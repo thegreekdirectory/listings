@@ -6,12 +6,44 @@
     <title>The Greek Directory - Listings</title>
     <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png">
     <link rel="manifest" href="manifest.webmanifest">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
         #map { width: 100%; height: 400px; }
+        
+        /* Photo Carousel Styles */
+        .carousel-container { position: relative; width: 100%; overflow: hidden; }
+        .carousel-track { display: flex; transition: transform 0.5s ease; }
+        .carousel-slide { min-width: 100%; height: 100%; }
+        .carousel-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
+        .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s; }
+        .carousel-dot.active { background: white; width: 24px; border-radius: 4px; }
+        .carousel-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; padding: 10px 15px; cursor: pointer; z-index: 10; border-radius: 4px; font-size: 20px; }
+        .carousel-nav:hover { background: rgba(0,0,0,0.7); }
+        .carousel-prev { left: 10px; }
+        .carousel-next { right: 10px; }
+        
+        /* Social Icons */
+        .social-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: all 0.3s; text-decoration: none; }
+        .social-icon:hover { transform: scale(1.1); }
+        .social-facebook { background: #1877F2; color: white; }
+        .social-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
+        .social-twitter { background: #1DA1F2; color: white; }
+        .social-youtube { background: #FF0000; color: white; }
+        .social-tiktok { background: #000000; color: white; }
+        .social-linkedin { background: #0077B5; color: white; }
+        .social-google { background: #4285F4; color: white; }
+        .social-yelp { background: #D32323; color: white; }
+        .social-tripadvisor { background: #00AF87; color: white; }
+        .social-other { background: #6B7280; color: white; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -107,9 +139,11 @@
         <div id="detailContent" class="max-w-4xl mx-auto px-4 py-8"></div>
     </div>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <script>
         // Configuration
-        const GOOGLE_MAPS_API_KEY = 'AIzaSyDpjgYkbEMAcFw0ZqxbkIsDDTkaDFYLkIs';
         const GOOGLE_SHEETS_API_KEY = 'YOUR_API_KEY_HERE';
         const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID_HERE';
         const RANGE = 'Sheet1!A2:Z';
@@ -126,7 +160,7 @@
             'Other'
         ];
 
-        // Mock data
+        // Mock data with multiple photos
         const mockListings = [
             {
                 id: '1',
@@ -138,10 +172,25 @@
                 email: 'info@athenaskitchen.com',
                 website: 'https://athenaskitchen.com',
                 hours: 'Mon-Sat: 11am-10pm, Sun: 12pm-9pm',
-                logo: 'https://via.placeholder.com/300x300/055193/FFFFFF?text=AK',
+                photos: [
+                    'https://via.placeholder.com/800x600/055193/FFFFFF?text=Photo1',
+                    'https://via.placeholder.com/800x600/0066CC/FFFFFF?text=Photo2',
+                    'https://via.placeholder.com/800x600/0055AA/FFFFFF?text=Photo3'
+                ],
                 fullName: 'Maria Papadopoulos',
                 fromGreece: 'Athens',
-                socialMedia: { facebook: 'https://facebook.com/athenaskitchen', instagram: 'https://instagram.com/athenaskitchen' }
+                socialMedia: {
+                    facebook: 'athenaskitchen',
+                    instagram: 'athenaskitchen',
+                    twitter: 'athenaskitchen',
+                    youtube: null,
+                    tiktok: 'athenaskitchen',
+                    linkedin: 'https://linkedin.com/company/athenaskitchen',
+                    google: 'https://g.page/athenaskitchen',
+                    yelp: 'https://yelp.com/biz/athenaskitchen',
+                    tripadvisor: null,
+                    other: null
+                }
             },
             {
                 id: '2',
@@ -153,10 +202,24 @@
                 email: 'office@stnicholaschicago.org',
                 website: 'https://stnicholaschicago.org',
                 hours: 'Sunday Liturgy: 9:30am',
-                logo: 'https://via.placeholder.com/300x300/055193/FFFFFF?text=SN',
+                photos: [
+                    'https://via.placeholder.com/800x600/055193/FFFFFF?text=Church1',
+                    'https://via.placeholder.com/800x600/0066CC/FFFFFF?text=Church2'
+                ],
                 fullName: 'Father Dimitri Kostopoulos',
                 fromGreece: 'Thessaloniki',
-                socialMedia: { facebook: 'https://facebook.com/stnicholaschicago' }
+                socialMedia: {
+                    facebook: 'stnicholaschicago',
+                    instagram: null,
+                    twitter: null,
+                    youtube: 'stnicholaschicago',
+                    tiktok: null,
+                    linkedin: null,
+                    google: null,
+                    yelp: null,
+                    tripadvisor: null,
+                    other: null
+                }
             },
             {
                 id: '3',
@@ -168,10 +231,23 @@
                 email: 'info@hellenicschool.org',
                 website: 'https://hellenicschool.org',
                 hours: 'Classes: Saturdays 9am-1pm',
-                logo: 'https://via.placeholder.com/300x300/055193/FFFFFF?text=HH',
+                photos: [
+                    'https://via.placeholder.com/800x600/055193/FFFFFF?text=School1'
+                ],
                 fullName: 'Elena Dimitriou',
                 fromGreece: 'Crete',
-                socialMedia: { facebook: 'https://facebook.com/hellenicschool', instagram: 'https://instagram.com/hellenicschool' }
+                socialMedia: {
+                    facebook: 'hellenicschool',
+                    instagram: 'hellenicschool',
+                    twitter: null,
+                    youtube: null,
+                    tiktok: null,
+                    linkedin: null,
+                    google: null,
+                    yelp: null,
+                    tripadvisor: null,
+                    other: null
+                }
             }
         ];
 
@@ -287,59 +363,50 @@
             const container = document.getElementById('mapContainer');
             container.classList.toggle('hidden');
             if (!container.classList.contains('hidden') && !map) {
-                loadGoogleMaps();
+                initLeafletMap();
             }
         }
 
-        function loadGoogleMaps() {
-            const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap`;
-            script.async = true;
-            document.head.appendChild(script);
-        }
+        function initLeafletMap() {
+            // Initialize Leaflet map centered on Chicago
+            map = L.map('map').setView([41.8781, -87.6298], 11);
 
-        window.initMap = function() {
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 41.8781, lng: -87.6298 },
-                zoom: 11
-            });
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
 
-            const geocoder = new google.maps.Geocoder();
-            const bounds = new google.maps.LatLngBounds();
-
+            // Add markers for each listing
             filteredListings.forEach(listing => {
-                geocoder.geocode({ address: listing.address }, (results, status) => {
-                    if (status === 'OK') {
-                        const position = results[0].geometry.location;
-                        bounds.extend(position);
+                // Simple geocoding fallback - in production, use a proper geocoding service
+                // For now, we'll use approximate coordinates
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(listing.address)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const lat = parseFloat(data[0].lat);
+                            const lon = parseFloat(data[0].lon);
 
-                        const marker = new google.maps.Marker({
-                            position: position,
-                            map: map,
-                            title: listing.businessName
-                        });
-
-                        const infoWindow = new google.maps.InfoWindow({
-                            content: `
-                                <div style="padding: 8px; max-width: 200px;">
+                            const marker = L.marker([lat, lon]).addTo(map);
+                            
+                            marker.bindPopup(`
+                                <div style="min-width: 200px;">
                                     <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #055193;">${listing.businessName}</h3>
                                     <p style="margin: 0 0 4px 0; font-size: 12px; color: #666;">${listing.category}</p>
                                     <p style="margin: 0; font-size: 12px;">${listing.address}</p>
+                                    <button onclick="showDetailFromMap('${listing.id}')" style="margin-top: 8px; padding: 4px 8px; background: #055193; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">View Details</button>
                                 </div>
-                            `
-                        });
+                            `);
 
-                        marker.addListener('click', () => {
-                            infoWindow.open(map, marker);
-                        });
-
-                        markers.push(marker);
-                        if (filteredListings.length > 0) {
-                            map.fitBounds(bounds);
+                            markers.push(marker);
                         }
-                    }
-                });
+                    })
+                    .catch(err => console.error('Geocoding error:', err));
             });
+        }
+
+        window.showDetailFromMap = function(id) {
+            showDetail(id);
         };
 
         function setView(view) {
@@ -380,10 +447,11 @@
         }
 
         function createGridCard(listing) {
+            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : 'https://via.placeholder.com/300x300/055193/FFFFFF?text=No+Image';
             return `
                 <div class="listing-card bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden" data-id="${listing.id}">
                     <div class="h-48 bg-gray-200 overflow-hidden">
-                        <img src="${listing.logo}" alt="${listing.businessName}" class="w-full h-full object-cover">
+                        <img src="${firstPhoto}" alt="${listing.businessName}" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4">
                         <div class="mb-2">
@@ -409,10 +477,11 @@
         }
 
         function createListRow(listing) {
+            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : 'https://via.placeholder.com/300x300/055193/FFFFFF?text=No+Image';
             return `
                 <div class="listing-card bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer p-4" data-id="${listing.id}">
                     <div class="flex gap-4">
-                        <img src="${listing.logo}" alt="${listing.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
+                        <img src="${firstPhoto}" alt="${listing.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
                         <div class="flex-1 min-w-0">
                             <div class="mb-2">
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color: #055193;">
@@ -437,34 +506,147 @@
             `;
         }
 
+        function createPhotoCarousel(photos) {
+            if (!photos || photos.length === 0) {
+                return '<div class="h-64 md:h-96 bg-gray-200 flex items-center justify-center"><span class="text-gray-400">No photos available</span></div>';
+            }
+
+            if (photos.length === 1) {
+                return `<div class="h-64 md:h-96 bg-gray-200"><img src="${photos[0]}" alt="Photo" class="w-full h-full object-cover"></div>`;
+            }
+
+            const carouselId = 'carousel-' + Math.random().toString(36).substr(2, 9);
+            const slides = photos.map((photo, idx) => 
+                `<div class="carousel-slide"><img src="${photo}" alt="Photo ${idx + 1}" class="w-full h-full object-cover"></div>`
+            ).join('');
+
+            const dots = photos.map((_, idx) => 
+                `<div class="carousel-dot ${idx === 0 ? 'active' : ''}" onclick="goToSlide('${carouselId}', ${idx})"></div>`
+            ).join('');
+
+            return `
+                <div class="carousel-container h-64 md:h-96 bg-gray-200" id="${carouselId}">
+                    <div class="carousel-track h-full">${slides}</div>
+                    ${photos.length > 1 ? `
+                        <div class="carousel-nav carousel-prev" onclick="prevSlide('${carouselId}')">‹</div>
+                        <div class="carousel-nav carousel-next" onclick="nextSlide('${carouselId}')">›</div>
+                        <div class="carousel-dots">${dots}</div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        window.goToSlide = function(carouselId, index) {
+            const carousel = document.getElementById(carouselId);
+            const track = carousel.querySelector('.carousel-track');
+            const dots = carousel.querySelectorAll('.carousel-dot');
+            
+            track.style.transform = `translateX(-${index * 100}%)`;
+            dots.forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === index);
+            });
+            
+            carousel.dataset.currentSlide = index;
+        };
+
+        window.nextSlide = function(carouselId) {
+            const carousel = document.getElementById(carouselId);
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const current = parseInt(carousel.dataset.currentSlide || 0);
+            const next = (current + 1) % slides.length;
+            goToSlide(carouselId, next);
+        };
+
+        window.prevSlide = function(carouselId) {
+            const carousel = document.getElementById(carouselId);
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const current = parseInt(carousel.dataset.currentSlide || 0);
+            const prev = (current - 1 + slides.length) % slides.length;
+            goToSlide(carouselId, prev);
+        };
+
+        function createSocialIcons(socialMedia) {
+            if (!socialMedia) return '';
+
+            const socialLinks = [];
+            
+            if (socialMedia.facebook) {
+                socialLinks.push(`<a href="https://www.facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook" title="Facebook">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </a>`);
+            }
+            
+            if (socialMedia.instagram) {
+                socialLinks.push(`<a href="https://www.instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram" title="Instagram">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </a>`);
+            }
+            
+            if (socialMedia.twitter) {
+                socialLinks.push(`<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon social-twitter" title="X (Twitter)">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </a>`);
+            }
+            
+            if (socialMedia.youtube) {
+                socialLinks.push(`<a href="https://www.youtube.com/@${socialMedia.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube" title="YouTube">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </a>`);
+            }
+            
+            if (socialMedia.tiktok) {
+                socialLinks.push(`<a href="https://www.tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok" title="TikTok">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                </a>`);
+            }
+            
+            if (socialMedia.linkedin) {
+                socialLinks.push(`<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin" title="LinkedIn">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                </a>`);
+            }
+            
+            if (socialMedia.google) {
+                socialLinks.push(`<a href="${socialMedia.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+                </a>`);
+            }
+            
+            if (socialMedia.yelp) {
+                socialLinks.push(`<a href="${socialMedia.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 14.5l-1.25-3.25h-2.5l-1.25 3.25L9 15l3-4.5 3 4.5-1.5 1.5zM12 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                </a>`);
+            }
+            
+            if (socialMedia.tripadvisor) {
+                socialLinks.push(`<a href="${socialMedia.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.418 0-8-3.582-8-8s3.582-8 8-8 8 3.582 8 8-3.582 8-8 8zm-4-8c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm6 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2z"/></svg>
+                </a>`);
+            }
+            
+            if (socialMedia.other) {
+                socialLinks.push(`<a href="${socialMedia.other}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="Website">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                </a>`);
+            }
+
+            return socialLinks.length > 0 ? `
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-3">Follow Us</h2>
+                    <div class="flex flex-wrap gap-2">
+                        ${socialLinks.join('')}
+                    </div>
+                </div>
+            ` : '';
+        }
+
         function showDetail(id) {
             const listing = allListings.find(l => l.id === id);
             if (!listing) return;
 
-            const socialIcons = { facebook: '📘', instagram: '📷', twitter: '🐦', youtube: '📺', linkedin: '💼', tiktok: '🎵', yelp: '⭐', tripadvisor: '✈️' };
-
-            let socialHTML = '';
-            if (listing.socialMedia) {
-                socialHTML = '<h2 class="text-xl font-bold text-gray-900 mb-3">Follow Us</h2><div class="flex flex-wrap gap-2">';
-                for (const [platform, url] of Object.entries(listing.socialMedia)) {
-                    if (url) {
-                        socialHTML += `
-                            <a href="${url}" target="_blank" rel="noopener noreferrer" 
-                               class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors">
-                                <span>${socialIcons[platform] || '🔗'}</span>
-                                <span class="capitalize">${platform}</span>
-                            </a>
-                        `;
-                    }
-                }
-                socialHTML += '</div>';
-            }
-
             document.getElementById('detailContent').innerHTML = `
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-                    <div class="h-64 md:h-96 bg-gray-200">
-                        <img src="${listing.logo}" alt="${listing.businessName}" class="w-full h-full object-cover">
-                    </div>
+                    ${createPhotoCarousel(listing.photos)}
                 </div>
 
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -539,7 +721,7 @@
                         </a>
                     </div>
 
-                    ${socialHTML}
+                    ${createSocialIcons(listing.socialMedia)}
                 </div>
 
                 <div class="bg-white rounded-lg shadow-sm p-6">
@@ -549,15 +731,11 @@
                 </div>
             `;
 
-            document.getElementById('listingsView').classList.add('hidden');
-            document.getElementById('detailView').classList.remove('hidden');
-            window.scrollTo(0, 0);
-        }
-
-        function closeDetail() {
-            document.getElementById('detailView').classList.add('hidden');
-            document.getElementById('listingsView').classList.remove('hidden');
-        }
-    </script>
-</body>
-</html>
+            // Start auto-play for carousels
+            const carousels = document.querySelectorAll('.carousel-container');
+            carousels.forEach(carousel => {
+                const slides = carousel.querySelectorAll('.carousel-slide');
+                if (slides.length > 1) {
+                    carousel.dataset.currentSlide = 0;
+                    setInterval(() => {
+                        nextSlide(carousel
