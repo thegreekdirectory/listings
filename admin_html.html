@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Greek Directory - Admin Dashboard</title>
+    <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-md w-full">
+            <div class="text-center mb-8">
+                <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-20 w-auto mx-auto mb-4">
+                <h1 class="text-3xl font-bold mb-2" style="color: #055193;">The Greek Directory</h1>
+                <p class="text-gray-600">Admin Dashboard</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Sign In</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <input type="email" id="loginEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;" placeholder="admin@thegreekdirectory.org">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="loginPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;" placeholder="••••••••">
+                    </div>
+                    <button id="loginBtn" class="w-full py-3 px-4 rounded-lg text-white font-semibold flex items-center justify-center gap-2" style="background-color: #055193;">
+                        <span>🔐</span>
+                        <span>Sign In</span>
+                    </button>
+                </div>
+
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-sm text-gray-700">
+                        <strong>Demo Credentials:</strong><br>
+                        Email: admin@thegreekdirectory.org<br>
+                        Password: admin123
+                    </p>
+                </div>
+            </div>
+
+            <p class="text-center text-sm text-gray-600 mt-4">© 2025 The Greek Directory. All Rights Reserved.</p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboardPage" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+            <div class="px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
+                    <div>
+                        <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
+                        <p class="text-xs text-gray-600">Admin Dashboard</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden md:block">
+                        <p id="userName" class="text-sm font-medium text-gray-900"></p>
+                        <p id="userEmail" class="text-xs text-gray-600"></p>
+                    </div>
+                    <button id="logoutBtn" class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        <span>🚪</span>
+                        <span class="hidden md:inline">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex">
+            <!-- Sidebar -->
+            <aside class="w-64 bg-white border-r min-h-screen p-6 hidden md:block">
+                <nav class="space-y-2">
+                    <button onclick="showPage('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-white" style="background-color: #055193;">
+                        <span>🏠</span>
+                        <span class="font-medium">Dashboard</span>
+                    </button>
+                    <button onclick="showPage('listings')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100">
+                        <span>📋</span>
+                        <span class="font-medium">Manage Listings</span>
+                    </button>
+                    <button onclick="showPage('analytics')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100">
+                        <span>📊</span>
+                        <span class="font-medium">Analytics</span>
+                    </button>
+                    <button onclick="showPage('settings')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100">
+                        <span>⚙️</span>
+                        <span class="font-medium">Settings</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6">
+                <!-- Dashboard View -->
+                <div id="dashboardView">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+                        <p class="text-gray-600">Welcome back! Here's what's happening.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Total Listings</p>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color: #055193;">+12%</span>
+                            </div>
+                            <p class="text-3xl font-bold text-gray-900">47</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Pending Reviews</p>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color: #FFA500;">+3</span>
+                            </div>
+                            <p class="text-3xl font-bold text-gray-900">8</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Active Users</p>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color: #22C55E;">+18%</span>
+                            </div>
+                            <p class="text-3xl font-bold text-gray-900">234</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Page Views</p>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color: #8B5CF6;">+25%</span>
+                            </div>
+                            <p class="text-3xl font-bold text-gray-900">1,245</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Recent Activity</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-3 pb-4 border-b">
+                                    <div class="w-2 h-2 rounded-full mt-2" style="background-color: #055193;"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">New listing submitted</p>
+                                        <p class="text-sm text-gray-600">Zeus Pizza & Pasta</p>
+                                        <p class="text-xs text-gray-500 mt-1">2 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 pb-4 border-b">
+                                    <div class="w-2 h-2 rounded-full mt-2" style="background-color: #055193;"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">Listing approved</p>
+                                        <p class="text-sm text-gray-600">Athena's Kitchen</p>
+                                        <p class="text-xs text-gray-500 mt-1">5 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 pb-4 border-b">
+                                    <div class="w-2 h-2 rounded-full mt-2" style="background-color: #055193;"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">Profile updated</p>
+                                        <p class="text-sm text-gray-600">St. Nicholas Church</p>
+                                        <p class="text-xs text-gray-500 mt-1">1 day ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+                            <div class="space-y-3">
+                                <button class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <span style="color: #055193;">➕</span>
+                                    <span class="font-medium text-gray-900">Add New Listing</span>
+                                </button>
+                                <button class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <span style="color: #055193;">👁️</span>
+                                    <span class="font-medium text-gray-900">Review Pending Submissions</span>
+                                </button>
+                                <button class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <span style="color: #055193;">📊</span>
+                                    <span class="font-medium text-gray-900">View Full Analytics</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Listings View -->
+                <div id="listingsView" class="hidden">
+                    <div class="mb-6 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Manage Listings</h2>
+                            <p class="text-gray-600">Review and manage all business listings</p>
+                        </div>
+                        <button class="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">
+                            <span>➕</span>
+                            <span>Add Listing</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex flex-col md:flex-row gap-4 mb-6">
+                            <div class="flex-1 relative">
+                                <input type="text" id="listingSearch" placeholder="Search listings..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;">
+                            </div>
+                            <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;">
+                                <option value="All">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b">
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Business Name</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Category</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Date Added</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-900">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-4 px-4 font-medium text-gray-900">Athena's Kitchen</td>
+                                        <td class="py-4 px-4 text-gray-600">Restaurant/Bakery</td>
+                                        <td class="py-4 px-4">
+                                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Active</span>
+                                        </td>
+                                        <td class="py-4 px-4 text-gray-600">2025-01-15</td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <button class="p-2 hover:bg-gray-100 rounded">👁️</button>
+                                                <button class="p-2 hover:bg-gray-100 rounded">✏️</button>
+                                                <button class="p-2 hover:bg-gray-100 rounded">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-4 px-4 font-medium text-gray-900">St. Nicholas Church</td>
+                                        <td class="py-4 px-4 text-gray-600">Church</td>
+                                        <td class="py-4 px-4">
+                                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Active</span>
+                                        </td>
+                                        <td class="py-4 px-4 text-gray-600">2025-01-14</td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <button class="p-2 hover:bg-gray-100 rounded">👁️</button>
+                                                <button class="p-2 hover:bg-gray-100 rounded">✏️</button>
+                                                <button class="p-2 hover:bg-gray-100 rounded">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-4 px-4 font-medium text-gray-900">Zeus Pizza</td>
+                                        <td class="py-4 px-4 text-gray-600">Restaurant/Bakery</td>
+                                        <td class="py-4 px-4">
+                                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Pending</span>
+                                        </td>
+                                        <td class="py-4 px-4 text-gray-600">2025-01-20</td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <button class="p-2 hover:bg-gray-100 rounded">👁️</button>
+                                                <button class="p-2 hover:bg-gray-100 rounded">✏️</button>
+                                                <button class="p-2 hover:bg-gray-100 rounded">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics View -->
+                <div id="analyticsView" class="hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Analytics</h2>
+                        <p class="text-gray-600">Track performance and growth metrics</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Monthly Page Views</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium text-gray-700">Jan</span>
+                                        <span class="text-sm font-bold text-gray-900">450</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full" style="background-color: #055193; width: 45%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium text-gray-700">Feb</span>
+                                        <span class="text-sm font-bold text-gray-900">680</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full" style="background-color: #055193; width: 68%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium text-gray-700">Mar</span>
+                                        <span class="text-sm font-bold text-gray-900">920</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full" style="background-color: #055193; width: 92%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Top Categories</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-32 text-sm font-medium text-gray-700">Restaurant/Bakery</div>
+                                    <div class="flex-1">
+                                        <div class="w-full bg-gray-200 rounded-full h-3">
+                                            <div class="h-3 rounded-full" style="background-color: #055193; width: 38%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="w-16 text-right text-sm font-bold text-gray-900">18</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-32 text-sm font-medium text-gray-700">Church/Religious</div>
+                                    <div class="flex-1">
+                                        <div class="w-full bg-gray-200 rounded-full h-3">
+                                            <div class="h-3 rounded-full" style="background-color: #055193; width: 26%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="w-16 text-right text-sm font-bold text-gray-900">12</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-32 text-sm font-medium text-gray-700">Retail</div>
+                                    <div class="flex-1">
+                                        <div class="w-full bg-gray-200 rounded-full h-3">
+                                            <div class="h-3 rounded-full" style="background-color: #055193; width: 17%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="w-16 text-right text-sm font-bold text-gray-900">8</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings View -->
+                <div id="settingsView" class="hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Settings</h2>
+                        <p class="text-gray-600">Manage your account and preferences</p>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Account Information</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                <input type="text" id="settingsName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" id="settingsEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                                <input type="text" id="settingsRole" disabled class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Change Password</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                                <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;">
+                            </div>
+                            <button class="px-6 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">Update Password</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const APPS_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+        let currentUser = null;
+
+        // Check if user is already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const storedUser = sessionStorage.getItem('greekDirectoryUser');
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+                showDashboard();
+            }
+
+            // Login button
+            document.getElementById('loginBtn').addEventListener('click', handleLogin);
+            document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+        });
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                alert('Please enter email and password');
+                return;
+            }
+
+            document.getElementById('loginBtn').innerHTML = '<span>⏳</span><span>Signing in...</span>';
+            document.getElementById('loginBtn').disabled = true;
+
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUser = { email: data.email, name: data.name, role: data.role };
+                    sessionStorage.setItem('greekDirectoryUser', JSON.stringify(currentUser));
+                    showDashboard();
+                } else {
+                    alert(data.message || 'Invalid credentials');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed. Please check your Apps Script URL and try again.');
+            }
+
+            document.getElementById('loginBtn').innerHTML = '<span>🔐</span><span>Sign In</span>';
+            document.getElementById('loginBtn').disabled = false;
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            sessionStorage.removeItem('greekDirectoryUser');
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('dashboardPage').classList.add('hidden');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        function showDashboard() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('dashboardPage').classList.remove('hidden');
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('settingsName').value = currentUser.name;
+            document.getElementById('settingsEmail').value = currentUser.email;
+            document.getElementById('settingsRole').value = currentUser.role;
+        }
+
+        function showPage(page) {
+            // Hide all views
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('listingsView').classList.add('hidden');
+            document.getElementById('analyticsView').classList.add('hidden');
+            document.getElementById('settingsView').classList.add('hidden');
+
+            // Show selected view
+            document.getElementById(page + 'View').classList.remove('hidden');
+
+            // Update nav buttons
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => {
+                btn.className = 'nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100';
+            });
+            event.target.closest('.nav-btn').className = 'nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-white';
+            event.target.closest('.nav-btn').style.backgroundColor = '#055193';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Greek Directory - Listings</title>
+    <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        #map { width: 100%; height: 400px; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Main Listings View -->
+    <div id="listingsView">
+        <!-- Header -->
+        <header class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
+                        <div>
+                            <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
+                            <p class="text-xs text-gray-600">Chicagoland Listings</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="relative mb-4">
+                    <input type="text" id="searchInput" placeholder="Search businesses, churches, schools..." 
+                        class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" 
+                        style="--tw-ring-color: #055193;">
+                </div>
+
+                <!-- Controls -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-2">
+                    <button id="filterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                        <span>🔍</span>
+                        <span class="text-sm font-medium">Filters</span>
+                    </button>
+                    <button id="mapBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                        <span>🗺️</span>
+                        <span class="text-sm font-medium">Map</span>
+                    </button>
+                    <div class="flex items-center gap-1 ml-auto bg-gray-100 rounded-lg p-1">
+                        <button id="gridViewBtn" class="p-2 rounded">
+                            <span>⊞</span>
+                        </button>
+                        <button id="listViewBtn" class="p-2 rounded bg-white shadow-sm">
+                            <span>☰</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Panel -->
+                <div id="filterPanel" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-gray-900">Filter by Category</h3>
+                        <button id="closeFilterBtn" class="text-gray-500">✕</button>
+                    </div>
+                    <div id="categoryFilters" class="grid grid-cols-2 gap-2"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Map View -->
+        <div id="mapContainer" class="hidden border-b">
+            <div id="map"></div>
+        </div>
+
+        <!-- Results Header -->
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
+                <select id="sortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none">
+                    <option value="name">Sort by Name</option>
+                    <option value="newest">Newest First</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Listings Container -->
+        <div class="max-w-7xl mx-auto px-4 pb-8">
+            <div id="listingsContainer"></div>
+        </div>
+    </div>
+
+    <!-- Detail View -->
+    <div id="detailView" class="hidden">
+        <header class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <button id="backBtn" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2">
+                    <span>←</span>
+                    <span>Back to Listings</span>
+                </button>
+                <div class="flex items-center gap-3">
+                    <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
+                    <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
+                </div>
+            </div>
+        </header>
+        <div id="detailContent" class="max-w-4xl mx-auto px-4 py-8"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const GOOGLE_MAPS_API_KEY = 'AIzaSyDpjgYkbEMAcFw0ZqxbkIsDDTkaDFYLkIs';
+        const GOOGLE_SHEETS_API_KEY = 'YOUR_API_KEY_HERE';
+        const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID_HERE';
+        const RANGE = 'Sheet1!A2:Z';
+
+        const CATEGORIES = [
+            'Restaurant/Bakery',
+            'Church/Religious Organization',
+            'Greek School/Cultural Center',
+            'Grocery/Imports',
+            'Event Services',
+            'Retail',
+            'Real Estate',
+            'Legal/Financial',
+            'Other'
+        ];
+
+        // Mock data
+        const mockListings = [
+            {
+                id: '1',
+                businessName: 'Athena\'s Kitchen',
+                description: 'Authentic Greek restaurant serving traditional dishes made with love and the finest ingredients.',
+                category: 'Restaurant/Bakery',
+                address: '123 Main St, Chicago, IL 60601',
+                phone: '(312) 555-0123',
+                email: 'info@athenaskitchen.com',
+                website: 'https://athenaskitchen.com',
+                hours: 'Mon-Sat: 11am-10pm, Sun: 12pm-9pm',
+                logo: 'https://via.placeholder.com/300x300/055193/FFFFFF?text=AK',
+                fullName: 'Maria Papadopoulos',
+                fromGreece: 'Athens',
+                socialMedia: { facebook: 'https://facebook.com/athenaskitchen', instagram: 'https://instagram.com/athenaskitchen' }
+            },
+            {
+                id: '2',
+                businessName: 'St. Nicholas Greek Orthodox Church',
+                description: 'A welcoming parish serving the Greek Orthodox community with liturgy, fellowship, and cultural programs.',
+                category: 'Church/Religious Organization',
+                address: '456 Church Ave, Chicago, IL 60614',
+                phone: '(312) 555-0456',
+                email: 'office@stnicholaschicago.org',
+                website: 'https://stnicholaschicago.org',
+                hours: 'Sunday Liturgy: 9:30am',
+                logo: 'https://via.placeholder.com/300x300/055193/FFFFFF?text=SN',
+                fullName: 'Father Dimitri Kostopoulos',
+                fromGreece: 'Thessaloniki',
+                socialMedia: { facebook: 'https://facebook.com/stnicholaschicago' }
+            },
+            {
+                id: '3',
+                businessName: 'Hellenic Heritage Language School',
+                description: 'Teaching Greek language and culture to the next generation through engaging classes and cultural activities.',
+                category: 'Greek School/Cultural Center',
+                address: '789 Education Blvd, Skokie, IL 60076',
+                phone: '(847) 555-0789',
+                email: 'info@hellenicschool.org',
+                website: 'https://hellenicschool.org',
+                hours: 'Classes: Saturdays 9am-1pm',
+                logo: 'https://via.placeholder.com/300x300/055193/FFFFFF?text=HH',
+                fullName: 'Elena Dimitriou',
+                fromGreece: 'Crete',
+                socialMedia: { facebook: 'https://facebook.com/hellenicschool', instagram: 'https://instagram.com/hellenicschool' }
+            }
+        ];
+
+        let allListings = [];
+        let filteredListings = [];
+        let currentView = 'list';
+        let selectedCategory = 'All';
+        let map = null;
+        let markers = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadListings();
+            setupEventListeners();
+            createCategoryFilters();
+        });
+
+        async function loadListings() {
+            try {
+                // Use mock data for now
+                allListings = mockListings;
+                filteredListings = allListings;
+                renderListings();
+                updateResultsCount();
+            } catch (error) {
+                console.error('Error loading listings:', error);
+                document.getElementById('listingsContainer').innerHTML = 
+                    '<p class="text-center text-gray-600 py-12">Error loading listings. Please try again.</p>';
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            document.getElementById('filterBtn').addEventListener('click', toggleFilters);
+            document.getElementById('closeFilterBtn').addEventListener('click', toggleFilters);
+            document.getElementById('mapBtn').addEventListener('click', toggleMap);
+            document.getElementById('gridViewBtn').addEventListener('click', () => setView('grid'));
+            document.getElementById('listViewBtn').addEventListener('click', () => setView('list'));
+            document.getElementById('sortSelect').addEventListener('change', handleSort);
+            document.getElementById('backBtn').addEventListener('click', closeDetail);
+        }
+
+        function createCategoryFilters() {
+            const container = document.getElementById('categoryFilters');
+            const allBtn = document.createElement('button');
+            allBtn.textContent = 'All';
+            allBtn.className = 'px-3 py-2 rounded-lg text-sm font-medium text-white';
+            allBtn.style.backgroundColor = '#055193';
+            allBtn.onclick = () => filterByCategory('All');
+            container.appendChild(allBtn);
+
+            CATEGORIES.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.textContent = cat;
+                btn.className = 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
+                btn.onclick = () => filterByCategory(cat);
+                container.appendChild(btn);
+            });
+        }
+
+        function filterByCategory(category) {
+            selectedCategory = category;
+            updateCategoryButtons();
+            applyFilters();
+        }
+
+        function updateCategoryButtons() {
+            const buttons = document.querySelectorAll('#categoryFilters button');
+            buttons.forEach((btn, idx) => {
+                const isSelected = (idx === 0 && selectedCategory === 'All') || 
+                                 (btn.textContent === selectedCategory);
+                if (isSelected) {
+                    btn.className = 'px-3 py-2 rounded-lg text-sm font-medium text-white';
+                    btn.style.backgroundColor = '#055193';
+                } else {
+                    btn.className = 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
+                }
+            });
+        }
+
+        function handleSearch(e) {
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            filteredListings = allListings.filter(listing => {
+                const matchesSearch = !searchTerm || 
+                    listing.businessName.toLowerCase().includes(searchTerm) ||
+                    listing.description.toLowerCase().includes(searchTerm) ||
+                    listing.address.toLowerCase().includes(searchTerm);
+                const matchesCategory = selectedCategory === 'All' || listing.category === selectedCategory;
+                return matchesSearch && matchesCategory;
+            });
+            renderListings();
+            updateResultsCount();
+        }
+
+        function handleSort(e) {
+            const sortBy = e.target.value;
+            if (sortBy === 'name') {
+                filteredListings.sort((a, b) => a.businessName.localeCompare(b.businessName));
+            }
+            renderListings();
+        }
+
+        function toggleFilters() {
+            const panel = document.getElementById('filterPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function toggleMap() {
+            const container = document.getElementById('mapContainer');
+            container.classList.toggle('hidden');
+            if (!container.classList.contains('hidden') && !map) {
+                loadGoogleMaps();
+            }
+        }
+
+        function loadGoogleMaps() {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap`;
+            script.async = true;
+            document.head.appendChild(script);
+        }
+
+        window.initMap = function() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 41.8781, lng: -87.6298 },
+                zoom: 11
+            });
+
+            const geocoder = new google.maps.Geocoder();
+            const bounds = new google.maps.LatLngBounds();
+
+            filteredListings.forEach(listing => {
+                geocoder.geocode({ address: listing.address }, (results, status) => {
+                    if (status === 'OK') {
+                        const position = results[0].geometry.location;
+                        bounds.extend(position);
+
+                        const marker = new google.maps.Marker({
+                            position: position,
+                            map: map,
+                            title: listing.businessName
+                        });
+
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `
+                                <div style="padding: 8px; max-width: 200px;">
+                                    <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #055193;">${listing.businessName}</h3>
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #666;">${listing.category}</p>
+                                    <p style="margin: 0; font-size: 12px;">${listing.address}</p>
+                                </div>
+                            `
+                        });
+
+                        marker.addListener('click', () => {
+                            infoWindow.open(map, marker);
+                        });
+
+                        markers.push(marker);
+                        if (filteredListings.length > 0) {
+                            map.fitBounds(bounds);
+                        }
+                    }
+                });
+            });
+        };
+
+        function setView(view) {
+            currentView = view;
+            document.getElementById('gridViewBtn').className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+            document.getElementById('listViewBtn').className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+            renderListings();
+        }
+
+        function updateResultsCount() {
+            const count = filteredListings.length;
+            const text = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
+            document.getElementById('resultsCount').textContent = text;
+        }
+
+        function renderListings() {
+            const container = document.getElementById('listingsContainer');
+            if (filteredListings.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found matching your criteria.</p>';
+                return;
+            }
+
+            if (currentView === 'grid') {
+                container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+                container.innerHTML = filteredListings.map(listing => createGridCard(listing)).join('');
+            } else {
+                container.className = 'space-y-4';
+                container.innerHTML = filteredListings.map(listing => createListRow(listing)).join('');
+            }
+
+            // Add click listeners
+            document.querySelectorAll('.listing-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = card.dataset.id;
+                    showDetail(id);
+                });
+            });
+        }
+
+        function createGridCard(listing) {
+            return `
+                <div class="listing-card bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden" data-id="${listing.id}">
+                    <div class="h-48 bg-gray-200 overflow-hidden">
+                        <img src="${listing.logo}" alt="${listing.businessName}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <div class="mb-2">
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color: #055193;">
+                                ${listing.category}
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">${listing.businessName}</h3>
+                        <p class="text-sm text-gray-600 mb-3 line-clamp-2">${listing.description}</p>
+                        <div class="space-y-1 text-sm text-gray-600">
+                            <div class="flex items-center gap-2">
+                                <span>📍</span>
+                                <span class="truncate">${listing.address}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span>📞</span>
+                                <span>${listing.phone}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createListRow(listing) {
+            return `
+                <div class="listing-card bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer p-4" data-id="${listing.id}">
+                    <div class="flex gap-4">
+                        <img src="${listing.logo}" alt="${listing.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="mb-2">
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color: #055193;">
+                                    ${listing.category}
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1">${listing.businessName}</h3>
+                            <p class="text-sm text-gray-600 mb-2 line-clamp-1">${listing.description}</p>
+                            <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                                <div class="flex items-center gap-1">
+                                    <span>📍</span>
+                                    <span class="truncate">${listing.address}</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span>📞</span>
+                                    <span>${listing.phone}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showDetail(id) {
+            const listing = allListings.find(l => l.id === id);
+            if (!listing) return;
+
+            const socialIcons = { facebook: '📘', instagram: '📷', twitter: '🐦', youtube: '📺', linkedin: '💼', tiktok: '🎵', yelp: '⭐', tripadvisor: '✈️' };
+
+            let socialHTML = '';
+            if (listing.socialMedia) {
+                socialHTML = '<h2 class="text-xl font-bold text-gray-900 mb-3">Follow Us</h2><div class="flex flex-wrap gap-2">';
+                for (const [platform, url] of Object.entries(listing.socialMedia)) {
+                    if (url) {
+                        socialHTML += `
+                            <a href="${url}" target="_blank" rel="noopener noreferrer" 
+                               class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors">
+                                <span>${socialIcons[platform] || '🔗'}</span>
+                                <span class="capitalize">${platform}</span>
+                            </a>
+                        `;
+                    }
+                }
+                socialHTML += '</div>';
+            }
+
+            document.getElementById('detailContent').innerHTML = `
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+                    <div class="h-64 md:h-96 bg-gray-200">
+                        <img src="${listing.logo}" alt="${listing.businessName}" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <div class="mb-4">
+                        <span class="text-sm font-semibold px-3 py-1 rounded-full text-white" style="background-color: #055193;">
+                            ${listing.category}
+                        </span>
+                    </div>
+
+                    <h1 class="text-3xl font-bold text-gray-900 mb-4">${listing.businessName}</h1>
+                    <p class="text-gray-700 mb-6">${listing.description}</p>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-start gap-3">
+                            <span class="mt-1">📍</span>
+                            <div>
+                                <p class="font-semibold text-gray-900">Address</p>
+                                <p class="text-gray-700">${listing.address}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="mt-1">📞</span>
+                            <div>
+                                <p class="font-semibold text-gray-900">Phone</p>
+                                <a href="tel:${listing.phone}" class="text-blue-600 hover:underline">${listing.phone}</a>
+                            </div>
+                        </div>
+                        ${listing.email ? `
+                        <div class="flex items-start gap-3">
+                            <span class="mt-1">📧</span>
+                            <div>
+                                <p class="font-semibold text-gray-900">Email</p>
+                                <a href="mailto:${listing.email}" class="text-blue-600 hover:underline">${listing.email}</a>
+                            </div>
+                        </div>` : ''}
+                        ${listing.website ? `
+                        <div class="flex items-start gap-3">
+                            <span class="mt-1">🌐</span>
+                            <div>
+                                <p class="font-semibold text-gray-900">Website</p>
+                                <a href="${listing.website}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all">${listing.website}</a>
+                            </div>
+                        </div>` : ''}
+                        ${listing.hours ? `
+                        <div class="flex items-start gap-3">
+                            <span class="mt-1">🕒</span>
+                            <div>
+                                <p class="font-semibold text-gray-900">Hours</p>
+                                <p class="text-gray-700">${listing.hours}</p>
+                            </div>
+                        </div>` : ''}
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        <a href="tel:${listing.phone}" class="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">
+                            <span>📞</span>
+                            <span>Call</span>
+                        </a>
+                        ${listing.email ? `
+                        <a href="mailto:${listing.email}" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">
+                            <span>📧</span>
+                            <span>Email</span>
+                        </a>` : ''}
+                        ${listing.website ? `
+                        <a href="${listing.website}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">
+                            <span>🌐</span>
+                            <span>Visit Website</span>
+                        </a>` : ''}
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.address)}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">
+                            <span>📍</span>
+                            <span>Directions</span>
+                        </a>
+                    </div>
+
+                    ${socialHTML}
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-3">Listed By</h2>
+                    <p class="text-gray-700 font-medium">${listing.fullName}</p>
+                    ${listing.fromGreece ? `<p class="text-sm text-gray-600 mt-1">From ${listing.fromGreece}, Greece</p>` : ''}
+                </div>
+            `;
+
+            document.getElementById('listingsView').classList.add('hidden');
+            document.getElementById('detailView').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function closeDetail() {
+            document.getElementById('detailView').classList.add('hidden');
+            document.getElementById('listingsView').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
