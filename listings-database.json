@@ -1,0 +1,79 @@
+{
+  "listings": [
+    {
+      "id": "athenas-kitchen",
+      "slug": "athenas-kitchen",
+      "visible": true,
+      "businessName": "Athena's Kitchen",
+      "description": "Authentic Greek restaurant serving traditional dishes made with love and the finest ingredients.",
+      "category": "Restaurant/Bakery",
+      "address": "123 Main St, Chicago, IL 60601",
+      "phone": "(312) 555-0123",
+      "email": "info@athenaskitchen.com",
+      "website": "https://athenaskitchen.com",
+      "hours": "Mon-Sat: 11am-10pm, Sun: 12pm-9pm",
+      "logo": "https://via.placeholder.com/200x200/055193/FFFFFF?text=Logo",
+      "photos": [
+        "https://via.placeholder.com/800x600/055193/FFFFFF?text=Photo1",
+        "https://via.placeholder.com/800x600/0066CC/FFFFFF?text=Photo2",
+        "https://via.placeholder.com/800x600/0055AA/FFFFFF?text=Photo3"
+      ],
+      "socialMedia": {
+        "facebook": "athenaskitchen",
+        "instagram": "athenaskitchen",
+        "twitter": "athenaskitchen",
+        "youtube": "athenaskitchen",
+        "tiktok": "athenaskitchen",
+        "linkedin": "https://linkedin.com/company/athenaskitchen",
+        "google": "https://g.page/athenaskitchen",
+        "yelp": "https://yelp.com/biz/athenaskitchen",
+        "tripadvisor": "https://tripadvisor.com/athenaskitchen",
+        "other": "https://example.com"
+      },
+      "ownerInfo": {
+        "fullName": "Maria Papadopoulos",
+        "fromGreece": "Athens",
+        "ownerEmail": "maria@example.com",
+        "ownerPhone": "(312) 555-0124"
+      },
+      "metadata": {
+        "createdAt": "2025-01-15T10:00:00Z",
+        "updatedAt": "2025-01-20T14:30:00Z",
+        "createdBy": "admin@thegreekdirectory.org"
+      }
+    },
+    {
+      "id": "st-nicholas-church",
+      "slug": "st-nicholas-church",
+      "visible": true,
+      "businessName": "St. Nicholas Greek Orthodox Church",
+      "description": "A welcoming parish serving the Greek Orthodox community with liturgy, fellowship, and cultural programs.",
+      "category": "Church/Religious Organization",
+      "address": "456 Church Ave, Chicago, IL 60614",
+      "phone": "(312) 555-0456",
+      "email": "office@stnicholaschicago.org",
+      "website": "https://stnicholaschicago.org",
+      "hours": "Sunday Liturgy: 9:30am",
+      "logo": "https://via.placeholder.com/200x200/055193/FFFFFF?text=SN",
+      "photos": [
+        "https://via.placeholder.com/800x600/055193/FFFFFF?text=Church1",
+        "https://via.placeholder.com/800x600/0066CC/FFFFFF?text=Church2"
+      ],
+      "socialMedia": {
+        "facebook": "stnicholaschicago",
+        "youtube": "stnicholaschicago"
+      },
+      "ownerInfo": {
+        "fullName": "Father Dimitri Kostopoulos",
+        "fromGreece": "Thessaloniki",
+        "ownerEmail": "father@stnicholaschicago.org",
+        "ownerPhone": "(312) 555-0457"
+      },
+      "metadata": {
+        "createdAt": "2025-01-14T09:00:00Z",
+        "updatedAt": "2025-01-14T09:00:00Z",
+        "createdBy": "admin@thegreekdirectory.org"
+      }
+    }
+  ]
+}
