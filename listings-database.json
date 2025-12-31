@@ -37,10 +37,10 @@
       "slug": "athenas-kitchen",
       "metadata": {
         "createdAt": "2025-01-15T10:00:00Z",
-        "updatedAt": "2025-12-31T23:51:57.358Z",
+        "updatedAt": "2025-12-31T23:51:58.854Z",
         "createdBy": "admin@thegreekdirectory.org"
       },
-      "visible": false,
+      "visible": true,
       "featured": true
     },
     {
