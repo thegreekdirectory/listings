@@ -98,9 +98,9 @@
         "facebook": "hellenicamericanacademy",
         "instagram": "hellenicamericanacademy",
         "twitter": null,
-        "youtube": null,
+        "youtube": "hellenicamericanacademy",
         "tiktok": null,
-        "linkedin": null,
+        "linkedin": "https://www.linkedin.com/company/hellenicamericanacademy.org",
         "google": null,
         "yelp": null,
         "tripadvisor": null,
@@ -116,9 +116,8 @@
       "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2025-12-31T07:22:03.186Z",
-        "updatedAt": "2025-12-31T07:38:12.611Z"
-      },
-      "visible": true
+        "updatedAt": "2025-12-31T07:41:04.321Z"
+      }
     }
   ]
 }
