@@ -92,7 +92,7 @@
       "email": "info@haamail.net",
       "website": "hellenicamericanacademy.org",
       "hours": null,
-      "logo": "",
+      "logo": "j",
       "photos": [],
       "socialMedia": {
         "facebook": "hellenicamericanacademy",
@@ -114,10 +114,9 @@
       },
       "id": "hellenic-american-academy",
       "slug": "hellenic-american-academy",
-      "visible": true,
       "metadata": {
         "createdAt": "2025-12-31T07:22:03.186Z",
-        "updatedAt": "2025-12-31T07:22:03.186Z"
+        "updatedAt": "2025-12-31T07:23:52.579Z"
       }
     }
   ]
