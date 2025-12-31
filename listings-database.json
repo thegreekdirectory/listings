@@ -90,7 +90,7 @@
       "phone": "(847) 317-1063",
       "address": "445 Pine St., Deerfield IL 60015",
       "email": "info@haamail.net",
-      "website": "hellenicamericanacademy.org",
+      "website": "https://www.hellenicamericanacademy.org",
       "hours": null,
       "logo": "j",
       "photos": [],
@@ -116,9 +116,8 @@
       "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2025-12-31T07:22:03.186Z",
-        "updatedAt": "2025-12-31T07:37:45.969Z"
-      },
-      "visible": true
+        "updatedAt": "2025-12-31T07:38:06.340Z"
+      }
     }
   ]
 }
