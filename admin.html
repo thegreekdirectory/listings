@@ -12,29 +12,22 @@
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Login Page -->
+    <!-- Simple Login -->
     <div id="loginPage" class="min-h-screen flex items-center justify-center px-4">
         <div class="max-w-md w-full">
             <div class="text-center mb-8">
                 <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-20 w-auto mx-auto mb-4">
                 <h1 class="text-3xl font-bold mb-2" style="color: #055193;">Admin Portal</h1>
-                <p class="text-gray-600">The Greek Directory</p>
             </div>
             <div class="bg-white rounded-lg shadow-md p-8">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Sign In</h2>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input type="email" id="loginEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;" placeholder="admin@thegreekdirectory.org">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                        <input type="password" id="loginPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;">
-                    </div>
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">GitHub Personal Access Token</label>
                         <input type="password" id="githubToken" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;" placeholder="ghp_...">
-                        <p class="text-xs text-gray-500 mt-1">Required to edit listings. <a href="https://github.com/settings/tokens/new" target="_blank" class="text-blue-600">Create token</a></p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <a href="https://github.com/settings/tokens/new?scopes=repo&description=Greek%20Directory%20Admin" target="_blank" class="text-blue-600">Create token here</a> (needs "repo" permission)
+                        </p>
                     </div>
                     <button id="loginBtn" class="w-full py-3 px-4 rounded-lg text-white font-semibold" style="background-color: #055193;">Sign In</button>
                 </div>
@@ -42,32 +35,24 @@
         </div>
     </div>
 
-    <!-- Admin Dashboard -->
+    <!-- Dashboard -->
     <div id="dashboardPage" class="hidden">
         <header class="bg-white shadow-sm border-b sticky top-0 z-50">
             <div class="px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
-                    <div>
-                        <h1 class="text-xl font-bold" style="color: #055193;">Admin Portal</h1>
-                        <p class="text-xs text-gray-600">Manage Listings</p>
-                    </div>
+                    <h1 class="text-xl font-bold" style="color: #055193;">Admin Portal</h1>
                 </div>
-                <div class="flex items-center gap-4">
-                    <span id="userName" class="text-sm font-medium text-gray-900"></span>
-                    <button id="logoutBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Logout</button>
-                </div>
+                <button id="logoutBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Logout</button>
             </div>
         </header>
 
         <div class="max-w-7xl mx-auto px-4 py-6">
-            <!-- Action Buttons -->
             <div class="mb-6 flex gap-3">
                 <button id="newListingBtn" class="px-4 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">+ New Listing</button>
                 <button id="refreshBtn" class="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">🔄 Refresh</button>
             </div>
 
-            <!-- Listings Table -->
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
@@ -76,7 +61,6 @@
                                 <th class="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
                                 <th class="text-left py-3 px-4 font-semibold text-gray-900">Business Name</th>
                                 <th class="text-left py-3 px-4 font-semibold text-gray-900">Category</th>
-                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Owner</th>
                                 <th class="text-left py-3 px-4 font-semibold text-gray-900">Last Updated</th>
                                 <th class="text-right py-3 px-4 font-semibold text-gray-900">Actions</th>
                             </tr>
@@ -88,7 +72,7 @@
         </div>
     </div>
 
-    <!-- Edit/Create Modal -->
+    <!-- Edit Modal -->
     <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
         <div class="bg-white rounded-lg max-w-4xl w-full my-8">
             <div class="p-6 border-b flex items-center justify-between">
@@ -97,7 +81,6 @@
             </div>
             <div class="p-6 max-h-[70vh] overflow-y-auto">
                 <div class="space-y-6">
-                    <!-- Basic Info -->
                     <div>
                         <h3 class="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -146,7 +129,6 @@
                         </div>
                     </div>
 
-                    <!-- Images -->
                     <div>
                         <h3 class="text-lg font-bold text-gray-900 mb-4">Images</h3>
                         <div class="space-y-4">
@@ -162,45 +144,44 @@ https://example.com/photo2.jpg"></textarea>
                         </div>
                     </div>
 
-                    <!-- Social Media -->
                     <div>
                         <h3 class="text-lg font-bold text-gray-900 mb-4">Social Media</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Facebook (username)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Facebook</label>
                                 <input type="text" id="editFacebook" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Instagram (username)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Instagram</label>
                                 <input type="text" id="editInstagram" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Twitter/X (username)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Twitter/X</label>
                                 <input type="text" id="editTwitter" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">YouTube (username)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">YouTube</label>
                                 <input type="text" id="editYoutube" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">TikTok (username)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">TikTok</label>
                                 <input type="text" id="editTiktok" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn (full URL)</label>
-                                <input type="url" id="editLinkedin" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://linkedin.com/company/...">
+                                <input type="url" id="editLinkedin" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Google Reviews (full URL)</label>
-                                <input type="url" id="editGoogle" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://g.page/...">
+                                <input type="url" id="editGoogle" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Yelp (full URL)</label>
-                                <input type="url" id="editYelp" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://yelp.com/biz/...">
+                                <input type="url" id="editYelp" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">TripAdvisor (full URL)</label>
-                                <input type="url" id="editTripadvisor" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://tripadvisor.com/...">
+                                <input type="url" id="editTripadvisor" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Other (full URL)</label>
@@ -209,9 +190,8 @@ https://example.com/photo2.jpg"></textarea>
                         </div>
                     </div>
 
-                    <!-- Owner Info (Optional) -->
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-4">Owner Information (Optional)</h3>
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Owner Info (Optional - Private)</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -219,7 +199,7 @@ https://example.com/photo2.jpg"></textarea>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">From Greece</label>
-                                <input type="text" id="editOwnerGreece" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Athens, Thessaloniki, etc.">
+                                <input type="text" id="editOwnerGreece" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Athens, Crete, etc.">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email</label>
@@ -235,155 +215,118 @@ https://example.com/photo2.jpg"></textarea>
             </div>
             <div class="p-6 border-t flex justify-end gap-3">
                 <button id="cancelEdit" class="px-6 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">Cancel</button>
-                <button id="saveEdit" class="px-6 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">Save Listing</button>
+                <button id="saveEdit" class="px-6 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">Save</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuration
         const GITHUB_OWNER = 'thegreekdirectory';
         const GITHUB_REPO = 'listings';
         const DATABASE_PATH = 'listings-database.json';
-        const TEMPLATE_PATH = 'listing-template.html';
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbws3eJStgjCU_V_wZZxg9JEAPPKBo8IuJjmhYyhZPr0T3WP51bIe4V3XY9vz8aVoCUw/exec'; // For authentication
 
-        let currentUser = null;
         let githubToken = null;
         let allListings = [];
         let editingListing = null;
+        let databaseSha = null;
 
         // Login
         document.getElementById('loginBtn').addEventListener('click', async () => {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            githubToken = document.getElementById('githubToken').value;
-
-            if (!email || !password || !githubToken) {
-                alert('Please fill in all fields');
+            githubToken = document.getElementById('githubToken').value.trim();
+            if (!githubToken) {
+                alert('Please enter your GitHub token');
                 return;
             }
+            sessionStorage.setItem('githubToken', githubToken);
+            await testToken();
+        });
 
-            // Authenticate with Apps Script
+        async function testToken() {
             try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
+                    headers: { 'Authorization': `token ${githubToken}` }
                 });
-                const data = await response.json();
-
-                if (data.success) {
-                    currentUser = { email: data.email, name: data.name, role: data.role };
-                    sessionStorage.setItem('greekDirectoryUser', JSON.stringify(currentUser));
-                    sessionStorage.setItem('githubToken', githubToken);
+                if (response.ok) {
                     showDashboard();
                     await loadListings();
                 } else {
-                    alert(data.message || 'Invalid credentials');
+                    alert('Invalid token or no access to repository');
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed');
+                alert('Error connecting to GitHub');
             }
-        });
-
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            currentUser = null;
-            githubToken = null;
-            sessionStorage.clear();
-            document.getElementById('loginPage').classList.remove('hidden');
-            document.getElementById('dashboardPage').classList.add('hidden');
-        });
+        }
 
         function showDashboard() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('dashboardPage').classList.remove('hidden');
-            document.getElementById('userName').textContent = currentUser.name;
         }
 
-        // Load listings from GitHub
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            githubToken = null;
+            sessionStorage.clear();
+            location.reload();
+        });
+
         async function loadListings() {
             try {
                 const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
-                    headers: {
-                        'Authorization': `token ${githubToken}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
+                    headers: { 'Authorization': `token ${githubToken}` }
                 });
-
-                if (!response.ok) throw new Error('Failed to load database');
-
                 const data = await response.json();
+                databaseSha = data.sha;
                 const content = JSON.parse(atob(data.content));
                 allListings = content.listings || [];
-                renderListingsTable();
+                renderTable();
             } catch (error) {
-                console.error('Error loading listings:', error);
-                alert('Failed to load listings. Check your GitHub token and repo settings.');
+                alert('Failed to load listings');
             }
         }
 
-        // Render listings table
-        function renderListingsTable() {
+        function renderTable() {
             const tbody = document.getElementById('listingsTableBody');
-            tbody.innerHTML = allListings.map(listing => `
+            tbody.innerHTML = allListings.map(l => `
                 <tr class="border-b hover:bg-gray-50">
                     <td class="py-4 px-4">
                         <label class="inline-flex items-center cursor-pointer">
-                            <input type="checkbox" ${listing.visible ? 'checked' : ''} onchange="toggleVisibility('${listing.id}')" class="w-4 h-4">
-                            <span class="ml-2 text-sm">${listing.visible ? '👁️ Visible' : '🚫 Hidden'}</span>
+                            <input type="checkbox" ${l.visible ? 'checked' : ''} onchange="toggleVisibility('${l.id}')" class="w-4 h-4">
+                            <span class="ml-2 text-sm">${l.visible ? '👁️ Visible' : '🚫 Hidden'}</span>
                         </label>
                     </td>
-                    <td class="py-4 px-4 font-medium text-gray-900">${listing.businessName}</td>
-                    <td class="py-4 px-4 text-gray-600">${listing.category}</td>
-                    <td class="py-4 px-4 text-gray-600">${listing.ownerInfo?.fullName || 'N/A'}</td>
-                    <td class="py-4 px-4 text-gray-600 text-sm">${new Date(listing.metadata.updatedAt).toLocaleDateString()}</td>
+                    <td class="py-4 px-4 font-medium">${l.businessName}</td>
+                    <td class="py-4 px-4 text-gray-600">${l.category}</td>
+                    <td class="py-4 px-4 text-sm text-gray-600">${new Date(l.metadata.updatedAt).toLocaleString()}</td>
                     <td class="py-4 px-4">
-                        <div class="flex items-center justify-end gap-2">
-                            <button onclick="editListing('${listing.id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
-                            <button onclick="viewListing('${listing.slug}')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View</button>
+                        <div class="flex justify-end gap-2">
+                            <button onclick="editListing('${l.id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                            <a href="/listings/${l.slug}.html" target="_blank" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View</a>
                         </div>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // Toggle visibility
         window.toggleVisibility = async function(id) {
             const listing = allListings.find(l => l.id === id);
-            if (listing) {
-                listing.visible = !listing.visible;
-                listing.metadata.updatedAt = new Date().toISOString();
-                await saveDatabase('Updated visibility');
-            }
+            listing.visible = !listing.visible;
+            listing.metadata.updatedAt = new Date().toISOString();
+            await saveDatabase();
         };
 
-        // New listing
         document.getElementById('newListingBtn').addEventListener('click', () => {
             editingListing = null;
             document.getElementById('modalTitle').textContent = 'New Listing';
-            clearEditForm();
+            clearForm();
             document.getElementById('editModal').classList.remove('hidden');
         });
 
-        // Edit listing
         window.editListing = function(id) {
             editingListing = allListings.find(l => l.id === id);
-            if (!editingListing) return;
-
             document.getElementById('modalTitle').textContent = 'Edit Listing';
-            fillEditForm(editingListing);
+            fillForm(editingListing);
             document.getElementById('editModal').classList.remove('hidden');
         };
 
-        // View listing
-        window.viewListing = function(slug) {
-            window.open(`/listings/${slug}.html`, '_blank');
-        };
-
-        // Close modal
         document.getElementById('closeModal').addEventListener('click', () => {
             document.getElementById('editModal').classList.add('hidden');
         });
@@ -391,92 +334,83 @@ https://example.com/photo2.jpg"></textarea>
             document.getElementById('editModal').classList.add('hidden');
         });
 
-        // Save listing
         document.getElementById('saveEdit').addEventListener('click', async () => {
             const listing = getFormData();
             if (!listing) return;
 
             if (editingListing) {
-                // Update existing
                 const index = allListings.findIndex(l => l.id === editingListing.id);
                 listing.id = editingListing.id;
+                listing.slug = editingListing.slug;
                 listing.metadata = editingListing.metadata;
                 listing.metadata.updatedAt = new Date().toISOString();
                 allListings[index] = listing;
             } else {
-                // Create new
                 listing.id = generateSlug(listing.businessName);
                 listing.slug = listing.id;
                 listing.visible = true;
                 listing.metadata = {
                     createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    createdBy: currentUser.email
+                    updatedAt: new Date().toISOString()
                 };
                 allListings.push(listing);
             }
 
-            await saveDatabase(editingListing ? 'Updated listing' : 'Created new listing');
-            await generateListingPage(listing);
+            await saveDatabase();
             document.getElementById('editModal').classList.add('hidden');
-            renderListingsTable();
+            renderTable();
         });
 
-        // Refresh
         document.getElementById('refreshBtn').addEventListener('click', loadListings);
 
-        // Helper functions
         function generateSlug(name) {
             return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         }
 
-        function clearEditForm() {
-            document.querySelectorAll('#editModal input, #editModal textarea, #editModal select').forEach(el => el.value = '');
+        function clearForm() {
+            document.querySelectorAll('#editModal input, #editModal textarea, #editModal select').forEach(el => {
+                if (el.type === 'checkbox') el.checked = false;
+                else el.value = '';
+            });
         }
 
-        function fillEditForm(listing) {
-            document.getElementById('editBusinessName').value = listing.businessName;
-            document.getElementById('editDescription').value = listing.description;
-            document.getElementById('editCategory').value = listing.category;
-            document.getElementById('editPhone').value = listing.phone;
-            document.getElementById('editAddress').value = listing.address;
-            document.getElementById('editEmail').value = listing.email || '';
-            document.getElementById('editWebsite').value = listing.website || '';
-            document.getElementById('editHours').value = listing.hours || '';
-            document.getElementById('editLogo').value = listing.logo;
-            document.getElementById('editPhotos').value = (listing.photos || []).join('\n');
+        function fillForm(l) {
+            document.getElementById('editBusinessName').value = l.businessName;
+            document.getElementById('editDescription').value = l.description;
+            document.getElementById('editCategory').value = l.category;
+            document.getElementById('editPhone').value = l.phone;
+            document.getElementById('editAddress').value = l.address;
+            document.getElementById('editEmail').value = l.email || '';
+            document.getElementById('editWebsite').value = l.website || '';
+            document.getElementById('editHours').value = l.hours || '';
+            document.getElementById('editLogo').value = l.logo;
+            document.getElementById('editPhotos').value = (l.photos || []).join('\n');
 
-            const social = listing.socialMedia || {};
-            document.getElementById('editFacebook').value = social.facebook || '';
-            document.getElementById('editInstagram').value = social.instagram || '';
-            document.getElementById('editTwitter').value = social.twitter || '';
-            document.getElementById('editYoutube').value = social.youtube || '';
-            document.getElementById('editTiktok').value = social.tiktok || '';
-            document.getElementById('editLinkedin').value = social.linkedin || '';
-            document.getElementById('editGoogle').value = social.google || '';
-            document.getElementById('editYelp').value = social.yelp || '';
-            document.getElementById('editTripadvisor').value = social.tripadvisor || '';
-            document.getElementById('editOther').value = social.other || '';
+            const s = l.socialMedia || {};
+            document.getElementById('editFacebook').value = s.facebook || '';
+            document.getElementById('editInstagram').value = s.instagram || '';
+            document.getElementById('editTwitter').value = s.twitter || '';
+            document.getElementById('editYoutube').value = s.youtube || '';
+            document.getElementById('editTiktok').value = s.tiktok || '';
+            document.getElementById('editLinkedin').value = s.linkedin || '';
+            document.getElementById('editGoogle').value = s.google || '';
+            document.getElementById('editYelp').value = s.yelp || '';
+            document.getElementById('editTripadvisor').value = s.tripadvisor || '';
+            document.getElementById('editOther').value = s.other || '';
 
-            const owner = listing.ownerInfo || {};
-            document.getElementById('editOwnerName').value = owner.fullName || '';
-            document.getElementById('editOwnerGreece').value = owner.fromGreece || '';
-            document.getElementById('editOwnerEmail').value = owner.ownerEmail || '';
-            document.getElementById('editOwnerPhone').value = owner.ownerPhone || '';
+            const o = l.ownerInfo || {};
+            document.getElementById('editOwnerName').value = o.fullName || '';
+            document.getElementById('editOwnerGreece').value = o.fromGreece || '';
+            document.getElementById('editOwnerEmail').value = o.ownerEmail || '';
+            document.getElementById('editOwnerPhone').value = o.ownerPhone || '';
         }
 
         function getFormData() {
-            const businessName = document.getElementById('editBusinessName').value.trim();
-            if (!businessName) {
-                alert('Business name is required');
-                return null;
-            }
-
-            const photos = document.getElementById('editPhotos').value.split('\n').filter(p => p.trim());
+            const name = document.getElementById('editBusinessName').value.trim();
+            if (!name) { alert('Business name required'); return null; }
 
             return {
-                slug: generateSlug(businessName),
-                businessName,
+                businessName: name,
                 description: document.getElementById('editDescription').value,
                 category: document.getElementById('editCategory').value,
                 phone: document.getElementById('editPhone').value,
@@ -485,7 +419,7 @@ https://example.com/photo2.jpg"></textarea>
                 website: document.getElementById('editWebsite').value || null,
                 hours: document.getElementById('editHours').value || null,
                 logo: document.getElementById('editLogo').value,
-                photos: photos,
+                photos: document.getElementById('editPhotos').value.split('\n').filter(p => p.trim()),
                 socialMedia: {
                     facebook: document.getElementById('editFacebook').value || null,
                     instagram: document.getElementById('editInstagram').value || null,
@@ -507,57 +441,41 @@ https://example.com/photo2.jpg"></textarea>
             };
         }
 
-        async function saveDatabase(commitMessage) {
+        async function saveDatabase() {
             try {
-                // Get current file SHA
-                const fileResponse = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
-                    headers: {
-                        'Authorization': `token ${githubToken}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-                const fileData = await fileResponse.json();
-
-                // Update file
                 const content = btoa(JSON.stringify({ listings: allListings }, null, 2));
                 const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${githubToken}`,
-                        'Accept': 'application/vnd.github.v3+json',
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: commitMessage,
+                        message: 'Update listings',
                         content: content,
-                        sha: fileData.sha
+                        sha: databaseSha
                     })
                 });
 
-                if (!response.ok) throw new Error('Failed to save');
-                alert('Saved successfully!');
+                if (response.ok) {
+                    const data = await response.json();
+                    databaseSha = data.content.sha;
+                    alert('Saved!');
+                } else {
+                    alert('Failed to save');
+                }
             } catch (error) {
-                console.error('Error saving:', error);
-                alert('Failed to save. Check console for details.');
+                alert('Error saving');
             }
         }
 
-        async function generateListingPage(listing) {
-            // This will generate the individual listing HTML page
-            // Implementation will create a new file in /listings/ folder
-            console.log('Generating page for:', listing.slug);
-            // Note: Actual page generation will be added in the template file
-        }
-
-        // Auto-login if session exists
+        // Auto-login
         window.addEventListener('DOMContentLoaded', () => {
-            const storedUser = sessionStorage.getItem('greekDirectoryUser');
-            const storedToken = sessionStorage.getItem('githubToken');
-            if (storedUser && storedToken) {
-                currentUser = JSON.parse(storedUser);
-                githubToken = storedToken;
-                showDashboard();
-                loadListings();
+            const stored = sessionStorage.getItem('githubToken');
+            if (stored) {
+                githubToken = stored;
+                document.getElementById('githubToken').value = stored;
+                testToken();
             }
         });
     </script>
