@@ -82,6 +82,43 @@
         "createdBy": "admin@thegreekdirectory.org"
       },
       "visible": true
+    },
+    {
+      "businessName": "Hellenic American Academy",
+      "description": "1",
+      "category": "Greek School/Cultural Center",
+      "phone": "(847) 317-1063",
+      "address": "445 Pine St., Deerfield IL 60015",
+      "email": "info@haamail.net",
+      "website": "hellenicamericanacademy.org",
+      "hours": null,
+      "logo": "",
+      "photos": [],
+      "socialMedia": {
+        "facebook": "hellenicamericanacademy",
+        "instagram": "hellenicamericanacademy",
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other": null
+      },
+      "ownerInfo": {
+        "fullName": "Paul Louis",
+        "fromGreece": null,
+        "ownerEmail": "plouis@haamail.net",
+        "ownerPhone": null
+      },
+      "id": "hellenic-american-academy",
+      "slug": "hellenic-american-academy",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2025-12-31T07:22:03.186Z",
+        "updatedAt": "2025-12-31T07:22:03.186Z"
+      }
     }
   ]
 }
