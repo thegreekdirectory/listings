@@ -42,14 +42,11 @@
       }
     },
     {
-      "id": "st-nicholas-church",
-      "slug": "st-nicholas-church",
-      "visible": true,
       "businessName": "St. Nicholas Greek Orthodox Church",
       "description": "A welcoming parish serving the Greek Orthodox community with liturgy, fellowship, and cultural programs.",
       "category": "Church/Religious Organization",
-      "address": "456 Church Ave, Chicago, IL 60614",
       "phone": "(312) 555-0456",
+      "address": "456 Church Ave, Chicago, IL 60614",
       "email": "office@stnicholaschicago.org",
       "website": "https://stnicholaschicago.org",
       "hours": "Sunday Liturgy: 9:30am",
@@ -60,7 +57,15 @@
       ],
       "socialMedia": {
         "facebook": "stnicholaschicago",
-        "youtube": "stnicholaschicago"
+        "instagram": null,
+        "twitter": null,
+        "youtube": "stnicholaschicago",
+        "tiktok": null,
+        "linkedin": null,
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other": null
       },
       "ownerInfo": {
         "fullName": "Father Dimitri Kostopoulos",
@@ -68,9 +73,11 @@
         "ownerEmail": "father@stnicholaschicago.org",
         "ownerPhone": "(312) 555-0457"
       },
+      "id": "st-nicholas-church",
+      "slug": "st-nicholas-church",
       "metadata": {
         "createdAt": "2025-01-14T09:00:00Z",
-        "updatedAt": "2025-01-14T09:00:00Z",
+        "updatedAt": "2025-12-31T05:35:46.998Z",
         "createdBy": "admin@thegreekdirectory.org"
       }
     }
