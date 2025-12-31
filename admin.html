@@ -308,7 +308,8 @@ https://example.com/photo2.jpg"></textarea>
             const listing = allListings.find(l => l.id === id);
             listing.visible = !listing.visible;
             listing.metadata.updatedAt = new Date().toISOString();
-            await saveDatabase();
+            await saveDatabase(true);
+            renderTable();
         };
 
         document.getElementById('newListingBtn').addEventListener('click', () => {
@@ -354,7 +355,7 @@ https://example.com/photo2.jpg"></textarea>
                 allListings.push(listing);
             }
 
-            await saveDatabase();
+            await saveDatabase(false);
             document.getElementById('editModal').classList.add('hidden');
             renderTable();
         });
@@ -439,7 +440,7 @@ https://example.com/photo2.jpg"></textarea>
             };
         }
 
-        async function saveDatabase() {
+        async function saveDatabase(silent = false) {
             try {
                 const content = btoa(JSON.stringify({ listings: allListings }, null, 2));
                 const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
@@ -458,7 +459,9 @@ https://example.com/photo2.jpg"></textarea>
                 if (response.ok) {
                     const data = await response.json();
                     databaseSha = data.content.sha;
-                    alert('Saved!');
+                    if (!silent) {
+                        alert('Saved!');
+                    }
                 } else {
                     alert('Failed to save');
                 }
