@@ -16,6 +16,7 @@
         #map { width: 100%; height: 400px; }
         .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
         .badge-open { background: #10b981; color: white; }
+        .badge-closed { background: #ef4444; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
     </style>
 </head>
@@ -152,6 +153,14 @@
                 const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
                 const data = await response.json();
                 allListings = data.listings.filter(l => l.visible !== false);
+                
+                // Geocode addresses that don't have coordinates
+                for (let listing of allListings) {
+                    if (!listing.coordinates) {
+                        await geocodeListing(listing);
+                    }
+                }
+                
                 filteredListings = [...allListings];
                 applyFilters();
                 updateResultsCount();
@@ -160,6 +169,29 @@
                 document.getElementById('listingsContainer').innerHTML = 
                     '<p class="text-center text-gray-600 py-12">Error loading listings. Please try again.</p>';
             }
+        }
+
+        async function geocodeListing(listing) {
+            const fullAddress = getFullAddress(listing);
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    listing.coordinates = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                }
+            } catch (e) {
+                console.error('Geocoding failed for', listing.businessName);
+            }
+        }
+
+        function getFullAddress(listing) {
+            if (listing.city && listing.state) {
+                return `${listing.address}, ${listing.city}, ${listing.state} ${listing.zipCode || ''}`.trim();
+            }
+            return listing.address;
         }
 
         function setupEventListeners() {
@@ -220,9 +252,13 @@
 
         function isOpenNow(hours) {
             if (!hours || typeof hours !== 'object') return false;
+            
+            // Get current time in Central Time (Chicago)
             const now = new Date();
+            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            
             const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-            const today = days[now.getDay()];
+            const today = days[centralTime.getDay()];
             const todayHours = hours[today];
             
             if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
@@ -239,7 +275,7 @@
             if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
             if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
             
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
             const startMinutes = start * 60 + parseInt(startMin);
             const endMinutes = end * 60 + parseInt(endMin);
             
@@ -252,11 +288,12 @@
             selectedRadius = document.getElementById('radiusFilter').value;
             
             filteredListings = allListings.filter(listing => {
+                const fullAddress = getFullAddress(listing);
                 const matchesSearch = !searchTerm || 
                     listing.businessName.toLowerCase().includes(searchTerm) ||
                     (listing.tagline && listing.tagline.toLowerCase().includes(searchTerm)) ||
                     listing.description.toLowerCase().includes(searchTerm) ||
-                    listing.address.toLowerCase().includes(searchTerm);
+                    fullAddress.toLowerCase().includes(searchTerm);
                 const matchesCategory = selectedCategory === 'All' || listing.category === selectedCategory;
                 
                 let matchesRadius = true;
@@ -271,20 +308,14 @@
                 return matchesSearch && matchesCategory && matchesRadius;
             });
             
-            // Optimized sorting
             filteredListings.sort((a, b) => {
                 if (sortOption === 'default') {
-                    // Featured first
                     if (a.featured !== b.featured) return b.featured ? 1 : -1;
-                    
-                    // Then open places (only if user location is available)
                     if (userLocation) {
                         const aOpen = a.hours ? isOpenNow(a.hours) : false;
                         const bOpen = b.hours ? isOpenNow(b.hours) : false;
                         if (aOpen !== bOpen) return bOpen ? 1 : -1;
                     }
-                    
-                    // Then alphabetical
                     return a.businessName.localeCompare(b.businessName);
                 } else if (sortOption === 'open-az') {
                     const aOpen = a.hours ? isOpenNow(a.hours) : false;
@@ -308,7 +339,7 @@
             const container = document.getElementById('mapContainer');
             container.classList.toggle('hidden');
             if (!container.classList.contains('hidden') && !map) {
-                map = L.map('map').setView([41.8781, -87.6298], 11);
+                map = L.map('map').setView([41.8781, -87.6298], 10);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap contributors'
                 }).addTo(map);
@@ -320,12 +351,17 @@
                             <div style="min-width:200px;">
                                 <h3 style="margin:0 0 8px 0;font-weight:bold;color:#055193;">${listing.businessName}</h3>
                                 <p style="margin:0 0 4px 0;font-size:12px;color:#666;">${listing.category}</p>
-                                <p style="margin:0;font-size:12px;">${listing.address}</p>
+                                <p style="margin:0;font-size:12px;">${getFullAddress(listing)}</p>
                                 <a href="/listings/${listing.slug}" style="display:inline-block;margin-top:8px;padding:4px 8px;background:#055193;color:white;text-decoration:none;border-radius:4px;font-size:12px;">View</a>
                             </div>
                         `);
                     }
                 });
+                
+                if (filteredListings.length > 0 && filteredListings[0].coordinates) {
+                    const bounds = L.latLngBounds(filteredListings.filter(l => l.coordinates).map(l => [l.coordinates.lat, l.coordinates.lng]));
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
             }
         }
 
@@ -352,10 +388,13 @@
                 container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
                 container.innerHTML = filteredListings.map(l => {
                     const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : 'https://via.placeholder.com/800x400/055193/FFFFFF?text=No+Photo';
-                    const isOpen = l.hours ? isOpenNow(l.hours) : false;
+                    const fullAddress = getFullAddress(l);
                     const badges = [];
                     if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (isOpen) badges.push('<span class="badge badge-open">Open</span>');
+                    if (l.hours) {
+                        const isOpen = isOpenNow(l.hours);
+                        badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    }
                     
                     return `
                         <a href="/listings/${l.slug}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block">
@@ -375,7 +414,7 @@
                                 <div class="text-sm text-gray-600 space-y-1">
                                     <div class="flex items-center gap-2">
                                         <span>📍</span>
-                                        <span class="truncate">${l.address}</span>
+                                        <span class="truncate">${fullAddress}</span>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <span>📞</span>
@@ -389,15 +428,17 @@
             } else {
                 container.className = 'space-y-4';
                 container.innerHTML = filteredListings.map(l => {
-                    const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
-                    const isOpen = l.hours ? isOpenNow(l.hours) : false;
+                    const fullAddress = getFullAddress(l);
                     const badges = [];
                     if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (isOpen) badges.push('<span class="badge badge-open">Open</span>');
+                    if (l.hours) {
+                        const isOpen = isOpenNow(l.hours);
+                        badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    }
                     
                     return `
                         <a href="/listings/${l.slug}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block">
-                            <img src="${firstPhoto}" alt="${l.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
+                            <img src="${l.logo}" alt="${l.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
                             <div class="flex-1 min-w-0 overflow-hidden">
                                 <div class="flex gap-2 mb-2 flex-wrap">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
@@ -408,7 +449,7 @@
                                 <div class="flex flex-col gap-1 text-sm text-gray-600">
                                     <div class="flex items-center gap-1">
                                         <span>📍</span>
-                                        <span class="truncate">${l.address}</span>
+                                        <span class="truncate">${fullAddress}</span>
                                     </div>
                                     <div class="flex items-center gap-1">
                                         <span>📞</span>
