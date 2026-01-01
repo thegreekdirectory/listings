@@ -126,7 +126,6 @@
       },
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/hellenic-american-academy/logo/logo.png",
       "photos": [
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/hellenic-american-academy/photos/photo-1.png",
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/hellenic-american-academy/photos/photo-2.png",
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/hellenic-american-academy/photos/photo-3.png",
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/hellenic-american-academy/photos/photo-4.png",
@@ -136,9 +135,8 @@
       "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-01T04:02:08.511Z",
-        "updatedAt": "2026-01-01T10:27:41.659Z"
-      },
-      "visible": true
+        "updatedAt": "2026-01-01T10:31:15.961Z"
+      }
     },
     {
       "businessName": "Eagle Restaurant",
