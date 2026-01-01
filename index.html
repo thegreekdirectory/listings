@@ -152,35 +152,13 @@
                 const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
                 const data = await response.json();
                 allListings = data.listings.filter(l => l.visible !== false);
-                
-                for (let listing of allListings) {
-                    if (listing.address && !listing.coordinates) {
-                        await geocodeListing(listing);
-                    }
-                }
-                
-                filteredListings = allListings;
-                renderListings();
+                filteredListings = [...allListings];
+                applyFilters();
                 updateResultsCount();
             } catch (error) {
                 console.error('Error loading listings:', error);
                 document.getElementById('listingsContainer').innerHTML = 
                     '<p class="text-center text-gray-600 py-12">Error loading listings. Please try again.</p>';
-            }
-        }
-
-        async function geocodeListing(listing) {
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(listing.address)}`);
-                const data = await response.json();
-                if (data && data.length > 0) {
-                    listing.coordinates = {
-                        lat: parseFloat(data[0].lat),
-                        lng: parseFloat(data[0].lon)
-                    };
-                }
-            } catch (e) {
-                console.error('Geocoding failed for', listing.businessName);
             }
         }
 
@@ -293,18 +271,24 @@
                 return matchesSearch && matchesCategory && matchesRadius;
             });
             
+            // Optimized sorting
             filteredListings.sort((a, b) => {
                 if (sortOption === 'default') {
+                    // Featured first
                     if (a.featured !== b.featured) return b.featured ? 1 : -1;
+                    
+                    // Then open places (only if user location is available)
                     if (userLocation) {
-                        const aOpen = isOpenNow(a.hours);
-                        const bOpen = isOpenNow(b.hours);
+                        const aOpen = a.hours ? isOpenNow(a.hours) : false;
+                        const bOpen = b.hours ? isOpenNow(b.hours) : false;
                         if (aOpen !== bOpen) return bOpen ? 1 : -1;
                     }
+                    
+                    // Then alphabetical
                     return a.businessName.localeCompare(b.businessName);
                 } else if (sortOption === 'open-az') {
-                    const aOpen = isOpenNow(a.hours);
-                    const bOpen = isOpenNow(b.hours);
+                    const aOpen = a.hours ? isOpenNow(a.hours) : false;
+                    const bOpen = b.hours ? isOpenNow(b.hours) : false;
                     if (aOpen !== bOpen) return bOpen ? 1 : -1;
                     return a.businessName.localeCompare(b.businessName);
                 } else {
@@ -337,7 +321,7 @@
                                 <h3 style="margin:0 0 8px 0;font-weight:bold;color:#055193;">${listing.businessName}</h3>
                                 <p style="margin:0 0 4px 0;font-size:12px;color:#666;">${listing.category}</p>
                                 <p style="margin:0;font-size:12px;">${listing.address}</p>
-                                <a href="/${listing.slug}" style="display:inline-block;margin-top:8px;padding:4px 8px;background:#055193;color:white;text-decoration:none;border-radius:4px;font-size:12px;">View</a>
+                                <a href="/listings/${listing.slug}" style="display:inline-block;margin-top:8px;padding:4px 8px;background:#055193;color:white;text-decoration:none;border-radius:4px;font-size:12px;">View</a>
                             </div>
                         `);
                     }
@@ -368,13 +352,13 @@
                 container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
                 container.innerHTML = filteredListings.map(l => {
                     const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : 'https://via.placeholder.com/800x400/055193/FFFFFF?text=No+Photo';
-                    const isOpen = isOpenNow(l.hours);
+                    const isOpen = l.hours ? isOpenNow(l.hours) : false;
                     const badges = [];
                     if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (isOpen && l.hours) badges.push('<span class="badge badge-open">Open</span>');
+                    if (isOpen) badges.push('<span class="badge badge-open">Open</span>');
                     
                     return `
-                        <a href="/${l.slug}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden block">
+                        <a href="/listings/${l.slug}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block">
                             <div class="h-48 bg-gray-200 relative">
                                 <img src="${firstPhoto}" alt="${l.businessName}" class="w-full h-full object-cover">
                                 ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2">${badges.join('')}</div>` : ''}
@@ -406,20 +390,20 @@
                 container.className = 'space-y-4';
                 container.innerHTML = filteredListings.map(l => {
                     const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
-                    const isOpen = isOpenNow(l.hours);
+                    const isOpen = l.hours ? isOpenNow(l.hours) : false;
                     const badges = [];
                     if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (isOpen && l.hours) badges.push('<span class="badge badge-open">Open</span>');
+                    if (isOpen) badges.push('<span class="badge badge-open">Open</span>');
                     
                     return `
-                        <a href="/${l.slug}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 flex gap-4 block">
+                        <a href="/listings/${l.slug}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block">
                             <img src="${firstPhoto}" alt="${l.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
-                            <div class="flex-1 min-w-0">
+                            <div class="flex-1 min-w-0 overflow-hidden">
                                 <div class="flex gap-2 mb-2 flex-wrap">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
                                     ${badges.join('')}
                                 </div>
-                                <h3 class="text-lg font-bold text-gray-900 mb-1 break-words">${l.businessName}</h3>
+                                <h3 class="text-lg font-bold text-gray-900 mb-1 truncate">${l.businessName}</h3>
                                 <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                                 <div class="flex flex-col gap-1 text-sm text-gray-600">
                                     <div class="flex items-center gap-1">
@@ -428,7 +412,7 @@
                                     </div>
                                     <div class="flex items-center gap-1">
                                         <span>📞</span>
-                                        <span class="break-all">${l.phone}</span>
+                                        <span class="truncate">${l.phone}</span>
                                     </div>
                                 </div>
                             </div>
