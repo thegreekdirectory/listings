@@ -183,20 +183,18 @@
       },
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/logo/logo.png",
       "photos": [
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-1.webp",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-1.png",
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-2.webp",
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-3.webp",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-4.png",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-5.webp",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-6.png"
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-4.webp",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-5.png",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-6.webp"
       ],
       "id": "eagle-restaurant",
       "slug": "eagle-restaurant",
-      "visible": true,
-      "featured": false,
       "metadata": {
         "createdAt": "2026-01-01T07:33:33.249Z",
-        "updatedAt": "2026-01-01T07:33:33.249Z"
+        "updatedAt": "2026-01-01T07:42:34.297Z"
       }
     }
   ]
