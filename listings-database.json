@@ -135,9 +135,10 @@
       "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-01T04:02:08.511Z",
-        "updatedAt": "2026-01-01T18:35:47.176Z"
+        "updatedAt": "2026-01-01T22:26:43.191Z"
       },
-      "visible": true
+      "visible": true,
+      "featured": true
     },
     {
       "businessName": "Eagle Restaurant",
