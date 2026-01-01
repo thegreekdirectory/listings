@@ -197,6 +197,55 @@
       },
       "visible": true,
       "featured": false
+    },
+    {
+      "businessName": "Test Business",
+      "tagline": "Test Tagline",
+      "description": "",
+      "category": "",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "state": "",
+      "zipCode": "",
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null
+      },
+      "id": "test-business",
+      "slug": "test-business",
+      "visible": true,
+      "featured": false,
+      "metadata": {
+        "createdAt": "2026-01-01T23:14:06.507Z",
+        "updatedAt": "2026-01-01T23:14:06.507Z"
+      }
     }
   ]
 }
