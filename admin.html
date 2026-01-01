@@ -71,6 +71,20 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 class="text-2xl font-bold text-red-600 mb-4">Delete Listing</h2>
+            <p class="text-gray-700 mb-4">Are you sure you want to delete <strong id="deleteBusinessName"></strong>?</p>
+            <p class="text-gray-700 mb-4">Type <strong>DELETE</strong> to confirm:</p>
+            <input type="text" id="deleteConfirmInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4" placeholder="Type DELETE">
+            <div class="flex gap-3">
+                <button id="cancelDelete" class="flex-1 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">Cancel</button>
+                <button id="confirmDelete" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium">Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+
     <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
         <div class="bg-white rounded-lg max-w-4xl w-full my-8">
             <div class="p-6 border-b flex items-center justify-between">
@@ -87,9 +101,9 @@
                                 <input type="text" id="editBusinessName" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (max 150 chars) *</label>
-                                <input type="text" id="editTagline" maxlength="150" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
-                                <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">0</span>/150 characters</p>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (max 75 chars) *</label>
+                                <input type="text" id="editTagline" maxlength="75" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
+                                <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">0</span>/75 characters</p>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
@@ -331,6 +345,7 @@
         let editingListing = null;
         let databaseSha = null;
         let uploadedImages = { logo: null, photos: [] };
+        let deletingListingId = null;
 
         document.getElementById('loginBtn').addEventListener('click', async () => {
             githubToken = document.getElementById('githubToken').value.trim();
@@ -407,6 +422,7 @@
                         <div class="flex justify-end gap-2">
                             <button onclick="editListing('${l.id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
                             <a href="/listings/${l.slug}" target="_blank" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View</a>
+                            <button onclick="showDeleteModal('${l.id}')" class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
                         </div>
                     </td>
                 </tr>
@@ -426,6 +442,36 @@
             listing.metadata.updatedAt = new Date().toISOString();
             await saveDatabase(true);
         };
+
+        window.showDeleteModal = function(id) {
+            deletingListingId = id;
+            const listing = allListings.find(l => l.id === id);
+            document.getElementById('deleteBusinessName').textContent = listing.businessName;
+            document.getElementById('deleteConfirmInput').value = '';
+            document.getElementById('deleteModal').classList.remove('hidden');
+        };
+
+        document.getElementById('cancelDelete').addEventListener('click', () => {
+            document.getElementById('deleteModal').classList.add('hidden');
+            deletingListingId = null;
+        });
+
+        document.getElementById('confirmDelete').addEventListener('click', async () => {
+            const input = document.getElementById('deleteConfirmInput').value;
+            if (input !== 'DELETE') {
+                alert('You must type DELETE to confirm');
+                return;
+            }
+
+            const index = allListings.findIndex(l => l.id === deletingListingId);
+            if (index > -1) {
+                allListings.splice(index, 1);
+                await saveDatabase(false);
+                document.getElementById('deleteModal').classList.add('hidden');
+                deletingListingId = null;
+                alert('Listing deleted successfully');
+            }
+        });
 
         document.getElementById('newListingBtn').addEventListener('click', () => {
             editingListing = null;
@@ -542,6 +588,7 @@
             }
 
             await saveDatabase(false);
+            await generateListingPage(listing);
             
             document.getElementById('editModal').classList.add('hidden');
             uploadedImages = { logo: null, photos: [] };
@@ -733,14 +780,124 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const stored = sessionStorage.getItem('githubToken');
-            if (stored) {
-                githubToken = stored;
-                document.getElementById('githubToken').value = stored;
-                testToken();
+async function generateListingPage(listing) {
+    try {
+        const templateResponse = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/listing-template.html`);
+        let template = await templateResponse.text();
+
+        // City/State formatting
+        const majorCities = ['chicago', 'new york', 'los angeles', 'san francisco', 'boston', 'philadelphia', 'miami', 'atlanta', 'seattle', 'portland', 'denver'];
+        const chicagoSuburbs = ['evanston', 'skokie', 'oak park', 'naperville', 'schaumburg', 'arlington heights', 'deerfield'];
+        const city = listing.city.toLowerCase();
+        const needsState = !majorCities.includes(city) && !chicagoSuburbs.includes(city);
+        const cityState = needsState ? ` - ${listing.city}, ${listing.state}` : ` - ${listing.city}`;
+        const inCity = listing.city ? ` in ${listing.city}` : '';
+
+        // Photo carousel
+        let carouselHTML = '';
+        let carouselControls = '';
+        if (listing.photos && listing.photos.length > 0) {
+            carouselHTML = listing.photos.map(p => `<div class="carousel-slide"><img src="${p}" alt="${listing.businessName}" class="w-full h-full object-cover"></div>`).join('');
+            if (listing.photos.length > 1) {
+                const dots = listing.photos.map((_, i) => `<div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>`).join('');
+                carouselControls = `<div class="carousel-nav carousel-prev" onclick="prevSlide()">‹</div><div class="carousel-nav carousel-next" onclick="nextSlide()">›</div><div class="carousel-dots">${dots}</div>`;
             }
+        } else {
+            carouselHTML = `<div class="carousel-slide"><img src="${listing.logo}" alt="${listing.businessName}" class="w-full h-full object-cover"></div>`;
+        }
+
+        // Social media section
+        let socialHTML = '';
+        if (listing.socialMedia) {
+            const icons = [];
+            const s = listing.socialMedia;
+            if (s.facebook) icons.push(`<a href="https://www.facebook.com/${s.facebook}" target="_blank" class="social-icon social-facebook" title="Facebook">📘</a>`);
+            if (s.instagram) icons.push(`<a href="https://www.instagram.com/${s.instagram}" target="_blank" class="social-icon social-instagram" title="Instagram">📷</a>`);
+            if (s.twitter) icons.push(`<a href="https://twitter.com/${s.twitter}" target="_blank" class="social-icon social-twitter" title="X">🐦</a>`);
+            if (s.youtube) icons.push(`<a href="https://www.youtube.com/@${s.youtube}" target="_blank" class="social-icon social-youtube" title="YouTube">📺</a>`);
+            if (s.tiktok) icons.push(`<a href="https://www.tiktok.com/@${s.tiktok}" target="_blank" class="social-icon social-tiktok" title="TikTok">🎵</a>`);
+            if (icons.length > 0) {
+                socialHTML = `<div><h2 class="text-xl font-bold text-gray-900 mb-3">Follow Us</h2><div class="flex flex-wrap gap-2">${icons.join('')}</div></div>`;
+            }
+        }
+
+        // Hours section
+        let hoursHTML = '';
+        if (listing.hours) {
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const hoursLines = days.map(day => {
+                const h = listing.hours[day.toLowerCase()];
+                return h ? `<div class="flex justify-between"><span class="font-medium">${day}:</span><span>${h}</span></div>` : '';
+            }).filter(Boolean).join('');
+            hoursHTML = `<div class="flex items-start gap-3"><span class="mt-1">🕒</span><div class="flex-1"><p class="font-semibold text-gray-900">Hours</p><div class="space-y-1">${hoursLines}</div><div class="hours-disclaimer">Hours not fully confirmed. Please check social media, website, or call to verify.</div></div></div>`;
+        }
+
+        // Map section
+        let mapHTML = '';
+        if (listing.coordinates) {
+            mapHTML = `<div class="bg-white rounded-lg p-4 mb-6 card-shadow"><div id="listingMap"></div></div>`;
+        }
+
+        // Replace all placeholders
+        template = template
+            .replace(/{{BUSINESS_NAME}}/g, listing.businessName)
+            .replace(/{{CITY_STATE}}/g, cityState)
+            .replace(/{{IN_CITY}}/g, inCity)
+            .replace(/{{TAGLINE}}/g, listing.tagline || listing.description.substring(0, 75))
+            .replace(/{{TAGLINE_DISPLAY}}/g, listing.tagline ? `<p class="text-lg text-gray-600 italic">"${listing.tagline}"</p>` : '')
+            .replace(/{{DESCRIPTION}}/g, listing.description)
+            .replace(/{{CATEGORY}}/g, listing.category)
+            .replace(/{{ADDRESS}}/g, listing.address)
+            .replace(/{{PHONE}}/g, listing.phone)
+            .replace(/{{LOGO}}/g, listing.logo)
+            .replace(/{{SLUG}}/g, listing.slug)
+            .replace(/{{ADDRESS_ENCODED}}/g, encodeURIComponent(listing.address))
+            .replace(/{{BUSINESS_NAME_ENCODED}}/g, encodeURIComponent(listing.businessName))
+            .replace(/{{LISTING_URL}}/g, `https://thegreekdirectory.org/listings/${listing.slug}`)
+            .replace(/{{PHOTOS_SLIDES}}/g, carouselHTML)
+            .replace(/{{CAROUSEL_CONTROLS}}/g, carouselControls)
+            .replace(/{{TOTAL_PHOTOS}}/g, listing.photos ? listing.photos.length : 1)
+            .replace(/{{EMAIL_SECTION}}/g, listing.email ? `<div class="flex items-start gap-3"><span class="mt-1">📧</span><div><p class="font-semibold text-gray-900">Email</p><a href="mailto:${listing.email}" class="text-blue-600 hover:underline">${listing.email}</a></div></div>` : '')
+            .replace(/{{WEBSITE_SECTION}}/g, listing.website ? `<div class="flex items-start gap-3"><span class="mt-1">🌐</span><div><p class="font-semibold text-gray-900">Website</p><a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline break-all">${listing.website}</a></div></div>` : '')
+            .replace(/{{HOURS_SECTION}}/g, hoursHTML)
+            .replace(/{{EMAIL_BUTTON}}/g, listing.email ? `<a href="mailto:${listing.email}" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>📧</span><span>Email</span></a>` : '')
+            .replace(/{{WEBSITE_BUTTON}}/g, listing.website ? `<a href="${listing.website}" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>🌐</span><span>Visit Website</span></a>` : '')
+            .replace(/{{SOCIAL_MEDIA_SECTION}}/g, socialHTML)
+            .replace(/{{MAP_SECTION}}/g, mapHTML)
+            .replace(/{{COORDINATES}}/g, listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '')
+            .replace(/{{OWNER_INFO_SECTION}}/g, '');
+
+        // Upload the HTML file
+        let fileSha = null;
+        try {
+            const existingFile = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/listings/${listing.slug}.html`, {
+                headers: { 'Authorization': `token ${githubToken}` }
+            });
+            if (existingFile.ok) {
+                const existingData = await existingFile.json();
+                fileSha = existingData.sha;
+            }
+        } catch (e) {}
+
+        const htmlContent = btoa(unescape(encodeURIComponent(template)));
+        await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/listings/${listing.slug}.html`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${githubToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Generate listing page for ${listing.businessName}`,
+                content: htmlContent,
+                ...(fileSha && { sha: fileSha })
+            })
         });
+
+        console.log('Listing page generated successfully!');
+    } catch (error) {
+        console.error('Error generating listing page:', error);
+    }
+}
     </script>
 </body>
 </html>
