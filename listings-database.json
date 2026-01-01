@@ -141,58 +141,6 @@
         "createdAt": "2026-01-01T04:02:08.511Z",
         "updatedAt": "2026-01-01T04:02:08.511Z"
       }
-    },
-    {
-      "businessName": "Hellenic American Academy",
-      "tagline": "Private dual-language day school, PreK-8th. Center for Greek language & culture, PreK-Adult. Midwest region examination center for Ellinomatheia.",
-      "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy’s problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\n\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
-      "category": "Greek School/Cultural Center",
-      "phone": "(847) 317-1063",
-      "address": "445 Pine St.",
-      "city": "Deerfield",
-      "state": "IL",
-      "zipCode": "60015",
-      "email": "info@haamail.net",
-      "website": "https://www.hellenicamericanacademy.org",
-      "hours": {
-        "monday": "8:00 AM - 5:30 PM",
-        "tuesday": "8:00 AM - 5:30 PM",
-        "wednesday": "8:00 AM - 5:30 PM",
-        "thursday": "8:00 AM - 5:30 PM",
-        "friday": "8:00 AM - 5:30 PM",
-        "saturday": "9:00 AM - 1:00 PM",
-        "sunday": "Closed"
-      },
-      "socialMedia": {
-        "facebook": "hellenicamericanacademy",
-        "instagram": "hellenicamericanacademy",
-        "twitter": null,
-        "youtube": "hellenicamericanacademy",
-        "tiktok": null,
-        "linkedin": "https://www.linkedin.com/company/hellenicamericanacademy.org",
-        "google": null,
-        "yelp": null,
-        "tripadvisor": null,
-        "other": null
-      },
-      "ownerInfo": {
-        "fullName": "Paul Louis",
-        "fromGreece": null,
-        "ownerEmail": "plouis@haamail.net",
-        "ownerPhone": null
-      },
-      "photos": [
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/hellenic-american-academy/photos/photo-1.png",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/hellenic-american-academy/photos/photo-2.png"
-      ],
-      "id": "hellenic-american-academy",
-      "slug": "hellenic-american-academy",
-      "visible": true,
-      "featured": false,
-      "metadata": {
-        "createdAt": "2026-01-01T04:02:10.972Z",
-        "updatedAt": "2026-01-01T04:02:10.972Z"
-      }
     }
   ]
 }
