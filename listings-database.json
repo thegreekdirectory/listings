@@ -201,13 +201,13 @@
     {
       "businessName": "Test Business",
       "tagline": "Test Tagline",
-      "description": "",
-      "category": "",
-      "phone": "",
-      "address": "",
-      "city": "",
-      "state": "",
-      "zipCode": "",
+      "description": "Testing\n\n\nDescription",
+      "category": "Other",
+      "phone": "(224) 222-2222",
+      "address": "123 Harlem Ave.",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
       "country": "USA",
       "email": null,
       "website": null,
@@ -238,13 +238,16 @@
         "ownerEmail": null,
         "ownerPhone": null
       },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/logo/logo.png",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-1.png",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-2.png"
+      ],
       "id": "test-business",
       "slug": "test-business",
-      "visible": true,
-      "featured": false,
       "metadata": {
         "createdAt": "2026-01-01T23:14:07.078Z",
-        "updatedAt": "2026-01-01T23:14:07.078Z"
+        "updatedAt": "2026-01-01T23:28:00.786Z"
       }
     }
   ]
