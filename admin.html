@@ -586,66 +586,70 @@
             renderPhotosPreview();
         };
 
-        document.getElementById('saveEdit').addEventListener('click', async () => {
-            const listing = await getFormData();
-            if (!listing) return;
+document.getElementById('saveEdit').addEventListener('click', async () => {
+    const listing = await getFormData();
+    if (!listing) return;
 
-            const slug = editingListing ? editingListing.slug : generateSlug(listing.businessName);
+    const slug = editingListing ? editingListing.slug : generateSlug(listing.businessName);
+    const country = listing.country || 'USA';
+    const state = listing.state;
 
-            if (uploadedImages.logo) {
-                document.getElementById('logoProgress').style.display = 'block';
-                document.getElementById('logoProgress').textContent = 'Uploading logo...';
-                const logoPath = await uploadImage(uploadedImages.logo, slug, 'logo/logo');
-                if (logoPath) listing.logo = logoPath;
-                document.getElementById('logoProgress').style.display = 'none';
-            } else if (editingListing) {
-                listing.logo = editingListing.logo;
-            }
+    // Upload logo with country and state
+    if (uploadedImages.logo) {
+        document.getElementById('logoProgress').style.display = 'block';
+        document.getElementById('logoProgress').textContent = 'Uploading logo...';
+        const logoPath = await uploadImage(uploadedImages.logo, slug, 'logo/logo', country, state);
+        if (logoPath) listing.logo = logoPath;
+        document.getElementById('logoProgress').style.display = 'none';
+    } else if (editingListing) {
+        listing.logo = editingListing.logo;
+    }
 
-            if (uploadedImages.photos.length > 0) {
-                document.getElementById('photosProgress').style.display = 'block';
-                const photoPaths = [];
-                for (let i = 0; i < uploadedImages.photos.length; i++) {
-                    if (uploadedImages.photos[i].existing) {
-                        photoPaths.push(uploadedImages.photos[i].url);
-                    } else {
-                        document.getElementById('photosProgress').textContent = `Uploading photo ${i + 1} of ${uploadedImages.photos.length}...`;
-                        const photoPath = await uploadImage(uploadedImages.photos[i], slug, `photos/photo-${i + 1}`);
-                        if (photoPath) photoPaths.push(photoPath);
-                    }
-                }
-                listing.photos = photoPaths;
-                document.getElementById('photosProgress').style.display = 'none';
-            } else if (editingListing && editingListing.photos) {
-                listing.photos = editingListing.photos;
-            }
-
-            if (editingListing) {
-                const index = allListings.findIndex(l => l.id === editingListing.id);
-                listing.id = editingListing.id;
-                listing.slug = editingListing.slug;
-                listing.metadata = editingListing.metadata;
-                listing.metadata.updatedAt = new Date().toISOString();
-                allListings[index] = listing;
+    // Upload photos with country and state
+    if (uploadedImages.photos.length > 0) {
+        document.getElementById('photosProgress').style.display = 'block';
+        const photoPaths = [];
+        for (let i = 0; i < uploadedImages.photos.length; i++) {
+            if (uploadedImages.photos[i].existing) {
+                photoPaths.push(uploadedImages.photos[i].url);
             } else {
-                listing.id = slug;
-                listing.slug = slug;
-                listing.visible = true;
-                listing.featured = false;
-                listing.metadata = {
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                allListings.push(listing);
+                document.getElementById('photosProgress').textContent = `Uploading photo ${i + 1} of ${uploadedImages.photos.length}...`;
+                const photoPath = await uploadImage(uploadedImages.photos[i], slug, `photos/photo-${i + 1}`, country, state);
+                if (photoPath) photoPaths.push(photoPath);
             }
+        }
+        listing.photos = photoPaths;
+        document.getElementById('photosProgress').style.display = 'none';
+    } else if (editingListing && editingListing.photos) {
+        listing.photos = editingListing.photos;
+    }
 
-            await saveDatabase(false);
-            await generateListingPage(listing);
-            
-            document.getElementById('editModal').classList.add('hidden');
-            uploadedImages = { logo: null, photos: [] };
-            renderTable();
-        });
+    if (editingListing) {
+        const index = allListings.findIndex(l => l.id === editingListing.id);
+        listing.id = editingListing.id;
+        listing.slug = editingListing.slug;
+        listing.metadata = editingListing.metadata;
+        listing.metadata.updatedAt = new Date().toISOString();
+        allListings[index] = listing;
+    } else {
+        listing.id = slug;
+        listing.slug = slug;
+        listing.visible = true;
+        listing.featured = false;
+        listing.metadata = {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        allListings.push(listing);
+    }
+
+    await saveDatabase(false);
+    await generateListingPage(listing);
+    
+    document.getElementById('editModal').classList.add('hidden');
+    uploadedImages = { logo: null, photos: [] };
+    renderTable();
+});
 
         document.getElementById('refreshBtn').addEventListener('click', loadListings);
 
@@ -843,6 +847,8 @@ async function uploadImage(imageObj, slug, filename, country, state) {
 
 // This is the complete generateListingPage function to replace in the admin portal
 
+// COMPLETE ADMIN PORTAL SCRIPT - Replace entire generateListingPage function with this:
+
 async function generateListingPage(listing) {
     try {
         const templateResponse = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/listing-template.html`);
@@ -859,7 +865,7 @@ async function generateListingPage(listing) {
         const cityState = listing.city ? (needsState ? ` - ${listing.city}, ${listing.state}` : ` - ${listing.city}`) : '';
         const inCity = listing.city ? ` in ${listing.city}` : '';
 
-        // Photo carousel - photos are already in correct order from drag-and-drop
+        // Photo carousel - use ordered photos
         let carouselHTML = '';
         let carouselControls = '';
         if (listing.photos && listing.photos.length > 0) {
@@ -872,11 +878,9 @@ async function generateListingPage(listing) {
             carouselHTML = `<div class="carousel-slide"><img src="${listing.logo}" alt="${listing.businessName}" class="w-full h-full object-cover"></div>`;
         }
 
-        // Status badges - featured badge + open/closed badge (calculated client-side)
+        // Status badges
         let statusBadges = '';
-        if (listing.featured) {
-            statusBadges += '<span class="badge badge-featured">Featured</span>';
-        }
+        if (listing.featured) statusBadges += '<span class="badge badge-featured">Featured</span>';
         statusBadges += '<span class="badge" id="openClosedBadge"></span>';
 
         // Social media section
@@ -894,11 +898,11 @@ async function generateListingPage(listing) {
             if (s.other) icons.push(`<a href="${s.other}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="Website"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></a>`);
             
             if (icons.length > 0) {
-                socialHTML = `<div class="mb-6"><h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2><div class="flex flex-wrap gap-2">${icons.join('')}</div></div>`;
+                socialHTML = `<div><h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2><div class="flex flex-wrap gap-2">${icons.join('')}</div></div>`;
             }
         }
 
-        // Review links section (separate from social media)
+        // Review links section
         let reviewHTML = '';
         if (listing.socialMedia) {
             const reviewIcons = [];
@@ -909,15 +913,13 @@ async function generateListingPage(listing) {
             if (s.tripadvisor) reviewIcons.push(`<a href="${s.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.006 4.295c-2.67 0-5.338.784-7.618 2.353H0l2.689 2.689c-1.78 2.039-2.860 4.713-2.860 7.652 0 6.342 5.149 11.49 11.491 11.49S22.81 23.33 22.81 16.989c0-2.939-1.080-5.613-2.860-7.652l2.689-2.689h-4.388c-2.28-1.569-4.948-2.353-7.618-2.353h-.627zM12 6.255c1.002 0 1.984.095 2.936.276L12 9.467 9.064 6.531c.952-.181 1.934-.276 2.936-.276zm-6.24 2.731a9.933 9.933 0 0 0-3.289 3.368 9.958 9.958 0 0 0-1.179 4.635c0 5.532 4.488 10.02 10.02 10.02s10.02-4.488 10.02-10.02a9.958 9.958 0 0 0-1.179-4.635 9.933 9.933 0 0 0-3.289-3.368L12 13.795l-6.24-4.809zm.24 2.003c1.784 0 3.545.681 4.908 2.042 2.727 2.727 2.727 7.089 0 9.816-2.727 2.727-7.089 2.727-9.816 0-2.727-2.727-2.727-7.089 0-9.816C2.455 11.670 4.216 10.989 6 10.989zm12 0c1.784 0 3.545.681 4.908 2.042 2.727 2.727 2.727 7.089 0 9.816-2.727 2.727-7.089 2.727-9.816 0-2.727-2.727-2.727-7.089 0-9.816C14.455 11.670 16.216 10.989 18 10.989zM6 12.735c-1.178 0-2.327.467-3.168 1.308-1.682 1.682-1.682 4.375 0 6.057 1.682 1.682 4.375 1.682 6.057 0 1.682-1.682 1.682-4.375 0-6.057C8.048 13.202 6.899 12.735 6 12.735zm12 0c-1.178 0-2.327.467-3.168 1.308-1.682 1.682-1.682 4.375 0 6.057 1.682 1.682 4.375 1.682 6.057 0 1.682-1.682 1.682-4.375 0-6.057-.841-.841-1.990-1.308-3.168-1.308zM6 14.501c.555 0 1.108.214 1.531.637.846.846.846 2.186 0 3.032-.846.846-2.186.846-3.032 0-.846-.846-.846-2.186 0-3.032.423-.423.976-.637 1.531-.637h-.03zm12 0c.555 0 1.108.214 1.531.637.846.846.846 2.186 0 3.032-.846.846-2.186.846-3.032 0-.846-.846-.846-2.186 0-3.032.423-.423.976-.637 1.531-.637h-.03z"/></svg></a>`);
             
             if (reviewIcons.length > 0) {
-                reviewHTML = `<div class="mb-6"><h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2><div class="flex flex-wrap gap-2">${reviewIcons.join('')}</div></div>`;
+                reviewHTML = `<div><h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2><div class="flex flex-wrap gap-2">${reviewIcons.join('')}</div></div>`;
             }
         }
 
-        // Hours section with new disclaimer
+        // Hours section
         let hoursHTML = '';
-        let hoursJSON = 'null';
         if (listing.hours) {
-            hoursJSON = JSON.stringify(listing.hours);
             const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             const hoursLines = days.map(day => {
                 const h = listing.hours[day.toLowerCase()];
@@ -934,18 +936,18 @@ async function generateListingPage(listing) {
 
         // Generate comprehensive keywords
         const categoryKeywords = {
-            'Restaurant/Bakery': 'restaurant, bakery, food, dining, eatery, cafe, bistro, tavern, greek food, greek restaurant, mediterranean food, mediterranean restaurant, greek cuisine, authentic greek food, traditional greek restaurant',
-            'Church/Religious Organization': 'church, orthodox, religious, parish, worship, greek orthodox church, christian church, religious organization, orthodox christian, greek orthodox parish, eastern orthodox',
-            'Greek School/Cultural Center': 'school, education, cultural center, greek school, language school, community center, cultural organization, greek language, hellenic education, greek culture, cultural programs',
-            'Grocery/Imports': 'grocery, market, store, imports, food store, greek grocery, mediterranean market, specialty foods, ethnic grocery, greek products, imported foods, international market',
-            'Event Services': 'events, catering, planning, services, event planning, party services, celebration services, event coordinator, party planning, celebrations',
-            'Retail': 'retail, store, shop, shopping, boutique, merchant, retail store, shopping center',
-            'Real Estate': 'real estate, property, realtor, housing, homes, realty, property management, real estate agent, real estate services',
-            'Legal/Financial': 'legal, financial, law, attorney, lawyer, accountant, financial services, legal services, legal counsel, financial advisor, accounting services',
-            'Other': 'business, service, company, professional, professional services'
+            'Restaurant/Bakery': 'restaurant, bakery, food, dining, eatery, cafe, bistro, tavern, greek food, greek restaurant, mediterranean food',
+            'Church/Religious Organization': 'church, orthodox, religious, parish, worship, greek orthodox church, christian church, religious organization',
+            'Greek School/Cultural Center': 'school, education, cultural center, greek school, language school, community center, cultural organization',
+            'Grocery/Imports': 'grocery, market, store, imports, food store, greek grocery, mediterranean market, specialty foods',
+            'Event Services': 'events, catering, planning, services, event planning, party services, celebration services',
+            'Retail': 'retail, store, shop, shopping, boutique, merchant',
+            'Real Estate': 'real estate, property, realtor, housing, homes, realty, property management',
+            'Legal/Financial': 'legal, financial, law, attorney, lawyer, accountant, financial services, legal services',
+            'Other': 'business, service, company, professional'
         };
 
-        const keywords = `greek, greek american, greek-american, greek americans, greek-americans, directory, greek directory, the greek directory, greek american directory, the greek american directory, local greek, local greeks, hellenic, hellenic american, hellenic-american, hellenic americans, hellenic-americans, hellenic directory, hellenic-american directory, hellenic american directory, local hellenic, ${listing.businessName}, ${listing.category}, ${categoryKeywords[listing.category] || listing.category}, ${listing.city}, ${listing.state}, ${listing.zipCode}, ${listing.country}, ${fullAddress}, ${listing.phone}, ${listing.website || ''}, ${listing.tagline || ''}`;
+        const keywords = `greek, greek american, greek-american, greek americans, greek-americans, directory, greek directory, the greek directory, greek american directory, the greek american directory, local greek, local greeks, hellenic, hellenic american, hellenic-american, hellenic americans, hellenic-americans, hellenic directory, hellenic-american directory, hellenic american directory, local hellenic, ${listing.businessName}, ${listing.category}, ${categoryKeywords[listing.category] || listing.category}, ${listing.city}, ${listing.state}, ${listing.zipCode}, ${listing.country}, ${fullAddress}, ${listing.phone}, ${listing.website || ''}`;
 
         const country = (listing.country || 'USA').toLowerCase();
         const state = listing.state.toLowerCase();
@@ -976,14 +978,13 @@ async function generateListingPage(listing) {
             .replace(/{{CAROUSEL_CONTROLS}}/g, carouselControls)
             .replace(/{{TOTAL_PHOTOS}}/g, listing.photos ? listing.photos.length : 1)
             .replace(/{{STATUS_BADGES}}/g, statusBadges)
-            .replace(/{{HOURS_JSON}}/g, hoursJSON)
             .replace(/{{EMAIL_SECTION}}/g, listing.email ? `<div class="flex items-start gap-3"><span class="mt-1">📧</span><div><p class="font-semibold text-gray-900">Email</p><a href="mailto:${listing.email}" class="text-blue-600 hover:underline">${listing.email}</a></div></div>` : '')
             .replace(/{{WEBSITE_SECTION}}/g, listing.website ? `<div class="flex items-start gap-3"><span class="mt-1">🌐</span><div><p class="font-semibold text-gray-900">Website</p><a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline break-all">${listing.website}</a></div></div>` : '')
             .replace(/{{HOURS_SECTION}}/g, hoursHTML)
             .replace(/{{EMAIL_BUTTON}}/g, listing.email ? `<a href="mailto:${listing.email}" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>📧</span><span>Email</span></a>` : '')
             .replace(/{{WEBSITE_BUTTON}}/g, listing.website ? `<a href="${listing.website}" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>🌐</span><span>Visit Website</span></a>` : '')
-            .replace(/{{SOCIAL_MEDIA_SECTION}}/g, socialHTML)
             .replace(/{{REVIEW_SECTION}}/g, reviewHTML)
+            .replace(/{{SOCIAL_MEDIA_SECTION}}/g, socialHTML)
             .replace(/{{MAP_SECTION}}/g, mapHTML)
             .replace(/{{COORDINATES}}/g, listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '')
             .replace(/{{OWNER_INFO_SECTION}}/g, '');
@@ -1020,15 +1021,6 @@ async function generateListingPage(listing) {
         console.error('Error generating listing page:', error);
     }
 }
-
-// Update the saveEdit button click handler to pass country and state to uploadImage:
-// In your admin portal, find the saveEdit click handler and update the uploadImage calls:
-
-// For logo:
-const logoPath = await uploadImage(uploadedImages.logo, slug, 'logo/logo', listing.country || 'USA', listing.state);
-
-// For photos:
-const photoPath = await uploadImage(uploadedImages.photos[i], slug, `photos/photo-${i + 1}`, listing.country || 'USA', listing.state);
 
 // Add at end of script
 if (sessionStorage.getItem('githubToken')) {
