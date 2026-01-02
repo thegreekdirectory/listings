@@ -145,10 +145,10 @@
       "id": "eagle-restaurant",
       "slug": "eagle-restaurant",
       "visible": true,
-      "featured": true,
+      "featured": false,
       "metadata": {
         "createdAt": "2026-01-02T10:17:35.028Z",
-        "updatedAt": "2026-01-02T10:37:21.769Z"
+        "updatedAt": "2026-01-02T10:39:19.482Z"
       }
     }
   ]
