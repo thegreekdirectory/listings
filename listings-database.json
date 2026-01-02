@@ -117,7 +117,7 @@
         "google": "https://www.google.com/search?sca_esv=50ca057078add2eb&sxsrf=AE3TifNznGTkHuc5FTdfCTOUucp4oKXg7w:1767335193619&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8s73B0CjFloNrBSOE9oJJqp6p9xSDvoA7W1X3bTmbN01_5owvmdFRHO_BxehkIh-_HhBIbw-Yuyovq_O-iTvGH1RZP723&q=Eagle+Restaurant+Reviews",
         "yelp": "https://www.yelp.com/biz/eagle-restaurant-downers-grove",
         "tripadvisor": "https://www.tripadvisor.com/Restaurant_Review-g35904-d427213-Reviews-Eagle_Restaurant-Downers_Grove_DuPage_County_Illinois.html",
-        "other": "https://www.test.com/1"
+        "other": null
       },
       "ownerInfo": {
         "fullName": "John Zografos",
@@ -139,9 +139,8 @@
       "slug": "eagle-restaurant",
       "metadata": {
         "createdAt": "2026-01-02T04:34:34.612Z",
-        "updatedAt": "2026-01-02T07:44:14.542Z"
-      },
-      "visible": true
+        "updatedAt": "2026-01-02T07:46:28.663Z"
+      }
     }
   ]
 }
