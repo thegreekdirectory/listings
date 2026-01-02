@@ -79,11 +79,11 @@
       "slug": "st-nicholas-church",
       "metadata": {
         "createdAt": "2025-01-14T09:00:00Z",
-        "updatedAt": "2026-01-02T04:23:25.135Z",
+        "updatedAt": "2026-01-02T10:15:27.030Z",
         "createdBy": "admin@thegreekdirectory.org"
       },
       "visible": true,
-      "featured": true
+      "featured": false
     }
   ]
 }
