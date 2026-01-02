@@ -118,7 +118,7 @@
                 </a>
                 {{EMAIL_BUTTON}}
                 {{WEBSITE_BUTTON}}
-                <a href="https://www.google.com/maps/search/?api=1&query={{FULL_ADDRESS_ENCODED}}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">
+                <a href="https://www.google.com/maps/place/{{MAPS_ADDRESS}}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">
                     <span>📍</span>
                     <span>Directions</span>
                 </a>
@@ -128,7 +128,7 @@
 
             {{REVIEW_SECTION}}
 
-            <div class="mb-6">
+            <div>
                 <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                 <div class="flex flex-wrap gap-2">
                     <a href="https://www.facebook.com/sharer/sharer.php?u={{LISTING_URL}}" target="_blank" rel="noopener noreferrer" class="share-button social-facebook" title="Share on Facebook">
@@ -148,6 +148,8 @@
         </div>
 
         {{MAP_SECTION}}
+
+        {{CLAIM_BUTTON}}
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -204,6 +206,7 @@
         if (totalSlides > 1) {
             function goToSlide(index) {
                 const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
                 const track = carousel.querySelector('.carousel-track');
                 const dots = carousel.querySelectorAll('.carousel-dot');
                 
@@ -216,17 +219,25 @@
 
             function nextSlide() {
                 const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
                 const current = parseInt(carousel.dataset.current || 0);
                 goToSlide((current + 1) % totalSlides);
             }
 
             function prevSlide() {
                 const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
                 const current = parseInt(carousel.dataset.current || 0);
                 goToSlide((current - 1 + totalSlides) % totalSlides);
             }
 
+            // Auto-advance carousel
             setInterval(nextSlide, 5000);
+            
+            // Make functions globally accessible
+            window.goToSlide = goToSlide;
+            window.nextSlide = nextSlide;
+            window.prevSlide = prevSlide;
         }
 
         function shareNative() {
@@ -234,25 +245,41 @@
                 navigator.share({
                     title: businessName + ' | The Greek Directory',
                     text: 'Check out ' + businessName + ' on The Greek Directory!',
-                    url: listingUrl
-                }).catch(err => console.log('Share cancelled'));
+                    url: window.location.href
+                }).catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.log('Share failed:', err);
+                    }
+                });
             } else {
-                alert('Sharing not supported on this browser');
+                // Fallback - copy to clipboard
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('Link copied to clipboard!');
+                }).catch(() => {
+                    alert('Unable to share. Please copy the URL from your browser.');
+                });
             }
         }
 
+        // Initialize map if coordinates exist
         const coordinates = '{{COORDINATES}}';
         if (coordinates && coordinates !== '') {
-            const [lat, lng] = coordinates.split(',').map(parseFloat);
-            const map = L.map('listingMap').setView([lat, lng], 16);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            L.marker([lat, lng]).addTo(map)
-                .bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}')
-                .openPopup();
+            setTimeout(() => {
+                const [lat, lng] = coordinates.split(',').map(parseFloat);
+                const mapElement = document.getElementById('listingMap');
+                if (mapElement) {
+                    const map = L.map('listingMap').setView([lat, lng], 16);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}')
+                        .openPopup();
+                }
+            }, 100);
         }
         
+        // Update badge on load and every minute
         updateOpenClosedBadge();
         setInterval(updateOpenClosedBadge, 60000);
     </script>
