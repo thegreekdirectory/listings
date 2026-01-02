@@ -149,6 +149,62 @@
         "updatedAt": "2026-01-02T20:42:59.869Z"
       },
       "visible": true
+    },
+    {
+      "businessName": "Lekas Auto Construction",
+      "tagline": "Auto body shop offering repairs and installations, including mirrors.",
+      "description": "",
+      "category": "Automotive & Transportation",
+      "phone": "(847) 657-8181",
+      "address": "3148 W Lake Ave. #F",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60026",
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": "Lekas-Auto-Construction-100042247874611",
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "http://google.com/search?sca_esv=cea07bd29ebaa7bd&hl=en-US&sxsrf=AE3TifM6iZPOouxWa2eAQhmPzBKmPlZEkw:1767386762400&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8s2mHO8pwZpp11OP5qdZ-LdW1aj_mBYxLU5POfOOl_wHaceO80qLg9koObBor6ZUlN-TFdBiodS1J5Ey66kQPVgkxHtX7&q=Lekas+Auto+Ltd+Reviews",
+        "yelp": "https://www.yelp.com/biz/lekas-auto-construction-glenview",
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "Mark Lekas",
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null
+      },
+      "id": "lekas-auto-construction",
+      "slug": "lekas-auto-construction",
+      "visible": true,
+      "featured": false,
+      "metadata": {
+        "createdAt": "2026-01-02T20:47:47.804Z",
+        "updatedAt": "2026-01-02T20:47:47.804Z"
+      }
     }
   ]
 }
