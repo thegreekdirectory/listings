@@ -86,7 +86,7 @@
       "featured": true
     },
     {
-      "businessName": "Hellenic American Academy",
+      "businessName": "Eagle Restaurant",
       "tagline": "Family-owned dining staple in Downers Grove since 1981. Where we treat our customers like family.",
       "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\n\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\n\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
       "category": "Restaurant/Bakery",
@@ -144,11 +144,9 @@
       ],
       "id": "hellenic-american-academy",
       "slug": "hellenic-american-academy",
-      "visible": true,
-      "featured": false,
       "metadata": {
         "createdAt": "2026-01-02T10:06:30.088Z",
-        "updatedAt": "2026-01-02T10:06:30.088Z"
+        "updatedAt": "2026-01-02T10:06:47.114Z"
       }
     }
   ]
