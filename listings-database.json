@@ -240,16 +240,15 @@
       },
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/logo/logo.png",
       "photos": [
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-1.png",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-2.png"
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-2.png",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-1.png"
       ],
       "id": "test-business",
       "slug": "test-business",
       "metadata": {
         "createdAt": "2026-01-01T23:14:07.078Z",
-        "updatedAt": "2026-01-01T23:28:05.662Z"
-      },
-      "visible": true
+        "updatedAt": "2026-01-02T03:53:02.179Z"
+      }
     }
   ]
 }
