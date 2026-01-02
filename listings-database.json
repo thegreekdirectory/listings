@@ -142,63 +142,6 @@
       "featured": false
     },
     {
-      "businessName": "Eagle Restaurant",
-      "tagline": "Serving fresh, delicious food in a relaxed family environment.",
-      "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\n\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\n\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
-      "category": "Restaurant/Bakery",
-      "phone": "(630) 963-9161",
-      "address": "406 Maple Ave.",
-      "city": "Downers Grove",
-      "state": "IL",
-      "zipCode": "60515",
-      "email": "eagledownersgrove@gmail.com",
-      "website": "https://eagledg.com",
-      "hours": {
-        "monday": "Closed",
-        "tuesday": "10:30 AM - 8:00 PM",
-        "wednesday": "10:30 AM - 8:00 PM",
-        "thursday": "10:30 AM - 8:00 PM",
-        "friday": "10:30 AM - 8:00 PM",
-        "saturday": "10:30 AM - 8:00 PM",
-        "sunday": "11:00 AM - 8:00 PM"
-      },
-      "socialMedia": {
-        "facebook": "EagleRestaurant",
-        "instagram": "eagle_downers_grove",
-        "twitter": null,
-        "youtube": null,
-        "tiktok": null,
-        "linkedin": null,
-        "google": null,
-        "yelp": "https://www.yelp.com/biz/eagle-restaurant-downers-grove",
-        "tripadvisor": "https://www.tripadvisor.com/Restaurant_Review-g35904-d427213-Reviews-Eagle_Restaurant-Downers_Grove_DuPage_County_Illinois.html",
-        "other": null
-      },
-      "ownerInfo": {
-        "fullName": "John Zografos",
-        "fromGreece": "Xios",
-        "ownerEmail": "jzografo@gmail.com",
-        "ownerPhone": "(630) 712-5050"
-      },
-      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/logo/logo.png",
-      "photos": [
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-1.png",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-2.webp",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-3.webp",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-4.webp",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-5.png",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/eagle-restaurant/photos/photo-6.webp"
-      ],
-      "id": "eagle-restaurant",
-      "slug": "eagle-restaurant",
-      "metadata": {
-        "createdAt": "2026-01-01T07:33:33.249Z",
-        "updatedAt": "2026-01-01T22:28:42.071Z"
-      },
-      "visible": true,
-      "featured": false
-    },
-    {
       "businessName": "Test Business",
       "tagline": "Test Tagline",
       "description": "Testing\n\n\nDescription",
