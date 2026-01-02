@@ -190,8 +190,9 @@
       "slug": "test-business",
       "metadata": {
         "createdAt": "2026-01-01T23:14:07.078Z",
-        "updatedAt": "2026-01-02T03:53:02.179Z"
-      }
+        "updatedAt": "2026-01-02T04:06:29.283Z"
+      },
+      "visible": true
     }
   ]
 }
