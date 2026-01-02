@@ -190,21 +190,29 @@
                 const data = await response.json();
                 allListings = data.listings.filter(l => l.visible !== false);
                 
-                for (let listing of allListings) {
-                    if (!listing.coordinates) {
-                        await geocodeListing(listing);
-                    }
-                }
-                
                 filteredListings = [...allListings];
                 populateCountryFilter();
                 updateLocationSubtitle();
                 applyFilters();
                 updateResultsCount();
+                
+                // Geocode addresses in background without blocking
+                setTimeout(() => {
+                    geocodeAllListings();
+                }, 100);
             } catch (error) {
                 console.error('Error loading listings:', error);
                 document.getElementById('listingsContainer').innerHTML = 
                     '<p class="text-center text-gray-600 py-12">Error loading listings. Please try again.</p>';
+            }
+        }
+
+        async function geocodeAllListings() {
+            for (let listing of allListings) {
+                if (!listing.coordinates) {
+                    await geocodeListing(listing);
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Rate limit
+                }
             }
         }
 
@@ -515,6 +523,9 @@
                     const fullAddress = getFullAddress(l);
                     const country = (l.country || 'USA').toLowerCase();
                     const state = (l.state || '').toLowerCase();
+                    const listingUrl = country === 'usa' ? 
+                        `/listings/${country}/${state}/${l.slug}` : 
+                        `/listings/${country}/${l.slug}`;
                     const badges = [];
                     if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
                     if (l.hours) {
@@ -523,7 +534,7 @@
                     }
                     
                     return `
-                        <a href="/listings/${country}/${state}/${l.slug}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block">
+                        <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block">
                             <div class="h-48 bg-gray-200 relative">
                                 <img src="${firstPhoto}" alt="${l.businessName}" class="w-full h-full object-cover">
                                 ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2">${badges.join('')}</div>` : ''}
@@ -557,6 +568,9 @@
                     const fullAddress = getFullAddress(l);
                     const country = (l.country || 'USA').toLowerCase();
                     const state = (l.state || '').toLowerCase();
+                    const listingUrl = country === 'usa' ? 
+                        `/listings/${country}/${state}/${l.slug}` : 
+                        `/listings/${country}/${l.slug}`;
                     const badges = [];
                     if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
                     if (l.hours) {
@@ -565,7 +579,7 @@
                     }
                     
                     return `
-                        <a href="/listings/${country}/${state}/${l.slug}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block">
+                        <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block">
                             <img src="${l.logo}" alt="${l.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
                             <div class="flex-1 min-w-0 overflow-hidden">
                                 <div class="flex gap-2 mb-2 flex-wrap">
