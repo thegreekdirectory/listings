@@ -146,8 +146,9 @@
       "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-02T10:06:30.088Z",
-        "updatedAt": "2026-01-02T10:06:47.114Z"
-      }
+        "updatedAt": "2026-01-02T10:06:51.323Z"
+      },
+      "visible": true
     }
   ]
 }
