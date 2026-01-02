@@ -209,57 +209,55 @@
     {
       "businessName": "Test Business",
       "tagline": "Test Tagline",
-      "description": "",
-      "category": "",
-      "phone": "",
-      "address": "",
-      "city": "",
-      "state": "",
-      "zipCode": "",
+      "description": "test desc",
+      "category": "Cultural Organization",
+      "phone": "(224) 222-2222",
+      "address": "123 Harlem Ave.",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60026",
       "country": "USA",
-      "email": null,
-      "website": null,
+      "email": "ex@example.com",
+      "website": "https://www.example.com",
       "hours": {
-        "monday": null,
-        "tuesday": null,
-        "wednesday": null,
-        "thursday": null,
-        "friday": null,
-        "saturday": null,
-        "sunday": null
+        "monday": "Closed",
+        "tuesday": "8:00 AM - 5:30 PM",
+        "wednesday": "8:00 AM - 5:30 PM",
+        "thursday": "8:00 AM - 5:30 PM",
+        "friday": "10:30 AM - 8:00 PM",
+        "saturday": "9:00 AM - 1:00 PM",
+        "sunday": "Closed"
       },
       "socialMedia": {
-        "facebook": null,
-        "instagram": null,
-        "twitter": null,
-        "youtube": null,
-        "tiktok": null,
-        "linkedin": null,
-        "other1": null,
+        "facebook": "a",
+        "instagram": "a",
+        "twitter": "a",
+        "youtube": "a",
+        "tiktok": "a",
+        "linkedin": "https://www.linkedin.com/company/ex",
+        "other1": "https://test.com/es",
         "other2": null,
         "other3": null
       },
       "reviews": {
-        "google": null,
-        "yelp": null,
-        "tripadvisor": null,
-        "other1": null,
+        "google": "https://g.page/test",
+        "yelp": "https://www.yelp.com/biz/test",
+        "tripadvisor": "https://www.tripadvisor.com/test",
+        "other1": "https://othertest.com/s",
         "other2": null,
         "other3": null
       },
       "ownerInfo": {
-        "fullName": null,
+        "fullName": "Proto Deutero",
         "fromGreece": null,
         "ownerEmail": null,
         "ownerPhone": null
       },
       "id": "test-business",
       "slug": "test-business",
-      "visible": true,
-      "featured": false,
       "metadata": {
         "createdAt": "2026-01-02T22:17:28.147Z",
-        "updatedAt": "2026-01-02T22:17:28.147Z"
+        "updatedAt": "2026-01-02T22:19:43.676Z"
       }
     }
   ]
