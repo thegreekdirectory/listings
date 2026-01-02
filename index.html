@@ -18,6 +18,67 @@
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
+        .custom-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #055193;
+            overflow: hidden;
+            background: white;
+            cursor: pointer;
+        }
+        .custom-marker img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .map-popup {
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 280px;
+        }
+        .map-popup-hero {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+        }
+        .map-popup-content {
+            padding: 12px;
+        }
+        .map-popup-badges {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .map-popup-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #055193;
+            margin-bottom: 4px;
+            text-decoration: none;
+            display: block;
+        }
+        .map-popup-title:hover {
+            text-decoration: underline;
+        }
+        .map-popup-tagline {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .map-popup-info {
+            font-size: 12px;
+            color: #444;
+            line-height: 1.6;
+        }
+        .leaflet-popup-close-button {
+            font-size: 24px !important;
+            color: #333 !important;
+            padding: 4px 8px !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -119,16 +180,17 @@
         const CATEGORIES = [
             'Automotive & Transportation',
             'Beauty & Health',
-            'Church',
-            'Cultural Organization',
+            'Church & Religious Organization',
+            'Cultural/Fraternal Organization',
             'Education & Community',
             'Entertainment, Arts & Recreation',
             'Food & Hospitality',
             'Grocery & Imports',
             'Home & Construction',
             'Industrial & Manufacturing',
-            'Pets & Veterinary'
+            'Pets & Veterinary',
             'Professional & Business Services',
+            'Real Estate & Development',
             'Retail & Shopping'
         ];
 
@@ -200,7 +262,6 @@
                 applyFilters();
                 updateResultsCount();
                 
-                // Geocode addresses in background without blocking
                 setTimeout(() => {
                     geocodeAllListings();
                 }, 100);
@@ -215,7 +276,7 @@
             for (let listing of allListings) {
                 if (!listing.coordinates) {
                     await geocodeListing(listing);
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Rate limit
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
             }
         }
@@ -463,6 +524,9 @@
             
             renderListings();
             updateResultsCount();
+            if (map) {
+                updateMapMarkers();
+            }
         }
 
         function toggleFilters() {
@@ -472,32 +536,78 @@
         function toggleMap() {
             const container = document.getElementById('mapContainer');
             container.classList.toggle('hidden');
-            if (!container.classList.contains('hidden') && !map) {
-                map = L.map('map').setView([41.8781, -87.6298], 10);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-
-                filteredListings.forEach(listing => {
-                    if (listing.coordinates) {
-                        const country = (listing.country || 'USA').toLowerCase();
-                        const state = (listing.state || '').toLowerCase();
-                        const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng]).addTo(map);
-                        marker.bindPopup(`
-                            <div style="min-width:200px;">
-                                <h3 style="margin:0 0 8px 0;font-weight:bold;color:#055193;">${listing.businessName}</h3>
-                                <p style="margin:0 0 4px 0;font-size:12px;color:#666;">${listing.category}</p>
-                                <p style="margin:0;font-size:12px;">${getFullAddress(listing)}</p>
-                                <a href="/listings/${country}/${state}/${listing.slug}" style="display:inline-block;margin-top:8px;padding:4px 8px;background:#055193;color:white;text-decoration:none;border-radius:4px;font-size:12px;">View</a>
-                            </div>
-                        `);
-                    }
-                });
-                
-                if (filteredListings.length > 0 && filteredListings[0].coordinates) {
-                    const bounds = L.latLngBounds(filteredListings.filter(l => l.coordinates).map(l => [l.coordinates.lat, l.coordinates.lng]));
-                    map.fitBounds(bounds, { padding: [50, 50] });
+            if (!container.classList.contains('hidden')) {
+                if (!map) {
+                    map = L.map('map').setView([41.8781, -87.6298], 10);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
                 }
+                updateMapMarkers();
+            }
+        }
+
+        function updateMapMarkers() {
+            if (!map) return;
+            
+            // Clear existing markers
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            const bounds = [];
+            
+            filteredListings.forEach(listing => {
+                if (listing.coordinates) {
+                    const isOpen = listing.hours ? isOpenNow(listing.hours) : false;
+                    const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : listing.logo;
+                    
+                    // Create custom icon with logo
+                    const iconHtml = `<div class="custom-marker"><img src="${listing.logo}" alt="${listing.businessName}"></div>`;
+                    const customIcon = L.divIcon({
+                        html: iconHtml,
+                        className: '',
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
+                    });
+                    
+                    const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], {
+                        icon: customIcon
+                    }).addTo(map);
+                    
+                    const badges = [];
+                    if (listing.featured) badges.push('<span class="badge badge-featured">Featured</span>');
+                    badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    
+                    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    const popupContent = `
+                        <div class="map-popup">
+                            <img src="${firstPhoto}" alt="${listing.businessName}" class="map-popup-hero">
+                            <div class="map-popup-content">
+                                <div class="map-popup-badges">${badges.join('')}</div>
+                                <a href="/listings/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.businessName}</a>
+                                <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 80) + '...'}</div>
+                                <div class="map-popup-info">
+                                    📍 ${getFullAddress(listing)}<br>
+                                    📞 ${listing.phone}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    marker.bindPopup(popupContent, {
+                        maxWidth: 280,
+                        className: 'custom-popup'
+                    });
+                    
+                    bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
+                }
+            });
+            
+            if (bounds.length > 0) {
+                map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
             }
         }
 
@@ -525,11 +635,8 @@
                 container.innerHTML = filteredListings.map(l => {
                     const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
                     const fullAddress = getFullAddress(l);
-                    const country = (l.country || 'USA').toLowerCase();
-                    const state = (l.state || '').toLowerCase();
-                    const listingUrl = country === 'usa' ? 
-                        `/listings/${country}/${state}/${l.slug}` : 
-                        `/listings/${country}/${l.slug}`;
+                    const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    const listingUrl = `/listings/${categorySlug}/${l.slug}`;
                     const badges = [];
                     if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
                     if (l.hours) {
@@ -570,11 +677,8 @@
                 container.className = 'space-y-4';
                 container.innerHTML = filteredListings.map(l => {
                     const fullAddress = getFullAddress(l);
-                    const country = (l.country || 'USA').toLowerCase();
-                    const state = (l.state || '').toLowerCase();
-                    const listingUrl = country === 'usa' ? 
-                        `/listings/${country}/${state}/${l.slug}` : 
-                        `/listings/${country}/${l.slug}`;
+                    const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    const listingUrl = `/listings/${categorySlug}/${l.slug}`;
                     const badges = [];
                     if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
                     if (l.hours) {
