@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Business - Niles, IL | The Greek Directory</title>
     <meta name="description" content="Test Tagline in Niles. View address, phone, hours, and photos for Test Business on The Greek Directory.">
-    <meta name="keywords" content="Test Business, Other, Greek business, Niles, Chicagoland, Greek-owned">
+    <meta name="keywords" content="greek, greek american, greek-american, greek americans, greek-americans, directory, greek directory, the greek directory, greek american directory, the greek american directory, local greek, local greeks, hellenic, hellenic american, hellenic-american, hellenic americans, hellenic-americans, hellenic directory, hellenic-american directory, hellenic american directory, local hellenic, Test Business, Other, business, service, company, professional, Niles, IL, 60714, USA, 123 Harlem Ave., Niles, IL 60714, (224) 222-2222, ">
     <meta property="og:title" content="Test Business | The Greek Directory">
     <meta property="og:description" content="Test Tagline in Niles">
     <meta property="og:type" content="business.business">
-    <meta property="og:url" content="https://thegreekdirectory.org/listings/test-business">
+    <meta property="og:url" content="https://thegreekdirectory.org/listings/usa/il/test-business">
     <meta property="og:image" content="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/logo/logo.png">
-    <link rel="canonical" href="https://thegreekdirectory.org/listings/test-business">
+    <link rel="canonical" content="https://thegreekdirectory.org/listings/usa/il/test-business">
     <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,7 +21,7 @@
         .carousel-track { display: flex; transition: transform 0.5s ease; }
         .carousel-slide { min-width: 100%; height: 100%; }
         .carousel-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
-        .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3px; }
+        .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s; }
         .carousel-dot.active { background: white; width: 24px; border-radius: 4px; }
         .carousel-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; padding: 10px 15px; cursor: pointer; z-index: 10; border-radius: 4px; font-size: 20px; user-select: none; }
         .carousel-nav:hover { background: rgba(0,0,0,0.7); }
@@ -65,21 +65,19 @@
     </header>
 
     <div class="max-w-4xl mx-auto px-4 py-8">
-        <!-- Photo Carousel -->
         <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
-                    <div class="carousel-slide"><img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-1.png" alt="Test Business" class="w-full h-full object-cover"></div><div class="carousel-slide"><img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-2.png" alt="Test Business" class="w-full h-full object-cover"></div>
+                    <div class="carousel-slide"><img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-2.png" alt="Test Business" class="w-full h-full object-cover"></div><div class="carousel-slide"><img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/test-business/photos/photo-1.png" alt="Test Business" class="w-full h-full object-cover"></div>
                 </div>
                 <div class="carousel-nav carousel-prev" onclick="prevSlide()">‹</div><div class="carousel-nav carousel-next" onclick="nextSlide()">›</div><div class="carousel-dots"><div class="carousel-dot active" onclick="goToSlide(0)"></div><div class="carousel-dot " onclick="goToSlide(1)"></div></div>
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="bg-white rounded-lg p-6 mb-6 card-shadow">
             <div class="flex justify-between items-start mb-4">
                 <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-4">
+                    <div class="flex items-center gap-2 mb-4 flex-wrap">
                         <span class="text-sm font-semibold px-3 py-1 rounded-full text-white" style="background-color:#055193;">
                             Other
                         </span>
@@ -129,7 +127,10 @@ Description</p>
                 </a>
             </div>
 
-            <!-- Share Section -->
+            
+
+            
+
             <div class="mb-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                 <div class="flex flex-wrap gap-2">
@@ -147,11 +148,8 @@ Description</p>
                     </button>
                 </div>
             </div>
-
-            
         </div>
 
-        <!-- Map -->
         
     </div>
 
@@ -160,6 +158,51 @@ Description</p>
         const totalSlides = 2;
         const businessName = 'Test Business';
         const listingUrl = 'https://thegreekdirectory.org/listings/usa/il/test-business';
+        const hoursData = {{HOURS_JSON}};
+        
+        function updateOpenClosedBadge() {
+            const badge = document.getElementById('openClosedBadge');
+            if (!badge || !hoursData) return;
+            
+            const now = new Date();
+            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = days[centralTime.getDay()];
+            const todayHours = hoursData[today];
+            
+            if (!todayHours || todayHours.toLowerCase() === 'closed') {
+                badge.textContent = 'Closed';
+                badge.className = 'badge badge-closed';
+                return;
+            }
+            
+            const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) {
+                badge.style.display = 'none';
+                return;
+            }
+            
+            const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
+            let start = parseInt(startHour);
+            let end = parseInt(endHour);
+            
+            if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
+            if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
+            if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
+            if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
+            
+            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+            const startMinutes = start * 60 + parseInt(startMin);
+            const endMinutes = end * 60 + parseInt(endMin);
+            
+            if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+                badge.textContent = 'Open';
+                badge.className = 'badge badge-open';
+            } else {
+                badge.textContent = 'Closed';
+                badge.className = 'badge badge-closed';
+            }
+        }
         
         if (totalSlides > 1) {
             function goToSlide(index) {
@@ -201,7 +244,6 @@ Description</p>
             }
         }
 
-        // Initialize map if coordinates exist
         const coordinates = '';
         if (coordinates && coordinates !== '') {
             const [lat, lng] = coordinates.split(',').map(parseFloat);
@@ -213,6 +255,9 @@ Description</p>
                 .bindPopup('<strong>Test Business</strong><br>123 Harlem Ave., Niles, IL 60714')
                 .openPopup();
         }
+        
+        updateOpenClosedBadge();
+        setInterval(updateOpenClosedBadge, 60000);
     </script>
 </body>
 </html>
