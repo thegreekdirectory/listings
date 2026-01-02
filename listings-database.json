@@ -139,8 +139,9 @@
       "slug": "eagle-restaurant",
       "metadata": {
         "createdAt": "2026-01-02T04:34:34.612Z",
-        "updatedAt": "2026-01-02T07:44:08.577Z"
-      }
+        "updatedAt": "2026-01-02T07:44:14.542Z"
+      },
+      "visible": true
     }
   ]
 }
