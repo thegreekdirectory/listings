@@ -84,6 +84,62 @@
       },
       "visible": true,
       "featured": false
+    },
+    {
+      "businessName": "Test Business",
+      "tagline": "Test Tagline",
+      "description": "test desc",
+      "category": "Cultural Organization",
+      "phone": "(224) 222-2222",
+      "address": "123 Harlem Ave.",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60026",
+      "country": "USA",
+      "email": "ex@example.com",
+      "website": "https://www.example.com",
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "8:00 AM - 5:30 PM",
+        "wednesday": "10:30 AM - 8:00 PM",
+        "thursday": "8:00 AM - 5:30 PM",
+        "friday": "8:00 AM - 5:30 PM",
+        "saturday": "10:30 AM - 8:00 PM",
+        "sunday": "11:00 AM - 8:00 PM"
+      },
+      "socialMedia": {
+        "facebook": "a",
+        "instagram": "a",
+        "twitter": "a",
+        "youtube": "a",
+        "tiktok": "a",
+        "linkedin": "https://www.linkedin.com/company/ex",
+        "other1": "https://test.com/es",
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://g.page/test",
+        "yelp": "https://www.yelp.com/biz/test",
+        "tripadvisor": "https://www.tripadvisor.com/test",
+        "other1": "https://othertest.com/s",
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "Proto Deutero",
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null
+      },
+      "id": "test-business",
+      "slug": "test-business",
+      "visible": true,
+      "featured": false,
+      "metadata": {
+        "createdAt": "2026-01-02T22:23:44.419Z",
+        "updatedAt": "2026-01-02T22:23:44.419Z"
+      }
     }
   ]
 }
