@@ -102,7 +102,7 @@
       "slug": "st-nicholas-church",
       "metadata": {
         "createdAt": "2025-01-14T09:00:00Z",
-        "updatedAt": "2026-01-03T07:46:13.402Z",
+        "updatedAt": "2026-01-03T07:46:16.553Z",
         "createdBy": "admin@thegreekdirectory.org"
       },
       "analytics": {
@@ -112,7 +112,8 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T07:46:13.402Z"
-      }
+      },
+      "visible": true
     },
     {
       "businessName": "Test Business",
