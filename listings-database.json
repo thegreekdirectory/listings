@@ -45,18 +45,29 @@
     },
     {
       "businessName": "St. Nicholas Greek Orthodox Church",
+      "tagline": "st nicks tagline",
       "description": "A welcoming parish serving the Greek Orthodox community with liturgy, fellowship, and cultural programs.",
-      "category": "Church/Religious Organization",
+      "category": "",
       "phone": "(312) 555-0456",
       "address": "456 Church Ave, Chicago, IL 60614",
+      "city": "",
+      "state": "IL",
+      "zipCode": "",
+      "country": "USA",
       "email": "office@stnicholaschicago.org",
       "website": "https://stnicholaschicago.org",
-      "hours": "Sunday Liturgy: 9:30am",
-      "logo": "https://via.placeholder.com/200x200/055193/FFFFFF?text=SN",
-      "photos": [
-        "https://via.placeholder.com/800x600/055193/FFFFFF?text=Church1",
-        "https://via.placeholder.com/800x600/0066CC/FFFFFF?text=Church2"
-      ],
+      "tier": "FEATURED",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
       "socialMedia": {
         "facebook": "stnicholaschicago",
         "instagram": null,
@@ -64,10 +75,17 @@
         "youtube": "stnicholaschicago",
         "tiktok": null,
         "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
         "google": null,
         "yelp": null,
         "tripadvisor": null,
-        "other": null
+        "other1": null,
+        "other2": null,
+        "other3": null
       },
       "ownerInfo": {
         "fullName": "Father Dimitri Kostopoulos",
@@ -75,15 +93,26 @@
         "ownerEmail": "father@stnicholaschicago.org",
         "ownerPhone": "(312) 555-0457"
       },
+      "logo": "https://via.placeholder.com/200x200/055193/FFFFFF?text=SN",
+      "photos": [
+        "https://via.placeholder.com/800x600/055193/FFFFFF?text=Church1",
+        "https://via.placeholder.com/800x600/0066CC/FFFFFF?text=Church2"
+      ],
       "id": "st-nicholas-church",
       "slug": "st-nicholas-church",
       "metadata": {
         "createdAt": "2025-01-14T09:00:00Z",
-        "updatedAt": "2026-01-02T12:28:45.445Z",
+        "updatedAt": "2026-01-03T07:46:13.402Z",
         "createdBy": "admin@thegreekdirectory.org"
       },
-      "visible": true,
-      "featured": false
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-03T07:46:13.402Z"
+      }
     },
     {
       "businessName": "Test Business",
