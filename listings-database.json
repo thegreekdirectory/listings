@@ -289,7 +289,7 @@
       "slug": "a",
       "metadata": {
         "createdAt": "2026-01-03T13:01:52.387Z",
-        "updatedAt": "2026-01-03T13:05:54.750Z"
+        "updatedAt": "2026-01-03T13:06:06.117Z"
       },
       "analytics": {
         "views": 0,
@@ -298,7 +298,8 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T13:01:52.387Z"
-      }
+      },
+      "visible": true
     }
   ]
 }
