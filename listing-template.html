@@ -12,7 +12,7 @@
     <meta property="og:url" content="{{LISTING_URL}}">
     <meta property="og:image" content="{{LOGO}}">
     <link rel="canonical" href="{{LISTING_URL}}">
-    <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png">
+    <link rel="icon" type="image/png" href="https://social.thegreekdirectory.org/Logo2.png">
     <link rel="apple-touch-icon" href="https://social.thegreekdirectory.org/Logo2.png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -47,14 +47,13 @@
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
+        .badge-open-now { background: #10b981; color: white; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: 600; }
+        .badge-closed-now { background: #ef4444; color: white; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: 600; }
         .hours-disclaimer { background: #fef3c7; border: 1px solid #fbbf24; color: #78350f; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 8px; }
         .card-shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); }
         @media (min-width: 768px) {
             .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
         }
-        .hours-status { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 6px; display: inline-block; }
-        .hours-status-open { background: #d1fae5; color: #065f46; }
-        .hours-status-closed { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -167,15 +166,13 @@
         const businessName = '{{BUSINESS_NAME}}';
         const listingUrl = '{{LISTING_URL}}';
         const hoursData = {{HOURS_JSON}};
-        const coordinates = '{{COORDINATES}}';
         
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
-            const hoursStatus = document.getElementById('hoursStatus');
-            
+            const openNowBadge = document.getElementById('openNowBadge');
             if (!hoursData) {
                 if (badge) badge.style.display = 'none';
-                if (hoursStatus) hoursStatus.style.display = 'none';
+                if (openNowBadge) openNowBadge.style.display = 'none';
                 return;
             }
             
@@ -190,9 +187,9 @@
                     badge.textContent = 'Closed';
                     badge.className = 'badge badge-closed';
                 }
-                if (hoursStatus) {
-                    hoursStatus.textContent = 'Closed Now';
-                    hoursStatus.className = 'hours-status hours-status-closed';
+                if (openNowBadge) {
+                    openNowBadge.textContent = 'Closed Now';
+                    openNowBadge.className = 'badge-closed-now';
                 }
                 return;
             }
@@ -200,7 +197,7 @@
             const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
             if (!match) {
                 if (badge) badge.style.display = 'none';
-                if (hoursStatus) hoursStatus.style.display = 'none';
+                if (openNowBadge) openNowBadge.style.display = 'none';
                 return;
             }
             
@@ -217,24 +214,16 @@
             const startMinutes = start * 60 + parseInt(startMin);
             const endMinutes = end * 60 + parseInt(endMin);
             
-            if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
-                if (badge) {
-                    badge.textContent = 'Open';
-                    badge.className = 'badge badge-open';
-                }
-                if (hoursStatus) {
-                    hoursStatus.textContent = 'Open Now';
-                    hoursStatus.className = 'hours-status hours-status-open';
-                }
-            } else {
-                if (badge) {
-                    badge.textContent = 'Closed';
-                    badge.className = 'badge badge-closed';
-                }
-                if (hoursStatus) {
-                    hoursStatus.textContent = 'Closed Now';
-                    hoursStatus.className = 'hours-status hours-status-closed';
-                }
+            const isOpen = currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+            
+            if (badge) {
+                badge.textContent = isOpen ? 'Open' : 'Closed';
+                badge.className = isOpen ? 'badge badge-open' : 'badge badge-closed';
+            }
+            
+            if (openNowBadge) {
+                openNowBadge.textContent = isOpen ? 'Open Now' : 'Closed Now';
+                openNowBadge.className = isOpen ? 'badge-open-now' : 'badge-closed-now';
             }
         }
         
@@ -293,19 +282,31 @@
             }
         }
 
-        if (coordinates && coordinates !== '') {
+        const coordinates = '{{COORDINATES}}';
+        const fullAddress = '{{FULL_ADDRESS}}';
+        
+        if (coordinates && coordinates !== '' && fullAddress) {
             setTimeout(() => {
                 const [lat, lng] = coordinates.split(',').map(parseFloat);
                 const mapElement = document.getElementById('listingMap');
                 if (mapElement && !isNaN(lat) && !isNaN(lng)) {
-                    const map = L.map('listingMap').setView([lat, lng], 16);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors',
-                        maxZoom: 19
-                    }).addTo(map);
-                    
-                    const marker = L.marker([lat, lng]).addTo(map);
-                    marker.bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}').openPopup();
+                    try {
+                        const map = L.map('listingMap').setView([lat, lng], 16);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors',
+                            maxZoom: 19
+                        }).addTo(map);
+                        
+                        L.marker([lat, lng]).addTo(map)
+                            .bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}')
+                            .openPopup();
+                        
+                        setTimeout(() => {
+                            map.invalidateSize();
+                        }, 250);
+                    } catch (e) {
+                        console.error('Map initialization error:', e);
+                    }
                 }
             }, 100);
         }
