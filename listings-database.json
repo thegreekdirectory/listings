@@ -214,6 +214,76 @@
         "lastViewed": "2026-01-03T07:41:09.722Z"
       },
       "visible": true
+    },
+    {
+      "businessName": "Blank Business",
+      "tagline": "Blank Business Tagline",
+      "description": "",
+      "category": "",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "state": "",
+      "zipCode": "",
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": false,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null
+      },
+      "logo": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80"
+      ],
+      "id": "blank-business",
+      "slug": "blank-business",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-03T07:53:40.314Z",
+        "updatedAt": "2026-01-03T07:53:40.314Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-03T07:53:40.314Z"
+      }
     }
   ]
 }
