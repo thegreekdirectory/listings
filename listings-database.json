@@ -89,7 +89,7 @@
       "businessName": "Test Business",
       "tagline": "Test Tagline",
       "description": "test desc",
-      "category": "Cultural Organization",
+      "category": "",
       "phone": "(224) 222-2222",
       "address": "123 Harlem Ave.",
       "city": "Glenview",
@@ -98,6 +98,9 @@
       "country": "USA",
       "email": "ex@example.com",
       "website": "https://www.example.com",
+      "tier": "PREMIUM",
+      "verified": true,
+      "showClaimButton": true,
       "hours": {
         "monday": "Closed",
         "tuesday": "8:00 AM - 5:30 PM",
@@ -132,15 +135,24 @@
         "ownerEmail": null,
         "ownerPhone": null
       },
+      "logo": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80"
+      ],
       "id": "test-business",
       "slug": "test-business",
-      "visible": true,
-      "featured": false,
       "metadata": {
         "createdAt": "2026-01-02T22:23:44.419Z",
-        "updatedAt": "2026-01-03T07:41:02.106Z"
+        "updatedAt": "2026-01-03T07:41:09.722Z"
       },
-      "verified": false
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-03T07:41:09.722Z"
+      }
     }
   ]
 }
