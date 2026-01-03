@@ -289,7 +289,7 @@
       "slug": "a",
       "metadata": {
         "createdAt": "2026-01-03T13:01:52.387Z",
-        "updatedAt": "2026-01-03T21:27:03.924Z"
+        "updatedAt": "2026-01-03T22:07:35.717Z"
       },
       "analytics": {
         "views": 0,
@@ -299,7 +299,7 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-03T13:01:52.387Z"
       },
-      "visible": true
+      "visible": false
     },
     {
       "businessName": "c",
