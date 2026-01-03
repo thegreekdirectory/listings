@@ -149,7 +149,7 @@
       "businessName": "Test Business",
       "tagline": "Test Tagline",
       "description": "test desc",
-      "category": "",
+      "category": "Cultural/Fraternal Organization",
       "phone": "(224) 222-2222",
       "address": "123 Harlem Ave.",
       "city": "Glenview",
@@ -203,7 +203,7 @@
       "slug": "test-business",
       "metadata": {
         "createdAt": "2026-01-02T22:23:44.419Z",
-        "updatedAt": "2026-01-03T07:45:47.691Z"
+        "updatedAt": "2026-01-03T07:46:54.377Z"
       },
       "analytics": {
         "views": 0,
@@ -212,8 +212,7 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T07:41:09.722Z"
-      },
-      "visible": true
+      }
     }
   ]
 }
