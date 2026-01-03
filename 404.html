@@ -83,6 +83,22 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 18px rgba(0,0,0,0.25);
     }
+    
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: linear-gradient(135deg, #1a3a5a, #0d2540);
+      }
+      
+      .container {
+        background: #2a2a2a;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+      }
+      
+      h1, p {
+        color: #e5e5e5;
+      }
+    }
   </style>
 </head>
 <body>
@@ -90,7 +106,7 @@
     <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory Logo" class="logo">
 
     <h1>404</h1>
-    <p>Sorry — the page you’re looking for doesn’t exist. Check the URL and try again.</p>
+    <p>Sorry — the page you're looking for doesn't exist. Check the URL and try again.</p>
 
     <div class="buttons">
       <a href="https://www.thegreekdirectory.org">Go to Home</a>
