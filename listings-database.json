@@ -60,7 +60,7 @@
       "slug": "athenas-kitchen",
       "metadata": {
         "createdAt": "2025-01-15T10:00:00Z",
-        "updatedAt": "2026-01-03T11:34:43.996Z",
+        "updatedAt": "2026-01-03T22:05:43.133Z",
         "createdBy": "admin@thegreekdirectory.org"
       },
       "analytics": {
@@ -71,7 +71,7 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-03T07:46:29.690Z"
       },
-      "visible": true
+      "visible": false
     },
     {
       "businessName": "St. Nicholas Greek Orthodox Church",
