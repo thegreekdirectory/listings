@@ -203,7 +203,7 @@
       "slug": "test-business",
       "metadata": {
         "createdAt": "2026-01-02T22:23:44.419Z",
-        "updatedAt": "2026-01-03T07:56:37.512Z"
+        "updatedAt": "2026-01-03T07:59:06.128Z"
       },
       "analytics": {
         "views": 0,
@@ -212,7 +212,8 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T07:41:09.722Z"
-      }
+      },
+      "visible": true
     }
   ]
 }
