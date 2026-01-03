@@ -284,6 +284,84 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-03T09:08:53.337Z"
       }
+    },
+    {
+      "businessName": "Eagle Restaurant",
+      "tagline": "Family-owned dining staple in Downers Grove since 1981.",
+      "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\n\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\n\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
+      "category": "Food & Hospitality",
+      "phone": "(630) 963-9161",
+      "address": "406 Maple Ave",
+      "city": "Downers Grove",
+      "state": "IL",
+      "zipCode": "60515",
+      "country": "USA",
+      "email": "eagledownersgrove@gmail.com",
+      "website": "https://eagledg.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "10:30 AM - 8:00 PM",
+        "wednesday": "10:30 AM - 8:00 PM",
+        "thursday": "10:30 AM - 8:00 PM",
+        "friday": "10:30 AM - 8:00 PM",
+        "saturday": "10:30 AM - 8:00 PM",
+        "sunday": "11:00 AM - 8:00 PM"
+      },
+      "socialMedia": {
+        "facebook": "EagleRestaurant",
+        "instagram": "eagle_downers_grove",
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://www.google.com/search?sca_esv=50ca057078add2eb&sxsrf=AE3TifNznGTkHuc5FTdfCTOUucp4oKXg7w:1767335193619&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8s73B0CjFloNrBSOE9oJJqp6p9xSDvoA7W1X3bTmbN01_5owvmdFRHO_BxehkIh-_HhBIbw-Yuyovq_O-iTvGH1RZP723&q=Eagle+Restaurant+Reviews",
+        "yelp": "https://www.yelp.com/biz/eagle-restaurant-downers-grove",
+        "tripadvisor": "https://www.tripadvisor.com/Restaurant_Review-g35904-d427213-Reviews-Eagle_Restaurant-Downers_Grove_DuPage_County_Illinois.html",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "John Zografos",
+        "title": "Owner",
+        "fromGreece": "Xios",
+        "ownerEmail": "jzografo@gmail.com",
+        "ownerPhone": "(630) 712-5050",
+        "visibility": {
+          "name": false,
+          "title": false,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/logo/logo/logo.png",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-1.png"
+      ],
+      "id": "eagle-restaurant",
+      "slug": "eagle-restaurant",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-03T10:45:32.161Z",
+        "updatedAt": "2026-01-03T10:45:32.161Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-03T10:45:32.161Z"
+      }
     }
   ]
 }
