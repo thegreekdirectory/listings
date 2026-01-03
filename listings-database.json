@@ -158,8 +158,8 @@
       "country": "USA",
       "email": "eagledownersgrove@gmail.com",
       "website": "https://eagledg.com",
-      "tier": "FREE",
-      "verified": false,
+      "tier": "VERIFIED",
+      "verified": true,
       "showClaimButton": false,
       "hours": {
         "monday": "Closed",
@@ -211,7 +211,7 @@
       "slug": "eagle-restaurant",
       "metadata": {
         "createdAt": "2026-01-03T10:45:32.161Z",
-        "updatedAt": "2026-01-03T10:51:01.571Z"
+        "updatedAt": "2026-01-03T11:09:08.244Z"
       },
       "analytics": {
         "views": 0,
@@ -220,8 +220,7 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T10:45:32.161Z"
-      },
-      "visible": true
+      }
     }
   ]
 }
