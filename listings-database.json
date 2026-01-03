@@ -449,7 +449,7 @@
       "phone": null,
       "address": null,
       "city": "Deerfield",
-      "state": "",
+      "state": "IL",
       "zipCode": null,
       "country": "USA",
       "email": null,
@@ -505,10 +505,9 @@
       ],
       "id": "b",
       "slug": "b",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-03T10:53:25.793Z",
-        "updatedAt": "2026-01-03T10:53:25.794Z"
+        "updatedAt": "2026-01-03T10:55:36.280Z"
       },
       "analytics": {
         "views": 0,
