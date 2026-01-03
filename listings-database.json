@@ -429,7 +429,7 @@
       "slug": "a",
       "metadata": {
         "createdAt": "2026-01-03T10:50:56.176Z",
-        "updatedAt": "2026-01-03T10:52:17.726Z"
+        "updatedAt": "2026-01-03T10:52:53.563Z"
       },
       "analytics": {
         "views": 0,
@@ -438,7 +438,8 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T10:50:56.176Z"
-      }
+      },
+      "visible": true
     }
   ]
 }
