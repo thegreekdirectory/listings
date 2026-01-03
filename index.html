@@ -222,15 +222,70 @@
             setupEventListeners();
             createCategoryFilters();
             requestLocation();
-            checkURLParams();
+            loadFiltersFromURL();
         });
 
-        function checkURLParams() {
+        function loadFiltersFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
+            
             const searchQuery = urlParams.get('q');
             if (searchQuery) {
                 document.getElementById('searchInput').value = searchQuery;
             }
+            
+            const category = urlParams.get('category');
+            if (category && CATEGORIES.includes(category)) {
+                selectedCategory = category;
+            }
+            
+            const country = urlParams.get('country');
+            if (country) {
+                selectedCountry = country;
+                document.getElementById('countryFilter').value = country;
+                if (country === 'USA') {
+                    document.getElementById('stateFilterContainer').classList.remove('hidden');
+                    populateStateFilter('USA');
+                }
+            }
+            
+            const state = urlParams.get('state');
+            if (state) {
+                selectedState = state;
+                document.getElementById('stateFilter').value = state;
+            }
+            
+            const radius = urlParams.get('radius');
+            if (radius) {
+                selectedRadius = radius;
+                document.getElementById('radiusFilter').value = radius;
+            }
+        }
+
+        function updateURL() {
+            const url = new URL(window.location);
+            const searchTerm = document.getElementById('searchInput').value;
+            
+            // Clear all params
+            url.search = '';
+            
+            // Add params if they exist
+            if (selectedCategory && selectedCategory !== 'All') {
+                url.searchParams.set('category', selectedCategory);
+            }
+            if (selectedCountry) {
+                url.searchParams.set('country', selectedCountry);
+            }
+            if (selectedState) {
+                url.searchParams.set('state', selectedState);
+            }
+            if (selectedRadius) {
+                url.searchParams.set('radius', selectedRadius);
+            }
+            if (searchTerm) {
+                url.searchParams.set('q', searchTerm);
+            }
+            
+            window.history.replaceState({}, '', url);
         }
 
         function requestLocation() {
@@ -355,15 +410,8 @@
         }
 
         function setupEventListeners() {
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                const searchTerm = e.target.value;
-                const url = new URL(window.location);
-                if (searchTerm) {
-                    url.searchParams.set('q', searchTerm);
-                } else {
-                    url.searchParams.delete('q');
-                }
-                window.history.replaceState({}, '', url);
+            document.getElementById('searchInput').addEventListener('input', () => {
+                updateURL();
                 applyFilters();
             });
             
@@ -372,7 +420,11 @@
             document.getElementById('mapBtn').addEventListener('click', toggleMap);
             document.getElementById('gridViewBtn').addEventListener('click', () => setView('grid'));
             document.getElementById('listViewBtn').addEventListener('click', () => setView('list'));
-            document.getElementById('radiusFilter').addEventListener('change', applyFilters);
+            document.getElementById('radiusFilter').addEventListener('change', (e) => {
+                selectedRadius = e.target.value;
+                updateURL();
+                applyFilters();
+            });
             document.getElementById('sortSelect').addEventListener('change', applyFilters);
             document.getElementById('countryFilter').addEventListener('change', (e) => {
                 selectedCountry = e.target.value;
@@ -383,10 +435,12 @@
                     document.getElementById('stateFilterContainer').classList.add('hidden');
                     selectedState = '';
                 }
+                updateURL();
                 applyFilters();
             });
             document.getElementById('stateFilter').addEventListener('change', (e) => {
                 selectedState = e.target.value;
+                updateURL();
                 applyFilters();
             });
         }
@@ -395,15 +449,16 @@
             const container = document.getElementById('categoryFilters');
             const allBtn = document.createElement('button');
             allBtn.textContent = 'All';
-            allBtn.className = 'px-3 py-2 rounded-lg text-sm font-medium text-white';
-            allBtn.style.backgroundColor = '#055193';
+            allBtn.className = selectedCategory === 'All' ? 'px-3 py-2 rounded-lg text-sm font-medium text-white' : 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
+            if (selectedCategory === 'All') allBtn.style.backgroundColor = '#055193';
             allBtn.onclick = () => filterByCategory('All');
             container.appendChild(allBtn);
 
             CATEGORIES.forEach(cat => {
                 const btn = document.createElement('button');
                 btn.textContent = cat;
-                btn.className = 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
+                btn.className = selectedCategory === cat ? 'px-3 py-2 rounded-lg text-sm font-medium text-white' : 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
+                if (selectedCategory === cat) btn.style.backgroundColor = '#055193';
                 btn.onclick = () => filterByCategory(cat);
                 container.appendChild(btn);
             });
@@ -422,6 +477,7 @@
                     btn.style.backgroundColor = '';
                 }
             });
+            updateURL();
             applyFilters();
         }
 
@@ -474,7 +530,6 @@
         function applyFilters() {
             const searchTerm = normalizeString(document.getElementById('searchInput').value);
             const sortOption = document.getElementById('sortSelect').value;
-            selectedRadius = document.getElementById('radiusFilter').value;
             
             filteredListings = allListings.filter(listing => {
                 const fullAddress = getFullAddress(listing);
@@ -507,7 +562,12 @@
             
             filteredListings.sort((a, b) => {
                 if (sortOption === 'default') {
-                    if (a.featured !== b.featured) return b.featured ? 1 : -1;
+                    const aTier = a.tier || 'FREE';
+                    const bTier = b.tier || 'FREE';
+                    const tierPriority = { PREMIUM: 3, FEATURED: 2, VERIFIED: 1, FREE: 0 };
+                    if (tierPriority[aTier] !== tierPriority[bTier]) {
+                        return tierPriority[bTier] - tierPriority[aTier];
+                    }
                     const aOpen = a.hours ? isOpenNow(a.hours) : false;
                     const bOpen = b.hours ? isOpenNow(b.hours) : false;
                     if (aOpen !== bOpen) return bOpen ? 1 : -1;
@@ -550,7 +610,6 @@
         function updateMapMarkers() {
             if (!map) return;
             
-            // Clear existing markers
             map.eachLayer(layer => {
                 if (layer instanceof L.Marker) {
                     map.removeLayer(layer);
@@ -564,7 +623,6 @@
                     const isOpen = listing.hours ? isOpenNow(listing.hours) : false;
                     const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : listing.logo;
                     
-                    // Create custom icon with logo
                     const iconHtml = `<div class="custom-marker"><img src="${listing.logo}" alt="${listing.businessName}"></div>`;
                     const customIcon = L.divIcon({
                         html: iconHtml,
@@ -578,7 +636,7 @@
                     }).addTo(map);
                     
                     const badges = [];
-                    if (listing.featured) badges.push('<span class="badge badge-featured">Featured</span>');
+                    if (listing.tier === 'FEATURED' || listing.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
                     badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
                     
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -638,7 +696,7 @@
                     const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     const listingUrl = `/listings/${categorySlug}/${l.slug}`;
                     const badges = [];
-                    if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
+                    if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
                     if (l.hours) {
                         const isOpen = isOpenNow(l.hours);
                         badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
@@ -680,7 +738,7 @@
                     const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     const listingUrl = `/listings/${categorySlug}/${l.slug}`;
                     const badges = [];
-                    if (l.featured) badges.push('<span class="badge badge-featured">Featured</span>');
+                    if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
                     if (l.hours) {
                         const isOpen = isOpenNow(l.hours);
                         badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
