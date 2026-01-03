@@ -226,12 +226,12 @@
     {
       "businessName": "a",
       "tagline": "a",
-      "description": "",
+      "description": "Desc",
       "category": "Industrial & Manufacturing",
       "phone": null,
       "address": null,
-      "city": "a",
-      "state": "",
+      "city": "Chicago",
+      "state": "IL",
       "zipCode": null,
       "country": "USA",
       "email": null,
@@ -287,10 +287,9 @@
       ],
       "id": "a",
       "slug": "a",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-03T13:01:52.387Z",
-        "updatedAt": "2026-01-03T13:01:52.387Z"
+        "updatedAt": "2026-01-03T13:05:54.750Z"
       },
       "analytics": {
         "views": 0,
