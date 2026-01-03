@@ -47,34 +47,14 @@
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
-        .badge-verified { background: #0000FF; color: white; }
-        .badge-claimed { background: #6B7280; color: white; }
         .hours-disclaimer { background: #fef3c7; border: 1px solid #fbbf24; color: #78350f; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 8px; }
         .card-shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); }
-        .open-now { color: #10b981; font-weight: 600; font-size: 14px; }
-        .closed-now { color: #ef4444; font-weight: 600; font-size: 14px; }
         @media (min-width: 768px) {
             .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
         }
-        
-        @media (prefers-color-scheme: dark) {
-            body { background: #1a1a1a; color: #e5e5e5; }
-            header { background: #2a2a2a !important; border-color: #3a3a3a; }
-            .bg-white { background: #2a2a2a !important; }
-            .bg-gray-50 { background: #1a1a1a !important; }
-            .bg-gray-100 { background: #3a3a3a !important; }
-            .bg-gray-200 { background: #404040 !important; }
-            .text-gray-900 { color: #e5e5e5 !important; }
-            .text-gray-700 { color: #b0b0b0 !important; }
-            .text-gray-600 { color: #999 !important; }
-            .border-gray-300 { border-color: #404040 !important; }
-            .shadow-sm, .shadow, .shadow-lg, .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
-            .hover\:text-gray-900:hover { color: #e5e5e5 !important; }
-            .hours-disclaimer { background: #3a3a00; border-color: #8a7a00; color: #ffd700; }
-            .leaflet-container { background: #1a1a1a; }
-            .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
-            .leaflet-popup-tip { background: #2a2a2a !important; }
-        }
+        .hours-status { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 6px; display: inline-block; }
+        .hours-status-open { background: #d1fae5; color: #065f46; }
+        .hours-status-closed { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -119,18 +99,36 @@
             <p class="text-gray-700 mb-6">{{DESCRIPTION}}</p>
 
             <div class="space-y-3 mb-6">
-                {{ADDRESS_SECTION}}
-                {{PHONE_SECTION}}
+                <div class="flex items-start gap-3">
+                    <span class="mt-1">📍</span>
+                    <div>
+                        <p class="font-semibold text-gray-900">Address</p>
+                        <p class="text-gray-700">{{FULL_ADDRESS}}</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="mt-1">📞</span>
+                    <div>
+                        <p class="font-semibold text-gray-900">Phone</p>
+                        <a href="tel:{{PHONE}}" class="text-blue-600 hover:underline">{{PHONE}}</a>
+                    </div>
+                </div>
                 {{EMAIL_SECTION}}
                 {{WEBSITE_SECTION}}
                 {{HOURS_SECTION}}
             </div>
 
             <div class="flex flex-wrap gap-3 mb-6">
-                {{PHONE_BUTTON}}
+                <a href="tel:{{PHONE}}" class="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium" style="background-color:#055193;">
+                    <span>📞</span>
+                    <span>Call</span>
+                </a>
                 {{EMAIL_BUTTON}}
                 {{WEBSITE_BUTTON}}
-                {{DIRECTIONS_BUTTON}}
+                <a href="https://www.google.com/maps/place/{{MAPS_ADDRESS}}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">
+                    <span>📍</span>
+                    <span>Directions</span>
+                </a>
             </div>
 
             <div class="social-map-grid">
@@ -168,67 +166,18 @@
         const totalSlides = {{TOTAL_PHOTOS}};
         const businessName = '{{BUSINESS_NAME}}';
         const listingUrl = '{{LISTING_URL}}';
-        const listingId = '{{LISTING_ID}}';
         const hoursData = {{HOURS_JSON}};
-        
-        window.addEventListener('load', async () => {
-            try {
-                await fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    body: JSON.stringify({
-                        event_type: 'track_analytics',
-                        client_payload: {
-                            listingId: listingId,
-                            action: 'view'
-                        }
-                    })
-                });
-            } catch (e) {
-                console.log('Analytics tracking failed');
-            }
-        });
-        
-        function trackClick(action) {
-            fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/vnd.github.v3+json'
-                },
-                body: JSON.stringify({
-                    event_type: 'track_analytics',
-                    client_payload: {
-                        listingId: listingId,
-                        action: action
-                    }
-                })
-            }).catch(() => {});
-        }
-        
-        document.querySelectorAll('a[href^="tel:"]').forEach(el => {
-            el.addEventListener('click', () => trackClick('call'));
-        });
-        document.querySelectorAll('a[href*="maps"]').forEach(el => {
-            el.addEventListener('click', () => trackClick('directions'));
-        });
-        document.querySelectorAll('.share-button, button[onclick="shareNative()"]').forEach(el => {
-            el.addEventListener('click', () => trackClick('share'));
-        });
-        const websiteLinks = document.querySelectorAll('a[href*="{{WEBSITE_DOMAIN}}"]');
-        if (websiteLinks.length > 0) {
-            websiteLinks.forEach(el => {
-                el.addEventListener('click', () => trackClick('website'));
-            });
-        }
+        const coordinates = '{{COORDINATES}}';
         
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
-            const statusText = document.getElementById('openStatusText');
-            if (!hoursData) return;
+            const hoursStatus = document.getElementById('hoursStatus');
+            
+            if (!hoursData) {
+                if (badge) badge.style.display = 'none';
+                if (hoursStatus) hoursStatus.style.display = 'none';
+                return;
+            }
             
             const now = new Date();
             const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
@@ -241,9 +190,9 @@
                     badge.textContent = 'Closed';
                     badge.className = 'badge badge-closed';
                 }
-                if (statusText) {
-                    statusText.textContent = 'Closed Now';
-                    statusText.className = 'closed-now';
+                if (hoursStatus) {
+                    hoursStatus.textContent = 'Closed Now';
+                    hoursStatus.className = 'hours-status hours-status-closed';
                 }
                 return;
             }
@@ -251,7 +200,7 @@
             const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
             if (!match) {
                 if (badge) badge.style.display = 'none';
-                if (statusText) statusText.style.display = 'none';
+                if (hoursStatus) hoursStatus.style.display = 'none';
                 return;
             }
             
@@ -273,18 +222,18 @@
                     badge.textContent = 'Open';
                     badge.className = 'badge badge-open';
                 }
-                if (statusText) {
-                    statusText.textContent = 'Open Now';
-                    statusText.className = 'open-now';
+                if (hoursStatus) {
+                    hoursStatus.textContent = 'Open Now';
+                    hoursStatus.className = 'hours-status hours-status-open';
                 }
             } else {
                 if (badge) {
                     badge.textContent = 'Closed';
                     badge.className = 'badge badge-closed';
                 }
-                if (statusText) {
-                    statusText.textContent = 'Closed Now';
-                    statusText.className = 'closed-now';
+                if (hoursStatus) {
+                    hoursStatus.textContent = 'Closed Now';
+                    hoursStatus.className = 'hours-status hours-status-closed';
                 }
             }
         }
@@ -344,29 +293,19 @@
             }
         }
 
-        const coordinates = '{{COORDINATES}}';
         if (coordinates && coordinates !== '') {
             setTimeout(() => {
                 const [lat, lng] = coordinates.split(',').map(parseFloat);
                 const mapElement = document.getElementById('listingMap');
                 if (mapElement && !isNaN(lat) && !isNaN(lng)) {
-                    try {
-                        const map = L.map('listingMap').setView([lat, lng], 15);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '© OpenStreetMap contributors',
-                            maxZoom: 19
-                        }).addTo(map);
-                        
-                        L.marker([lat, lng]).addTo(map)
-                            .bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}')
-                            .openPopup();
-                        
-                        setTimeout(() => {
-                            map.invalidateSize();
-                        }, 100);
-                    } catch (e) {
-                        console.error('Map initialization failed:', e);
-                    }
+                    const map = L.map('listingMap').setView([lat, lng], 16);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors',
+                        maxZoom: 19
+                    }).addTo(map);
+                    
+                    const marker = L.marker([lat, lng]).addTo(map);
+                    marker.bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}').openPopup();
                 }
             }, 100);
         }
