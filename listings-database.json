@@ -367,11 +367,11 @@
       "businessName": "a",
       "tagline": "a",
       "description": "",
-      "category": "",
+      "category": "Automotive & Transportation",
       "phone": null,
       "address": null,
       "city": "Niles",
-      "state": "",
+      "state": "IL",
       "zipCode": null,
       "country": "USA",
       "email": null,
@@ -427,10 +427,9 @@
       ],
       "id": "a",
       "slug": "a",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-03T10:50:56.176Z",
-        "updatedAt": "2026-01-03T10:50:56.176Z"
+        "updatedAt": "2026-01-03T10:52:17.726Z"
       },
       "analytics": {
         "views": 0,
