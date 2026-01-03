@@ -2,19 +2,29 @@
   "listings": [
     {
       "businessName": "Athena's Kitchen",
+      "tagline": "athena tagline",
       "description": "Authentic Greek restaurant serving traditional dishes made with love and the finest ingredients.",
-      "category": "Restaurant/Bakery",
+      "category": "",
       "phone": "(312) 555-0123",
       "address": "123 Main St, Chicago, IL 60601",
+      "city": "",
+      "state": "IL",
+      "zipCode": "",
+      "country": "USA",
       "email": "info@athenaskitchen.com",
       "website": "https://athenaskitchen.com",
-      "hours": "Mon-Sat: 11am-10pm, Sun: 12pm-9pm",
-      "logo": "https://via.placeholder.com/200x200/055193/FFFFFF?text=Logo",
-      "photos": [
-        "https://via.placeholder.com/800x600/055193/FFFFFF?text=Photo1",
-        "https://via.placeholder.com/800x600/0066CC/FFFFFF?text=Photo2",
-        "https://via.placeholder.com/800x600/0055AA/FFFFFF?text=Photo3"
-      ],
+      "tier": "VERIFIED",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
       "socialMedia": {
         "facebook": "athenaskitchen",
         "instagram": "athenaskitchen",
@@ -22,10 +32,17 @@
         "youtube": "athenaskitchen",
         "tiktok": "athenaskitchen",
         "linkedin": "https://linkedin.com/company/athenaskitchen",
-        "google": "https://g.page/athenaskitchen",
-        "yelp": "https://yelp.com/biz/athenaskitchen",
-        "tripadvisor": "https://tripadvisor.com/athenaskitchen",
-        "other": "https://example.com"
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
       },
       "ownerInfo": {
         "fullName": "Maria Papadopoulos",
@@ -33,15 +50,27 @@
         "ownerEmail": "maria@example.com",
         "ownerPhone": "(312) 555-0124"
       },
+      "logo": "https://via.placeholder.com/200x200/055193/FFFFFF?text=Logo",
+      "photos": [
+        "https://via.placeholder.com/800x600/055193/FFFFFF?text=Photo1",
+        "https://via.placeholder.com/800x600/0066CC/FFFFFF?text=Photo2",
+        "https://via.placeholder.com/800x600/0055AA/FFFFFF?text=Photo3"
+      ],
       "id": "athenas-kitchen",
       "slug": "athenas-kitchen",
       "metadata": {
         "createdAt": "2025-01-15T10:00:00Z",
-        "updatedAt": "2026-01-02T04:23:09.676Z",
+        "updatedAt": "2026-01-03T07:46:29.690Z",
         "createdBy": "admin@thegreekdirectory.org"
       },
-      "visible": true,
-      "featured": false
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-03T07:46:29.690Z"
+      }
     },
     {
       "businessName": "St. Nicholas Greek Orthodox Church",
