@@ -507,7 +507,7 @@
       "slug": "b",
       "metadata": {
         "createdAt": "2026-01-03T10:53:25.793Z",
-        "updatedAt": "2026-01-03T10:55:36.280Z"
+        "updatedAt": "2026-01-03T10:55:56.642Z"
       },
       "analytics": {
         "views": 0,
@@ -516,7 +516,8 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T10:53:25.794Z"
-      }
+      },
+      "visible": true
     }
   ]
 }
