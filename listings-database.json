@@ -14,7 +14,7 @@
       "email": "info@athenaskitchen.com",
       "website": "https://athenaskitchen.com",
       "tier": "VERIFIED",
-      "verified": false,
+      "verified": true,
       "showClaimButton": true,
       "hours": {
         "monday": null,
@@ -60,7 +60,7 @@
       "slug": "athenas-kitchen",
       "metadata": {
         "createdAt": "2025-01-15T10:00:00Z",
-        "updatedAt": "2026-01-03T22:05:44.756Z",
+        "updatedAt": "2026-01-03T22:06:00.997Z",
         "createdBy": "admin@thegreekdirectory.org"
       },
       "analytics": {
