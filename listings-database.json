@@ -160,7 +160,7 @@
       "website": "https://www.example.com",
       "tier": "PREMIUM",
       "verified": true,
-      "showClaimButton": false,
+      "showClaimButton": true,
       "hours": {
         "monday": "Closed",
         "tuesday": "8:00 AM - 5:30 PM",
@@ -203,7 +203,7 @@
       "slug": "test-business",
       "metadata": {
         "createdAt": "2026-01-02T22:23:44.419Z",
-        "updatedAt": "2026-01-03T07:46:58.760Z"
+        "updatedAt": "2026-01-03T07:56:37.512Z"
       },
       "analytics": {
         "views": 0,
@@ -212,8 +212,7 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T07:41:09.722Z"
-      },
-      "visible": true
+      }
     }
   ]
 }
