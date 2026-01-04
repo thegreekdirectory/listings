@@ -86,15 +86,15 @@
       "description": "A welcoming parish serving the Greek Orthodox community with liturgy, fellowship, and cultural programs.",
       "category": "Church & Religious Organization",
       "phone": "(312) 555-0456",
-      "address": "456 Church Ave, Chicago, IL 60614",
-      "city": "",
+      "address": "456 Church Ave",
+      "city": "Chicago",
       "state": "IL",
-      "zipCode": "",
+      "zipCode": null,
       "country": "USA",
       "email": "office@stnicholaschicago.org",
       "website": "https://stnicholaschicago.org",
       "tier": "FEATURED",
-      "verified": false,
+      "verified": true,
       "showClaimButton": true,
       "hours": {
         "monday": null,
@@ -126,9 +126,17 @@
       },
       "ownerInfo": {
         "fullName": "Father Dimitri Kostopoulos",
+        "title": null,
         "fromGreece": "Thessaloniki",
         "ownerEmail": "father@stnicholaschicago.org",
-        "ownerPhone": "(312) 555-0457"
+        "ownerPhone": "(312) 555-0457",
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
       },
       "logo": "https://via.placeholder.com/200x200/055193/FFFFFF?text=SN",
       "photos": [
@@ -139,7 +147,7 @@
       "slug": "st-nicholas-church",
       "metadata": {
         "createdAt": "2025-01-14T09:00:00Z",
-        "updatedAt": "2026-01-04T08:45:25.221Z",
+        "updatedAt": "2026-01-04T08:45:58.697Z",
         "createdBy": "admin@thegreekdirectory.org"
       },
       "analytics": {
@@ -149,8 +157,7 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T07:46:13.402Z"
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "Test Business",
