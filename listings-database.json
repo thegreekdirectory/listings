@@ -465,7 +465,7 @@
       "slug": "q",
       "metadata": {
         "createdAt": "2026-01-04T18:58:53.078Z",
-        "updatedAt": "2026-01-04T18:59:44.119Z"
+        "updatedAt": "2026-01-04T18:59:48.745Z"
       },
       "analytics": {
         "views": 0,
@@ -475,7 +475,8 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-04T18:58:53.078Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
