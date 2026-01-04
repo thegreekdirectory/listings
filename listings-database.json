@@ -228,7 +228,7 @@
       "slug": "test-business",
       "metadata": {
         "createdAt": "2026-01-03T23:15:51.009Z",
-        "updatedAt": "2026-01-04T08:46:11.944Z"
+        "updatedAt": "2026-01-04T08:46:18.930Z"
       },
       "analytics": {
         "views": 0,
@@ -237,7 +237,8 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T23:15:51.009Z"
-      }
+      },
+      "visible": true
     },
     {
       "businessName": "Eagle Restaurant",
