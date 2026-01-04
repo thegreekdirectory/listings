@@ -1,0 +1,105 @@
+name: Track Analytics
+
+on:
+  repository_dispatch:
+    types: [track_analytics]
+
+jobs:
+  update-analytics:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Update analytics
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Get the listing ID and action from the dispatch event
+            const listingId = context.payload.client_payload.listingId;
+            const action = context.payload.client_payload.action;
+            const timestamp = context.payload.client_payload.timestamp || new Date().toISOString();
+            const userAgent = context.payload.client_payload.userAgent || 'Unknown';
+            
+            console.log(`Tracking ${action} for listing ${listingId} at ${timestamp}`);
+            
+            // Read the database file
+            const databasePath = 'listings-database.json';
+            const fileContent = fs.readFileSync(databasePath, 'utf8');
+            const database = JSON.parse(fileContent);
+            
+            // Find the listing
+            const listing = database.listings.find(l => l.id === listingId);
+            
+            if (!listing) {
+              console.log(`Listing ${listingId} not found`);
+              return;
+            }
+            
+            // Initialize analytics if not exists
+            if (!listing.analytics) {
+              listing.analytics = {
+                views: 0,
+                callClicks: 0,
+                websiteClicks: 0,
+                directionClicks: 0,
+                shareClicks: 0,
+                lastViewed: timestamp,
+                detailedViews: []
+              };
+            }
+            
+            // Initialize detailedViews if not exists
+            if (!listing.analytics.detailedViews) {
+              listing.analytics.detailedViews = [];
+            }
+            
+            // Update counters based on action
+            switch (action) {
+              case 'view':
+                listing.analytics.views = (listing.analytics.views || 0) + 1;
+                listing.analytics.lastViewed = timestamp;
+                break;
+              case 'call':
+                listing.analytics.callClicks = (listing.analytics.callClicks || 0) + 1;
+                break;
+              case 'website':
+                listing.analytics.websiteClicks = (listing.analytics.websiteClicks || 0) + 1;
+                break;
+              case 'directions':
+                listing.analytics.directionClicks = (listing.analytics.directionClicks || 0) + 1;
+                break;
+              case 'share':
+                listing.analytics.shareClicks = (listing.analytics.shareClicks || 0) + 1;
+                break;
+            }
+            
+            // Add to detailed views
+            listing.analytics.detailedViews.push({
+              action: action,
+              timestamp: timestamp,
+              userAgent: userAgent
+            });
+            
+            // Keep only last 1000 detailed views to prevent file bloat
+            if (listing.analytics.detailedViews.length > 1000) {
+              listing.analytics.detailedViews = listing.analytics.detailedViews.slice(-1000);
+            }
+            
+            // Write back to file
+            fs.writeFileSync(databasePath, JSON.stringify(database, null, 2));
+            
+            console.log(`Updated analytics for ${listing.businessName}`);
+            console.log(`Total views: ${listing.analytics.views}`);
+            
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add listings-database.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics for listing" && git push)
