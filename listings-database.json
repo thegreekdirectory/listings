@@ -3,18 +3,18 @@
     {
       "businessName": "Athena's Kitchen",
       "tagline": "athena tagline",
-      "description": "Authentic Greek restaurant serving traditional dishes made with love and the finest ingredients.",
+      "description": "Authentic Greek restaurant serving traditional dishes made with love and the finest ingredients",
       "category": "Food & Hospitality",
       "phone": "(312) 555-0123",
       "address": "123 Main St, Chicago, IL 60601",
-      "city": "",
+      "city": "Chicago",
       "state": "IL",
-      "zipCode": "",
+      "zipCode": null,
       "country": "USA",
       "email": "info@athenaskitchen.com",
       "website": "https://athenaskitchen.com",
       "tier": "VERIFIED",
-      "verified": false,
+      "verified": true,
       "showClaimButton": true,
       "hours": {
         "monday": null,
@@ -46,9 +46,17 @@
       },
       "ownerInfo": {
         "fullName": "Maria Papadopoulos",
+        "title": null,
         "fromGreece": "Athens",
         "ownerEmail": "maria@example.com",
-        "ownerPhone": "(312) 555-0124"
+        "ownerPhone": "(312) 555-0124",
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
       },
       "logo": "https://via.placeholder.com/200x200/055193/FFFFFF?text=Logo",
       "photos": [
@@ -60,7 +68,7 @@
       "slug": "athenas-kitchen",
       "metadata": {
         "createdAt": "2025-01-15T10:00:00Z",
-        "updatedAt": "2026-01-04T08:45:23.860Z",
+        "updatedAt": "2026-01-04T08:45:47.564Z",
         "createdBy": "admin@thegreekdirectory.org"
       },
       "analytics": {
@@ -70,8 +78,7 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-03T07:46:29.690Z"
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "St. Nicholas Greek Orthodox Church",
