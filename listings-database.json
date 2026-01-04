@@ -174,8 +174,8 @@
       "country": "USA",
       "email": "ex@example.com",
       "website": "https://www.example.com",
-      "tier": "FREE",
-      "verified": false,
+      "tier": "PREMIUM",
+      "verified": true,
       "showClaimButton": true,
       "hours": {
         "monday": "Closed",
@@ -226,10 +226,9 @@
       ],
       "id": "test-business",
       "slug": "test-business",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-03T23:15:51.009Z",
-        "updatedAt": "2026-01-03T23:15:51.009Z"
+        "updatedAt": "2026-01-04T08:46:11.944Z"
       },
       "analytics": {
         "views": 0,
