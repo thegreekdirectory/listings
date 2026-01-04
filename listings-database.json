@@ -334,9 +334,9 @@
       "country": "USA",
       "email": "info@haamail.net",
       "website": "https://hellenicamericanacademy.org",
-      "tier": "FREE",
-      "verified": false,
-      "showClaimButton": true,
+      "tier": "PREMIUM",
+      "verified": true,
+      "showClaimButton": false,
       "hours": {
         "monday": "8:00 AM - 5:30 PM",
         "tuesday": "8:00 AM - 5:30 PM",
@@ -387,7 +387,7 @@
       "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-04T08:43:03.777Z",
-        "updatedAt": "2026-01-04T08:44:01.070Z"
+        "updatedAt": "2026-01-04T11:43:19.703Z"
       },
       "analytics": {
         "views": 0,
@@ -396,8 +396,7 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-04T08:43:03.778Z"
-      },
-      "visible": true
+      }
     }
   ]
 }
