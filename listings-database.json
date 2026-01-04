@@ -402,12 +402,12 @@
     {
       "businessName": "q",
       "tagline": "q",
-      "description": "",
+      "description": "q desc",
       "category": "Pets & Veterinary",
       "phone": null,
       "address": null,
       "city": null,
-      "state": null,
+      "state": "IL",
       "zipCode": null,
       "country": "USA",
       "email": null,
@@ -463,10 +463,9 @@
       ],
       "id": "q",
       "slug": "q",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-04T18:58:53.078Z",
-        "updatedAt": "2026-01-04T18:58:53.078Z"
+        "updatedAt": "2026-01-04T18:59:44.119Z"
       },
       "analytics": {
         "views": 0,
