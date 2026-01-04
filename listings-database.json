@@ -477,6 +477,85 @@
         "detailedViews": []
       },
       "visible": true
+    },
+    {
+      "businessName": "Example",
+      "tagline": "Example",
+      "description": "Example",
+      "category": "Automotive & Transportation",
+      "phone": "1112223333",
+      "address": "123 Open Ave",
+      "city": "Chicago",
+      "state": "IL",
+      "zipCode": "60706",
+      "country": "USA",
+      "email": "example@example.com",
+      "website": "example.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://g.page/example",
+        "yelp": "https://yelp.com/biz/example",
+        "tripadvisor": "https://tripadvisor.com/example",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"
+      ],
+      "id": "example",
+      "slug": "example",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-04T22:52:13.213Z",
+        "updatedAt": "2026-01-04T22:52:13.213Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-04T22:52:13.213Z",
+        "detailedViews": []
+      }
     }
   ]
 }
