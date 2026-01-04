@@ -243,7 +243,7 @@
     {
       "businessName": "Eagle Restaurant",
       "tagline": "Family-owned dining staple in Downers Grove since 1981.",
-      "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
+      "description": "Established in 1981, Eagle Restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
       "category": "Food & Hospitality",
       "phone": "(630) 963-9161",
       "address": "406 Maple Ave",
@@ -309,7 +309,7 @@
       "slug": "eagle-restaurant",
       "metadata": {
         "createdAt": "2026-01-04T00:19:55.239Z",
-        "updatedAt": "2026-01-04T09:01:01.209Z"
+        "updatedAt": "2026-01-04T22:49:50.571Z"
       },
       "analytics": {
         "views": 0,
@@ -318,8 +318,7 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-04T00:19:55.240Z"
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "Hellenic American Academy",
