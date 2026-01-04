@@ -334,7 +334,7 @@
         "facebook": "hellenicamericanacademy",
         "instagram": "hellenicamericanacademy",
         "twitter": null,
-        "youtube": null,
+        "youtube": "hellenicamericanacademy",
         "tiktok": null,
         "linkedin": "https://www.linkedin.com/company/hellenicamericanacademy.org",
         "other1": null,
@@ -369,10 +369,9 @@
       ],
       "id": "hellenic-american-academy",
       "slug": "hellenic-american-academy",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-04T08:43:03.777Z",
-        "updatedAt": "2026-01-04T08:43:03.778Z"
+        "updatedAt": "2026-01-04T08:43:56.404Z"
       },
       "analytics": {
         "views": 0,
