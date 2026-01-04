@@ -70,6 +70,13 @@
             .border-gray-300 { border-color: #404040 !important; }
             .shadow-sm, .shadow, .shadow-lg, .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
             .hover\:text-gray-900:hover { color: #e5e5e5 !important; }
+            img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
+            .social-icon svg { pointer-events: none; user-select: none; }
+
+            /* Fix social icons */
+            .social-google { background: white; border: 2px solid #e5e7eb; }
+            .social-yelp { background: white; border: 2px solid #e5e7eb; }
+            .social-tripadvisor { background: white; border: 2px solid #e5e7eb; }
             .hours-disclaimer { background: #3a3a00; border-color: #8a7a00; color: #ffd700; }
             .leaflet-container { background: #1a1a1a; }
             .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
@@ -183,7 +190,9 @@
                         event_type: 'track_analytics',
                         client_payload: {
                             listingId: listingId,
-                            action: 'view'
+                            action: 'view',
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent
                         }
                     })
                 });
@@ -203,7 +212,9 @@
                     event_type: 'track_analytics',
                     client_payload: {
                         listingId: listingId,
-                        action: action
+                        action: action,
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent
                     }
                 })
             }).catch(() => {});
