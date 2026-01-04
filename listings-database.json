@@ -223,6 +223,84 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-03T23:15:51.009Z"
       }
+    },
+    {
+      "businessName": "Eagle Restaurant",
+      "tagline": "Family-owned dining staple in Downers Grove since 1981.",
+      "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
+      "category": "Food & Hospitality",
+      "phone": "(630) 963-9161",
+      "address": "406 Maple Ave",
+      "city": "Downers Grove",
+      "state": "IL",
+      "zipCode": "60515",
+      "country": "USA",
+      "email": "eagledownersgrove@gmail.com",
+      "website": "https://eagledg.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "10:30 AM - 8:00 PM",
+        "wednesday": "10:30 AM - 8:00 PM",
+        "thursday": "10:30 AM - 8:00 PM",
+        "friday": "10:30 AM - 8:00 PM",
+        "saturday": "10:30 AM - 8:00 PM",
+        "sunday": "11:00 AM - 8:00 PM"
+      },
+      "socialMedia": {
+        "facebook": "EagleRestaurant",
+        "instagram": "eag",
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/logo/logo/logo.png",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-1.webp"
+      ],
+      "id": "eagle-restaurant",
+      "slug": "eagle-restaurant",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-04T00:19:55.239Z",
+        "updatedAt": "2026-01-04T00:19:55.239Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-04T00:19:55.240Z"
+      }
     }
   ]
 }
