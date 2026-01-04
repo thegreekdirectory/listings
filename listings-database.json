@@ -251,7 +251,7 @@
       },
       "socialMedia": {
         "facebook": "EagleRestaurant",
-        "instagram": "eag",
+        "instagram": "eagle_downers_grove",
         "twitter": null,
         "youtube": null,
         "tiktok": null,
@@ -261,19 +261,19 @@
         "other3": null
       },
       "reviews": {
-        "google": null,
-        "yelp": null,
-        "tripadvisor": null,
+        "google": "https://www.google.com/gasearch?q=eagle%20restaurant%20downers%20grove%20reviews&source=sh/x/gs/m2/5#ebo=2",
+        "yelp": "https://www.yelp.com/biz/eagle-restaurant-downers-grove",
+        "tripadvisor": "https://www.tripadvisor.com/Restaurant_Review-g35904-d427213-Reviews-Eagle_Restaurant-Downers_Grove_DuPage_County_Illinois.html",
         "other1": null,
         "other2": null,
         "other3": null
       },
       "ownerInfo": {
-        "fullName": null,
-        "title": null,
-        "fromGreece": null,
-        "ownerEmail": null,
-        "ownerPhone": null,
+        "fullName": "John Zografos",
+        "title": "Owner",
+        "fromGreece": "Xios",
+        "ownerEmail": "jzografo@gmail.com",
+        "ownerPhone": "(630) 712-5050",
         "visibility": {
           "name": true,
           "title": true,
@@ -284,14 +284,16 @@
       },
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/logo/logo/logo.png",
       "photos": [
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-1.webp"
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-1.webp",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-2.jpeg",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-3.webp",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-4.jpeg"
       ],
       "id": "eagle-restaurant",
       "slug": "eagle-restaurant",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-04T00:19:55.239Z",
-        "updatedAt": "2026-01-04T00:19:55.239Z"
+        "updatedAt": "2026-01-04T00:25:33.328Z"
       },
       "analytics": {
         "views": 0,
