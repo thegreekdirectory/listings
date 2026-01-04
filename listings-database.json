@@ -398,6 +398,85 @@
         "lastViewed": "2026-01-04T08:43:03.778Z"
       },
       "visible": true
+    },
+    {
+      "businessName": "q",
+      "tagline": "q",
+      "description": "",
+      "category": "Pets & Veterinary",
+      "phone": null,
+      "address": null,
+      "city": null,
+      "state": null,
+      "zipCode": null,
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": false,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://g.page/test",
+        "yelp": "https://www.yelp.com/biz/test",
+        "tripadvisor": "https://www.tripadvisor.com/test",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&q=80"
+      ],
+      "id": "q",
+      "slug": "q",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-04T18:58:53.078Z",
+        "updatedAt": "2026-01-04T18:58:53.078Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-04T18:58:53.078Z",
+        "detailedViews": []
+      }
     }
   ]
 }
