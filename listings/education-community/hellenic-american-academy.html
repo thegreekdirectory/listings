@@ -70,6 +70,13 @@
             .border-gray-300 { border-color: #404040 !important; }
             .shadow-sm, .shadow, .shadow-lg, .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
             .hover\:text-gray-900:hover { color: #e5e5e5 !important; }
+            img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
+            .social-icon svg { pointer-events: none; user-select: none; }
+
+            /* Fix social icons */
+            .social-google { background: white; border: 2px solid #e5e7eb; }
+            .social-yelp { background: white; border: 2px solid #e5e7eb; }
+            .social-tripadvisor { background: white; border: 2px solid #e5e7eb; }
             .hours-disclaimer { background: #3a3a00; border-color: #8a7a00; color: #ffd700; }
             .leaflet-container { background: #1a1a1a; }
             .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
@@ -108,7 +115,7 @@
                         <span class="text-sm font-semibold px-3 py-1 rounded-full text-white" style="background-color:#055193;">
                             Education & Community
                         </span>
-                        <span class="badge badge-verified">Verified</span><span class="badge badge-featured">Featured</span><span class="badge" id="openClosedBadge"></span>
+                        <span class="badge" id="openClosedBadge"></span>
                     </div>
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">Hellenic American Academy</h1>
                     <p class="text-lg text-gray-600 italic">"Private dual-language day school, PreK-8th. Center for Greek language & culture, PreK-Adult. Midwest region examination center for Ellinomatheia."</p>
@@ -116,7 +123,8 @@
                 <img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/logo/logo/logo.png" alt="Hellenic American Academy logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
             </div>
 
-            <p class="text-gray-700 mb-6"></p>
+            <p class="text-gray-700 mb-6">Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy’s problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.
+In addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.</p>
 
             <div class="space-y-3 mb-6">
                 <div class="flex items-start gap-3"><span class="mt-1">📍</span><div><p class="font-semibold text-gray-900">Address</p><p class="text-gray-700">445 Pine St, Deerfield, IL 60015</p></div></div>
@@ -160,7 +168,7 @@
             </div>
         </div>
 
-        
+        <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Hellenic%20American%20Academy%20-%20Deerfield%2C%20IL%2C%20USA" class="fixed bottom-6 right-6 px-6 py-3 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all z-50" style="background-color: #055193;">📝 Claim this Listing</a>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -183,7 +191,9 @@
                         event_type: 'track_analytics',
                         client_payload: {
                             listingId: listingId,
-                            action: 'view'
+                            action: 'view',
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent
                         }
                     })
                 });
@@ -203,7 +213,9 @@
                     event_type: 'track_analytics',
                     client_payload: {
                         listingId: listingId,
-                        action: action
+                        action: action,
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent
                     }
                 })
             }).catch(() => {});
