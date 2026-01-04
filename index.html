@@ -16,7 +16,7 @@
         body.modal-open { overflow: hidden; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-        #map { width: 100%; height: 500px; }
+        #map { width: 100%; height: calc(100vh - 300px); max-height: 600px; min-height: 400px; }
         .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
@@ -24,6 +24,20 @@
         .badge-verified { background: #0000FF; color: white; }
         .badge-claimed { background: #6B7280; color: white; }
         img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
+        
+        /* Filter Panel Styling */
+        #filterPanel {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        
+        /* Map Container Styling */
+        #mapContainer {
+            max-height: calc(100vh - 150px);
+            overflow: hidden;
+        }
+        
+        /* Custom Marker with Circular Crop */
         .custom-marker {
             width: 40px;
             height: 40px;
@@ -33,6 +47,9 @@
             background: white;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .custom-marker:hover {
             transform: scale(1.1);
@@ -46,10 +63,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center;
             pointer-events: none;
             user-select: none;
             -webkit-user-drag: none;
         }
+        
         .marker-cluster {
             background: rgba(5, 81, 147, 0.6);
             border: 3px solid #055193;
@@ -70,6 +89,7 @@
         .marker-cluster-small { width: 40px; height: 40px; }
         .marker-cluster-medium { width: 50px; height: 50px; font-size: 16px; }
         .marker-cluster-large { width: 60px; height: 60px; font-size: 18px; }
+        
         .map-controls {
             position: absolute;
             top: 10px;
@@ -96,6 +116,7 @@
             background: #f5f5f5;
             border-color: #055193;
         }
+        
         .radius-value {
             font-size: 14px;
             color: #666;
@@ -126,6 +147,7 @@
             cursor: pointer;
             border: none;
         }
+        
         .map-popup {
             position: relative;
             background: white;
