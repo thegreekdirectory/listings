@@ -3,7 +3,7 @@
     {
       "businessName": "Hellenic American Academy",
       "tagline": "Private dual-language day school & midwest region examination center for Ellinomatheia.",
-      "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The AcademyÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂs problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
+      "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The AcademyÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂs problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
       "category": "Education & Community",
       "phone": "(847) 317-1063",
       "address": "445 Pine St",
@@ -161,7 +161,7 @@
     {
       "businessName": "Filakia",
       "tagline": "Kiss toxins goodbye.",
-      "description": "Welcome to Filakia, where we focus on small-batch, handmade beauty products. Everything is thoughtfully developed with clean ingredients that support your natural glow without compromise, toxins, or unnecessary ingredients. \n\nI was inspired to start Filakia because my son suffered from severe eczema when he was a baby. For a while, I thought we finally had it under control, but a few years later it came back even worse than before. This time, not only did the eczema return, but he also suddenly developed multiple allergies. I realized it wasnÃÂ¢ÃÂÃÂt just about what I put into his body-it was equally important to pay attention to what I put onto his skin. That realization fueled my determination to find safer, more nourishing options and ultimately sparked the passion behind my business. \n\nOur mission is simple - to create everyday essentials that make you feel good inside and out. From our ultra-hydrating lip balms to our delicately crafted whipped tallow balm, each homemade product is made with intention, purity, and care.\n\nFilakia is derived from the Greek root philia (ÃÂÃÂÃÂÃÂ¹ÃÂÃÂ»ÃÂÃÂ¹ÃÂÃÂ±) meaning \"friendship\" or \"affectionate regard\". Filakia also means little kisses!\n\n We appreciate you visiting us and hope you love our products!",
+      "description": "Welcome to Filakia, where we focus on small-batch, handmade beauty products. Everything is thoughtfully developed with clean ingredients that support your natural glow without compromise, toxins, or unnecessary ingredients. \n\nI was inspired to start Filakia because my son suffered from severe eczema when he was a baby. For a while, I thought we finally had it under control, but a few years later it came back even worse than before. This time, not only did the eczema return, but he also suddenly developed multiple allergies. I realized it wasnÃÂÃÂ¢ÃÂÃÂÃÂÃÂt just about what I put into his body-it was equally important to pay attention to what I put onto his skin. That realization fueled my determination to find safer, more nourishing options and ultimately sparked the passion behind my business. \n\nOur mission is simple - to create everyday essentials that make you feel good inside and out. From our ultra-hydrating lip balms to our delicately crafted whipped tallow balm, each homemade product is made with intention, purity, and care.\n\nFilakia is derived from the Greek root philia (ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¹ÃÂÃÂÃÂÃÂ»ÃÂÃÂÃÂÃÂ¹ÃÂÃÂÃÂÃÂ±) meaning \"friendship\" or \"affectionate regard\". Filakia also means little kisses!\n\n We appreciate you visiting us and hope you love our products!",
       "category": "Beauty & Health",
       "phone": null,
       "address": null,
@@ -315,6 +315,85 @@
         "detailedViews": []
       },
       "visible": true
+    },
+    {
+      "businessName": "Brillakis Import Foods",
+      "tagline": "Family-owned grocery store with Greek imports.",
+      "description": "Brillakis Import Foods is a family-owned grocery store in Niles, Illinois, specializing in authentic Greek and imported foods, including cheeses, olive oil, pastries, and meats. It is known for its high-quality products, friendly service, and a wide selection of Greek groceries, imported beers, and other specialty items.",
+      "category": "Grocery & Imports",
+      "phone": "(847) 966-1250",
+      "address": "9061 Courtland Dr",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": "9:00 AM - 6:00 PM",
+        "tuesday": "9:00 AM - 6:00 PM",
+        "wednesday": "9:00 AM - 6:00 PM",
+        "thursday": "9:00 AM - 6:00 PM",
+        "friday": "9:00 AM - 6:00 PM",
+        "saturday": "9:00 AM - 6:00 PM",
+        "sunday": "9:00 AM - 4:00 PM"
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "John Brillakis",
+        "title": "Owner",
+        "fromGreece": "Xania",
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/brillakis-import-foods/photos/photos/photo-1.jpeg"
+      ],
+      "id": "brillakis-import-foods",
+      "slug": "brillakis-import-foods",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-05T10:54:25.512Z",
+        "updatedAt": "2026-01-05T10:54:25.512Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-05T10:54:25.512Z",
+        "detailedViews": []
+      }
     }
   ]
 }
