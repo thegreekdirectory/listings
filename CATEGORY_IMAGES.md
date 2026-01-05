@@ -6,7 +6,7 @@ These Unsplash images are automatically used when listings don't have custom log
 
 - **Automotive & Transportation**: https://images.unsplash.com/photo-1486262715619-67b85e0b08d3
 - **Beauty & Health**: https://images.unsplash.com/photo-1560750588-73207b1ef5b8
-- **Church & Religious Organization**: https://images.unsplash.com/photo-1438232992991-995b7058bbb3
+- **Church & Religious Organization**: https://images.unsplash.com/photo-1601231656153-73aa7f115365
 - **Cultural/Fraternal Organization**: https://images.unsplash.com/photo-1529156069898-49953e39b3ac
 - **Education & Community**: https://images.unsplash.com/photo-1523050854058-8df90110c9f1
 - **Entertainment, Arts & Recreation**: https://images.unsplash.com/photo-1514525253161-7a46d19cd819
