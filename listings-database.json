@@ -394,6 +394,85 @@
         "lastViewed": "2026-01-05T10:54:25.512Z",
         "detailedViews": []
       }
+    },
+    {
+      "businessName": "Meraki Events Chicago",
+      "tagline": "Wedding planning service in Niles, IL.",
+      "description": "At Meraki Event Designs & Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.\nWe provide for each of our clients a courteous and professional environment from set up to service breakdown. Meraki Event Designs & Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs & Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.",
+      "category": "Professional & Business Services",
+      "phone": "(847) 779-3056",
+      "address": "9073 Courtland Dr",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
+      "country": "USA",
+      "email": "merakieventsniles@gmail.com",
+      "website": "https://merakieventschicago.com/",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/professional-business-services/meraki-events-chicago/logo/logo/logo.jpeg",
+      "photos": [
+        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80"
+      ],
+      "id": "meraki-events-chicago",
+      "slug": "meraki-events-chicago",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-05T11:01:49.789Z",
+        "updatedAt": "2026-01-05T11:01:49.789Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-05T11:01:49.789Z",
+        "detailedViews": []
+      }
     }
   ]
 }
