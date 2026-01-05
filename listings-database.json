@@ -303,7 +303,7 @@
       "slug": "lekas-auto-construction",
       "metadata": {
         "createdAt": "2026-01-05T10:14:24.228Z",
-        "updatedAt": "2026-01-05T10:30:56.603Z"
+        "updatedAt": "2026-01-05T10:31:01.158Z"
       },
       "analytics": {
         "views": 0,
@@ -313,7 +313,8 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-05T10:14:24.228Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
