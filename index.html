@@ -13,7 +13,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body.modal-open { overflow: hidden; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
         #map { width: 100%; height: calc(100vh - 300px); max-height: 600px; min-height: 400px; }
@@ -25,19 +24,19 @@
         .badge-claimed { background: #6B7280; color: white; }
         img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
         
-        /* Filter Panel Styling */
         #filterPanel {
             max-height: calc(100vh - 200px);
             overflow-y: auto;
         }
         
-        /* Map Container Styling */
-        #mapContainer {
-            max-height: calc(100vh - 150px);
-            overflow: hidden;
+        #filterPanel .space-y-4 > div:last-child {
+            padding-bottom: 40px;
         }
         
-        /* Custom Marker with Circular Crop */
+        #mapContainer {
+            position: relative;
+        }
+        
         .custom-marker {
             width: 40px;
             height: 40px;
@@ -269,6 +268,9 @@
                     <span>🗺️</span>
                     <span class="text-sm font-medium">Map</span>
                 </button>
+                <button id="refreshBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap" style="display: none;">
+                    <span>🔄</span>
+                </button>
                 <div class="flex items-center gap-1 ml-auto bg-gray-100 rounded-lg p-1">
                     <button id="gridViewBtn" class="p-2 rounded bg-white shadow-sm"><span>⊞</span></button>
                     <button id="listViewBtn" class="p-2 rounded"><span>☰</span></button>
@@ -321,6 +323,7 @@
                 <option value="default">Default</option>
                 <option value="open-az">Open (A-Z)</option>
                 <option value="az">All (A-Z)</option>
+                <option value="closest">Closest to Me</option>
             </select>
         </div>
     </div>
@@ -380,8 +383,19 @@
         let markerClusterGroup = null;
         let defaultMapCenter = [41.8781, -87.6298];
         let defaultMapZoom = 10;
+        let userLocationMarker = null;
+
+        // Detect iOS web app
+        function isIOSWebApp() {
+            return ('standalone' in window.navigator) && window.navigator.standalone;
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Show refresh button for iOS web app
+            if (isIOSWebApp()) {
+                document.getElementById('refreshBtn').style.display = 'flex';
+            }
+            
             loadListings();
             setupEventListeners();
             createCategoryFilters();
@@ -460,12 +474,41 @@
                             lng: position.coords.longitude
                         };
                         applyFilters();
+                        
+                        // Add user location marker if map is open
+                        if (map && mapOpen) {
+                            addUserLocationMarker();
+                        }
                     },
                     () => {
                         console.log('Location not shared');
                     }
                 );
             }
+        }
+
+        function addUserLocationMarker() {
+            if (!map || !userLocation) return;
+            
+            // Remove existing marker
+            if (userLocationMarker) {
+                map.removeLayer(userLocationMarker);
+            }
+            
+            // Create blue circle marker for user location
+            const userIcon = L.divIcon({
+                html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
+                className: '',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
+            });
+            
+            userLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
+                icon: userIcon,
+                zIndexOffset: 1000
+            }).addTo(map);
+            
+            userLocationMarker.bindPopup('<strong>Your Location</strong>');
         }
 
         async function loadListings() {
@@ -480,6 +523,7 @@
                 applyFilters();
                 updateResultsCount();
                 
+                // Geocode listings in background
                 setTimeout(() => {
                     geocodeAllListings();
                 }, 100);
@@ -496,6 +540,11 @@
                     await geocodeListing(listing);
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
+            }
+            
+            // Update map if it's open
+            if (map && mapOpen) {
+                updateMapMarkers();
             }
         }
 
@@ -592,6 +641,11 @@
             document.getElementById('gridViewBtn').addEventListener('click', () => setView('grid'));
             document.getElementById('listViewBtn').addEventListener('click', () => setView('list'));
             
+            // iOS refresh button
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                window.location.reload();
+            });
+            
             const radiusSlider = document.getElementById('radiusFilter');
             radiusSlider.addEventListener('input', (e) => {
                 selectedRadius = parseInt(e.target.value);
@@ -622,6 +676,7 @@
             document.getElementById('locateBtn').addEventListener('click', () => {
                 if (userLocation) {
                     map.setView([userLocation.lat, userLocation.lng], 13);
+                    addUserLocationMarker();
                 } else {
                     requestLocation();
                 }
@@ -632,18 +687,6 @@
                     map.setView(defaultMapCenter, defaultMapZoom);
                 }
             });
-            
-            document.body.addEventListener('touchmove', (e) => {
-                if (filtersOpen || mapOpen) {
-                    const target = e.target;
-                    const filterPanel = document.getElementById('filterPanel');
-                    const mapContainer = document.getElementById('mapContainer');
-                    
-                    if (!filterPanel.contains(target) && !mapContainer.contains(target)) {
-                        e.preventDefault();
-                    }
-                }
-            }, { passive: false });
         }
         
         function updateRadiusValue() {
@@ -691,7 +734,7 @@
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 3959;
+            const R = 3959; // Earth's radius in miles
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -757,17 +800,41 @@
                 const matchesCountry = !selectedCountry || (listing.country || 'USA') === selectedCountry;
                 const matchesState = !selectedState || listing.state === selectedState;
                 
+                // Fixed radius filter
                 let matchesRadius = true;
-                if (selectedRadius > 0 && userLocation && listing.coordinates) {
-                    const distance = calculateDistance(
-                        userLocation.lat, userLocation.lng,
-                        listing.coordinates.lat, listing.coordinates.lng
-                    );
-                    matchesRadius = distance <= selectedRadius;
+                if (selectedRadius > 0) {
+                    if (!userLocation) {
+                        // If no user location, don't filter by radius
+                        matchesRadius = true;
+                    } else if (!listing.coordinates) {
+                        // If listing has no coordinates, exclude it from radius filter
+                        matchesRadius = false;
+                    } else {
+                        // Calculate distance
+                        const distance = calculateDistance(
+                            userLocation.lat, userLocation.lng,
+                            listing.coordinates.lat, listing.coordinates.lng
+                        );
+                        matchesRadius = distance <= selectedRadius;
+                    }
                 }
                 
                 return matchesSearch && matchesCategory && matchesCountry && matchesState && matchesRadius;
             });
+            
+            // Add distance to each listing for sorting
+            if (userLocation && sortOption === 'closest') {
+                filteredListings.forEach(listing => {
+                    if (listing.coordinates) {
+                        listing._distance = calculateDistance(
+                            userLocation.lat, userLocation.lng,
+                            listing.coordinates.lat, listing.coordinates.lng
+                        );
+                    } else {
+                        listing._distance = Infinity;
+                    }
+                });
+            }
             
             filteredListings.sort((a, b) => {
                 if (sortOption === 'default') {
@@ -786,6 +853,9 @@
                     const bOpen = b.hours ? isOpenNow(b.hours) : false;
                     if (aOpen !== bOpen) return bOpen ? 1 : -1;
                     return a.businessName.localeCompare(b.businessName);
+                } else if (sortOption === 'closest') {
+                    // Sort by distance (closest first)
+                    return (a._distance || Infinity) - (b._distance || Infinity);
                 } else {
                     return a.businessName.localeCompare(b.businessName);
                 }
@@ -804,13 +874,11 @@
             
             if (filtersOpen) {
                 panel.classList.remove('hidden');
-                document.body.classList.add('modal-open');
                 if (mapOpen) {
                     toggleMap();
                 }
             } else {
                 panel.classList.add('hidden');
-                document.body.classList.remove('modal-open');
             }
         }
 
@@ -820,7 +888,6 @@
             
             if (mapOpen) {
                 container.classList.remove('hidden');
-                document.body.classList.add('modal-open');
                 if (filtersOpen) {
                     toggleFilters();
                 }
@@ -830,10 +897,12 @@
                 setTimeout(() => {
                     map.invalidateSize();
                     updateMapMarkers();
+                    if (userLocation) {
+                        addUserLocationMarker();
+                    }
                 }, 100);
             } else {
                 container.classList.add('hidden');
-                document.body.classList.remove('modal-open');
             }
         }
         
@@ -869,6 +938,11 @@
             });
             
             map.addLayer(markerClusterGroup);
+            
+            // Add user location marker if available
+            if (userLocation) {
+                addUserLocationMarker();
+            }
         }
 
         function updateMapMarkers() {
@@ -951,6 +1025,7 @@
             const count = filteredListings.length;
             document.getElementById('resultsCount').textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
         }
+
         function renderListings() {
             const container = document.getElementById('listingsContainer');
             if (filteredListings.length === 0) {
