@@ -45,6 +45,33 @@
             position: relative;
         }
         
+        .map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #055193;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         .custom-marker {
             width: 40px;
             height: 40px;
@@ -245,6 +272,7 @@
             .map-popup-tagline, .map-popup-details { color: #999; }
             .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
             .leaflet-popup-tip { background: #2a2a2a !important; }
+            .map-loading { background: #2a2a2a; color: #e5e5e5; }
         }
     </style>
 </head>
@@ -317,6 +345,10 @@
     </header>
 
     <div id="mapContainer" class="hidden border-b relative">
+        <div class="map-loading" id="mapLoading">
+            <div class="spinner"></div>
+            <p class="text-sm text-gray-600 mt-2 text-center">Loading map...</p>
+        </div>
         <div id="map"></div>
         <div class="map-controls">
             <button class="map-control-btn" id="locateBtn" title="Find my location">📍</button>
@@ -332,6 +364,7 @@
                 <option value="open-az">Open (A-Z)</option>
                 <option value="az">All (A-Z)</option>
                 <option value="closest">Closest to Me</option>
+                <option value="closest-open">Closest to Me (Open)</option>
             </select>
         </div>
     </div>
@@ -392,6 +425,7 @@
         let defaultMapCenter = [41.8781, -87.6298];
         let defaultMapZoom = 10;
         let userLocationMarker = null;
+        let mapLoading = false;
 
         // Detect iOS web app
         function isIOSWebApp() {
@@ -490,6 +524,11 @@
                     },
                     () => {
                         console.log('Location not shared');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
                     }
                 );
             }
@@ -546,7 +585,7 @@
             for (let listing of allListings) {
                 if (!listing.coordinates && listing.address && !isBasedIn(listing)) {
                     await geocodeListing(listing);
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
             
@@ -558,6 +597,23 @@
 
         function isBasedIn(listing) {
             return listing.city && listing.state && !listing.address;
+        }
+
+        async function geocodeListing(listing) {
+            const fullAddress = getFullAddress(listing);
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    listing.coordinates = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                    console.log(`Geocoded ${listing.businessName}:`, listing.coordinates);
+                }
+            } catch (e) {
+                console.error('Geocoding failed for', listing.businessName, e);
+            }
         }
 
         function populateCountryFilter() {
@@ -608,22 +664,6 @@
             }
             
             document.getElementById('locationSubtitle').textContent = subtitle;
-        }
-
-        async function geocodeListing(listing) {
-            const fullAddress = getFullAddress(listing);
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`);
-                const data = await response.json();
-                if (data && data.length > 0) {
-                    listing.coordinates = {
-                        lat: parseFloat(data[0].lat),
-                        lng: parseFloat(data[0].lon)
-                    };
-                }
-            } catch (e) {
-                console.error('Geocoding failed for', listing.businessName);
-            }
         }
 
         function getFullAddress(listing) {
@@ -757,7 +797,11 @@
         }
 
         function isOpenNow(hours) {
-            if (!hours || typeof hours !== 'object') return false;
+            if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
+            
+            // Check if all values are null or empty
+            const hasAnyHours = Object.values(hours).some(h => h && h.trim() !== '');
+            if (!hasAnyHours) return null;
             
             const now = new Date();
             const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
@@ -769,7 +813,7 @@
             if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
             
             const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-            if (!match) return false;
+            if (!match) return null;
             
             const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
             let start = parseInt(startHour);
@@ -808,17 +852,13 @@
                 const matchesCountry = !selectedCountry || (listing.country || 'USA') === selectedCountry;
                 const matchesState = !selectedState || listing.state === selectedState;
                 
-                // Fixed radius filter
                 let matchesRadius = true;
                 if (selectedRadius > 0) {
                     if (!userLocation) {
-                        // If no user location, don't filter by radius
                         matchesRadius = true;
                     } else if (!listing.coordinates) {
-                        // If listing has no coordinates, exclude it from radius filter
                         matchesRadius = false;
                     } else {
-                        // Calculate distance
                         const distance = calculateDistance(
                             userLocation.lat, userLocation.lng,
                             listing.coordinates.lat, listing.coordinates.lng
@@ -831,7 +871,7 @@
             });
             
             // Add distance to each listing for sorting
-            if (userLocation && sortOption === 'closest') {
+            if (userLocation && (sortOption === 'closest' || sortOption === 'closest-open')) {
                 filteredListings.forEach(listing => {
                     if (listing.coordinates) {
                         listing._distance = calculateDistance(
@@ -852,22 +892,44 @@
                     if (tierPriority[aTier] !== tierPriority[bTier]) {
                         return tierPriority[bTier] - tierPriority[aTier];
                     }
-                    const aOpen = a.hours ? isOpenNow(a.hours) : false;
-                    const bOpen = b.hours ? isOpenNow(b.hours) : false;
-                    if (aOpen !== bOpen) return bOpen ? 1 : -1;
+                    const aOpen = isOpenNow(a.hours);
+                    const bOpen = isOpenNow(b.hours);
+                    if (aOpen !== bOpen) {
+                        if (aOpen === null && bOpen !== null) return 1;
+                        if (bOpen === null && aOpen !== null) return -1;
+                        return bOpen ? 1 : -1;
+                    }
                     return a.businessName.localeCompare(b.businessName);
                 } else if (sortOption === 'open-az') {
-                    const aOpen = a.hours ? isOpenNow(a.hours) : false;
-                    const bOpen = b.hours ? isOpenNow(b.hours) : false;
-                    if (aOpen !== bOpen) return bOpen ? 1 : -1;
+                    const aOpen = isOpenNow(a.hours);
+                    const bOpen = isOpenNow(b.hours);
+                    if (aOpen !== bOpen) {
+                        if (aOpen === null && bOpen !== null) return 1;
+                        if (bOpen === null && aOpen !== null) return -1;
+                        return bOpen ? 1 : -1;
+                    }
                     return a.businessName.localeCompare(b.businessName);
                 } else if (sortOption === 'closest') {
-                    // Sort by distance (closest first)
+                    return (a._distance || Infinity) - (b._distance || Infinity);
+                } else if (sortOption === 'closest-open') {
+                    const aOpen = isOpenNow(a.hours);
+                    const bOpen = isOpenNow(b.hours);
+                    
+                    // First filter: only show open businesses
+                    if (!aOpen && bOpen) return 1;
+                    if (aOpen && !bOpen) return -1;
+                    
+                    // If both open or both closed, sort by distance
                     return (a._distance || Infinity) - (b._distance || Infinity);
                 } else {
                     return a.businessName.localeCompare(b.businessName);
                 }
             });
+            
+            // For closest-open, filter out closed listings after sorting
+            if (sortOption === 'closest-open') {
+                filteredListings = filteredListings.filter(l => isOpenNow(l.hours) === true);
+            }
             
             renderListings();
             updateResultsCount();
@@ -901,20 +963,34 @@
                 }
                 if (!map) {
                     initMap();
+                } else {
+                    setTimeout(() => {
+                        map.invalidateSize();
+                        updateMapMarkers();
+                        if (userLocation) {
+                            addUserLocationMarker();
+                        }
+                        hideMapLoading();
+                    }, 100);
                 }
-                setTimeout(() => {
-                    map.invalidateSize();
-                    updateMapMarkers();
-                    if (userLocation) {
-                        addUserLocationMarker();
-                    }
-                }, 100);
             } else {
                 container.classList.add('hidden');
             }
         }
         
+        function showMapLoading() {
+            const loading = document.getElementById('mapLoading');
+            if (loading) loading.style.display = 'block';
+        }
+        
+        function hideMapLoading() {
+            const loading = document.getElementById('mapLoading');
+            if (loading) loading.style.display = 'none';
+        }
+        
         function initMap() {
+            showMapLoading();
+            
             map = L.map('map', {
                 center: defaultMapCenter,
                 zoom: defaultMapZoom,
@@ -951,17 +1027,26 @@
             if (userLocation) {
                 addUserLocationMarker();
             }
+            
+            // Wait for map to load
+            setTimeout(() => {
+                map.invalidateSize();
+                updateMapMarkers();
+                hideMapLoading();
+            }, 500);
         }
 
         function updateMapMarkers() {
             if (!map || !markerClusterGroup) return;
             
+            showMapLoading();
             markerClusterGroup.clearLayers();
             const bounds = [];
             
             filteredListings.forEach(listing => {
                 if (listing.coordinates && !isBasedIn(listing)) {
-                    const isOpen = listing.hours ? isOpenNow(listing.hours) : false;
+                    const openStatus = isOpenNow(listing.hours);
+                    const isOpen = openStatus === true;
                     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
                     const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : listing.logo;
                     
@@ -983,7 +1068,9 @@
                     if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
                     if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    if (openStatus !== null) {
+                        badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    }
                     
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     const popupContent = `
@@ -1020,6 +1107,8 @@
                     maxZoom: 15
                 });
             }
+            
+            setTimeout(hideMapLoading, 300);
         }
 
         function setView(view) {
@@ -1052,9 +1141,9 @@
                     if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
                     if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (l.hours) {
-                        const isOpen = isOpenNow(l.hours);
-                        badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    const openStatus = isOpenNow(l.hours);
+                    if (openStatus !== null) {
+                        badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
                     }
                     
                     return `
@@ -1093,9 +1182,9 @@
                     if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
                     if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (l.hours) {
-                        const isOpen = isOpenNow(l.hours);
-                        badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    const openStatus = isOpenNow(l.hours);
+                    if (openStatus !== null) {
+                        badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
                     }
                     
                     return `
