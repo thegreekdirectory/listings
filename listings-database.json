@@ -324,7 +324,7 @@
     {
       "businessName": "Hellenic American Academy",
       "tagline": "Private dual-language day school & examination center for Ellinomatheia.",
-      "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academyâs problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
+      "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The AcademyÃ¢ÂÂs problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
       "category": "Education & Community",
       "phone": "(847) 317-1063",
       "address": "445 Pine St",
@@ -554,6 +554,86 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-04T22:52:13.213Z",
+        "detailedViews": []
+      }
+    },
+    {
+      "businessName": "t",
+      "tagline": "t",
+      "description": "t\na\n\ntt",
+      "category": "Grocery & Imports",
+      "phone": "1111111111",
+      "address": "123 Harlem Ave",
+      "city": "Chicago",
+      "state": "IL",
+      "zipCode": "60026",
+      "country": "USA",
+      "email": "ex@example.com",
+      "website": "https://www.example.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": "8:00 AM - 5:30 PM",
+        "tuesday": "8:00 AM - 5:30 PM",
+        "wednesday": "10:30 AM - 8:00 PM",
+        "thursday": "8:00 AM - 5:30 PM",
+        "friday": "10:30 AM - 8:00 PM",
+        "saturday": "9:00 AM - 1:00 PM",
+        "sunday": "Closed"
+      },
+      "socialMedia": {
+        "facebook": "a",
+        "instagram": "a",
+        "twitter": "a",
+        "youtube": "a",
+        "tiktok": "a",
+        "linkedin": "https://www.linkedin.com/company/ex",
+        "other1": "https://test.com/es",
+        "other2": "https://test.com/esa",
+        "other3": "https://test.com/esb"
+      },
+      "reviews": {
+        "google": "https://g.page/test",
+        "yelp": "https://www.yelp.com/biz/test",
+        "tripadvisor": "https://www.tripadvisor.com/test",
+        "other1": "https://test.com/es1",
+        "other2": "https://test.com/es2",
+        "other3": "https://test.com/es3"
+      },
+      "ownerInfo": {
+        "fullName": "Proto Deutero",
+        "title": "Owner",
+        "fromGreece": "Athens",
+        "ownerEmail": "example@example.com",
+        "ownerPhone": "(312) 555-0124",
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/t/logo/logo/logo.png",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/t/photos/photos/photo-1.png",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/t/photos/photos/photo-2.png"
+      ],
+      "id": "t",
+      "slug": "t",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-05T08:35:51.524Z",
+        "updatedAt": "2026-01-05T08:35:51.524Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-05T08:35:51.524Z",
         "detailedViews": []
       }
     }
