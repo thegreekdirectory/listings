@@ -161,11 +161,11 @@
     {
       "businessName": "Filakia",
       "tagline": "Clean and non-toxic products that nourish, heal and hydrate your lips and skin.",
-      "description": "At Filakia, we focus on small-batch, handmade beauty products. Everything is thoughtfully developed with clean ingredients that support your natural glow without compromise, toxins, or unnecessary ingredients. \n\nI was inspired to start Filakia because my son suffered from severe eczema when he was a baby. For a while, I thought we finally had it under control, but a few years later it came back even worse than before. This time, not only did the eczema return, but he also suddenly developed multiple allergies. I realized it wasn't just about what I put into his body-it was equally important to pay attention to what I put onto his skin. That realization fueled my determination to find safer, more nourishing options and ultimately sparked the passion behind my business. \n\nOur mission is simple - to create everyday essentials that make you feel good inside and out. From our ultra-hydrating lip balms to our delicately crafted whipped tallow balm, each homemade product is made with intention, purity, and care.\n\nFilakia is derived from the Greek root philia (ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¹ÃÂÃÂÃÂÃÂ»ÃÂÃÂÃÂÃÂ¹ÃÂÃÂÃÂÃÂ±) meaning \"friendship\" or \"affectionate regard\". Filakia also means little kisses!\n\n We appreciate you visiting us and hope you love our products!",
+      "description": "At Filakia, we focus on small-batch, handmade beauty products. Everything is thoughtfully developed with clean ingredients that support your natural glow without compromise, toxins, or unnecessary ingredients. \n\nI was inspired to start Filakia because my son suffered from severe eczema when he was a baby. For a while, I thought we finally had it under control, but a few years later it came back even worse than before. This time, not only did the eczema return, but he also suddenly developed multiple allergies. I realized it wasn't just about what I put into his body-it was equally important to pay attention to what I put onto his skin. That realization fueled my determination to find safer, more nourishing options and ultimately sparked the passion behind my business. \n\nOur mission is simple - to create everyday essentials that make you feel good inside and out. From our ultra-hydrating lip balms to our delicately crafted whipped tallow balm, each homemade product is made with intention, purity, and care.\n\nFilakia is derived from the Greek root philia meaning \"friendship\" or \"affectionate regard\". Filakia also means little kisses!\n\n We appreciate you visiting us and hope you love our products!",
       "category": "Beauty & Health",
       "phone": null,
       "address": null,
-      "city": "Chicago",
+      "city": "Oakbrook Terrace",
       "state": "IL",
       "zipCode": null,
       "country": "USA",
@@ -224,7 +224,7 @@
       "slug": "filakia",
       "metadata": {
         "createdAt": "2026-01-05T09:51:17.373Z",
-        "updatedAt": "2026-01-05T18:30:19.468Z"
+        "updatedAt": "2026-01-05T18:59:53.851Z"
       },
       "analytics": {
         "views": 0,
@@ -234,8 +234,7 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-05T09:51:17.373Z",
         "detailedViews": []
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "Brillakis Import Foods",
