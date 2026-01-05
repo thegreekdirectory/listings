@@ -480,7 +480,7 @@
       "description": "From the day we opened our doors in Niles in 2000, we've earned our spot as a top Salon. We offer unparalleled beauty pampering, but also respect our clients' busy schedules and will get you looking fabulous and on your way as soon as possible.\nOver the years, our expert team has had one mission--to make our devoted customers look stunning and feel their best. Contact us and see what our team of qualified professionals can do for you today. ",
       "category": "Beauty & Health",
       "phone": "(847) 966-0686",
-      "address": "9081 N Courtland Ave",
+      "address": "9081 Courtland Ave",
       "city": "Niles",
       "state": "IL",
       "zipCode": "60714",
@@ -538,10 +538,9 @@
       ],
       "id": "skb-hair-salon",
       "slug": "skb-hair-salon",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-05T14:49:41.242Z",
-        "updatedAt": "2026-01-05T14:49:41.242Z"
+        "updatedAt": "2026-01-05T14:54:29.143Z"
       },
       "analytics": {
         "views": 0,
