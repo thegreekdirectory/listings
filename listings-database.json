@@ -160,6 +160,85 @@
         "lastViewed": "2026-01-03T07:46:13.402Z"
       },
       "visible": true
+    },
+    {
+      "businessName": "Hellenic American Academy",
+      "tagline": "Private dual-language day school & midwest regionexamination center for Ellinomatheia.",
+      "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy’s problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
+      "category": "Education & Community",
+      "phone": "(847) 317-1063",
+      "address": "445 Pine St",
+      "city": "Deerfield",
+      "state": "IL",
+      "zipCode": "60015",
+      "country": "USA",
+      "email": "info@haamail.net",
+      "website": "https://hellenicamericanacademy.org",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": "8:00 AM - 5:30 PM",
+        "tuesday": "8:00 AM - 5:30 PM",
+        "wednesday": "8:00 AM - 5:30 PM",
+        "thursday": "8:00 AM - 5:30 PM",
+        "friday": "8:00 AM - 5:30 PM",
+        "saturday": "9:00 AM - 1:00 PM",
+        "sunday": "Closed"
+      },
+      "socialMedia": {
+        "facebook": "hellenicamericanacademy",
+        "instagram": "hellenicamericanacademy",
+        "twitter": null,
+        "youtube": "hellenicamericanacademy",
+        "tiktok": null,
+        "linkedin": "https://www.linkedin.com/company/hellenicamericanacademy.org",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://www.google.com/search?sca_esv=a7b494c8dfb9f393&sxsrf=AE3TifN-8ti95cDOoxaIQ3kfc7Y0wYleXA:1767604514111&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8syw1cwovHj5Xyj1Cj8d-SfoufsCekGlzEcyDIh1Etk22C_DhCnQ7SVTx15tIVSmPepCEudFiD_qYUPDCGbmSDgkQ42Li9cJv5spewFeWIJHDyo02XA%3D%3D&q=Hellenic+American+Academy+Reviews",
+        "yelp": "https://www.yelp.com/biz/hellenic-american-academy-deerfield",
+        "tripadvisor": null,
+        "other1": "https://www.niche.com/k12/hellenic-american-academy-deerfield-il/#reviews",
+        "other2": "https://www.greatschools.org/illinois/northbrook/7499-Hellenic-American-Academy/reviews/",
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "Paul Louis",
+        "title": "Principal",
+        "fromGreece": null,
+        "ownerEmail": "plouis@haamail.net",
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/logo/logo/logo.png",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-1.png"
+      ],
+      "id": "hellenic-american-academy",
+      "slug": "hellenic-american-academy",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-05T09:16:39.211Z",
+        "updatedAt": "2026-01-05T09:16:39.211Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-05T09:16:39.211Z",
+        "detailedViews": []
+      }
     }
   ]
 }
