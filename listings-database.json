@@ -540,7 +540,7 @@
       "slug": "skb-hair-salon",
       "metadata": {
         "createdAt": "2026-01-05T14:49:41.242Z",
-        "updatedAt": "2026-01-05T14:54:29.143Z"
+        "updatedAt": "2026-01-05T14:54:33.636Z"
       },
       "analytics": {
         "views": 0,
@@ -550,7 +550,8 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-05T14:49:41.242Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
