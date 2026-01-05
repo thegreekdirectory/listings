@@ -224,7 +224,7 @@
       "slug": "filakia",
       "metadata": {
         "createdAt": "2026-01-05T09:51:17.373Z",
-        "updatedAt": "2026-01-05T13:42:36.793Z"
+        "updatedAt": "2026-01-05T13:42:41.449Z"
       },
       "analytics": {
         "views": 0,
@@ -234,7 +234,8 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-05T09:51:17.373Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     },
     {
       "businessName": "Brillakis Import Foods",
