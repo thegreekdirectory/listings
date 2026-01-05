@@ -164,7 +164,7 @@
     {
       "businessName": "Hellenic American Academy",
       "tagline": "Private dual-language day school & midwest region examination center for Ellinomatheia.",
-      "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy’s problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
+      "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academyâs problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
       "category": "Education & Community",
       "phone": "(847) 317-1063",
       "address": "445 Pine St",
@@ -227,7 +227,7 @@
       "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-05T09:16:39.211Z",
-        "updatedAt": "2026-01-05T09:24:48.227Z"
+        "updatedAt": "2026-01-05T09:25:08.968Z"
       },
       "analytics": {
         "views": 0,
@@ -237,7 +237,8 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-05T09:16:39.211Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
