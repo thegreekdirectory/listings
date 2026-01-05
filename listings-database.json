@@ -387,7 +387,7 @@
       "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-04T08:43:03.777Z",
-        "updatedAt": "2026-01-05T03:22:28.754Z"
+        "updatedAt": "2026-01-05T03:22:33.322Z"
       },
       "analytics": {
         "views": 0,
@@ -396,7 +396,8 @@
         "directionClicks": 0,
         "shareClicks": 0,
         "lastViewed": "2026-01-04T08:43:03.778Z"
-      }
+      },
+      "visible": true
     },
     {
       "businessName": "q",
