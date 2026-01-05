@@ -532,16 +532,15 @@
           "phone": false
         }
       },
-      "logo": "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=200&h=200&fit=crop&q=80",
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/beauty-health/skb-hair-salon/logo/logo/logo.jpg",
       "photos": [
         "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80"
       ],
       "id": "skb-hair-salon",
       "slug": "skb-hair-salon",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-05T15:02:36.405Z",
-        "updatedAt": "2026-01-05T15:02:36.405Z"
+        "updatedAt": "2026-01-05T15:08:01.191Z"
       },
       "analytics": {
         "views": 0,
