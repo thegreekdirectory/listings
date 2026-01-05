@@ -473,6 +473,85 @@
         "detailedViews": []
       },
       "visible": true
+    },
+    {
+      "businessName": "Lekas Auto Construction",
+      "tagline": "Auto body shop offering repairs and installations, including mirrors.",
+      "description": "",
+      "category": "Automotive & Transportation",
+      "phone": "(847) 657-8181",
+      "address": "3148 W Lake Ave",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60026",
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "hours": {
+        "monday": "7:30 AM - 6:00 PM",
+        "tuesday": "7:30 AM - 6:00 PM",
+        "wednesday": "7:30 AM - 6:00 PM",
+        "thursday": "7:30 AM - 6:00 PM",
+        "friday": "7:30 AM - 6:00 PM",
+        "saturday": "8:00 AM - 1:00 PM",
+        "sunday": "Closed"
+      },
+      "socialMedia": {
+        "facebook": "Lekas-Auto-Construction-100042247874611",
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://google.com/search?sca_esv=cea07bd29ebaa7bd&hl=en-US&sxsrf=AE3TifM6iZPOouxWa2eAQhmPzBKmPlZEkw:1767386762400&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8s2mHO8pwZpp11OP5qdZ-LdW1aj_mBYxLU5POfOOl_wHaceO80qLg9koObBor6ZUlN-TFdBiodS1J5Ey66kQPVgkxHtX7&q=Lekas+Auto+Ltd+Reviews",
+        "yelp": "https://www.yelp.com/biz/lekas-auto-construction-glenview",
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"
+      ],
+      "id": "lekas-auto-construction",
+      "slug": "lekas-auto-construction",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-05T13:27:28.712Z",
+        "updatedAt": "2026-01-05T13:27:28.712Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-05T13:27:28.712Z",
+        "detailedViews": []
+      }
     }
   ]
 }
