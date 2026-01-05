@@ -902,33 +902,137 @@
     };
 
     document.getElementById('refreshBtn').addEventListener('click', loadListings);
-    document.getElementById('logoUpload').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const base64 = event.target.result.split(',')[1];
-                uploadedImages.logo = { file: file, base64: base64 };
-                document.getElementById('logoPreview').innerHTML = `<img src="${event.target.result}" class="image-preview">`;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+// Replace the logoUpload event listener in admin.html with this:
 
-    document.getElementById('photosUpload').addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files).slice(0, 15);
-        
-        for (const file of files) {
+document.getElementById('logoUpload').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        try {
+            // Create an image element to load the file
+            const img = new Image();
             const reader = new FileReader();
+            
             reader.onload = (event) => {
-                const base64 = event.target.result.split(',')[1];
-                uploadedImages.photos.push({ file: file, base64: base64, url: event.target.result });
-                renderPhotosPreview();
+                img.onload = () => {
+                    // Create a canvas to resize the image
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Set canvas to square
+                    const size = 800; // Square size
+                    canvas.width = size;
+                    canvas.height = size;
+                    
+                    // Fill with white background
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, size, size);
+                    
+                    // Calculate dimensions to fit image within square
+                    let drawWidth, drawHeight, offsetX, offsetY;
+                    const aspectRatio = img.width / img.height;
+                    
+                    if (aspectRatio > 1) {
+                        // Wider than tall
+                        drawWidth = size;
+                        drawHeight = size / aspectRatio;
+                        offsetX = 0;
+                        offsetY = (size - drawHeight) / 2;
+                    } else {
+                        // Taller than wide
+                        drawHeight = size;
+                        drawWidth = size * aspectRatio;
+                        offsetX = (size - drawWidth) / 2;
+                        offsetY = 0;
+                    }
+                    
+                    // Draw the image centered on the canvas
+                    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+                    
+                    // Convert canvas to base64
+                    canvas.toBlob((blob) => {
+                        const blobReader = new FileReader();
+                        blobReader.onload = (blobEvent) => {
+                            const base64 = blobEvent.target.result.split(',')[1];
+                            uploadedImages.logo = { 
+                                file: new File([blob], file.name, { type: 'image/png' }),
+                                base64: base64 
+                            };
+                            document.getElementById('logoPreview').innerHTML = `<img src="${blobEvent.target.result}" class="image-preview">`;
+                        };
+                        blobReader.readAsDataURL(blob);
+                    }, 'image/png', 0.95);
+                };
+                img.src = event.target.result;
             };
+            
             reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Error processing logo:', error);
+            alert('Error processing logo. Please try again.');
         }
-    });
+    }
+});
+// Replace the photosUpload event listener in admin.html with this:
 
+document.getElementById('photosUpload').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files).slice(0, 15);
+    
+    for (const file of files) {
+        try {
+            const img = new Image();
+            const reader = new FileReader();
+            
+            await new Promise((resolve) => {
+                reader.onload = (event) => {
+                    img.onload = () => {
+                        // Create a canvas
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Set max dimensions while maintaining aspect ratio
+                        const maxWidth = 1920;
+                        const maxHeight = 1920;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Calculate new dimensions
+                        if (width > maxWidth || height > maxHeight) {
+                            const ratio = Math.min(maxWidth / width, maxHeight / height);
+                            width = width * ratio;
+                            height = height * ratio;
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Draw the image
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Convert to base64
+                        canvas.toBlob((blob) => {
+                            const blobReader = new FileReader();
+                            blobReader.onload = (blobEvent) => {
+                                const base64 = blobEvent.target.result.split(',')[1];
+                                uploadedImages.photos.push({ 
+                                    file: new File([blob], file.name, { type: 'image/jpeg' }),
+                                    base64: base64, 
+                                    url: blobEvent.target.result 
+                                });
+                                renderPhotosPreview();
+                                resolve();
+                            };
+                            blobReader.readAsDataURL(blob);
+                        }, 'image/jpeg', 0.9);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        } catch (error) {
+            console.error('Error processing photo:', error);
+        }
+    }
+});
     function renderPhotosPreview() {
         const preview = document.getElementById('photosPreview');
         preview.innerHTML = uploadedImages.photos.map((photo, idx) => `
