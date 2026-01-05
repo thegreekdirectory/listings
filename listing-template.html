@@ -171,20 +171,22 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
+<script>
         const totalSlides = {{TOTAL_PHOTOS}};
         const businessName = '{{BUSINESS_NAME}}';
         const listingUrl = '{{LISTING_URL}}';
         const listingId = '{{LISTING_ID}}';
         const hoursData = {{HOURS_JSON}};
         
+        // Analytics tracking with proper error handling
         window.addEventListener('load', async () => {
             try {
-                await fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
+                const response = await fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json'
+                        'Accept': 'application/vnd.github+json',
+                        'X-GitHub-Api-Version': '2022-11-28'
                     },
                     body: JSON.stringify({
                         event_type: 'track_analytics',
@@ -196,8 +198,12 @@
                         }
                     })
                 });
+                
+                if (!response.ok) {
+                    console.log('Analytics tracking response:', response.status);
+                }
             } catch (e) {
-                console.log('Analytics tracking failed');
+                console.log('Analytics tracking error:', e.message);
             }
         });
         
@@ -206,7 +212,8 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/vnd.github.v3+json'
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28'
                 },
                 body: JSON.stringify({
                     event_type: 'track_analytics',
@@ -217,21 +224,30 @@
                         userAgent: navigator.userAgent
                     }
                 })
-            }).catch(() => {});
+            }).catch((e) => {
+                console.log('Analytics tracking error:', e.message);
+            });
         }
         
+        // Track call clicks
         document.querySelectorAll('a[href^="tel:"]').forEach(el => {
             el.addEventListener('click', () => trackClick('call'));
         });
+        
+        // Track directions clicks
         document.querySelectorAll('a[href*="maps"]').forEach(el => {
             el.addEventListener('click', () => trackClick('directions'));
         });
+        
+        // Track share clicks
         document.querySelectorAll('.share-button, button[onclick="shareNative()"]').forEach(el => {
             el.addEventListener('click', () => trackClick('share'));
         });
-        const websiteLinks = document.querySelectorAll('a[href*="{{WEBSITE_DOMAIN}}"]');
-        if (websiteLinks.length > 0) {
-            websiteLinks.forEach(el => {
+        
+        // Track website clicks
+        const websiteDomain = '{{WEBSITE_DOMAIN}}';
+        if (websiteDomain) {
+            document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
                 el.addEventListener('click', () => trackClick('website'));
             });
         }
@@ -355,6 +371,7 @@
             }
         }
 
+        // Initialize map if coordinates exist
         const coordinates = '{{COORDINATES}}';
         if (coordinates && coordinates !== '') {
             setTimeout(() => {
