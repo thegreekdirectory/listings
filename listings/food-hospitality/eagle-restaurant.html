@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle Restaurant - Downers Grove | The Greek Directory</title>
+    <meta name="description" content="Family-owned dining staple in Downers Grove since 1981. in Downers Grove. View address, phone, hours, and photos for Eagle Restaurant on The Greek Directory.">
+    <meta name="keywords" content="greek, greek american, hellenic, Eagle Restaurant, Food & Hospitality, Downers Grove, IL, 60515, USA, 406 Maple Ave, Downers Grove, IL 60515, (630) 963-9161, https://eagledg.com, Family-owned dining staple in Downers Grove since 1981.">
+    <meta property="og:title" content="Eagle Restaurant | The Greek Directory">
+    <meta property="og:description" content="Family-owned dining staple in Downers Grove since 1981. in Downers Grove">
+    <meta property="og:type" content="business.business">
+    <meta property="og:url" content="https://thegreekdirectory.org/listings/food-hospitality/eagle-restaurant">
+    <meta property="og:image" content="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/logo/logo/logo.png">
+    <link rel="canonical" href="https://thegreekdirectory.org/listings/food-hospitality/eagle-restaurant">
+    <link rel="icon" href="https://static.thegreekdirectory.org/bluefavicon.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/whitefavicon.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://social.thegreekdirectory.org/Logo2.png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .carousel-container { position: relative; width: 100%; overflow: hidden; }
+        .carousel-track { display: flex; transition: transform 0.5s ease; }
+        .carousel-slide { min-width: 100%; height: 100%; }
+        .carousel-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
+        .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s; }
+        .carousel-dot.active { background: white; width: 24px; border-radius: 4px; }
+        .carousel-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; padding: 10px 15px; cursor: pointer; z-index: 10; border-radius: 4px; font-size: 20px; user-select: none; }
+        .carousel-nav:hover { background: rgba(0,0,0,0.7); }
+        .carousel-prev { left: 10px; }
+        .carousel-next { right: 10px; }
+        .social-icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; }
+        .social-icon:hover { transform: scale(1.1); }
+        .social-facebook { background: #1877F2; color: white; }
+        .social-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
+        .social-twitter { background: #000000; color: white; }
+        .social-youtube { background: #FF0000; color: white; }
+        .social-tiktok { background: #000000; color: white; }
+        .social-linkedin { background: #0077B5; color: white; }
+        .social-google { background: white; color: #4285F4; border: 2px solid #4285F4; }
+        .social-yelp { background: white; color: #D32323; border: 2px solid #D32323; }
+        .social-tripadvisor { background: white; color: #00AF87; border: 2px solid #00AF87; }
+        .social-other { background: #6B7280; color: white; }
+        .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
+        .share-button:hover { transform: scale(1.1); }
+        #listingMap { width: 100%; height: 400px; border-radius: 8px; }
+        .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
+        .badge-open { background: #10b981; color: white; }
+        .badge-closed { background: #ef4444; color: white; }
+        .badge-featured { background: #fbbf24; color: #78350f; }
+        .badge-verified { background: #0000FF; color: white; }
+        .badge-claimed { background: #6B7280; color: white; }
+        .hours-disclaimer { background: #fef3c7; border: 1px solid #fbbf24; color: #78350f; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 8px; }
+        .card-shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); }
+        .open-now { color: #10b981; font-weight: 600; font-size: 14px; }
+        .closed-now { color: #ef4444; font-weight: 600; font-size: 14px; }
+        @media (min-width: 768px) {
+            .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
+        }
+        @media (max-width: 767px) {
+            .share-section { margin-bottom: 24px; }
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body { background: #1a1a1a; color: #e5e5e5; }
+            header { background: #2a2a2a !important; border-color: #3a3a3a; }
+            .bg-white { background: #2a2a2a !important; }
+            .bg-gray-50 { background: #1a1a1a !important; }
+            .bg-gray-100 { background: #3a3a3a !important; }
+            .bg-gray-200 { background: #404040 !important; }
+            .text-gray-900 { color: #e5e5e5 !important; }
+            .text-gray-700 { color: #b0b0b0 !important; }
+            .text-gray-600 { color: #999 !important; }
+            .border-gray-300 { border-color: #404040 !important; }
+            .shadow-sm, .shadow, .shadow-lg, .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
+            .hover\:text-gray-900:hover { color: #e5e5e5 !important; }
+            img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
+            .social-icon svg { pointer-events: none; user-select: none; }
+
+            /* Fix social icons */
+            .social-google { background: white; border: 2px solid #e5e7eb; }
+            .social-yelp { background: white; border: 2px solid #e5e7eb; }
+            .social-tripadvisor { background: white; border: 2px solid #e5e7eb; }
+            .hours-disclaimer { background: #3a3a00; border-color: #8a7a00; color: #ffd700; }
+            .leaflet-container { background: #1a1a1a; }
+            .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
+            .leaflet-popup-tip { background: #2a2a2a !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <a href="/" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2">
+                <span>←</span>
+                <span>Back to Directory</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
+                <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
+            <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
+                <div class="carousel-track h-full">
+                    <div class="carousel-slide"><img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-1.png" alt="Eagle Restaurant" class="w-full h-full object-cover"></div>
+                </div>
+                
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg p-6 mb-6 card-shadow">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-4 flex-wrap">
+                        <span class="text-sm font-semibold px-3 py-1 rounded-full text-white" style="background-color:#055193;">
+                            Food & Hospitality
+                        </span>
+                        <span class="badge" id="openClosedBadge"></span>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Eagle Restaurant</h1>
+                    <p class="text-lg text-gray-600 italic">"Family-owned dining staple in Downers Grove since 1981."</p>
+                </div>
+                <img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/logo/logo/logo.png" alt="Eagle Restaurant logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
+            </div>
+
+            <p class="text-gray-700 mb-6"><p class="mb-3">Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.</p><p class="mb-3">Everything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.</p><p class="mb-3">Neighborhood casual fast food restaurant serving Downers Grove for over 40 years.</p></p>
+
+            <div class="space-y-3 mb-6">
+                <div class="flex items-start gap-3"><span class="mt-1">📍</span><div><p class="font-semibold text-gray-900">Address</p><p class="text-gray-700">406 Maple Ave, Downers Grove, IL 60515</p></div></div>
+                <div class="flex items-start gap-3"><span class="mt-1">📞</span><div><p class="font-semibold text-gray-900">Phone</p><a href="tel:(630) 963-9161" class="text-blue-600 hover:underline">(630) 963-9161</a></div></div>
+                <div class="flex items-start gap-3"><span class="mt-1">📧</span><div><p class="font-semibold text-gray-900">Email</p><a href="mailto:eagledownersgrove@gmail.com" class="text-blue-600 hover:underline">eagledownersgrove@gmail.com</a></div></div>
+                <div class="flex items-start gap-3"><span class="mt-1">🌐</span><div><p class="font-semibold text-gray-900">Website</p><a href="https://eagledg.com" target="_blank" class="text-blue-600 hover:underline break-all">https://eagledg.com</a></div></div>
+                <div class="flex items-start gap-3"><span class="mt-1">🕒</span><div class="flex-1"><p class="font-semibold text-gray-900">Hours</p><div class="space-y-1"><div class="flex justify-between"><span class="font-medium">Monday:</span><span>Closed</span></div><div class="flex justify-between"><span class="font-medium">Tuesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between"><span class="font-medium">Wednesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between"><span class="font-medium">Thursday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between"><span class="font-medium">Friday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between"><span class="font-medium">Saturday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between"><span class="font-medium">Sunday:</span><span>11:00 AM - 8:00 PM</span></div></div><div class="hours-disclaimer">These are normal operating hours. To find special hours, visit this listing's website or socials, or contact them directly.</div></div></div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mb-6">
+                <a href="tel:(630) 963-9161" class="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium" style="background-color:#055193;"><span>📞</span><span>Call</span></a>
+                <a href="mailto:eagledownersgrove@gmail.com" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>📧</span><span>Email</span></a>
+                <a href="https://eagledg.com" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>🌐</span><span>Visit Website</span></a>
+                <a href="https://www.google.com/maps/place/406+Maple+Ave+Downers+Grove+IL+60515" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>📍</span><span>Directions</span></a>
+            </div>
+
+            <div class="social-map-grid">
+                <div>
+                    <div class="mb-6"><h2 class="text-xl font-bold text-gray-900 mb-3">Follow Us!</h2><div class="flex flex-wrap gap-2"><a href="https://www.facebook.com/EagleRestaurant" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook" title="Facebook"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a><a href="https://www.instagram.com/eagle_downers_grove" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram" title="Instagram"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a></div></div>
+                    <div class="mb-8"><h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2><div class="flex flex-wrap gap-2"><a href="https://www.google.com/search?sca_esv=be40058fb533a05b&sxsrf=AE3TifOm9YQkZvCrJeMlieSEs9Uxf-DBew:1767606361757&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8s73B0CjFloNrBSOE9oJJqp6p9xSDvoA7W1X3bTmbN01_5owvmdFRHO_BxehkIh-_HhBIbw-Yuyovq_O-iTvGH1RZP723&q=Eagle+Restaurant+Reviews" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg></a><a href="https://www.yelp.com/biz/eagle-restaurant-downers-grove" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M21.111 18.226c-.141.969-2.119 3.483-3.029 3.847-.311.124-.611.094-.85-.09-.154-.12-2.314-1.834-2.857-2.295-.559-.475-.674-.873-.589-1.354.096-.494.496-.837 1.032-.888.532-.05 2.854-.289 3.373-.363.582-.084.949-.085 1.273.174.324.259.676.898.647 1.969zM17.403 11.974c-.163.265-.316.435-.576.55-.391.174-.836.091-1.175-.216a37.813 37.813 0 0 1-2.329-2.314c-.552-.596-.727-1.047-.551-1.669.175-.621.636-.943 1.205-1.056.573-.112 2.741-.297 3.28-.363.597-.073.924.034 1.226.345.303.311.474.828.317 1.561-.158.734-.851 2.421-1.397 3.162zm-5.098-7.568c-.164.062-.374.069-.814.043-.47-.027-1.203-.144-1.611-.175l-.168-.016c-.491-.046-.896-.227-1.064-.754-.168-.528.012-1.058.383-1.467.37-.408 2.004-2.271 2.485-2.706.524-.472.952-.634 1.528-.513.577.121 1.003.604 1.092 1.243.088.638-.108 2.813-.204 3.408-.117.726-.336 1.118-.627 1.347-.291.228-.674.349-1 .39zm-.507 4.022c.074.015.141.032.21.052.479.139.729.362.894.649.162.284.168.58.089.95-.081.37-.244.753-.505 1.205-.261.451-1.841 2.932-2.261 3.498-.375.506-.754.75-1.298.762-.543.012-1.025-.235-1.357-.72-.333-.485-1.234-2.262-1.598-2.944-.399-.747-.442-1.235-.255-1.794.187-.559.596-.946 1.146-1.097.551-.151 2.702-.581 3.286-.695.674-.132 1.219-.1 1.649.134z" fill="#D32323"/></svg></a><a href="https://www.tripadvisor.com/Restaurant_Review-g35904-d427213-Reviews-Eagle_Restaurant-Downers_Grove_DuPage_County_Illinois.html" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12.006 4.295c-2.67 0-5.338.784-7.618 2.353H0l2.689 2.689c-1.78 2.039-2.86 4.713-2.86 7.652 0 6.342 5.149 11.49 11.491 11.49s11.491-5.148 11.491-11.49c0-2.939-1.08-5.613-2.859-7.652l2.689-2.689h-4.388c-2.28-1.569-4.948-2.353-7.618-2.353h-.627zM12 6.255c1.002 0 1.984.095 2.936.276L12 9.467 9.064 6.531c.952-.181 1.934-.276 2.936-.276zm-6.24 2.731a9.933 9.933 0 0 0-3.289 3.368 9.958 9.958 0 0 0-1.179 4.635c0 5.532 4.488 10.02 10.02 10.02s10.02-4.488 10.02-10.02a9.958 9.958 0 0 0-1.179-4.635 9.933 9.933 0 0 0-3.289-3.368L12 13.795 5.76 8.986zm.24 2.003c1.784 0 3.545.681 4.908 2.042 2.727 2.727 2.727 7.089 0 9.816-2.727 2.727-7.089 2.727-9.816 0-2.727-2.727-2.727-7.089 0-9.816C2.455 11.67 4.216 10.989 6 10.989zm12 0c1.784 0 3.545.681 4.908 2.042 2.727 2.727 2.727 7.089 0 9.816-2.727 2.727-7.089 2.727-9.816 0-2.727-2.727-2.727-7.089 0-9.816 1.363-1.361 3.124-2.042 4.908-2.042zM6 12.735c-1.178 0-2.327.467-3.168 1.308-1.682 1.682-1.682 4.375 0 6.057 1.682 1.682 4.375 1.682 6.057 0 1.682-1.682 1.682-4.375 0-6.057C8.048 13.202 6.899 12.735 6 12.735zm12 0c-1.178 0-2.327.467-3.168 1.308-1.682 1.682-1.682 4.375 0 6.057 1.682 1.682 4.375 1.682 6.057 0 1.682-1.682 1.682-4.375 0-6.057-.841-.841-1.99-1.308-3.168-1.308zM6 14.501c.555 0 1.108.214 1.531.637.846.846.846 2.186 0 3.032-.846.846-2.186.846-3.032 0-.846-.846-.846-2.186 0-3.032.423-.423.976-.637 1.531-.637h-.03zm12 0c.555 0 1.108.214 1.531.637.846.846.846 2.186 0 3.032-.846.846-2.186.846-3.032 0-.846-.846-.846-2.186 0-3.032.423-.423.976-.637 1.531-.637h-.03z" fill="#00AF87"/></svg></a></div></div>
+                    <div class="share-section">
+                        <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=https://thegreekdirectory.org/listings/food-hospitality/eagle-restaurant" target="_blank" rel="noopener noreferrer" class="share-button social-facebook" title="Share on Facebook" onclick="trackClick('share')">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?text=Check%20out%20Eagle%20Restaurant%20on%20The%20Greek%20Directory!&url=https://thegreekdirectory.org/listings/food-hospitality/eagle-restaurant" target="_blank" rel="noopener noreferrer" class="share-button social-twitter" title="Share on X" onclick="trackClick('share')">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            </a>
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://thegreekdirectory.org/listings/food-hospitality/eagle-restaurant" target="_blank" rel="noopener noreferrer" class="share-button social-linkedin" title="Share on LinkedIn" onclick="trackClick('share')">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                            </a>
+                            <button onclick="shareNative()" class="share-button social-other" title="Share">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4 card-shadow"><h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2><div id="listingMap"></div></div>
+            </div>
+        </div>
+
+        <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Eagle%20Restaurant%20-%20Downers%20Grove%2C%20IL%2C%20USA" class="fixed bottom-6 right-6 px-6 py-3 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all z-50" style="background-color: #055193;">📝 Claim this Listing</a>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const totalSlides = 1;
+        const businessName = 'Eagle Restaurant';
+        const listingUrl = 'https://thegreekdirectory.org/listings/food-hospitality/eagle-restaurant';
+        const listingId = 'eagle-restaurant';
+        const hoursData = {"monday":"Closed","tuesday":"10:30 AM - 8:00 PM","wednesday":"10:30 AM - 8:00 PM","thursday":"10:30 AM - 8:00 PM","friday":"10:30 AM - 8:00 PM","saturday":"10:30 AM - 8:00 PM","sunday":"11:00 AM - 8:00 PM"};
+        
+        // Analytics tracking
+        async function trackAnalytics(action) {
+            try {
+                const payload = {
+                    event_type: 'track_analytics',
+                    client_payload: {
+                        listingId: listingId,
+                        action: action,
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent
+                    }
+                };
+                
+                // Use navigator.sendBeacon for better reliability
+                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                const success = navigator.sendBeacon(
+                    `https://api.github.com/repos/thegreekdirectory/listings/dispatches`,
+                    blob
+                );
+                
+                if (!success) {
+                    // Fallback to fetch if sendBeacon fails
+                    await fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/vnd.github+json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                }
+            } catch (e) {
+                console.log('Analytics tracking error:', e.message);
+            }
+        }
+        
+        // Track page view
+        window.addEventListener('load', () => {
+            trackAnalytics('view');
+        });
+        
+        // Track click function
+        function trackClick(action) {
+            trackAnalytics(action);
+        }
+        
+        // Track call clicks
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a[href^="tel:"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('call'));
+            });
+            
+            // Track directions clicks
+            document.querySelectorAll('a[href*="maps"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('directions'));
+            });
+            
+            // Track website clicks
+            const websiteDomain = 'eagledg.com';
+            if (websiteDomain) {
+                document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
+                    el.addEventListener('click', () => trackClick('website'));
+                });
+            }
+        });
+        
+        function updateOpenClosedBadge() {
+            const badge = document.getElementById('openClosedBadge');
+            const statusText = document.getElementById('openStatusText');
+            if (!hoursData) return;
+            
+            const now = new Date();
+            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = days[centralTime.getDay()];
+            const todayHours = hoursData[today];
+            
+            if (!todayHours || todayHours.toLowerCase() === 'closed') {
+                if (badge) {
+                    badge.textContent = 'Closed';
+                    badge.className = 'badge badge-closed';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Closed Now';
+                    statusText.className = 'closed-now';
+                }
+                return;
+            }
+            
+            const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) {
+                if (badge) badge.style.display = 'none';
+                if (statusText) statusText.style.display = 'none';
+                return;
+            }
+            
+            const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
+            let start = parseInt(startHour);
+            let end = parseInt(endHour);
+            
+            if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
+            if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
+            if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
+            if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
+            
+            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+            const startMinutes = start * 60 + parseInt(startMin);
+            const endMinutes = end * 60 + parseInt(endMin);
+            
+            if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+                if (badge) {
+                    badge.textContent = 'Open';
+                    badge.className = 'badge badge-open';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Open Now';
+                    statusText.className = 'open-now';
+                }
+            } else {
+                if (badge) {
+                    badge.textContent = 'Closed';
+                    badge.className = 'badge badge-closed';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Closed Now';
+                    statusText.className = 'closed-now';
+                }
+            }
+        }
+        
+        if (totalSlides > 1) {
+            function goToSlide(index) {
+                const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
+                const track = carousel.querySelector('.carousel-track');
+                const dots = carousel.querySelectorAll('.carousel-dot');
+                
+                track.style.transform = `translateX(-${index * 100}%)`;
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+                carousel.dataset.current = index;
+            }
+
+            function nextSlide() {
+                const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
+                const current = parseInt(carousel.dataset.current || 0);
+                goToSlide((current + 1) % totalSlides);
+            }
+
+            function prevSlide() {
+                const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
+                const current = parseInt(carousel.dataset.current || 0);
+                goToSlide((current - 1 + totalSlides) % totalSlides);
+            }
+
+            setInterval(nextSlide, 5000);
+            
+            window.goToSlide = goToSlide;
+            window.nextSlide = nextSlide;
+            window.prevSlide = prevSlide;
+        }
+
+        function shareNative() {
+            trackClick('share');
+            if (navigator.share) {
+                navigator.share({
+                    title: businessName + ' | The Greek Directory',
+                    text: 'Check out ' + businessName + ' on The Greek Directory!',
+                    url: window.location.href
+                }).catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.log('Share failed:', err);
+                    }
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('Link copied to clipboard!');
+                }).catch(() => {
+                    alert('Unable to share. Please copy the URL from your browser.');
+                });
+            }
+        }
+
+        // Initialize map if coordinates exist
+        const coordinates = '';
+        const fullAddress = '406 Maple Ave, Downers Grove, IL 60515';
+        
+        function initializeMap() {
+            if (!coordinates || coordinates === '' || !fullAddress || fullAddress === '') {
+                return;
+            }
+            
+            const mapElement = document.getElementById('listingMap');
+            if (!mapElement) return;
+            
+            try {
+                const [lat, lng] = coordinates.split(',').map(parseFloat);
+                
+                if (isNaN(lat) || isNaN(lng)) {
+                    console.error('Invalid coordinates:', lat, lng);
+                    return;
+                }
+                
+                console.log('Initializing map with coordinates:', lat, lng);
+                
+                const map = L.map('listingMap', {
+                    center: [lat, lng],
+                    zoom: 15,
+                    zoomControl: true,
+                    scrollWheelZoom: false
+                });
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(map);
+                
+                L.marker([lat, lng]).addTo(map)
+                    .bindPopup('<strong>Eagle Restaurant</strong><br>406 Maple Ave, Downers Grove, IL 60515')
+                    .openPopup();
+                
+                // Force map to recalculate size
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 250);
+                
+                // Make map scroll-enabled on click
+                map.once('focus', function() { 
+                    map.scrollWheelZoom.enable(); 
+                });
+                
+                console.log('Map initialized successfully');
+            } catch (e) {
+                console.error('Map initialization failed:', e);
+            }
+        }
+        
+        // Initialize map after DOM is loaded and a short delay
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initializeMap, 500);
+            });
+        } else {
+            setTimeout(initializeMap, 500);
+        }
+        
+        updateOpenClosedBadge();
+        setInterval(updateOpenClosedBadge, 60000);
+    </script>
+</body>
+</html>
