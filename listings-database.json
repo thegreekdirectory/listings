@@ -624,7 +624,7 @@
       "slug": "t",
       "metadata": {
         "createdAt": "2026-01-05T08:35:51.524Z",
-        "updatedAt": "2026-01-05T08:45:02.457Z"
+        "updatedAt": "2026-01-05T08:45:08.595Z"
       },
       "analytics": {
         "views": 0,
@@ -634,7 +634,8 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-05T08:35:51.524Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
