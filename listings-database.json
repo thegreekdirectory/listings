@@ -5,6 +5,7 @@
       "tagline": "Private dual-language day school & midwest region examination center for Ellinomatheia.",
       "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy's problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
       "category": "Education & Community",
+      "subcategories": ["Greek School"],
       "phone": "(847) 317-1063",
       "address": "445 Pine St",
       "city": "Deerfield",
@@ -16,6 +17,7 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
+      "businessPortalPassword": null,
       "hours": {
         "monday": "8:00 AM - 5:30 PM",
         "tuesday": "8:00 AM - 5:30 PM",
@@ -62,6 +64,7 @@
       "photos": [
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-1.png"
       ],
+      "video": null,
       "id": "hellenic-american-academy",
       "slug": "hellenic-american-academy",
       "metadata": {
@@ -74,6 +77,7 @@
         "websiteClicks": 0,
         "directionClicks": 0,
         "shareClicks": 0,
+        "videoPlays": 0,
         "lastViewed": "2026-01-05T09:16:39.211Z",
         "detailedViews": []
       },
@@ -84,6 +88,7 @@
       "tagline": "Family-owned dining staple in Downers Grove since 1981.",
       "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
       "category": "Food & Hospitality",
+      "subcategories": ["Lunch", "Dinner", "Restaurant"],
       "phone": "(630) 963-9161",
       "address": "406 Maple Ave",
       "city": "Downers Grove",
@@ -95,6 +100,7 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
+      "businessPortalPassword": null,
       "hours": {
         "monday": "Closed",
         "tuesday": "10:30 AM - 8:00 PM",
@@ -141,6 +147,7 @@
       "photos": [
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-1.png"
       ],
+      "video": null,
       "id": "eagle-restaurant",
       "slug": "eagle-restaurant",
       "metadata": {
@@ -153,6 +160,7 @@
         "websiteClicks": 0,
         "directionClicks": 0,
         "shareClicks": 0,
+        "videoPlays": 0,
         "lastViewed": "2026-01-05T09:47:32.093Z",
         "detailedViews": []
       },
@@ -163,6 +171,7 @@
       "tagline": "Clean and non-toxic products that nourish, heal and hydrate your lips and skin.",
       "description": "At Filakia, we focus on small-batch, handmade beauty products. Everything is thoughtfully developed with clean ingredients that support your natural glow without compromise, toxins, or unnecessary ingredients. \n\nI was inspired to start Filakia because my son suffered from severe eczema when he was a baby. For a while, I thought we finally had it under control, but a few years later it came back even worse than before. This time, not only did the eczema return, but he also suddenly developed multiple allergies. I realized it wasn't just about what I put into his body-it was equally important to pay attention to what I put onto his skin. That realization fueled my determination to find safer, more nourishing options and ultimately sparked the passion behind my business. \n\nOur mission is simple - to create everyday essentials that make you feel good inside and out. From our ultra-hydrating lip balms to our delicately crafted whipped tallow balm, each homemade product is made with intention, purity, and care.\n\nFilakia is derived from the Greek root philia meaning \"friendship\" or \"affectionate regard\". Filakia also means little kisses!\n\n We appreciate you visiting us and hope you love our products!",
       "category": "Beauty & Health",
+      "subcategories": [],
       "phone": null,
       "address": null,
       "city": "Oakbrook Terrace",
@@ -174,6 +183,7 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
+      "businessPortalPassword": null,
       "hours": {
         "monday": null,
         "tuesday": null,
@@ -220,6 +230,7 @@
       "photos": [
         "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80"
       ],
+      "video": null,
       "id": "filakia",
       "slug": "filakia",
       "metadata": {
@@ -232,6 +243,7 @@
         "websiteClicks": 0,
         "directionClicks": 0,
         "shareClicks": 0,
+        "videoPlays": 0,
         "lastViewed": "2026-01-05T09:51:17.373Z",
         "detailedViews": []
       },
@@ -242,6 +254,7 @@
       "tagline": "Family-owned grocery store with Greek imports.",
       "description": "Brillakis Import Foods is a family-owned grocery store in Niles, Illinois, specializing in authentic Greek and imported foods, including cheeses, olive oil, pastries, and meats. It is known for its high-quality products, friendly service, and a wide selection of Greek groceries, imported beers, and other specialty items.",
       "category": "Grocery & Imports",
+      "subcategories": ["Market"],
       "phone": "(847) 966-1250",
       "address": "9061 Courtland Dr",
       "city": "Niles",
@@ -253,6 +266,7 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
+      "businessPortalPassword": null,
       "hours": {
         "monday": "9:00 AM - 6:00 PM",
         "tuesday": "9:00 AM - 6:00 PM",
@@ -299,6 +313,7 @@
       "photos": [
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/brillakis-import-foods/photos/photos/photo-1.jpeg"
       ],
+      "video": null,
       "id": "brillakis-import-foods",
       "slug": "brillakis-import-foods",
       "metadata": {
@@ -311,6 +326,7 @@
         "websiteClicks": 0,
         "directionClicks": 0,
         "shareClicks": 0,
+        "videoPlays": 0,
         "lastViewed": "2026-01-05T10:54:25.512Z",
         "detailedViews": []
       },
@@ -321,6 +337,7 @@
       "tagline": "Wedding planning service in Niles, IL.",
       "description": "At Meraki Event Designs & Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.\nWe provide for each of our clients a courteous and professional environment from set up to service breakdown. Meraki Event Designs & Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs & Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.",
       "category": "Professional & Business Services",
+      "subcategories": ["Wedding Planner"],
       "phone": "(847) 779-3056",
       "address": "9073 Courtland Dr",
       "city": "Niles",
@@ -332,6 +349,7 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
+      "businessPortalPassword": null,
       "hours": {
         "monday": null,
         "tuesday": null,
@@ -378,6 +396,7 @@
       "photos": [
         "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80"
       ],
+      "video": null,
       "id": "meraki-events-chicago",
       "slug": "meraki-events-chicago",
       "metadata": {
@@ -390,6 +409,7 @@
         "websiteClicks": 0,
         "directionClicks": 0,
         "shareClicks": 0,
+        "videoPlays": 0,
         "lastViewed": "2026-01-05T11:01:49.789Z",
         "detailedViews": []
       },
@@ -400,6 +420,7 @@
       "tagline": "Auto body shop offering repairs and installations, including mirrors.",
       "description": "",
       "category": "Automotive & Transportation",
+      "subcategories": ["Auto Repair Shop"],
       "phone": "(847) 657-8181",
       "address": "3148 W Lake Ave",
       "city": "Glenview",
@@ -411,6 +432,7 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
+      "businessPortalPassword": null,
       "hours": {
         "monday": "7:30 AM - 6:00 PM",
         "tuesday": "7:30 AM - 6:00 PM",
@@ -457,6 +479,7 @@
       "photos": [
         "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"
       ],
+      "video": null,
       "id": "lekas-auto-construction",
       "slug": "lekas-auto-construction",
       "metadata": {
@@ -469,6 +492,7 @@
         "websiteClicks": 0,
         "directionClicks": 0,
         "shareClicks": 0,
+        "videoPlays": 0,
         "lastViewed": "2026-01-05T13:27:28.712Z",
         "detailedViews": []
       },
@@ -479,6 +503,7 @@
       "tagline": "Full-service hair salon in Niles, IL.",
       "description": "From the day we opened our doors in Niles in 2000, we've earned our spot as a top Salon. We offer unparalleled beauty pampering, but also respect our clients' busy schedules and will get you looking fabulous and on your way as soon as possible.\nOver the years, our expert team has had one mission--to make our devoted customers look stunning and feel their best. Contact us and see what our team of qualified professionals can do for you today. ",
       "category": "Beauty & Health",
+      "subcategories": ["Hair Salons"],
       "phone": "(847) 966-0686",
       "address": "9081 Courtland Dr",
       "city": "Niles",
@@ -490,6 +515,7 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
+      "businessPortalPassword": null,
       "hours": {
         "monday": null,
         "tuesday": null,
@@ -536,6 +562,7 @@
       "photos": [
         "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80"
       ],
+      "video": null,
       "id": "skb-hair-salon",
       "slug": "skb-hair-salon",
       "metadata": {
@@ -548,6 +575,7 @@
         "websiteClicks": 0,
         "directionClicks": 0,
         "shareClicks": 0,
+        "videoPlays": 0,
         "lastViewed": "2026-01-05T15:02:36.405Z",
         "detailedViews": []
       },
