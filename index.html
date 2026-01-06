@@ -250,6 +250,25 @@
             padding: 4px 8px !important;
         }
         
+        .subcategory-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 4px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .subcategory-tag:hover {
+            background: #d1d5db;
+        }
+        .subcategory-tag.selected {
+            background: #055193;
+            color: white;
+        }
+        
         @media (prefers-color-scheme: dark) {
             body { background: #1a1a1a; color: #e5e5e5; }
             header { background: #2a2a2a; border-color: #3a3a3a; }
@@ -273,6 +292,9 @@
             .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
             .leaflet-popup-tip { background: #2a2a2a !important; }
             .map-loading { background: #2a2a2a; color: #e5e5e5; }
+            .subcategory-tag { background: #404040; color: #e5e5e5; }
+            .subcategory-tag:hover { background: #4a4a4a; }
+            .subcategory-tag.selected { background: #055193; color: white; }
         }
     </style>
 </head>
@@ -333,7 +355,13 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <input type="text" id="categorySearch" placeholder="Search categories..." 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2">
                         <div id="categoryFilters" class="grid grid-cols-2 gap-2"></div>
+                    </div>
+                    <div id="subcategoryContainer" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Subcategories</label>
+                        <div id="subcategoryFilters" class="flex flex-wrap"></div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Radius: <span class="radius-value" id="radiusValue">Any distance</span></label>
@@ -361,8 +389,8 @@
             <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
             <select id="sortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
                 <option value="default">Default</option>
-                <option value="open-az">A-Z</option>
-                <option value="az">A-Z (Open Only)</option>
+                <option value="az">A-Z</option>
+                <option value="az-open">A-Z (Open Only)</option>
                 <option value="closest">Closest to Me</option>
                 <option value="closest-open">Closest to Me (Open Only)</option>
             </select>
@@ -397,6 +425,23 @@
             'Retail & Shopping'
         ];
 
+        const SUBCATEGORIES = {
+            'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
+            'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
+            'Church & Religious Organization': ['Church'],
+            'Cultural/Fraternal Organization': ['Dance Troupe', 'Non-Profit', 'Philanthropic Group', 'Society', 'Youth Organization'],
+            'Education & Community': ['Childcare', 'Greek School', 'Senior Care', 'Tutor'],
+            'Entertainment, Arts & Recreation': ['Band', 'DJs', 'Entertainment Group', 'Photographer', 'Art'],
+            'Food & Hospitality': ['Banquet Hall', 'Catering Service', 'Event Venue', 'Bakeries', 'Deli', 'Pastry Shop', 'Bar', 'Breakfast', 'Coffee', 'Lunch', 'Dinner', 'Restaurant', 'Hotel', 'Airbnb'],
+            'Grocery & Imports': ['Butcher Shop', 'Liquor Shop', 'Market', 'Greek Alcohol', 'Honey', 'Olive Oil', 'Food Distribution', 'Food Manufacturer'],
+            'Home & Construction': ['Carpenter', 'Electrician', 'General Contractor', 'Handyman', 'HVAC', 'Landscaping', 'Painter', 'Plumber', 'Roofing', 'Tile & Stone Specialist'],
+            'Industrial & Manufacturing': ['Food Manufacturer'],
+            'Pets & Veterinary': ['Veterinarian', 'Pet Accessories Maker'],
+            'Professional & Business Services': ['Business Services', 'Consultant', 'CPA', 'Financial Advisor', 'Insurance Agent', 'IT Service & Repair', 'Lawyer', 'Marketing & Creative Agency', 'Notaries', 'Wedding Planner', 'Travel Agency'],
+            'Real Estate & Development': ['Appraiser', 'Broker', 'Developer', 'Lender', 'Property Management', 'Real Estate Agent'],
+            'Retail & Shopping': ['Boutique Shop', 'ECommerce', 'Jewelry', 'Souvenir Shop']
+        };
+
         const US_STATES = {
             'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
             'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
@@ -414,6 +459,7 @@
         let filteredListings = [];
         let currentView = 'grid';
         let selectedCategory = 'All';
+        let selectedSubcategories = [];
         let selectedCountry = '';
         let selectedState = '';
         let selectedRadius = 0;
@@ -426,14 +472,14 @@
         let defaultMapZoom = 10;
         let userLocationMarker = null;
         let mapLoading = false;
+        let mapReady = false;
+        let allListingsGeocoded = false;
 
-        // Detect iOS web app
         function isIOSWebApp() {
             return ('standalone' in window.navigator) && window.navigator.standalone;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Show refresh button for iOS web app
             if (isIOSWebApp()) {
                 document.getElementById('refreshBtn').style.display = 'flex';
             }
@@ -443,6 +489,9 @@
             createCategoryFilters();
             requestLocation();
             loadFiltersFromURL();
+            
+            // Preload map immediately
+            initMap();
         });
 
         function loadFiltersFromURL() {
@@ -456,6 +505,11 @@
             const category = urlParams.get('category');
             if (category && CATEGORIES.includes(category)) {
                 selectedCategory = category;
+            }
+            
+            const subcategories = urlParams.get('subcategories');
+            if (subcategories) {
+                selectedSubcategories = subcategories.split(',');
             }
             
             const country = urlParams.get('country');
@@ -491,6 +545,9 @@
             if (selectedCategory && selectedCategory !== 'All') {
                 url.searchParams.set('category', selectedCategory);
             }
+            if (selectedSubcategories.length > 0) {
+                url.searchParams.set('subcategories', selectedSubcategories.join(','));
+            }
             if (selectedCountry) {
                 url.searchParams.set('country', selectedCountry);
             }
@@ -517,7 +574,6 @@
                         };
                         applyFilters();
                         
-                        // Add user location marker if map is open
                         if (map && mapOpen) {
                             addUserLocationMarker();
                         }
@@ -537,12 +593,10 @@
         function addUserLocationMarker() {
             if (!map || !userLocation) return;
             
-            // Remove existing marker
             if (userLocationMarker) {
                 map.removeLayer(userLocationMarker);
             }
             
-            // Create blue circle marker for user location
             const userIcon = L.divIcon({
                 html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
                 className: '',
@@ -557,7 +611,6 @@
             
             userLocationMarker.bindPopup('<strong>Your Location</strong>');
         }
-
         async function loadListings() {
             try {
                 const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
@@ -570,10 +623,7 @@
                 applyFilters();
                 updateResultsCount();
                 
-                // Geocode listings in background
-                setTimeout(() => {
-                    geocodeAllListings();
-                }, 100);
+                geocodeAllListings();
             } catch (error) {
                 console.error('Error loading listings:', error);
                 document.getElementById('listingsContainer').innerHTML = 
@@ -582,15 +632,19 @@
         }
 
         async function geocodeAllListings() {
+            let geocodedCount = 0;
             for (let listing of allListings) {
                 if (!listing.coordinates && listing.address && !isBasedIn(listing)) {
                     await geocodeListing(listing);
+                    geocodedCount++;
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
             
-            // Update map if it's open
-            if (map && mapOpen) {
+            allListingsGeocoded = true;
+            
+            if (map && mapReady) {
+                hideMapLoading();
                 updateMapMarkers();
             }
         }
@@ -609,7 +663,6 @@
                         lat: parseFloat(data[0].lat),
                         lng: parseFloat(data[0].lon)
                     };
-                    console.log(`Geocoded ${listing.businessName}:`, listing.coordinates);
                 }
             } catch (e) {
                 console.error('Geocoding failed for', listing.businessName, e);
@@ -689,7 +742,6 @@
             document.getElementById('gridViewBtn').addEventListener('click', () => setView('grid'));
             document.getElementById('listViewBtn').addEventListener('click', () => setView('list'));
             
-            // iOS refresh button
             document.getElementById('refreshBtn').addEventListener('click', () => {
                 window.location.reload();
             });
@@ -735,6 +787,22 @@
                     map.setView(defaultMapCenter, defaultMapZoom);
                 }
             });
+            
+            document.getElementById('categorySearch').addEventListener('input', filterCategories);
+        }
+        
+        function filterCategories() {
+            const searchTerm = document.getElementById('categorySearch').value.toLowerCase();
+            const buttons = document.querySelectorAll('#categoryFilters button');
+            
+            buttons.forEach(btn => {
+                const categoryName = btn.textContent.toLowerCase();
+                if (categoryName === 'all' || categoryName.includes(searchTerm)) {
+                    btn.style.display = '';
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
         }
         
         function updateRadiusValue() {
@@ -745,6 +813,7 @@
                 valueSpan.textContent = `${selectedRadius} miles`;
             }
         }
+        
         function createCategoryFilters() {
             const container = document.getElementById('categoryFilters');
             const allBtn = document.createElement('button');
@@ -766,6 +835,8 @@
 
         function filterByCategory(category) {
             selectedCategory = category;
+            selectedSubcategories = [];
+            
             const buttons = document.querySelectorAll('#categoryFilters button');
             buttons.forEach((btn, idx) => {
                 const isSelected = (idx === 0 && category === 'All') || btn.textContent === category;
@@ -777,12 +848,60 @@
                     btn.style.backgroundColor = '';
                 }
             });
+            
+            if (category !== 'All' && SUBCATEGORIES[category]) {
+                showSubcategoryFilter(category);
+            } else {
+                hideSubcategoryFilter();
+            }
+            
             updateURL();
             applyFilters();
         }
-
+        
+        function showSubcategoryFilter(category) {
+            const container = document.getElementById('subcategoryContainer');
+            const filtersDiv = document.getElementById('subcategoryFilters');
+            
+            filtersDiv.innerHTML = '';
+            SUBCATEGORIES[category].forEach(sub => {
+                const tag = document.createElement('div');
+                tag.className = 'subcategory-tag';
+                tag.textContent = sub;
+                if (selectedSubcategories.includes(sub)) {
+                    tag.classList.add('selected');
+                }
+                tag.onclick = () => toggleSubcategory(sub);
+                filtersDiv.appendChild(tag);
+            });
+            
+            container.classList.remove('hidden');
+        }
+        
+        function hideSubcategoryFilter() {
+            document.getElementById('subcategoryContainer').classList.add('hidden');
+        }
+        
+        function toggleSubcategory(subcategory) {
+            const index = selectedSubcategories.indexOf(subcategory);
+            if (index > -1) {
+                selectedSubcategories.splice(index, 1);
+            } else {
+                selectedSubcategories.push(subcategory);
+            }
+            
+            const tags = document.querySelectorAll('.subcategory-tag');
+            tags.forEach(tag => {
+                if (tag.textContent === subcategory) {
+                    tag.classList.toggle('selected');
+                }
+            });
+            
+            updateURL();
+            applyFilters();
+        }
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 3959; // Earth's radius in miles
+            const R = 3959;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -799,7 +918,6 @@
         function isOpenNow(hours) {
             if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
             
-            // Check if all values are null or empty
             const hasAnyHours = Object.values(hours).some(h => h && h.trim() !== '');
             if (!hasAnyHours) return null;
             
@@ -849,6 +967,10 @@
                     normalizedAddress.includes(searchTerm);
                     
                 const matchesCategory = selectedCategory === 'All' || listing.category === selectedCategory;
+                
+                const matchesSubcategory = selectedSubcategories.length === 0 || 
+                    (listing.subcategories && selectedSubcategories.some(sub => listing.subcategories.includes(sub)));
+                
                 const matchesCountry = !selectedCountry || (listing.country || 'USA') === selectedCountry;
                 const matchesState = !selectedState || listing.state === selectedState;
                 
@@ -867,10 +989,9 @@
                     }
                 }
                 
-                return matchesSearch && matchesCategory && matchesCountry && matchesState && matchesRadius;
+                return matchesSearch && matchesCategory && matchesSubcategory && matchesCountry && matchesState && matchesRadius;
             });
             
-            // Add distance to each listing for sorting
             if (userLocation && (sortOption === 'closest' || sortOption === 'closest-open')) {
                 filteredListings.forEach(listing => {
                     if (listing.coordinates) {
@@ -900,14 +1021,15 @@
                         return bOpen ? 1 : -1;
                     }
                     return a.businessName.localeCompare(b.businessName);
-                } else if (sortOption === 'open-az') {
+                } else if (sortOption === 'az') {
+                    return a.businessName.localeCompare(b.businessName);
+                } else if (sortOption === 'az-open') {
                     const aOpen = isOpenNow(a.hours);
                     const bOpen = isOpenNow(b.hours);
-                    if (aOpen !== bOpen) {
-                        if (aOpen === null && bOpen !== null) return 1;
-                        if (bOpen === null && aOpen !== null) return -1;
-                        return bOpen ? 1 : -1;
-                    }
+                    
+                    if (aOpen === true && bOpen !== true) return -1;
+                    if (bOpen === true && aOpen !== true) return 1;
+                    
                     return a.businessName.localeCompare(b.businessName);
                 } else if (sortOption === 'closest') {
                     return (a._distance || Infinity) - (b._distance || Infinity);
@@ -915,19 +1037,15 @@
                     const aOpen = isOpenNow(a.hours);
                     const bOpen = isOpenNow(b.hours);
                     
-                    // First filter: only show open businesses
-                    if (!aOpen && bOpen) return 1;
-                    if (aOpen && !bOpen) return -1;
+                    if (aOpen === true && bOpen !== true) return -1;
+                    if (bOpen === true && aOpen !== true) return 1;
                     
-                    // If both open or both closed, sort by distance
                     return (a._distance || Infinity) - (b._distance || Infinity);
-                } else {
-                    return a.businessName.localeCompare(b.businessName);
                 }
+                return 0;
             });
             
-            // For closest-open, filter out closed listings after sorting
-            if (sortOption === 'closest-open') {
+            if (sortOption === 'az-open' || sortOption === 'closest-open') {
                 filteredListings = filteredListings.filter(l => isOpenNow(l.hours) === true);
             }
             
@@ -961,16 +1079,16 @@
                 if (filtersOpen) {
                     toggleFilters();
                 }
-                if (!map) {
-                    initMap();
-                } else {
+                if (map) {
                     setTimeout(() => {
                         map.invalidateSize();
                         updateMapMarkers();
                         if (userLocation) {
                             addUserLocationMarker();
                         }
-                        hideMapLoading();
+                        if (allListingsGeocoded) {
+                            hideMapLoading();
+                        }
                     }, 100);
                 }
             } else {
@@ -989,6 +1107,8 @@
         }
         
         function initMap() {
+            if (map) return;
+            
             showMapLoading();
             
             map = L.map('map', {
@@ -1023,23 +1143,23 @@
             
             map.addLayer(markerClusterGroup);
             
-            // Add user location marker if available
             if (userLocation) {
                 addUserLocationMarker();
             }
             
-            // Wait for map to load
             setTimeout(() => {
                 map.invalidateSize();
+                mapReady = true;
                 updateMapMarkers();
-                hideMapLoading();
+                if (allListingsGeocoded) {
+                    hideMapLoading();
+                }
             }, 500);
         }
 
         function updateMapMarkers() {
-            if (!map || !markerClusterGroup) return;
+            if (!map || !markerClusterGroup || !mapReady) return;
             
-            showMapLoading();
             markerClusterGroup.clearLayers();
             const bounds = [];
             
@@ -1107,8 +1227,6 @@
                     maxZoom: 15
                 });
             }
-            
-            setTimeout(hideMapLoading, 300);
         }
 
         function setView(view) {
