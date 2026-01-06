@@ -77,7 +77,6 @@
             img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
             .social-icon svg { pointer-events: none; user-select: none; }
 
-            /* Fix social icons */
             .social-google { background: white; border: 2px solid #e5e7eb; }
             .social-yelp { background: white; border: 2px solid #e5e7eb; }
             .social-tripadvisor { background: white; border: 2px solid #e5e7eb; }
@@ -185,34 +184,22 @@
         // Analytics tracking
         async function trackAnalytics(action) {
             try {
-                const payload = {
-                    event_type: 'track_analytics',
-                    client_payload: {
-                        listingId: listingId,
-                        action: action,
-                        timestamp: new Date().toISOString(),
-                        userAgent: navigator.userAgent
-                    }
-                };
-                
-                // Use navigator.sendBeacon for better reliability
-                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-                const success = navigator.sendBeacon(
-                    `https://api.github.com/repos/thegreekdirectory/listings/dispatches`,
-                    blob
-                );
-                
-                if (!success) {
-                    // Fallback to fetch if sendBeacon fails
-                    await fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/vnd.github+json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
-                }
+                await fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github+json'
+                    },
+                    body: JSON.stringify({
+                        event_type: 'track_analytics',
+                        client_payload: {
+                            listingId: listingId,
+                            action: action,
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent
+                        }
+                    })
+                });
             } catch (e) {
                 console.log('Analytics tracking error:', e.message);
             }
@@ -369,19 +356,30 @@
         }
 
         // Initialize map if coordinates exist
-        const coordinates = '{{COORDINATES}}';
+        const coordinatesStr = '{{COORDINATES}}';
         const fullAddress = '{{FULL_ADDRESS}}';
         
         function initializeMap() {
-            if (!coordinates || coordinates === '' || !fullAddress || fullAddress === '') {
+            if (!coordinatesStr || coordinatesStr === '' || !fullAddress || fullAddress === '') {
+                console.log('No coordinates or address, skipping map');
                 return;
             }
             
             const mapElement = document.getElementById('listingMap');
-            if (!mapElement) return;
+            if (!mapElement) {
+                console.log('Map element not found');
+                return;
+            }
             
             try {
-                const [lat, lng] = coordinates.split(',').map(parseFloat);
+                const coords = coordinatesStr.split(',');
+                if (coords.length !== 2) {
+                    console.log('Invalid coordinates format');
+                    return;
+                }
+                
+                const lat = parseFloat(coords[0].trim());
+                const lng = parseFloat(coords[1].trim());
                 
                 if (isNaN(lat) || isNaN(lng)) {
                     console.error('Invalid coordinates:', lat, lng);
@@ -406,12 +404,10 @@
                     .bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}')
                     .openPopup();
                 
-                // Force map to recalculate size
                 setTimeout(() => {
                     map.invalidateSize();
                 }, 250);
                 
-                // Make map scroll-enabled on click
                 map.once('focus', function() { 
                     map.scrollWheelZoom.enable(); 
                 });
