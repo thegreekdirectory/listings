@@ -206,6 +206,8 @@
         };
     }
 
+<!-- Replace the login script section in admin.html (around lines 230-280) -->
+
     let githubToken = null;
     let allListings = [];
     let editingListing = null;
@@ -216,29 +218,78 @@
     let ownerFieldsVisibility = { name: true, title: true, greece: false, email: false, phone: false };
     let selectedSubcategories = [];
     let passwordVisible = false;
+
+    // Login handler
     document.getElementById('loginBtn').addEventListener('click', async () => {
-        githubToken = document.getElementById('githubToken').value.trim();
+        const tokenInput = document.getElementById('githubToken');
+        githubToken = tokenInput.value.trim();
+        
         if (!githubToken) {
             alert('Please enter your GitHub token');
             return;
         }
-        sessionStorage.setItem('githubToken', githubToken);
-        await testToken();
+        
+        // Disable button and show loading
+        const loginBtn = document.getElementById('loginBtn');
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Verifying...';
+        
+        try {
+            const isValid = await testToken();
+            if (isValid) {
+                sessionStorage.setItem('githubToken', githubToken);
+                showDashboard();
+                await loadListings();
+            } else {
+                alert('ERROR: Invalid token or insufficient permissions. Make sure your token has "repo" access.');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('ERROR: Failed to verify token. Please check your token and try again.');
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Sign In';
+        }
     });
 
     async function testToken() {
         try {
-            const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
-                headers: { 'Authorization': `token ${githubToken}` }
+            // Test with user endpoint first (doesn't require repo access)
+            const userResponse = await fetch('https://api.github.com/user', {
+                headers: { 
+                    'Authorization': `Bearer ${githubToken}`,
+                    'Accept': 'application/vnd.github+json'
+                }
             });
-            if (response.ok) {
-                showDashboard();
-                await loadListings();
-            } else {
-                alert('ERROR: Invalid token.');
+            
+            if (!userResponse.ok) {
+                console.error('User API failed:', userResponse.status);
+                return false;
             }
+            
+            // Now test repo access
+            const repoResponse = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
+                headers: { 
+                    'Authorization': `Bearer ${githubToken}`,
+                    'Accept': 'application/vnd.github+json'
+                }
+            });
+            
+            if (!repoResponse.ok) {
+                console.error('Repo API failed:', repoResponse.status);
+                if (repoResponse.status === 404) {
+                    alert('ERROR: Repository or file not found. Check GITHUB_OWNER and GITHUB_REPO values.');
+                } else if (repoResponse.status === 403) {
+                    alert('ERROR: Token lacks repository permissions. Generate a token with "repo" scope.');
+                }
+                return false;
+            }
+            
+            return true;
         } catch (error) {
-            alert('ERROR: Connection to repo failed.');
+            console.error('Token test error:', error);
+            return false;
         }
     }
 
@@ -248,31 +299,62 @@
     }
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
-        githubToken = null;
-        sessionStorage.clear();
-        location.reload();
+        if (confirm('Are you sure you want to logout?')) {
+            githubToken = null;
+            sessionStorage.clear();
+            location.reload();
+        }
     });
 
     async function loadListings() {
         try {
             const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
-                headers: { 'Authorization': `token ${githubToken}` }
+                headers: { 
+                    'Authorization': `Bearer ${githubToken}`,
+                    'Accept': 'application/vnd.github+json'
+                }
             });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to load listings: ${response.status}`);
+            }
+            
             const data = await response.json();
             databaseSha = data.sha;
             const content = JSON.parse(atob(data.content));
             allListings = content.listings || [];
             renderTable();
         } catch (error) {
-            alert('Failed to load listings');
+            console.error('Error loading listings:', error);
+            alert('Failed to load listings: ' + error.message);
         }
     }
 
-    if (sessionStorage.getItem('githubToken')) {
-        githubToken = sessionStorage.getItem('githubToken');
-        testToken();
-    }
-
+    // Check for existing session
+    window.addEventListener('DOMContentLoaded', async () => {
+        const savedToken = sessionStorage.getItem('githubToken');
+        if (savedToken) {
+            githubToken = savedToken;
+            const isValid = await testToken();
+            if (isValid) {
+                showDashboard();
+                await loadListings();
+            } else {
+                sessionStorage.removeItem('githubToken');
+                alert('Your session has expired. Please login again.');
+            }
+        }
+    });
+    
+    // Add token input keypress handler
+    document.addEventListener('DOMContentLoaded', () => {
+        const tokenInput = document.getElementById('githubToken');
+        tokenInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('loginBtn').click();
+            }
+        });
+    });
     function renderTable() {
         const tbody = document.getElementById('listingsTableBody');
         const searchTerm = document.getElementById('adminSearch') ? document.getElementById('adminSearch').value.toLowerCase() : '';
