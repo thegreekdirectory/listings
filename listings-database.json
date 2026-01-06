@@ -99,8 +99,8 @@
       "website": "https://eagledg.com",
       "tier": "FREE",
       "verified": false,
-      "showClaimButton": true,
-      "businessPortalPassword": null,
+      "showClaimButton": false,
+      "businessPortalPassword": "test",
       "hours": {
         "monday": "Closed",
         "tuesday": "10:30 AM - 8:00 PM",
