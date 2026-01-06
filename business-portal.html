@@ -149,7 +149,7 @@
                 await attemptLogin(slug, email, password);
             }
         });
-      function showDashboard() {
+        function showDashboard() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('dashboardPage').classList.remove('hidden');
             
@@ -246,7 +246,7 @@
     </div>
 
     <script>
-      function renderDashboard() {
+        function renderDashboard() {
             if (!currentListing) return;
             
             document.getElementById('businessName').textContent = currentListing.businessName;
@@ -570,7 +570,7 @@
                 }
             }
         };
-      function setupImageHandlers() {
+        function setupImageHandlers() {
             document.getElementById('logoUpload').addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (file) {
@@ -824,7 +824,7 @@
             
             document.getElementById('analyticsContent').innerHTML = html;
         }
-      async function loadDatabase() {
+        async function loadDatabase() {
             try {
                 const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
                 const data = await response.json();
