@@ -277,32 +277,18 @@
     </style>
 </head>
 <body class="bg-gray-50">
-<body class="bg-gray-50">
-    <header class="site-header sticky top-0 z-50">
-      <div class="header-container">
-        <div class="site-branding">
-          <a href="/home" class="site-logo">
-            <img src="https://social.thegreekdirectory.org/Logo2.png" alt="Home">
-            <span>The Greek Directory</span>
-          </a>
-        </div>
-        <nav class="main-navigation">
-          <ul class="nav-list">
-            <li><a href="/home">Home</a></li>
-            <li><a href="/about">About</a></li>
-            <li class="dropdown">
-              <a href="/listings">Listings ▾</a>
-              <ul class="dropdown-menu">
-                <li><a href="https://forms.gle/1rsqe5g9SsVCDYMs8" target="_blank">Submit Listing</a></li>
-              </ul>
-            </li>
-            <li><a href="/contact">Contact</a></li>
-            <li><a href="/newsletter">Newsletter</a></li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-    
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
+                    <div>
+                        <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
+                        <p class="text-xs text-gray-600" id="locationSubtitle">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="relative mb-4">
                 <input type="text" id="searchInput" placeholder="Search businesses, churches, schools..." 
                     class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" 
@@ -356,7 +342,7 @@
                 </div>
             </div>
         </div>
-
+    </header>
 
     <div id="mapContainer" class="hidden border-b relative">
         <div class="map-loading" id="mapLoading">
