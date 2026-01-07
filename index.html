@@ -32,11 +32,11 @@
         .badge-claimed { background: #6B7280; color: white; }
         img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
         
-        header { z-index: 100 !important; }
+        header { z-index: 100 !important; position: relative; }
         #filterPanel { max-height: calc(100vh - 200px); overflow-y: auto; }
         #filterPanel .space-y-4 > div:last-child { padding-bottom: 40px; }
         
-        #mapContainer { position: relative; z-index: 10; }
+        #mapContainer { position: relative; z-index: 50; }
         
         .map-loading {
             position: absolute;
@@ -158,7 +158,6 @@
             cursor: pointer;
             border: none;
         }
-        
         .map-popup {
             position: relative;
             background: white;
@@ -581,7 +580,6 @@
             loadFiltersFromURL();
             initMap();
         });
-
         function loadFiltersFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             
@@ -858,7 +856,6 @@
             }
             return listing.address || '';
         }
-
         function setupEventListeners() {
             document.getElementById('searchInput').addEventListener('input', () => {
                 updateURL();
@@ -998,7 +995,6 @@
                 container.appendChild(btn);
             });
         }
-
         function filterByCategory(category) {
             selectedCategory = category;
             selectedSubcategories = [];
@@ -1115,7 +1111,6 @@
             
             return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
         }
-
         function applyFilters() {
             const searchTerm = normalizeString(document.getElementById('searchInput').value);
             const sortOption = document.getElementById('sortSelect').value;
@@ -1256,7 +1251,6 @@
                 container.classList.add('hidden');
             }
         }
-
         function toggleSplitView() {
             splitViewActive = !splitViewActive;
             
@@ -1318,6 +1312,7 @@
             const loading = document.getElementById('mapLoading');
             if (loading) loading.style.display = 'none';
         }
+
         function initMap() {
             if (map) return;
             
@@ -1335,8 +1330,8 @@
             }).addTo(map);
             
             markerClusterGroup = L.markerClusterGroup({
-                maxClusterRadius: 80,
-                disableClusteringAtZoom: 16,
+                maxClusterRadius: 50,
+                disableClusteringAtZoom: 18,
                 spiderfyOnMaxZoom: true,
                 showCoverageOnHover: false,
                 zoomToBoundsOnClick: true,
@@ -1386,8 +1381,8 @@
             }).addTo(splitMap);
             
             const splitMarkerClusterGroup = L.markerClusterGroup({
-                maxClusterRadius: 80,
-                disableClusteringAtZoom: 16,
+                maxClusterRadius: 50,
+                disableClusteringAtZoom: 18,
                 spiderfyOnMaxZoom: true,
                 showCoverageOnHover: false,
                 zoomToBoundsOnClick: true,
@@ -1490,7 +1485,6 @@
                 splitMap.invalidateSize();
             }, 250);
         }
-
         function updateMapMarkers() {
             if (!map || !markerClusterGroup || !mapReady) return;
             
@@ -1673,7 +1667,6 @@
                 }).join('');
             }
         }
-
         function renderSplitViewListings() {
             const container = document.getElementById('splitListingsContainer');
             if (!container) return;
