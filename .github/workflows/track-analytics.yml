@@ -20,13 +20,17 @@ jobs:
           script: |
             const fs = require('fs');
             
-            // Get the listing ID and action from the dispatch event
+            // Get the listing ID, action, and optional platform from the dispatch event
             const listingId = context.payload.client_payload.listingId;
             const action = context.payload.client_payload.action;
+            const platform = context.payload.client_payload.platform || null;
             const timestamp = context.payload.client_payload.timestamp || new Date().toISOString();
             const userAgent = context.payload.client_payload.userAgent || 'Unknown';
             
             console.log(`Tracking ${action} for listing ${listingId} at ${timestamp}`);
+            if (platform) {
+              console.log(`Share platform: ${platform}`);
+            }
             
             // Read the database file
             const databasePath = 'listings-database.json';
@@ -50,13 +54,19 @@ jobs:
                 directionClicks: 0,
                 shareClicks: 0,
                 lastViewed: timestamp,
-                detailedViews: []
+                detailedViews: [],
+                sharePlatforms: {}
               };
             }
             
             // Initialize detailedViews if not exists
             if (!listing.analytics.detailedViews) {
               listing.analytics.detailedViews = [];
+            }
+            
+            // Initialize sharePlatforms if not exists
+            if (!listing.analytics.sharePlatforms) {
+              listing.analytics.sharePlatforms = {};
             }
             
             // Update counters based on action
@@ -76,15 +86,26 @@ jobs:
                 break;
               case 'share':
                 listing.analytics.shareClicks = (listing.analytics.shareClicks || 0) + 1;
+                // Track platform-specific shares
+                if (platform) {
+                  listing.analytics.sharePlatforms[platform] = (listing.analytics.sharePlatforms[platform] || 0) + 1;
+                }
                 break;
             }
             
             // Add to detailed views
-            listing.analytics.detailedViews.push({
+            const detailedView = {
               action: action,
               timestamp: timestamp,
               userAgent: userAgent
-            });
+            };
+            
+            // Add platform for share actions
+            if (action === 'share' && platform) {
+              detailedView.platform = platform;
+            }
+            
+            listing.analytics.detailedViews.push(detailedView);
             
             // Keep only last 1000 detailed views to prevent file bloat
             if (listing.analytics.detailedViews.length > 1000) {
@@ -96,6 +117,10 @@ jobs:
             
             console.log(`Updated analytics for ${listing.businessName}`);
             console.log(`Total views: ${listing.analytics.views}`);
+            console.log(`Total shares: ${listing.analytics.shareClicks}`);
+            if (platform) {
+              console.log(`${platform} shares: ${listing.analytics.sharePlatforms[platform]}`);
+            }
             
       - name: Commit and push changes
         run: |
