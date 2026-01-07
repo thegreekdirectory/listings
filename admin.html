@@ -206,8 +206,7 @@
         };
     }
 
-<!-- Replace the login script section in admin.html (around lines 230-280) -->
-
+// LOGIN HANDLER - Replace the existing login section starting from line ~230
     let githubToken = null;
     let allListings = [];
     let editingListing = null;
@@ -355,6 +354,7 @@
             }
         });
     });
+    
     function renderTable() {
         const tbody = document.getElementById('listingsTableBody');
         const searchTerm = document.getElementById('adminSearch') ? document.getElementById('adminSearch').value.toLowerCase() : '';
