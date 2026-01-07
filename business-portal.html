@@ -141,15 +141,21 @@
             }
         }
 
-        // Check for existing session
-        window.addEventListener('DOMContentLoaded', async () => {
-            const savedAuth = sessionStorage.getItem('businessPortalAuth');
-            if (savedAuth) {
-                const { slug, email, password } = JSON.parse(savedAuth);
-                await attemptLogin(slug, email, password);
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const slugFromUrl = urlParams.get('slug');
+        
+        if (slugFromUrl) {
+            const slugInput = document.getElementById('loginSlug');
+            if (slugInput) {
+                slugInput.value = slugFromUrl;
+                // Focus on email field instead
+                document.getElementById('loginEmail').focus();
             }
-        });
-        function showDashboard() {
+        }
+    });        
+        
+    function showDashboard() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('dashboardPage').classList.remove('hidden');
             
