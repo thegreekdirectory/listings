@@ -860,7 +860,7 @@
       "website": null,
       "tier": "FREE",
       "verified": false,
-      "showClaimButton": false,
+      "showClaimButton": true,
       "businessPortalPassword": null,
       "hours": {
         "monday": null,
@@ -913,7 +913,7 @@
       "listingId": 3,
       "metadata": {
         "createdAt": "2026-01-08T18:18:20.797Z",
-        "updatedAt": "2026-01-08T18:20:37.328Z"
+        "updatedAt": "2026-01-08T22:34:58.898Z"
       },
       "analytics": {
         "views": 0,
