@@ -90,11 +90,6 @@
       "tagline": "Family-owned dining staple in Downers Grove since 1981.",
       "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
       "category": "Food & Hospitality",
-      "subcategories": [
-        "Lunch",
-        "Dinner",
-        "Restaurant"
-      ],
       "phone": "(630) 963-9161",
       "address": "406 Maple Ave",
       "city": "Downers Grove",
@@ -105,8 +100,7 @@
       "website": "https://eagledg.com",
       "tier": "FREE",
       "verified": false,
-      "showClaimButton": false,
-      "businessPortalPassword": "test",
+      "showClaimButton": true,
       "hours": {
         "monday": "Closed",
         "tuesday": "10:30 AM - 8:00 PM",
@@ -153,12 +147,11 @@
       "photos": [
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-1.png"
       ],
-      "video": null,
       "id": "eagle-restaurant",
       "slug": "eagle-restaurant",
       "metadata": {
         "createdAt": "2026-01-05T09:47:32.093Z",
-        "updatedAt": "2026-01-05T18:30:15.004Z"
+        "updatedAt": "2026-01-08T03:42:26.690Z"
       },
       "analytics": {
         "views": 0,
@@ -169,8 +162,7 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-05T09:47:32.093Z",
         "detailedViews": []
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "Filakia",
