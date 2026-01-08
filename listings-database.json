@@ -5,7 +5,9 @@
       "tagline": "Private dual-language day school & midwest region examination center for Ellinomatheia.",
       "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy's problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.\nIn addition to its day school, the Academy offers comprehensive Greek Language programs on Saturdays and evenings. Enrichment and cultural programs are also available, thoughtfully infused with timeless Hellenic ideals and classical values.",
       "category": "Education & Community",
-      "subcategories": ["Greek School"],
+      "subcategories": [
+        "Greek School"
+      ],
       "phone": "(847) 317-1063",
       "address": "445 Pine St",
       "city": "Deerfield",
@@ -88,7 +90,11 @@
       "tagline": "Family-owned dining staple in Downers Grove since 1981.",
       "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
       "category": "Food & Hospitality",
-      "subcategories": ["Lunch", "Dinner", "Restaurant"],
+      "subcategories": [
+        "Lunch",
+        "Dinner",
+        "Restaurant"
+      ],
       "phone": "(630) 963-9161",
       "address": "406 Maple Ave",
       "city": "Downers Grove",
@@ -254,7 +260,9 @@
       "tagline": "Family-owned grocery store with Greek imports.",
       "description": "Brillakis Import Foods is a family-owned grocery store in Niles, Illinois, specializing in authentic Greek and imported foods, including cheeses, olive oil, pastries, and meats. It is known for its high-quality products, friendly service, and a wide selection of Greek groceries, imported beers, and other specialty items.",
       "category": "Grocery & Imports",
-      "subcategories": ["Market"],
+      "subcategories": [
+        "Market"
+      ],
       "phone": "(847) 966-1250",
       "address": "9061 Courtland Dr",
       "city": "Niles",
@@ -337,7 +345,9 @@
       "tagline": "Wedding planning service in Niles, IL.",
       "description": "At Meraki Event Designs & Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.\nWe provide for each of our clients a courteous and professional environment from set up to service breakdown. Meraki Event Designs & Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs & Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.",
       "category": "Professional & Business Services",
-      "subcategories": ["Wedding Planner"],
+      "subcategories": [
+        "Wedding Planner"
+      ],
       "phone": "(847) 779-3056",
       "address": "9073 Courtland Dr",
       "city": "Niles",
@@ -420,7 +430,9 @@
       "tagline": "Auto body shop offering repairs and installations, including mirrors.",
       "description": "",
       "category": "Automotive & Transportation",
-      "subcategories": ["Auto Repair Shop"],
+      "subcategories": [
+        "Auto Repair Shop"
+      ],
       "phone": "(847) 657-8181",
       "address": "3148 W Lake Ave",
       "city": "Glenview",
@@ -503,7 +515,9 @@
       "tagline": "Full-service hair salon in Niles, IL.",
       "description": "From the day we opened our doors in Niles in 2000, we've earned our spot as a top Salon. We offer unparalleled beauty pampering, but also respect our clients' busy schedules and will get you looking fabulous and on your way as soon as possible.\nOver the years, our expert team has had one mission--to make our devoted customers look stunning and feel their best. Contact us and see what our team of qualified professionals can do for you today. ",
       "category": "Beauty & Health",
-      "subcategories": ["Hair Salons"],
+      "subcategories": [
+        "Hair Salons"
+      ],
       "phone": "(847) 966-0686",
       "address": "9081 Courtland Dr",
       "city": "Niles",
@@ -580,6 +594,85 @@
         "detailedViews": []
       },
       "visible": true
+    },
+    {
+      "businessName": "Test Business",
+      "tagline": "Test Tagline",
+      "description": "",
+      "category": "Industrial & Manufacturing",
+      "phone": null,
+      "address": null,
+      "city": null,
+      "state": null,
+      "zipCode": null,
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": false,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": "https://www.yelp.com/biz/test",
+        "tripadvisor": "https://www.tripadvisor.com/test",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80"
+      ],
+      "id": "test-business",
+      "slug": "test-business",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-08T03:40:30.549Z",
+        "updatedAt": "2026-01-08T03:40:30.550Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "lastViewed": "2026-01-08T03:40:30.550Z",
+        "detailedViews": []
+      }
     }
   ]
 }
