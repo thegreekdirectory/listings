@@ -151,7 +151,7 @@
       "slug": "eagle-restaurant",
       "metadata": {
         "createdAt": "2026-01-05T09:47:32.093Z",
-        "updatedAt": "2026-01-08T03:42:26.690Z"
+        "updatedAt": "2026-01-08T04:21:33.668Z"
       },
       "analytics": {
         "views": 0,
@@ -162,7 +162,8 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-05T09:47:32.093Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     },
     {
       "businessName": "Filakia",
