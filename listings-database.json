@@ -739,10 +739,10 @@
       "id": "e",
       "slug": "e",
       "listingId": 1,
-      "visible": false,
+      "visible": true,
       "metadata": {
         "createdAt": "2026-01-08T16:37:19.110Z",
-        "updatedAt": "2026-01-08T18:16:07.683Z"
+        "updatedAt": "2026-01-08T18:16:09.414Z"
       },
       "analytics": {
         "views": 0,
