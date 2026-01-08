@@ -2,9 +2,101 @@
 <html>
 <head>
   <script src="/js/load-header.js" defer></script>
+  <style>
+.site-header {
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  z-index: 1000;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: #111;
+}
+
+.site-nav {
+  display: flex;
+  gap: 16px;
+}
+
+.site-nav a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+
+.menu-toggle {
+  display: none;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .site-nav {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    padding: 10px;
+    flex-direction: column;
+    display: none;
+  }
+
+  .site-nav.open {
+    display: flex;
+  }
+}
+</style>
 </head>
 <body>
-  <div id="header-placeholder"></div>
+  <header class="site-header">
+  <div class="header-inner">
+    <a href="/home" class="logo">The Greek Directory</a>
+
+    <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
+
+    <nav class="site-nav">
+      <a href="/home">Home</a>
+      <a href="/about">About</a>
+      <a href="/listings">Listings</a>
+      <a href="/contact">Contact</a>
+      <a href="/newsletter">Newsletter</a>
+    </nav>
+  </div>
+</header>
+
+</header>
+
   <p>hi</p>
+  <script>
+const toggle = document.querySelector('.menu-toggle');
+const nav = document.querySelector('.site-nav');
+
+toggle.addEventListener('click', () => {
+  nav.classList.toggle('open');
+});
+</script>
+
 </body>
 </html>
