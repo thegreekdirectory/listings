@@ -592,17 +592,21 @@
       "tagline": "Test Tagline",
       "description": "",
       "category": "Industrial & Manufacturing",
+      "subcategories": [
+        "Food Manufacturer"
+      ],
       "phone": null,
       "address": null,
       "city": null,
-      "state": null,
+      "state": "IL",
       "zipCode": null,
       "country": "USA",
       "email": null,
       "website": null,
-      "tier": "FREE",
-      "verified": false,
+      "tier": "PREMIUM",
+      "verified": true,
       "showClaimButton": false,
+      "businessPortalPassword": null,
       "hours": {
         "monday": null,
         "tuesday": null,
@@ -651,10 +655,9 @@
       ],
       "id": "test-business",
       "slug": "test-business",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-08T03:40:30.549Z",
-        "updatedAt": "2026-01-08T03:40:30.550Z"
+        "updatedAt": "2026-01-08T04:32:33.172Z"
       },
       "analytics": {
         "views": 0,
@@ -664,7 +667,8 @@
         "shareClicks": 0,
         "lastViewed": "2026-01-08T03:40:30.550Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
