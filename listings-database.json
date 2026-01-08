@@ -911,10 +911,10 @@
       "id": "f",
       "slug": "f",
       "listingId": 3,
-      "visible": true,
+      "visible": false,
       "metadata": {
         "createdAt": "2026-01-08T18:18:20.797Z",
-        "updatedAt": "2026-01-08T18:18:20.797Z"
+        "updatedAt": "2026-01-08T18:20:25.464Z"
       },
       "analytics": {
         "views": 0,
