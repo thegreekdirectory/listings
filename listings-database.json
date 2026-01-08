@@ -19,7 +19,7 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
-      "businessPortalPassword": null,
+      "businessPortalPassword": "ScfxkawSxbaqmaJ",
       "hours": {
         "monday": "8:00 AM - 5:30 PM",
         "tuesday": "8:00 AM - 5:30 PM",
@@ -66,12 +66,11 @@
       "photos": [
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-1.png"
       ],
-      "video": null,
       "id": "hellenic-american-academy",
       "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-05T09:16:39.211Z",
-        "updatedAt": "2026-01-05T18:23:20.343Z"
+        "updatedAt": "2026-01-08T04:27:00.376Z"
       },
       "analytics": {
         "views": 0,
