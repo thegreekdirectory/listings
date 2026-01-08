@@ -970,8 +970,8 @@
       },
       "reviews": {
         "google": null,
-        "yelp": null,
-        "tripadvisor": null,
+        "yelp": "https://www.yelp.com/biz/test",
+        "tripadvisor": "https://www.tripadvisor.com/test",
         "other1": null,
         "other2": null,
         "other3": null
@@ -997,10 +997,9 @@
       "id": "q",
       "slug": "q",
       "listingId": 4,
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-08T21:16:29.692Z",
-        "updatedAt": "2026-01-08T21:16:29.692Z"
+        "updatedAt": "2026-01-08T21:17:40.871Z"
       },
       "analytics": {
         "views": 0,
@@ -1012,7 +1011,8 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-08T21:16:29.692Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
