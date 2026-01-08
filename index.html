@@ -336,7 +336,10 @@
             <div id="filterPanel" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="font-semibold text-gray-900">Filters</h3>
-                    <button id="closeFilterBtn" class="text-gray-500">✕</button>
+                    <div class="flex gap-2">
+                        <button id="clearFiltersBtn" class="text-sm text-blue-600 hover:text-blue-800">Clear All</button>
+                        <button id="closeFilterBtn" class="text-gray-500">✕</button>
+                    </div>
                 </div>
                 <div class="space-y-4">
                     <div>
@@ -429,7 +432,6 @@
         const GITHUB_OWNER = 'thegreekdirectory';
         const GITHUB_REPO = 'listings';
         const DATABASE_PATH = 'listings-database.json';
-
         const CATEGORIES = [
             'Automotive & Transportation',
             'Beauty & Health',
@@ -500,6 +502,7 @@
         let mapReady = false;
         let allListingsGeocoded = false;
         let starredListings = [];
+        let viewingStarredOnly = false;
 
         // Starred listings functions
         function loadStarredListings() {
@@ -539,16 +542,28 @@
             document.getElementById('starredCount').textContent = starredListings.length;
         }
 
-        function showStarredListings() {
-            if (starredListings.length === 0) {
-                alert('You haven\'t starred any listings yet!');
-                return;
+        function toggleStarredView() {
+            viewingStarredOnly = !viewingStarredOnly;
+            
+            if (viewingStarredOnly) {
+                if (starredListings.length === 0) {
+                    alert('You haven\'t starred any listings yet!');
+                    viewingStarredOnly = false;
+                    return;
+                }
+                
+                filteredListings = allListings.filter(l => starredListings.includes(l.id));
+                document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
+                document.getElementById('starredBtn').style.backgroundColor = '#fbbf24';
+                document.getElementById('starredBtn').style.color = '#78350f';
+            } else {
+                applyFilters();
+                document.getElementById('starredBtn').style.backgroundColor = '';
+                document.getElementById('starredBtn').style.color = '';
             }
             
-            filteredListings = allListings.filter(l => starredListings.includes(l.id));
             renderListings();
             updateResultsCount();
-            document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
         }
 
         function setCookie(name, value, days) {
@@ -580,6 +595,7 @@
             loadFiltersFromURL();
             initMap();
         });
+        
         function loadFiltersFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             
@@ -684,7 +700,9 @@
                             lng: position.coords.longitude
                         };
                         console.log('Location acquired:', userLocation);
-                        applyFilters();
+                        if (!viewingStarredOnly) {
+                            applyFilters();
+                        }
                         
                         if (map && mapOpen) {
                             addUserLocationMarker();
@@ -735,9 +753,12 @@
             });
             if (!skipUpdate) {
                 updateURL();
-                applyFilters();
+                if (!viewingStarredOnly) {
+                    applyFilters();
+                }
             }
         };
+        
         async function loadListings() {
             try {
                 const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
@@ -856,10 +877,13 @@
             }
             return listing.address || '';
         }
+        
         function setupEventListeners() {
             document.getElementById('searchInput').addEventListener('input', () => {
                 updateURL();
-                applyFilters();
+                if (!viewingStarredOnly) {
+                    applyFilters();
+                }
             });
             
             document.getElementById('filterBtn').addEventListener('click', toggleFilters);
@@ -867,8 +891,9 @@
             document.getElementById('mapBtn').addEventListener('click', toggleMap);
             document.getElementById('gridViewBtn').addEventListener('click', () => setView('grid'));
             document.getElementById('listViewBtn').addEventListener('click', () => setView('list'));
-            document.getElementById('starredBtn').addEventListener('click', showStarredListings);
+            document.getElementById('starredBtn').addEventListener('click', toggleStarredView);
             document.getElementById('splitViewBtn').addEventListener('click', toggleSplitView);
+            document.getElementById('clearFiltersBtn').addEventListener('click', clearAllFilters);
             
             document.getElementById('refreshBtn').addEventListener('click', () => {
                 window.location.reload();
@@ -879,22 +904,34 @@
                 selectedRadius = parseInt(e.target.value);
                 updateRadiusValue();
                 updateURL();
-                applyFilters();
+                if (!viewingStarredOnly) {
+                    applyFilters();
+                }
             });
             
             document.getElementById('openNowFilter').addEventListener('change', (e) => {
                 openNowOnly = e.target.checked;
                 updateURL();
-                applyFilters();
+                if (!viewingStarredOnly) {
+                    applyFilters();
+                }
             });
             
             document.getElementById('onlineOnlyFilter').addEventListener('change', (e) => {
                 onlineOnly = e.target.checked;
                 updateURL();
-                applyFilters();
+                if (!viewingStarredOnly) {
+                    applyFilters();
+                }
             });
             
-            document.getElementById('sortSelect').addEventListener('change', applyFilters);
+            document.getElementById('sortSelect').addEventListener('change', () => {
+                if (!viewingStarredOnly) {
+                    applyFilters();
+                } else {
+                    renderListings();
+                }
+            });
             document.getElementById('countryFilter').addEventListener('change', (e) => {
                 selectedCountry = e.target.value;
                 if (selectedCountry === 'USA') {
@@ -905,12 +942,16 @@
                     selectedState = '';
                 }
                 updateURL();
-                applyFilters();
+                if (!viewingStarredOnly) {
+                    applyFilters();
+                }
             });
             document.getElementById('stateFilter').addEventListener('change', (e) => {
                 selectedState = e.target.value;
                 updateURL();
-                applyFilters();
+                if (!viewingStarredOnly) {
+                    applyFilters();
+                }
             });
             
             document.getElementById('locateBtn').addEventListener('click', () => {
@@ -925,12 +966,48 @@
             document.getElementById('resetMapBtn').addEventListener('click', () => {
                 if (map) {
                     map.setView(defaultMapCenter, defaultMapZoom);
+                    if (mapReady && allListingsGeocoded) {
+                        updateMapMarkers();
+                    }
                 }
             });
             
             document.getElementById('categorySearch').addEventListener('input', filterCategories);
         }
         
+        function clearAllFilters() {
+            // Reset all filter states
+            selectedCategory = 'All';
+            selectedSubcategories = [];
+            selectedCountry = '';
+            selectedState = '';
+            selectedRadius = 0;
+            openNowOnly = false;
+            onlineOnly = false;
+            
+            // Reset UI
+            document.getElementById('searchInput').value = '';
+            document.getElementById('categorySearch').value = '';
+            document.getElementById('countryFilter').value = '';
+            document.getElementById('stateFilter').value = '';
+            document.getElementById('stateFilterContainer').classList.add('hidden');
+            document.getElementById('radiusFilter').value = '0';
+            document.getElementById('openNowFilter').checked = false;
+            document.getElementById('onlineOnlyFilter').checked = false;
+            
+            // Reset category buttons
+            createCategoryFilters();
+            
+            // Hide subcategories
+            document.getElementById('subcategoryContainer').classList.add('hidden');
+            
+            updateRadiusValue();
+            updateURL();
+            
+            if (!viewingStarredOnly) {
+                applyFilters();
+            }
+        }
         function filterCategories() {
             const searchTerm = document.getElementById('categorySearch').value.toLowerCase();
             const buttons = document.querySelectorAll('#categoryFilters button');
@@ -979,6 +1056,8 @@
         
         function createCategoryFilters() {
             const container = document.getElementById('categoryFilters');
+            container.innerHTML = '';
+            
             const allBtn = document.createElement('button');
             allBtn.textContent = 'All';
             allBtn.className = selectedCategory === 'All' ? 'px-3 py-2 rounded-lg text-sm font-medium text-white' : 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
@@ -995,6 +1074,7 @@
                 container.appendChild(btn);
             });
         }
+        
         function filterByCategory(category) {
             selectedCategory = category;
             selectedSubcategories = [];
@@ -1018,7 +1098,9 @@
             }
             
             updateURL();
-            applyFilters();
+            if (!viewingStarredOnly) {
+                applyFilters();
+            }
         }
         
         function showSubcategoryFilter(category) {
@@ -1060,7 +1142,9 @@
             });
             
             updateURL();
-            applyFilters();
+            if (!viewingStarredOnly) {
+                applyFilters();
+            }
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -1111,6 +1195,7 @@
             
             return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
         }
+        
         function applyFilters() {
             const searchTerm = normalizeString(document.getElementById('searchInput').value);
             const sortOption = document.getElementById('sortSelect').value;
@@ -1251,6 +1336,7 @@
                 container.classList.add('hidden');
             }
         }
+        
         function toggleSplitView() {
             splitViewActive = !splitViewActive;
             
@@ -1282,7 +1368,11 @@
                 document.getElementById('splitSortSelect').value = document.getElementById('sortSelect').value;
                 document.getElementById('splitSortSelect').addEventListener('change', (e) => {
                     document.getElementById('sortSelect').value = e.target.value;
-                    applyFilters();
+                    if (!viewingStarredOnly) {
+                        applyFilters();
+                    } else {
+                        renderListings();
+                    }
                 });
                 
                 renderSplitViewListings();
@@ -1566,8 +1656,11 @@
 
         function updateResultsCount() {
             const count = filteredListings.length;
-            document.getElementById('resultsCount').textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
+            if (!viewingStarredOnly) {
+                document.getElementById('resultsCount').textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
+            }
         }
+        
         function renderListings() {
             const container = document.getElementById('listingsContainer');
             if (filteredListings.length === 0) {
@@ -1667,6 +1760,7 @@
                 }).join('');
             }
         }
+        
         function renderSplitViewListings() {
             const container = document.getElementById('splitListingsContainer');
             if (!container) return;
