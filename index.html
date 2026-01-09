@@ -131,6 +131,8 @@
             white-space: nowrap;
         }
         .map-control-btn:hover { background: #f5f5f5; border-color: #055193; }
+        .map-control-btn img { width: 20px; height: 20px; pointer-events: none; }
+        .map-control-btn.active { background: #4285F4; border-color: #4285F4; color: white; }
         
         .radius-value { font-size: 14px; color: #666; font-weight: 600; }
         input[type="range"] {
@@ -185,7 +187,23 @@
         .map-popup-title:hover { text-decoration: underline; }
         .map-popup-tagline { font-size: 13px; color: #666; margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .map-popup-details { font-size: 12px; color: #444; line-height: 1.6; }
-        .leaflet-popup-close-button { font-size: 24px !important; color: #333 !important; padding: 4px 8px !important; }
+        
+        .leaflet-popup-close-button {
+            width: 24px !important;
+            height: 24px !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            top: 8px !important;
+            right: 8px !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 50% !important;
+            border: 1px solid #ccc !important;
+        }
+        .leaflet-popup-close-button:hover {
+            background: #f0f0f0 !important;
+        }
         
         .subcategory-tag {
             display: inline-block;
@@ -252,6 +270,23 @@
         .toggle-option:hover { background: #f3f4f6; }
         .toggle-option.active { background: #055193; color: white; }
         
+        @media (min-width: 1024px) {
+            .desktop-layout { display: flex; gap: 24px; }
+            .desktop-filters { width: 280px; flex-shrink: 0; }
+            .desktop-content { flex: 1; min-width: 0; }
+            #filterPanel.desktop-sidebar {
+                display: block !important;
+                position: sticky;
+                top: 80px;
+                height: fit-content;
+                max-height: calc(100vh - 100px);
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 16px;
+                background: white;
+            }
+        }
+        
         @media (max-width: 768px) {
             .split-view-container { flex-direction: column; }
             .split-view-listings { border-right: none; border-bottom: 2px solid #e5e7eb; max-height: 50%; }
@@ -286,6 +321,7 @@
             .subcategory-tag.selected { background: #055193; color: white; }
             .star-button { background: rgba(42, 42, 42, 0.9); }
             .split-view-listings { border-right-color: #404040; border-bottom-color: #404040; }
+            .leaflet-tile { filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7); }
         }
     </style>
 </head>
@@ -315,7 +351,7 @@
                     style="--tw-ring-color: #055193;">
             </div>
 
-            <div class="flex items-center gap-2 overflow-x-auto pb-2">
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:hidden">
                 <button id="filterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
                     <span>🔍</span>
                     <span class="text-sm font-medium">Filters</span>
@@ -333,32 +369,25 @@
                 </div>
             </div>
 
-            <div id="filterPanel" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden">
+            <div id="filterPanel" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden lg:hidden">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="font-semibold text-gray-900">Filters</h3>
                     <div class="flex gap-2">
                         <button id="clearFiltersBtn" class="text-sm text-blue-600 hover:text-blue-800">Clear All</button>
-                        <button id="closeFilterBtn" class="text-gray-500">✕</button>
+                        <button id="closeFilterBtn" class="text-gray-500 lg:hidden">✕</button>
                     </div>
                 </div>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                        <select id="countryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                            <option value="">All Countries</option>
-                        </select>
-                    </div>
-                    <div id="stateFilterContainer" class="hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
-                        <select id="stateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                            <option value="">All States</option>
-                        </select>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search Categories & Subcategories</label>
+                        <input type="text" id="categorySearch" placeholder="Type to search..." 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                        <input type="text" id="categorySearch" placeholder="Search categories & subcategories..." 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2">
-                        <div id="categoryFilters" class="grid grid-cols-2 gap-2"></div>
+                        <select id="categoryDropdown" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <option value="">All Categories</option>
+                        </select>
                     </div>
                     <div id="subcategoryContainer" class="hidden">
                         <div class="flex items-center justify-between mb-2">
@@ -382,7 +411,19 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Radius: <span class="radius-value" id="radiusValue">Any distance</span></label>
-                        <input type="range" id="radiusFilter" min="0" max="100" value="0" step="5" class="w-full">
+                        <input type="range" id="radiusFilter" min="0" max="100" value="0" step="1" class="w-full">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                        <select id="countryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <option value="">All Countries</option>
+                        </select>
+                    </div>
+                    <div id="stateFilterContainer" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                        <select id="stateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <option value="">All States</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -401,31 +442,98 @@
                 <span class="desktop-only">Split View</span>
             </button>
             <button class="map-control-btn" id="locateBtn" title="Find my location">
-                <span>📍</span>
+                <img src="https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/7e877be3da64a66caf9a6dfb5fddad8f.png" alt="Location">
+                <span class="desktop-only">Current Location</span>
             </button>
             <button class="map-control-btn" id="resetMapBtn" title="Reset map view">
                 <span>🔄</span>
+                <span class="desktop-only">Reload</span>
             </button>
         </div>
     </div>
 
     <div id="splitViewContainer" class="hidden"></div>
 
-    <div class="max-w-7xl mx-auto px-4 py-4" id="normalViewControls">
-        <div class="flex items-center justify-between">
-            <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
-            <select id="sortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                <option value="default">Default</option>
-                <option value="az">A-Z</option>
-                <option value="closest">Closest to Me</option>
-            </select>
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <div class="desktop-layout">
+            <div class="desktop-filters hidden lg:block">
+                <div id="desktopFilterPanel" class="desktop-sidebar">
+                    <h3 class="font-semibold text-gray-900 mb-3">Filters</h3>
+                    <button id="clearFiltersBtn2" class="text-sm text-blue-600 hover:text-blue-800 mb-4 block">Clear All</button>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                            <input type="text" id="categorySearch2" placeholder="Categories & subcategories..." 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <select id="categoryDropdown2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <div id="subcategoryContainer2" class="hidden">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Subcategories</label>
+                                <div class="toggle-group">
+                                    <button class="toggle-option active text-xs" data-mode="any" onclick="setSubcategoryMode('any')">Any</button>
+                                    <button class="toggle-option text-xs" data-mode="all" onclick="setSubcategoryMode('all')">All</button>
+                                </div>
+                            </div>
+                            <div id="subcategoryFilters2" class="flex flex-wrap"></div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="openNowFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Open Now</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="onlineOnlyFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Online Only</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Radius: <span class="radius-value" id="radiusValue2">Any distance</span></label>
+                            <input type="range" id="radiusFilter2" min="0" max="100" value="0" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                            <select id="countryFilter2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">All Countries</option>
+                            </select>
+                        </div>
+                        <div id="stateFilterContainer2" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                            <select id="stateFilter2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">All States</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="desktop-content">
+                <div id="normalViewControls" class="flex items-center justify-between mb-4">
+                    <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
+                    <div class="flex items-center gap-2">
+                        <div class="hidden lg:flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                            <button id="gridViewBtn2" class="p-2 rounded bg-white shadow-sm"><span>⊞</span></button>
+                            <button id="listViewBtn2" class="p-2 rounded"><span>☰</span></button>
+                        </div>
+                        <select id="sortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                            <option value="default">Default</option>
+                            <option value="az">A-Z</option>
+                            <option value="closest">Closest to Me</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="normalViewListings">
+                    <div id="listingsContainer"></div>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="max-w-7xl mx-auto px-4 pb-8" id="normalViewListings">
-        <div id="listingsContainer"></div>
-    </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script>
@@ -433,20 +541,10 @@
         const GITHUB_REPO = 'listings';
         const DATABASE_PATH = 'listings-database.json';
         const CATEGORIES = [
-            'Automotive & Transportation',
-            'Beauty & Health',
-            'Church & Religious Organization',
-            'Cultural/Fraternal Organization',
-            'Education & Community',
-            'Entertainment, Arts & Recreation',
-            'Food & Hospitality',
-            'Grocery & Imports',
-            'Home & Construction',
-            'Industrial & Manufacturing',
-            'Pets & Veterinary',
-            'Professional & Business Services',
-            'Real Estate & Development',
-            'Retail & Shopping'
+            'Automotive & Transportation', 'Beauty & Health', 'Church & Religious Organization',
+            'Cultural/Fraternal Organization', 'Education & Community', 'Entertainment, Arts & Recreation',
+            'Food & Hospitality', 'Grocery & Imports', 'Home & Construction', 'Industrial & Manufacturing',
+            'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
         ];
 
         const SUBCATEGORIES = {
@@ -479,40 +577,18 @@
             'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
         };
 
-        let allListings = [];
-        let filteredListings = [];
-        let currentView = 'grid';
-        let selectedCategory = 'All';
-        let selectedSubcategories = [];
-        let subcategoryMode = 'any'; // 'any' or 'all'
-        let selectedCountry = '';
-        let selectedState = '';
-        let selectedRadius = 0;
-        let openNowOnly = false;
-        let onlineOnly = false;
-        let userLocation = null;
-        let map = null;
-        let mapOpen = false;
-        let splitViewActive = false;
-        let filtersOpen = false;
-        let markerClusterGroup = null;
-        let defaultMapCenter = [41.8781, -87.6298];
-        let defaultMapZoom = 10;
-        let userLocationMarker = null;
-        let mapReady = false;
-        let allListingsGeocoded = false;
-        let starredListings = [];
-        let viewingStarredOnly = false;
+        let allListings = [], filteredListings = [], currentView = 'grid', selectedCategory = 'All';
+        let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '';
+        let selectedRadius = 0, openNowOnly = false, onlineOnly = false, userLocation = null;
+        let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
+        let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
+        let userLocationMarker = null, mapReady = false, allListingsGeocoded = false;
+        let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
 
-        // Starred listings functions
         function loadStarredListings() {
             const stored = getCookie('starredListings');
             if (stored) {
-                try {
-                    starredListings = JSON.parse(stored);
-                } catch (e) {
-                    starredListings = [];
-                }
+                try { starredListings = JSON.parse(stored); } catch (e) { starredListings = []; }
             }
             updateStarredCount();
         }
@@ -523,17 +599,10 @@
         }
 
         function toggleStar(listingId, event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            
+            if (event) { event.preventDefault(); event.stopPropagation(); }
             const index = starredListings.indexOf(listingId);
-            if (index > -1) {
-                starredListings.splice(index, 1);
-            } else {
-                starredListings.push(listingId);
-            }
+            if (index > -1) starredListings.splice(index, 1);
+            else starredListings.push(listingId);
             saveStarredListings();
             renderListings();
         }
@@ -544,14 +613,12 @@
 
         function toggleStarredView() {
             viewingStarredOnly = !viewingStarredOnly;
-            
             if (viewingStarredOnly) {
                 if (starredListings.length === 0) {
                     alert('You haven\'t starred any listings yet!');
                     viewingStarredOnly = false;
                     return;
                 }
-                
                 filteredListings = allListings.filter(l => starredListings.includes(l.id));
                 document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
                 document.getElementById('starredBtn').style.backgroundColor = '#fbbf24';
@@ -561,7 +628,6 @@
                 document.getElementById('starredBtn').style.backgroundColor = '';
                 document.getElementById('starredBtn').style.color = '';
             }
-            
             renderListings();
             updateResultsCount();
         }
@@ -583,36 +649,27 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (isIOSWebApp()) {
-                document.getElementById('refreshBtn').style.display = 'flex';
-            }
-            
+            if (isIOSWebApp()) document.getElementById('refreshBtn').style.display = 'flex';
             loadStarredListings();
             loadListings();
             setupEventListeners();
-            createCategoryFilters();
+            createCategoryDropdowns();
             requestLocationOnLoad();
             loadFiltersFromURL();
             initMap();
+            syncFilters();
         });
         
         function loadFiltersFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
-            
             const searchQuery = urlParams.get('q');
-            if (searchQuery) {
-                document.getElementById('searchInput').value = searchQuery;
-            }
+            if (searchQuery) document.getElementById('searchInput').value = searchQuery;
             
             const category = urlParams.get('category');
-            if (category && CATEGORIES.includes(category)) {
-                selectedCategory = category;
-            }
+            if (category && CATEGORIES.includes(category)) selectedCategory = category;
             
             const subcategories = urlParams.get('subcategories');
-            if (subcategories) {
-                selectedSubcategories = subcategories.split(',');
-            }
+            if (subcategories) selectedSubcategories = subcategories.split(',');
             
             const subMode = urlParams.get('submode');
             if (subMode === 'all' || subMode === 'any') {
@@ -624,8 +681,10 @@
             if (country) {
                 selectedCountry = country;
                 document.getElementById('countryFilter').value = country;
+                document.getElementById('countryFilter2').value = country;
                 if (country === 'USA') {
                     document.getElementById('stateFilterContainer').classList.remove('hidden');
+                    document.getElementById('stateFilterContainer2').classList.remove('hidden');
                     populateStateFilter('USA');
                 }
             }
@@ -634,12 +693,14 @@
             if (state) {
                 selectedState = state;
                 document.getElementById('stateFilter').value = state;
+                document.getElementById('stateFilter2').value = state;
             }
             
             const radius = urlParams.get('radius');
             if (radius) {
                 selectedRadius = parseInt(radius);
                 document.getElementById('radiusFilter').value = radius;
+                document.getElementById('radiusFilter2').value = radius;
                 updateRadiusValue();
             }
             
@@ -647,47 +708,32 @@
             if (openNow === 'true') {
                 openNowOnly = true;
                 document.getElementById('openNowFilter').checked = true;
+                document.getElementById('openNowFilter2').checked = true;
             }
             
             const online = urlParams.get('online');
             if (online === 'true') {
                 onlineOnly = true;
                 document.getElementById('onlineOnlyFilter').checked = true;
+                document.getElementById('onlineOnlyFilter2').checked = true;
             }
         }
 
         function updateURL() {
             const url = new URL(window.location);
             const searchTerm = document.getElementById('searchInput').value;
-            
             url.search = '';
-            
-            if (selectedCategory && selectedCategory !== 'All') {
-                url.searchParams.set('category', selectedCategory);
-            }
+            if (selectedCategory && selectedCategory !== 'All') url.searchParams.set('category', selectedCategory);
             if (selectedSubcategories.length > 0) {
                 url.searchParams.set('subcategories', selectedSubcategories.join(','));
                 url.searchParams.set('submode', subcategoryMode);
             }
-            if (selectedCountry) {
-                url.searchParams.set('country', selectedCountry);
-            }
-            if (selectedState) {
-                url.searchParams.set('state', selectedState);
-            }
-            if (selectedRadius > 0) {
-                url.searchParams.set('radius', selectedRadius);
-            }
-            if (openNowOnly) {
-                url.searchParams.set('open', 'true');
-            }
-            if (onlineOnly) {
-                url.searchParams.set('online', 'true');
-            }
-            if (searchTerm) {
-                url.searchParams.set('q', searchTerm);
-            }
-            
+            if (selectedCountry) url.searchParams.set('country', selectedCountry);
+            if (selectedState) url.searchParams.set('state', selectedState);
+            if (selectedRadius > 0) url.searchParams.set('radius', selectedRadius);
+            if (openNowOnly) url.searchParams.set('open', 'true');
+            if (onlineOnly) url.searchParams.set('online', 'true');
+            if (searchTerm) url.searchParams.set('q', searchTerm);
             window.history.replaceState({}, '', url);
         }
 
@@ -695,82 +741,51 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     position => {
-                        userLocation = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
+                        userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
                         console.log('Location acquired:', userLocation);
-                        if (!viewingStarredOnly) {
-                            applyFilters();
-                        }
-                        
-                        if (map && mapOpen) {
-                            addUserLocationMarker();
-                        }
+                        if (!viewingStarredOnly) applyFilters();
+                        if (map && mapOpen) addUserLocationMarker();
                     },
-                    (error) => {
-                        console.log('Location permission denied or unavailable:', error.message);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
+                    (error) => console.log('Location permission denied or unavailable:', error.message),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             }
         }
 
         function addUserLocationMarker() {
             if (!map || !userLocation) return;
-            
-            if (userLocationMarker) {
-                map.removeLayer(userLocationMarker);
-            }
-            
+            if (userLocationMarker) map.removeLayer(userLocationMarker);
             const userIcon = L.divIcon({
                 html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
-                className: '',
-                iconSize: [22, 22],
-                iconAnchor: [11, 11]
+                className: '', iconSize: [22, 22], iconAnchor: [11, 11]
             });
-            
             userLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
-                icon: userIcon,
-                zIndexOffset: 1000
+                icon: userIcon, zIndexOffset: 1000
             }).addTo(map);
-            
             userLocationMarker.bindPopup('<strong>Your Location</strong>');
         }
 
         window.setSubcategoryMode = function(mode, skipUpdate) {
             subcategoryMode = mode;
             document.querySelectorAll('.toggle-option').forEach(opt => {
-                if (opt.dataset.mode === mode) {
-                    opt.classList.add('active');
-                } else {
-                    opt.classList.remove('active');
-                }
+                if (opt.dataset.mode === mode) opt.classList.add('active');
+                else opt.classList.remove('active');
             });
             if (!skipUpdate) {
                 updateURL();
-                if (!viewingStarredOnly) {
-                    applyFilters();
-                }
+                if (!viewingStarredOnly) applyFilters();
             }
         };
-        
         async function loadListings() {
             try {
                 const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
                 const data = await response.json();
                 allListings = data.listings.filter(l => l.visible !== false);
-                
                 filteredListings = [...allListings];
                 populateCountryFilter();
                 updateLocationSubtitle();
                 applyFilters();
                 updateResultsCount();
-                
                 geocodeAllListings();
             } catch (error) {
                 console.error('Error loading listings:', error);
@@ -788,9 +803,7 @@
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
-            
             allListingsGeocoded = true;
-            
             if (map && mapReady) {
                 hideMapLoading();
                 updateMapMarkers();
@@ -807,10 +820,7 @@
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`);
                 const data = await response.json();
                 if (data && data.length > 0) {
-                    listing.coordinates = {
-                        lat: parseFloat(data[0].lat),
-                        lng: parseFloat(data[0].lon)
-                    };
+                    listing.coordinates = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
                 }
             } catch (e) {
                 console.error('Geocoding failed for', listing.businessName, e);
@@ -819,28 +829,30 @@
 
         function populateCountryFilter() {
             const countries = [...new Set(allListings.map(l => l.country || 'USA'))].sort();
-            const countrySelect = document.getElementById('countryFilter');
-            countrySelect.innerHTML = '<option value="">All Countries</option>';
-            
-            countries.forEach(country => {
-                const option = document.createElement('option');
-                option.value = country;
-                option.textContent = country === 'USA' ? 'United States' : country;
-                countrySelect.appendChild(option);
+            ['countryFilter', 'countryFilter2'].forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">All Countries</option>';
+                countries.forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country;
+                    option.textContent = country === 'USA' ? 'United States' : country;
+                    select.appendChild(option);
+                });
             });
         }
 
         function populateStateFilter(country) {
-            const stateSelect = document.getElementById('stateFilter');
-            stateSelect.innerHTML = '<option value="">All States</option>';
-            
             if (country === 'USA') {
                 const states = [...new Set(allListings.filter(l => (l.country || 'USA') === 'USA').map(l => l.state))].sort();
-                states.forEach(state => {
-                    const option = document.createElement('option');
-                    option.value = state;
-                    option.textContent = `${US_STATES[state] || state} (${state})`;
-                    stateSelect.appendChild(option);
+                ['stateFilter', 'stateFilter2'].forEach(id => {
+                    const select = document.getElementById(id);
+                    select.innerHTML = '<option value="">All States</option>';
+                    states.forEach(state => {
+                        const option = document.createElement('option');
+                        option.value = state;
+                        option.textContent = `${US_STATES[state] || state} (${state})`;
+                        select.appendChild(option);
+                    });
                 });
             }
         }
@@ -848,12 +860,9 @@
         function updateLocationSubtitle() {
             const urlPath = window.location.pathname;
             const pathParts = urlPath.split('/').filter(p => p);
-            
             let subtitle = 'All Listings';
-            
             if (pathParts.length >= 2 && pathParts[0] === 'listings') {
                 const country = pathParts[1].toUpperCase();
-                
                 if (country === 'USA' && pathParts.length >= 3) {
                     const state = pathParts[2].toUpperCase();
                     subtitle = `${US_STATES[state] || state}, United States Listings`;
@@ -863,7 +872,6 @@
                     subtitle = `${country} Listings`;
                 }
             }
-            
             document.getElementById('locationSubtitle').textContent = subtitle;
         }
 
@@ -878,12 +886,48 @@
             return listing.address || '';
         }
         
+        function syncFilters() {
+            ['categorySearch', 'categoryDropdown', 'openNowFilter', 'onlineOnlyFilter', 'radiusFilter', 'countryFilter', 'stateFilter'].forEach(base => {
+                const elem1 = document.getElementById(base);
+                const elem2 = document.getElementById(base + '2');
+                if (!elem1 || !elem2) return;
+                
+                elem1.addEventListener('input', () => { 
+                    if (base.includes('Filter') && elem1.type === 'checkbox') {
+                        elem2.checked = elem1.checked;
+                    } else {
+                        elem2.value = elem1.value;
+                    }
+                });
+                elem1.addEventListener('change', () => {
+                    if (base.includes('Filter') && elem1.type === 'checkbox') {
+                        elem2.checked = elem1.checked;
+                    } else {
+                        elem2.value = elem1.value;
+                    }
+                });
+                
+                elem2.addEventListener('input', () => {
+                    if (base.includes('Filter') && elem2.type === 'checkbox') {
+                        elem1.checked = elem2.checked;
+                    } else {
+                        elem1.value = elem2.value;
+                    }
+                });
+                elem2.addEventListener('change', () => {
+                    if (base.includes('Filter') && elem2.type === 'checkbox') {
+                        elem1.checked = elem2.checked;
+                    } else {
+                        elem1.value = elem2.value;
+                    }
+                });
+            });
+        }
+        
         function setupEventListeners() {
             document.getElementById('searchInput').addEventListener('input', () => {
                 updateURL();
-                if (!viewingStarredOnly) {
-                    applyFilters();
-                }
+                if (!viewingStarredOnly) applyFilters();
             });
             
             document.getElementById('filterBtn').addEventListener('click', toggleFilters);
@@ -891,71 +935,89 @@
             document.getElementById('mapBtn').addEventListener('click', toggleMap);
             document.getElementById('gridViewBtn').addEventListener('click', () => setView('grid'));
             document.getElementById('listViewBtn').addEventListener('click', () => setView('list'));
+            document.getElementById('gridViewBtn2').addEventListener('click', () => setView('grid'));
+            document.getElementById('listViewBtn2').addEventListener('click', () => setView('list'));
             document.getElementById('starredBtn').addEventListener('click', toggleStarredView);
             document.getElementById('splitViewBtn').addEventListener('click', toggleSplitView);
             document.getElementById('clearFiltersBtn').addEventListener('click', clearAllFilters);
+            document.getElementById('clearFiltersBtn2').addEventListener('click', clearAllFilters);
             
-            document.getElementById('refreshBtn').addEventListener('click', () => {
-                window.location.reload();
+            document.getElementById('refreshBtn').addEventListener('click', () => window.location.reload());
+            
+            ['radiusFilter', 'radiusFilter2'].forEach(id => {
+                const slider = document.getElementById(id);
+                slider.addEventListener('input', (e) => {
+                    selectedRadius = parseInt(e.target.value);
+                    document.getElementById('radiusFilter').value = selectedRadius;
+                    document.getElementById('radiusFilter2').value = selectedRadius;
+                    updateRadiusValue();
+                    updateURL();
+                    if (!viewingStarredOnly) applyFilters();
+                });
             });
             
-            const radiusSlider = document.getElementById('radiusFilter');
-            radiusSlider.addEventListener('input', (e) => {
-                selectedRadius = parseInt(e.target.value);
-                updateRadiusValue();
-                updateURL();
-                if (!viewingStarredOnly) {
-                    applyFilters();
-                }
+            ['openNowFilter', 'openNowFilter2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    openNowOnly = e.target.checked;
+                    document.getElementById('openNowFilter').checked = openNowOnly;
+                    document.getElementById('openNowFilter2').checked = openNowOnly;
+                    updateURL();
+                    if (!viewingStarredOnly) applyFilters();
+                });
             });
             
-            document.getElementById('openNowFilter').addEventListener('change', (e) => {
-                openNowOnly = e.target.checked;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    applyFilters();
-                }
-            });
-            
-            document.getElementById('onlineOnlyFilter').addEventListener('change', (e) => {
-                onlineOnly = e.target.checked;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    applyFilters();
-                }
+            ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    onlineOnly = e.target.checked;
+                    document.getElementById('onlineOnlyFilter').checked = onlineOnly;
+                    document.getElementById('onlineOnlyFilter2').checked = onlineOnly;
+                    updateURL();
+                    if (!viewingStarredOnly) applyFilters();
+                });
             });
             
             document.getElementById('sortSelect').addEventListener('change', () => {
-                if (!viewingStarredOnly) {
-                    applyFilters();
-                } else {
-                    renderListings();
-                }
-            });
-            document.getElementById('countryFilter').addEventListener('change', (e) => {
-                selectedCountry = e.target.value;
-                if (selectedCountry === 'USA') {
-                    document.getElementById('stateFilterContainer').classList.remove('hidden');
-                    populateStateFilter('USA');
-                } else {
-                    document.getElementById('stateFilterContainer').classList.add('hidden');
-                    selectedState = '';
-                }
-                updateURL();
-                if (!viewingStarredOnly) {
-                    applyFilters();
-                }
-            });
-            document.getElementById('stateFilter').addEventListener('change', (e) => {
-                selectedState = e.target.value;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    applyFilters();
-                }
+                if (!viewingStarredOnly) applyFilters();
+                else renderListings();
             });
             
-            document.getElementById('locateBtn').addEventListener('click', () => {
+            ['countryFilter', 'countryFilter2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    selectedCountry = e.target.value;
+                    document.getElementById('countryFilter').value = selectedCountry;
+                    document.getElementById('countryFilter2').value = selectedCountry;
+                    if (selectedCountry === 'USA') {
+                        document.getElementById('stateFilterContainer').classList.remove('hidden');
+                        document.getElementById('stateFilterContainer2').classList.remove('hidden');
+                        populateStateFilter('USA');
+                    } else {
+                        document.getElementById('stateFilterContainer').classList.add('hidden');
+                        document.getElementById('stateFilterContainer2').classList.add('hidden');
+                        selectedState = '';
+                    }
+                    updateURL();
+                    if (!viewingStarredOnly) applyFilters();
+                });
+            });
+            
+            ['stateFilter', 'stateFilter2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    selectedState = e.target.value;
+                    document.getElementById('stateFilter').value = selectedState;
+                    document.getElementById('stateFilter2').value = selectedState;
+                    updateURL();
+                    if (!viewingStarredOnly) applyFilters();
+                });
+            });
+            
+            const locateBtn = document.getElementById('locateBtn');
+            const locateImg = locateBtn.querySelector('img');
+            locateBtn.addEventListener('click', () => {
                 if (userLocation) {
+                    locationButtonActive = true;
+                    mapMoved = false;
+                    locateImg.src = 'https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/9c3d0cf36d7f9115a669db04944b08c3.png';
+                    locateBtn.classList.add('active');
                     map.setView([userLocation.lat, userLocation.lng], 13);
                     addUserLocationMarker();
                 } else {
@@ -966,17 +1028,21 @@
             document.getElementById('resetMapBtn').addEventListener('click', () => {
                 if (map) {
                     map.setView(defaultMapCenter, defaultMapZoom);
-                    if (mapReady && allListingsGeocoded) {
-                        updateMapMarkers();
-                    }
+                    if (mapReady && allListingsGeocoded) updateMapMarkers();
                 }
             });
             
-            document.getElementById('categorySearch').addEventListener('input', filterCategories);
+            ['categorySearch', 'categorySearch2'].forEach(id => {
+                document.getElementById(id).addEventListener('input', filterCategoriesAndSubcategories);
+            });
+            
+            ['categoryDropdown', 'categoryDropdown2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    filterByCategory(e.target.value);
+                });
+            });
         }
-        
         function clearAllFilters() {
-            // Reset all filter states
             selectedCategory = 'All';
             selectedSubcategories = [];
             selectedCountry = '';
@@ -985,145 +1051,140 @@
             openNowOnly = false;
             onlineOnly = false;
             
-            // Reset UI
             document.getElementById('searchInput').value = '';
-            document.getElementById('categorySearch').value = '';
-            document.getElementById('countryFilter').value = '';
-            document.getElementById('stateFilter').value = '';
+            ['categorySearch', 'categorySearch2'].forEach(id => document.getElementById(id).value = '');
+            ['countryFilter', 'countryFilter2'].forEach(id => document.getElementById(id).value = '');
+            ['stateFilter', 'stateFilter2'].forEach(id => document.getElementById(id).value = '');
+            ['categoryDropdown', 'categoryDropdown2'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('stateFilterContainer').classList.add('hidden');
-            document.getElementById('radiusFilter').value = '0';
-            document.getElementById('openNowFilter').checked = false;
-            document.getElementById('onlineOnlyFilter').checked = false;
+            document.getElementById('stateFilterContainer2').classList.add('hidden');
+            ['radiusFilter', 'radiusFilter2'].forEach(id => document.getElementById(id).value = '0');
+            ['openNowFilter', 'openNowFilter2'].forEach(id => document.getElementById(id).checked = false);
+            ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => document.getElementById(id).checked = false);
             
-            // Reset category buttons
-            createCategoryFilters();
-            
-            // Hide subcategories
-            document.getElementById('subcategoryContainer').classList.add('hidden');
+            ['subcategoryContainer', 'subcategoryContainer2'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
             
             updateRadiusValue();
             updateURL();
-            
-            if (!viewingStarredOnly) {
-                applyFilters();
-            }
+            if (!viewingStarredOnly) applyFilters();
         }
-        function filterCategories() {
-            const searchTerm = document.getElementById('categorySearch').value.toLowerCase();
-            const buttons = document.querySelectorAll('#categoryFilters button');
+        
+        function filterCategoriesAndSubcategories() {
+            const searchTerm = (document.getElementById('categorySearch').value || document.getElementById('categorySearch2').value).toLowerCase();
             
             if (!searchTerm) {
-                buttons.forEach(btn => {
-                    btn.style.display = '';
-                });
+                selectedSubcategories = [];
+                selectedCategory = 'All';
+                document.getElementById('categoryDropdown').value = '';
+                document.getElementById('categoryDropdown2').value = '';
+                updateSubcategoryDisplay();
+                if (!viewingStarredOnly) applyFilters();
                 return;
             }
             
-            const matchingCategories = new Set();
-            
-            CATEGORIES.forEach(cat => {
-                if (cat.toLowerCase().includes(searchTerm)) {
-                    matchingCategories.add(cat);
-                }
-            });
+            let foundCategory = null;
+            const matchingSubcategories = [];
             
             Object.entries(SUBCATEGORIES).forEach(([category, subs]) => {
                 subs.forEach(sub => {
                     if (sub.toLowerCase().includes(searchTerm)) {
-                        matchingCategories.add(category);
+                        matchingSubcategories.push({ category, subcategory: sub });
                     }
                 });
             });
             
-            buttons.forEach(btn => {
-                const categoryName = btn.textContent;
-                if (categoryName === 'All' || matchingCategories.has(categoryName)) {
-                    btn.style.display = '';
+            if (matchingSubcategories.length > 0) {
+                const latestMatch = matchingSubcategories[matchingSubcategories.length - 1];
+                foundCategory = latestMatch.category;
+                selectedSubcategories = matchingSubcategories
+                    .filter(m => m.category === foundCategory)
+                    .map(m => m.subcategory);
+                
+                selectedCategory = foundCategory;
+                document.getElementById('categoryDropdown').value = foundCategory;
+                document.getElementById('categoryDropdown2').value = foundCategory;
+                updateSubcategoryDisplay();
+            } else {
+                CATEGORIES.forEach(cat => {
+                    if (cat.toLowerCase().includes(searchTerm) && !foundCategory) {
+                        foundCategory = cat;
+                    }
+                });
+                
+                if (foundCategory) {
+                    selectedCategory = foundCategory;
+                    selectedSubcategories = [];
+                    document.getElementById('categoryDropdown').value = foundCategory;
+                    document.getElementById('categoryDropdown2').value = foundCategory;
+                    updateSubcategoryDisplay();
+                }
+            }
+            
+            updateURL();
+            if (!viewingStarredOnly) applyFilters();
+        }
+        
+        function updateRadiusValue() {
+            ['radiusValue', 'radiusValue2'].forEach(id => {
+                const valueSpan = document.getElementById(id);
+                if (selectedRadius === 0) {
+                    valueSpan.textContent = 'Any distance';
                 } else {
-                    btn.style.display = 'none';
+                    valueSpan.textContent = `${selectedRadius} ${selectedRadius === 1 ? 'mile' : 'miles'}`;
                 }
             });
         }
         
-        function updateRadiusValue() {
-            const valueSpan = document.getElementById('radiusValue');
-            if (selectedRadius === 0) {
-                valueSpan.textContent = 'Any distance';
-            } else {
-                valueSpan.textContent = `${selectedRadius} miles`;
-            }
-        }
-        
-        function createCategoryFilters() {
-            const container = document.getElementById('categoryFilters');
-            container.innerHTML = '';
-            
-            const allBtn = document.createElement('button');
-            allBtn.textContent = 'All';
-            allBtn.className = selectedCategory === 'All' ? 'px-3 py-2 rounded-lg text-sm font-medium text-white' : 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
-            if (selectedCategory === 'All') allBtn.style.backgroundColor = '#055193';
-            allBtn.onclick = () => filterByCategory('All');
-            container.appendChild(allBtn);
-
-            CATEGORIES.forEach(cat => {
-                const btn = document.createElement('button');
-                btn.textContent = cat;
-                btn.className = selectedCategory === cat ? 'px-3 py-2 rounded-lg text-sm font-medium text-white' : 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
-                if (selectedCategory === cat) btn.style.backgroundColor = '#055193';
-                btn.onclick = () => filterByCategory(cat);
-                container.appendChild(btn);
+        function createCategoryDropdowns() {
+            ['categoryDropdown', 'categoryDropdown2'].forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">All Categories</option>';
+                CATEGORIES.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    select.appendChild(option);
+                });
             });
         }
         
         function filterByCategory(category) {
-            selectedCategory = category;
+            selectedCategory = category || 'All';
             selectedSubcategories = [];
             
-            const buttons = document.querySelectorAll('#categoryFilters button');
-            buttons.forEach((btn, idx) => {
-                const isSelected = (idx === 0 && category === 'All') || btn.textContent === category;
-                if (isSelected) {
-                    btn.className = 'px-3 py-2 rounded-lg text-sm font-medium text-white';
-                    btn.style.backgroundColor = '#055193';
-                } else {
-                    btn.className = 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
-                    btn.style.backgroundColor = '';
-                }
-            });
+            document.getElementById('categoryDropdown').value = category;
+            document.getElementById('categoryDropdown2').value = category;
             
-            if (category !== 'All' && SUBCATEGORIES[category]) {
-                showSubcategoryFilter(category);
-            } else {
-                hideSubcategoryFilter();
-            }
-            
+            updateSubcategoryDisplay();
             updateURL();
-            if (!viewingStarredOnly) {
-                applyFilters();
+            if (!viewingStarredOnly) applyFilters();
+        }
+        
+        function updateSubcategoryDisplay() {
+            if (selectedCategory && selectedCategory !== 'All' && SUBCATEGORIES[selectedCategory]) {
+                ['subcategoryContainer', 'subcategoryContainer2'].forEach((containerId, idx) => {
+                    const filtersId = idx === 0 ? 'subcategoryFilters' : 'subcategoryFilters2';
+                    document.getElementById(containerId).classList.remove('hidden');
+                    const filtersDiv = document.getElementById(filtersId);
+                    filtersDiv.innerHTML = '';
+                    SUBCATEGORIES[selectedCategory].forEach(sub => {
+                        const tag = document.createElement('div');
+                        tag.className = 'subcategory-tag';
+                        tag.textContent = sub;
+                        if (selectedSubcategories.includes(sub)) {
+                            tag.classList.add('selected');
+                        }
+                        tag.onclick = () => toggleSubcategory(sub);
+                        filtersDiv.appendChild(tag);
+                    });
+                });
+            } else {
+                ['subcategoryContainer', 'subcategoryContainer2'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
             }
-        }
-        
-        function showSubcategoryFilter(category) {
-            const container = document.getElementById('subcategoryContainer');
-            const filtersDiv = document.getElementById('subcategoryFilters');
-            
-            filtersDiv.innerHTML = '';
-            SUBCATEGORIES[category].forEach(sub => {
-                const tag = document.createElement('div');
-                tag.className = 'subcategory-tag';
-                tag.textContent = sub;
-                if (selectedSubcategories.includes(sub)) {
-                    tag.classList.add('selected');
-                }
-                tag.onclick = () => toggleSubcategory(sub);
-                filtersDiv.appendChild(tag);
-            });
-            
-            container.classList.remove('hidden');
-        }
-        
-        function hideSubcategoryFilter() {
-            document.getElementById('subcategoryContainer').classList.add('hidden');
         }
         
         function toggleSubcategory(subcategory) {
@@ -1134,17 +1195,9 @@
                 selectedSubcategories.push(subcategory);
             }
             
-            const tags = document.querySelectorAll('.subcategory-tag');
-            tags.forEach(tag => {
-                if (tag.textContent === subcategory) {
-                    tag.classList.toggle('selected');
-                }
-            });
-            
+            updateSubcategoryDisplay();
             updateURL();
-            if (!viewingStarredOnly) {
-                applyFilters();
-            }
+            if (!viewingStarredOnly) applyFilters();
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -1164,35 +1217,26 @@
 
         function isOpenNow(hours) {
             if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
-            
             const hasAnyHours = Object.values(hours).some(h => h && h.trim() !== '');
             if (!hasAnyHours) return null;
-            
             const now = new Date();
             const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-            
             const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             const today = days[centralTime.getDay()];
             const todayHours = hours[today];
-            
             if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
-            
             const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
             if (!match) return null;
-            
             const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
             let start = parseInt(startHour);
             let end = parseInt(endHour);
-            
             if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
             if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
             if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
             if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
-            
             const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
             const startMinutes = start * 60 + parseInt(startMin);
             const endMinutes = end * 60 + parseInt(endMin);
-            
             return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
         }
         
@@ -1289,20 +1333,15 @@
             
             renderListings();
             updateResultsCount();
-            if (map) {
-                updateMapMarkers();
-            }
+            if (map) updateMapMarkers();
         }
 
         function toggleFilters() {
             const panel = document.getElementById('filterPanel');
             filtersOpen = !filtersOpen;
-            
             if (filtersOpen) {
                 panel.classList.remove('hidden');
-                if (mapOpen) {
-                    toggleMap();
-                }
+                if (mapOpen) toggleMap();
             } else {
                 panel.classList.add('hidden');
             }
@@ -1311,40 +1350,28 @@
         function toggleMap() {
             const container = document.getElementById('mapContainer');
             mapOpen = !mapOpen;
-            
             if (mapOpen) {
                 container.classList.remove('hidden');
-                if (filtersOpen) {
-                    toggleFilters();
-                }
-                if (splitViewActive) {
-                    toggleSplitView();
-                }
+                if (filtersOpen) toggleFilters();
+                if (splitViewActive) toggleSplitView();
                 if (map) {
                     setTimeout(() => {
                         map.invalidateSize();
                         updateMapMarkers();
-                        if (userLocation) {
-                            addUserLocationMarker();
-                        }
-                        if (allListingsGeocoded) {
-                            hideMapLoading();
-                        }
+                        if (userLocation) addUserLocationMarker();
+                        if (allListingsGeocoded) hideMapLoading();
                     }, 100);
                 }
             } else {
                 container.classList.add('hidden');
             }
         }
-        
         function toggleSplitView() {
             splitViewActive = !splitViewActive;
-            
             if (splitViewActive) {
                 document.getElementById('normalViewControls').classList.add('hidden');
                 document.getElementById('normalViewListings').classList.add('hidden');
                 document.getElementById('mapContainer').classList.add('hidden');
-                
                 const splitContainer = document.getElementById('splitViewContainer');
                 splitContainer.classList.remove('hidden');
                 splitContainer.className = 'split-view-container';
@@ -1360,21 +1387,14 @@
                         </div>
                         <div id="splitListingsContainer"></div>
                     </div>
-                    <div class="split-view-map">
-                        <div id="splitMap"></div>
-                    </div>
+                    <div class="split-view-map"><div id="splitMap"></div></div>
                 `;
-                
                 document.getElementById('splitSortSelect').value = document.getElementById('sortSelect').value;
                 document.getElementById('splitSortSelect').addEventListener('change', (e) => {
                     document.getElementById('sortSelect').value = e.target.value;
-                    if (!viewingStarredOnly) {
-                        applyFilters();
-                    } else {
-                        renderListings();
-                    }
+                    if (!viewingStarredOnly) applyFilters();
+                    else renderListings();
                 });
-                
                 renderSplitViewListings();
                 initSplitMap();
             } else {
@@ -1383,7 +1403,6 @@
                 document.getElementById('normalViewControls').classList.remove('hidden');
                 document.getElementById('normalViewListings').classList.remove('hidden');
                 document.getElementById('mapContainer').classList.remove('hidden');
-                
                 setTimeout(() => {
                     if (map) {
                         map.invalidateSize();
@@ -1405,20 +1424,11 @@
 
         function initMap() {
             if (map) return;
-            
             showMapLoading();
-            
-            map = L.map('map', {
-                center: defaultMapCenter,
-                zoom: defaultMapZoom,
-                zoomControl: true
-            });
-            
+            map = L.map('map', { center: defaultMapCenter, zoom: defaultMapZoom, zoomControl: true });
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: null,
-                maxZoom: 19
+                attribution: null, maxZoom: 19
             }).addTo(map);
-            
             markerClusterGroup = L.markerClusterGroup({
                 maxClusterRadius: 50,
                 disableClusteringAtZoom: 18,
@@ -1430,7 +1440,6 @@
                     let size = 'small';
                     if (count >= 10) size = 'medium';
                     if (count >= 50) size = 'large';
-                    
                     return L.divIcon({
                         html: `<div class="marker-cluster marker-cluster-${size}">${count}</div>`,
                         className: '',
@@ -1438,102 +1447,69 @@
                     });
                 }
             });
-            
             map.addLayer(markerClusterGroup);
-            
-            if (userLocation) {
-                addUserLocationMarker();
-            }
-            
+            if (userLocation) addUserLocationMarker();
+            map.on('movestart', () => {
+                if (locationButtonActive && !mapMoved) {
+                    mapMoved = true;
+                    locationButtonActive = false;
+                    const locateBtn = document.getElementById('locateBtn');
+                    const locateImg = locateBtn.querySelector('img');
+                    locateImg.src = 'https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/7e877be3da64a66caf9a6dfb5fddad8f.png';
+                    locateBtn.classList.remove('active');
+                }
+            });
             setTimeout(() => {
                 map.invalidateSize();
                 mapReady = true;
                 updateMapMarkers();
-                if (allListingsGeocoded) {
-                    hideMapLoading();
-                }
+                if (allListingsGeocoded) hideMapLoading();
             }, 500);
         }
 
         function initSplitMap() {
             const splitMapDiv = document.getElementById('splitMap');
             if (!splitMapDiv) return;
-            
-            const splitMap = L.map('splitMap', {
-                center: defaultMapCenter,
-                zoom: defaultMapZoom,
-                zoomControl: true
-            });
-            
+            const splitMap = L.map('splitMap', { center: defaultMapCenter, zoom: defaultMapZoom, zoomControl: true });
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: null,
-                maxZoom: 19
+                attribution: null, maxZoom: 19
             }).addTo(splitMap);
-            
             const splitMarkerClusterGroup = L.markerClusterGroup({
-                maxClusterRadius: 50,
-                disableClusteringAtZoom: 18,
-                spiderfyOnMaxZoom: true,
-                showCoverageOnHover: false,
-                zoomToBoundsOnClick: true,
+                maxClusterRadius: 50, disableClusteringAtZoom: 18, spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false, zoomToBoundsOnClick: true,
                 iconCreateFunction: function(cluster) {
                     const count = cluster.getChildCount();
-                    let size = 'small';
-                    if (count >= 10) size = 'medium';
-                    if (count >= 50) size = 'large';
-                    
+                    let size = count >= 50 ? 'large' : count >= 10 ? 'medium' : 'small';
                     return L.divIcon({
                         html: `<div class="marker-cluster marker-cluster-${size}">${count}</div>`,
-                        className: '',
-                        iconSize: size === 'small' ? [40, 40] : size === 'medium' ? [50, 50] : [60, 60]
+                        className: '', iconSize: size === 'small' ? [40, 40] : size === 'medium' ? [50, 50] : [60, 60]
                     });
                 }
             });
-            
             splitMap.addLayer(splitMarkerClusterGroup);
-            
             if (userLocation) {
                 const userIcon = L.divIcon({
                     html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
-                    className: '',
-                    iconSize: [22, 22],
-                    iconAnchor: [11, 11]
+                    className: '', iconSize: [22, 22], iconAnchor: [11, 11]
                 });
-                
                 L.marker([userLocation.lat, userLocation.lng], {
-                    icon: userIcon,
-                    zIndexOffset: 1000
+                    icon: userIcon, zIndexOffset: 1000
                 }).addTo(splitMap).bindPopup('<strong>Your Location</strong>');
             }
-            
             const bounds = [];
             filteredListings.forEach(listing => {
                 if (listing.coordinates && !isBasedIn(listing)) {
                     const openStatus = isOpenNow(listing.hours);
                     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-                    
                     const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
                     const iconHtml = `<div class="${iconClass}"><img src="${listing.logo}" alt="${listing.businessName}"></div>`;
-                    const customIcon = L.divIcon({
-                        html: iconHtml,
-                        className: '',
-                        iconSize: [40, 40],
-                        iconAnchor: [20, 20]
-                    });
-                    
-                    const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], {
-                        icon: customIcon,
-                        riseOnHover: true
-                    });
-                    
+                    const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
+                    const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
                     const badges = [];
                     if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
                     if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (openStatus !== null) {
-                        badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
-                    }
-                    
+                    if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : listing.logo;
                     const popupContent = `
@@ -1545,71 +1521,42 @@
                                     <div class="map-popup-badges">${badges.join('')}</div>
                                     <a href="/listings/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.businessName}</a>
                                     <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
-                                    <div class="map-popup-details">
-                                        📍 ${getFullAddress(listing)}<br>
-                                        ${listing.phone ? '📞 ' + listing.phone : ''}
-                                    </div>
+                                    <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + listing.phone : ''}</div>
                                 </div>
                             </div>
                         </div>
                     `;
-                    
-                    marker.bindPopup(popupContent, {
-                        maxWidth: 320,
-                        className: 'custom-popup'
+                    marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
+                    marker.on('popupopen', () => {
+                        const closeBtn = document.querySelector('.leaflet-popup-close-button');
+                        if (closeBtn) closeBtn.innerHTML = '<img src="https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/6b95c3060c7ea35acdffad8d68c54277.png" style="width: 16px; height: 16px;">';
                     });
-                    
                     splitMarkerClusterGroup.addLayer(marker);
                     bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
                 }
             });
-            
-            if (bounds.length > 0) {
-                splitMap.fitBounds(L.latLngBounds(bounds), { 
-                    padding: [50, 50],
-                    maxZoom: 15
-                });
-            }
-            
-            setTimeout(() => {
-                splitMap.invalidateSize();
-            }, 250);
+            if (bounds.length > 0) splitMap.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
+            setTimeout(() => splitMap.invalidateSize(), 250);
         }
+
         function updateMapMarkers() {
             if (!map || !markerClusterGroup || !mapReady) return;
-            
             markerClusterGroup.clearLayers();
             const bounds = [];
-            
             filteredListings.forEach(listing => {
                 if (listing.coordinates && !isBasedIn(listing)) {
                     const openStatus = isOpenNow(listing.hours);
-                    const isOpen = openStatus === true;
                     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
                     const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : listing.logo;
-                    
                     const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
                     const iconHtml = `<div class="${iconClass}"><img src="${listing.logo}" alt="${listing.businessName}"></div>`;
-                    const customIcon = L.divIcon({
-                        html: iconHtml,
-                        className: '',
-                        iconSize: [40, 40],
-                        iconAnchor: [20, 20]
-                    });
-                    
-                    const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], {
-                        icon: customIcon,
-                        riseOnHover: true
-                    });
-                    
+                    const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
+                    const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
                     const badges = [];
                     if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
                     if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (openStatus !== null) {
-                        badges.push(isOpen ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
-                    }
-                    
+                    if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     const popupContent = `
                         <div class="map-popup">
@@ -1620,37 +1567,29 @@
                                     <div class="map-popup-badges">${badges.join('')}</div>
                                     <a href="/listings/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.businessName}</a>
                                     <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
-                                    <div class="map-popup-details">
-                                        📍 ${getFullAddress(listing)}<br>
-                                        ${listing.phone ? '📞 ' + listing.phone : ''}
-                                    </div>
+                                    <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + listing.phone : ''}</div>
                                 </div>
                             </div>
                         </div>
                     `;
-                    
-                    marker.bindPopup(popupContent, {
-                        maxWidth: 320,
-                        className: 'custom-popup'
+                    marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
+                    marker.on('popupopen', () => {
+                        const closeBtn = document.querySelector('.leaflet-popup-close-button');
+                        if (closeBtn) closeBtn.innerHTML = '<img src="https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/6b95c3060c7ea35acdffad8d68c54277.png" style="width: 16px; height: 16px;">';
                     });
-                    
                     markerClusterGroup.addLayer(marker);
                     bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
                 }
             });
-            
-            if (bounds.length > 0) {
-                map.fitBounds(L.latLngBounds(bounds), { 
-                    padding: [50, 50],
-                    maxZoom: 15
-                });
-            }
+            if (bounds.length > 0) map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
         }
 
         function setView(view) {
             currentView = view;
             document.getElementById('gridViewBtn').className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
             document.getElementById('listViewBtn').className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+            document.getElementById('gridViewBtn2').className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+            document.getElementById('listViewBtn2').className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
             renderListings();
         }
 
@@ -1680,9 +1619,7 @@
                     if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
                     const openStatus = isOpenNow(l.hours);
-                    if (openStatus !== null) {
-                        badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
-                    }
+                    if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
                     const isStarred = starredListings.includes(l.id);
                     
                     return `
@@ -1727,9 +1664,7 @@
                     if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
                     const openStatus = isOpenNow(l.hours);
-                    if (openStatus !== null) {
-                        badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
-                    }
+                    if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
                     const isStarred = starredListings.includes(l.id);
                     
                     return `
@@ -1740,7 +1675,7 @@
                                 </svg>
                             </button>
                             <img src="${l.logo}" alt="${l.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
-                            <div class="flex-1 min-w-0 overflow-hidden">
+                            <div class="flex-1 min-w-0 overflow-hidden pr-12">
                                 <div class="flex gap-2 mb-2 flex-wrap">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
                                     ${badges.join('')}
@@ -1764,12 +1699,10 @@
         function renderSplitViewListings() {
             const container = document.getElementById('splitListingsContainer');
             if (!container) return;
-            
             if (filteredListings.length === 0) {
                 container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
                 return;
             }
-
             container.className = 'space-y-3';
             container.innerHTML = filteredListings.map(l => {
                 const fullAddress = getFullAddress(l);
@@ -1780,9 +1713,7 @@
                 if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                 if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
                 const openStatus = isOpenNow(l.hours);
-                if (openStatus !== null) {
-                    badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
-                }
+                if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
                 const isStarred = starredListings.includes(l.id);
                 
                 return `
@@ -1811,7 +1742,6 @@
             }).join('');
         }
 
-        // Make toggleStar globally accessible
         window.toggleStar = toggleStar;
     </script>
 </body>
