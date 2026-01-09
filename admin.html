@@ -736,24 +736,35 @@ async function generateRedirectFile(path, redirectUrl) {
 }
 
 async function loadListings() {
+    console.log('🔄 Loading listings from GitHub...');
     try {
         const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
             headers: { 'Authorization': `token ${githubToken}` }
         });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch: ${response.status}`);
+        }
+        
         const data = await response.json();
         databaseSha = data.sha;
+        console.log('Database SHA:', databaseSha);
+        
         const content = JSON.parse(atob(data.content));
         allListings = content.listings || [];
+        console.log('Loaded', allListings.length, 'listings');
         
         // Calculate next listing ID
         nextListingId = Math.max(...allListings.map(l => l.listingId || 0), 0) + 1;
+        console.log('Next listing ID will be:', nextListingId);
         
         renderTable();
     } catch (error) {
+        console.error('❌ Error loading listings:', error);
         alert('Failed to load listings');
     }
 }
-
+    
 if (sessionStorage.getItem('githubToken')) {
     githubToken = sessionStorage.getItem('githubToken');
     testToken();
@@ -984,55 +995,86 @@ function generateSlug(name) {
 
 // UPDATED: Save edit with better error handling and page generation
 document.getElementById('saveEdit').addEventListener('click', async () => {
+    console.log('=== SAVE BUTTON CLICKED ===');
+    
     const listing = await getFormData();
-    if (!listing) return;
+    if (!listing) {
+        console.log('Form data validation failed');
+        return;
+    }
+
+    console.log('Form data collected:', listing.businessName);
 
     const slug = editingListing ? editingListing.slug : generateSlug(listing.businessName);
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
+    console.log('Slug:', slug);
+    console.log('Category slug:', categorySlug);
+
     const defaults = getCategoryDefaults(listing.category);
     
+    // Handle logo upload
     if (uploadedImages.logo) {
+        console.log('Uploading logo...');
         document.getElementById('logoProgress').style.display = 'block';
         document.getElementById('logoProgress').textContent = 'Uploading logo...';
         const logoPath = await uploadImage(uploadedImages.logo, slug, 'logo/logo', categorySlug);
-        if (logoPath) listing.logo = logoPath;
+        if (logoPath) {
+            listing.logo = logoPath;
+            console.log('Logo uploaded:', logoPath);
+        }
         document.getElementById('logoProgress').style.display = 'none';
     } else if (editingListing && editingListing.logo) {
         listing.logo = editingListing.logo;
+        console.log('Using existing logo:', listing.logo);
     } else {
         listing.logo = defaults.logo;
+        console.log('Using default logo:', listing.logo);
     }
 
+    // Handle photos upload
     if (uploadedImages.photos.length > 0) {
+        console.log('Uploading', uploadedImages.photos.length, 'photos...');
         document.getElementById('photosProgress').style.display = 'block';
         const photoPaths = [];
         for (let i = 0; i < uploadedImages.photos.length; i++) {
             if (uploadedImages.photos[i].existing) {
                 photoPaths.push(uploadedImages.photos[i].url);
+                console.log(`Photo ${i+1}: Using existing`);
             } else {
                 document.getElementById('photosProgress').textContent = `Uploading photo ${i + 1} of ${uploadedImages.photos.length}...`;
                 const photoPath = await uploadImage(uploadedImages.photos[i], slug, `photos/photo-${i + 1}`, categorySlug);
-                if (photoPath) photoPaths.push(photoPath);
+                if (photoPath) {
+                    photoPaths.push(photoPath);
+                    console.log(`Photo ${i+1}: Uploaded to ${photoPath}`);
+                }
             }
         }
         listing.photos = photoPaths;
         document.getElementById('photosProgress').style.display = 'none';
     } else if (editingListing && editingListing.photos) {
         listing.photos = editingListing.photos;
+        console.log('Using existing photos:', listing.photos.length);
     } else {
         listing.photos = [defaults.main];
+        console.log('Using default photo');
     }
 
     listing.verified = listing.tier !== 'FREE';
 
+    // Update or create listing in array
     if (editingListing) {
+        console.log('📝 UPDATING existing listing:', editingListing.id);
         const index = allListings.findIndex(l => l.id === editingListing.id);
+        console.log('Found at index:', index);
+        
         listing.id = editingListing.id;
         listing.slug = editingListing.slug;
         listing.listingId = editingListing.listingId;
-        listing.metadata = editingListing.metadata;
-        listing.metadata.updatedAt = new Date().toISOString();
+        listing.metadata = {
+            createdAt: editingListing.metadata.createdAt,
+            updatedAt: new Date().toISOString()
+        };
         listing.analytics = editingListing.analytics || {
             views: 0,
             callClicks: 0,
@@ -1045,11 +1087,18 @@ document.getElementById('saveEdit').addEventListener('click', async () => {
             detailedViews: []
         };
         listing.visible = editingListing.visible !== undefined ? editingListing.visible : true;
+        
         allListings[index] = listing;
+        console.log('Updated listing at index', index);
     } else {
+        console.log('✨ CREATING new listing');
         listing.id = slug;
         listing.slug = slug;
-        listing.listingId = nextListingId++;
+        listing.listingId = nextListingId;
+        console.log('Assigned listing ID:', listing.listingId);
+        
+        nextListingId++; // Increment for next listing
+        
         listing.visible = true;
         listing.metadata = {
             createdAt: new Date().toISOString(),
@@ -1066,32 +1115,84 @@ document.getElementById('saveEdit').addEventListener('click', async () => {
             lastViewed: new Date().toISOString(),
             detailedViews: []
         };
+        
         allListings.push(listing);
+        console.log('Added to allListings array, new count:', allListings.length);
     }
 
-    console.log('Saving database...');
-    await saveDatabase(true); // Save silently first
+    // STEP 1: Save database FIRST and wait for it to complete
+    console.log('');
+    console.log('📦 STEP 1: Saving database...');
+    const dbSaved = await saveDatabase(false); // Show alert
     
-    console.log('Generating listing page...');
-    const pageGenerated = await generateListingPage(listing);
-    
-    if (pageGenerated) {
-        console.log('Creating redirect links...');
-        await createLinksRedirect(listing.listingId, slug, categorySlug);
-        alert('✅ Saved successfully! Listing page generated.');
-    } else {
-        alert('⚠️ Saved to database, but listing page generation failed. Check console for details.');
+    if (!dbSaved) {
+        console.error('❌ Database save failed, aborting...');
+        alert('Failed to save database. Listing page will not be generated.');
+        return;
     }
     
+    console.log('✅ Database saved successfully');
+    console.log('');
+
+    // STEP 2: Generate listing page
+    console.log('📄 STEP 2: Generating listing page...');
+    const pageGenerated = await generateListingPage(listing);
+    
+    if (!pageGenerated) {
+        console.log('⚠️ Page generation failed, but database was saved');
+    } else {
+        console.log('✅ Page generated successfully');
+    }
+    console.log('');
+
+    // STEP 3: Create redirect links
+    console.log('🔗 STEP 3: Creating redirect links...');
+    try {
+        await createLinksRedirect(listing.listingId, slug, categorySlug);
+        console.log('✅ Redirect links created');
+    } catch (error) {
+        console.error('⚠️ Failed to create redirect links:', error);
+    }
+    console.log('');
+
+    console.log('=== SAVE COMPLETE ===');
+    console.log('');
+    
+    // Close modal and refresh
     document.getElementById('editModal').classList.add('hidden');
     uploadedImages = { logo: null, photos: [] };
     selectedSubcategories = [];
-});
-
+    
 // FIXED: Save database function
 async function saveDatabase(silent = false) {
+    console.log('💾 Starting database save...');
+    console.log('Current allListings count:', allListings.length);
+    
     try {
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify({ listings: allListings }, null, 2))));
+        // First, get the current SHA to make sure we have the latest
+        console.log('Fetching current database SHA...');
+        const getCurrentSha = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
+            headers: { 'Authorization': `token ${githubToken}` }
+        });
+        
+        if (!getCurrentSha.ok) {
+            throw new Error(`Failed to fetch current database: ${getCurrentSha.status}`);
+        }
+        
+        const currentData = await getCurrentSha.json();
+        databaseSha = currentData.sha;
+        console.log('Current SHA:', databaseSha);
+        
+        // Create the content
+        const databaseContent = { listings: allListings };
+        const jsonString = JSON.stringify(databaseContent, null, 2);
+        console.log('JSON string length:', jsonString.length);
+        
+        const content = btoa(unescape(encodeURIComponent(jsonString)));
+        console.log('Base64 content length:', content.length);
+        
+        // Upload to GitHub
+        console.log('Uploading to GitHub...');
         const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
             method: 'PUT',
             headers: {
@@ -1099,7 +1200,7 @@ async function saveDatabase(silent = false) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: 'Update listings database',
+                message: `Update listings database - ${allListings.length} listings`,
                 content: content,
                 sha: databaseSha
             })
@@ -1108,17 +1209,27 @@ async function saveDatabase(silent = false) {
         if (response.ok) {
             const data = await response.json();
             databaseSha = data.content.sha;
-            if (!silent) alert('Saved successfully!');
-            await loadListings(); // Reload to get fresh data
+            console.log('✅ Database saved successfully! New SHA:', databaseSha);
+            
+            if (!silent) {
+                alert('✅ Database saved successfully!');
+            }
+            
+            return true;
         } else {
             const error = await response.json();
-            alert('Failed to save: ' + error.message);
+            console.error('❌ Failed to save database:', response.status, error);
+            alert(`ERROR: Failed to save database. ${error.message || 'Unknown error'}`);
+            return false;
         }
     } catch (error) {
-        alert('Error saving: ' + error.message);
+        console.error('❌ Error in saveDatabase:', error);
+        alert(`ERROR: ${error.message}`);
+        return false;
     }
 }
-    // Image upload handlers
+    
+// Image upload handlers
 document.getElementById('logoUpload').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
