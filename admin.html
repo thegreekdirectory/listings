@@ -554,10 +554,11 @@
         });
     }
     // Login and authentication
-document.getElementById('loginBtn').addEventListener('click', async function testToken() {
+document.getElementById('loginBtn').addEventListener('click', async () => {
     githubToken = document.getElementById('githubToken').value.trim();
     if (!githubToken) {
         alert('Please enter your GitHub token');
+        return;
     }
     sessionStorage.setItem('githubToken', githubToken);
     await testToken();
