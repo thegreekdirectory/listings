@@ -1035,7 +1035,7 @@
       "website": null,
       "tier": "FREE",
       "verified": false,
-      "showClaimButton": false,
+      "showClaimButton": true,
       "businessPortalPassword": null,
       "hours": {
         "monday": null,
@@ -1088,7 +1088,7 @@
       "listingId": 5,
       "metadata": {
         "createdAt": "2026-01-09T21:51:34.234Z",
-        "updatedAt": "2026-01-09T21:58:24.227Z"
+        "updatedAt": "2026-01-09T21:59:23.644Z"
       },
       "analytics": {
         "views": 0,
