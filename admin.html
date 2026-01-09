@@ -155,9 +155,9 @@
                                 <input type="text" id="editBusinessName" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (max 150 chars) *</label>
-                                <input type="text" id="editTagline" maxlength="150" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
-                                <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">0</span>/150 characters</p>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (max 75 chars) *</label>
+                                <input type="text" id="editTagline" maxlength="75" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
+                                <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">0</span>/75 characters</p>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
@@ -625,7 +625,7 @@ async function createLinksRedirect(listingId, slug, categorySlug) {
         // Create business portal redirect: /r/b/{listingId}
         const portalLinkId = generateUUID();
         const portalPath = `/r/b/${listingId}`;
-        const portalUrl = `https://thegreekdirectory.org/business-portal.html?slug=${slug}`;
+        const portalUrl = `https://thegreekdirectory.org/business.html?slug=${slug}`;
 
         // Add to links data if they don't exist
         const listingLinkExists = linksData.links.some(l => l.path === listingPath);
@@ -857,7 +857,12 @@ document.getElementById('cancelEdit').addEventListener('click', () => {
 });
 
 document.getElementById('editTagline').addEventListener('input', (e) => {
-    document.getElementById('taglineCount').textContent = e.target.value.length;
+    const count = e.target.value.length;
+    document.getElementById('taglineCount').textContent = count;
+    if (count > 75) {
+        e.target.value = e.target.value.substring(0, 75);
+        document.getElementById('taglineCount').textContent = '75';
+    }
 });
 
 window.updateVerifiedBasedOnTier = function() {
