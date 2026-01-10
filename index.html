@@ -274,7 +274,7 @@
         .toggle-option.active { background: #055193; color: white; }
         
         @media (min-width: 1024px) {
-            .desktop-layout { display: flex; gap: 24px; }
+            .desktop-layout.with-left-filters { display: flex; gap: 24px; }
             .desktop-filters { width: 280px; flex-shrink: 0; }
             .desktop-content { flex: 1; min-width: 0; }
             #filterPanel.desktop-sidebar {
@@ -289,6 +289,7 @@
                 background: white;
             }
             .listings-2-col { grid-template-columns: repeat(2, 1fr) !important; }
+            .listings-3-col { grid-template-columns: repeat(3, 1fr) !important; }
         }
         
         @media (max-width: 768px) {
@@ -383,7 +384,7 @@
                     style="--tw-ring-color: #055193;">
             </div>
 
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:hidden">
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:hidden" id="mobileControls">
                 <button id="filterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
                     <span>🔍</span>
                     <span class="text-sm font-medium">Filters</span>
@@ -415,11 +416,9 @@
                         <input type="text" id="categorySearch" placeholder="Type to search..." 
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2">
                     </div>
-                    <div id="categoryDropdownContainer">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                        <select id="categoryDropdown" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                            <option value="">All Categories</option>
-                        </select>
+                        <div id="categoryFilters" class="grid grid-cols-2 gap-2"></div>
                     </div>
                     <div id="subcategoryContainer" class="hidden">
                         <div class="flex items-center justify-between mb-2">
@@ -483,7 +482,6 @@
             </div>
         </div>
     </header>
-
     <div id="mapContainer" class="hidden border-b relative">
         <div class="map-loading" id="mapLoading">
             <div class="spinner"></div>
@@ -509,8 +507,8 @@
     <div id="splitViewContainer" class="hidden"></div>
 
     <div class="max-w-7xl mx-auto px-4 py-4">
-        <div class="desktop-layout">
-            <div class="desktop-filters hidden lg:block">
+        <div class="desktop-layout" id="desktopLayout">
+            <div class="desktop-filters hidden" id="desktopFiltersContainer">
                 <div id="desktopFilterPanel" class="desktop-sidebar">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-semibold text-gray-900">Filters</h3>
@@ -521,13 +519,11 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
                             <input type="text" id="categorySearch2" placeholder="Categories & subcategories..." 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2">
                         </div>
-                        <div id="categoryDropdownContainer2">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                            <select id="categoryDropdown2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <option value="">All Categories</option>
-                            </select>
+                            <div id="categoryFilters2" class="grid grid-cols-2 gap-2"></div>
                         </div>
                         <div id="subcategoryContainer2" class="hidden">
                             <div class="flex items-center justify-between mb-2">
@@ -595,6 +591,10 @@
                 <div id="normalViewControls" class="flex items-center justify-between mb-4">
                     <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
                     <div class="flex items-center gap-2">
+                        <button id="mapBtnDesktop" class="hidden lg:flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                            <span>🗺️</span>
+                            <span class="text-sm font-medium">Map</span>
+                        </button>
                         <div class="hidden lg:flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                             <button id="gridViewBtn2" class="p-2 rounded bg-white shadow-sm"><span>⊞</span></button>
                             <button id="listViewBtn2" class="p-2 rounded"><span>☰</span></button>
@@ -665,6 +665,7 @@
         let userLocationMarker = null, mapReady = false, allListingsGeocoded = false;
         let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
         let filterPosition = 'left';
+        let searchDebounceTimer = null;
 
         function loadStarredListings() {
             const stored = getCookie('starredListings');
@@ -734,7 +735,7 @@
             loadStarredListings();
             loadListings();
             setupEventListeners();
-            createCategoryDropdowns();
+            createCategoryButtons();
             requestLocationOnLoad();
             loadFiltersFromURL();
             initMap();
@@ -745,41 +746,39 @@
         function checkFilterPosition() {
             const screenWidth = window.innerWidth;
             const toggleBtn = document.getElementById('toggleFilterPosition');
+            const desktopLayout = document.getElementById('desktopLayout');
+            const desktopFilters = document.getElementById('desktopFiltersContainer');
+            const mapBtn = document.getElementById('mapBtnDesktop');
+            const listingsContainer = document.getElementById('listingsContainer');
             
             if (screenWidth >= 1024) {
                 toggleBtn.style.display = 'block';
+                mapBtn.classList.remove('hidden');
                 if (filterPosition === 'left') {
-                    showLeftFilters();
+                    desktopLayout.classList.add('with-left-filters');
+                    desktopFilters.classList.remove('hidden');
+                    if (currentView === 'grid') {
+                        listingsContainer.classList.remove('listings-3-col');
+                        listingsContainer.classList.add('listings-2-col');
+                    }
                 } else {
-                    showTopFilters();
+                    desktopLayout.classList.remove('with-left-filters');
+                    desktopFilters.classList.add('hidden');
+                    if (currentView === 'grid') {
+                        listingsContainer.classList.remove('listings-2-col');
+                        listingsContainer.classList.add('listings-3-col');
+                    }
                 }
             } else {
                 toggleBtn.style.display = 'none';
-                showTopFilters();
+                desktopLayout.classList.remove('with-left-filters');
+                desktopFilters.classList.add('hidden');
+                mapBtn.classList.add('hidden');
+                if (currentView === 'grid') {
+                    listingsContainer.classList.remove('listings-2-col', 'listings-3-col');
+                }
             }
         }
-
-        function showLeftFilters() {
-            const desktopFilters = document.querySelector('.desktop-filters');
-            const desktopPanel = document.getElementById('desktopFilterPanel');
-            const listingsContainer = document.getElementById('listingsContainer');
-            
-            desktopFilters.classList.remove('hidden');
-            desktopPanel.classList.add('desktop-sidebar');
-            
-            if (currentView === 'grid') {
-                listingsContainer.classList.add('listings-2-col');
-            }
-        }
-
-        function showTopFilters() {
-            const desktopFilters = document.querySelector('.desktop-filters');
-            const listingsContainer = document.getElementById('listingsContainer');
-            
-            desktopFilters.classList.add('hidden');
-            listingsContainer.classList.remove('listings-2-col');
-        }
-
         function loadFiltersFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const searchQuery = urlParams.get('q');
@@ -824,15 +823,37 @@
                 updateRadiusValue();
             }
             
-            const openNow = urlParams.get('open');
-            if (openNow === 'true') {
+            if (urlParams.get('open') === 'true') {
                 openNowOnly = true;
                 document.getElementById('openNowFilter').checked = true;
                 document.getElementById('openNowFilter2').checked = true;
             }
             
-            const online = urlParams.get('online');
-            if (online === 'true') {
+            if (urlParams.get('closed') === 'true') {
+                closedNowOnly = true;
+                document.getElementById('closedNowFilter').checked = true;
+                document.getElementById('closedNowFilter2').checked = true;
+            }
+            
+            if (urlParams.get('opening') === 'true') {
+                openingSoonOnly = true;
+                document.getElementById('openingSoonFilter').checked = true;
+                document.getElementById('openingSoonFilter2').checked = true;
+            }
+            
+            if (urlParams.get('closing') === 'true') {
+                closingSoonOnly = true;
+                document.getElementById('closingSoonFilter').checked = true;
+                document.getElementById('closingSoonFilter2').checked = true;
+            }
+            
+            if (urlParams.get('hours') === 'unknown') {
+                hoursUnknownOnly = true;
+                document.getElementById('hoursUnknownFilter').checked = true;
+                document.getElementById('hoursUnknownFilter2').checked = true;
+            }
+            
+            if (urlParams.get('online') === 'true') {
                 onlineOnly = true;
                 document.getElementById('onlineOnlyFilter').checked = true;
                 document.getElementById('onlineOnlyFilter2').checked = true;
@@ -852,6 +873,10 @@
             if (selectedState) url.searchParams.set('state', selectedState);
             if (selectedRadius > 0) url.searchParams.set('radius', selectedRadius);
             if (openNowOnly) url.searchParams.set('open', 'true');
+            if (closedNowOnly) url.searchParams.set('closed', 'true');
+            if (openingSoonOnly) url.searchParams.set('opening', 'true');
+            if (closingSoonOnly) url.searchParams.set('closing', 'true');
+            if (hoursUnknownOnly) url.searchParams.set('hours', 'unknown');
             if (onlineOnly) url.searchParams.set('online', 'true');
             if (searchTerm) url.searchParams.set('q', searchTerm);
             window.history.replaceState({}, '', url);
@@ -896,6 +921,7 @@
                 if (!viewingStarredOnly) applyFilters();
             }
         };
+
         async function loadListings() {
             try {
                 const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
@@ -1005,7 +1031,6 @@
             }
             return listing.address || '';
         }
-        
         function syncFilters() {
             const filterPairs = [
                 'categorySearch', 'openNowFilter', 'closedNowFilter', 'openingSoonFilter',
@@ -1059,6 +1084,7 @@
             document.getElementById('filterBtn').addEventListener('click', toggleFilters);
             document.getElementById('closeFilterBtn').addEventListener('click', toggleFilters);
             document.getElementById('mapBtn').addEventListener('click', toggleMap);
+            document.getElementById('mapBtnDesktop').addEventListener('click', toggleMap);
             document.getElementById('gridViewBtn').addEventListener('click', () => setView('grid'));
             document.getElementById('listViewBtn').addEventListener('click', () => setView('list'));
             document.getElementById('gridViewBtn2').addEventListener('click', () => setView('grid'));
@@ -1101,6 +1127,8 @@
                 document.getElementById(id).addEventListener('change', (e) => {
                     closedNowOnly = e.target.checked;
                     document.getElementById('closedNowFilter').checked = closedNowOnly;
+                    document.getElementById('closedNowFilter2').checked = closedNowOnly;
+                    updateURL();
                     if (!viewingStarredOnly) applyFilters();
                 });
             });
@@ -1109,6 +1137,8 @@
                 document.getElementById(id).addEventListener('change', (e) => {
                     openingSoonOnly = e.target.checked;
                     document.getElementById('openingSoonFilter').checked = openingSoonOnly;
+                    document.getElementById('openingSoonFilter2').checked = openingSoonOnly;
+                    updateURL();
                     if (!viewingStarredOnly) applyFilters();
                 });
             });
@@ -1117,6 +1147,8 @@
                 document.getElementById(id).addEventListener('change', (e) => {
                     closingSoonOnly = e.target.checked;
                     document.getElementById('closingSoonFilter').checked = closingSoonOnly;
+                    document.getElementById('closingSoonFilter2').checked = closingSoonOnly;
+                    updateURL();
                     if (!viewingStarredOnly) applyFilters();
                 });
             });
@@ -1125,6 +1157,8 @@
                 document.getElementById(id).addEventListener('change', (e) => {
                     hoursUnknownOnly = e.target.checked;
                     document.getElementById('hoursUnknownFilter').checked = hoursUnknownOnly;
+                    document.getElementById('hoursUnknownFilter2').checked = hoursUnknownOnly;
+                    updateURL();
                     if (!viewingStarredOnly) applyFilters();
                 });
             });
@@ -1196,18 +1230,18 @@
             });
             
             ['categorySearch', 'categorySearch2'].forEach(id => {
-                document.getElementById(id).addEventListener('input', filterCategoriesAndSubcategories);
-            });
-            
-            ['categoryDropdown', 'categoryDropdown2'].forEach(id => {
-                document.getElementById(id).addEventListener('change', (e) => {
-                    filterByCategory(e.target.value);
+                document.getElementById(id).addEventListener('input', (e) => {
+                    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                    searchDebounceTimer = setTimeout(() => {
+                        filterCategoriesAndSubcategories(e.target.value);
+                    }, 300);
                 });
             });
 
             setupLocationSearch();
+            
+            window.addEventListener('resize', checkFilterPosition);
         }
-
         function setupLocationSearch() {
             ['locationSearch', 'locationSearch2'].forEach(id => {
                 const input = document.getElementById(id);
@@ -1352,7 +1386,6 @@
             ['locationSearch', 'locationSearch2'].forEach(id => document.getElementById(id).value = '');
             ['countryFilter', 'countryFilter2'].forEach(id => document.getElementById(id).value = '');
             ['stateFilter', 'stateFilter2'].forEach(id => document.getElementById(id).value = '');
-            ['categoryDropdown', 'categoryDropdown2'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('stateFilterContainer').classList.add('hidden');
             document.getElementById('stateFilterContainer2').classList.add('hidden');
             ['radiusFilter', 'radiusFilter2'].forEach(id => document.getElementById(id).value = '0');
@@ -1369,18 +1402,22 @@
             
             updateRadiusValue();
             updateURL();
+            createCategoryButtons();
             if (!viewingStarredOnly) applyFilters();
         }
-        function filterCategoriesAndSubcategories() {
-            const searchTerm = (document.getElementById('categorySearch').value || document.getElementById('categorySearch2').value).toLowerCase();
+        
+        function filterCategoriesAndSubcategories(searchTerm) {
+            searchTerm = searchTerm.toLowerCase();
             
-            document.getElementById('categorySearch').value = searchTerm;
-            document.getElementById('categorySearch2').value = searchTerm;
+            const elem1 = document.getElementById('categorySearch');
+            const elem2 = document.getElementById('categorySearch2');
+            if (elem1) elem1.value = searchTerm;
+            if (elem2) elem2.value = searchTerm;
 
             if (!searchTerm) {
                 selectedSubcategories = [];
                 updateSubcategoryDisplay();
-                updateCategoryDropdown([]);
+                createCategoryButtons();
                 if (!viewingStarredOnly) applyFilters();
                 return;
             }
@@ -1403,7 +1440,7 @@
                 }
             });
 
-            updateCategoryDropdown(Array.from(matchingCategories));
+            createCategoryButtons(Array.from(matchingCategories));
 
             if (matchingSubcategories.length > 0) {
                 updateSubcategoryDisplay(matchingSubcategories);
@@ -1415,67 +1452,34 @@
             if (!viewingStarredOnly) applyFilters();
         }
 
-        function updateCategoryDropdown(filteredCategories) {
-            const screenWidth = window.innerWidth;
+        function createCategoryButtons(filteredCategories) {
+            const categoriesToShow = filteredCategories && filteredCategories.length > 0 ? filteredCategories : CATEGORIES;
             
-            ['categoryDropdownContainer', 'categoryDropdownContainer2'].forEach((containerId, idx) => {
+            ['categoryFilters', 'categoryFilters2'].forEach(containerId => {
                 const container = document.getElementById(containerId);
-                const dropdownId = idx === 0 ? 'categoryDropdown' : 'categoryDropdown2';
+                if (!container) return;
                 
-                if (screenWidth >= 1024 && filterPosition === 'left' && idx === 1) {
-                    container.innerHTML = '';
-                    const label = document.createElement('label');
-                    label.className = 'block text-sm font-medium text-gray-700 mb-2';
-                    label.textContent = 'Category';
-                    container.appendChild(label);
-                    
-                    const categoriesDiv = document.createElement('div');
-                    categoriesDiv.className = 'space-y-1';
-                    
-                    const allCategories = filteredCategories.length > 0 ? filteredCategories : CATEGORIES;
-                    allCategories.forEach(cat => {
-                        const label = document.createElement('label');
-                        label.className = 'flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded';
-                        
-                        const radio = document.createElement('input');
-                        radio.type = 'radio';
-                        radio.name = 'categoryRadio';
-                        radio.value = cat;
-                        radio.checked = selectedCategory === cat;
-                        radio.className = 'w-4 h-4';
-                        radio.addEventListener('change', () => filterByCategory(cat));
-                        
-                        const text = document.createElement('span');
-                        text.className = 'text-sm';
-                        text.textContent = cat;
-                        
-                        label.appendChild(radio);
-                        label.appendChild(text);
-                        categoriesDiv.appendChild(label);
-                    });
-                    
-                    container.appendChild(categoriesDiv);
-                } else {
-                    const dropdown = document.getElementById(dropdownId);
-                    if (!dropdown) return;
-                    
-                    const currentValue = dropdown.value;
-                    dropdown.innerHTML = '<option value="">All Categories</option>';
-                    
-                    const categoriesToShow = filteredCategories.length > 0 ? filteredCategories : CATEGORIES;
-                    categoriesToShow.forEach(cat => {
-                        const option = document.createElement('option');
-                        option.value = cat;
-                        option.textContent = cat;
-                        dropdown.appendChild(option);
-                    });
-                    
-                    if (categoriesToShow.includes(currentValue)) {
-                        dropdown.value = currentValue;
-                    } else {
-                        dropdown.value = '';
-                    }
-                }
+                container.innerHTML = '';
+                
+                const allButton = document.createElement('button');
+                allButton.className = selectedCategory === 'All' ? 
+                    'px-3 py-2 rounded-lg text-sm font-medium text-white' : 
+                    'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300';
+                if (selectedCategory === 'All') allButton.style.backgroundColor = '#055193';
+                allButton.textContent = 'All';
+                allButton.onclick = () => filterByCategory('All');
+                container.appendChild(allButton);
+                
+                categoriesToShow.forEach(cat => {
+                    const button = document.createElement('button');
+                    button.className = selectedCategory === cat ? 
+                        'px-3 py-2 rounded-lg text-sm font-medium text-white' : 
+                        'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
+                    if (selectedCategory === cat) button.style.backgroundColor = '#055193';
+                    button.textContent = cat;
+                    button.onclick = () => filterByCategory(cat);
+                    container.appendChild(button);
+                });
             });
         }
         
@@ -1490,25 +1494,15 @@
             });
         }
         
-        function createCategoryDropdowns() {
-            updateCategoryDropdown([]);
-        }
-        
         function filterByCategory(category) {
             selectedCategory = category || 'All';
             selectedSubcategories = [];
             
-            const radios = document.querySelectorAll('input[name="categoryRadio"]');
-            radios.forEach(r => r.checked = r.value === category);
-            
-            document.getElementById('categoryDropdown').value = category;
-            document.getElementById('categoryDropdown2').value = category;
-            
+            createCategoryButtons();
             updateSubcategoryDisplay();
             updateURL();
             if (!viewingStarredOnly) applyFilters();
         }
-        
         function updateSubcategoryDisplay(matchingSubcategories) {
             if (selectedCategory && selectedCategory !== 'All' && SUBCATEGORIES[selectedCategory]) {
                 ['subcategoryContainer', 'subcategoryContainer2'].forEach((containerId, idx) => {
@@ -1657,7 +1651,6 @@
             const todayHours = listing.hours[today];
             return !todayHours || todayHours.trim() === '';
         }
-        
         function applyFilters() {
             const searchTerm = normalizeString(document.getElementById('searchInput').value);
             const sortOption = document.getElementById('sortSelect').value;
@@ -1791,6 +1784,7 @@
                 container.classList.add('hidden');
             }
         }
+
         function toggleSplitView() {
             splitViewActive = !splitViewActive;
             if (splitViewActive) {
@@ -1847,6 +1841,196 @@
             if (loading) loading.style.display = 'none';
         }
 
+        function setView(view) {
+            currentView = view;
+            document.getElementById('gridViewBtn').className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+            document.getElementById('listViewBtn').className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+            document.getElementById('gridViewBtn2').className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+            document.getElementById('listViewBtn2').className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+            renderListings();
+        }
+
+        function updateResultsCount() {
+            const count = filteredListings.length;
+            if (!viewingStarredOnly) {
+                document.getElementById('resultsCount').textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
+            }
+        }
+        function renderListings() {
+            const container = document.getElementById('listingsContainer');
+            if (filteredListings.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
+                return;
+            }
+
+            if (currentView === 'grid') {
+                const screenWidth = window.innerWidth;
+                let gridClass = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+                
+                if (screenWidth >= 1024) {
+                    if (filterPosition === 'left') {
+                        gridClass = 'grid grid-cols-1 md:grid-cols-2 gap-6 listings-2-col';
+                    } else {
+                        gridClass = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 listings-3-col';
+                    }
+                }
+                
+                container.className = gridClass;
+                container.innerHTML = filteredListings.map(l => {
+                    const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
+                    const fullAddress = getFullAddress(l);
+                    const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+                    const badges = [];
+                    
+                    const openStatus = isOpenNow(l.hours);
+                    if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+                    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+                    if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+                    if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+                    if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+                    
+                    if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
+                    if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                    if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
+                    
+                    const isStarred = starredListings.includes(l.id);
+                    
+                    return `
+                        <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
+                            <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)">
+                                <svg class="star-icon" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                            </button>
+                            <div class="h-48 bg-gray-200 relative">
+                                <img src="${firstPhoto}" alt="${l.businessName}" class="w-full h-full object-cover">
+                                ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2 flex-wrap">${badges.join('')}</div>` : ''}
+                            </div>
+                            <div class="p-4">
+                                <div class="flex gap-3 mb-3">
+                                    <img src="${l.logo}" alt="${l.businessName} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">
+                                    <div class="flex-1 min-w-0">
+                                        <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${l.category}</span>
+                                        <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${l.businessName}</h3>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
+                                <div class="text-sm text-gray-600 space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span>📍</span>
+                                        <span class="truncate">${fullAddress}</span>
+                                    </div>
+                                    ${l.phone ? `<div class="flex items-center gap-2"><span>📞</span><span class="truncate">${l.phone}</span></div>` : ''}
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+            } else {
+                container.className = 'space-y-4';
+                container.innerHTML = filteredListings.map(l => {
+                    const fullAddress = getFullAddress(l);
+                    const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+                    const badges = [];
+                    
+                    const openStatus = isOpenNow(l.hours);
+                    if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+                    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+                    if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+                    if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+                    if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+                    
+                    if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
+                    if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                    if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
+                    
+                    const isStarred = starredListings.includes(l.id);
+                    
+                    return `
+                        <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block relative">
+                            <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 12px; right: 12px;">
+                                <svg class="star-icon" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                            </button>
+                            <img src="${l.logo}" alt="${l.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
+                            <div class="flex-1 min-w-0 overflow-hidden pr-12">
+                                <div class="flex gap-2 mb-2 flex-wrap">
+                                    <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
+                                    ${badges.join('')}
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-1 truncate">${l.businessName}</h3>
+                                <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
+                                <div class="flex flex-col gap-1 text-sm text-gray-600">
+                                    <div class="flex items-center gap-1">
+                                        <span>📍</span>
+                                        <span class="truncate">${fullAddress}</span>
+                                    </div>
+                                    ${l.phone ? `<div class="flex items-center gap-1"><span>📞</span><span class="truncate">${l.phone}</span></div>` : ''}
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+            }
+        }
+
+        function renderSplitViewListings() {
+            const container = document.getElementById('splitListingsContainer');
+            if (!container) return;
+            if (filteredListings.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
+                return;
+            }
+            container.className = 'space-y-3';
+            container.innerHTML = filteredListings.map(l => {
+                const fullAddress = getFullAddress(l);
+                const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+                const badges = [];
+                
+                const openStatus = isOpenNow(l.hours);
+                if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+                else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+                if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+                if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+                if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+                
+                if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
+                if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
+                
+                const isStarred = starredListings.includes(l.id);
+                
+                return `
+                    <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
+                        <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 8px; right: 8px; width: 32px; height: 32px;">
+                            <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </button>
+                        <img src="${l.logo}" alt="${l.businessName}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
+                        <div class="flex-1 min-w-0 overflow-hidden pr-8">
+                            <div class="flex gap-1 mb-1 flex-wrap">
+                                ${badges.join('')}
+                            </div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate">${l.businessName}</h3>
+                            <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
+                            <div class="text-xs text-gray-600">
+                                <div class="flex items-center gap-1 truncate">
+                                    <span>📍</span>
+                                    <span class="truncate">${fullAddress}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        window.toggleStar = toggleStar;
         function initMap() {
             if (map) return;
             showMapLoading();
@@ -1931,14 +2115,16 @@
                     const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
                     const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
                     const badges = [];
-                    if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-                    if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-                    if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
+                    
                     if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
                     else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
                     if (isOpeningSoon(listing.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
                     if (isClosingSoon(listing.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
                     if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+                    
+                    if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
+                    if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                    if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : listing.logo;
@@ -1983,14 +2169,16 @@
                     const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
                     const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
                     const badges = [];
-                    if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-                    if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-                    if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
+                    
                     if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
                     else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
                     if (isOpeningSoon(listing.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
                     if (isClosingSoon(listing.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
                     if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+                    
+                    if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
+                    if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                    if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     const popupContent = `
@@ -2018,181 +2206,6 @@
             });
             if (bounds.length > 0) map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
         }
-
-        function setView(view) {
-            currentView = view;
-            document.getElementById('gridViewBtn').className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-            document.getElementById('listViewBtn').className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-            document.getElementById('gridViewBtn2').className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-            document.getElementById('listViewBtn2').className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-            renderListings();
-        }
-
-        function updateResultsCount() {
-            const count = filteredListings.length;
-            if (!viewingStarredOnly) {
-                document.getElementById('resultsCount').textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
-            }
-        }
-        
-        function renderListings() {
-            const container = document.getElementById('listingsContainer');
-            if (filteredListings.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
-                return;
-            }
-
-            if (currentView === 'grid') {
-                container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
-                if (filterPosition === 'left' && window.innerWidth >= 1024) {
-                    container.classList.add('listings-2-col');
-                }
-                container.innerHTML = filteredListings.map(l => {
-                    const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
-                    const fullAddress = getFullAddress(l);
-                    const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                    const listingUrl = `/listings/${categorySlug}/${l.slug}`;
-                    const badges = [];
-                    if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-                    if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-                    if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-                    const openStatus = isOpenNow(l.hours);
-                    if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-                    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-                    if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-                    if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-                    if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-                    const isStarred = starredListings.includes(l.id);
-                    
-                    return `
-                        <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
-                            <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)">
-                                <svg class="star-icon" viewBox="0 0 24 24">
-                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                </svg>
-                            </button>
-                            <div class="h-48 bg-gray-200 relative">
-                                <img src="${firstPhoto}" alt="${l.businessName}" class="w-full h-full object-cover">
-                                ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2 flex-wrap">${badges.join('')}</div>` : ''}
-                            </div>
-                            <div class="p-4">
-                                <div class="flex gap-3 mb-3">
-                                    <img src="${l.logo}" alt="${l.businessName} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">
-                                    <div class="flex-1 min-w-0">
-                                        <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${l.category}</span>
-                                        <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${l.businessName}</h3>
-                                    </div>
-                                </div>
-                                <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
-                                <div class="text-sm text-gray-600 space-y-1">
-                                    <div class="flex items-center gap-2">
-                                        <span>📍</span>
-                                        <span class="truncate">${fullAddress}</span>
-                                    </div>
-                                    ${l.phone ? `<div class="flex items-center gap-2"><span>📞</span><span class="truncate">${l.phone}</span></div>` : ''}
-                                </div>
-                            </div>
-                        </a>
-                    `;
-                }).join('');
-            } else {
-                container.className = 'space-y-4';
-                container.innerHTML = filteredListings.map(l => {
-                    const fullAddress = getFullAddress(l);
-                    const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                    const listingUrl = `/listings/${categorySlug}/${l.slug}`;
-                    const badges = [];
-                    if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-                    if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-                    if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-                    const openStatus = isOpenNow(l.hours);
-                    if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-                    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-                    if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-                    if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-                    if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-                    const isStarred = starredListings.includes(l.id);
-                    
-                    return `
-                        <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block relative">
-                            <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 12px; right: 12px;">
-                                <svg class="star-icon" viewBox="0 0 24 24">
-                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                </svg>
-                            </button>
-                            <img src="${l.logo}" alt="${l.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
-                            <div class="flex-1 min-w-0 overflow-hidden pr-12">
-                                <div class="flex gap-2 mb-2 flex-wrap">
-                                    <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
-                                    ${badges.join('')}
-                                </div>
-                                <h3 class="text-lg font-bold text-gray-900 mb-1 truncate">${l.businessName}</h3>
-                                <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
-                                <div class="flex flex-col gap-1 text-sm text-gray-600">
-                                    <div class="flex items-center gap-1">
-                                        <span>📍</span>
-                                        <span class="truncate">${fullAddress}</span>
-                                    </div>
-                                    ${l.phone ? `<div class="flex items-center gap-1"><span>📞</span><span class="truncate">${l.phone}</span></div>` : ''}
-                                </div>
-                            </div>
-                        </a>
-                    `;
-                }).join('');
-            }
-        }
-        function renderSplitViewListings() {
-            const container = document.getElementById('splitListingsContainer');
-            if (!container) return;
-            if (filteredListings.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
-                return;
-            }
-            container.className = 'space-y-3';
-            container.innerHTML = filteredListings.map(l => {
-                const fullAddress = getFullAddress(l);
-                const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                const listingUrl = `/listings/${categorySlug}/${l.slug}`;
-                const badges = [];
-                if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-                if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-                if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-                const openStatus = isOpenNow(l.hours);
-                if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-                else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-                if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-                if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-                if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-                const isStarred = starredListings.includes(l.id);
-                
-                return `
-                    <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
-                        <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 8px; right: 8px; width: 32px; height: 32px;">
-                            <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                        </button>
-                        <img src="${l.logo}" alt="${l.businessName}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
-                        <div class="flex-1 min-w-0 overflow-hidden pr-8">
-                            <div class="flex gap-1 mb-1 flex-wrap">
-                                ${badges.join('')}
-                            </div>
-                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate">${l.businessName}</h3>
-                            <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
-                            <div class="text-xs text-gray-600">
-                                <div class="flex items-center gap-1 truncate">
-                                    <span>📍</span>
-                                    <span class="truncate">${fullAddress}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                `;
-            }).join('');
-        }
-
-        window.toggleStar = toggleStar;
-        window.addEventListener('resize', checkFilterPosition);
     </script>
 </body>
 </html>
