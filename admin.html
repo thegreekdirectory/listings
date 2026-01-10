@@ -988,8 +988,22 @@ document.getElementById('refreshBtn').addEventListener('click', loadListings);
     };
 }
 
-function generateSlug(name) {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+async function geocodeAddress(address, city, state, zipCode) {
+    const fullAddress = `${address}, ${city}, ${state} ${zipCode || ''}`.trim();
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`);
+        const data = await response.json();
+        if (data && data.length > 0) {
+            return {
+                lat: parseFloat(data[0].lat),
+                lng: parseFloat(data[0].lon)
+            };
+        }
+        return null;
+    } catch (e) {
+        console.error('Geocoding failed:', e);
+        return null;
+    }
 }
 
 document.getElementById('saveEdit').addEventListener('click', async () => {
@@ -1008,6 +1022,20 @@ document.getElementById('saveEdit').addEventListener('click', async () => {
 
     console.log('Slug:', slug);
     console.log('Category slug:', categorySlug);
+
+    // GEOCODE THE ADDRESS IF IT EXISTS
+    if (listing.address && listing.city && listing.state) {
+        console.log('🌍 Geocoding address...');
+        const coords = await geocodeAddress(listing.address, listing.city, listing.state, listing.zipCode);
+        if (coords) {
+            listing.coordinates = coords;
+            console.log('✅ Geocoded:', coords);
+        } else {
+            console.log('⚠️ Geocoding failed, continuing without coordinates');
+        }
+        // Add a small delay to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
 
     const defaults = getCategoryDefaults(listing.category);
     
@@ -1153,6 +1181,9 @@ document.getElementById('saveEdit').addEventListener('click', async () => {
     document.getElementById('editModal').classList.add('hidden');
     uploadedImages = { logo: null, photos: [] };
     selectedSubcategories = [];
+    
+    renderTable();
+});
     
     renderTable();
 });
