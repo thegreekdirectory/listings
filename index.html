@@ -27,6 +27,9 @@
         .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
+        .badge-opening-soon { background: #fbbf24; color: #78350f; }
+        .badge-closing-soon { background: #f59e0b; color: white; }
+        .badge-hours-unknown { background: #6b7280; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
         .badge-verified { background: #0000FF; color: white; }
         .badge-claimed { background: #6B7280; color: white; }
@@ -161,12 +164,7 @@
             border: none;
         }
         .map-popup {
-            position: relative;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            width: 320px;
+            max-width: 320px;
         }
         .map-popup-hero { width: 100%; height: 140px; object-fit: cover; }
         .map-popup-content { padding: 12px; display: flex; gap: 12px; }
@@ -189,20 +187,25 @@
         .map-popup-details { font-size: 12px; color: #444; line-height: 1.6; }
         
         .leaflet-popup-close-button {
-            width: 24px !important;
-            height: 24px !important;
+            width: 30px !important;
+            height: 30px !important;
             padding: 0 !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             top: 8px !important;
             right: 8px !important;
-            background: rgba(255, 255, 255, 0.9) !important;
+            background: rgba(255, 255, 255, 0.95) !important;
             border-radius: 50% !important;
-            border: 1px solid #ccc !important;
+            border: 2px solid #ccc !important;
+            font-size: 24px !important;
+            line-height: 1 !important;
+            color: #666 !important;
         }
         .leaflet-popup-close-button:hover {
             background: #f0f0f0 !important;
+            border-color: #999 !important;
+            color: #333 !important;
         }
         
         .subcategory-tag {
@@ -285,6 +288,7 @@
                 padding: 16px;
                 background: white;
             }
+            .listings-2-col { grid-template-columns: repeat(2, 1fr) !important; }
         }
         
         @media (max-width: 768px) {
@@ -322,6 +326,34 @@
             .star-button { background: rgba(42, 42, 42, 0.9); }
             .split-view-listings { border-right-color: #404040; border-bottom-color: #404040; }
             .leaflet-tile { filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7); }
+        }
+
+        .location-search-container { position: relative; }
+        .location-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+        .location-search-result {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .location-search-result:hover {
+            background: #f3f4f6;
+        }
+        .location-search-result.active {
+            background: #055193;
+            color: white;
         }
     </style>
 </head>
@@ -383,7 +415,7 @@
                         <input type="text" id="categorySearch" placeholder="Type to search..." 
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2">
                     </div>
-                    <div>
+                    <div id="categoryDropdownContainer">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
                         <select id="categoryDropdown" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                             <option value="">All Categories</option>
@@ -399,10 +431,26 @@
                         </div>
                         <div id="subcategoryFilters" class="flex flex-wrap"></div>
                     </div>
-                    <div class="flex gap-4">
+                    <div class="space-y-2">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" id="openNowFilter" class="w-4 h-4">
                             <span class="text-sm font-medium text-gray-700">Open Now</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="closedNowFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700">Closed Now</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="openingSoonFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700">Opening Soon (60 min)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="closingSoonFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700">Closing Soon (60 min)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="hoursUnknownFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700">Hours Unknown</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" id="onlineOnlyFilter" class="w-4 h-4">
@@ -412,6 +460,12 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Radius: <span class="radius-value" id="radiusValue">Any distance</span></label>
                         <input type="range" id="radiusFilter" min="0" max="100" value="0" step="1" class="w-full">
+                    </div>
+                    <div class="location-search-container">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Location Search</label>
+                        <input type="text" id="locationSearch" placeholder="City, State, Zip, or Country..." 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <div id="locationSearchResults" class="location-search-results"></div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
@@ -458,7 +512,10 @@
         <div class="desktop-layout">
             <div class="desktop-filters hidden lg:block">
                 <div id="desktopFilterPanel" class="desktop-sidebar">
-                    <h3 class="font-semibold text-gray-900 mb-3">Filters</h3>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-gray-900">Filters</h3>
+                        <button id="toggleFilterPosition" class="text-xs px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" title="Toggle filter position">⇄</button>
+                    </div>
                     <button id="clearFiltersBtn2" class="text-sm text-blue-600 hover:text-blue-800 mb-4 block">Clear All</button>
                     <div class="space-y-4">
                         <div>
@@ -466,7 +523,7 @@
                             <input type="text" id="categorySearch2" placeholder="Categories & subcategories..." 
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                         </div>
-                        <div>
+                        <div id="categoryDropdownContainer2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
                             <select id="categoryDropdown2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                                 <option value="">All Categories</option>
@@ -488,6 +545,22 @@
                                 <span class="text-sm font-medium text-gray-700">Open Now</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="closedNowFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Closed Now</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="openingSoonFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Opening Soon</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="closingSoonFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Closing Soon</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="hoursUnknownFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Hours Unknown</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="onlineOnlyFilter2" class="w-4 h-4">
                                 <span class="text-sm font-medium text-gray-700">Online Only</span>
                             </label>
@@ -495,6 +568,12 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Radius: <span class="radius-value" id="radiusValue2">Any distance</span></label>
                             <input type="range" id="radiusFilter2" min="0" max="100" value="0" step="1" class="w-full">
+                        </div>
+                        <div class="location-search-container">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Location Search</label>
+                            <input type="text" id="locationSearch2" placeholder="City, State, Zip, or Country..." 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <div id="locationSearchResults2" class="location-search-results"></div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
@@ -579,11 +658,13 @@
 
         let allListings = [], filteredListings = [], currentView = 'grid', selectedCategory = 'All';
         let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '';
-        let selectedRadius = 0, openNowOnly = false, onlineOnly = false, userLocation = null;
+        let selectedRadius = 0, openNowOnly = false, closedNowOnly = false, openingSoonOnly = false;
+        let closingSoonOnly = false, hoursUnknownOnly = false, onlineOnly = false, userLocation = null;
         let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
         let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
         let userLocationMarker = null, mapReady = false, allListingsGeocoded = false;
         let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
+        let filterPosition = 'left';
 
         function loadStarredListings() {
             const stored = getCookie('starredListings');
@@ -658,8 +739,47 @@
             loadFiltersFromURL();
             initMap();
             syncFilters();
+            checkFilterPosition();
         });
         
+        function checkFilterPosition() {
+            const screenWidth = window.innerWidth;
+            const toggleBtn = document.getElementById('toggleFilterPosition');
+            
+            if (screenWidth >= 1024) {
+                toggleBtn.style.display = 'block';
+                if (filterPosition === 'left') {
+                    showLeftFilters();
+                } else {
+                    showTopFilters();
+                }
+            } else {
+                toggleBtn.style.display = 'none';
+                showTopFilters();
+            }
+        }
+
+        function showLeftFilters() {
+            const desktopFilters = document.querySelector('.desktop-filters');
+            const desktopPanel = document.getElementById('desktopFilterPanel');
+            const listingsContainer = document.getElementById('listingsContainer');
+            
+            desktopFilters.classList.remove('hidden');
+            desktopPanel.classList.add('desktop-sidebar');
+            
+            if (currentView === 'grid') {
+                listingsContainer.classList.add('listings-2-col');
+            }
+        }
+
+        function showTopFilters() {
+            const desktopFilters = document.querySelector('.desktop-filters');
+            const listingsContainer = document.getElementById('listingsContainer');
+            
+            desktopFilters.classList.add('hidden');
+            listingsContainer.classList.remove('listings-2-col');
+        }
+
         function loadFiltersFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const searchQuery = urlParams.get('q');
@@ -887,7 +1007,13 @@
         }
         
         function syncFilters() {
-            ['categorySearch', 'categoryDropdown', 'openNowFilter', 'onlineOnlyFilter', 'radiusFilter', 'countryFilter', 'stateFilter'].forEach(base => {
+            const filterPairs = [
+                'categorySearch', 'openNowFilter', 'closedNowFilter', 'openingSoonFilter',
+                'closingSoonFilter', 'hoursUnknownFilter', 'onlineOnlyFilter', 'radiusFilter',
+                'countryFilter', 'stateFilter', 'locationSearch'
+            ];
+
+            filterPairs.forEach(base => {
                 const elem1 = document.getElementById(base);
                 const elem2 = document.getElementById(base + '2');
                 if (!elem1 || !elem2) return;
@@ -944,6 +1070,11 @@
             
             document.getElementById('refreshBtn').addEventListener('click', () => window.location.reload());
             
+            document.getElementById('toggleFilterPosition').addEventListener('click', () => {
+                filterPosition = filterPosition === 'left' ? 'top' : 'left';
+                checkFilterPosition();
+            });
+
             ['radiusFilter', 'radiusFilter2'].forEach(id => {
                 const slider = document.getElementById(id);
                 slider.addEventListener('input', (e) => {
@@ -962,6 +1093,38 @@
                     document.getElementById('openNowFilter').checked = openNowOnly;
                     document.getElementById('openNowFilter2').checked = openNowOnly;
                     updateURL();
+                    if (!viewingStarredOnly) applyFilters();
+                });
+            });
+
+            ['closedNowFilter', 'closedNowFilter2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    closedNowOnly = e.target.checked;
+                    document.getElementById('closedNowFilter').checked = closedNowOnly;
+                    if (!viewingStarredOnly) applyFilters();
+                });
+            });
+
+            ['openingSoonFilter', 'openingSoonFilter2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    openingSoonOnly = e.target.checked;
+                    document.getElementById('openingSoonFilter').checked = openingSoonOnly;
+                    if (!viewingStarredOnly) applyFilters();
+                });
+            });
+
+            ['closingSoonFilter', 'closingSoonFilter2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    closingSoonOnly = e.target.checked;
+                    document.getElementById('closingSoonFilter').checked = closingSoonOnly;
+                    if (!viewingStarredOnly) applyFilters();
+                });
+            });
+
+            ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    hoursUnknownOnly = e.target.checked;
+                    document.getElementById('hoursUnknownFilter').checked = hoursUnknownOnly;
                     if (!viewingStarredOnly) applyFilters();
                 });
             });
@@ -1041,7 +1204,136 @@
                     filterByCategory(e.target.value);
                 });
             });
+
+            setupLocationSearch();
         }
+
+        function setupLocationSearch() {
+            ['locationSearch', 'locationSearch2'].forEach(id => {
+                const input = document.getElementById(id);
+                const resultsId = id + 'Results';
+                const resultsDiv = document.getElementById(resultsId);
+
+                input.addEventListener('input', () => {
+                    const query = input.value.toLowerCase().trim();
+                    
+                    if (id === 'locationSearch') {
+                        document.getElementById('locationSearch2').value = input.value;
+                    } else {
+                        document.getElementById('locationSearch').value = input.value;
+                    }
+
+                    if (query.length < 2) {
+                        resultsDiv.style.display = 'none';
+                        return;
+                    }
+
+                    const matches = [];
+                    const seen = new Set();
+
+                    allListings.forEach(listing => {
+                        const city = listing.city?.toLowerCase();
+                        const state = listing.state?.toLowerCase();
+                        const zip = listing.zipCode?.toLowerCase();
+                        const country = (listing.country || 'USA').toLowerCase();
+
+                        if (city && city.includes(query) && !seen.has(city)) {
+                            matches.push({ type: 'city', value: listing.city, state: listing.state, display: `${listing.city}, ${listing.state}` });
+                            seen.add(city);
+                        }
+                        if (state && state.includes(query) && !seen.has(state)) {
+                            matches.push({ type: 'state', value: listing.state, display: US_STATES[listing.state] || listing.state });
+                            seen.add(state);
+                        }
+                        if (zip && zip.includes(query) && !seen.has(zip)) {
+                            matches.push({ type: 'zip', value: listing.zipCode, city: listing.city, state: listing.state, display: `${listing.zipCode} (${listing.city}, ${listing.state})` });
+                            seen.add(zip);
+                        }
+                        if (country.includes(query) && !seen.has(country)) {
+                            matches.push({ type: 'country', value: listing.country || 'USA', display: listing.country === 'USA' ? 'United States' : listing.country });
+                            seen.add(country);
+                        }
+                    });
+
+                    if (matches.length > 0) {
+                        resultsDiv.innerHTML = matches.slice(0, 10).map(m => 
+                            `<div class="location-search-result" data-type="${m.type}" data-value="${m.value}" data-state="${m.state || ''}" data-city="${m.city || ''}">${m.display}</div>`
+                        ).join('');
+                        resultsDiv.style.display = 'block';
+
+                        resultsDiv.querySelectorAll('.location-search-result').forEach(elem => {
+                            elem.addEventListener('click', () => {
+                                const type = elem.dataset.type;
+                                const value = elem.dataset.value;
+
+                                if (type === 'city') {
+                                    const state = elem.dataset.state;
+                                    selectedCountry = 'USA';
+                                    selectedState = state;
+                                    document.getElementById('countryFilter').value = 'USA';
+                                    document.getElementById('countryFilter2').value = 'USA';
+                                    document.getElementById('stateFilterContainer').classList.remove('hidden');
+                                    document.getElementById('stateFilterContainer2').classList.remove('hidden');
+                                    populateStateFilter('USA');
+                                    document.getElementById('stateFilter').value = state;
+                                    document.getElementById('stateFilter2').value = state;
+                                } else if (type === 'state') {
+                                    selectedCountry = 'USA';
+                                    selectedState = value;
+                                    document.getElementById('countryFilter').value = 'USA';
+                                    document.getElementById('countryFilter2').value = 'USA';
+                                    document.getElementById('stateFilterContainer').classList.remove('hidden');
+                                    document.getElementById('stateFilterContainer2').classList.remove('hidden');
+                                    populateStateFilter('USA');
+                                    document.getElementById('stateFilter').value = value;
+                                    document.getElementById('stateFilter2').value = value;
+                                } else if (type === 'zip') {
+                                    const state = elem.dataset.state;
+                                    selectedCountry = 'USA';
+                                    selectedState = state;
+                                    document.getElementById('countryFilter').value = 'USA';
+                                    document.getElementById('countryFilter2').value = 'USA';
+                                    document.getElementById('stateFilterContainer').classList.remove('hidden');
+                                    document.getElementById('stateFilterContainer2').classList.remove('hidden');
+                                    populateStateFilter('USA');
+                                    document.getElementById('stateFilter').value = state;
+                                    document.getElementById('stateFilter2').value = state;
+                                } else if (type === 'country') {
+                                    selectedCountry = value;
+                                    selectedState = '';
+                                    document.getElementById('countryFilter').value = value;
+                                    document.getElementById('countryFilter2').value = value;
+                                    if (value === 'USA') {
+                                        document.getElementById('stateFilterContainer').classList.remove('hidden');
+                                        document.getElementById('stateFilterContainer2').classList.remove('hidden');
+                                        populateStateFilter('USA');
+                                    } else {
+                                        document.getElementById('stateFilterContainer').classList.add('hidden');
+                                        document.getElementById('stateFilterContainer2').classList.add('hidden');
+                                    }
+                                }
+
+                                input.value = '';
+                                document.getElementById('locationSearch').value = '';
+                                document.getElementById('locationSearch2').value = '';
+                                resultsDiv.style.display = 'none';
+                                updateURL();
+                                if (!viewingStarredOnly) applyFilters();
+                            });
+                        });
+                    } else {
+                        resultsDiv.style.display = 'none';
+                    }
+                });
+
+                input.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        resultsDiv.style.display = 'none';
+                    }, 200);
+                });
+            });
+        }
+
         function clearAllFilters() {
             selectedCategory = 'All';
             selectedSubcategories = [];
@@ -1049,10 +1341,15 @@
             selectedState = '';
             selectedRadius = 0;
             openNowOnly = false;
+            closedNowOnly = false;
+            openingSoonOnly = false;
+            closingSoonOnly = false;
+            hoursUnknownOnly = false;
             onlineOnly = false;
             
             document.getElementById('searchInput').value = '';
             ['categorySearch', 'categorySearch2'].forEach(id => document.getElementById(id).value = '');
+            ['locationSearch', 'locationSearch2'].forEach(id => document.getElementById(id).value = '');
             ['countryFilter', 'countryFilter2'].forEach(id => document.getElementById(id).value = '');
             ['stateFilter', 'stateFilter2'].forEach(id => document.getElementById(id).value = '');
             ['categoryDropdown', 'categoryDropdown2'].forEach(id => document.getElementById(id).value = '');
@@ -1060,6 +1357,10 @@
             document.getElementById('stateFilterContainer2').classList.add('hidden');
             ['radiusFilter', 'radiusFilter2'].forEach(id => document.getElementById(id).value = '0');
             ['openNowFilter', 'openNowFilter2'].forEach(id => document.getElementById(id).checked = false);
+            ['closedNowFilter', 'closedNowFilter2'].forEach(id => document.getElementById(id).checked = false);
+            ['openingSoonFilter', 'openingSoonFilter2'].forEach(id => document.getElementById(id).checked = false);
+            ['closingSoonFilter', 'closingSoonFilter2'].forEach(id => document.getElementById(id).checked = false);
+            ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => document.getElementById(id).checked = false);
             ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => document.getElementById(id).checked = false);
             
             ['subcategoryContainer', 'subcategoryContainer2'].forEach(id => {
@@ -1070,60 +1371,112 @@
             updateURL();
             if (!viewingStarredOnly) applyFilters();
         }
-        
         function filterCategoriesAndSubcategories() {
             const searchTerm = (document.getElementById('categorySearch').value || document.getElementById('categorySearch2').value).toLowerCase();
             
+            document.getElementById('categorySearch').value = searchTerm;
+            document.getElementById('categorySearch2').value = searchTerm;
+
             if (!searchTerm) {
                 selectedSubcategories = [];
-                selectedCategory = 'All';
-                document.getElementById('categoryDropdown').value = '';
-                document.getElementById('categoryDropdown2').value = '';
                 updateSubcategoryDisplay();
+                updateCategoryDropdown([]);
                 if (!viewingStarredOnly) applyFilters();
                 return;
             }
             
-            let foundCategory = null;
             const matchingSubcategories = [];
+            const matchingCategories = new Set();
             
             Object.entries(SUBCATEGORIES).forEach(([category, subs]) => {
                 subs.forEach(sub => {
                     if (sub.toLowerCase().includes(searchTerm)) {
                         matchingSubcategories.push({ category, subcategory: sub });
+                        matchingCategories.add(category);
                     }
                 });
             });
-            
-            if (matchingSubcategories.length > 0) {
-                const latestMatch = matchingSubcategories[matchingSubcategories.length - 1];
-                foundCategory = latestMatch.category;
-                selectedSubcategories = matchingSubcategories
-                    .filter(m => m.category === foundCategory)
-                    .map(m => m.subcategory);
-                
-                selectedCategory = foundCategory;
-                document.getElementById('categoryDropdown').value = foundCategory;
-                document.getElementById('categoryDropdown2').value = foundCategory;
-                updateSubcategoryDisplay();
-            } else {
-                CATEGORIES.forEach(cat => {
-                    if (cat.toLowerCase().includes(searchTerm) && !foundCategory) {
-                        foundCategory = cat;
-                    }
-                });
-                
-                if (foundCategory) {
-                    selectedCategory = foundCategory;
-                    selectedSubcategories = [];
-                    document.getElementById('categoryDropdown').value = foundCategory;
-                    document.getElementById('categoryDropdown2').value = foundCategory;
-                    updateSubcategoryDisplay();
+
+            CATEGORIES.forEach(cat => {
+                if (cat.toLowerCase().includes(searchTerm)) {
+                    matchingCategories.add(cat);
                 }
+            });
+
+            updateCategoryDropdown(Array.from(matchingCategories));
+
+            if (matchingSubcategories.length > 0) {
+                updateSubcategoryDisplay(matchingSubcategories);
+            } else {
+                updateSubcategoryDisplay();
             }
             
             updateURL();
             if (!viewingStarredOnly) applyFilters();
+        }
+
+        function updateCategoryDropdown(filteredCategories) {
+            const screenWidth = window.innerWidth;
+            
+            ['categoryDropdownContainer', 'categoryDropdownContainer2'].forEach((containerId, idx) => {
+                const container = document.getElementById(containerId);
+                const dropdownId = idx === 0 ? 'categoryDropdown' : 'categoryDropdown2';
+                
+                if (screenWidth >= 1024 && filterPosition === 'left' && idx === 1) {
+                    container.innerHTML = '';
+                    const label = document.createElement('label');
+                    label.className = 'block text-sm font-medium text-gray-700 mb-2';
+                    label.textContent = 'Category';
+                    container.appendChild(label);
+                    
+                    const categoriesDiv = document.createElement('div');
+                    categoriesDiv.className = 'space-y-1';
+                    
+                    const allCategories = filteredCategories.length > 0 ? filteredCategories : CATEGORIES;
+                    allCategories.forEach(cat => {
+                        const label = document.createElement('label');
+                        label.className = 'flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded';
+                        
+                        const radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = 'categoryRadio';
+                        radio.value = cat;
+                        radio.checked = selectedCategory === cat;
+                        radio.className = 'w-4 h-4';
+                        radio.addEventListener('change', () => filterByCategory(cat));
+                        
+                        const text = document.createElement('span');
+                        text.className = 'text-sm';
+                        text.textContent = cat;
+                        
+                        label.appendChild(radio);
+                        label.appendChild(text);
+                        categoriesDiv.appendChild(label);
+                    });
+                    
+                    container.appendChild(categoriesDiv);
+                } else {
+                    const dropdown = document.getElementById(dropdownId);
+                    if (!dropdown) return;
+                    
+                    const currentValue = dropdown.value;
+                    dropdown.innerHTML = '<option value="">All Categories</option>';
+                    
+                    const categoriesToShow = filteredCategories.length > 0 ? filteredCategories : CATEGORIES;
+                    categoriesToShow.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat;
+                        dropdown.appendChild(option);
+                    });
+                    
+                    if (categoriesToShow.includes(currentValue)) {
+                        dropdown.value = currentValue;
+                    } else {
+                        dropdown.value = '';
+                    }
+                }
+            });
         }
         
         function updateRadiusValue() {
@@ -1138,21 +1491,15 @@
         }
         
         function createCategoryDropdowns() {
-            ['categoryDropdown', 'categoryDropdown2'].forEach(id => {
-                const select = document.getElementById(id);
-                select.innerHTML = '<option value="">All Categories</option>';
-                CATEGORIES.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat;
-                    option.textContent = cat;
-                    select.appendChild(option);
-                });
-            });
+            updateCategoryDropdown([]);
         }
         
         function filterByCategory(category) {
             selectedCategory = category || 'All';
             selectedSubcategories = [];
+            
+            const radios = document.querySelectorAll('input[name="categoryRadio"]');
+            radios.forEach(r => r.checked = r.value === category);
             
             document.getElementById('categoryDropdown').value = category;
             document.getElementById('categoryDropdown2').value = category;
@@ -1162,7 +1509,7 @@
             if (!viewingStarredOnly) applyFilters();
         }
         
-        function updateSubcategoryDisplay() {
+        function updateSubcategoryDisplay(matchingSubcategories) {
             if (selectedCategory && selectedCategory !== 'All' && SUBCATEGORIES[selectedCategory]) {
                 ['subcategoryContainer', 'subcategoryContainer2'].forEach((containerId, idx) => {
                     const filtersId = idx === 0 ? 'subcategoryFilters' : 'subcategoryFilters2';
@@ -1177,6 +1524,24 @@
                             tag.classList.add('selected');
                         }
                         tag.onclick = () => toggleSubcategory(sub);
+                        filtersDiv.appendChild(tag);
+                    });
+                });
+            } else if (matchingSubcategories && matchingSubcategories.length > 0) {
+                ['subcategoryContainer', 'subcategoryContainer2'].forEach((containerId, idx) => {
+                    const filtersId = idx === 0 ? 'subcategoryFilters' : 'subcategoryFilters2';
+                    document.getElementById(containerId).classList.remove('hidden');
+                    const filtersDiv = document.getElementById(filtersId);
+                    filtersDiv.innerHTML = '';
+                    
+                    matchingSubcategories.forEach(item => {
+                        const tag = document.createElement('div');
+                        tag.className = 'subcategory-tag';
+                        tag.textContent = `${item.subcategory} (${item.category})`;
+                        if (selectedSubcategories.includes(item.subcategory)) {
+                            tag.classList.add('selected');
+                        }
+                        tag.onclick = () => toggleSubcategory(item.subcategory);
                         filtersDiv.appendChild(tag);
                     });
                 });
@@ -1239,6 +1604,59 @@
             const endMinutes = end * 60 + parseInt(endMin);
             return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
         }
+
+        function isOpeningSoon(hours) {
+            if (!hours || typeof hours !== 'object') return false;
+            const now = new Date();
+            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = days[centralTime.getDay()];
+            const todayHours = hours[today];
+            if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
+            const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return false;
+            const [, startHour, startMin, startPeriod] = match;
+            let start = parseInt(startHour);
+            if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
+            if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
+            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+            const startMinutes = start * 60 + parseInt(startMin);
+            const diff = startMinutes - currentMinutes;
+            return diff > 0 && diff <= 60;
+        }
+
+        function isClosingSoon(hours) {
+            if (!hours || typeof hours !== 'object') return false;
+            const now = new Date();
+            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = days[centralTime.getDay()];
+            const todayHours = hours[today];
+            if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
+            const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return false;
+            const [, , , , endHour, endMin, endPeriod] = match;
+            let end = parseInt(endHour);
+            if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
+            if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
+            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+            const endMinutes = end * 60 + parseInt(endMin);
+            const diff = endMinutes - currentMinutes;
+            return diff > 0 && diff <= 60;
+        }
+
+        function hasUnknownHours(listing) {
+            if (!listing.address || isBasedIn(listing)) return false;
+            if (!listing.hours || typeof listing.hours !== 'object') return true;
+            const hasAnyHours = Object.values(listing.hours).some(h => h && h.trim() !== '');
+            if (!hasAnyHours) return true;
+            const now = new Date();
+            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = days[centralTime.getDay()];
+            const todayHours = listing.hours[today];
+            return !todayHours || todayHours.trim() === '';
+        }
         
         function applyFilters() {
             const searchTerm = normalizeString(document.getElementById('searchInput').value);
@@ -1288,10 +1706,17 @@
                     }
                 }
                 
-                const matchesOpenNow = !openNowOnly || isOpenNow(listing.hours) === true;
+                const openStatus = isOpenNow(listing.hours);
+                const matchesOpenNow = !openNowOnly || openStatus === true;
+                const matchesClosedNow = !closedNowOnly || openStatus === false;
+                const matchesOpeningSoon = !openingSoonOnly || isOpeningSoon(listing.hours);
+                const matchesClosingSoon = !closingSoonOnly || isClosingSoon(listing.hours);
+                const matchesHoursUnknown = !hoursUnknownOnly || hasUnknownHours(listing);
                 const matchesOnlineOnly = !onlineOnly || isBasedIn(listing);
                 
-                return matchesSearch && matchesCategory && matchesSubcategory && matchesCountry && matchesState && matchesRadius && matchesOpenNow && matchesOnlineOnly;
+                return matchesSearch && matchesCategory && matchesSubcategory && matchesCountry && 
+                       matchesState && matchesRadius && matchesOpenNow && matchesClosedNow &&
+                       matchesOpeningSoon && matchesClosingSoon && matchesHoursUnknown && matchesOnlineOnly;
             });
             
             if (userLocation && sortOption === 'closest') {
@@ -1509,7 +1934,12 @@
                     if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
                     if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+                    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+                    if (isOpeningSoon(listing.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+                    if (isClosingSoon(listing.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+                    if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+                    
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : listing.logo;
                     const popupContent = `
@@ -1529,7 +1959,7 @@
                     marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
                     marker.on('popupopen', () => {
                         const closeBtn = document.querySelector('.leaflet-popup-close-button');
-                        if (closeBtn) closeBtn.innerHTML = '<img src="https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/6b95c3060c7ea35acdffad8d68c54277.png" style="width: 16px; height: 16px;">';
+                        if (closeBtn) closeBtn.textContent = '×';
                     });
                     splitMarkerClusterGroup.addLayer(marker);
                     bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
@@ -1556,7 +1986,12 @@
                     if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
                     if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+                    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+                    if (isOpeningSoon(listing.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+                    if (isClosingSoon(listing.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+                    if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+                    
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                     const popupContent = `
                         <div class="map-popup">
@@ -1575,7 +2010,7 @@
                     marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
                     marker.on('popupopen', () => {
                         const closeBtn = document.querySelector('.leaflet-popup-close-button');
-                        if (closeBtn) closeBtn.innerHTML = '<img src="https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/6b95c3060c7ea35acdffad8d68c54277.png" style="width: 16px; height: 16px;">';
+                        if (closeBtn) closeBtn.textContent = '×';
                     });
                     markerClusterGroup.addLayer(marker);
                     bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
@@ -1609,6 +2044,9 @@
 
             if (currentView === 'grid') {
                 container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+                if (filterPosition === 'left' && window.innerWidth >= 1024) {
+                    container.classList.add('listings-2-col');
+                }
                 container.innerHTML = filteredListings.map(l => {
                     const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
                     const fullAddress = getFullAddress(l);
@@ -1619,7 +2057,11 @@
                     if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
                     const openStatus = isOpenNow(l.hours);
-                    if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+                    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+                    if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+                    if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+                    if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
                     const isStarred = starredListings.includes(l.id);
                     
                     return `
@@ -1664,7 +2106,11 @@
                     if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
                     const openStatus = isOpenNow(l.hours);
-                    if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                    if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+                    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+                    if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+                    if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+                    if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
                     const isStarred = starredListings.includes(l.id);
                     
                     return `
@@ -1695,7 +2141,6 @@
                 }).join('');
             }
         }
-        
         function renderSplitViewListings() {
             const container = document.getElementById('splitListingsContainer');
             if (!container) return;
@@ -1713,7 +2158,11 @@
                 if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                 if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
                 const openStatus = isOpenNow(l.hours);
-                if (openStatus !== null) badges.push(openStatus ? '<span class="badge badge-open">Open</span>' : '<span class="badge badge-closed">Closed</span>');
+                if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+                else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+                if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+                if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+                if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
                 const isStarred = starredListings.includes(l.id);
                 
                 return `
@@ -1743,6 +2192,7 @@
         }
 
         window.toggleStar = toggleStar;
+        window.addEventListener('resize', checkFilterPosition);
     </script>
 </body>
 </html>
