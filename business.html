@@ -37,11 +37,18 @@
         .subcategory-checkbox { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .subcategory-checkbox:hover { background: #f3f4f6; }
         .subcategory-checkbox input[type="checkbox"]:checked + label { font-weight: 600; color: #055193; }
-        .disabled-field { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
+        .disabled-field { opacity: 0.5; pointer-events: none; cursor: not-allowed; background: #f9fafb; }
         .preview-card { display: flex; gap: 16px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .preview-main-image { width: 200px; height: 200px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
         .preview-info { flex: 1; }
         .preview-logo { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+        .info-notice { font-size: 12px; color: #6b7280; margin-top: 4px; font-style: italic; }
+        .visibility-toggle { cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 12px; transition: all 0.2s; }
+        .visibility-toggle.visible { background: #10b981; color: white; }
+        .visibility-toggle.hidden { background: #ef4444; color: white; }
+        .owner-field { display: flex; gap: 8px; align-items: center; }
+        .slug-preview { font-family: monospace; background: #f3f4f6; padding: 8px 12px; border-radius: 6px; font-size: 14px; color: #374151; display: inline-block; }
+        .id-badge { display: inline-block; background: #055193; color: white; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; margin-left: 8px; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -58,8 +65,14 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Listing URL Slug</label>
-                        <input type="text" id="loginSlug" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;" placeholder="e.g., eagle-restaurant">
-                        <p class="text-xs text-gray-500 mt-1">This is the end part of your listing URL</p>
+                        <input type="text" id="loginSlug" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #055193;" placeholder="e.g., my-listing">
+                        <div id="slugPreview" class="mt-2 hidden">
+                            <p class="text-xs text-gray-500 mb-1">Your listing:</p>
+                            <div class="slug-preview">
+                                listings.thegreekdirectory.org/<span id="slugPreviewText"></span>
+                                <span id="listingIdBadge" class="id-badge"></span>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email</label>
@@ -77,7 +90,6 @@
             </div>
         </div>
     </div>
-
     <!-- Dashboard Page -->
     <div id="dashboardPage" class="hidden">
         <header class="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -87,7 +99,7 @@
                         <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
                         <div>
                             <h1 class="text-xl font-bold" style="color: #055193;">Business Portal</h1>
-                            <p class="text-sm text-gray-600" id="businessName"></p>
+                            <p class="text-sm text-gray-600"><span id="businessName"></span> <span id="listingIdDisplay" class="id-badge"></span></p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
@@ -104,6 +116,7 @@
                 <button onclick="switchTab('overview')" id="tab-overview" class="px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600">Overview</button>
                 <button onclick="switchTab('edit')" id="tab-edit" class="px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700">Edit Listing</button>
                 <button onclick="switchTab('analytics')" id="tab-analytics" class="px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700">Analytics</button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700">Settings</button>
             </div>
             <!-- Overview Tab -->
             <div id="content-overview" class="space-y-6">
@@ -153,7 +166,6 @@
                     <div class="space-y-6" id="editForm"></div>
                 </div>
             </div>
-
             <!-- Analytics Tab -->
             <div id="content-analytics" class="hidden">
                 <div class="bg-white rounded-lg p-6 shadow-sm">
@@ -163,6 +175,92 @@
                     </div>
                     
                     <div id="analyticsContent"></div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="content-settings" class="hidden">
+                <div class="bg-white rounded-lg p-6 shadow-sm">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Account Settings</h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Owner Information</h3>
+                            <p class="text-sm text-gray-600 mb-4">This information is private and used for account management only.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="owner-field">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                                        <input type="text" id="settingsOwnerName" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="John Doe">
+                                    </div>
+                                    <div class="mt-6">
+                                        <button class="visibility-toggle visible" data-field="name" onclick="toggleSettingsFieldVisibility('name')">Visible</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="owner-field">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                                        <input type="text" id="settingsOwnerTitle" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Owner, Manager, etc.">
+                                    </div>
+                                    <div class="mt-6">
+                                        <button class="visibility-toggle visible" data-field="title" onclick="toggleSettingsFieldVisibility('title')">Visible</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="owner-field">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">From Greece</label>
+                                        <input type="text" id="settingsOwnerGreece" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Athens, Crete, etc.">
+                                    </div>
+                                    <div class="mt-6">
+                                        <button class="visibility-toggle hidden" data-field="greece" onclick="toggleSettingsFieldVisibility('greece')">Hidden</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="owner-field">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email</label>
+                                        <input type="email" id="settingsOwnerEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="owner@example.com">
+                                    </div>
+                                    <div class="mt-6">
+                                        <button class="visibility-toggle hidden" data-field="email" onclick="toggleSettingsFieldVisibility('email')">Hidden</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="owner-field">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Owner Phone</label>
+                                        <input type="tel" id="settingsOwnerPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(555) 123-4567">
+                                    </div>
+                                    <div class="mt-6">
+                                        <button class="visibility-toggle hidden" data-field="phone" onclick="toggleSettingsFieldVisibility('phone')">Hidden</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p class="text-xs text-gray-500 mt-4">
+                                <strong>Note:</strong> Name and Title visibility is controlled by administrators. Email, Phone, and Greece location can be toggled by you.
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Password</h3>
+                            <div class="max-w-md">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Portal Password</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="settingsPassword" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-mono" placeholder="Your current password">
+                                    <button type="button" onclick="generateNewPassword()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Generate New</button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">Use this password to log in to the business portal</p>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-6">
+                            <button onclick="saveSettings()" class="px-6 py-3 text-white rounded-lg font-medium" style="background-color: #055193;">Save Settings</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -195,6 +293,32 @@
         let uploadedImages = { logo: null, photos: [] };
         let photosSortable = null;
         let selectedSubcategories = [];
+        let settingsVisibility = { name: true, title: true, greece: false, email: false, phone: false };
+
+        // Enhanced login with slug preview
+        document.getElementById('loginSlug').addEventListener('input', async (e) => {
+            const slug = e.target.value.trim();
+            if (slug.length > 2) {
+                try {
+                    const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
+                    const data = await response.json();
+                    const listing = data.listings.find(l => l.slug === slug);
+                    
+                    if (listing) {
+                        document.getElementById('slugPreview').classList.remove('hidden');
+                        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        document.getElementById('slugPreviewText').textContent = `${categorySlug}/${slug}`;
+                        document.getElementById('listingIdBadge').textContent = `#${listing.listingId}`;
+                    } else {
+                        document.getElementById('slugPreview').classList.add('hidden');
+                    }
+                } catch (e) {
+                    console.error('Error fetching listing:', e);
+                }
+            } else {
+                document.getElementById('slugPreview').classList.add('hidden');
+            }
+        });
 
         document.getElementById('loginBtn').addEventListener('click', async () => {
             const slug = document.getElementById('loginSlug').value.trim();
@@ -248,6 +372,7 @@
                 const slugInput = document.getElementById('loginSlug');
                 if (slugInput) {
                     slugInput.value = slugFromUrl;
+                    slugInput.dispatchEvent(new Event('input'));
                     document.getElementById('loginEmail').focus();
                 }
             }
@@ -276,10 +401,20 @@
             location.reload();
         }
 
+        function generatePassword(length = 15) {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
         function renderDashboard() {
             if (!currentListing) return;
             
             document.getElementById('businessName').textContent = currentListing.businessName;
+            document.getElementById('listingIdDisplay').textContent = `#${currentListing.listingId}`;
             
             const tier = currentListing.tier || 'FREE';
             const tierBadge = document.getElementById('tierBadge');
@@ -294,10 +429,11 @@
             renderOverview();
             renderEditForm();
             renderAnalytics();
+            renderSettings();
         }
 
         function switchTab(tab) {
-            ['overview', 'edit', 'analytics'].forEach(t => {
+            ['overview', 'edit', 'analytics', 'settings'].forEach(t => {
                 document.getElementById(`content-${t}`).classList.add('hidden');
                 document.getElementById(`tab-${t}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700';
             });
@@ -305,7 +441,6 @@
             document.getElementById(`content-${tab}`).classList.remove('hidden');
             document.getElementById(`tab-${tab}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600';
         }
-
         function renderOverview() {
             if (!currentListing) return;
             
@@ -348,7 +483,7 @@
             const featuresList = document.getElementById('tierFeatures');
             featuresList.innerHTML = features[tier].map(f => `<div class="flex items-start gap-2"><span>${f}</span></div>`).join('');
             
-            // Preview - Show main photo with logo on right
+            // Preview
             const mainImage = (currentListing.photos && currentListing.photos.length > 0) ? currentListing.photos[0] : currentListing.logo;
             document.getElementById('previewMainImage').src = mainImage;
             document.getElementById('previewLogo').src = currentListing.logo;
@@ -360,7 +495,7 @@
                 `${currentListing.address}, ${currentListing.city}, ${currentListing.state} ${currentListing.zipCode || ''}` : 
                 `${currentListing.city}, ${currentListing.state}`;
             
-            let details = '';
+            let details = `<div><span class="font-semibold">Listing ID:</span> #${currentListing.listingId}</div>`;
             if (currentListing.subcategories && currentListing.subcategories.length > 0) {
                 details += `<div><span class="font-semibold">Subcategories:</span> ${currentListing.subcategories.join(', ')}</div>`;
             }
@@ -378,6 +513,89 @@
             document.getElementById('previewDetails').innerHTML = details;
         }
 
+        function renderSettings() {
+            if (!currentListing) return;
+            
+            const o = currentListing.ownerInfo || {};
+            document.getElementById('settingsOwnerName').value = o.fullName || '';
+            document.getElementById('settingsOwnerTitle').value = o.title || '';
+            document.getElementById('settingsOwnerGreece').value = o.fromGreece || '';
+            document.getElementById('settingsOwnerEmail').value = o.ownerEmail || '';
+            document.getElementById('settingsOwnerPhone').value = o.ownerPhone || '';
+            document.getElementById('settingsPassword').value = currentListing.businessPortalPassword || '';
+            
+            settingsVisibility = o.visibility || { name: true, title: true, greece: false, email: false, phone: false };
+            
+            // Update visibility buttons
+            document.querySelectorAll('.visibility-toggle').forEach(btn => {
+                const field = btn.getAttribute('data-field');
+                if (settingsVisibility[field]) {
+                    btn.className = 'visibility-toggle visible';
+                    btn.textContent = 'Visible';
+                } else {
+                    btn.className = 'visibility-toggle hidden';
+                    btn.textContent = 'Hidden';
+                }
+            });
+        }
+
+        window.toggleSettingsFieldVisibility = function(field) {
+            // Name and title cannot be toggled by business owners
+            if (field === 'name' || field === 'title') {
+                alert('Name and Title visibility is controlled by administrators. Contact support to change this.');
+                return;
+            }
+            
+            settingsVisibility[field] = !settingsVisibility[field];
+            const button = document.querySelector(`.visibility-toggle[data-field="${field}"]`);
+            if (settingsVisibility[field]) {
+                button.className = 'visibility-toggle visible';
+                button.textContent = 'Visible';
+            } else {
+                button.className = 'visibility-toggle hidden';
+                button.textContent = 'Hidden';
+            }
+        };
+
+        window.generateNewPassword = function() {
+            const newPassword = generatePassword(15);
+            document.getElementById('settingsPassword').value = newPassword;
+        };
+
+        async function saveSettings() {
+            if (!currentListing) return;
+            
+            const updatedOwnerInfo = {
+                fullName: document.getElementById('settingsOwnerName').value || null,
+                title: document.getElementById('settingsOwnerTitle').value || null,
+                fromGreece: document.getElementById('settingsOwnerGreece').value || null,
+                ownerEmail: document.getElementById('settingsOwnerEmail').value || null,
+                ownerPhone: document.getElementById('settingsOwnerPhone').value || null,
+                visibility: settingsVisibility
+            };
+            
+            const updatedPassword = document.getElementById('settingsPassword').value.trim();
+            
+            currentListing.ownerInfo = updatedOwnerInfo;
+            currentListing.businessPortalPassword = updatedPassword;
+            currentListing.metadata.updatedAt = new Date().toISOString();
+            
+            // Save to localStorage (in production this would go to backend/admin approval)
+            const pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
+            pendingChanges.push({
+                listingId: currentListing.id,
+                type: 'settings',
+                ownerInfo: updatedOwnerInfo,
+                password: updatedPassword,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('pendingChanges', JSON.stringify(pendingChanges));
+            
+            alert('✅ Settings saved! Your changes have been submitted for review.');
+            renderSettings();
+        }
+
+        window.saveSettings = saveSettings;
         function renderEditForm() {
             if (!currentListing) return;
             
@@ -393,8 +611,14 @@
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2 disabled-field">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Name (Cannot Edit)</label>
-                            <input type="text" value="${currentListing.businessName}" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100" disabled>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Listing ID</label>
+                            <input type="text" value="#${currentListing.listingId}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
+                            <p class="info-notice">Contact Support to change this information.</p>
+                        </div>
+                        <div class="md:col-span-2 disabled-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+                            <input type="text" value="${currentListing.businessName}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
+                            <p class="info-notice">Contact Support to change this information.</p>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (max 75 chars) *</label>
@@ -407,8 +631,9 @@
                             <p class="char-counter mt-1"><span id="descriptionCount">${(currentListing.description || '').length}</span>/<span id="descriptionMax">${maxDesc}</span> characters</p>
                         </div>
                         <div class="disabled-field">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Category (Cannot Edit)</label>
-                            <input type="text" value="${currentListing.category}" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100" disabled>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <input type="text" value="${currentListing.category}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
+                            <p class="info-notice">Contact Support to change this information.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Subcategories</label>
@@ -507,18 +732,6 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn (full URL)</label>
                             <input type="url" id="editLinkedin" value="${currentListing.socialMedia?.linkedin || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 1 (full URL)</label>
-                            <input type="url" id="editOther1" value="${currentListing.socialMedia?.other1 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 2 (full URL)</label>
-                            <input type="url" id="editOther2" value="${currentListing.socialMedia?.other2 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 3 (full URL)</label>
-                            <input type="url" id="editOther3" value="${currentListing.socialMedia?.other3 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
                     </div>
                 </div>
 
@@ -538,34 +751,19 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">TripAdvisor (full URL)</label>
                             <input type="url" id="editTripadvisor" value="${currentListing.reviews?.tripadvisor || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 1 (full URL)</label>
-                            <input type="url" id="editReviewOther1" value="${currentListing.reviews?.other1 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 2 (full URL)</label>
-                            <input type="url" id="editReviewOther2" value="${currentListing.reviews?.other2 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 3 (full URL)</label>
-                            <input type="url" id="editReviewOther3" value="${currentListing.reviews?.other3 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
                     </div>
                 </div>
             `;
             
             document.getElementById('editForm').innerHTML = html;
             
-            // Render subcategories
             renderSubcategories();
             
-            // Show existing photos
             if (currentListing.photos && currentListing.photos.length > 0) {
                 uploadedImages.photos = currentListing.photos.map(url => ({ url: url, existing: true }));
                 renderPhotosPreview();
             }
             
-            // Setup image upload handlers
             setupImageHandlers();
         }
 
@@ -711,9 +909,6 @@
         };
 
         async function saveChanges() {
-            console.log('=== SAVE CHANGES STARTED ===');
-            
-            // Validate tagline
             const tagline = document.getElementById('editTagline').value.trim();
             if (!tagline) {
                 alert('Tagline is required');
@@ -729,7 +924,6 @@
                 return;
             }
             
-            // Build updated listing
             const updatedListing = {
                 ...currentListing,
                 tagline: tagline,
@@ -757,18 +951,12 @@
                     twitter: document.getElementById('editTwitter').value || null,
                     youtube: document.getElementById('editYoutube').value || null,
                     tiktok: document.getElementById('editTiktok').value || null,
-                    linkedin: document.getElementById('editLinkedin').value || null,
-                    other1: document.getElementById('editOther1').value || null,
-                    other2: document.getElementById('editOther2').value || null,
-                    other3: document.getElementById('editOther3').value || null
+                    linkedin: document.getElementById('editLinkedin').value || null
                 },
                 reviews: {
                     google: document.getElementById('editGoogle').value || null,
                     yelp: document.getElementById('editYelp').value || null,
-                    tripadvisor: document.getElementById('editTripadvisor').value || null,
-                    other1: document.getElementById('editReviewOther1').value || null,
-                    other2: document.getElementById('editReviewOther2').value || null,
-                    other3: document.getElementById('editReviewOther3').value || null
+                    tripadvisor: document.getElementById('editTripadvisor').value || null
                 },
                 metadata: {
                     ...currentListing.metadata,
@@ -776,9 +964,6 @@
                 }
             };
             
-            console.log('Updated listing data prepared');
-            
-            // Handle images if uploaded (note: actual upload to GitHub would require admin approval)
             if (uploadedImages.logo && !uploadedImages.logo.existing) {
                 alert('Note: Image uploads require admin approval. Your other changes will be saved.');
             }
@@ -787,52 +972,25 @@
                 alert('Note: New photo uploads require admin approval. Your other changes will be saved.');
             }
             
-            // Keep existing photos
             if (uploadedImages.photos.length > 0) {
                 updatedListing.photos = uploadedImages.photos.map(p => p.url);
             }
             
-            // Update in allListings array
-            const index = allListings.findIndex(l => l.id === currentListing.id);
-            if (index > -1) {
-                allListings[index] = updatedListing;
-                console.log('Updated listing in array at index', index);
-            }
+            const savedChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
+            savedChanges.push({
+                listingId: currentListing.id,
+                businessName: currentListing.businessName,
+                slug: currentListing.slug,
+                updatedData: updatedListing,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('pendingChanges', JSON.stringify(savedChanges));
             
-            // Save to email/notification system (since business portal can't directly push to GitHub)
-            try {
-                console.log('Preparing save notification...');
-                
-                // Create a formatted email body
-                const changes = {
-                    listingId: currentListing.id,
-                    businessName: currentListing.businessName,
-                    slug: currentListing.slug,
-                    updatedData: updatedListing,
-                    timestamp: new Date().toISOString()
-                };
-                
-                // In a real implementation, this would send to a backend API
-                // For now, we'll save to localStorage and show success
-                const savedChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
-                savedChanges.push(changes);
-                localStorage.setItem('pendingChanges', JSON.stringify(savedChanges));
-                
-                console.log('Changes saved locally. In production, these would be sent to admin for approval.');
-                
-                alert('✅ Changes saved! Your updates have been submitted and will be reviewed by our team. You should see them live within 24 hours.');
-                
-                // Update current listing in memory
-                currentListing = updatedListing;
-                
-                // Refresh dashboard
-                renderDashboard();
-                switchTab('overview');
-                
-            } catch (error) {
-                console.error('Save error:', error);
-                alert('Failed to save changes. Please try again or contact support.');
-            }
+            alert('✅ Changes saved! Your updates have been submitted and will be reviewed by our team. You should see them live within 24 hours.');
+            
+            currentListing = updatedListing;
+            renderDashboard();
+            switchTab('overview');
         }
 
         function renderAnalytics() {
@@ -963,6 +1121,8 @@
                 alert('Failed to refresh data. Please try again.');
             }
         }
+
+        window.saveChanges = saveChanges;
     </script>
 </body>
 </html>
