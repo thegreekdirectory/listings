@@ -562,11 +562,14 @@
     }
     // Login and authentication
 document.getElementById('loginBtn').addEventListener('click', async () => {
-    const tokenInput = document.getElementById('githubToken').value.trim();
-    if (!tokenInput) {
+    githubToken = document.getElementById('githubToken').value.trim();
+    if (!githubToken) {
         alert('Please enter your GitHub token');
         return;
     }
+    sessionStorage.setItem('githubToken', githubToken);
+    await testToken();
+});
     
     console.log('Login button clicked, testing token...');
     
