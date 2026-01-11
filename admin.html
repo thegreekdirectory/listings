@@ -562,31 +562,49 @@
     }
     // Login and authentication
 document.getElementById('loginBtn').addEventListener('click', async () => {
-    githubToken = document.getElementById('githubToken').value.trim();
+    const githubToken = document.getElementById('githubToken').value.trim();
     if (!githubToken) {
         alert('Please enter your GitHub token');
         return;
     }
+    
+    // Store token FIRST
+    window.githubToken = githubToken;
     sessionStorage.setItem('githubToken', githubToken);
+    
+    // Then test it
     await testToken();
 });
 
 async function testToken() {
     try {
+        console.log('Testing token...');
         const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
-            headers: { 'Authorization': `token ${githubToken}` }
+            headers: { 
+                'Authorization': `token ${window.githubToken}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
         });
+        
+        console.log('Response status:', response.status);
+        
         if (response.ok) {
+            console.log('✅ Token valid!');
             showDashboard();
             await loadListings();
             await loadLinksDatabase();
         } else {
-            alert('ERROR: Invalid token or insufficient permissions.');
-            console.error('Token test failed:', response.status, response.statusText);
+            const errorData = await response.json();
+            console.error('❌ Token test failed:', response.status, errorData);
+            alert(`ERROR: Invalid token or insufficient permissions.\nStatus: ${response.status}\nMessage: ${errorData.message || 'Unknown error'}`);
+            sessionStorage.removeItem('githubToken');
+            window.githubToken = null;
         }
     } catch (error) {
-        alert('ERROR: Connection to repo failed.');
-        console.error('Connection error:', error);
+        console.error('❌ Connection error:', error);
+        alert('ERROR: Connection to GitHub failed. ' + error.message);
+        sessionStorage.removeItem('githubToken');
+        window.githubToken = null;
     }
 }
 
@@ -596,7 +614,7 @@ function showDashboard() {
 }
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
-    githubToken = null;
+    window.githubToken = null;
     sessionStorage.clear();
     location.reload();
 });
@@ -762,10 +780,11 @@ async function loadListings() {
     }
 }
     
-if (sessionStorage.getItem('githubToken')) {
-    githubToken = sessionStorage.getItem('githubToken');
+    if (sessionStorage.getItem('githubToken')) {
+    window.githubToken = sessionStorage.getItem('githubToken');
+    console.log('Found stored token, attempting auto-login...');
     testToken();
-}
+    }
     function renderTable() {
     const tbody = document.getElementById('listingsTableBody');
     const searchTerm = document.getElementById('adminSearch') ? document.getElementById('adminSearch').value.toLowerCase() : '';
