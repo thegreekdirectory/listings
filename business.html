@@ -917,90 +917,110 @@
             renderPhotosPreview();
         };
 
-        async function saveChanges() {
-            const tagline = document.getElementById('editTagline').value.trim();
-            if (!tagline) {
-                alert('Tagline is required');
-                return;
-            }
-            
-            const tier = currentListing.tier || 'FREE';
-            const maxDesc = tier === 'FREE' ? 500 : 1000;
-            const description = document.getElementById('editDescription').value;
-            
-            if (description.length > maxDesc) {
-                alert(`Description too long! Maximum ${maxDesc} characters for ${tier} tier.`);
-                return;
-            }
-            
-            const updatedListing = {
-                ...currentListing,
-                tagline: tagline,
-                description: description,
-                subcategories: selectedSubcategories,
-                phone: document.getElementById('editPhone').value || null,
-                email: document.getElementById('editEmail').value || null,
-                website: document.getElementById('editWebsite').value || null,
-                address: document.getElementById('editAddress').value || null,
-                city: document.getElementById('editCity').value || null,
-                state: document.getElementById('editState').value || null,
-                zipCode: document.getElementById('editZipCode').value || null,
-                hours: {
-                    monday: document.getElementById('editHoursMonday').value || null,
-                    tuesday: document.getElementById('editHoursTuesday').value || null,
-                    wednesday: document.getElementById('editHoursWednesday').value || null,
-                    thursday: document.getElementById('editHoursThursday').value || null,
-                    friday: document.getElementById('editHoursFriday').value || null,
-                    saturday: document.getElementById('editHoursSaturday').value || null,
-                    sunday: document.getElementById('editHoursSunday').value || null
-                },
-                socialMedia: {
-                    facebook: document.getElementById('editFacebook').value || null,
-                    instagram: document.getElementById('editInstagram').value || null,
-                    twitter: document.getElementById('editTwitter').value || null,
-                    youtube: document.getElementById('editYoutube').value || null,
-                    tiktok: document.getElementById('editTiktok').value || null,
-                    linkedin: document.getElementById('editLinkedin').value || null
-                },
-                reviews: {
-                    google: document.getElementById('editGoogle').value || null,
-                    yelp: document.getElementById('editYelp').value || null,
-                    tripadvisor: document.getElementById('editTripadvisor').value || null
-                },
-                metadata: {
-                    ...currentListing.metadata,
-                    updatedAt: new Date().toISOString()
-                }
-            };
-            
-            if (uploadedImages.logo && !uploadedImages.logo.existing) {
-                alert('Note: Image uploads require admin approval. Your other changes will be saved.');
-            }
-            
-            if (uploadedImages.photos.some(p => !p.existing)) {
-                alert('Note: New photo uploads require admin approval. Your other changes will be saved.');
-            }
-            
-            if (uploadedImages.photos.length > 0) {
-                updatedListing.photos = uploadedImages.photos.map(p => p.url);
-            }
-            
-            const savedChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
-            savedChanges.push({
-                listingId: currentListing.id,
-                businessName: currentListing.businessName,
-                slug: currentListing.slug,
-                updatedData: updatedListing,
-                timestamp: new Date().toISOString()
-            });
-            localStorage.setItem('pendingChanges', JSON.stringify(savedChanges));
-            
-            alert('✅ Changes saved! Your updates have been submitted and will be reviewed by our team. You should see them live within 24 hours.');
-            
-            currentListing = updatedListing;
-            renderDashboard();
-            switchTab('overview');
+async function saveChanges() {
+    const tagline = document.getElementById('editTagline').value.trim();
+    if (!tagline) {
+        alert('Tagline is required');
+        return;
+    }
+    
+    const tier = currentListing.tier || 'FREE';
+    const maxDesc = tier === 'FREE' ? 500 : 1000;
+    const description = document.getElementById('editDescription').value;
+    
+    if (description.length > maxDesc) {
+        alert(`Description too long! Maximum ${maxDesc} characters for ${tier} tier.`);
+        return;
+    }
+    
+    // SHOW CONFIRMATION DIALOG
+    const confirmMessage = `
+Are you sure you want to save these changes?
+
+Your updates will be submitted for review and should appear live within 24 hours.
+
+Changes include:
+• Business information
+• Hours of operation
+• Social media links
+• Photos (if uploaded)
+
+Click OK to confirm and submit your changes.
+Click Cancel to continue editing.
+    `;
+    
+    if (!confirm(confirmMessage)) {
+        return; // User cancelled
+    }
+    
+    const updatedListing = {
+        ...currentListing,
+        tagline: tagline,
+        description: description,
+        subcategories: selectedSubcategories,
+        phone: document.getElementById('editPhone').value || null,
+        email: document.getElementById('editEmail').value || null,
+        website: document.getElementById('editWebsite').value || null,
+        address: document.getElementById('editAddress').value || null,
+        city: document.getElementById('editCity').value || null,
+        state: document.getElementById('editState').value || null,
+        zipCode: document.getElementById('editZipCode').value || null,
+        hours: {
+            monday: document.getElementById('editHoursMonday').value || null,
+            tuesday: document.getElementById('editHoursTuesday').value || null,
+            wednesday: document.getElementById('editHoursWednesday').value || null,
+            thursday: document.getElementById('editHoursThursday').value || null,
+            friday: document.getElementById('editHoursFriday').value || null,
+            saturday: document.getElementById('editHoursSaturday').value || null,
+            sunday: document.getElementById('editHoursSunday').value || null
+        },
+        socialMedia: {
+            facebook: document.getElementById('editFacebook').value || null,
+            instagram: document.getElementById('editInstagram').value || null,
+            twitter: document.getElementById('editTwitter').value || null,
+            youtube: document.getElementById('editYoutube').value || null,
+            tiktok: document.getElementById('editTiktok').value || null,
+            linkedin: document.getElementById('editLinkedin').value || null
+        },
+        reviews: {
+            google: document.getElementById('editGoogle').value || null,
+            yelp: document.getElementById('editYelp').value || null,
+            tripadvisor: document.getElementById('editTripadvisor').value || null
+        },
+        metadata: {
+            ...currentListing.metadata,
+            updatedAt: new Date().toISOString()
         }
+    };
+    
+    if (uploadedImages.logo && !uploadedImages.logo.existing) {
+        alert('Note: Image uploads require admin approval. Your other changes will be saved.');
+    }
+    
+    if (uploadedImages.photos.some(p => !p.existing)) {
+        alert('Note: New photo uploads require admin approval. Your other changes will be saved.');
+    }
+    
+    if (uploadedImages.photos.length > 0) {
+        updatedListing.photos = uploadedImages.photos.map(p => p.url);
+    }
+    
+    const savedChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
+    savedChanges.push({
+        listingId: currentListing.id,
+        businessName: currentListing.businessName,
+        slug: currentListing.slug,
+        updatedData: updatedListing,
+        timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('pendingChanges', JSON.stringify(savedChanges));
+    
+    alert('✅ Changes saved! Your updates have been submitted and will be reviewed by our team. You should see them live within 24 hours.');
+    
+    currentListing = updatedListing;
+    renderDashboard();
+    switchTab('overview');
+}
 
         function renderAnalytics() {
             if (!currentListing) return;
