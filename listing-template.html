@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{BUSINESS_NAME}}{{CITY_STATE}} | The Greek Directory</title>
-    <meta name="description" content="{{TAGLINE}}{{IN_CITY}}. View address, phone, hours, and photos for {{BUSINESS_NAME}} on The Greek Directory.">
-    <meta name="keywords" content="{{KEYWORDS}}">
+    <meta name="description" content="{{TAGLINE}}{{IN_CITY}}. {{BUSINESS_NAME}} is listed on The Greek Directory, a trusted Greek directory connecting you to Greek businesses, restaurants, churches, and cultural centers. View address, phone, hours, and photos.">
+    <meta name="keywords" content="greek directory, the greek directory, greek businesses, {{KEYWORDS}}">
     <meta property="og:title" content="{{BUSINESS_NAME}} | The Greek Directory">
     <meta property="og:description" content="{{TAGLINE}}{{IN_CITY}}">
     <meta property="og:type" content="business.business">
@@ -17,6 +17,26 @@
     <link rel="apple-touch-icon" href="https://social.thegreekdirectory.org/Logo2.png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "{{BUSINESS_NAME}}",
+        "description": "{{TAGLINE}}",
+        "url": "{{LISTING_URL}}",
+        "image": "{{LOGO}}",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "{{ADDRESS}}",
+            "addressLocality": "{{CITY}}",
+            "addressRegion": "{{STATE}}",
+            "postalCode": "{{ZIP_CODE}}",
+            "addressCountry": "{{COUNTRY}}"
+        },
+        "telephone": "{{PHONE}}",
+        "openingHoursSpecification": {{HOURS_SCHEMA}}
+    }
+    </script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .carousel-container { position: relative; width: 100%; overflow: hidden; }
@@ -54,6 +74,12 @@
         .card-shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); }
         .open-now { color: #10b981; font-weight: 600; font-size: 14px; }
         .closed-now { color: #ef4444; font-weight: 600; font-size: 14px; }
+        .category-pill { cursor: pointer; transition: all 0.2s; position: relative; }
+        .category-pill:hover { opacity: 0.8; }
+        .subcategories-display { display: none; margin-top: 8px; }
+        .subcategories-display.active { display: block; }
+        .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
+        .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; }
         @media (min-width: 768px) {
             .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
         }
@@ -76,7 +102,6 @@
             .hover\:text-gray-900:hover { color: #e5e5e5 !important; }
             img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
             .social-icon svg { pointer-events: none; user-select: none; }
-
             .social-google { background: white; border: 2px solid #e5e7eb; }
             .social-yelp { background: white; border: 2px solid #e5e7eb; }
             .social-tripadvisor { background: white; border: 2px solid #e5e7eb; }
@@ -84,6 +109,8 @@
             .leaflet-container { background: #1a1a1a; }
             .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
             .leaflet-popup-tip { background: #2a2a2a !important; }
+            .subcategory-tag { background: #404040; color: #e5e5e5; }
+            .owner-info-section { background: #2a2a2a; border-color: #404040; }
         }
     </style>
 </head>
@@ -92,7 +119,7 @@
         <div class="max-w-7xl mx-auto px-4 py-4">
             <a href="/" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2">
                 <span>←</span>
-                <span>Back to Directory</span>
+                <span>Back to The Greek Directory</span>
             </a>
             <div class="flex items-center gap-3">
                 <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
@@ -115,13 +142,19 @@
             <div class="flex justify-between items-start mb-4">
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-4 flex-wrap">
-                        <span class="text-sm font-semibold px-3 py-1 rounded-full text-white" style="background-color:#055193;">
+                        <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
                             {{CATEGORY}}
                         </span>
+                        <div class="subcategories-display" id="subcategoriesDisplay">
+                            {{SUBCATEGORIES_TAGS}}
+                        </div>
                         {{STATUS_BADGES}}
                     </div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{BUSINESS_NAME}}</h1>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">{{BUSINESS_NAME}}</h2>
                     {{TAGLINE_DISPLAY}}
+                    <p class="text-sm text-gray-600 mt-2">
+                        <strong>{{BUSINESS_NAME}}</strong> is listed on <a href="/" class="text-blue-600 hover:underline">The Greek Directory</a>, a trusted Greek directory connecting you to Greek businesses{{IN_CITY}}.
+                    </p>
                 </div>
                 <img src="{{LOGO}}" alt="{{BUSINESS_NAME}} logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
             </div>
@@ -142,6 +175,8 @@
                 {{WEBSITE_BUTTON}}
                 {{DIRECTIONS_BUTTON}}
             </div>
+
+            {{OWNER_INFO_SECTION}}
 
             <div class="social-map-grid">
                 <div>
@@ -181,7 +216,12 @@
         const listingId = '{{LISTING_ID}}';
         const hoursData = {{HOURS_JSON}};
         
-        // Analytics tracking - UPDATED to include platform
+        function toggleSubcategories() {
+            const display = document.getElementById('subcategoriesDisplay');
+            display.classList.toggle('active');
+        }
+        
+        // Analytics tracking
         async function trackAnalytics(action, platform) {
             try {
                 const payload = {
@@ -194,7 +234,6 @@
                     }
                 };
                 
-                // Add platform for share actions
                 if (action === 'share' && platform) {
                     payload.client_payload.platform = platform;
                 }
@@ -212,28 +251,23 @@
             }
         }
         
-        // Track page view
         window.addEventListener('load', () => {
             trackAnalytics('view');
         });
         
-        // Track click function - UPDATED to handle platform
         function trackClick(action, platform) {
             trackAnalytics(action, platform);
         }
         
-        // Track call clicks
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('a[href^="tel:"]').forEach(el => {
                 el.addEventListener('click', () => trackClick('call'));
             });
             
-            // Track directions clicks
             document.querySelectorAll('a[href*="maps"]').forEach(el => {
                 el.addEventListener('click', () => trackClick('directions'));
             });
             
-            // Track website clicks
             const websiteDomain = '{{WEBSITE_DOMAIN}}';
             if (websiteDomain) {
                 document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
@@ -241,11 +275,9 @@
                 });
             }
             
-            // Check for admin redirect
             checkAdminRedirect();
         });
         
-        // Admin redirect function
         function checkAdminRedirect() {
             const path = window.location.pathname;
             if (path.endsWith('/admin')) {
@@ -253,8 +285,7 @@
                 window.location.href = `/business.html?slug=${slug}`;
             }
         }
-        
-        function updateOpenClosedBadge() {
+    function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
             if (!hoursData) return;
@@ -318,7 +349,7 @@
             }
         }
         
-if (totalSlides > 1) {
+        if (totalSlides > 1) {
             function goToSlide(index) {
                 const carousel = document.getElementById('photoCarousel');
                 if (!carousel) return;
@@ -374,13 +405,11 @@ if (totalSlides > 1) {
             }
         }
 
-        // Initialize map if coordinates exist - FIXED
         const coordinatesStr = '{{COORDINATES}}';
         const fullAddress = '{{FULL_ADDRESS}}';
         
         function initializeMap() {
             if (!coordinatesStr || coordinatesStr === '' || !fullAddress || fullAddress === '') {
-                console.log('No coordinates or address, skipping map');
                 const mapSection = document.querySelector('#listingMap');
                 if (mapSection && mapSection.parentElement) {
                     mapSection.parentElement.style.display = 'none';
@@ -390,14 +419,12 @@ if (totalSlides > 1) {
             
             const mapElement = document.getElementById('listingMap');
             if (!mapElement) {
-                console.log('Map element not found');
                 return;
             }
             
             try {
                 const coords = coordinatesStr.split(',');
                 if (coords.length !== 2) {
-                    console.log('Invalid coordinates format');
                     if (mapElement.parentElement) {
                         mapElement.parentElement.style.display = 'none';
                     }
@@ -408,18 +435,13 @@ if (totalSlides > 1) {
                 const lng = parseFloat(coords[1].trim());
                 
                 if (isNaN(lat) || isNaN(lng)) {
-                    console.error('Invalid coordinates:', lat, lng);
                     if (mapElement.parentElement) {
                         mapElement.parentElement.style.display = 'none';
                     }
                     return;
                 }
                 
-                console.log('Initializing map with coordinates:', lat, lng);
-                
-                // Ensure Leaflet is loaded
                 if (typeof L === 'undefined') {
-                    console.error('Leaflet not loaded');
                     setTimeout(initializeMap, 500);
                     return;
                 }
@@ -447,17 +469,13 @@ if (totalSlides > 1) {
                 map.once('focus', function() { 
                     map.scrollWheelZoom.enable(); 
                 });
-                
-                console.log('Map initialized successfully');
             } catch (e) {
-                console.error('Map initialization failed:', e);
                 if (mapElement && mapElement.parentElement) {
                     mapElement.parentElement.style.display = 'none';
                 }
             }
         }
         
-        // Initialize map after DOM is loaded and Leaflet is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(initializeMap, 1000);
@@ -468,6 +486,6 @@ if (totalSlides > 1) {
         
         updateOpenClosedBadge();
         setInterval(updateOpenClosedBadge, 60000);
-    </script>
+</script>
 </body>
 </html>
