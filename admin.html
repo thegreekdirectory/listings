@@ -1747,7 +1747,7 @@ function calculatePeriodStats(views) {
     
     return stats;
 }
-    async function generateListingPage(listing) {
+async function generateListingPage(listing) {
     console.log('Starting page generation for:', listing.businessName);
     
     try {
@@ -1803,6 +1803,51 @@ function calculatePeriodStats(views) {
             statusBadges += '<span class="badge" id="openClosedBadge"></span>';
         }
 
+        // NEW: Subcategories Tags
+        let subcategoriesTags = '';
+        if (listing.subcategories && listing.subcategories.length > 0) {
+            subcategoriesTags = listing.subcategories.map(sub => 
+                `<span class="subcategory-tag">${sub}</span>`
+            ).join('');
+        }
+
+        // NEW: Owner Info Section
+        let ownerInfoSection = '';
+        if (listing.ownerInfo) {
+            const o = listing.ownerInfo;
+            const v = o.visibility || {};
+            let ownerHtml = '';
+            
+            if (v.name && o.fullName) {
+                ownerHtml += `<p><strong>Owner:</strong> ${o.fullName}`;
+                if (v.title && o.title) {
+                    ownerHtml += `, ${o.title}`;
+                }
+                ownerHtml += '</p>';
+            }
+            
+            if (v.greece && o.fromGreece) {
+                ownerHtml += `<p><strong>From Greece:</strong> ${o.fromGreece}</p>`;
+            }
+            
+            if (v.email && o.ownerEmail) {
+                ownerHtml += `<p><strong>Email:</strong> <a href="mailto:${o.ownerEmail}" class="text-blue-600 hover:underline">${o.ownerEmail}</a></p>`;
+            }
+            
+            if (v.phone && o.ownerPhone) {
+                ownerHtml += `<p><strong>Phone:</strong> <a href="tel:${o.ownerPhone}" class="text-blue-600 hover:underline">${o.ownerPhone}</a></p>`;
+            }
+            
+            if (ownerHtml) {
+                ownerInfoSection = `
+                    <div class="owner-info-section">
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
+                        ${ownerHtml}
+                    </div>
+                `;
+            }
+        }
+
         const descriptionParagraphs = (listing.description || '')
             .split('\n')
             .filter(p => p.trim())
@@ -1841,8 +1886,41 @@ function calculatePeriodStats(views) {
 
         let hoursHTML = '';
         let hoursJSON = 'null';
+        let hoursSchema = 'null';
+        
         if (listing.hours && Object.values(listing.hours).some(h => h)) {
             hoursJSON = JSON.stringify(listing.hours);
+            
+            // Generate hours schema for structured data
+            const hoursArray = [];
+            const dayMap = {
+                monday: 'Monday',
+                tuesday: 'Tuesday',
+                wednesday: 'Wednesday',
+                thursday: 'Thursday',
+                friday: 'Friday',
+                saturday: 'Saturday',
+                sunday: 'Sunday'
+            };
+            
+            Object.entries(listing.hours).forEach(([day, hours]) => {
+                if (hours && hours.toLowerCase() !== 'closed') {
+                    const match = hours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                    if (match) {
+                        hoursArray.push({
+                            "@type": "OpeningHoursSpecification",
+                            "dayOfWeek": dayMap[day],
+                            "opens": `${match[1]}:${match[2]} ${match[3]}`,
+                            "closes": `${match[4]}:${match[5]} ${match[6]}`
+                        });
+                    }
+                }
+            });
+            
+            if (hoursArray.length > 0) {
+                hoursSchema = JSON.stringify(hoursArray);
+            }
+            
             const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             const hoursLines = days.map(day => {
                 const h = listing.hours[day.toLowerCase()];
@@ -1884,6 +1962,7 @@ function calculatePeriodStats(views) {
             .replace(/{{TAGLINE_DISPLAY}}/g, listing.tagline ? `<p class="text-lg text-gray-600 italic">"${listing.tagline}"</p>` : '')
             .replace(/{{DESCRIPTION}}/g, descriptionParagraphs)
             .replace(/{{CATEGORY}}/g, listing.category)
+            .replace(/{{SUBCATEGORIES_TAGS}}/g, subcategoriesTags)
             .replace(/{{FULL_ADDRESS}}/g, fullAddress)
             .replace(/{{PHONE}}/g, listing.phone || '')
             .replace(/{{LOGO}}/g, listing.logo)
@@ -1898,6 +1977,7 @@ function calculatePeriodStats(views) {
             .replace(/{{TOTAL_PHOTOS}}/g, listing.photos ? listing.photos.length : 1)
             .replace(/{{STATUS_BADGES}}/g, statusBadges)
             .replace(/{{HOURS_JSON}}/g, hoursJSON)
+            .replace(/{{HOURS_SCHEMA}}/g, hoursSchema)
             .replace(/{{ADDRESS_SECTION}}/g, addressSection)
             .replace(/{{PHONE_SECTION}}/g, phoneSection)
             .replace(/{{EMAIL_SECTION}}/g, listing.email ? `<div class="flex items-start gap-3"><span class="mt-1">📧</span><div><p class="font-semibold text-gray-900">Email</p><a href="mailto:${listing.email}" class="text-blue-600 hover:underline">${listing.email}</a></div></div>` : '')
@@ -1911,7 +1991,13 @@ function calculatePeriodStats(views) {
             .replace(/{{REVIEW_SECTION}}/g, reviewHTML)
             .replace(/{{MAP_SECTION}}/g, mapHTML)
             .replace(/{{COORDINATES}}/g, coordinates)
-            .replace(/{{CLAIM_BUTTON}}/g, claimButton);
+            .replace(/{{CLAIM_BUTTON}}/g, claimButton)
+            .replace(/{{OWNER_INFO_SECTION}}/g, ownerInfoSection)
+            .replace(/{{ADDRESS}}/g, listing.address || '')
+            .replace(/{{CITY}}/g, listing.city || '')
+            .replace(/{{STATE}}/g, listing.state || '')
+            .replace(/{{ZIP_CODE}}/g, listing.zipCode || '')
+            .replace(/{{COUNTRY}}/g, listing.country || 'USA');
 
         const htmlPath = `listings/${categorySlug}/${listing.slug}.html`;
         console.log('Saving to path:', htmlPath);
