@@ -562,11 +562,22 @@
     }
     // Login and authentication
 document.getElementById('loginBtn').addEventListener('click', async () => {
-    const githubToken = document.getElementById('githubToken').value.trim();
-    if (!githubToken) {
+    const tokenInput = document.getElementById('githubToken').value.trim();
+    if (!tokenInput) {
         alert('Please enter your GitHub token');
         return;
     }
+    
+    console.log('Login button clicked, testing token...');
+    
+    // Store token FIRST
+    githubToken = tokenInput;
+    window.githubToken = tokenInput;
+    sessionStorage.setItem('githubToken', tokenInput);
+    
+    // Then test it
+    await testToken();
+});
     
     // Store token FIRST
     window.githubToken = githubToken;
@@ -578,13 +589,39 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
 
 async function testToken() {
     try {
-        console.log('Testing token...');
+        console.log('Testing token with GitHub API...');
+        console.log('Token exists:', !!githubToken);
+        
         const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATABASE_PATH}`, {
             headers: { 
-                'Authorization': `token ${window.githubToken}`,
+                'Authorization': `token ${githubToken}`,
                 'Accept': 'application/vnd.github.v3+json'
             }
         });
+        
+        console.log('API Response status:', response.status);
+        
+        if (response.ok) {
+            console.log('✅ Token valid! Loading dashboard...');
+            showDashboard();
+            await loadListings();
+            await loadLinksDatabase();
+        } else {
+            const errorData = await response.json();
+            console.error('❌ Token test failed:', response.status, errorData);
+            alert(`ERROR: Invalid token or insufficient permissions.\nStatus: ${response.status}\nMessage: ${errorData.message || 'Unknown error'}\n\nMake sure your token has 'repo' permissions.`);
+            sessionStorage.removeItem('githubToken');
+            githubToken = null;
+            window.githubToken = null;
+        }
+    } catch (error) {
+        console.error('❌ Connection error:', error);
+        alert('ERROR: Connection to GitHub failed. ' + error.message);
+        sessionStorage.removeItem('githubToken');
+        githubToken = null;
+        window.githubToken = null;
+    }
+}
         
         console.log('Response status:', response.status);
         
