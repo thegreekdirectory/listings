@@ -787,8 +787,9 @@
         function showEstimatedLocationCircle() {
             if (!map || !estimatedUserLocation) return;
             
-            if (userLocationCircle) {
+            if (userLocation && userLocationCircle) {
                 map.removeLayer(userLocationCircle);
+                userLocationCircle = null;
             }
             
             const radius = 50000;
