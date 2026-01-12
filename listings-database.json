@@ -319,7 +319,7 @@
       "slug": "brillakis-import-foods",
       "metadata": {
         "createdAt": "2026-01-05T10:54:25.512Z",
-        "updatedAt": "2026-01-05T18:30:25.004Z"
+        "updatedAt": "2026-01-12T23:25:53.187Z"
       },
       "analytics": {
         "views": 0,
@@ -331,7 +331,7 @@
         "lastViewed": "2026-01-05T10:54:25.512Z",
         "detailedViews": []
       },
-      "visible": true
+      "visible": false
     },
     {
       "businessName": "Meraki Events Chicago",
