@@ -489,7 +489,7 @@
       "slug": "lekas-auto-construction",
       "metadata": {
         "createdAt": "2026-01-05T13:27:28.712Z",
-        "updatedAt": "2026-01-05T18:30:51.982Z"
+        "updatedAt": "2026-01-12T23:27:00.667Z"
       },
       "analytics": {
         "views": 0,
@@ -501,7 +501,7 @@
         "lastViewed": "2026-01-05T13:27:28.712Z",
         "detailedViews": []
       },
-      "visible": true
+      "visible": false
     },
     {
       "businessName": "SKB Hair Salon",
