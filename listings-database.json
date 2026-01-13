@@ -704,6 +704,97 @@
         "detailedViews": []
       },
       "visible": true
+    },
+    {
+      "businessName": "B",
+      "tagline": "B",
+      "description": "B\\n P",
+      "category": "Home & Construction",
+      "subcategories": [
+        "Carpenter"
+      ],
+      "phone": "(847) 291-1939",
+      "address": "213 Harlem Ave",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60626",
+      "country": "USA",
+      "email": "example@example.com",
+      "website": "https://example.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "businessPortalPassword": null,
+      "placesUrlEnding": "chicago",
+      "slug": "b",
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "Open",
+        "wednesday": "Open",
+        "thursday": "Open",
+        "friday": "Open",
+        "saturday": "Open",
+        "sunday": "Open"
+      },
+      "socialMedia": {
+        "facebook": "B",
+        "instagram": "B",
+        "twitter": "B",
+        "youtube": "B",
+        "tiktok": "B",
+        "linkedin": "https://linkedin.com/b",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://g.page/b",
+        "yelp": "https://yelp.com/b",
+        "tripadvisor": "https://tripadvisor.com/b",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "John Smith",
+        "title": "Manager",
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.0596438,
+        "lng": -87.8058499
+      },
+      "logo": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80"
+      ],
+      "id": "b",
+      "listingId": 2,
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-13T18:28:48.103Z",
+        "updatedAt": "2026-01-13T18:28:48.103Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-13T18:28:48.103Z",
+        "detailedViews": []
+      }
     }
   ]
 }
