@@ -671,11 +671,11 @@
         "ownerEmail": "example@example.com",
         "ownerPhone": "(312) 555-0457",
         "visibility": {
-          "name": false,
+          "name": true,
           "title": true,
-          "greece": false,
-          "email": false,
-          "phone": false
+          "greece": true,
+          "email": true,
+          "phone": true
         }
       },
       "coordinates": {
