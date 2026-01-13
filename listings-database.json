@@ -20,6 +20,8 @@
       "verified": true,
       "showClaimButton": false,
       "businessPortalPassword": "102030",
+      "placesUrlEnding": null,
+      "slug": "hellenic-american-academy",
       "hours": {
         "monday": "8:00 AM - 5:30 PM",
         "tuesday": "8:00 AM - 5:30 PM",
@@ -62,15 +64,19 @@
           "phone": false
         }
       },
+      "coordinates": {
+        "lat": 42.1612138,
+        "lng": -87.8568086
+      },
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/logo/logo/logo.png",
       "photos": [
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-1.png"
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-1.png",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-2.png"
       ],
       "id": "hellenic-american-academy",
-      "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-05T09:16:39.211Z",
-        "updatedAt": "2026-01-13T08:08:42.004Z"
+        "updatedAt": "2026-01-13T08:56:24.161Z"
       },
       "analytics": {
         "views": 0,
