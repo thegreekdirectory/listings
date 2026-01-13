@@ -587,6 +587,99 @@
         "detailedViews": []
       },
       "visible": true
+    },
+    {
+      "businessName": "A",
+      "tagline": "A",
+      "description": "A\n\nB\nC",
+      "category": "Automotive & Transportation",
+      "subcategories": [
+        "Car Dealer",
+        "Taxi & Limo Service",
+        "Auto Repair Shop"
+      ],
+      "phone": "(312) 555-0456",
+      "address": "123 Harlem Ave",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60026",
+      "country": "USA",
+      "email": "example@example.com",
+      "website": "https://www.example.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "businessPortalPassword": null,
+      "placesUrlEnding": "chicago",
+      "slug": "a",
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "10:30 AM - 8:00 PM",
+        "wednesday": "10:30 AM - 8:00 PM",
+        "thursday": "8:00 AM - 5:30 PM",
+        "friday": "10:30 AM - 8:00 PM",
+        "saturday": "10:30 AM - 8:00 PM",
+        "sunday": "11:00 AM - 8:00 PM"
+      },
+      "socialMedia": {
+        "facebook": "a",
+        "instagram": "a",
+        "twitter": "a",
+        "youtube": "a",
+        "tiktok": "a",
+        "linkedin": "https://www.linkedin.com/company/ex",
+        "other1": "https://test.com/es",
+        "other2": "https://test.com/esa",
+        "other3": "https://test.com/esb"
+      },
+      "reviews": {
+        "google": "https://g.page/test",
+        "yelp": "https://www.yelp.com/biz/test",
+        "tripadvisor": "https://www.tripadvisor.com/test",
+        "other1": "https://test.com/es1",
+        "other2": "https://test.com/es2",
+        "other3": "https://test.com/es3"
+      },
+      "ownerInfo": {
+        "fullName": "Proto Deutero",
+        "title": "Owner",
+        "fromGreece": "Athens",
+        "ownerEmail": "example@example.com",
+        "ownerPhone": "(312) 555-0457",
+        "visibility": {
+          "name": false,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.0732503,
+        "lng": -87.8055076
+      },
+      "logo": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"
+      ],
+      "id": "a",
+      "listingId": 1,
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-13T08:51:41.440Z",
+        "updatedAt": "2026-01-13T08:51:41.440Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-13T08:51:41.440Z",
+        "detailedViews": []
+      }
     }
   ]
 }
