@@ -587,6 +587,97 @@
         "detailedViews": []
       },
       "visible": true
+    },
+    {
+      "businessName": "Test",
+      "tagline": "Test Tagline",
+      "description": "",
+      "category": "Real Estate & Development",
+      "subcategories": [
+        "Real Estate Agent"
+      ],
+      "phone": null,
+      "address": "123 Harlem Ave.",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60026",
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": false,
+      "businessPortalPassword": null,
+      "placesUrlEnding": "chicago",
+      "slug": "test",
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.0732503,
+        "lng": -87.8055076
+      },
+      "logo": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"
+      ],
+      "id": "test",
+      "listingId": 1,
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-13T08:39:25.401Z",
+        "updatedAt": "2026-01-13T08:39:25.401Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-13T08:39:25.401Z",
+        "detailedViews": []
+      }
     }
   ]
 }
