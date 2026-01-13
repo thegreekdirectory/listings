@@ -597,7 +597,7 @@
     {
       "businessName": "A",
       "tagline": "A",
-      "description": "A\n\nB\nC",
+      "description": "A\n\nBd \nC",
       "category": "Automotive & Transportation",
       "subcategories": [
         "Car Dealer",
@@ -670,10 +670,9 @@
       ],
       "id": "a",
       "listingId": 1,
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-13T08:51:41.440Z",
-        "updatedAt": "2026-01-13T08:51:41.440Z"
+        "updatedAt": "2026-01-13T09:07:56.403Z"
       },
       "analytics": {
         "views": 0,
@@ -685,7 +684,8 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-13T08:51:41.440Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
