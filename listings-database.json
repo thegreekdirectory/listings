@@ -587,45 +587,6 @@
         "detailedViews": []
       },
       "visible": true
-    },
-    {
-      "businessName": "e",
-      "description": "Testing\n\nDesc \\n Hi",
-      "category": "Grocery/Imports",
-      "phone": "(847) 657-8181",
-      "address": "406 Maple Ave. Niles IL 60714 ",
-      "email": "ex@example.com",
-      "website": "https://www.example.com",
-      "hours": "Sunday Liturgy: 9:30am",
-      "logo": "https://via.placeholder.com/200x200/055193/FFFFFF?text=Logo",
-      "photos": [
-        "https://example.com/1.jpg"
-      ],
-      "socialMedia": {
-        "facebook": "a",
-        "instagram": "a",
-        "twitter": "a",
-        "youtube": "aa",
-        "tiktok": "a",
-        "linkedin": "https://www.linkedin.com/company/ex",
-        "google": "https://g.page/test",
-        "yelp": "https://www.yelp.com/biz/test",
-        "tripadvisor": "https://www.tripadvisor.com/test",
-        "other": null
-      },
-      "ownerInfo": {
-        "fullName": "Proto Deutero",
-        "fromGreece": "Xios",
-        "ownerEmail": "example@example.com",
-        "ownerPhone": "(312) 555-0457"
-      },
-      "id": "e",
-      "slug": "e",
-      "metadata": {
-        "createdAt": "2026-01-13T04:39:39.045Z",
-        "updatedAt": "2026-01-13T04:47:16.903Z"
-      },
-      "visible": true
     }
   ]
 }
