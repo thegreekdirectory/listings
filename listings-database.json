@@ -606,7 +606,7 @@
       "website": null,
       "tier": "FREE",
       "verified": false,
-      "showClaimButton": false,
+      "showClaimButton": true,
       "businessPortalPassword": null,
       "placesUrlEnding": "chicago",
       "slug": "test",
@@ -662,10 +662,9 @@
       ],
       "id": "test",
       "listingId": 1,
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-13T08:39:25.401Z",
-        "updatedAt": "2026-01-13T08:39:25.401Z"
+        "updatedAt": "2026-01-13T08:40:55.270Z"
       },
       "analytics": {
         "views": 0,
@@ -677,7 +676,8 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-13T08:39:25.401Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
