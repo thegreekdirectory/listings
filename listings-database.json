@@ -355,10 +355,12 @@
       "country": "USA",
       "email": "merakieventsniles@gmail.com",
       "website": "https://merakieventschicago.com/",
-      "tier": "FREE",
-      "verified": false,
-      "showClaimButton": true,
+      "tier": "FEATURED",
+      "verified": true,
+      "showClaimButton": false,
       "businessPortalPassword": null,
+      "placesUrlEnding": null,
+      "slug": "meraki-events-chicago",
       "hours": {
         "monday": null,
         "tuesday": null,
@@ -401,16 +403,18 @@
           "phone": false
         }
       },
+      "coordinates": {
+        "lat": 42.0459021,
+        "lng": -87.8305043
+      },
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/professional-business-services/meraki-events-chicago/logo/logo/logo.jpeg",
       "photos": [
         "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80"
       ],
-      "video": null,
       "id": "meraki-events-chicago",
-      "slug": "meraki-events-chicago",
       "metadata": {
         "createdAt": "2026-01-05T11:01:49.789Z",
-        "updatedAt": "2026-01-05T18:30:31.568Z"
+        "updatedAt": "2026-01-13T16:32:33.528Z"
       },
       "analytics": {
         "views": 0,
