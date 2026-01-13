@@ -664,7 +664,7 @@
       "listingId": 1,
       "metadata": {
         "createdAt": "2026-01-13T08:39:25.401Z",
-        "updatedAt": "2026-01-13T08:40:55.270Z"
+        "updatedAt": "2026-01-13T08:48:20.982Z"
       },
       "analytics": {
         "views": 0,
@@ -677,7 +677,7 @@
         "lastViewed": "2026-01-13T08:39:25.401Z",
         "detailedViews": []
       },
-      "visible": true
+      "visible": false
     }
   ]
 }
