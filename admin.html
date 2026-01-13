@@ -1525,7 +1525,7 @@ async function generateRedirectFile(path, redirectUrl) {
         console.error('Error generating redirect file:', error);
     }
 }
-        async function generateListingPage(listing) {
+    async function generateListingPage(listing) {
     console.log('📄 Generating listing page for:', listing.businessName);
     
     try {
@@ -1606,34 +1606,30 @@ async function generateRedirectFile(path, redirectUrl) {
         template = template.replace(/{{TAGLINE_DISPLAY}}/g, listing.tagline ? `<p class="text-gray-600 italic mb-2">"${listing.tagline}"</p>` : '');
         
         const addressSection = listing.address || (listing.city && listing.state)
-            ? `<div class="flex items-center gap-2">
-                   <span class="text-gray-600">📍</span><div><p class="font-semibold text-gray-900">Address</p></div>
-                   <span class="text-gray-700">${fullAddress}</span>
-               </div>`
+            <div class="flex items-start gap-3"><span class="mt-1">📍</span>
+            <div><p class="font-semibold text-gray-900">Address</p>
+            <p class="text-gray-700">${fullAddress}</p></div></div>
             : '';
         template = template.replace(/{{ADDRESS_SECTION}}/g, addressSection);
         
         const phoneSection = listing.phone
-            ? `<div class="flex items-center gap-2">
-                   <span class="text-gray-600">📞</span><div><p class="font-semibold text-gray-900">Phone</p></div>
-                   <a href="tel:${listing.phone}" class="text-gray-700 hover:text-blue-600">${listing.phone}</a>
-               </div>`
+            <div class="flex items-start gap-3"><span class="mt-1">📞</span><div>
+            <p class="font-semibold text-gray-900">Phone</p>
+            <a href="tel:${listing.phone}" class="text-blue-600 hover:underline">${listing.phone}</a></div></div>
             : '';
         template = template.replace(/{{PHONE_SECTION}}/g, phoneSection);
         
         const emailSection = listing.email
-            ? `<div class="flex items-center gap-2">
-                   <span class="text-gray-600">✉️</span><div><p class="font-semibold text-gray-900">Email</p></div>
-                   <a href="mailto:${listing.email}" class="text-gray-700 hover:text-blue-600">${listing.email}</a>
-               </div>`
+            <div class="flex items-start gap-3"><span class="mt-1">✉️</span><div>
+            <p class="font-semibold text-gray-900">Email</p>
+            <a href="mailto:${listing.email}" class="text-blue-600 hover:underline">${listing.email}</a></div></div>
             : '';
         template = template.replace(/{{EMAIL_SECTION}}/g, emailSection);
         
         const websiteSection = listing.website
-            ? `<div class="flex items-center gap-2">
-                   <span class="text-gray-600">🌐</span><div><p class="font-semibold text-gray-900">Website</p></div>
-                   <a href="${listing.website}" target="_blank" class="text-gray-700 hover:text-blue-600 break-all">${listing.website}</a>
-               </div>`
+            <div class="flex items-start gap-3"><span class="mt-1">🌐</span><div>
+            <p class="font-semibold text-gray-900">Website</p>
+            <a href="${listing.website}" class="text-blue-600 hover:underline">${listing.website}/a></div></div>
             : '';
         template = template.replace(/{{WEBSITE_SECTION}}/g, websiteSection);
         
