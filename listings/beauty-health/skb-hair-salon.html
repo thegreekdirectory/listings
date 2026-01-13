@@ -3,20 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SKB Hair Salon - Niles, IL | The Greek Directory</title>
-    <meta name="description" content="Full-service hair salon in Niles, IL. in Niles. View address, phone, hours, and photos for SKB Hair Salon on The Greek Directory.">
-    <meta name="keywords" content="greek, greek american, hellenic, SKB Hair Salon, Beauty & Health, Niles, IL, 60714, USA, 9081 Courtland Dr, Niles, IL 60714, (847) 966-0686, https://skbsalon.wixsite.com/website-1/, Full-service hair salon in Niles, IL.">
-    <meta property="og:title" content="SKB Hair Salon | The Greek Directory">
+    <title>SKB Hair Salon in Niles, IL | The Greek Directory</title>
+
+    <meta name="description" content="Full-service hair salon in Niles, IL. in Niles. SKB Hair Salon is listed on The Greek Directory, a trusted Greek directory connecting you to Greek businesses, restaurants, churches, and cultural centers. View address, phone, hours, and photos.">
+    <meta property="og:title" content="SKB Hair Salon in Niles, IL | The Greek Directory">
     <meta property="og:description" content="Full-service hair salon in Niles, IL. in Niles">
     <meta property="og:type" content="business.business">
-    <meta property="og:url" content="https://thegreekdirectory.org/listings/beauty-health/skb-hair-salon">
+    <meta property="og:url" content="https://listings.thegreekdirectory.org/listings/beauty-health/skb-hair-salon">
     <meta property="og:image" content="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/beauty-health/skb-hair-salon/logo/logo/logo.jpg">
-    <link rel="canonical" href="https://thegreekdirectory.org/listings/beauty-health/skb-hair-salon">
+    <link rel="canonical" href="https://listings.thegreekdirectory.org/listings/beauty-health/skb-hair-salon">
     <link rel="icon" href="https://static.thegreekdirectory.org/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/whitefavicon.png" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="https://social.thegreekdirectory.org/Logo2.png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "SKB Hair Salon",
+        "description": "Full-service hair salon in Niles, IL.",
+        "url": "https://listings.thegreekdirectory.org/listings/beauty-health/skb-hair-salon",
+        "image": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/beauty-health/skb-hair-salon/logo/logo/logo.jpg",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "9081 Courtland Dr",
+            "addressLocality": "Niles",
+            "addressRegion": "IL",
+            "postalCode": "60714",
+            "addressCountry": "USA"
+        },
+        "telephone": "(847) 966-0686",
+        "openingHoursSpecification": []
+    }
+    </script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .carousel-container { position: relative; width: 100%; overflow: hidden; }
@@ -54,6 +74,12 @@
         .card-shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); }
         .open-now { color: #10b981; font-weight: 600; font-size: 14px; }
         .closed-now { color: #ef4444; font-weight: 600; font-size: 14px; }
+        .category-pill { cursor: pointer; transition: all 0.2s; position: relative; }
+        .category-pill:hover { opacity: 0.8; }
+        .subcategories-display { display: none; margin-top: 8px; }
+        .subcategories-display.active { display: block; }
+        .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
+        .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; }
         @media (min-width: 768px) {
             .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
         }
@@ -76,8 +102,6 @@
             .hover\:text-gray-900:hover { color: #e5e5e5 !important; }
             img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
             .social-icon svg { pointer-events: none; user-select: none; }
-
-            /* Fix social icons */
             .social-google { background: white; border: 2px solid #e5e7eb; }
             .social-yelp { background: white; border: 2px solid #e5e7eb; }
             .social-tripadvisor { background: white; border: 2px solid #e5e7eb; }
@@ -85,6 +109,8 @@
             .leaflet-container { background: #1a1a1a; }
             .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
             .leaflet-popup-tip { background: #2a2a2a !important; }
+            .subcategory-tag { background: #404040; color: #e5e5e5; }
+            .owner-info-section { background: #2a2a2a; border-color: #404040; }
         }
     </style>
 </head>
@@ -93,7 +119,7 @@
         <div class="max-w-7xl mx-auto px-4 py-4">
             <a href="/" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2">
                 <span>←</span>
-                <span>Back to Directory</span>
+                <span>Back to The Greek Directory</span>
             </a>
             <div class="flex items-center gap-3">
                 <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
@@ -106,7 +132,7 @@
         <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
-                    <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80" alt="SKB Hair Salon" class="w-full h-full object-cover"></div>
+                    <div class="carousel-slide h-full"><img src="https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80" alt="SKB Hair Salon" class="w-full h-full object-cover"></div>
                 </div>
                 
             </div>
@@ -116,48 +142,90 @@
             <div class="flex justify-between items-start mb-4">
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-4 flex-wrap">
-                        <span class="text-sm font-semibold px-3 py-1 rounded-full text-white" style="background-color:#055193;">
+                        <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
                             Beauty & Health
                         </span>
-                        
+                        <div class="subcategories-display" id="subcategoriesDisplay">
+                            <span class="subcategory-tag">Hair Salons</span>
+                        </div>
+                        <span class="badge badge-featured">Featured</span><span class="badge badge-verified">Verified</span><span class="badge" id="openClosedBadge">...</span>
                     </div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">SKB Hair Salon</h1>
-                    <p class="text-lg text-gray-600 italic">"Full-service hair salon in Niles, IL."</p>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">SKB Hair Salon</h2>
+                    <p class="text-gray-600 italic mb-2">"Full-service hair salon in Niles, IL."</p>
+                    <p class="text-sm text-gray-600 mt-2">
+                        <strong>SKB Hair Salon</strong> is listed on <a href="/" class="text-blue-600 hover:underline">The Greek Directory</a>, a trusted Greek directory connecting you to Greek businesses in Niles.
+                    </p>
                 </div>
                 <img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/beauty-health/skb-hair-salon/logo/logo/logo.jpg" alt="SKB Hair Salon logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
             </div>
 
-            <p class="text-gray-700 mb-6"><p class="mb-3">From the day we opened our doors in Niles in 2000, we've earned our spot as a top Salon. We offer unparalleled beauty pampering, but also respect our clients' busy schedules and will get you looking fabulous and on your way as soon as possible.</p><p class="mb-3">Over the years, our expert team has had one mission--to make our devoted customers look stunning and feel their best. Contact us and see what our team of qualified professionals can do for you today. </p></p>
+            <p class="text-gray-700 mb-6">From the day we opened our doors in Niles in 2000, we've earned our spot as a top Salon. We offer unparalleled beauty pampering, but also respect our clients' busy schedules and will get you looking fabulous and on your way as soon as possible.
+Over the years, our expert team has had one mission--to make our devoted customers look stunning and feel their best. Contact us and see what our team of qualified professionals can do for you today. </p>
 
             <div class="space-y-3 mb-6">
-                <div class="flex items-start gap-3"><span class="mt-1">📍</span><div><p class="font-semibold text-gray-900">Address</p><p class="text-gray-700">9081 Courtland Dr, Niles, IL 60714</p></div></div>
-                <div class="flex items-start gap-3"><span class="mt-1">📞</span><div><p class="font-semibold text-gray-900">Phone</p><a href="tel:(847) 966-0686" class="text-blue-600 hover:underline">(847) 966-0686</a></div></div>
+                <div class="flex items-center gap-2">
+                   <span class="text-gray-600">📍</span>
+                   <span class="text-gray-700">9081 Courtland Dr, Niles, IL 60714</span>
+               </div>
+                <div class="flex items-center gap-2">
+                   <span class="text-gray-600">📞</span>
+                   <a href="tel:(847) 966-0686" class="text-gray-700 hover:text-blue-600">(847) 966-0686</a>
+               </div>
                 
-                <div class="flex items-start gap-3"><span class="mt-1">🌐</span><div><p class="font-semibold text-gray-900">Website</p><a href="https://skbsalon.wixsite.com/website-1/" target="_blank" class="text-blue-600 hover:underline break-all">https://skbsalon.wixsite.com/website-1/</a></div></div>
+                <div class="flex items-center gap-2">
+                   <span class="text-gray-600">🌐</span>
+                   <a href="https://skbsalon.wixsite.com/website-1/" target="_blank" class="text-gray-700 hover:text-blue-600 break-all">https://skbsalon.wixsite.com/website-1/</a>
+               </div>
                 
             </div>
 
             <div class="flex flex-wrap gap-3 mb-6">
-                <a href="tel:(847) 966-0686" class="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium" style="background-color:#055193;"><span>📞</span><span>Call</span></a>
+                <a href="tel:(847) 966-0686" class="px-4 py-2 rounded-lg text-white font-medium" style="background-color:#055193;">📞 Call</a>
                 
-                <a href="https://skbsalon.wixsite.com/website-1/" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>🌐</span><span>Visit Website</span></a>
-                <a href="https://www.google.com/maps/place/9081+Courtland+Dr+Niles+IL+60714" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>📍</span><span>Directions</span></a>
+                <a href="https://skbsalon.wixsite.com/website-1/" target="_blank" class="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">🌐 Website</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=9081%20Courtland%20Dr%2C%20Niles%2C%20IL%2060714" target="_blank" class="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">🗺️ Directions</a>
             </div>
+
+            
+                    <div class="owner-info-section">
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
+                        <div class="text-sm text-gray-700 space-y-1">
+                            <div><strong>Owner:</strong> Sandy Brillakis, Owner</div>
+                        </div>
+                    </div>
+                
 
             <div class="social-map-grid">
                 <div>
-                    <div class="mb-6"><h2 class="text-xl font-bold text-gray-900 mb-3">Follow Us!</h2><div class="flex flex-wrap gap-2"><a href="https://www.facebook.com/SKBHAIRSALON" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook" title="Facebook"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a><a href="https://www.instagram.com/skbhairsalon" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram" title="Instagram"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a></div></div>
-                    <div class="mb-8"><h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2><div class="flex flex-wrap gap-2"><a href="https://www.yelp.com/biz/skb-hair-salon-niles" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M21.111 18.226c-.141.969-2.119 3.483-3.029 3.847-.311.124-.611.094-.85-.09-.154-.12-2.314-1.834-2.857-2.295-.559-.475-.674-.873-.589-1.354.096-.494.496-.837 1.032-.888.532-.05 2.854-.289 3.373-.363.582-.084.949-.085 1.273.174.324.259.676.898.647 1.969zM17.403 11.974c-.163.265-.316.435-.576.55-.391.174-.836.091-1.175-.216a37.813 37.813 0 0 1-2.329-2.314c-.552-.596-.727-1.047-.551-1.669.175-.621.636-.943 1.205-1.056.573-.112 2.741-.297 3.28-.363.597-.073.924.034 1.226.345.303.311.474.828.317 1.561-.158.734-.851 2.421-1.397 3.162zm-5.098-7.568c-.164.062-.374.069-.814.043-.47-.027-1.203-.144-1.611-.175l-.168-.016c-.491-.046-.896-.227-1.064-.754-.168-.528.012-1.058.383-1.467.37-.408 2.004-2.271 2.485-2.706.524-.472.952-.634 1.528-.513.577.121 1.003.604 1.092 1.243.088.638-.108 2.813-.204 3.408-.117.726-.336 1.118-.627 1.347-.291.228-.674.349-1 .39zm-.507 4.022c.074.015.141.032.21.052.479.139.729.362.894.649.162.284.168.58.089.95-.081.37-.244.753-.505 1.205-.261.451-1.841 2.932-2.261 3.498-.375.506-.754.75-1.298.762-.543.012-1.025-.235-1.357-.72-.333-.485-1.234-2.262-1.598-2.944-.399-.747-.442-1.235-.255-1.794.187-.559.596-.946 1.146-1.097.551-.151 2.702-.581 3.286-.695.674-.132 1.219-.1 1.649.134z" fill="#D32323"/></svg></a></div></div>
+                    <div class="mb-6">
+                   <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
+                   <div class="flex flex-wrap gap-2">
+                       <a href="https://facebook.com/SKBHAIRSALON" target="_blank" class="social-icon social-facebook" title="Facebook"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                       <a href="https://instagram.com/skbhairsalon" target="_blank" class="social-icon social-instagram" title="Instagram"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+                       
+                       
+                       
+                       
+                   </div>
+               </div>
+                    <div class="mb-6">
+                   <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
+                   <div class="flex flex-wrap gap-2">
+                       
+                       <a href="https://www.yelp.com/biz/skb-hair-salon-niles" target="_blank" class="social-icon social-yelp" title="Yelp"><svg width="20" height="20" viewBox="0 0 2400 3160"><use href="#yelp-icon" fill="currentColor"/></svg></a>
+                       
+                   </div>
+               </div>
                     <div class="share-section">
                         <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                         <div class="flex flex-wrap gap-2">
-                            <a href="https://www.facebook.com/sharer/sharer.php?u=https://thegreekdirectory.org/listings/beauty-health/skb-hair-salon" target="_blank" rel="noopener noreferrer" class="share-button social-facebook" title="Share on Facebook" onclick="trackClick('share')">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=https://listings.thegreekdirectory.org/listings/beauty-health/skb-hair-salon%3Futm_source%3Dfacebook%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-facebook" title="Share on Facebook" onclick="trackClick('share', 'facebook')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                             </a>
-                            <a href="https://twitter.com/intent/tweet?text=Check%20out%20SKB%20Hair%20Salon%20on%20The%20Greek%20Directory!&url=https://thegreekdirectory.org/listings/beauty-health/skb-hair-salon" target="_blank" rel="noopener noreferrer" class="share-button social-twitter" title="Share on X" onclick="trackClick('share')">
+                            <a href="https://twitter.com/intent/tweet?text=Check%20out%20SKB%20Hair%20Salon%20on%20The%20Greek%20Directory!&url=https://listings.thegreekdirectory.org/listings/beauty-health/skb-hair-salon%3Futm_source%3Dtwitter%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-twitter" title="Share on X" onclick="trackClick('share', 'twitter')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                             </a>
-                            <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://thegreekdirectory.org/listings/beauty-health/skb-hair-salon" target="_blank" rel="noopener noreferrer" class="share-button social-linkedin" title="Share on LinkedIn" onclick="trackClick('share')">
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://listings.thegreekdirectory.org/listings/beauty-health/skb-hair-salon%3Futm_source%3Dlinkedin%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-linkedin" title="Share on LinkedIn" onclick="trackClick('share', 'linkedin')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                             </a>
                             <button onclick="shareNative()" class="share-button social-other" title="Share">
@@ -167,23 +235,32 @@
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-lg p-4 card-shadow"><h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2><div id="listingMap"></div></div>
+                <div><div id="listingMap"></div></div>
             </div>
         </div>
 
-        <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20SKB%20Hair%20Salon%20-%20Niles%2C%20IL%2C%20USA" class="fixed bottom-6 right-6 px-6 py-3 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all z-50" style="background-color: #055193;">📝 Claim this Listing</a>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                   <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
+                   <p class="text-gray-700 mb-4">Claim this listing to manage your information and respond to reviews.</p>
+                   <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20SKB%20Hair%20Salon%20-%20Niles%2C%20IL%2C%20USA" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Business</a>
+               </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
+<script>
         const totalSlides = 1;
         const businessName = 'SKB Hair Salon';
-        const listingUrl = 'https://thegreekdirectory.org/listings/beauty-health/skb-hair-salon';
+        const listingUrl = 'https://listings.thegreekdirectory.org/listings/beauty-health/skb-hair-salon';
         const listingId = 'skb-hair-salon';
-        const hoursData = null;
+        const hoursData = {"monday":null,"tuesday":null,"wednesday":null,"thursday":null,"friday":null,"saturday":null,"sunday":null};
+        
+        function toggleSubcategories() {
+            const display = document.getElementById('subcategoriesDisplay');
+            display.classList.toggle('active');
+        }
         
         // Analytics tracking
-        async function trackAnalytics(action) {
+        async function trackAnalytics(action, platform) {
             try {
                 const payload = {
                     event_type: 'track_analytics',
@@ -195,60 +272,58 @@
                     }
                 };
                 
-                // Use navigator.sendBeacon for better reliability
-                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-                const success = navigator.sendBeacon(
-                    `https://api.github.com/repos/thegreekdirectory/listings/dispatches`,
-                    blob
-                );
-                
-                if (!success) {
-                    // Fallback to fetch if sendBeacon fails
-                    await fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/vnd.github+json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
+                if (action === 'share' && platform) {
+                    payload.client_payload.platform = platform;
                 }
+                
+                await fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github+json'
+                    },
+                    body: JSON.stringify(payload)
+                });
             } catch (e) {
                 console.log('Analytics tracking error:', e.message);
             }
         }
         
-        // Track page view
         window.addEventListener('load', () => {
             trackAnalytics('view');
         });
         
-        // Track click function
-        function trackClick(action) {
-            trackAnalytics(action);
+        function trackClick(action, platform) {
+            trackAnalytics(action, platform);
         }
         
-        // Track call clicks
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('a[href^="tel:"]').forEach(el => {
                 el.addEventListener('click', () => trackClick('call'));
             });
             
-            // Track directions clicks
             document.querySelectorAll('a[href*="maps"]').forEach(el => {
                 el.addEventListener('click', () => trackClick('directions'));
             });
             
-            // Track website clicks
             const websiteDomain = 'skbsalon.wixsite.com';
             if (websiteDomain) {
                 document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
                     el.addEventListener('click', () => trackClick('website'));
                 });
             }
+            
+            checkAdminRedirect();
         });
         
-        function updateOpenClosedBadge() {
+        function checkAdminRedirect() {
+            const path = window.location.pathname;
+            if (path.endsWith('/admin')) {
+                const slug = listingId;
+                window.location.href = `/business.html?slug=${slug}`;
+            }
+        }
+    function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
             if (!hoursData) return;
@@ -348,12 +423,12 @@
         }
 
         function shareNative() {
-            trackClick('share');
+            trackClick('share', 'native');
             if (navigator.share) {
                 navigator.share({
                     title: businessName + ' | The Greek Directory',
                     text: 'Check out ' + businessName + ' on The Greek Directory!',
-                    url: window.location.href
+                    url: window.location.href.split('?')[0] + '?utm_source=native&utm_medium=share&utm_campaign=listing'
                 }).catch(err => {
                     if (err.name !== 'AbortError') {
                         console.log('Share failed:', err);
@@ -368,27 +443,46 @@
             }
         }
 
-        // Initialize map if coordinates exist
-        const coordinates = '';
+        const coordinatesStr = '42.0458939,-87.8303263';
         const fullAddress = '9081 Courtland Dr, Niles, IL 60714';
         
         function initializeMap() {
-            if (!coordinates || coordinates === '' || !fullAddress || fullAddress === '') {
+            if (!coordinatesStr || coordinatesStr === '' || !fullAddress || fullAddress === '') {
+                const mapSection = document.querySelector('#listingMap');
+                if (mapSection && mapSection.parentElement) {
+                    mapSection.parentElement.style.display = 'none';
+                }
                 return;
             }
             
             const mapElement = document.getElementById('listingMap');
-            if (!mapElement) return;
+            if (!mapElement) {
+                return;
+            }
             
             try {
-                const [lat, lng] = coordinates.split(',').map(parseFloat);
-                
-                if (isNaN(lat) || isNaN(lng)) {
-                    console.error('Invalid coordinates:', lat, lng);
+                const coords = coordinatesStr.split(',');
+                if (coords.length !== 2) {
+                    if (mapElement.parentElement) {
+                        mapElement.parentElement.style.display = 'none';
+                    }
                     return;
                 }
                 
-                console.log('Initializing map with coordinates:', lat, lng);
+                const lat = parseFloat(coords[0].trim());
+                const lng = parseFloat(coords[1].trim());
+                
+                if (isNaN(lat) || isNaN(lng)) {
+                    if (mapElement.parentElement) {
+                        mapElement.parentElement.style.display = 'none';
+                    }
+                    return;
+                }
+                
+                if (typeof L === 'undefined') {
+                    setTimeout(initializeMap, 500);
+                    return;
+                }
                 
                 const map = L.map('listingMap', {
                     center: [lat, lng],
@@ -406,33 +500,30 @@
                     .bindPopup('<strong>SKB Hair Salon</strong><br>9081 Courtland Dr, Niles, IL 60714')
                     .openPopup();
                 
-                // Force map to recalculate size
                 setTimeout(() => {
                     map.invalidateSize();
                 }, 250);
                 
-                // Make map scroll-enabled on click
                 map.once('focus', function() { 
                     map.scrollWheelZoom.enable(); 
                 });
-                
-                console.log('Map initialized successfully');
             } catch (e) {
-                console.error('Map initialization failed:', e);
+                if (mapElement && mapElement.parentElement) {
+                    mapElement.parentElement.style.display = 'none';
+                }
             }
         }
         
-        // Initialize map after DOM is loaded and a short delay
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(initializeMap, 500);
+                setTimeout(initializeMap, 1000);
             });
         } else {
-            setTimeout(initializeMap, 500);
+            setTimeout(initializeMap, 1000);
         }
         
         updateOpenClosedBadge();
         setInterval(updateOpenClosedBadge, 60000);
-    </script>
+</script>
 </body>
 </html>
