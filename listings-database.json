@@ -95,6 +95,11 @@
       "tagline": "Family-owned dining staple in Downers Grove since 1981.",
       "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
       "category": "Food & Hospitality",
+      "subcategories": [
+        "Catering Service",
+        "Restaurant",
+        "Lunch"
+      ],
       "phone": "(630) 963-9161",
       "address": "406 Maple Ave",
       "city": "Downers Grove",
@@ -107,6 +112,8 @@
       "verified": false,
       "showClaimButton": false,
       "businessPortalPassword": "12345",
+      "placesUrlEnding": null,
+      "slug": "eagle-restaurant",
       "hours": {
         "monday": "Closed",
         "tuesday": "10:30 AM - 8:00 PM",
@@ -149,15 +156,18 @@
           "phone": false
         }
       },
+      "coordinates": {
+        "lat": 41.7965214,
+        "lng": -87.9955015
+      },
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/logo/logo/logo.png",
       "photos": [
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-1.png"
       ],
       "id": "eagle-restaurant",
-      "slug": "eagle-restaurant",
       "metadata": {
         "createdAt": "2026-01-05T09:47:32.093Z",
-        "updatedAt": "2026-01-08T04:21:33.668Z"
+        "updatedAt": "2026-01-13T16:34:53.961Z"
       },
       "analytics": {
         "views": 0,
