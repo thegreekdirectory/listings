@@ -587,6 +587,43 @@
         "detailedViews": []
       },
       "visible": true
+    },
+    {
+      "businessName": "e",
+      "description": "",
+      "category": "",
+      "phone": "",
+      "address": "",
+      "email": null,
+      "website": null,
+      "hours": null,
+      "logo": "",
+      "photos": [],
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null
+      },
+      "id": "e",
+      "slug": "e",
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-13T04:39:39.045Z",
+        "updatedAt": "2026-01-13T04:39:39.045Z"
+      }
     }
   ]
 }
