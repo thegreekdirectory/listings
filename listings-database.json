@@ -622,7 +622,7 @@
         "Taxi & Limo Service",
         "Auto Repair Shop"
       ],
-      "phone": "(312) 555-0456",
+      "phone": "(312) 555-0455",
       "address": "123 Harlem Ave",
       "city": "Glenview",
       "state": "IL",
@@ -690,7 +690,7 @@
       "listingId": 1,
       "metadata": {
         "createdAt": "2026-01-13T08:51:41.440Z",
-        "updatedAt": "2026-01-13T18:14:10.505Z"
+        "updatedAt": "2026-01-13T18:19:50.470Z"
       },
       "analytics": {
         "views": 0,
