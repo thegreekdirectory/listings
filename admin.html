@@ -57,7 +57,7 @@
     </svg>
 </head>
 <body class="bg-gray-50">
-<!-- Login Page -->
+    <!-- Login Page -->
     <div id="loginPage" class="min-h-screen flex items-center justify-center px-4">
         <div class="max-w-md w-full">
             <div class="text-center mb-8">
@@ -417,12 +417,12 @@
             </div>
             
             <div class="flex border-b overflow-x-auto">
-                <div class="analytics-tab active" data-tab="overview">Overview</div>
-                <div class="analytics-tab" data-tab="today">Today</div>
-                <div class="analytics-tab" data-tab="yesterday">Yesterday</div>
-                <div class="analytics-tab" data-tab="week">Past Week</div>
-                <div class="analytics-tab" data-tab="month">Past 30 Days</div>
-                <div class="analytics-tab" data-tab="alltime">All Time</div>
+                <div class="analytics-tab active" data-tab="overview" onclick="switchAnalyticsTab('overview')">Overview</div>
+                <div class="analytics-tab" data-tab="today" onclick="switchAnalyticsTab('today')">Today</div>
+                <div class="analytics-tab" data-tab="yesterday" onclick="switchAnalyticsTab('yesterday')">Yesterday</div>
+                <div class="analytics-tab" data-tab="week" onclick="switchAnalyticsTab('week')">Past Week</div>
+                <div class="analytics-tab" data-tab="month" onclick="switchAnalyticsTab('month')">Past 30 Days</div>
+                <div class="analytics-tab" data-tab="alltime" onclick="switchAnalyticsTab('alltime')">All Time</div>
             </div>
             
             <div class="flex-1 overflow-y-auto p-6">
@@ -552,6 +552,8 @@ let photosSortable = null;
 let ownerFieldsVisibility = { name: true, title: true, greece: false, email: false, phone: false };
 let selectedSubcategories = [];
 let nextListingId = 1;
+let currentAnalyticsListing = null;
+let currentAnalyticsTab = 'overview';
 
 function generatePassword(length = 15) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -761,14 +763,24 @@ function clearForm() {
     });
     document.getElementById('editCountry').value = 'USA';
     document.getElementById('editTier').value = 'FREE';
-    document.getElementById('editDescriptionMax').textContent = '2000';
-    document.getElementById('logoPreview').innerHTML = '';
-    document.getElementById('photosPreview').innerHTML = '';
-    document.getElementById('taglineCount').textContent = '0';
-    document.getElementById('descriptionCount').textContent = '0';
+    
+    const descriptionMaxEl = document.getElementById('descriptionMax');
+    const taglineCountEl = document.getElementById('taglineCount');
+    const descriptionCountEl = document.getElementById('descriptionCount');
+    
+    if (descriptionMaxEl) descriptionMaxEl.textContent = '2000';
+    if (taglineCountEl) taglineCountEl.textContent = '0';
+    if (descriptionCountEl) descriptionCountEl.textContent = '0';
+    
+    const logoPreview = document.getElementById('logoPreview');
+    const photosPreview = document.getElementById('photosPreview');
+    if (logoPreview) logoPreview.innerHTML = '';
+    if (photosPreview) photosPreview.innerHTML = '';
+    
     uploadedImages = { logo: null, photos: [] };
     selectedSubcategories = [];
     ownerFieldsVisibility = { name: true, title: true, greece: false, email: false, phone: false };
+    
     document.querySelectorAll('.visibility-toggle').forEach(btn => {
         const field = btn.getAttribute('data-field');
         if (ownerFieldsVisibility[field]) {
@@ -779,49 +791,72 @@ function clearForm() {
             btn.textContent = 'Hidden';
         }
     });
-    document.getElementById('subcategoriesContainer').classList.add('hidden');
+    
+    const subcatContainer = document.getElementById('subcategoriesContainer');
+    if (subcatContainer) subcatContainer.classList.add('hidden');
     hideSlugChecker();
 }
 
 function fillForm(l) {
-    document.getElementById('editListingId').value = l.listingId || 'N/A';
-    document.getElementById('editBusinessName').value = l.businessName;
-    document.getElementById('editTagline').value = l.tagline || '';
-    document.getElementById('taglineCount').textContent = (l.tagline || '').length;
-    document.getElementById('editDescription').value = l.description || '';
-    document.getElementById('descriptionCount').textContent = (l.description || '').length;
-    document.getElementById('editCategory').value = l.category;
-    document.getElementById('editTier').value = l.tier || 'FREE';
-    document.getElementById('editPlacesUrl').value = l.placesUrlEnding || '';
+    const editListingId = document.getElementById('editListingId');
+    const editBusinessName = document.getElementById('editBusinessName');
+    const editTagline = document.getElementById('editTagline');
+    const taglineCount = document.getElementById('taglineCount');
+    const editDescription = document.getElementById('editDescription');
+    const descriptionCount = document.getElementById('descriptionCount');
+    const editCategory = document.getElementById('editCategory');
+    const editTier = document.getElementById('editTier');
+    const editPlacesUrl = document.getElementById('editPlacesUrl');
+    const descriptionMax = document.getElementById('descriptionMax');
+    
+    if (editListingId) editListingId.value = l.listingId || 'N/A';
+    if (editBusinessName) editBusinessName.value = l.businessName;
+    if (editTagline) editTagline.value = l.tagline || '';
+    if (taglineCount) taglineCount.textContent = (l.tagline || '').length;
+    if (editDescription) editDescription.value = l.description || '';
+    if (descriptionCount) descriptionCount.textContent = (l.description || '').length;
+    if (editCategory) editCategory.value = l.category;
+    if (editTier) editTier.value = l.tier || 'FREE';
+    if (editPlacesUrl) editPlacesUrl.value = l.placesUrlEnding || '';
     
     const maxDesc = (l.tier === 'FREE' ? 1000 : 2000);
-    document.getElementById('editDescriptionMax').textContent = maxDesc;
+    if (descriptionMax) descriptionMax.textContent = maxDesc;
     
     selectedSubcategories = l.subcategories || [];
     updateSubcategoriesForCategory();
     
-    document.getElementById('editPhone').value = l.phone || '';
-    document.getElementById('editAddress').value = l.address || '';
-    document.getElementById('editCity').value = l.city || '';
-    document.getElementById('editState').value = l.state || 'IL';
-    document.getElementById('editZipCode').value = l.zipCode || '';
-    document.getElementById('editCountry').value = l.country || 'USA';
-    document.getElementById('editEmail').value = l.email || '';
-    document.getElementById('editWebsite').value = l.website || '';
-    document.getElementById('editShowClaim').checked = l.showClaimButton !== false;
-    document.getElementById('editPassword').value = l.businessPortalPassword || '';
+    const editPhone = document.getElementById('editPhone');
+    const editAddress = document.getElementById('editAddress');
+    const editCity = document.getElementById('editCity');
+    const editState = document.getElementById('editState');
+    const editZipCode = document.getElementById('editZipCode');
+    const editCountry = document.getElementById('editCountry');
+    const editEmail = document.getElementById('editEmail');
+    const editWebsite = document.getElementById('editWebsite');
+    const editShowClaim = document.getElementById('editShowClaim');
+    const editPassword = document.getElementById('editPassword');
+    
+    if (editPhone) editPhone.value = l.phone || '';
+    if (editAddress) editAddress.value = l.address || '';
+    if (editCity) editCity.value = l.city || '';
+    if (editState) editState.value = l.state || 'IL';
+    if (editZipCode) editZipCode.value = l.zipCode || '';
+    if (editCountry) editCountry.value = l.country || 'USA';
+    if (editEmail) editEmail.value = l.email || '';
+    if (editWebsite) editWebsite.value = l.website || '';
+    if (editShowClaim) editShowClaim.checked = l.showClaimButton !== false;
+    if (editPassword) editPassword.value = l.businessPortalPassword || '';
 
     const h = l.hours || {};
-    document.getElementById('editHoursMonday').value = h.monday || '';
-    document.getElementById('editHoursTuesday').value = h.tuesday || '';
-    document.getElementById('editHoursWednesday').value = h.wednesday || '';
-    document.getElementById('editHoursThursday').value = h.thursday || '';
-    document.getElementById('editHoursFriday').value = h.friday || '';
-    document.getElementById('editHoursSaturday').value = h.saturday || '';
-    document.getElementById('editHoursSunday').value = h.sunday || '';
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    days.forEach(day => {
+        const el = document.getElementById(`editHours${day}`);
+        if (el) el.value = h[day.toLowerCase()] || '';
+    });
 
-    if (l.logo) {
-        document.getElementById('logoPreview').innerHTML = `<img src="${l.logo}" class="image-preview">`;
+    const logoPreview = document.getElementById('logoPreview');
+    if (l.logo && logoPreview) {
+        logoPreview.innerHTML = `<img src="${l.logo}" class="image-preview">`;
     }
 
     if (l.photos && l.photos.length > 0) {
@@ -830,30 +865,30 @@ function fillForm(l) {
     }
 
     const s = l.socialMedia || {};
-    document.getElementById('editFacebook').value = s.facebook || '';
-    document.getElementById('editInstagram').value = s.instagram || '';
-    document.getElementById('editTwitter').value = s.twitter || '';
-    document.getElementById('editYoutube').value = s.youtube || '';
-    document.getElementById('editTiktok').value = s.tiktok || '';
-    document.getElementById('editLinkedin').value = s.linkedin || '';
-    document.getElementById('editOther1').value = s.other1 || '';
-    document.getElementById('editOther2').value = s.other2 || '';
-    document.getElementById('editOther3').value = s.other3 || '';
+    ['Facebook', 'Instagram', 'Twitter', 'Youtube', 'Tiktok', 'Linkedin', 'Other1', 'Other2', 'Other3'].forEach(field => {
+        const el = document.getElementById(`edit${field}`);
+        if (el) el.value = s[field.toLowerCase()] || '';
+    });
 
     const r = l.reviews || {};
-    document.getElementById('editGoogle').value = r.google || '';
-    document.getElementById('editYelp').value = r.yelp || '';
-    document.getElementById('editTripadvisor').value = r.tripadvisor || '';
-    document.getElementById('editReviewOther1').value = r.other1 || '';
-    document.getElementById('editReviewOther2').value = r.other2 || '';
-    document.getElementById('editReviewOther3').value = r.other3 || '';
+    ['Google', 'Yelp', 'Tripadvisor', 'ReviewOther1', 'ReviewOther2', 'ReviewOther3'].forEach(field => {
+        const el = document.getElementById(`edit${field}`);
+        const key = field.replace('Review', '').toLowerCase().replace('other', 'other');
+        if (el) el.value = r[key] || '';
+    });
 
     const o = l.ownerInfo || {};
-    document.getElementById('editOwnerName').value = o.fullName || '';
-    document.getElementById('editOwnerTitle').value = o.title || '';
-    document.getElementById('editOwnerGreece').value = o.fromGreece || '';
-    document.getElementById('editOwnerEmail').value = o.ownerEmail || '';
-    document.getElementById('editOwnerPhone').value = o.ownerPhone || '';
+    const editOwnerName = document.getElementById('editOwnerName');
+    const editOwnerTitle = document.getElementById('editOwnerTitle');
+    const editOwnerGreece = document.getElementById('editOwnerGreece');
+    const editOwnerEmail = document.getElementById('editOwnerEmail');
+    const editOwnerPhone = document.getElementById('editOwnerPhone');
+    
+    if (editOwnerName) editOwnerName.value = o.fullName || '';
+    if (editOwnerTitle) editOwnerTitle.value = o.title || '';
+    if (editOwnerGreece) editOwnerGreece.value = o.fromGreece || '';
+    if (editOwnerEmail) editOwnerEmail.value = o.ownerEmail || '';
+    if (editOwnerPhone) editOwnerPhone.value = o.ownerPhone || '';
     
     ownerFieldsVisibility = o.visibility || { name: true, title: true, greece: false, email: false, phone: false };
     document.querySelectorAll('.visibility-toggle').forEach(btn => {
@@ -874,11 +909,14 @@ window.updateCharCounter = function(field) {
     if (field === 'description') {
         const input = document.getElementById('editDescription');
         const counter = document.getElementById('descriptionCount');
-        const tier = document.getElementById('editTier').value;
-        const max = (tier === 'FREE' ? 1000 : 2000);
+        const tier = document.getElementById('editTier');
+        if (!input || !counter || !tier) return;
+        
+        const max = (tier.value === 'FREE' ? 1000 : 2000);
         const current = input.value.length;
         
-        document.getElementById('editDescriptionMax').textContent = max;
+        const descMaxEl = document.getElementById('descriptionMax');
+        if (descMaxEl) descMaxEl.textContent = max;
         counter.textContent = current;
         counter.parentElement.className = 'text-xs text-gray-500 mt-1';
         
@@ -893,15 +931,18 @@ window.updateCharCounter = function(field) {
 };
 
 window.updateVerifiedBasedOnTier = function() {
-    const tier = document.getElementById('editTier').value;
-    const maxDesc = (tier === 'FREE' ? 1000 : 2000);
-    document.getElementById('editDescriptionMax').textContent = maxDesc;
+    const tier = document.getElementById('editTier');
+    if (!tier) return;
+    const maxDesc = (tier.value === 'FREE' ? 1000 : 2000);
+    const descMaxEl = document.getElementById('descriptionMax');
+    if (descMaxEl) descMaxEl.textContent = maxDesc;
     updateCharCounter('description');
 };
 
 window.toggleOwnerFieldVisibility = function(field) {
     ownerFieldsVisibility[field] = !ownerFieldsVisibility[field];
     const button = document.querySelector(`.visibility-toggle[data-field="${field}"]`);
+    if (!button) return;
     if (ownerFieldsVisibility[field]) {
         button.className = 'visibility-toggle visible';
         button.textContent = 'Visible';
@@ -909,23 +950,28 @@ window.toggleOwnerFieldVisibility = function(field) {
         button.className = 'visibility-toggle hidden';
         button.textContent = 'Hidden';
     }
-    document.getElementById('ownerFieldsVisibility').value = JSON.stringify(ownerFieldsVisibility);
+    const visField = document.getElementById('ownerFieldsVisibility');
+    if (visField) visField.value = JSON.stringify(ownerFieldsVisibility);
 };
 
 window.generatePasswordField = function() {
     const password = generatePassword(15);
-    document.getElementById('editPassword').value = password;
+    const editPassword = document.getElementById('editPassword');
+    if (editPassword) editPassword.value = password;
 };
 
 window.updateSubcategoriesForCategory = function() {
-    const category = document.getElementById('editCategory').value;
+    const category = document.getElementById('editCategory');
     const container = document.getElementById('subcategoriesContainer');
     
-    if (SUBCATEGORIES[category]) {
+    if (!category || !container) return;
+    
+    if (SUBCATEGORIES[category.value]) {
         container.classList.remove('hidden');
         const checkboxDiv = document.getElementById('subcategoryCheckboxes');
+        if (!checkboxDiv) return;
         checkboxDiv.innerHTML = '';
-        SUBCATEGORIES[category].forEach(sub => {
+        SUBCATEGORIES[category.value].forEach(sub => {
             const checked = selectedSubcategories.includes(sub);
             const div = document.createElement('div');
             div.className = 'subcategory-checkbox';
@@ -948,15 +994,17 @@ window.toggleSubcategory = function(subcategory) {
         selectedSubcategories.push(subcategory);
     }
 };
-
-async function checkSlugAvailability() {
-    const businessName = document.getElementById('editBusinessName').value.trim();
-    if (!businessName) {
+        async function checkSlugAvailability() {
+    const businessName = document.getElementById('editBusinessName');
+    if (!businessName) return;
+    
+    const name = businessName.value.trim();
+    if (!name) {
         hideSlugChecker();
         return;
     }
 
-    const proposedSlug = generateSlug(businessName);
+    const proposedSlug = generateSlug(name);
     
     if (editingListing && editingListing.slug === proposedSlug) {
         showSlugChecker(true, proposedSlug);
@@ -982,8 +1030,10 @@ function showSlugChecker(available, slug) {
         checkerDiv.id = 'slugCheckerDiv';
         checkerDiv.className = 'md:col-span-2';
         
-        const businessNameDiv = document.getElementById('editBusinessName').parentElement;
-        businessNameDiv.parentElement.insertBefore(checkerDiv, businessNameDiv.nextSibling);
+        const businessNameDiv = document.getElementById('editBusinessName');
+        if (businessNameDiv && businessNameDiv.parentElement) {
+            businessNameDiv.parentElement.parentElement.insertBefore(checkerDiv, businessNameDiv.parentElement.nextSibling);
+        }
     }
 
     if (available) {
@@ -1012,22 +1062,25 @@ function showSlugChecker(available, slug) {
             </div>
         `;
         
-        document.getElementById('editCustomSlug').addEventListener('input', (e) => {
-            const customSlug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-            e.target.value = customSlug;
-            
-            if (customSlug.length > 2) {
-                const customExists = allListings.some(l => 
-                    l.slug === customSlug && (!editingListing || l.id !== editingListing.id)
-                );
+        const customSlugInput = document.getElementById('editCustomSlug');
+        if (customSlugInput) {
+            customSlugInput.addEventListener('input', (e) => {
+                const customSlug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                e.target.value = customSlug;
                 
-                if (!customExists) {
-                    e.target.className = 'w-full px-4 py-2 border-2 border-green-500 rounded-lg';
-                } else {
-                    e.target.className = 'w-full px-4 py-2 border-2 border-red-500 rounded-lg';
+                if (customSlug.length > 2) {
+                    const customExists = allListings.some(l => 
+                        l.slug === customSlug && (!editingListing || l.id !== editingListing.id)
+                    );
+                    
+                    if (!customExists) {
+                        e.target.className = 'w-full px-4 py-2 border-2 border-green-500 rounded-lg';
+                    } else {
+                        e.target.className = 'w-full px-4 py-2 border-2 border-red-500 rounded-lg';
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }
 
@@ -1037,46 +1090,59 @@ function hideSlugChecker() {
         checkerDiv.remove();
     }
 }
-        function setupImageHandlers() {
-    document.getElementById('logoUpload').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                uploadedImages.logo = { 
-                    file: file,
-                    base64: event.target.result.split(',')[1],
-                    url: event.target.result
-                };
-                document.getElementById('logoPreview').innerHTML = `<img src="${event.target.result}" class="image-preview">`;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
 
-    document.getElementById('photosUpload').addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files).slice(0, 15);
-        
-        for (const file of files) {
-            const reader = new FileReader();
-            await new Promise((resolve) => {
+function setupImageHandlers() {
+    const logoUpload = document.getElementById('logoUpload');
+    const photosUpload = document.getElementById('photosUpload');
+    
+    if (logoUpload) {
+        logoUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
                 reader.onload = (event) => {
-                    uploadedImages.photos.push({ 
+                    uploadedImages.logo = { 
                         file: file,
                         base64: event.target.result.split(',')[1],
                         url: event.target.result
-                    });
-                    renderPhotosPreview();
-                    resolve();
+                    };
+                    const logoPreview = document.getElementById('logoPreview');
+                    if (logoPreview) {
+                        logoPreview.innerHTML = `<img src="${event.target.result}" class="image-preview">`;
+                    }
                 };
                 reader.readAsDataURL(file);
-            });
-        }
-    });
+            }
+        });
+    }
+
+    if (photosUpload) {
+        photosUpload.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files).slice(0, 15);
+            
+            for (const file of files) {
+                const reader = new FileReader();
+                await new Promise((resolve) => {
+                    reader.onload = (event) => {
+                        uploadedImages.photos.push({ 
+                            file: file,
+                            base64: event.target.result.split(',')[1],
+                            url: event.target.result
+                        });
+                        renderPhotosPreview();
+                        resolve();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+    }
 }
 
 function renderPhotosPreview() {
     const preview = document.getElementById('photosPreview');
+    if (!preview) return;
+    
     preview.innerHTML = uploadedImages.photos.map((photo, idx) => `
         <div class="photo-item" data-index="${idx}">
             <div class="photo-number">#${idx + 1}</div>
@@ -1169,14 +1235,25 @@ async function geocodeAddress(address, city, state, zipCode) {
         return null;
     }
 }
-
-async function getFormData() {
-    const name = document.getElementById('editBusinessName').value.trim();
-    const tagline = document.getElementById('editTagline').value.trim();
-    const category = document.getElementById('editCategory').value;
-    const tier = document.getElementById('editTier').value;
-    const description = document.getElementById('editDescription').value || '';
-    const password = document.getElementById('editPassword').value.trim();
+        async function getFormData() {
+    const editBusinessName = document.getElementById('editBusinessName');
+    const editTagline = document.getElementById('editTagline');
+    const editCategory = document.getElementById('editCategory');
+    const editTier = document.getElementById('editTier');
+    const editDescription = document.getElementById('editDescription');
+    const editPassword = document.getElementById('editPassword');
+    
+    if (!editBusinessName || !editTagline || !editCategory || !editTier) {
+        alert('Required form fields missing');
+        return null;
+    }
+    
+    const name = editBusinessName.value.trim();
+    const tagline = editTagline.value.trim();
+    const category = editCategory.value;
+    const tier = editTier.value;
+    const description = editDescription ? editDescription.value : '';
+    const password = editPassword ? editPassword.value.trim() : '';
     
     if (!name) { alert('Business name required'); return null; }
     if (!tagline) { alert('Tagline required'); return null; }
@@ -1207,65 +1284,71 @@ async function getFormData() {
         slug = editingListing ? editingListing.slug : generateSlug(name);
     }
 
+    const getData = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value || null : null;
+    };
+
     return {
         businessName: name,
         tagline: tagline,
         description: description,
         category: category,
         subcategories: selectedSubcategories,
-        phone: document.getElementById('editPhone').value || null,
-        address: document.getElementById('editAddress').value || null,
-        city: document.getElementById('editCity').value || null,
-        state: document.getElementById('editState').value || null,
-        zipCode: document.getElementById('editZipCode').value || null,
-        country: document.getElementById('editCountry').value || 'USA',
-        email: document.getElementById('editEmail').value || null,
-        website: document.getElementById('editWebsite').value || null,
+        phone: getData('editPhone'),
+        address: getData('editAddress'),
+        city: getData('editCity'),
+        state: getData('editState'),
+        zipCode: getData('editZipCode'),
+        country: getData('editCountry') || 'USA',
+        email: getData('editEmail'),
+        website: getData('editWebsite'),
         tier: tier,
         verified: tier !== 'FREE',
-        showClaimButton: document.getElementById('editShowClaim').checked,
+        showClaimButton: document.getElementById('editShowClaim') ? document.getElementById('editShowClaim').checked : true,
         businessPortalPassword: password || null,
-        placesUrlEnding: document.getElementById('editPlacesUrl').value || null,
+        placesUrlEnding: getData('editPlacesUrl'),
         slug: slug,
         hours: {
-            monday: document.getElementById('editHoursMonday').value || null,
-            tuesday: document.getElementById('editHoursTuesday').value || null,
-            wednesday: document.getElementById('editHoursWednesday').value || null,
-            thursday: document.getElementById('editHoursThursday').value || null,
-            friday: document.getElementById('editHoursFriday').value || null,
-            saturday: document.getElementById('editHoursSaturday').value || null,
-            sunday: document.getElementById('editHoursSunday').value || null
+            monday: getData('editHoursMonday'),
+            tuesday: getData('editHoursTuesday'),
+            wednesday: getData('editHoursWednesday'),
+            thursday: getData('editHoursThursday'),
+            friday: getData('editHoursFriday'),
+            saturday: getData('editHoursSaturday'),
+            sunday: getData('editHoursSunday')
         },
         socialMedia: {
-            facebook: document.getElementById('editFacebook').value || null,
-            instagram: document.getElementById('editInstagram').value || null,
-            twitter: document.getElementById('editTwitter').value || null,
-            youtube: document.getElementById('editYoutube').value || null,
-            tiktok: document.getElementById('editTiktok').value || null,
-            linkedin: document.getElementById('editLinkedin').value || null,
-            other1: document.getElementById('editOther1').value || null,
-            other2: document.getElementById('editOther2').value || null,
-            other3: document.getElementById('editOther3').value || null
+            facebook: getData('editFacebook'),
+            instagram: getData('editInstagram'),
+            twitter: getData('editTwitter'),
+            youtube: getData('editYoutube'),
+            tiktok: getData('editTiktok'),
+            linkedin: getData('editLinkedin'),
+            other1: getData('editOther1'),
+            other2: getData('editOther2'),
+            other3: getData('editOther3')
         },
         reviews: {
-            google: document.getElementById('editGoogle').value || null,
-            yelp: document.getElementById('editYelp').value || null,
-            tripadvisor: document.getElementById('editTripadvisor').value || null,
-            other1: document.getElementById('editReviewOther1').value || null,
-            other2: document.getElementById('editReviewOther2').value || null,
-            other3: document.getElementById('editReviewOther3').value || null
+            google: getData('editGoogle'),
+            yelp: getData('editYelp'),
+            tripadvisor: getData('editTripadvisor'),
+            other1: getData('editReviewOther1'),
+            other2: getData('editReviewOther2'),
+            other3: getData('editReviewOther3')
         },
         ownerInfo: {
-            fullName: document.getElementById('editOwnerName').value || null,
-            title: document.getElementById('editOwnerTitle').value || null,
-            fromGreece: document.getElementById('editOwnerGreece').value || null,
-            ownerEmail: document.getElementById('editOwnerEmail').value || null,
-            ownerPhone: document.getElementById('editOwnerPhone').value || null,
+            fullName: getData('editOwnerName'),
+            title: getData('editOwnerTitle'),
+            fromGreece: getData('editOwnerGreece'),
+            ownerEmail: getData('editOwnerEmail'),
+            ownerPhone: getData('editOwnerPhone'),
             visibility: ownerFieldsVisibility
         }
     };
 }
-        async function saveDatabase(silent = false) {
+
+async function saveDatabase(silent = false) {
     console.log('💾 Starting database save...');
     console.log('Current allListings count:', allListings.length);
     
@@ -1706,7 +1789,8 @@ async function generateRedirectFile(path, redirectUrl) {
         return false;
     }
 }
-        async function saveEditHandler() {
+
+async function saveEditHandler() {
     console.log('=== SAVE BUTTON CLICKED ===');
     
     const listing = await getFormData();
@@ -1739,14 +1823,17 @@ async function generateRedirectFile(path, redirectUrl) {
     
     if (uploadedImages.logo) {
         console.log('Uploading logo...');
-        document.getElementById('logoProgress').style.display = 'block';
-        document.getElementById('logoProgress').textContent = 'Uploading logo...';
+        const logoProgress = document.getElementById('logoProgress');
+        if (logoProgress) {
+            logoProgress.style.display = 'block';
+            logoProgress.textContent = 'Uploading logo...';
+        }
         const logoPath = await uploadImage(uploadedImages.logo, slug, 'logo/logo', categorySlug);
         if (logoPath) {
             listing.logo = logoPath;
             console.log('Logo uploaded:', logoPath);
         }
-        document.getElementById('logoProgress').style.display = 'none';
+        if (logoProgress) logoProgress.style.display = 'none';
     } else if (editingListing && editingListing.logo) {
         listing.logo = editingListing.logo;
         console.log('Using existing logo:', listing.logo);
@@ -1757,14 +1844,15 @@ async function generateRedirectFile(path, redirectUrl) {
 
     if (uploadedImages.photos.length > 0) {
         console.log('Uploading', uploadedImages.photos.length, 'photos...');
-        document.getElementById('photosProgress').style.display = 'block';
+        const photosProgress = document.getElementById('photosProgress');
+        if (photosProgress) photosProgress.style.display = 'block';
         const photoPaths = [];
         for (let i = 0; i < uploadedImages.photos.length; i++) {
             if (uploadedImages.photos[i].existing) {
                 photoPaths.push(uploadedImages.photos[i].url);
                 console.log(`Photo ${i+1}: Using existing`);
             } else {
-                document.getElementById('photosProgress').textContent = `Uploading photo ${i + 1} of ${uploadedImages.photos.length}...`;
+                if (photosProgress) photosProgress.textContent = `Uploading photo ${i + 1} of ${uploadedImages.photos.length}...`;
                 const photoPath = await uploadImage(uploadedImages.photos[i], slug, `photos/photo-${i + 1}`, categorySlug);
                 if (photoPath) {
                     photoPaths.push(photoPath);
@@ -1773,7 +1861,7 @@ async function generateRedirectFile(path, redirectUrl) {
             }
         }
         listing.photos = photoPaths;
-        document.getElementById('photosProgress').style.display = 'none';
+        if (photosProgress) photosProgress.style.display = 'none';
     } else if (editingListing && editingListing.photos) {
         listing.photos = editingListing.photos;
         console.log('Using existing photos:', listing.photos.length);
@@ -1881,63 +1969,43 @@ async function generateRedirectFile(path, redirectUrl) {
     
     renderTable();
 }
-        function setupEventListeners() {
-    document.getElementById('newListingBtn').addEventListener('click', () => {
-        editingListing = null;
-        document.getElementById('modalTitle').textContent = 'New Listing';
-        clearForm();
-        document.getElementById('editModal').classList.remove('hidden');
-        setTimeout(initPhotosSortable, 100);
-    });
-
-    document.getElementById('refreshBtn').addEventListener('click', loadListings);
-
-    document.getElementById('closeModal').addEventListener('click', () => {
-        if (confirm('Are you sure you want to cancel? All inputted info will be deleted.')) {
-            document.getElementById('editModal').classList.add('hidden');
-            clearForm();
-        }
-    });
-
-    document.getElementById('cancelEdit').addEventListener('click', () => {
-        if (confirm('Are you sure you want to cancel? All inputted info will be deleted.')) {
-            document.getElementById('editModal').classList.add('hidden');
-            clearForm();
-        }
-    });
-
-    document.getElementById('editTagline').addEventListener('input', (e) => {
-        const count = e.target.value.length;
-        document.getElementById('taglineCount').textContent = count;
-        if (count > 75) {
-            e.target.value = e.target.value.substring(0, 75);
-            document.getElementById('taglineCount').textContent = '75';
-        }
-    });
-
-    document.getElementById('editDescription').addEventListener('input', () => {
-        updateCharCounter('description');
-    });
-
-    document.getElementById('editBusinessName').addEventListener('input', () => {
-        checkSlugAvailability();
-    });
-
-    document.getElementById('editTier').addEventListener('change', () => {
-        updateVerifiedBasedOnTier();
-    });
-
-    document.getElementById('saveEdit').addEventListener('click', saveEditHandler);
-    
-    setupImageHandlers();
-}
-
-window.showAnalytics = function(id) {
+        window.showAnalytics = function(id) {
     const listing = allListings.find(l => l.id === id);
-    document.getElementById('analyticsBusinessName').textContent = listing.businessName;
-    document.getElementById('analyticsLastUpdated').textContent = new Date().toLocaleString();
+    if (!listing) return;
     
-    const analytics = listing.analytics || {
+    currentAnalyticsListing = listing;
+    currentAnalyticsTab = 'overview';
+    
+    const businessNameSpan = document.getElementById('analyticsBusinessName');
+    const lastUpdatedSpan = document.getElementById('analyticsLastUpdated');
+    
+    if (businessNameSpan) businessNameSpan.textContent = listing.businessName;
+    if (lastUpdatedSpan) lastUpdatedSpan.textContent = new Date().toLocaleString();
+    
+    renderAnalyticsContent();
+    
+    document.getElementById('analyticsModal').classList.remove('hidden');
+};
+
+window.switchAnalyticsTab = function(tab) {
+    currentAnalyticsTab = tab;
+    
+    document.querySelectorAll('.analytics-tab').forEach(t => {
+        t.classList.remove('active');
+    });
+    
+    const activeTab = document.querySelector(`.analytics-tab[data-tab="${tab}"]`);
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
+    
+    renderAnalyticsContent();
+};
+
+function renderAnalyticsContent() {
+    if (!currentAnalyticsListing) return;
+    
+    const analytics = currentAnalyticsListing.analytics || {
         views: 0,
         callClicks: 0,
         websiteClicks: 0,
@@ -1949,55 +2017,147 @@ window.showAnalytics = function(id) {
         detailedViews: []
     };
     
-    const content = `
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-            <div class="analytics-stat-card">
-                <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                <div class="text-sm opacity-90">Total Views</div>
-            </div>
-            <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <div class="text-4xl font-bold mb-2">${analytics.callClicks || 0}</div>
-                <div class="text-sm opacity-90">Call Clicks</div>
-            </div>
-            <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                <div class="text-4xl font-bold mb-2">${analytics.websiteClicks || 0}</div>
-                <div class="text-sm opacity-90">Website Clicks</div>
-            </div>
-            <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                <div class="text-4xl font-bold mb-2">${analytics.directionClicks || 0}</div>
-                <div class="text-sm opacity-90">Direction Clicks</div>
-            </div>
-            <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                <div class="text-4xl font-bold mb-2">${analytics.shareClicks || 0}</div>
-                <div class="text-sm opacity-90">Share Clicks</div>
-            </div>
-            <div class="analytics-stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
-                <div class="text-lg font-bold mb-2">${analytics.lastViewed ? new Date(analytics.lastViewed).toLocaleString() : 'Never'}</div>
-                <div class="text-sm opacity-90">Last Viewed</div>
-            </div>
-        </div>
-        
-        ${analytics.detailedViews && analytics.detailedViews.length > 0 ? `
-            <div class="bg-gray-50 rounded-lg p-4">
-                <h3 class="font-bold text-gray-900 mb-3">Recent Activity (Last 30 actions)</h3>
-                <div class="space-y-2">
-                    ${analytics.detailedViews.slice(-30).reverse().map(v => `
-                        <div class="analytics-detail-row flex justify-between text-sm">
-                            <span class="font-medium">${v.action}</span>
-                            <span class="text-gray-600">${new Date(v.timestamp).toLocaleString()}</span>
-                        </div>
-                    `).join('')}
+    const content = document.getElementById('analyticsContent');
+    if (!content) return;
+    
+    let html = '';
+    
+    if (currentAnalyticsTab === 'overview') {
+        html = `
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <div class="analytics-stat-card">
+                    <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
+                    <div class="text-sm opacity-90">Total Views</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="text-4xl font-bold mb-2">${analytics.callClicks || 0}</div>
+                    <div class="text-sm opacity-90">Call Clicks</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="text-4xl font-bold mb-2">${analytics.websiteClicks || 0}</div>
+                    <div class="text-sm opacity-90">Website Clicks</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="text-4xl font-bold mb-2">${analytics.directionClicks || 0}</div>
+                    <div class="text-sm opacity-90">Direction Clicks</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <div class="text-4xl font-bold mb-2">${analytics.shareClicks || 0}</div>
+                    <div class="text-sm opacity-90">Share Clicks</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                    <div class="text-lg font-bold mb-2">${analytics.lastViewed ? new Date(analytics.lastViewed).toLocaleString() : 'Never'}</div>
+                    <div class="text-sm opacity-90">Last Viewed</div>
                 </div>
             </div>
-        ` : '<p class="text-gray-600">No detailed analytics available yet.</p>'}
-    `;
+            
+            ${analytics.detailedViews && analytics.detailedViews.length > 0 ? `
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-bold text-gray-900 mb-3">Recent Activity (Last 30 actions)</h3>
+                    <div class="space-y-2">
+                        ${analytics.detailedViews.slice(-30).reverse().map(v => `
+                            <div class="analytics-detail-row flex justify-between text-sm">
+                                <span class="font-medium">${v.action}</span>
+                                <span class="text-gray-600">${new Date(v.timestamp).toLocaleString()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '<p class="text-gray-600">No detailed analytics available yet.</p>'}
+        `;
+    } else {
+        const now = new Date();
+        let filteredViews = [];
+        
+        if (currentAnalyticsTab === 'today') {
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            filteredViews = analytics.detailedViews?.filter(v => new Date(v.timestamp) >= todayStart) || [];
+        } else if (currentAnalyticsTab === 'yesterday') {
+            const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+            const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            filteredViews = analytics.detailedViews?.filter(v => {
+                const d = new Date(v.timestamp);
+                return d >= yesterdayStart && d < yesterdayEnd;
+            }) || [];
+        } else if (currentAnalyticsTab === 'week') {
+            const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            filteredViews = analytics.detailedViews?.filter(v => new Date(v.timestamp) >= weekStart) || [];
+        } else if (currentAnalyticsTab === 'month') {
+            const monthStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            filteredViews = analytics.detailedViews?.filter(v => new Date(v.timestamp) >= monthStart) || [];
+        } else if (currentAnalyticsTab === 'alltime') {
+            filteredViews = analytics.detailedViews || [];
+        }
+        
+        const views = filteredViews.filter(v => v.action === 'view').length;
+        const calls = filteredViews.filter(v => v.action === 'call').length;
+        const websites = filteredViews.filter(v => v.action === 'website').length;
+        const directions = filteredViews.filter(v => v.action === 'directions').length;
+        const shares = filteredViews.filter(v => v.action.includes('share')).length;
+        
+        html = `
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <div class="analytics-stat-card">
+                    <div class="text-4xl font-bold mb-2">${views}</div>
+                    <div class="text-sm opacity-90">Views</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="text-4xl font-bold mb-2">${calls}</div>
+                    <div class="text-sm opacity-90">Call Clicks</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="text-4xl font-bold mb-2">${websites}</div>
+                    <div class="text-sm opacity-90">Website Clicks</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="text-4xl font-bold mb-2">${directions}</div>
+                    <div class="text-sm opacity-90">Direction Clicks</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <div class="text-4xl font-bold mb-2">${shares}</div>
+                    <div class="text-sm opacity-90">Share Clicks</div>
+                </div>
+                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                    <div class="text-4xl font-bold mb-2">${filteredViews.length}</div>
+                    <div class="text-sm opacity-90">Total Actions</div>
+                </div>
+            </div>
+            
+            ${filteredViews.length > 0 ? `
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-bold text-gray-900 mb-3">Activity Details</h3>
+                    <div class="space-y-2">
+                        ${filteredViews.slice().reverse().slice(0, 50).map(v => `
+                            <div class="analytics-detail-row flex justify-between text-sm">
+                                <span class="font-medium">${v.action}</span>
+                                <span class="text-gray-600">${new Date(v.timestamp).toLocaleString()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '<p class="text-gray-600">No activity in this time period.</p>'}
+        `;
+    }
     
-    document.getElementById('analyticsContent').innerHTML = content;
-    document.getElementById('analyticsModal').classList.remove('hidden');
-};
+    content.innerHTML = html;
+}
 
 document.getElementById('closeAnalytics').addEventListener('click', () => {
     document.getElementById('analyticsModal').classList.add('hidden');
+    currentAnalyticsListing = null;
+    currentAnalyticsTab = 'overview';
+});
+
+document.getElementById('refreshAnalytics').addEventListener('click', async () => {
+    if (!currentAnalyticsListing) return;
+    await loadListings();
+    const updatedListing = allListings.find(l => l.id === currentAnalyticsListing.id);
+    if (updatedListing) {
+        currentAnalyticsListing = updatedListing;
+        const lastUpdatedSpan = document.getElementById('analyticsLastUpdated');
+        if (lastUpdatedSpan) lastUpdatedSpan.textContent = new Date().toLocaleString();
+        renderAnalyticsContent();
+    }
 });
 
 window.showDeleteModal = function(id) {
@@ -2016,6 +2176,84 @@ window.showDeleteModal = function(id) {
         }
     }
 };
+        function setupEventListeners() {
+    const newListingBtn = document.getElementById('newListingBtn');
+    if (newListingBtn) {
+        newListingBtn.addEventListener('click', () => {
+            editingListing = null;
+            document.getElementById('modalTitle').textContent = 'New Listing';
+            clearForm();
+            document.getElementById('editModal').classList.remove('hidden');
+            setTimeout(initPhotosSortable, 100);
+        });
+    }
+
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', loadListings);
+    }
+
+    const closeModal = document.getElementById('closeModal');
+    if (closeModal) {
+        closeModal.addEventListener('click', () => {
+            if (confirm('Are you sure you want to cancel? All inputted info will be deleted.')) {
+                document.getElementById('editModal').classList.add('hidden');
+                clearForm();
+            }
+        });
+    }
+
+    const cancelEdit = document.getElementById('cancelEdit');
+    if (cancelEdit) {
+        cancelEdit.addEventListener('click', () => {
+            if (confirm('Are you sure you want to cancel? All inputted info will be deleted.')) {
+                document.getElementById('editModal').classList.add('hidden');
+                clearForm();
+            }
+        });
+    }
+
+    const editTagline = document.getElementById('editTagline');
+    if (editTagline) {
+        editTagline.addEventListener('input', (e) => {
+            const count = e.target.value.length;
+            const countSpan = document.getElementById('taglineCount');
+            if (countSpan) countSpan.textContent = count;
+            if (count > 75) {
+                e.target.value = e.target.value.substring(0, 75);
+                if (countSpan) countSpan.textContent = '75';
+            }
+        });
+    }
+
+    const editDescription = document.getElementById('editDescription');
+    if (editDescription) {
+        editDescription.addEventListener('input', () => {
+            updateCharCounter('description');
+        });
+    }
+
+    const editBusinessName = document.getElementById('editBusinessName');
+    if (editBusinessName) {
+        editBusinessName.addEventListener('input', () => {
+            checkSlugAvailability();
+        });
+    }
+
+    const editTier = document.getElementById('editTier');
+    if (editTier) {
+        editTier.addEventListener('change', () => {
+            updateVerifiedBasedOnTier();
+        });
+    }
+
+    const saveEdit = document.getElementById('saveEdit');
+    if (saveEdit) {
+        saveEdit.addEventListener('click', saveEditHandler);
+    }
+    
+    setupImageHandlers();
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -2034,7 +2272,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     setTimeout(() => {
-        if (document.getElementById('newListingBtn')) {
+        const newListingBtn = document.getElementById('newListingBtn');
+        if (newListingBtn) {
             setupEventListeners();
         }
     }, 500);
