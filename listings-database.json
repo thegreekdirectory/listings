@@ -606,23 +606,22 @@
         "youtube": null,
         "tiktok": null,
         "linkedin": null,
-        "google": null,
-        "yelp": null,
-        "tripadvisor": null,
+        "google": "https://g.page/test",
+        "yelp": "https://www.yelp.com/biz/test",
+        "tripadvisor": "https://www.tripadvisor.com/test",
         "other": null
       },
       "ownerInfo": {
-        "fullName": null,
-        "fromGreece": null,
-        "ownerEmail": null,
-        "ownerPhone": null
+        "fullName": "Proto Deutero",
+        "fromGreece": "Xios",
+        "ownerEmail": "example@example.com",
+        "ownerPhone": "(312) 555-0457"
       },
       "id": "e",
       "slug": "e",
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-13T04:39:39.045Z",
-        "updatedAt": "2026-01-13T04:39:39.045Z"
+        "updatedAt": "2026-01-13T04:43:57.548Z"
       }
     }
   ]
