@@ -665,8 +665,8 @@
         "other3": "https://test.com/es3"
       },
       "ownerInfo": {
-        "fullName": "Proto Deutero",
-        "title": "Owner",
+        "fullName": "Test Name",
+        "title": "Founder",
         "fromGreece": "Athens",
         "ownerEmail": "example@example.com",
         "ownerPhone": "(312) 555-0457",
@@ -690,7 +690,7 @@
       "listingId": 1,
       "metadata": {
         "createdAt": "2026-01-13T08:51:41.440Z",
-        "updatedAt": "2026-01-13T09:07:56.403Z"
+        "updatedAt": "2026-01-13T16:46:56.488Z"
       },
       "analytics": {
         "views": 0,
