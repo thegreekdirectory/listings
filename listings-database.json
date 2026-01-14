@@ -711,7 +711,8 @@
       "description": "B\\n P",
       "category": "Home & Construction",
       "subcategories": [
-        "Carpenter"
+        "Carpenter",
+        "Electrician"
       ],
       "phone": "(847) 291-1939",
       "address": "213 Harlem Ave",
@@ -769,20 +770,15 @@
           "phone": false
         }
       },
-      "coordinates": {
-        "lat": 42.0596438,
-        "lng": -87.8058499
-      },
       "logo": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80",
       "photos": [
         "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80"
       ],
       "id": "b",
       "listingId": 2,
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-13T18:28:48.103Z",
-        "updatedAt": "2026-01-13T18:28:48.103Z"
+        "updatedAt": "2026-01-14T22:18:28.168Z"
       },
       "analytics": {
         "views": 0,
@@ -794,7 +790,8 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-13T18:28:48.103Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
