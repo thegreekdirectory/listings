@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{BUSINESS_NAME}}{{CITY_STATE}} | The Greek Directory</title>
 
-    <meta name="description" content="{{TAGLINE}}{{IN_CITY}}. {{BUSINESS_NAME}} is listed on The Greek Directory, a trusted Greek directory connecting you to Greek businesses, restaurants, churches, and cultural centers. View address, phone, hours, and photos.">
+    <meta name="description" content="{{TAGLINE}}{{IN_CITY}}. View address, phone, hours, and photos.">
     <meta property="og:title" content="{{BUSINESS_NAME}}{{CITY_STATE}} | The Greek Directory">
     <meta property="og:description" content="{{TAGLINE}}{{IN_CITY}}">
     <meta property="og:type" content="business.business">
@@ -63,7 +63,8 @@
         .social-other { background: #6B7280; color: white; }
         .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
         .share-button:hover { transform: scale(1.1); }
-        #listingMap { width: 100%; height: 400px; border-radius: 8px; }
+        #listingMap { width: 100%; height: 400px; border-radius: 8px; pointer-events: none; }
+        #listingMap.active { pointer-events: auto; }
         .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
@@ -79,7 +80,7 @@
         .subcategories-display { display: none; margin-top: 8px; }
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
-        .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; }
+        .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
         @media (min-width: 768px) {
             .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
         }
@@ -152,9 +153,6 @@
                     </div>
                     <h2 class="text-3xl font-bold text-gray-900 mb-2">{{BUSINESS_NAME}}</h2>
                     {{TAGLINE_DISPLAY}}
-                    <p class="text-sm text-gray-600 mt-2">
-                        <strong>{{BUSINESS_NAME}}</strong> is listed on <a href="/" class="text-blue-600 hover:underline">The Greek Directory</a>, a trusted Greek directory connecting you to Greek businesses{{IN_CITY}}.
-                    </p>
                 </div>
                 <img src="{{LOGO}}" alt="{{BUSINESS_NAME}} logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
             </div>
@@ -209,7 +207,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
+    <script>
         const totalSlides = {{TOTAL_PHOTOS}};
         const businessName = '{{BUSINESS_NAME}}';
         const listingUrl = '{{LISTING_URL}}';
@@ -285,7 +283,8 @@
                 window.location.href = `/business.html?slug=${slug}`;
             }
         }
-    function updateOpenClosedBadge() {
+
+        function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
             if (!hoursData) return;
@@ -466,8 +465,14 @@
                     map.invalidateSize();
                 }, 250);
                 
-                map.once('focus', function() { 
-                    map.scrollWheelZoom.enable(); 
+                mapElement.addEventListener('click', function() {
+                    this.classList.add('active');
+                    map.scrollWheelZoom.enable();
+                });
+
+                mapElement.addEventListener('mouseleave', function() {
+                    this.classList.remove('active');
+                    map.scrollWheelZoom.disable();
                 });
             } catch (e) {
                 if (mapElement && mapElement.parentElement) {
