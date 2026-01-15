@@ -897,7 +897,7 @@
       "website": null,
       "tier": "FREE",
       "verified": false,
-      "showClaimButton": true,
+      "showClaimButton": false,
       "placesUrlEnding": null,
       "slug": "g",
       "logo": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80",
@@ -948,10 +948,9 @@
       },
       "id": "g",
       "listingId": 4,
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-15T06:36:40.945Z",
-        "updatedAt": "2026-01-15T06:36:40.946Z"
+        "updatedAt": "2026-01-15T06:40:50.569Z"
       },
       "analytics": {
         "views": 0,
@@ -963,7 +962,8 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-15T06:36:40.946Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
