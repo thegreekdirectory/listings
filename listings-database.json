@@ -811,7 +811,7 @@
       "website": null,
       "tier": "FREE",
       "verified": false,
-      "showClaimButton": false,
+      "showClaimButton": true,
       "placesUrlEnding": null,
       "slug": "c",
       "logo": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=200&h=200&fit=crop&q=80",
@@ -864,7 +864,7 @@
       "listingId": 3,
       "metadata": {
         "createdAt": "2026-01-15T03:57:51.894Z",
-        "updatedAt": "2026-01-15T06:17:57.306Z"
+        "updatedAt": "2026-01-15T06:35:33.761Z"
       },
       "analytics": {
         "views": 0,
