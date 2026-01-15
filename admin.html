@@ -1800,14 +1800,13 @@ async function generateListingPage(listing) {
         template = template.replace(/{{OWNER_INFO_SECTION}}/g, ownerInfoSection);
         
         // Claim button
-        const claimButton = listing.showClaimButton !== false ? `
-            <div class="text-center py-8 border-t mt-8">
-                <p class="text-gray-600 mb-4">Is this your business?</p>
-                <a href="/business.html?claim=${listing.listingId}" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                    Claim This Listing
-                </a>
-            </div>
-        ` : '';
+        const claimButton = listing.showClaimButton
+            ? `<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                   <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
+                   <p class="text-gray-700 mb-4">Claim this listing to manage your information and tag it as Claimed.</p>
+                   <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20${encodeURIComponent(listing.businessName)}%20-%20${encodeURIComponent(listing.city)}%2C%20${encodeURIComponent(listing.state)}%2C%20${encodeURIComponent(listing.country)}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Business</a>
+               </div>`
+            : '';
         template = template.replace(/{{CLAIM_BUTTON}}/g, claimButton);
         
         // Hours schema for SEO
