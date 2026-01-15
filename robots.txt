@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin.html
-Disallow: /business.html
+Disallow: /backup/admin.html
 
 Sitemap: https://listings.thegreekdirectory.org/sitemap.xml
