@@ -1788,16 +1788,6 @@ async function generateListingPage(listing) {
     }
 }
 
-// ADD THIS TO THE saveEditHandler function, right after saveToGitHub succeeds:
-// 
-// console.log('📄 STEP 2: Generating listing page...');
-// const pageGenerated = await generateListingPage(listing);
-// 
-// if (!pageGenerated) {
-//     console.log('⚠️ Page generation failed, but database was saved');
-// } else {
-//     console.log('✅ Page generated successfully');
-// }
         
         window.showDeleteModal = function(id) {
     deletingListingId = id;
