@@ -897,7 +897,7 @@
       "website": null,
       "tier": "FREE",
       "verified": false,
-      "showClaimButton": true,
+      "showClaimButton": false,
       "placesUrlEnding": null,
       "slug": "g",
       "logo": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80",
@@ -933,8 +933,8 @@
         "other3": null
       },
       "ownerInfo": {
-        "fullName": null,
-        "title": null,
+        "fullName": "John Pappas",
+        "title": "Owner",
         "fromGreece": null,
         "ownerEmail": null,
         "ownerPhone": null,
@@ -950,7 +950,7 @@
       "listingId": 4,
       "metadata": {
         "createdAt": "2026-01-15T06:36:40.945Z",
-        "updatedAt": "2026-01-15T13:03:28.487Z"
+        "updatedAt": "2026-01-15T14:02:34.302Z"
       },
       "analytics": {
         "views": 0,
