@@ -804,17 +804,20 @@
       "phone": null,
       "address": null,
       "city": null,
-      "state": null,
+      "state": "IL",
       "zipCode": null,
       "country": "USA",
       "email": null,
       "website": null,
       "tier": "FREE",
       "verified": false,
-      "showClaimButton": true,
-      "businessPortalPassword": null,
+      "showClaimButton": false,
       "placesUrlEnding": null,
       "slug": "c",
+      "logo": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80"
+      ],
       "hours": {
         "monday": null,
         "tuesday": null,
@@ -857,16 +860,11 @@
           "phone": false
         }
       },
-      "logo": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=200&h=200&fit=crop&q=80",
-      "photos": [
-        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80"
-      ],
       "id": "c",
       "listingId": 3,
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-15T03:57:51.894Z",
-        "updatedAt": "2026-01-15T03:57:51.895Z"
+        "updatedAt": "2026-01-15T06:17:57.306Z"
       },
       "analytics": {
         "views": 0,
@@ -878,93 +876,8 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-15T03:57:51.895Z",
         "detailedViews": []
-      }
-    },
-    {
-      "businessName": "d",
-      "tagline": "d",
-      "description": "",
-      "category": "Education & Community",
-      "subcategories": [
-        "Tutor"
-      ],
-      "phone": null,
-      "address": null,
-      "city": "Deerfield",
-      "state": "FL",
-      "zipCode": null,
-      "country": "USA",
-      "email": null,
-      "website": null,
-      "tier": "FREE",
-      "verified": false,
-      "showClaimButton": false,
-      "placesUrlEnding": null,
-      "slug": "d",
-      "logo": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=200&h=200&fit=crop&q=80",
-      "photos": [
-        "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80"
-      ],
-      "hours": {
-        "monday": null,
-        "tuesday": null,
-        "wednesday": null,
-        "thursday": null,
-        "friday": null,
-        "saturday": null,
-        "sunday": null
       },
-      "socialMedia": {
-        "facebook": null,
-        "instagram": null,
-        "twitter": null,
-        "youtube": null,
-        "tiktok": null,
-        "linkedin": null,
-        "other1": null,
-        "other2": null,
-        "other3": null
-      },
-      "reviews": {
-        "google": null,
-        "yelp": null,
-        "tripadvisor": null,
-        "other1": null,
-        "other2": null,
-        "other3": null
-      },
-      "ownerInfo": {
-        "fullName": null,
-        "title": null,
-        "fromGreece": null,
-        "ownerEmail": null,
-        "ownerPhone": null,
-        "visibility": {
-          "name": false,
-          "title": false,
-          "greece": false,
-          "email": false,
-          "phone": false
-        }
-      },
-      "id": "d",
-      "listingId": 4,
-      "visible": true,
-      "metadata": {
-        "createdAt": "2026-01-15T06:15:58.264Z",
-        "updatedAt": "2026-01-15T06:15:58.264Z"
-      },
-      "analytics": {
-        "views": 0,
-        "callClicks": 0,
-        "websiteClicks": 0,
-        "directionClicks": 0,
-        "shareClicks": 0,
-        "sharePlatforms": {},
-        "videoPlays": 0,
-        "lastViewed": "2026-01-15T06:15:58.264Z",
-        "detailedViews": []
-      }
+      "visible": true
     }
   ]
 }
