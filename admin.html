@@ -130,7 +130,7 @@
                 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">GitHub Personal Access Token</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Personal Access Token</label>
                         <input type="password" id="githubToken" class="tgd-input" placeholder="Type here..." autocomplete="off">
                     </div>
                     <button onclick="handleAdminLogin()" class="tgd-button-primary">
@@ -625,7 +625,7 @@ async function handleAdminLogin() {
     const token = document.getElementById('githubToken').value.trim();
     
     if (!token) {
-        showError('Please enter your GitHub token');
+        showError('Incorrect token. Try again.');
         return;
     }
     
