@@ -936,7 +936,7 @@
         "fullName": "John Pappas",
         "title": "Owner",
         "fromGreece": null,
-        "ownerEmail": null,
+        "ownerEmail": "example@example.com",
         "ownerPhone": null,
         "visibility": {
           "name": true,
@@ -950,7 +950,7 @@
       "listingId": 4,
       "metadata": {
         "createdAt": "2026-01-15T06:36:40.945Z",
-        "updatedAt": "2026-01-15T14:02:34.302Z"
+        "updatedAt": "2026-01-15T14:02:50.487Z"
       },
       "analytics": {
         "views": 0,
