@@ -1,10 +1,15 @@
 // ============================================
 // SUPABASE CLIENT CONFIGURATION
-// Add this to a new file: js/supabase-config.js
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNzA3MTcsImV4cCI6MjA1MjY0NjcxN30.YUzOppA6JIX5hhGsUPf0-Q_Y2WJr4Y5';
+
+// GitHub Configuration - DO NOT EXPOSE IN PRODUCTION
+// This should be handled server-side via Supabase Edge Functions
+const GITHUB_OWNER = 'thegreekdirectory';
+const GITHUB_REPO = 'listings';
+const DATABASE_PATH = 'listings-database.json';
 
 // Initialize Supabase client
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -272,6 +277,60 @@ async function updatePassword(newPassword) {
 }
 
 // ============================================
+// GITHUB INTEGRATION
+// ============================================
+
+/**
+ * Update GitHub file (called from business portal)
+ * This uses Supabase Service Role Key stored server-side
+ * @param {string} owner - GitHub owner
+ * @param {string} repo - GitHub repo
+ * @param {string} path - File path
+ * @param {string} content - File content
+ * @param {string} message - Commit message
+ * @returns {Promise<Object>} Result object
+ */
+async function updateGitHubFile(owner, repo, path, content, message) {
+    try {
+        // In production, this should call a Supabase Edge Function
+        // that handles GitHub API calls server-side
+        // For now, we'll use the approach where GitHub token is stored in Supabase secrets
+        
+        console.log('Updating GitHub file:', path);
+        
+        // Get current file SHA
+        const fileInfoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+            headers: {
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        
+        if (!fileInfoResponse.ok) {
+            throw new Error(`Failed to fetch file info: ${fileInfoResponse.status}`);
+        }
+        
+        const fileInfo = await fileInfoResponse.json();
+        const currentSha = fileInfo.sha;
+        
+        // This should be handled by a Supabase Edge Function in production
+        // The Edge Function would have the GitHub token in environment variables
+        // For now, we'll return an error asking to use admin portal
+        
+        return {
+            success: false,
+            error: 'GitHub updates from business portal require admin setup. Please contact administrator to update listing, or use the admin portal.'
+        };
+
+    } catch (error) {
+        console.error('GitHub update error:', error);
+        return {
+            success: false,
+            error: error.message || 'GitHub update failed'
+        };
+    }
+}
+
+// ============================================
 // AUTH STATE LISTENER
 // ============================================
 
@@ -298,5 +357,6 @@ window.TGDAuth = {
     updateBusinessOwnerContact,
     resetPassword,
     updatePassword,
-    onAuthStateChange
+    onAuthStateChange,
+    updateGitHubFile
 };
