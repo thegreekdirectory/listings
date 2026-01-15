@@ -3,7 +3,7 @@
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNzA3MTcsImV4cCI6MjA1MjY0NjcxN30.YUzOppA6JIX5hhGsUPf0-Q_Y2WJr4Y5';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 
 // GitHub Configuration - DO NOT EXPOSE IN PRODUCTION
 // This should be handled server-side via Supabase Edge Functions
