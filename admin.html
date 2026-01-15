@@ -1528,7 +1528,309 @@ document.getElementById('confirmDelete').addEventListener('click', async () => {
         alert('Listing deleted successfully');
     }
 });
+async function generateListingPage(listing) {
+    console.log('📄 Generating listing page for:', listing.businessName);
+    
+    try {
+        const templateResponse = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/listing-template.html`);
+        let template = await templateResponse.text();
+        
+        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
+        const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
+        const inCity = listing.city ? ` in ${listing.city}` : '';
+        
+        template = template.replace(/{{BUSINESS_NAME}}/g, listing.businessName);
+        template = template.replace(/{{CITY_STATE}}/g, cityState);
+        template = template.replace(/{{IN_CITY}}/g, inCity);
+        template = template.replace(/{{TAGLINE}}/g, listing.tagline || '');
+        template = template.replace(/{{LISTING_URL}}/g, listingUrl);
+        template = template.replace(/{{LOGO}}/g, listing.logo || '');
+        template = template.replace(/{{CATEGORY}}/g, listing.category);
+        template = template.replace(/{{DESCRIPTION}}/g, listing.description || '');
+        template = template.replace(/{{ADDRESS}}/g, listing.address || '');
+        template = template.replace(/{{CITY}}/g, listing.city || '');
+        template = template.replace(/{{STATE}}/g, listing.state || '');
+        template = template.replace(/{{ZIP_CODE}}/g, listing.zipCode || '');
+        template = template.replace(/{{COUNTRY}}/g, listing.country || 'USA');
+        template = template.replace(/{{PHONE}}/g, listing.phone || '');
+        template = template.replace(/{{WEBSITE_DOMAIN}}/g, listing.website ? new URL(listing.website).hostname : '');
+        template = template.replace(/{{LISTING_ID}}/g, listing.id);
+        template = template.replace(/{{BUSINESS_NAME_ENCODED}}/g, encodeURIComponent(listing.businessName));
+        
+        const fullAddress = listing.address && listing.city && listing.state 
+            ? `${listing.address}, ${listing.city}, ${listing.state} ${listing.zipCode || ''}`
+            : listing.city && listing.state 
+            ? `${listing.city}, ${listing.state}`
+            : '';
+        template = template.replace(/{{FULL_ADDRESS}}/g, fullAddress);
+        
+        const coordinates = listing.coordinates 
+            ? `${listing.coordinates.lat},${listing.coordinates.lng}` 
+            : '';
+        template = template.replace(/{{COORDINATES}}/g, coordinates);
+        
+        const hoursJson = JSON.stringify(listing.hours || {});
+        template = template.replace(/{{HOURS_JSON}}/g, hoursJson);
+        
+        const photosSlides = (listing.photos && listing.photos.length > 0 
+            ? listing.photos 
+            : [listing.logo]).map(photo => 
+            `<div class="carousel-slide h-full"><img src="${photo}" alt="${listing.businessName}" class="w-full h-full object-cover"></div>`
+        ).join('');
+        template = template.replace(/{{PHOTOS_SLIDES}}/g, photosSlides);
+        
+        const totalPhotos = (listing.photos && listing.photos.length > 0 ? listing.photos.length : 1);
+        template = template.replace(/{{TOTAL_PHOTOS}}/g, totalPhotos);
+        
+        const carouselControls = totalPhotos > 1 
+            ? `<div class="carousel-nav carousel-prev" onclick="prevSlide()">‹</div>
+               <div class="carousel-nav carousel-next" onclick="nextSlide()">›</div>
+               <div class="carousel-dots">${Array.from({length: totalPhotos}, (_, i) => 
+                   `<div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>`
+               ).join('')}</div>` 
+            : '';
+        template = template.replace(/{{CAROUSEL_CONTROLS}}/g, carouselControls);
+        
+        const subcategoriesTags = listing.subcategories && listing.subcategories.length > 0
+            ? listing.subcategories.map(sub => `<span class="subcategory-tag">${sub}</span>`).join('')
+            : '';
+        template = template.replace(/{{SUBCATEGORIES_TAGS}}/g, subcategoriesTags);
+        
+        const statusBadges = [];
+        if (listing.tier === 'FEATURED' || listing.tier === 'PREMIUM') statusBadges.push('<span class="badge badge-featured">Featured</span>');
+        if (listing.verified) statusBadges.push('<span class="badge badge-verified">Verified</span>');
+        if (!listing.showClaimButton && listing.tier === 'FREE') statusBadges.push('<span class="badge badge-claimed">Claimed</span>');
+        if (listing.hours) {
+            statusBadges.push('<span class="badge" id="openClosedBadge">...</span>');
+        }
+        template = template.replace(/{{STATUS_BADGES}}/g, statusBadges.join(''));
+        
+        template = template.replace(/{{TAGLINE_DISPLAY}}/g, listing.tagline ? `<p class="text-gray-600 italic mb-2">"${listing.tagline}"</p>` : '');
+        
+        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
+        
+        const result = await window.TGDAuth.updateGitHubFile(
+            GITHUB_OWNER,
+            GITHUB_REPO,
+            filePath,
+            template,
+            `Generate listing page for ${listing.businessName}`
+        );
 
+        if (result.success) {
+            console.log('✅ Listing page generated successfully');
+            return true;
+        } else {
+            console.error('❌ Failed to generate listing page:', result.error);
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Error generating listing page:', error);
+        return false;
+    }
+}
+        async function saveEditHandler() {
+    console.log('=== SAVE BUTTON CLICKED ===');
+    
+    const listing = await getFormData();
+    if (!listing) {
+        console.log('Form data validation failed');
+        return;
+    }
+
+    console.log('Form data collected:', listing.businessName);
+
+    const slug = listing.slug;
+    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+    console.log('Slug:', slug);
+    console.log('Category slug:', categorySlug);
+
+    if (listing.address && listing.city && listing.state) {
+        console.log('🌍 Geocoding address...');
+        const coords = await geocodeAddress(listing.address, listing.city, listing.state, listing.zipCode);
+        if (coords) {
+            listing.coordinates = coords;
+            console.log('✅ Geocoded:', coords);
+        } else {
+            console.log('⚠️ Geocoding failed, continuing without coordinates');
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    const defaults = getCategoryDefaults(listing.category);
+    
+    if (uploadedImages.logo && !uploadedImages.logo.existing) {
+        console.log('Uploading logo...');
+        const logoProgress = document.getElementById('logoProgress');
+        if (logoProgress) {
+            logoProgress.style.display = 'block';
+            logoProgress.textContent = 'Uploading logo...';
+        }
+        const logoPath = await uploadImageToSupabase(uploadedImages.logo, slug, 'logo', categorySlug);
+        if (logoPath) {
+            listing.logo = logoPath;
+            console.log('Logo uploaded:', logoPath);
+        }
+        if (logoProgress) logoProgress.style.display = 'none';
+    } else if (editingListing && editingListing.logo) {
+        listing.logo = editingListing.logo;
+        console.log('Using existing logo:', listing.logo);
+    } else {
+        listing.logo = defaults.logo;
+        console.log('Using default logo:', listing.logo);
+    }
+
+    if (uploadedImages.photos.length > 0) {
+        console.log('Uploading', uploadedImages.photos.length, 'photos...');
+        const photosProgress = document.getElementById('photosProgress');
+        if (photosProgress) photosProgress.style.display = 'block';
+        const photoPaths = [];
+        for (let i = 0; i < uploadedImages.photos.length; i++) {
+            if (uploadedImages.photos[i].existing) {
+                photoPaths.push(uploadedImages.photos[i].url);
+                console.log(`Photo ${i+1}: Using existing`);
+            } else {
+                if (photosProgress) photosProgress.textContent = `Uploading photo ${i + 1} of ${uploadedImages.photos.length}...`;
+                const photoPath = await uploadImageToSupabase(uploadedImages.photos[i], slug, `photo-${i + 1}`, categorySlug);
+                if (photoPath) {
+                    photoPaths.push(photoPath);
+                    console.log(`Photo ${i+1}: Uploaded to ${photoPath}`);
+                }
+            }
+        }
+        listing.photos = photoPaths;
+        if (photosProgress) photosProgress.style.display = 'none';
+    } else if (editingListing && editingListing.photos) {
+        listing.photos = editingListing.photos;
+        console.log('Using existing photos:', listing.photos.length);
+    } else {
+        listing.photos = [defaults.main];
+        console.log('Using default photo');
+    }
+
+    listing.verified = listing.tier !== 'FREE';
+
+    if (editingListing) {
+        console.log('📝 UPDATING existing listing:', editingListing.id);
+        const index = allListings.findIndex(l => l.id === editingListing.id);
+        console.log('Found at index:', index);
+        
+        listing.id = editingListing.id;
+        listing.listingId = editingListing.listingId;
+        listing.metadata = {
+            createdAt: editingListing.metadata.createdAt,
+            updatedAt: new Date().toISOString()
+        };
+        listing.analytics = editingListing.analytics || {
+            views: 0,
+            callClicks: 0,
+            websiteClicks: 0,
+            directionClicks: 0,
+            shareClicks: 0,
+            sharePlatforms: {},
+            videoPlays: 0,
+            lastViewed: new Date().toISOString(),
+            detailedViews: []
+        };
+        listing.visible = editingListing.visible !== undefined ? editingListing.visible : true;
+        
+        allListings[index] = listing;
+        console.log('Updated listing at index', index);
+    } else {
+        console.log('✨ CREATING new listing');
+        listing.id = slug;
+        listing.listingId = nextListingId;
+        console.log('Assigned listing ID:', listing.listingId);
+        
+        nextListingId++;
+        
+        listing.visible = true;
+        listing.metadata = {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        listing.analytics = {
+            views: 0,
+            callClicks: 0,
+            websiteClicks: 0,
+            directionClicks: 0,
+            shareClicks: 0,
+            sharePlatforms: {},
+            videoPlays: 0,
+            lastViewed: new Date().toISOString(),
+            detailedViews: []
+        };
+        
+        allListings.push(listing);
+        console.log('Added to allListings array, new count:', allListings.length);
+    }
+
+    console.log('');
+    console.log('📦 STEP 1: Saving database...');
+    const dbSaved = await saveToGitHub(false);
+    
+    if (!dbSaved) {
+        console.error('❌ Database save failed, aborting...');
+        alert('Failed to save database. Listing page will not be generated.');
+        return;
+    }
+    
+    console.log('✅ Database saved successfully');
+    console.log('');
+
+    console.log('📄 STEP 2: Generating listing page...');
+    const pageGenerated = await generateListingPage(listing);
+    
+    if (!pageGenerated) {
+        console.log('⚠️ Page generation failed, but database was saved');
+    } else {
+        console.log('✅ Page generated successfully');
+    }
+    console.log('');
+
+    console.log('=== SAVE COMPLETE ===');
+    console.log('');
+    
+    document.getElementById('editModal').classList.add('hidden');
+    uploadedImages = { logo: null, photos: [] };
+    selectedSubcategories = [];
+    
+    renderTable();
+}
+
+window.showDeleteModal = function(id) {
+    deletingListingId = id;
+    const listing = allListings.find(l => l.id === id);
+    document.getElementById('deleteBusinessName').textContent = listing.businessName;
+    document.getElementById('deleteModal').classList.remove('hidden');
+};
+
+document.getElementById('cancelDelete').addEventListener('click', () => {
+    document.getElementById('deleteModal').classList.add('hidden');
+    deletingListingId = null;
+    document.getElementById('deleteConfirmInput').value = '';
+});
+
+document.getElementById('confirmDelete').addEventListener('click', async () => {
+    const confirmText = document.getElementById('deleteConfirmInput').value;
+    if (confirmText !== 'DELETE') {
+        alert('You must type DELETE to confirm');
+        return;
+    }
+    
+    const index = allListings.findIndex(l => l.id === deletingListingId);
+    if (index > -1) {
+        allListings.splice(index, 1);
+        await saveToGitHub(false);
+        document.getElementById('deleteModal').classList.add('hidden');
+        deletingListingId = null;
+        document.getElementById('deleteConfirmInput').value = '';
+        alert('Listing deleted successfully');
+    }
+});
+        
 function setupEventListeners() {
     const newListingBtn = document.getElementById('newListingBtn');
     if (newListingBtn) {
