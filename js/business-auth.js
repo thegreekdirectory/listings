@@ -244,7 +244,6 @@ async function logout() {
         showAuthPage();
     }
 }
-
 window.handleSignIn = handleSignIn;
 window.handleSignUp = handleSignUp;
 window.handlePasswordReset = handlePasswordReset;
