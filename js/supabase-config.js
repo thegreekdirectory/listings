@@ -5,8 +5,13 @@
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNzA3MTcsImV4cCI6MjA1MjY0NjcxN30.YUzOppA6JIX5hhGsUPf0-Q_Y2WJr4Y5iHhZGNBT0kAA';
 
+console.log('Supabase URL:', SUPABASE_URL);
+console.log('Supabase Key (first 20 chars):', SUPABASE_ANON_KEY.substring(0, 20));
+
 // Initialize Supabase client
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+console.log('Supabase client initialized:', supabaseClient ? 'Success' : 'Failed');
 
 // ============================================
 // AUTHENTICATION UTILITIES
@@ -108,12 +113,19 @@ async function signUpBusinessOwner(email, password, listingId, phone = null) {
  */
 async function signInBusinessOwner(email, password) {
     try {
+        console.log('Attempting sign in for:', email);
+        
         const { data, error } = await supabaseClient.auth.signInWithPassword({
             email: email,
             password: password
         });
 
-        if (error) throw error;
+        console.log('Sign in response:', { data, error });
+
+        if (error) {
+            console.error('Sign in error details:', error);
+            throw error;
+        }
 
         // Get business owner data
         const { data: ownerData, error: ownerError } = await supabaseClient
@@ -121,6 +133,8 @@ async function signInBusinessOwner(email, password) {
             .select('*')
             .eq('user_id', data.user.id)
             .single();
+
+        console.log('Owner data fetch:', { ownerData, ownerError });
 
         if (ownerError) {
             console.warn('Owner data not found:', ownerError);
