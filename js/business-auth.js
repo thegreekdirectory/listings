@@ -135,6 +135,8 @@ async function searchListingForSignup() {
     const searchTerm = document.getElementById('signUpListingSearch').value.trim().toLowerCase();
     const resultsDiv = document.getElementById('listingSearchResults');
     
+    console.log('Search term:', searchTerm);
+    
     if (searchTerm.length < 2) {
         resultsDiv.innerHTML = '';
         return;
@@ -142,20 +144,30 @@ async function searchListingForSignup() {
     
     if (!allListings || allListings.length === 0) {
         try {
+            console.log('Loading listings from GitHub...');
             const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
             allListings = data.listings;
+            console.log('Loaded listings:', allListings.length);
         } catch (error) {
             console.error('Error loading listings:', error);
+            resultsDiv.innerHTML = '<p class="text-sm text-red-500 p-2">Error loading listings. Please try again.</p>';
             return;
         }
     }
     
     const matches = allListings.filter(l => 
         l.businessName.toLowerCase().includes(searchTerm) ||
-        l.listingId.toString().includes(searchTerm) ||
-        l.id.includes(searchTerm)
+        (l.listingId && l.listingId.toString().includes(searchTerm)) ||
+        (l.id && l.id.includes(searchTerm))
     ).slice(0, 5);
+    
+    console.log('Matches found:', matches.length);
     
     if (matches.length === 0) {
         resultsDiv.innerHTML = '<p class="text-sm text-gray-500 p-2">No listings found</p>';
@@ -163,7 +175,7 @@ async function searchListingForSignup() {
     }
     
     resultsDiv.innerHTML = matches.map(l => `
-        <div class="p-2 hover:bg-gray-100 cursor-pointer rounded" onclick="selectListing('${l.id}', '${l.businessName}')">
+        <div class="p-2 hover:bg-gray-100 cursor-pointer rounded" onclick="selectListing('${l.id}', '${l.businessName.replace(/'/g, "\\'")}')">
             <div class="font-medium">${l.businessName}</div>
             <div class="text-xs text-gray-500">ID: ${l.listingId} • ${l.city}, ${l.state}</div>
         </div>
