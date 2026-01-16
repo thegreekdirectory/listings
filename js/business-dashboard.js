@@ -157,7 +157,6 @@ function renderOverview() {
     
     document.getElementById('previewDetails').innerHTML = details;
 }
-
 function renderSettings() {
     if (!ownerData) return;
     
@@ -506,7 +505,6 @@ function toggleSubcategory(subcategory) {
         selectedSubcategories.push(subcategory);
     }
 }
-
 window.updateCharCounter = function(field) {
     if (field === 'tagline') {
         const input = document.getElementById('editTagline');
@@ -730,3 +728,55 @@ async function saveChanges() {
 }
 
 window.saveChanges = saveChanges;
+// ============================================
+// SOCIAL MEDIA & REVIEWS SECTIONS
+// ============================================
+
+function renderSocialMediaSection() {
+    if (!currentListing || !currentListing.socialMedia) return '';
+    
+    const sm = currentListing.socialMedia;
+    let socialLinks = '';
+    
+    if (sm.facebook) socialLinks += `<a href="https://facebook.com/${sm.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon">Facebook</a>`;
+    if (sm.instagram) socialLinks += `<a href="https://instagram.com/${sm.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon">Instagram</a>`;
+    if (sm.twitter) socialLinks += `<a href="https://twitter.com/${sm.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon">Twitter</a>`;
+    if (sm.youtube) socialLinks += `<a href="https://youtube.com/@${sm.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon">YouTube</a>`;
+    if (sm.tiktok) socialLinks += `<a href="https://tiktok.com/@${sm.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon">TikTok</a>`;
+    if (sm.linkedin) socialLinks += `<a href="${sm.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon">LinkedIn</a>`;
+    
+    if (socialLinks) {
+        return `
+            <div class="mt-4">
+                <h4 class="font-semibold text-gray-700 mb-2">Social Media</h4>
+                <div class="flex flex-wrap gap-2">
+                    ${socialLinks}
+                </div>
+            </div>
+        `;
+    }
+    return '';
+}
+
+function renderReviewsSection() {
+    if (!currentListing || !currentListing.reviews) return '';
+    
+    const r = currentListing.reviews;
+    let reviewLinks = '';
+    
+    if (r.google) reviewLinks += `<a href="${r.google}" target="_blank" rel="noopener noreferrer" class="social-icon">Google</a>`;
+    if (r.yelp) reviewLinks += `<a href="${r.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon">Yelp</a>`;
+    if (r.tripadvisor) reviewLinks += `<a href="${r.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon">TripAdvisor</a>`;
+    
+    if (reviewLinks) {
+        return `
+            <div class="mt-4">
+                <h4 class="font-semibold text-gray-700 mb-2">Reviews</h4>
+                <div class="flex flex-wrap gap-2">
+                    ${reviewLinks}
+                </div>
+            </div>
+        `;
+    }
+    return '';
+}
