@@ -1118,7 +1118,7 @@
         "fullName": "E F",
         "title": "Manager",
         "fromGreece": null,
-        "ownerEmail": null,
+        "ownerEmail": "gdv@e.com",
         "ownerPhone": null,
         "visibility": {
           "name": true,
@@ -1136,7 +1136,7 @@
       "listingId": 6,
       "metadata": {
         "createdAt": "2026-01-16T16:56:38.076Z",
-        "updatedAt": "2026-01-16T16:58:21.700Z"
+        "updatedAt": "2026-01-16T17:22:42.794Z"
       },
       "analytics": {
         "views": 0,
