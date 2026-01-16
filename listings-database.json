@@ -1057,6 +1057,99 @@
         "lastViewed": "2026-01-16T16:47:36.745Z",
         "detailedViews": []
       }
+    },
+    {
+      "businessName": "E",
+      "tagline": "e",
+      "description": "e\nF",
+      "category": "Home & Construction",
+      "subcategories": [
+        "Electrician",
+        "Handyman",
+        "Landscaping",
+        "HVAC"
+      ],
+      "phone": "(987) 293-2345",
+      "address": "111 Main St",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
+      "country": "USA",
+      "email": "a@ex.com",
+      "website": "https://ex.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": false,
+      "placesUrlEnding": "wyoming",
+      "slug": "e",
+      "logo": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80"
+      ],
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "Closed",
+        "wednesday": "Closed",
+        "thursday": "Closed",
+        "friday": "10:00 AM - 11:30 AM",
+        "saturday": "Closed",
+        "sunday": "Closed"
+      },
+      "socialMedia": {
+        "facebook": "e",
+        "instagram": "e",
+        "twitter": "e",
+        "youtube": "e",
+        "tiktok": "e",
+        "linkedin": "https://ex.com/l",
+        "other1": "https://ex.com/o1",
+        "other2": "https://ex.com/o2",
+        "other3": "https://ex.com/o3"
+      },
+      "reviews": {
+        "google": "https://g.com/g",
+        "yelp": "https://g.com/y",
+        "tripadvisor": "https://g.com/t",
+        "other1": "https://g.com/or1",
+        "other2": "https://g.com/or2",
+        "other3": "https://g.com/or3"
+      },
+      "ownerInfo": {
+        "fullName": "E F",
+        "title": "Manager",
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.0331241,
+        "lng": -87.8231913
+      },
+      "id": "e",
+      "listingId": 6,
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-16T16:56:38.076Z",
+        "updatedAt": "2026-01-16T16:56:38.076Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-16T16:56:38.076Z",
+        "detailedViews": []
+      }
     }
   ]
 }
