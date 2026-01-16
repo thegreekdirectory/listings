@@ -964,6 +964,99 @@
         "detailedViews": []
       },
       "visible": true
+    },
+    {
+      "businessName": "D",
+      "tagline": "D tag",
+      "description": "D\nDesc",
+      "category": "Education & Community",
+      "subcategories": [
+        "Senior Care",
+        "Childcare",
+        "Tutor",
+        "Greek School"
+      ],
+      "phone": "(123) 456-7890",
+      "address": "123 Main St",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
+      "country": "USA",
+      "email": "example@example.com",
+      "website": "https://example.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "placesUrlEnding": "chicago",
+      "slug": "d",
+      "logo": "https://example.com/photo.png",
+      "photos": [
+        "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80"
+      ],
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "Closed",
+        "wednesday": "Closed",
+        "thursday": "Closed",
+        "friday": "10:00 AM - 5:00 PM",
+        "saturday": "Closed",
+        "sunday": "Closed"
+      },
+      "socialMedia": {
+        "facebook": "D",
+        "instagram": "d",
+        "twitter": "d",
+        "youtube": "d",
+        "tiktok": "d",
+        "linkedin": "https://linkedin.com/d",
+        "other1": "https://other.com/soc1/d",
+        "other2": "https://other.com/soc2/d",
+        "other3": "https://other.com/soc3/d"
+      },
+      "reviews": {
+        "google": "https://google.com/d",
+        "yelp": "https://yelp.com/biz/d",
+        "tripadvisor": "https://tripadvisor.com/d",
+        "other1": "https://other.com/rev1/d",
+        "other2": "https://other.com/rev2/d",
+        "other3": "https://other.com/rev3/d"
+      },
+      "ownerInfo": {
+        "fullName": "D E",
+        "title": "Owner",
+        "fromGreece": "Attica",
+        "ownerEmail": "example1@example.com",
+        "ownerPhone": "(098) 765-4321",
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.0331241,
+        "lng": -87.8231913
+      },
+      "id": "d",
+      "listingId": 5,
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-16T16:47:36.745Z",
+        "updatedAt": "2026-01-16T16:47:36.745Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-16T16:47:36.745Z",
+        "detailedViews": []
+      }
     }
   ]
 }
