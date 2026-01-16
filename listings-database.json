@@ -1077,9 +1077,9 @@
       "country": "USA",
       "email": "a@ex.com",
       "website": "https://ex.com",
-      "tier": "FREE",
-      "verified": false,
-      "showClaimButton": false,
+      "tier": "PREMIUM",
+      "verified": true,
+      "showClaimButton": true,
       "placesUrlEnding": "wyoming",
       "slug": "e",
       "logo": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80",
@@ -1134,10 +1134,9 @@
       },
       "id": "e",
       "listingId": 6,
-      "visible": true,
       "metadata": {
         "createdAt": "2026-01-16T16:56:38.076Z",
-        "updatedAt": "2026-01-16T16:56:38.076Z"
+        "updatedAt": "2026-01-16T16:58:21.700Z"
       },
       "analytics": {
         "views": 0,
@@ -1149,7 +1148,8 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-16T16:56:38.076Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     }
   ]
 }
