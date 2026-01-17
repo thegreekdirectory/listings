@@ -1059,9 +1059,9 @@
       }
     },
     {
-      "businessName": "E",
-      "tagline": "e",
-      "description": "e\nF",
+      "businessName": "Example Busness",
+      "tagline": "Example Business is a thriving business in Chicago.",
+      "description": "A paragraph is a distinct unit of writing, a collection of related sentences focused on a single idea or topic, serving to organize thoughts and guide readers through an essay's structure. Typically, it includes a topic sentence (the main point), supporting sentences (details, evidence, examples), and sometimes a concluding or transition sentence, though length varies (often 3-10 sentences) and is less important than unity and coherence.",
       "category": "Home & Construction",
       "subcategories": [
         "Electrician",
@@ -1136,7 +1136,7 @@
       "listingId": 6,
       "metadata": {
         "createdAt": "2026-01-16T16:56:38.076Z",
-        "updatedAt": "2026-01-17T02:14:54.231Z"
+        "updatedAt": "2026-01-17T02:17:05.868Z"
       },
       "analytics": {
         "views": 0,
