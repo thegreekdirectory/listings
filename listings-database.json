@@ -1077,8 +1077,8 @@
       "country": "USA",
       "email": "a@ex.com",
       "website": "https://ex.com",
-      "tier": "PREMIUM",
-      "verified": true,
+      "tier": "FREE",
+      "verified": false,
       "showClaimButton": true,
       "placesUrlEnding": "wyoming",
       "slug": "e",
@@ -1136,7 +1136,7 @@
       "listingId": 6,
       "metadata": {
         "createdAt": "2026-01-16T16:56:38.076Z",
-        "updatedAt": "2026-01-16T17:22:42.794Z"
+        "updatedAt": "2026-01-17T02:14:54.231Z"
       },
       "analytics": {
         "views": 0,
