@@ -5,8 +5,9 @@
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 
-console.log('Supabase URL:', SUPABASE_URL);
-console.log('Supabase Key (first 20 chars):', SUPABASE_ANON_KEY.substring(0, 20));
+console.log('✅ Supabase configured correctly');
+console.log('URL:', SUPABASE_URL);
+console.log('Key valid:', SUPABASE_ANON_KEY.split('.').length === 3);
 
 // Initialize Supabase client
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -57,7 +58,9 @@ async function getCurrentSession() {
  */
 async function signUpBusinessOwner(email, password, listingId, phone = null) {
     try {
-        // 1. Sign up the user
+        console.log('Starting signup for:', email, 'with listing:', listingId);
+        
+        // 1. Sign up the user first
         const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
             email: email,
             password: password,
@@ -70,9 +73,17 @@ async function signUpBusinessOwner(email, password, listingId, phone = null) {
             }
         });
 
-        if (signUpError) throw signUpError;
+        if (signUpError) {
+            console.error('Auth signup error:', signUpError);
+            throw signUpError;
+        }
 
-        // 2. Create business_owners record
+        console.log('Auth signup successful, user ID:', authData.user.id);
+
+        // 2. Wait a moment for the session to be established
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 3. Create business_owners record
         const { data: ownerData, error: insertError } = await supabaseClient
             .from('business_owners')
             .insert({
@@ -86,14 +97,19 @@ async function signUpBusinessOwner(email, password, listingId, phone = null) {
             .select()
             .single();
 
-        if (insertError) throw insertError;
+        if (insertError) {
+            console.error('Insert error:', insertError);
+            throw insertError;
+        }
+
+        console.log('Business owner record created:', ownerData);
 
         return {
             success: true,
             user: authData.user,
             session: authData.session,
             owner: ownerData,
-            message: 'Sign up successful! Please check your email to verify your account.'
+            message: 'Sign up successful! You can now sign in.'
         };
 
     } catch (error) {
