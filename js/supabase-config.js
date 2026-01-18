@@ -1,5 +1,6 @@
 // ============================================
-// SUPABASE CLIENT CONFIGURATION
+// SUPABASE CLIENT CONFIGURATION - PART 1
+// Initialization & Core Functions
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
@@ -47,20 +48,43 @@ async function getCurrentSession() {
         return null;
     }
 }
+// ============================================
+// SUPABASE CLIENT CONFIGURATION - PART 2
+// Sign Up & Sign In Functions
+// ============================================
 
 /**
  * Sign up a new business owner
  * @param {string} email - Business owner email
  * @param {string} password - Password
  * @param {string} listingId - Listing ID to link
+ * @param {string} confirmationKey - Confirmation key for claiming
  * @param {string} phone - Optional phone number
  * @returns {Promise<Object>} Result object
  */
-async function signUpBusinessOwner(email, password, listingId, phone = null) {
+async function signUpBusinessOwner(email, password, listingId, confirmationKey, phone = null) {
     try {
         console.log('Starting signup for:', email, 'with listing:', listingId);
         
-        // 1. Sign up the user first
+        // 1. Verify confirmation key matches listing
+        const { data: ownerRecord, error: ownerCheckError } = await supabaseClient
+            .from('business_owners')
+            .select('*')
+            .eq('listing_id', listingId)
+            .eq('confirmation_key', confirmationKey)
+            .single();
+        
+        if (ownerCheckError || !ownerRecord) {
+            console.error('Invalid confirmation key:', ownerCheckError);
+            throw new Error('Invalid confirmation key for this listing');
+        }
+        
+        // Check if listing is already claimed
+        if (ownerRecord.user_id) {
+            throw new Error('This listing has already been claimed');
+        }
+        
+        // 2. Sign up the user
         const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
             email: email,
             password: password,
@@ -80,35 +104,30 @@ async function signUpBusinessOwner(email, password, listingId, phone = null) {
 
         console.log('Auth signup successful, user ID:', authData.user.id);
 
-        // 2. Wait a moment for the session to be established
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // 3. Create business_owners record
-        const { data: ownerData, error: insertError } = await supabaseClient
+        // 3. Update business_owners record with user_id and contact info
+        const { data: updatedOwner, error: updateError } = await supabaseClient
             .from('business_owners')
-            .insert({
+            .update({
                 user_id: authData.user.id,
-                listing_id: listingId,
                 owner_email: email,
-                owner_phone: phone,
-                email_visible: false,
-                phone_visible: false
+                owner_phone: phone
             })
+            .eq('listing_id', listingId)
             .select()
             .single();
 
-        if (insertError) {
-            console.error('Insert error:', insertError);
-            throw insertError;
+        if (updateError) {
+            console.error('Update error:', updateError);
+            throw updateError;
         }
 
-        console.log('Business owner record created:', ownerData);
+        console.log('Business owner record updated:', updatedOwner);
 
         return {
             success: true,
             user: authData.user,
             session: authData.session,
-            owner: ownerData,
+            owner: updatedOwner,
             message: 'Sign up successful! You can now sign in.'
         };
 
@@ -143,12 +162,11 @@ async function signInBusinessOwner(email, password) {
             throw error;
         }
 
-        // Get business owner data
+        // Get all business owner data for this user
         const { data: ownerData, error: ownerError } = await supabaseClient
             .from('business_owners')
             .select('*')
-            .eq('user_id', data.user.id)
-            .single();
+            .eq('user_id', data.user.id);
 
         console.log('Owner data fetch:', { ownerData, ownerError });
 
@@ -172,6 +190,10 @@ async function signInBusinessOwner(email, password) {
         };
     }
 }
+// ============================================
+// SUPABASE CLIENT CONFIGURATION - PART 3
+// Utility & Helper Functions
+// ============================================
 
 /**
  * Sign out current user
@@ -190,7 +212,7 @@ async function signOut() {
 
 /**
  * Get business owner data for current user
- * @returns {Promise<Object|null>} Owner data or null
+ * @returns {Promise<Array|null>} Owner data array or null
  */
 async function getBusinessOwnerData() {
     try {
@@ -200,8 +222,7 @@ async function getBusinessOwnerData() {
         const { data, error } = await supabaseClient
             .from('business_owners')
             .select('*')
-            .eq('user_id', user.id)
-            .single();
+            .eq('user_id', user.id);
 
         if (error) throw error;
         return data;
@@ -226,8 +247,7 @@ async function updateBusinessOwnerContact(updates) {
             .from('business_owners')
             .update(updates)
             .eq('user_id', user.id)
-            .select()
-            .single();
+            .select();
 
         if (error) throw error;
 
@@ -299,54 +319,6 @@ async function updatePassword(newPassword) {
         };
     }
 }
-// ============================================
-// GITHUB INTEGRATION
-// ============================================
-
-/**
- * Update GitHub file via Supabase Edge Function
- * @param {string} owner - GitHub owner
- * @param {string} repo - GitHub repo
- * @param {string} path - File path
- * @param {string} content - File content
- * @param {string} message - Commit message
- * @returns {Promise<Object>} Result object
- */
-async function updateGitHubFile(owner, repo, path, content, message) {
-    try {
-        console.log('Updating GitHub file via Supabase Edge Function:', path);
-        
-        const response = await supabaseClient.functions.invoke('update-github-file', {
-            body: {
-                owner: owner,
-                repo: repo,
-                path: path,
-                content: content,
-                message: message
-            }
-        });
-
-        if (response.error) {
-            throw new Error(response.error.message || 'GitHub update failed');
-        }
-
-        return {
-            success: true,
-            data: response.data
-        };
-
-    } catch (error) {
-        console.error('GitHub update error:', error);
-        return {
-            success: false,
-            error: error.message || 'GitHub update failed'
-        };
-    }
-}
-
-// ============================================
-// AUTH STATE LISTENER
-// ============================================
 
 /**
  * Set up auth state change listener
@@ -371,6 +343,5 @@ window.TGDAuth = {
     updateBusinessOwnerContact,
     resetPassword,
     updatePassword,
-    onAuthStateChange,
-    updateGitHubFile
+    onAuthStateChange
 };
