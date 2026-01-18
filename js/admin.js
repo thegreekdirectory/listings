@@ -1,6 +1,6 @@
 // ============================================
-// ADMIN PORTAL - MAIN JAVASCRIPT
-// Part 1: Configuration, Authentication & Core Functions
+// ADMIN PORTAL - PART 1
+// Configuration & State Management
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
@@ -43,48 +43,29 @@ const US_STATES = {
     'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
 };
 
-// ============================================
-// GLOBAL STATE
-// ============================================
 let supabase = null;
 let currentAdminUser = null;
 let allListings = [];
 let editingListing = null;
 let selectedSubcategories = [];
 let primarySubcategory = null;
-let currentAnalyticsListing = null;
-let currentAnalyticsTab = 'overview';
-let deletingListingId = null;
 
-// ============================================
-// INITIALIZATION
-// ============================================
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing Admin Portal...');
     
-    // Initialize Supabase
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('✅ Supabase initialized');
     
-    // Check authentication
     await checkAuthState();
-    
-    // Setup event listeners
     setupEventListeners();
-    
-    console.log('✅ Admin Portal initialization complete');
 });
 
-// ============================================
-// AUTHENTICATION FUNCTIONS
-// ============================================
 async function checkAuthState() {
     const session = await supabase.auth.getSession();
     
     if (session.data.session) {
         currentAdminUser = session.data.session.user;
         
-        // Check if user is admin (you can customize this check)
         const { data: adminData } = await supabase
             .from('admin_users')
             .select('*')
@@ -124,7 +105,6 @@ async function handleAdminLogin() {
         
         currentAdminUser = data.user;
         
-        // Check if user is admin
         const { data: adminData, error: adminError } = await supabase
             .from('admin_users')
             .select('*')
@@ -185,9 +165,6 @@ function clearAuthMessage() {
     msgDiv.textContent = '';
 }
 
-// ============================================
-// LOAD LISTINGS FROM SUPABASE
-// ============================================
 async function loadListings() {
     try {
         console.log('📥 Loading listings from Supabase...');
@@ -213,12 +190,9 @@ async function loadListings() {
     }
 }
 
-// ============================================
-// RENDER TABLE
-// ============================================
 function renderTable() {
     const tbody = document.getElementById('listingsTableBody');
-    const searchTerm = document.getElementById('adminSearch') ? document.getElementById('adminSearch').value.toLowerCase() : '';
+    const searchTerm = document.getElementById('adminSearch')?.value.toLowerCase() || '';
     
     const filtered = searchTerm ? allListings.filter(l => 
         l.business_name.toLowerCase().includes(searchTerm) ||
@@ -260,20 +234,15 @@ function renderTable() {
             <td class="py-4 px-4 text-sm text-gray-600">${new Date(l.updated_at).toLocaleString()}</td>
             <td class="py-4 px-4">
                 <div class="flex justify-end gap-2">
-                    <button onclick="showAnalytics('${l.id}')" class="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200">📊</button>
                     <button onclick="editListing('${l.id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
                     <a href="${listingUrl}" target="_blank" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View</a>
                     ${isClaimed ? `<button onclick="sendMagicLink('${l.id}')" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200">🔗</button>` : ''}
-                    <button onclick="showDeleteModal('${l.id}')" class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
                 </div>
             </td>
         </tr>
     `}).join('');
 }
 
-// ============================================
-// TOGGLE VISIBILITY
-// ============================================
 window.toggleVisibility = async function(id) {
     try {
         const listing = allListings.find(l => l.id === id);
@@ -295,69 +264,32 @@ window.toggleVisibility = async function(id) {
     }
 };
 
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-function generateSlug(name) {
-    return name.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
+function setupEventListeners() {
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('newListingBtn')?.addEventListener('click', newListing);
+    document.getElementById('refreshBtn')?.addEventListener('click', loadListings);
+    document.getElementById('adminSearch')?.addEventListener('input', renderTable);
+    document.getElementById('saveEdit')?.addEventListener('click', saveListing);
+    document.getElementById('cancelEdit')?.addEventListener('click', () => {
+        if (confirm('Discard changes?')) {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+    });
+    document.getElementById('closeModal')?.addEventListener('click', () => {
+        if (confirm('Discard changes?')) {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+    });
 }
 
-function generateConfirmationKey() {
-    const words = [
-        'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
-        'iota', 'kappa', 'lambda', 'sigma', 'omega', 'phoenix', 'apollo',
-        'athena', 'zeus', 'hera', 'poseidon', 'demeter', 'ares', 'hermes',
-        'helios', 'selene', 'nike', 'tyche', 'eros', 'chaos', 'gaia', 'uranus',
-        'titan', 'atlas', 'prometheus', 'olympus', 'sparta', 'athens', 'delphi',
-        'corinth', 'thebes', 'argos', 'crete', 'rhodes', 'cyprus', 'aegean'
-    ];
-    
-    const word1 = words[Math.floor(Math.random() * words.length)];
-    const word2 = words[Math.floor(Math.random() * words.length)];
-    const word3 = words[Math.floor(Math.random() * words.length)];
-    
-    return `${word1}-${word2}-${word3}`;
-}
-
-function generateMetaDescription(listing) {
-    const parts = [];
-    
-    if (listing.tagline) {
-        parts.push(listing.tagline);
-    }
-    
-    if (listing.city && listing.state) {
-        parts.push(`in ${listing.city}, ${listing.state}`);
-    } else if (listing.state) {
-        parts.push(`in ${listing.state}`);
-    }
-    
-    if (parts.length === 0 && listing.description) {
-        return listing.description.substring(0, 155) + '...';
-    }
-    
-    let meta = parts.join(' ');
-    if (meta.length > 155) {
-        meta = meta.substring(0, 152) + '...';
-    }
-    
-    return meta;
-}
-
-// Make functions globally available
 window.handleAdminLogin = handleAdminLogin;
 window.logout = logout;
 window.loadListings = loadListings;
 // ============================================
 // ADMIN PORTAL - PART 2
-// Edit Listing, Form Management & Save Functions
+// Edit Listing & Form Management
 // ============================================
 
-// ============================================
-// EDIT LISTING
-// ============================================
 window.editListing = async function(id) {
     try {
         const { data: listing, error } = await supabase
@@ -372,8 +304,11 @@ window.editListing = async function(id) {
         if (error) throw error;
         
         editingListing = listing;
+        selectedSubcategories = listing.subcategories || [];
+        primarySubcategory = listing.primary_subcategory || null;
+        
         document.getElementById('modalTitle').textContent = 'Edit Listing';
-        fillForm(listing);
+        fillEditForm(listing);
         document.getElementById('editModal').classList.remove('hidden');
         
     } catch (error) {
@@ -384,173 +319,213 @@ window.editListing = async function(id) {
 
 window.newListing = function() {
     editingListing = null;
+    selectedSubcategories = [];
+    primarySubcategory = null;
     document.getElementById('modalTitle').textContent = 'New Listing';
-    clearForm();
+    fillEditForm(null);
     document.getElementById('editModal').classList.remove('hidden');
 };
 
-// ============================================
-// FORM MANAGEMENT
-// ============================================
-function fillForm(listing) {
-    // Basic info
-    document.getElementById('editListingId').value = listing.id || '';
-    document.getElementById('editBusinessName').value = listing.business_name || '';
-    document.getElementById('editTagline').value = listing.tagline || '';
-    document.getElementById('editDescription').value = listing.description || '';
-    document.getElementById('editCategory').value = listing.category || CATEGORIES[0];
-    document.getElementById('editTier').value = listing.tier || 'FREE';
+function fillEditForm(listing) {
+    const owner = listing?.owner && listing.owner.length > 0 ? listing.owner[0] : null;
     
-    // Chain info
-    document.getElementById('editIsChain').checked = listing.is_chain || false;
-    document.getElementById('editChainName').value = listing.chain_name || '';
-    document.getElementById('editChainId').value = listing.chain_id || '';
-    toggleChainFields();
-    
-    // Subcategories
-    selectedSubcategories = listing.subcategories || [];
-    primarySubcategory = listing.primary_subcategory || null;
-    updateSubcategoriesDisplay();
-    
-    // Location
-    document.getElementById('editAddress').value = listing.address || '';
-    document.getElementById('editCity').value = listing.city || '';
-    document.getElementById('editState').value = listing.state || 'IL';
-    document.getElementById('editZipCode').value = listing.zip_code || '';
-    document.getElementById('editCountry').value = listing.country || 'USA';
-    document.getElementById('editPlacesUrl').value = listing.places_url_ending || '';
-    
-    // Contact
-    document.getElementById('editPhone').value = listing.phone || '';
-    document.getElementById('editEmail').value = listing.email || '';
-    document.getElementById('editWebsite').value = listing.website || '';
-    
-    // Hours
-    const hours = listing.hours || {};
-    ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach(day => {
-        const el = document.getElementById(`editHours${day}`);
-        if (el) el.value = hours[day.toLowerCase()] || '';
-    });
-    
-    // Media
-    document.getElementById('editLogo').value = listing.logo || '';
-    document.getElementById('editPhotos').value = listing.photos ? listing.photos.join('\n') : '';
-    
-    // Social Media
-    const social = listing.social_media || {};
-    ['Facebook', 'Instagram', 'Twitter', 'Youtube', 'Tiktok', 'Linkedin', 'Other1', 'Other2', 'Other3'].forEach(field => {
-        const el = document.getElementById(`edit${field}`);
-        if (el) el.value = social[field.toLowerCase()] || '';
-    });
-    
-    // Reviews
-    const reviews = listing.reviews || {};
-    ['Google', 'Yelp', 'Tripadvisor', 'ReviewOther1', 'ReviewOther2', 'ReviewOther3'].forEach(field => {
-        const el = document.getElementById(`edit${field}`);
-        const key = field.replace('Review', '').toLowerCase();
-        if (el) el.value = reviews[key] || '';
-    });
-    
-    // Owner Info
-    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    if (owner) {
-        document.getElementById('editOwnerName').value = owner.full_name || '';
-        document.getElementById('editOwnerTitle').value = owner.title || '';
-        document.getElementById('editOwnerGreece').value = owner.from_greece || '';
-        document.getElementById('editOwnerEmail').value = owner.owner_email || '';
-        document.getElementById('editOwnerPhone').value = owner.owner_phone || '';
-        document.getElementById('editConfirmationKey').value = owner.confirmation_key || '';
-        
-        // Show if listing is claimed
-        if (owner.user_id) {
-            document.getElementById('claimedIndicator').classList.remove('hidden');
-        } else {
-            document.getElementById('claimedIndicator').classList.add('hidden');
-        }
-    }
-    
-    document.getElementById('editShowClaim').checked = listing.show_claim_button !== false;
-    
-    updateCharCounters();
-}
+    const formContent = document.getElementById('editFormContent');
+    formContent.innerHTML = `
+        <div class="space-y-6">
+            <!-- Basic Info -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Basic Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Business Name *</label>
+                        <input type="text" id="editBusinessName" value="${listing?.business_name || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Tagline (max 75) *</label>
+                        <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span>/75</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Description *</label>
+                        <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg">${listing?.description || ''}</textarea>
+                        <p class="text-xs text-gray-500 mt-1"><span id="descCount">${(listing?.description || '').length}</span> characters</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Category *</label>
+                        <select id="editCategory" class="w-full px-4 py-2 border rounded-lg" onchange="updateSubcategoriesForCategory()">
+                            ${CATEGORIES.map(cat => `<option value="${cat}" ${listing?.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Tier</label>
+                        <select id="editTier" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="FREE" ${listing?.tier === 'FREE' ? 'selected' : ''}>FREE</option>
+                            <option value="VERIFIED" ${listing?.tier === 'VERIFIED' ? 'selected' : ''}>VERIFIED</option>
+                            <option value="FEATURED" ${listing?.tier === 'FEATURED' ? 'selected' : ''}>FEATURED</option>
+                            <option value="PREMIUM" ${listing?.tier === 'PREMIUM' ? 'selected' : ''}>PREMIUM</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-function clearForm() {
-    document.querySelectorAll('#editModal input, #editModal textarea, #editModal select').forEach(el => {
-        if (el.type === 'checkbox') el.checked = false;
-        else el.value = '';
-    });
+            <!-- Subcategories -->
+            <div id="subcategoriesContainer">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium">Subcategories *</label>
+                    <span class="text-xs text-gray-500">Select at least one</span>
+                </div>
+                <div id="subcategoryCheckboxes" class="grid grid-cols-2 gap-2"></div>
+            </div>
+
+            <!-- Chain Info -->
+            <div>
+                <label class="flex items-center gap-2 mb-4">
+                    <input type="checkbox" id="editIsChain" ${listing?.is_chain ? 'checked' : ''} onchange="toggleChainFields()">
+                    <span class="text-sm font-medium">This is a chain business</span>
+                </label>
+                <div id="chainFieldsContainer" class="${listing?.is_chain ? '' : 'hidden'} grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Chain Name</label>
+                        <input type="text" id="editChainName" value="${listing?.chain_name || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Chain ID</label>
+                        <input type="text" id="editChainId" value="${listing?.chain_id || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Location</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Address</label>
+                        <input type="text" id="editAddress" value="${listing?.address || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">City</label>
+                        <input type="text" id="editCity" value="${listing?.city || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">State</label>
+                        <select id="editState" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">Select State</option>
+                            ${Object.entries(US_STATES).map(([code, name]) => 
+                                `<option value="${code}" ${listing?.state === code ? 'selected' : ''}>${name}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Zip Code</label>
+                        <input type="text" id="editZipCode" value="${listing?.zip_code || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Country</label>
+                        <select id="editCountry" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="USA" ${listing?.country === 'USA' ? 'selected' : ''}>USA</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Contact Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Phone</label>
+                        <input type="tel" id="editPhone" value="${listing?.phone || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Email</label>
+                        <input type="email" id="editEmail" value="${listing?.email || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Website</label>
+                        <input type="url" id="editWebsite" value="${listing?.website || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner Info -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Owner Information</h3>
+                ${owner?.user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : ''}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Owner Name</label>
+                        <input type="text" id="editOwnerName" value="${owner?.full_name || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Title</label>
+                        <input type="text" id="editOwnerTitle" value="${owner?.title || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">From Greece</label>
+                        <input type="text" id="editOwnerGreece" value="${owner?.from_greece || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g. Athens">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Owner Email</label>
+                        <input type="email" id="editOwnerEmail" value="${owner?.owner_email || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Owner Phone</label>
+                        <input type="tel" id="editOwnerPhone" value="${owner?.owner_phone || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Confirmation Key</label>
+                        <input type="text" id="editConfirmationKey" value="${owner?.confirmation_key || ''}" class="w-full px-4 py-2 border rounded-lg" ${owner?.user_id ? 'disabled' : ''}>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Media -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Media</h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Logo URL</label>
+                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
+                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
     
-    document.getElementById('editCountry').value = 'USA';
-    document.getElementById('editState').value = 'IL';
-    document.getElementById('editTier').value = 'FREE';
-    document.getElementById('editCategory').value = CATEGORIES[0];
+    updateSubcategoriesForCategory();
     
-    selectedSubcategories = [];
-    primarySubcategory = null;
-    updateSubcategoriesDisplay();
-    
-    document.getElementById('claimedIndicator').classList.add('hidden');
-    document.getElementById('chainFieldsContainer').classList.add('hidden');
-    
-    updateCharCounters();
+    // Add input listeners
+    document.getElementById('editTagline')?.addEventListener('input', updateCharCounters);
+    document.getElementById('editDescription')?.addEventListener('input', updateCharCounters);
 }
 
 function updateCharCounters() {
-    const tagline = document.getElementById('editTagline').value;
-    const description = document.getElementById('editDescription').value;
-    const tier = document.getElementById('editTier').value;
-    const maxDesc = tier === 'FREE' ? 1000 : 2000;
+    const tagline = document.getElementById('editTagline')?.value || '';
+    const desc = document.getElementById('editDescription')?.value || '';
     
-    document.getElementById('taglineCount').textContent = tagline.length;
-    document.getElementById('descriptionCount').textContent = description.length;
-    document.getElementById('descriptionMax').textContent = maxDesc;
+    const taglineCount = document.getElementById('taglineCount');
+    const descCount = document.getElementById('descCount');
     
-    if (description.length > maxDesc) {
-        document.getElementById('editDescription').value = description.substring(0, maxDesc);
-        document.getElementById('descriptionCount').textContent = maxDesc;
-    }
+    if (taglineCount) taglineCount.textContent = tagline.length;
+    if (descCount) descCount.textContent = desc.length;
 }
 
-window.updateCharCounter = function(field) {
-    updateCharCounters();
-};
-
-window.updateVerifiedBasedOnTier = function() {
-    updateCharCounters();
-};
-
-// ============================================
-// CHAIN MANAGEMENT
-// ============================================
-function toggleChainFields() {
-    const isChain = document.getElementById('editIsChain').checked;
-    const container = document.getElementById('chainFieldsContainer');
-    
-    if (isChain) {
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
-        document.getElementById('editChainName').value = '';
-        document.getElementById('editChainId').value = '';
-    }
-}
-
-window.toggleChainFields = toggleChainFields;
-
-// ============================================
-// SUBCATEGORY MANAGEMENT
-// ============================================
-function updateSubcategoriesDisplay() {
-    const category = document.getElementById('editCategory').value;
+window.updateSubcategoriesForCategory = function() {
+    const category = document.getElementById('editCategory')?.value;
     const container = document.getElementById('subcategoriesContainer');
+    const checkboxDiv = document.getElementById('subcategoryCheckboxes');
     
-    if (!SUBCATEGORIES[category] || SUBCATEGORIES[category].length === 0) {
+    if (!category || !SUBCATEGORIES[category] || SUBCATEGORIES[category].length === 0) {
         container.classList.add('hidden');
         return;
     }
     
     container.classList.remove('hidden');
-    const checkboxDiv = document.getElementById('subcategoryCheckboxes');
     checkboxDiv.innerHTML = '';
     
     SUBCATEGORIES[category].forEach(sub => {
@@ -558,32 +533,20 @@ function updateSubcategoriesDisplay() {
         const isPrimary = sub === primarySubcategory;
         
         const div = document.createElement('div');
-        div.className = 'subcategory-checkbox';
+        div.className = 'flex items-center gap-2 p-2 border rounded';
         div.innerHTML = `
             <input type="checkbox" id="subcat-${sub.replace(/\s+/g, '-')}" 
                 ${isSelected ? 'checked' : ''} 
-                onchange="toggleSubcategory('${sub}')">
-            <label for="subcat-${sub.replace(/\s+/g, '-')}">${sub}</label>
+                onchange="toggleSubcategory('${sub.replace(/'/g, "\\'")}')">
+            <label for="subcat-${sub.replace(/\s+/g, '-')}" class="flex-1 text-sm">${sub}</label>
             <input type="radio" name="primarySub" 
                 ${isPrimary ? 'checked' : ''} 
                 ${!isSelected ? 'disabled' : ''}
-                onchange="setPrimarySubcategory('${sub}')"
-                title="Set as primary">
+                onchange="setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')"
+                title="Primary">
         `;
         checkboxDiv.appendChild(div);
     });
-}
-
-window.updateSubcategoriesForCategory = function() {
-    const category = document.getElementById('editCategory').value;
-    
-    // Clear subcategories if category changed
-    if (editingListing && editingListing.category !== category) {
-        selectedSubcategories = [];
-        primarySubcategory = null;
-    }
-    
-    updateSubcategoriesDisplay();
 };
 
 window.toggleSubcategory = function(subcategory) {
@@ -601,23 +564,33 @@ window.toggleSubcategory = function(subcategory) {
         }
     }
     
-    updateSubcategoriesDisplay();
+    updateSubcategoriesForCategory();
 };
 
 window.setPrimarySubcategory = function(subcategory) {
     primarySubcategory = subcategory;
-    updateSubcategoriesDisplay();
+    updateSubcategoriesForCategory();
 };
 
+window.toggleChainFields = function() {
+    const isChain = document.getElementById('editIsChain')?.checked;
+    const container = document.getElementById('chainFieldsContainer');
+    
+    if (isChain) {
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+    }
+};
 // ============================================
-// SAVE LISTING
+// ADMIN PORTAL - PART 3
+// Save Listing & Magic Link
 // ============================================
+
 async function saveListing() {
     try {
-        // Validate form
         const businessName = document.getElementById('editBusinessName').value.trim();
         const tagline = document.getElementById('editTagline').value.trim();
-        const category = document.getElementById('editCategory').value;
         
         if (!businessName) {
             alert('Business name is required');
@@ -634,19 +607,8 @@ async function saveListing() {
             return;
         }
         
-        // Prepare listing data
-        const tier = document.getElementById('editTier').value;
-        const description = document.getElementById('editDescription').value;
-        const maxDesc = tier === 'FREE' ? 1000 : 2000;
-        
-        if (description.length > maxDesc) {
-            alert(`Description too long! Max ${maxDesc} characters for ${tier} tier.`);
-            return;
-        }
-        
         const isChain = document.getElementById('editIsChain').checked;
-        const chainName = isChain ? document.getElementById('editChainName').value.trim() : null;
-        const chainId = isChain ? document.getElementById('editChainId').value.trim() : null;
+        const chainName = document.getElementById('editChainName').value.trim();
         
         if (isChain && !chainName) {
             alert('Chain name is required for chain listings');
@@ -659,67 +621,26 @@ async function saveListing() {
         const listingData = {
             business_name: businessName,
             tagline: tagline,
-            description: description,
-            category: category,
+            description: document.getElementById('editDescription').value,
+            category: document.getElementById('editCategory').value,
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
-            tier: tier,
-            verified: tier !== 'FREE',
+            tier: document.getElementById('editTier').value,
+            verified: document.getElementById('editTier').value !== 'FREE',
             is_chain: isChain,
-            chain_name: chainName,
-            chain_id: chainId,
+            chain_name: isChain ? chainName : null,
+            chain_id: isChain ? document.getElementById('editChainId').value.trim() : null,
             address: document.getElementById('editAddress').value.trim() || null,
             city: document.getElementById('editCity').value.trim() || null,
             state: document.getElementById('editState').value || null,
             zip_code: document.getElementById('editZipCode').value.trim() || null,
             country: document.getElementById('editCountry').value || 'USA',
-            places_url_ending: document.getElementById('editPlacesUrl').value.trim() || null,
             phone: document.getElementById('editPhone').value.trim() || null,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
             logo: document.getElementById('editLogo').value.trim() || null,
-            photos: photos,
-            hours: {
-                monday: document.getElementById('editHoursMonday').value.trim() || null,
-                tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
-                wednesday: document.getElementById('editHoursWednesday').value.trim() || null,
-                thursday: document.getElementById('editHoursThursday').value.trim() || null,
-                friday: document.getElementById('editHoursFriday').value.trim() || null,
-                saturday: document.getElementById('editHoursSaturday').value.trim() || null,
-                sunday: document.getElementById('editHoursSunday').value.trim() || null
-            },
-            social_media: {
-                facebook: document.getElementById('editFacebook').value.trim() || null,
-                instagram: document.getElementById('editInstagram').value.trim() || null,
-                twitter: document.getElementById('editTwitter').value.trim() || null,
-                youtube: document.getElementById('editYoutube').value.trim() || null,
-                tiktok: document.getElementById('editTiktok').value.trim() || null,
-                linkedin: document.getElementById('editLinkedin').value.trim() || null,
-                other1: document.getElementById('editOther1').value.trim() || null,
-                other2: document.getElementById('editOther2').value.trim() || null,
-                other3: document.getElementById('editOther3').value.trim() || null
-            },
-            reviews: {
-                google: document.getElementById('editGoogle').value.trim() || null,
-                yelp: document.getElementById('editYelp').value.trim() || null,
-                tripadvisor: document.getElementById('editTripadvisor').value.trim() || null,
-                other1: document.getElementById('editReviewOther1').value.trim() || null,
-                other2: document.getElementById('editReviewOther2').value.trim() || null,
-                other3: document.getElementById('editReviewOther3').value.trim() || null
-            },
-            show_claim_button: document.getElementById('editShowClaim').checked,
-            meta_description: generateMetaDescription({
-                tagline: tagline,
-                city: document.getElementById('editCity').value,
-                state: document.getElementById('editState').value,
-                description: description
-            })
+            photos: photos
         };
-        
-        // Generate slug if new listing
-        if (!editingListing) {
-            listingData.slug = generateSlug(businessName);
-        }
         
         let savedListing;
         
@@ -735,7 +656,11 @@ async function saveListing() {
             if (error) throw error;
             savedListing = data;
         } else {
-            // Create new listing
+            // Create new listing - generate slug
+            listingData.slug = businessName.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+            
             const { data, error } = await supabase
                 .from('listings')
                 .insert(listingData)
@@ -766,7 +691,8 @@ async function saveOwnerInfo(listingId) {
         title: document.getElementById('editOwnerTitle').value.trim() || null,
         from_greece: document.getElementById('editOwnerGreece').value.trim() || null,
         owner_email: document.getElementById('editOwnerEmail').value.trim() || null,
-        owner_phone: document.getElementById('editOwnerPhone').value.trim() || null
+        owner_phone: document.getElementById('editOwnerPhone').value.trim() || null,
+        confirmation_key: document.getElementById('editConfirmationKey').value.trim() || null
     };
     
     // Check if owner info exists
@@ -777,16 +703,33 @@ async function saveOwnerInfo(listingId) {
         .single();
     
     if (existing) {
-        // Update existing
+        // Update existing (don't overwrite user_id if already set)
+        const updates = { ...ownerData };
+        delete updates.confirmation_key; // Don't change confirmation key if listing is claimed
+        
+        if (!existing.user_id && ownerData.confirmation_key) {
+            updates.confirmation_key = ownerData.confirmation_key;
+        }
+        
         const { error } = await supabase
             .from('business_owners')
-            .update(ownerData)
+            .update(updates)
             .eq('listing_id', listingId);
         
         if (error) throw error;
     } else {
-        // Create new with confirmation key
-        ownerData.confirmation_key = generateConfirmationKey();
+        // Create new - generate confirmation key if not provided
+        if (!ownerData.confirmation_key) {
+            const words = [
+                'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
+                'iota', 'kappa', 'lambda', 'sigma', 'omega', 'phoenix', 'apollo',
+                'athena', 'zeus', 'hera', 'poseidon'
+            ];
+            const word1 = words[Math.floor(Math.random() * words.length)];
+            const word2 = words[Math.floor(Math.random() * words.length)];
+            const word3 = words[Math.floor(Math.random() * words.length)];
+            ownerData.confirmation_key = `${word1}-${word2}-${word3}`;
+        }
         
         const { error } = await supabase
             .from('business_owners')
@@ -796,280 +739,13 @@ async function saveOwnerInfo(listingId) {
     }
 }
 
-window.saveListing = saveListing;
-
-// Setup event listeners
-function setupEditFormListeners() {
-    document.getElementById('editBusinessName')?.addEventListener('input', updateCharCounters);
-    document.getElementById('editTagline')?.addEventListener('input', updateCharCounters);
-    document.getElementById('editDescription')?.addEventListener('input', updateCharCounters);
-    document.getElementById('editTier')?.addEventListener('change', updateCharCounters);
-    document.getElementById('editCategory')?.addEventListener('change', updateSubcategoriesForCategory);
-    document.getElementById('editIsChain')?.addEventListener('change', toggleChainFields);
-    document.getElementById('saveEdit')?.addEventListener('click', saveListing);
-    document.getElementById('cancelEdit')?.addEventListener('click', () => {
-        if (confirm('Discard changes?')) {
-            document.getElementById('editModal').classList.add('hidden');
-        }
-    });
-    document.getElementById('closeModal')?.addEventListener('click', () => {
-        if (confirm('Discard changes?')) {
-            document.getElementById('editModal').classList.add('hidden');
-        }
-    });
-}
-// ============================================
-// ADMIN PORTAL - PART 3
-// Analytics, Delete, Magic Link & Event Listeners
-// ============================================
-
-// ============================================
-// ANALYTICS FUNCTIONS
-// ============================================
-window.showAnalytics = async function(id) {
-    try {
-        const { data: listing, error } = await supabase
-            .from('listings')
-            .select('*')
-            .eq('id', id)
-            .single();
-        
-        if (error) throw error;
-        
-        currentAnalyticsListing = listing;
-        currentAnalyticsTab = 'overview';
-        
-        document.getElementById('analyticsBusinessName').textContent = listing.business_name;
-        document.getElementById('analyticsLastUpdated').textContent = new Date().toLocaleString();
-        
-        renderAnalyticsContent();
-        document.getElementById('analyticsModal').classList.remove('hidden');
-        
-    } catch (error) {
-        console.error('Error loading analytics:', error);
-        alert('Failed to load analytics');
-    }
-};
-
-window.switchAnalyticsTab = function(tab) {
-    currentAnalyticsTab = tab;
-    
-    document.querySelectorAll('.analytics-tab').forEach(t => {
-        t.classList.remove('active');
-    });
-    
-    document.querySelector(`.analytics-tab[data-tab="${tab}"]`)?.classList.add('active');
-    
-    renderAnalyticsContent();
-};
-
-function renderAnalyticsContent() {
-    if (!currentAnalyticsListing) return;
-    
-    const analytics = currentAnalyticsListing.analytics || {
-        views: 0,
-        call_clicks: 0,
-        website_clicks: 0,
-        direction_clicks: 0,
-        share_clicks: 0,
-        last_viewed: null,
-        detailed_views: []
-    };
-    
-    const content = document.getElementById('analyticsContent');
-    
-    let html = '';
-    
-    if (currentAnalyticsTab === 'overview') {
-        html = `
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                <div class="analytics-stat-card">
-                    <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                    <div class="text-sm opacity-90">Total Views</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                    <div class="text-sm opacity-90">Call Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                    <div class="text-sm opacity-90">Website Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                    <div class="text-sm opacity-90">Direction Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
-                    <div class="text-sm opacity-90">Share Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
-                    <div class="text-lg font-bold mb-2">${analytics.last_viewed ? new Date(analytics.last_viewed).toLocaleString() : 'Never'}</div>
-                    <div class="text-sm opacity-90">Last Viewed</div>
-                </div>
-            </div>
-            
-            ${analytics.detailed_views && analytics.detailed_views.length > 0 ? `
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h3 class="font-bold text-gray-900 mb-3">Recent Activity (Last 30 actions)</h3>
-                    <div class="space-y-2">
-                        ${analytics.detailed_views.slice(-30).reverse().map(v => `
-                            <div class="analytics-detail-row flex justify-between text-sm">
-                                <span class="font-medium">${v.action}</span>
-                                <span class="text-gray-600">${new Date(v.timestamp).toLocaleString()}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            ` : '<p class="text-gray-600">No detailed analytics available yet.</p>'}
-        `;
-    } else {
-        // Time-based analytics
-        const now = new Date();
-        let filteredViews = [];
-        
-        if (currentAnalyticsTab === 'today') {
-            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            filteredViews = analytics.detailed_views?.filter(v => new Date(v.timestamp) >= todayStart) || [];
-        } else if (currentAnalyticsTab === 'yesterday') {
-            const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-            const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            filteredViews = analytics.detailed_views?.filter(v => {
-                const d = new Date(v.timestamp);
-                return d >= yesterdayStart && d < yesterdayEnd;
-            }) || [];
-        } else if (currentAnalyticsTab === 'week') {
-            const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            filteredViews = analytics.detailed_views?.filter(v => new Date(v.timestamp) >= weekStart) || [];
-        } else if (currentAnalyticsTab === 'month') {
-            const monthStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            filteredViews = analytics.detailed_views?.filter(v => new Date(v.timestamp) >= monthStart) || [];
-        } else if (currentAnalyticsTab === 'alltime') {
-            filteredViews = analytics.detailed_views || [];
-        }
-        
-        const views = filteredViews.filter(v => v.action === 'view').length;
-        const calls = filteredViews.filter(v => v.action === 'call').length;
-        const websites = filteredViews.filter(v => v.action === 'website').length;
-        const directions = filteredViews.filter(v => v.action === 'directions').length;
-        const shares = filteredViews.filter(v => v.action.includes('share')).length;
-        
-        html = `
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                <div class="analytics-stat-card">
-                    <div class="text-4xl font-bold mb-2">${views}</div>
-                    <div class="text-sm opacity-90">Views</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <div class="text-4xl font-bold mb-2">${calls}</div>
-                    <div class="text-sm opacity-90">Call Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <div class="text-4xl font-bold mb-2">${websites}</div>
-                    <div class="text-sm opacity-90">Website Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <div class="text-4xl font-bold mb-2">${directions}</div>
-                    <div class="text-sm opacity-90">Direction Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                    <div class="text-4xl font-bold mb-2">${shares}</div>
-                    <div class="text-sm opacity-90">Share Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
-                    <div class="text-4xl font-bold mb-2">${filteredViews.length}</div>
-                    <div class="text-sm opacity-90">Total Actions</div>
-                </div>
-            </div>
-            
-            ${filteredViews.length > 0 ? `
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h3 class="font-bold text-gray-900 mb-3">Activity Details</h3>
-                    <div class="space-y-2">
-                        ${filteredViews.slice().reverse().slice(0, 50).map(v => `
-                            <div class="analytics-detail-row flex justify-between text-sm">
-                                <span class="font-medium">${v.action}</span>
-                                <span class="text-gray-600">${new Date(v.timestamp).toLocaleString()}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            ` : '<p class="text-gray-600">No activity in this time period.</p>'}
-        `;
-    }
-    
-    content.innerHTML = html;
-}
-
-// ============================================
-// DELETE FUNCTIONS
-// ============================================
-window.showDeleteModal = async function(id) {
-    try {
-        const { data: listing, error } = await supabase
-            .from('listings')
-            .select('business_name')
-            .eq('id', id)
-            .single();
-        
-        if (error) throw error;
-        
-        deletingListingId = id;
-        document.getElementById('deleteBusinessName').textContent = listing.business_name;
-        document.getElementById('deleteModal').classList.remove('hidden');
-        
-    } catch (error) {
-        console.error('Error loading listing:', error);
-        alert('Failed to load listing');
-    }
-};
-
-window.confirmDelete = async function() {
-    const confirmText = document.getElementById('deleteConfirmInput').value;
-    
-    if (confirmText !== 'DELETE') {
-        alert('You must type DELETE to confirm');
-        return;
-    }
-    
-    try {
-        // Delete owner info first
-        await supabase
-            .from('business_owners')
-            .delete()
-            .eq('listing_id', deletingListingId);
-        
-        // Delete listing
-        const { error } = await supabase
-            .from('listings')
-            .delete()
-            .eq('id', deletingListingId);
-        
-        if (error) throw error;
-        
-        document.getElementById('deleteModal').classList.add('hidden');
-        document.getElementById('deleteConfirmInput').value = '';
-        deletingListingId = null;
-        
-        alert('Listing deleted successfully');
-        await loadListings();
-        
-    } catch (error) {
-        console.error('Error deleting listing:', error);
-        alert('Failed to delete listing: ' + error.message);
-    }
-};
-
-// ============================================
-// MAGIC LINK FUNCTIONS
-// ============================================
 window.sendMagicLink = async function(listingId) {
     try {
         const { data: listing, error: listingError } = await supabase
             .from('listings')
             .select(`
                 business_name,
-                owner:business_owners(owner_email)
+                owner:business_owners(owner_email, user_id)
             `)
             .eq('id', listingId)
             .single();
@@ -1077,18 +753,18 @@ window.sendMagicLink = async function(listingId) {
         if (listingError) throw listingError;
         
         const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-        if (!owner || !owner.owner_email) {
-            alert('No owner email found for this listing');
+        if (!owner || !owner.owner_email || !owner.user_id) {
+            alert('No claimed owner email found for this listing');
             return;
         }
         
-        const confirmText = prompt(`Are you sure you want to send a magic link to ${owner.owner_email}?\n\nType "CONFIRM" to proceed.`);
+        const confirmText = prompt(`Send magic link to ${owner.owner_email}?\n\nType "CONFIRM" to proceed.`);
         
         if (confirmText !== 'CONFIRM') {
             return;
         }
         
-        // Send magic link via Supabase Auth
+        // Send magic link
         const { error } = await supabase.auth.signInWithOtp({
             email: owner.owner_email,
             options: {
@@ -1106,13 +782,556 @@ window.sendMagicLink = async function(listingId) {
     }
 };
 
+window.saveListing = saveListing;
+// ============================================
+// ADMIN PORTAL - PART 4
+// Hours, Social Media & Reviews Management
+// ============================================
+
+function renderHoursSection() {
+    const hours = editingListing?.hours || {};
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    
+    return `
+        <div>
+            <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
+            <div class="space-y-2">
+                ${days.map(day => `
+                    <div class="flex items-center gap-3">
+                        <label class="w-28 text-sm font-medium">${day}</label>
+                        <input type="text" id="editHours${day}" 
+                            value="${hours[day.toLowerCase()] || ''}" 
+                            class="flex-1 px-4 py-2 border rounded-lg" 
+                            placeholder="9:00 AM - 5:00 PM or Closed">
+                    </div>
+                `).join('')}
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Leave blank or enter "Closed" for closed days</p>
+        </div>
+    `;
+}
+
+function renderSocialMediaSection() {
+    const social = editingListing?.social_media || {};
+    
+    return `
+        <div>
+            <h3 class="text-lg font-bold mb-4">Social Media</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Facebook</label>
+                    <input type="text" id="editFacebook" value="${social.facebook || ''}" 
+                        class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Instagram</label>
+                    <input type="text" id="editInstagram" value="${social.instagram || ''}" 
+                        class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Twitter/X</label>
+                    <input type="text" id="editTwitter" value="${social.twitter || ''}" 
+                        class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">YouTube</label>
+                    <input type="text" id="editYoutube" value="${social.youtube || ''}" 
+                        class="w-full px-4 py-2 border rounded-lg" placeholder="channel">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">TikTok</label>
+                    <input type="text" id="editTiktok" value="${social.tiktok || ''}" 
+                        class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">LinkedIn</label>
+                    <input type="url" id="editLinkedin" value="${social.linkedin || ''}" 
+                        class="w-full px-4 py-2 border rounded-lg" placeholder="Full URL">
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-medium mb-2">Other Links (JSON format)</label>
+                <textarea id="editSocialOther" rows="3" class="w-full px-4 py-2 border rounded-lg" 
+                    placeholder='{"link": "https://example.com", "name": "Custom Site"}'>${social.other ? JSON.stringify(social.other, null, 2) : ''}</textarea>
+                <p class="text-xs text-gray-500 mt-1">Add custom social links as JSON array</p>
+            </div>
+        </div>
+    `;
+}
+
+function renderReviewsSection() {
+    const reviews = editingListing?.reviews || {};
+    
+    return `
+        <div>
+            <h3 class="text-lg font-bold mb-4">Review Sites</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Google Reviews URL</label>
+                    <input type="url" id="editGoogleReviews" value="${reviews.google || ''}" 
+                        class="w-full px-4 py-2 border rounded-lg" placeholder="Full Google Reviews URL">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Yelp URL</label>
+                    <input type="url" id="editYelp" value="${reviews.yelp || ''}" 
+                        class="w-full px-4 py-2 border rounded-lg" placeholder="Full Yelp URL">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">TripAdvisor URL</label>
+                    <input type="url" id="editTripadvisor" value="${reviews.tripadvisor || ''}" 
+                        class="w-full px-4 py-2 border rounded-lg" placeholder="Full TripAdvisor URL">
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderVisibilitySection() {
+    return `
+        <div>
+            <h3 class="text-lg font-bold mb-4">Visibility & Status</h3>
+            <div class="space-y-3">
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" id="editVisible" ${editingListing?.visible !== false ? 'checked' : ''}>
+                    <span class="text-sm font-medium">Listing is visible on site</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" id="editShowClaimButton" ${editingListing?.show_claim_button !== false ? 'checked' : ''}>
+                    <span class="text-sm font-medium">Show "Claim this listing" button</span>
+                </label>
+            </div>
+        </div>
+    `;
+}
+
+// Update fillEditForm to include new sections
+function fillEditFormComplete(listing) {
+    const owner = listing?.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+    
+    const formContent = document.getElementById('editFormContent');
+    formContent.innerHTML = `
+        <div class="space-y-6">
+            <!-- Basic Info -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Basic Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Business Name *</label>
+                        <input type="text" id="editBusinessName" value="${listing?.business_name || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Tagline (max 75) *</label>
+                        <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">
+                        <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span>/75</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Description *</label>
+                        <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">${listing?.description || ''}</textarea>
+                        <p class="text-xs text-gray-500 mt-1"><span id="descCount">${(listing?.description || '').length}</span> characters</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Category *</label>
+                        <select id="editCategory" class="w-full px-4 py-2 border rounded-lg" onchange="updateSubcategoriesForCategory()">
+                            ${CATEGORIES.map(cat => `<option value="${cat}" ${listing?.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Tier</label>
+                        <select id="editTier" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="FREE" ${listing?.tier === 'FREE' ? 'selected' : ''}>FREE</option>
+                            <option value="VERIFIED" ${listing?.tier === 'VERIFIED' ? 'selected' : ''}>VERIFIED</option>
+                            <option value="FEATURED" ${listing?.tier === 'FEATURED' ? 'selected' : ''}>FEATURED</option>
+                            <option value="PREMIUM" ${listing?.tier === 'PREMIUM' ? 'selected' : ''}>PREMIUM</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subcategories -->
+            <div id="subcategoriesContainer">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium">Subcategories *</label>
+                    <span class="text-xs text-gray-500">Select at least one and mark primary</span>
+                </div>
+                <div id="subcategoryCheckboxes" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
+            </div>
+
+            <!-- Chain Info -->
+            <div>
+                <label class="flex items-center gap-2 mb-4">
+                    <input type="checkbox" id="editIsChain" ${listing?.is_chain ? 'checked' : ''} onchange="toggleChainFields()">
+                    <span class="text-sm font-medium">This is a chain business</span>
+                </label>
+                <div id="chainFieldsContainer" class="${listing?.is_chain ? '' : 'hidden'} grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Chain Name</label>
+                        <input type="text" id="editChainName" value="${listing?.chain_name || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Chain ID</label>
+                        <input type="text" id="editChainId" value="${listing?.chain_id || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Auto-generated if empty">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Location</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Address</label>
+                        <input type="text" id="editAddress" value="${listing?.address || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">City</label>
+                        <input type="text" id="editCity" value="${listing?.city || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">State</label>
+                        <select id="editState" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">Select State</option>
+                            ${Object.entries(US_STATES).map(([code, name]) => 
+                                `<option value="${code}" ${listing?.state === code ? 'selected' : ''}>${name}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Zip Code</label>
+                        <input type="text" id="editZipCode" value="${listing?.zip_code || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Country</label>
+                        <select id="editCountry" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="USA" ${listing?.country === 'USA' ? 'selected' : ''}>USA</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Google Maps URL Ending</label>
+                        <input type="text" id="editPlacesUrl" value="${listing?.places_url_ending || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., ChIJ...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Contact Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Phone</label>
+                        <input type="tel" id="editPhone" value="${listing?.phone || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Email</label>
+                        <input type="email" id="editEmail" value="${listing?.email || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Website</label>
+                        <input type="url" id="editWebsite" value="${listing?.website || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner Info -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Owner Information</h3>
+                ${owner?.user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : '<p class="text-sm text-gray-600 mb-4">This listing has not been claimed yet</p>'}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Owner Name</label>
+                        <input type="text" id="editOwnerName" value="${owner?.full_name || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Title</label>
+                        <input type="text" id="editOwnerTitle" value="${owner?.title || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., Owner, Manager">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">From Greece</label>
+                        <input type="text" id="editOwnerGreece" value="${owner?.from_greece || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., Athens, Crete">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Owner Email</label>
+                        <input type="email" id="editOwnerEmail" value="${owner?.owner_email || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Owner Phone</label>
+                        <input type="tel" id="editOwnerPhone" value="${owner?.owner_phone || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Confirmation Key</label>
+                        <input type="text" id="editConfirmationKey" value="${owner?.confirmation_key || ''}" class="w-full px-4 py-2 border rounded-lg" ${owner?.user_id ? 'disabled title="Cannot change - listing is claimed"' : ''}>
+                        ${!owner?.user_id ? '<p class="text-xs text-gray-500 mt-1">Leave blank to auto-generate</p>' : ''}
+                    </div>
+                </div>
+            </div>
+
+            ${renderHoursSection()}
+            ${renderSocialMediaSection()}
+            ${renderReviewsSection()}
+
+            <!-- Media -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Media</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Logo URL</label>
+                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
+                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg" placeholder="https://example.com/photo1.jpg
+https://example.com/photo2.jpg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                        <p class="text-xs text-gray-500 mt-1">Enter one URL per line</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Video URL (YouTube embed link)</label>
+                        <input type="url" id="editVideo" value="${listing?.video || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="https://www.youtube.com/embed/...">
+                    </div>
+                </div>
+            </div>
+
+            ${renderVisibilitySection()}
+        </div>
+    `;
+    
+    updateSubcategoriesForCategory();
+}
+// ============================================
+// ADMIN PORTAL - PART 5
+// Complete Save with All Fields
+// ============================================
+
+async function saveListingComplete() {
+    try {
+        const businessName = document.getElementById('editBusinessName').value.trim();
+        const tagline = document.getElementById('editTagline').value.trim();
+        
+        if (!businessName) {
+            alert('Business name is required');
+            return;
+        }
+        
+        if (!tagline) {
+            alert('Tagline is required');
+            return;
+        }
+        
+        if (selectedSubcategories.length === 0) {
+            alert('At least one subcategory is required');
+            return;
+        }
+        
+        if (!primarySubcategory) {
+            alert('Please select a primary subcategory');
+            return;
+        }
+        
+        const isChain = document.getElementById('editIsChain').checked;
+        const chainName = document.getElementById('editChainName')?.value.trim();
+        
+        if (isChain && !chainName) {
+            alert('Chain name is required for chain listings');
+            return;
+        }
+        
+        // Parse photos
+        const photosText = document.getElementById('editPhotos').value;
+        const photos = photosText ? photosText.split('\n').map(url => url.trim()).filter(url => url) : [];
+        
+        // Parse social media other
+        let socialOther = null;
+        const socialOtherText = document.getElementById('editSocialOther')?.value.trim();
+        if (socialOtherText) {
+            try {
+                socialOther = JSON.parse(socialOtherText);
+            } catch (e) {
+                alert('Invalid JSON format for other social links');
+                return;
+            }
+        }
+        
+        // Collect hours
+        const hours = {};
+        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach(day => {
+            const value = document.getElementById(`editHours${day}`)?.value.trim();
+            if (value) {
+                hours[day.toLowerCase()] = value;
+            }
+        });
+        
+        // Generate chain_id if needed
+        let chainId = document.getElementById('editChainId')?.value.trim();
+        if (isChain && !chainId) {
+            chainId = `chain-${chainName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
+        }
+        
+        const listingData = {
+            business_name: businessName,
+            tagline: tagline,
+            description: document.getElementById('editDescription').value.trim(),
+            category: document.getElementById('editCategory').value,
+            subcategories: selectedSubcategories,
+            primary_subcategory: primarySubcategory,
+            tier: document.getElementById('editTier').value,
+            verified: document.getElementById('editTier').value !== 'FREE',
+            is_chain: isChain,
+            chain_name: isChain ? chainName : null,
+            chain_id: isChain ? chainId : null,
+            address: document.getElementById('editAddress').value.trim() || null,
+            city: document.getElementById('editCity').value.trim() || null,
+            state: document.getElementById('editState').value || null,
+            zip_code: document.getElementById('editZipCode').value.trim() || null,
+            country: document.getElementById('editCountry').value || 'USA',
+            places_url_ending: document.getElementById('editPlacesUrl')?.value.trim() || null,
+            phone: document.getElementById('editPhone').value.trim() || null,
+            email: document.getElementById('editEmail').value.trim() || null,
+            website: document.getElementById('editWebsite').value.trim() || null,
+            logo: document.getElementById('editLogo').value.trim() || null,
+            photos: photos,
+            video: document.getElementById('editVideo')?.value.trim() || null,
+            hours: hours,
+            social_media: {
+                facebook: document.getElementById('editFacebook')?.value.trim() || null,
+                instagram: document.getElementById('editInstagram')?.value.trim() || null,
+                twitter: document.getElementById('editTwitter')?.value.trim() || null,
+                youtube: document.getElementById('editYoutube')?.value.trim() || null,
+                tiktok: document.getElementById('editTiktok')?.value.trim() || null,
+                linkedin: document.getElementById('editLinkedin')?.value.trim() || null,
+                other: socialOther
+            },
+            reviews: {
+                google: document.getElementById('editGoogleReviews')?.value.trim() || null,
+                yelp: document.getElementById('editYelp')?.value.trim() || null,
+                tripadvisor: document.getElementById('editTripadvisor')?.value.trim() || null
+            },
+            visible: document.getElementById('editVisible')?.checked !== false,
+            show_claim_button: document.getElementById('editShowClaimButton')?.checked !== false
+        };
+        
+        let savedListing;
+        
+        if (editingListing) {
+            // Update existing listing
+            const { data, error } = await supabase
+                .from('listings')
+                .update(listingData)
+                .eq('id', editingListing.id)
+                .select()
+                .single();
+            
+            if (error) throw error;
+            savedListing = data;
+            
+            console.log('✅ Listing updated:', savedListing.id);
+        } else {
+            // Create new listing - generate slug
+            listingData.slug = businessName.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+            
+            // Check if slug exists
+            const { data: existingSlug } = await supabase
+                .from('listings')
+                .select('slug')
+                .eq('slug', listingData.slug)
+                .single();
+            
+            if (existingSlug) {
+                listingData.slug = `${listingData.slug}-${Date.now()}`;
+            }
+            
+            const { data, error } = await supabase
+                .from('listings')
+                .insert(listingData)
+                .select()
+                .single();
+            
+            if (error) throw error;
+            savedListing = data;
+            
+            console.log('✅ New listing created:', savedListing.id);
+        }
+        
+        // Handle owner info
+        await saveOwnerInfoComplete(savedListing.id);
+        
+        alert('✅ Listing saved successfully!');
+        document.getElementById('editModal').classList.add('hidden');
+        await loadListings();
+        
+    } catch (error) {
+        console.error('❌ Error saving listing:', error);
+        alert('Failed to save listing: ' + error.message);
+    }
+}
+
+async function saveOwnerInfoComplete(listingId) {
+    const ownerData = {
+        listing_id: listingId,
+        full_name: document.getElementById('editOwnerName')?.value.trim() || null,
+        title: document.getElementById('editOwnerTitle')?.value.trim() || null,
+        from_greece: document.getElementById('editOwnerGreece')?.value.trim() || null,
+        owner_email: document.getElementById('editOwnerEmail')?.value.trim() || null,
+        owner_phone: document.getElementById('editOwnerPhone')?.value.trim() || null,
+        confirmation_key: document.getElementById('editConfirmationKey')?.value.trim() || null
+    };
+    
+    // Check if owner info exists
+    const { data: existing } = await supabase
+        .from('business_owners')
+        .select('*')
+        .eq('listing_id', listingId)
+        .maybeSingle();
+    
+    if (existing) {
+        // Update existing (don't overwrite user_id if already set)
+        const updates = { ...ownerData };
+        
+        // Don't change confirmation key if listing is claimed
+        if (existing.user_id) {
+            delete updates.confirmation_key;
+        }
+        
+        const { error } = await supabase
+            .from('business_owners')
+            .update(updates)
+            .eq('listing_id', listingId);
+        
+        if (error) throw error;
+        
+        console.log('✅ Owner info updated');
+    } else {
+        // Create new - generate confirmation key if not provided
+        if (!ownerData.confirmation_key) {
+            const words = [
+                'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
+                'iota', 'kappa', 'lambda', 'sigma', 'omega', 'phoenix', 'apollo',
+                'athena', 'zeus', 'hera', 'poseidon', 'demeter', 'ares', 'hermes',
+                'helios', 'selene', 'nike', 'tyche', 'eros', 'chaos', 'gaia'
+            ];
+            const word1 = words[Math.floor(Math.random() * words.length)];
+            const word2 = words[Math.floor(Math.random() * words.length)];
+            const word3 = words[Math.floor(Math.random() * words.length)];
+            ownerData.confirmation_key = `${word1}-${word2}-${word3}`;
+        }
+        
+        const { error } = await supabase
+            .from('business_owners')
+            .insert(ownerData);
+        
+        if (error) throw error;
+        
+        console.log('✅ Owner info created with key:', ownerData.confirmation_key);
+    }
+}
+
+// Send password reset email
 window.sendPasswordReset = async function(listingId) {
     try {
         const { data: listing, error: listingError } = await supabase
             .from('listings')
             .select(`
                 business_name,
-                owner:business_owners(owner_email)
+                owner:business_owners(owner_email, user_id)
             `)
             .eq('id', listingId)
             .single();
@@ -1120,25 +1339,24 @@ window.sendPasswordReset = async function(listingId) {
         if (listingError) throw listingError;
         
         const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-        if (!owner || !owner.owner_email) {
-            alert('No owner email found for this listing');
+        if (!owner || !owner.owner_email || !owner.user_id) {
+            alert('No claimed owner email found for this listing');
             return;
         }
         
-        const confirmText = prompt(`Are you sure you want to send a password reset link to ${owner.owner_email}?\n\nType "CONFIRM" to proceed.`);
+        const confirmText = prompt(`Send password reset email to ${owner.owner_email}?\n\nType "CONFIRM" to proceed.`);
         
         if (confirmText !== 'CONFIRM') {
             return;
         }
         
-        // Send password reset
         const { error } = await supabase.auth.resetPasswordForEmail(owner.owner_email, {
             redirectTo: `${window.location.origin}/business.html?reset=true`
         });
         
         if (error) throw error;
         
-        alert(`Password reset link sent successfully to ${owner.owner_email}`);
+        alert(`✅ Password reset email sent to ${owner.owner_email}`);
         
     } catch (error) {
         console.error('Error sending password reset:', error);
@@ -1146,67 +1364,42 @@ window.sendPasswordReset = async function(listingId) {
     }
 };
 
-// ============================================
-// EVENT LISTENERS SETUP
-// ============================================
-function setupEventListeners() {
-    // Login
-    document.getElementById('adminLoginBtn')?.addEventListener('click', handleAdminLogin);
-    document.getElementById('adminPassword')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleAdminLogin();
-    });
+// Delete listing
+window.deleteListing = async function(listingId) {
+    const listing = allListings.find(l => l.id === listingId);
+    if (!listing) return;
     
-    // Logout
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    const confirmText = prompt(`Are you sure you want to DELETE "${listing.business_name}"?\n\nThis action CANNOT be undone.\n\nType "DELETE" to confirm.`);
     
-    // New Listing
-    document.getElementById('newListingBtn')?.addEventListener('click', newListing);
+    if (confirmText !== 'DELETE') {
+        return;
+    }
     
-    // Refresh
-    document.getElementById('refreshBtn')?.addEventListener('click', loadListings);
-    
-    // Search
-    document.getElementById('adminSearch')?.addEventListener('input', renderTable);
-    
-    // Analytics
-    document.getElementById('closeAnalytics')?.addEventListener('click', () => {
-        document.getElementById('analyticsModal').classList.add('hidden');
-        currentAnalyticsListing = null;
-        currentAnalyticsTab = 'overview';
-    });
-    
-    document.getElementById('refreshAnalytics')?.addEventListener('click', async () => {
-        if (!currentAnalyticsListing) return;
+    try {
+        // Delete owner info first (cascade should handle this but being explicit)
+        const { error: ownerError } = await supabase
+            .from('business_owners')
+            .delete()
+            .eq('listing_id', listingId);
         
-        const { data: listing, error } = await supabase
+        if (ownerError) throw ownerError;
+        
+        // Delete listing
+        const { error } = await supabase
             .from('listings')
-            .select('*')
-            .eq('id', currentAnalyticsListing.id)
-            .single();
+            .delete()
+            .eq('id', listingId);
         
-        if (!error && listing) {
-            currentAnalyticsListing = listing;
-            document.getElementById('analyticsLastUpdated').textContent = new Date().toLocaleString();
-            renderAnalyticsContent();
-        }
-    });
-    
-    // Delete
-    document.getElementById('cancelDelete')?.addEventListener('click', () => {
-        document.getElementById('deleteModal').classList.add('hidden');
-        document.getElementById('deleteConfirmInput').value = '';
-        deletingListingId = null;
-    });
-    
-    document.getElementById('confirmDelete')?.addEventListener('click', confirmDelete);
-    
-    // Edit form
-    setupEditFormListeners();
-}
+        if (error) throw error;
+        
+        alert('✅ Listing deleted successfully');
+        await loadListings();
+        
+    } catch (error) {
+        console.error('Error deleting listing:', error);
+        alert('Failed to delete listing: ' + error.message);
+    }
+};
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupEventListeners);
-} else {
-    setupEventListeners();
-}
+// Update the main save function reference
+window.saveListing = saveListingComplete;
