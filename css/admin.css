@@ -1,334 +1,192 @@
 /* ============================================
-   BASE STYLES
+   ADMIN PORTAL - COMPLETE CSS
+   Styling for admin dashboard
    ============================================ */
-body { 
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+
+/* CSS Variables */
+:root {
+    --primary-blue: #055193;
+    --primary-blue-dark: #044174;
+    --success-green: #10b981;
+    --error-red: #ef4444;
+    --warning-yellow: #f59e0b;
+    --text-dark: #1a1a1a;
+    --text-light: #666;
+    --border-color: #e5e7eb;
+    --bg-light: #f9fafb;
 }
 
-.hidden { 
-    display: none !important; 
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-img { 
-    pointer-events: none; 
-    user-select: none; 
-    -webkit-user-drag: none; 
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    background: var(--bg-light);
 }
 
-/* ============================================
-   AUTHENTICATION STYLES
-   ============================================ */
+/* Auth Page */
 .auth-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 2rem;
+    background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
 }
 
 .auth-card {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    max-width: 480px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 420px;
     width: 100%;
     overflow: hidden;
 }
 
 .auth-header {
-    background: linear-gradient(135deg, #055193 0%, #044080 100%);
-    padding: 32px 24px;
-    text-align: center;
+    background: var(--primary-blue);
     color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.auth-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
 }
 
 .auth-body {
-    padding: 32px 24px;
+    padding: 2rem;
 }
 
+/* Messages */
 .error-message {
-    background: #fee;
-    border: 1px solid #fcc;
-    color: #c33;
-    padding: 12px;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    padding: 0.875rem;
     border-radius: 8px;
-    margin-bottom: 16px;
-    font-size: 14px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
 }
 
 .success-message {
-    background: #efe;
-    border: 1px solid #cfc;
-    color: #3c3;
-    padding: 12px;
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+    padding: 0.875rem;
     border-radius: 8px;
-    margin-bottom: 16px;
-    font-size: 14px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
 }
 
+/* Inputs */
 .tgd-input {
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 12px 16px;
     width: 100%;
-    transition: all 0.3s;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
 }
 
 .tgd-input:focus {
     outline: none;
-    border-color: #055193;
+    border-color: var(--primary-blue);
     box-shadow: 0 0 0 3px rgba(5, 81, 147, 0.1);
 }
 
+/* Button */
 .tgd-button-primary {
-    background: linear-gradient(135deg, #055193 0%, #044080 100%);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s;
     width: 100%;
+    padding: 0.875rem 1.5rem;
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
 .tgd-button-primary:hover {
+    background: var(--primary-blue-dark);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(5, 81, 147, 0.3);
 }
 
-/* ============================================
-   IMAGE STYLES
-   ============================================ */
-.image-preview { 
-    width: 100px; 
-    height: 100px; 
-    object-fit: contain;
-    background: #f3f4f6;
-    border-radius: 8px; 
-    border: 2px solid #e5e7eb; 
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-.image-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
-    gap: 12px; 
+thead {
+    background: var(--bg-light);
+    position: sticky;
+    top: 0;
 }
 
-.photo-item { 
-    position: relative; 
-    cursor: move; 
-}
-
-.photo-item .delete-photo { 
-    position: absolute; 
-    top: 4px; 
-    right: 4px; 
-    background: #ef4444; 
-    color: white; 
-    border-radius: 50%; 
-    width: 24px; 
-    height: 24px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    cursor: pointer; 
-    font-size: 14px; 
-}
-
-.photo-item .photo-number { 
-    position: absolute; 
-    top: 4px; 
-    left: 4px; 
-    background: rgba(0,0,0,0.7); 
-    color: white; 
-    border-radius: 4px; 
-    padding: 2px 6px; 
-    font-size: 12px; 
-    font-weight: bold; 
-}
-
-.sortable-ghost { 
-    opacity: 0.4; 
-}
-
-/* ============================================
-   ANALYTICS STYLES
-   ============================================ */
-.analytics-tab { 
-    padding: 8px 16px; 
-    cursor: pointer; 
-    border-bottom: 2px solid transparent; 
-    transition: all 0.2s; 
-}
-
-.analytics-tab.active { 
-    border-bottom-color: #055193; 
-    color: #055193; 
-    font-weight: 600; 
-}
-
-.analytics-stat-card { 
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-    color: white; 
-    padding: 20px; 
-    border-radius: 12px; 
-}
-
-.analytics-detail-row { 
-    padding: 12px; 
-    border-bottom: 1px solid #e5e7eb; 
-}
-
-.analytics-detail-row:hover { 
-    background: #f9fafb; 
-}
-
-/* ============================================
-   TIER BADGES
-   ============================================ */
-.tier-badge { 
-    display: inline-block; 
-    padding: 6px 12px; 
-    border-radius: 6px; 
-    font-weight: 600; 
-    font-size: 14px; 
-}
-
-.tier-FREE { 
-    background: #e5e7eb; 
-    color: #374151; 
-}
-
-.tier-VERIFIED { 
-    background: #dbeafe; 
-    color: #1e40af; 
-}
-
-.tier-FEATURED { 
-    background: #fef3c7; 
-    color: #92400e; 
-}
-
-.tier-PREMIUM { 
-    background: #f3e8ff; 
-    color: #6b21a8; 
-}
-
-/* ============================================
-   FORM ELEMENTS
-   ============================================ */
-.subcategory-checkbox { 
-    display: flex; 
-    align-items: center; 
-    gap: 8px; 
-    padding: 8px; 
-    border: 1px solid #e5e7eb; 
-    border-radius: 6px; 
-    cursor: pointer; 
-    transition: all 0.2s; 
-}
-
-.subcategory-checkbox:hover { 
-    background: #f3f4f6; 
-}
-
-.subcategory-checkbox input[type="checkbox"]:checked + label { 
-    font-weight: 600; 
-    color: #055193; 
-}
-
-.disabled-field { 
-    opacity: 0.6; 
-    pointer-events: none; 
-    background: #f3f4f6; 
-}
-
-.info-notice { 
-    font-size: 12px; 
-    color: #6b7280; 
-    margin-top: 4px; 
-    font-style: italic; 
-}
-
-.visibility-toggle { 
-    cursor: pointer; 
-    padding: 4px 8px; 
-    border-radius: 4px; 
-    font-size: 12px; 
-    transition: all 0.2s; 
-}
-
-.visibility-toggle.visible { 
-    background: #10b981; 
-    color: white; 
-}
-
-.visibility-toggle.hidden { 
-    background: #ef4444; 
-    color: white; 
-}
-
-.owner-field { 
-    display: flex; 
-    gap: 8px; 
-    align-items: center; 
-}
-
-.char-counter { 
-    font-size: 12px; 
-    color: #6b7280; 
-}
-
-.char-counter.warning { 
-    color: #f59e0b; 
-}
-
-.char-counter.error { 
-    color: #ef4444; 
-}
-
-/* ============================================
-   CHAIN BADGE
-   ============================================ */
-.chain-badge {
-    background: #6366f1;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
+th {
+    padding: 1rem;
     font-weight: 600;
-    display: inline-block;
+    text-align: left;
+    border-bottom: 2px solid var(--border-color);
 }
 
-/* ============================================
-   CONFIRMATION KEY DISPLAY
-   ============================================ */
-.confirmation-key {
-    font-family: monospace;
+td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+tbody tr:hover {
+    background: var(--bg-light);
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tier-badge {
+    padding: 0.375rem 0.875rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.tier-FREE {
     background: #f3f4f6;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 14px;
     color: #374151;
-    display: inline-block;
-    border: 1px solid #e5e7eb;
 }
 
-.confirmation-key-notice {
+.tier-VERIFIED {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.tier-FEATURED {
     background: #fef3c7;
-    border: 1px solid #fbbf24;
-    color: #78350f;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin-top: 8px;
+    color: #92400e;
 }
 
-/* ============================================
-   MODAL STYLES
-   ============================================ */
+.tier-PREMIUM {
+    background: #ede9fe;
+    color: #6b21a8;
+}
+
+/* Modal */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -336,72 +194,155 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 50;
-    padding: 16px;
+    z-index: 1000;
+    padding: 1rem;
+    overflow-y: auto;
 }
 
 .modal-content {
     background: white;
-    border-radius: 8px;
-    max-width: 600px;
-    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     max-height: 90vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
+.modal-overlay.hidden {
+    display: none;
+}
+
+/* Form Elements */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
+textarea,
+select {
+    font-family: inherit;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+    background: var(--bg-light);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Edit Form Specific */
+#editFormContent h3 {
+    color: var(--text-dark);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+#editFormContent label {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+/* Subcategories in Edit Form */
+#subcategoryCheckboxes > div {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+#subcategoryCheckboxes > div:has(input[type="checkbox"]:checked) {
+    border-color: var(--primary-blue);
+    background: #eff6ff;
+}
+
+#subcategoryCheckboxes input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+#subcategoryCheckboxes input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--warning-yellow);
+}
+
+#subcategoryCheckboxes label {
+    flex: 1;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+/* Action Buttons */
+button {
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .image-grid { 
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
+    .modal-content {
+        max-width: 100%;
+        margin: 0;
     }
     
-    .image-preview { 
-        width: 80px; 
-        height: 80px; 
+    table {
+        font-size: 0.875rem;
+    }
+    
+    th,
+    td {
+        padding: 0.5rem;
     }
 }
 
-/* ============================================
-   DARK MODE SUPPORT
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-    body { 
-        background: #1a1a1a; 
-        color: #e5e5e5; 
-    }
-    
-    .bg-white { 
-        background: #2a2a2a !important; 
-    }
-    
-    .bg-gray-50 { 
-        background: #1a1a1a !important; 
-    }
-    
-    .text-gray-900 { 
-        color: #e5e5e5 !important; 
-    }
-    
-    .text-gray-700 { 
-        color: #b0b0b0 !important; 
-    }
-    
-    .border-gray-300 { 
-        border-color: #404040 !important; 
-    }
-    
-    input, select, textarea { 
-        background: #2a2a2a !important; 
-        color: #e5e5e5 !important; 
-    }
-    
-    .analytics-detail-row:hover { 
-        background: #3a3a3a; 
-    }
-    
-    .subcategory-checkbox:hover { 
-        background: #3a3a3a; 
-    }
+/* Loading State */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Info Notice */
+.info-notice {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+    font-style: italic;
 }
