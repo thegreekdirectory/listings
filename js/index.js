@@ -23,14 +23,14 @@ const CATEGORIES = [
     { name: 'Retail & Shopping', icon: '🛍️', slug: 'retail-shopping' }
 ];
 
-let supabase = null;
+let indexSupabase = null;
 let allListings = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing homepage...');
     
     // Initialize Supabase
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    indexSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
     // Setup search
     setupSearch();
@@ -49,24 +49,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupSearch() {
     const searchInput = document.getElementById('mainSearch');
     
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
 }
 
-window.performSearch = function() {
+function performSearch() {
     const searchInput = document.getElementById('mainSearch');
-    const query = searchInput.value.trim();
+    const query = searchInput?.value.trim();
     
     if (query) {
         window.location.href = `/search?q=${encodeURIComponent(query)}`;
     }
-};
+}
 
 function renderCategories() {
     const grid = document.getElementById('categoriesGrid');
+    
+    if (!grid) return;
     
     grid.innerHTML = CATEGORIES.map(category => `
         <a href="/category/${category.slug}" class="category-card">
@@ -82,7 +86,7 @@ function renderCategories() {
 
 async function updateCategoryCounts() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await indexSupabase
             .from('listings')
             .select('category')
             .eq('visible', true);
@@ -111,7 +115,7 @@ async function loadListings() {
     try {
         console.log('📥 Loading listings...');
         
-        const { data: listings, error } = await supabase
+        const { data: listings, error } = await indexSupabase
             .from('listings')
             .select('*')
             .eq('visible', true)
@@ -131,6 +135,8 @@ async function loadListings() {
 function renderFeaturedListings() {
     const container = document.getElementById('featuredListings');
     
+    if (!container) return;
+    
     // Get featured and premium listings
     const featured = allListings
         .filter(l => l.tier === 'FEATURED' || l.tier === 'PREMIUM')
@@ -146,6 +152,8 @@ function renderFeaturedListings() {
 
 function renderRecentListings() {
     const container = document.getElementById('recentListings');
+    
+    if (!container) return;
     
     // Get most recent listings
     const recent = allListings.slice(0, 6);
