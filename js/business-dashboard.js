@@ -1,5 +1,6 @@
 // ============================================
-// BUSINESS DASHBOARD FUNCTIONALITY
+// BUSINESS DASHBOARD FUNCTIONALITY - PART 1
+// Configuration & State Management
 // ============================================
 
 const SUBCATEGORIES = {
@@ -22,45 +23,14 @@ const SUBCATEGORIES = {
 let uploadedImages = { logo: null, photos: [] };
 let photosSortable = null;
 let selectedSubcategories = [];
+let primarySubcategory = null;
 let settingsVisibility = { email: false, phone: false };
-
-async function loadListingData() {
-    if (!ownerData || !ownerData.listing_id) {
-        console.error('No listing ID found in owner data');
-        return;
-    }
-    
-    try {
-        console.log('📥 Loading listing data from GitHub...');
-        
-        const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
-        
-        if (!response.ok) {
-            throw new Error(`Failed to fetch database: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        allListings = data.listings || [];
-        
-        currentListing = allListings.find(l => l.id === ownerData.listing_id);
-        
-        if (!currentListing) {
-            throw new Error('Listing not found in database');
-        }
-        
-        console.log('✅ Listing data loaded:', currentListing.businessName);
-        
-    } catch (error) {
-        console.error('❌ Error loading listing data:', error);
-        alert('Failed to load listing data. Please try again.');
-    }
-}
 
 function renderDashboard() {
     if (!currentListing) return;
     
-    document.getElementById('businessName').textContent = currentListing.businessName;
-    document.getElementById('listingIdDisplay').textContent = `#${currentListing.listingId}`;
+    document.getElementById('businessName').textContent = currentListing.business_name;
+    document.getElementById('listingIdDisplay').textContent = `#${currentListing.id}`;
     
     const tier = currentListing.tier || 'FREE';
     const tierBadge = document.getElementById('tierBadge');
@@ -86,6 +56,13 @@ function switchTab(tab) {
     document.getElementById(`content-${tab}`).classList.remove('hidden');
     document.getElementById(`tab-${tab}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600';
 }
+
+window.switchTab = switchTab;
+window.loadListingData = loadListingData;
+// ============================================
+// BUSINESS DASHBOARD FUNCTIONALITY - PART 2
+// Overview & Preview Rendering
+// ============================================
 
 function renderOverview() {
     if (!currentListing) return;
@@ -126,58 +103,624 @@ function renderOverview() {
         ]
     };
     
-    const featuresList = document.getElementById('tierFeatures');
-    featuresList.innerHTML = features[tier].map(f => `<div class="flex items-start gap-2"><span>${f}</span></div>`).join('');
+    const categorySlug = currentListing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${currentListing.slug}`;
     
-    const mainImage = (currentListing.photos && currentListing.photos.length > 0) ? currentListing.photos[0] : currentListing.logo;
-    document.getElementById('previewMainImage').src = mainImage;
-    document.getElementById('previewLogo').src = currentListing.logo;
-    document.getElementById('previewBusinessName').textContent = currentListing.businessName;
-    document.getElementById('previewTagline').textContent = currentListing.tagline ? `"${currentListing.tagline}"` : '';
-    document.getElementById('previewCategory').textContent = currentListing.category;
-    
-    const fullAddress = currentListing.address ? 
-        `${currentListing.address}, ${currentListing.city}, ${currentListing.state} ${currentListing.zipCode || ''}` : 
-        `${currentListing.city}, ${currentListing.state}`;
-    
-    let details = `<div><span class="font-semibold">Listing ID:</span> #${currentListing.listingId}</div>`;
-    if (currentListing.subcategories && currentListing.subcategories.length > 0) {
-        details += `<div><span class="font-semibold">Subcategories:</span> ${currentListing.subcategories.join(', ')}</div>`;
-    }
-    details += `<div><span class="font-semibold">Location:</span> ${fullAddress}</div>`;
-    if (currentListing.phone) {
-        details += `<div><span class="font-semibold">Phone:</span> ${currentListing.phone}</div>`;
-    }
-    if (currentListing.email) {
-        details += `<div><span class="font-semibold">Email:</span> ${currentListing.email}</div>`;
-    }
-    if (currentListing.website) {
-        details += `<div><span class="font-semibold">Website:</span> <a href="${currentListing.website}" target="_blank" class="text-blue-600 hover:underline">${currentListing.website}</a></div>`;
-    }
-    
-    document.getElementById('previewDetails').innerHTML = details;
+    const content = document.getElementById('content-overview');
+    content.innerHTML = `
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome!</h2>
+            <p class="text-gray-700 mb-4">Manage your listing on The Greek Directory. Your current tier allows you to access the following features:</p>
+            
+            <div class="space-y-2 mb-6">
+                ${features[tier].map(f => `<div class="flex items-start gap-2"><span>${f}</span></div>`).join('')}
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 class="font-semibold text-blue-900 mb-2">Quick Actions</h3>
+                <div class="flex gap-3">
+                    <button onclick="switchTab('edit')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Edit Listing</button>
+                    <button onclick="switchTab('analytics')" class="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50">View Analytics</button>
+                    <a id="viewLiveBtn" href="${listingUrl}" target="_blank" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">View Live Page</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Listing Preview</h3>
+            <div class="preview-card">
+                <img id="previewMainImage" src="${(currentListing.photos && currentListing.photos.length > 0) ? currentListing.photos[0] : currentListing.logo}" alt="Main preview" class="preview-main-image">
+                <div class="preview-info">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <h4 id="previewBusinessName" class="text-2xl font-bold text-gray-900 mb-1">${currentListing.business_name}</h4>
+                            <p id="previewTagline" class="text-gray-600 italic text-sm mb-2">${currentListing.tagline || ''}</p>
+                            <div id="previewCategory" class="inline-block px-3 py-1 text-sm font-semibold text-white rounded-full mb-2" style="background-color:#055193;">${currentListing.category}</div>
+                        </div>
+                        <img id="previewLogo" src="${currentListing.logo}" alt="Logo" class="preview-logo ml-4">
+                    </div>
+                    <div id="previewDetails" class="text-sm text-gray-700 space-y-1">
+                        <div><span class="font-semibold">Listing ID:</span> #${currentListing.id}</div>
+                        ${currentListing.subcategories && currentListing.subcategories.length > 0 ? 
+                            `<div><span class="font-semibold">Subcategories:</span> ${currentListing.subcategories.join(', ')}</div>` : ''}
+                        ${currentListing.city && currentListing.state ? 
+                            `<div><span class="font-semibold">Location:</span> ${currentListing.city}, ${currentListing.state}</div>` : ''}
+                        ${currentListing.phone ? 
+                            `<div><span class="font-semibold">Phone:</span> ${currentListing.phone}</div>` : ''}
+                        ${currentListing.email ? 
+                            `<div><span class="font-semibold">Email:</span> ${currentListing.email}</div>` : ''}
+                        ${currentListing.website ? 
+                            `<div><span class="font-semibold">Website:</span> <a href="${currentListing.website}" target="_blank" class="text-blue-600 hover:underline">${currentListing.website}</a></div>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 }
+// ============================================
+// BUSINESS DASHBOARD FUNCTIONALITY - PART 3
+// Edit Form Rendering
+// ============================================
+
+function renderEditForm() {
+    if (!currentListing) return;
+    
+    const tier = currentListing.tier || 'FREE';
+    const maxDesc = tier === 'FREE' ? 1000 : 2000;
+    const maxPhotos = tier === 'FREE' ? 1 : tier === 'FEATURED' ? 5 : tier === 'PREMIUM' ? 15 : 1;
+    
+    selectedSubcategories = currentListing.subcategories || [];
+    primarySubcategory = currentListing.primary_subcategory || null;
+    
+    const content = document.getElementById('content-edit');
+    content.innerHTML = `
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Edit Your Listing</h2>
+                <button onclick="saveChanges()" class="px-6 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">Save Changes</button>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- Basic Information -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2 disabled-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+                            <input type="text" value="${currentListing.business_name}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
+                            <p class="info-notice">Contact Support to change this information.</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (max 75 chars) *</label>
+                            <input type="text" id="editTagline" value="${currentListing.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('tagline')">
+                            <p class="char-counter mt-1"><span id="taglineCount">${(currentListing.tagline || '').length}</span>/75 characters</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description (max ${maxDesc} chars)</label>
+                            <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('description')">${currentListing.description || ''}</textarea>
+                            <p class="char-counter mt-1"><span id="descriptionCount">${(currentListing.description || '').length}</span>/<span id="descriptionMax">${maxDesc}</span> characters</p>
+                        </div>
+                        <div class="disabled-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <input type="text" value="${currentListing.category}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
+                            <p class="info-notice">Contact Support to change this information.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Subcategories</label>
+                            <div id="subcategoriesGrid" class="grid grid-cols-2 gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Location Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                            <input type="text" id="editAddress" value="${currentListing.address || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
+                            <input type="text" id="editCity" value="${currentListing.city || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                            <input type="text" id="editState" value="${currentListing.state || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
+                            <input type="text" id="editZipCode" value="${currentListing.zip_code || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                            <input type="tel" id="editPhone" value="${currentListing.phone || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="editEmail" value="${currentListing.email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                            <input type="url" id="editWebsite" value="${currentListing.website || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hours of Operation -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Hours of Operation</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => `
+                            <div class="flex gap-2">
+                                <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
+                                <input type="text" id="editHours${day}" value="${currentListing.hours && currentListing.hours[day.toLowerCase()] ? currentListing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Social Media -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Social Media Links</h3>
+                    <p class="text-sm text-gray-600 mb-4">Add or update your social media profiles</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Facebook</label>
+                            <input type="text" id="editFacebook" value="${currentListing.social_media?.facebook || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Instagram</label>
+                            <input type="text" id="editInstagram" value="${currentListing.social_media?.instagram || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Twitter/X</label>
+                            <input type="text" id="editTwitter" value="${currentListing.social_media?.twitter || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">YouTube</label>
+                            <input type="text" id="editYoutube" value="${currentListing.social_media?.youtube || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="channel">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">TikTok</label>
+                            <input type="text" id="editTiktok" value="${currentListing.social_media?.tiktok || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn</label>
+                            <input type="url" id="editLinkedin" value="${currentListing.social_media?.linkedin || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review Sites -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Review Sites</h3>
+                    <p class="text-sm text-gray-600 mb-4">Add review links if not already present (locked fields require Support to change)</p>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Google Reviews</label>
+                            <input type="url" id="editGoogleReviews" value="${currentListing.reviews?.google || ''}" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
+                                ${currentListing.reviews?.google ? 'disabled' : ''} 
+                                placeholder="Full Google Reviews URL">
+                            ${currentListing.reviews?.google ? '<p class="info-notice">Contact Support to change this link</p>' : ''}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Yelp</label>
+                            <input type="url" id="editYelp" value="${currentListing.reviews?.yelp || ''}" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
+                                ${currentListing.reviews?.yelp ? 'disabled' : ''} 
+                                placeholder="Full Yelp URL">
+                            ${currentListing.reviews?.yelp ? '<p class="info-notice">Contact Support to change this link</p>' : ''}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">TripAdvisor</label>
+                            <input type="url" id="editTripadvisor" value="${currentListing.reviews?.tripadvisor || ''}" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
+                                ${currentListing.reviews?.tripadvisor ? 'disabled' : ''} 
+                                placeholder="Full TripAdvisor URL">
+                            ${currentListing.reviews?.tripadvisor ? '<p class="info-notice">Contact Support to change this link</p>' : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    renderSubcategories();
+}
+
+function renderSubcategories() {
+    const category = currentListing.category;
+    const grid = document.getElementById('subcategoriesGrid');
+    
+    if (!grid) return;
+    
+    if (SUBCATEGORIES[category] && SUBCATEGORIES[category].length > 0) {
+        grid.innerHTML = '';
+        SUBCATEGORIES[category].forEach(sub => {
+            const isSelected = selectedSubcategories.includes(sub);
+            const isPrimary = sub === primarySubcategory;
+            
+            const div = document.createElement('div');
+            div.className = 'subcategory-checkbox';
+            div.innerHTML = `
+                <input type="checkbox" id="subcat-${sub.replace(/\s+/g, '-')}" 
+                    ${isSelected ? 'checked' : ''} 
+                    onchange="toggleSubcategory('${sub.replace(/'/g, "\\'")}')">
+                <label for="subcat-${sub.replace(/\s+/g, '-')}" class="flex-1">${sub}</label>
+                <input type="radio" name="primarySub" 
+                    ${isPrimary ? 'checked' : ''} 
+                    ${!isSelected ? 'disabled' : ''}
+                    onchange="setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')"
+                    title="Set as primary">
+            `;
+            grid.appendChild(div);
+        });
+    }
+}
+
+window.toggleSubcategory = function(subcategory) {
+    const index = selectedSubcategories.indexOf(subcategory);
+    
+    if (index > -1) {
+        selectedSubcategories.splice(index, 1);
+        if (primarySubcategory === subcategory) {
+            primarySubcategory = selectedSubcategories.length > 0 ? selectedSubcategories[0] : null;
+        }
+    } else {
+        selectedSubcategories.push(subcategory);
+        if (!primarySubcategory) {
+            primarySubcategory = subcategory;
+        }
+    }
+    
+    renderSubcategories();
+};
+
+window.setPrimarySubcategory = function(subcategory) {
+    primarySubcategory = subcategory;
+    renderSubcategories();
+};
+
+window.updateCharCounter = function(field) {
+    if (field === 'tagline') {
+        const input = document.getElementById('editTagline');
+        const counter = document.getElementById('taglineCount');
+        counter.textContent = input.value.length;
+    } else if (field === 'description') {
+        const input = document.getElementById('editDescription');
+        const counter = document.getElementById('descriptionCount');
+        const max = parseInt(document.getElementById('descriptionMax').textContent);
+        const current = input.value.length;
+        
+        counter.textContent = current;
+        counter.parentElement.className = 'char-counter mt-1';
+        
+        if (current > max) {
+            counter.parentElement.className = 'char-counter error mt-1';
+            input.value = input.value.substring(0, max);
+            counter.textContent = max;
+        } else if (current > max * 0.9) {
+            counter.parentElement.className = 'char-counter warning mt-1';
+        }
+    }
+};
+// ============================================
+// BUSINESS DASHBOARD FUNCTIONALITY - PART 4
+// Save Changes & Analytics
+// ============================================
+
+async function saveChanges() {
+    const tagline = document.getElementById('editTagline').value.trim();
+    if (!tagline) {
+        alert('Tagline is required');
+        return;
+    }
+    
+    if (selectedSubcategories.length === 0) {
+        alert('At least one subcategory is required');
+        return;
+    }
+    
+    const tier = currentListing.tier || 'FREE';
+    const maxDesc = tier === 'FREE' ? 1000 : 2000;
+    const description = document.getElementById('editDescription').value;
+    
+    if (description.length > maxDesc) {
+        alert(`Description too long! Maximum ${maxDesc} characters for ${tier} tier.`);
+        return;
+    }
+    
+    const changes = [];
+    if (currentListing.tagline !== tagline) changes.push(`Tagline updated`);
+    if (currentListing.description !== description) changes.push('Description updated');
+    
+    const newSubcategories = selectedSubcategories.sort().join(',');
+    const oldSubcategories = (currentListing.subcategories || []).sort().join(',');
+    if (oldSubcategories !== newSubcategories) changes.push(`Subcategories updated`);
+    
+    if (changes.length === 0) {
+        alert('No changes detected.');
+        return;
+    }
+    
+    const confirmMessage = `Are you sure you want to save these changes?\n\nChanges:\n${changes.map(c => `• ${c}`).join('\n')}`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    try {
+        // Prepare update data
+        const updates = {
+            tagline: tagline,
+            description: description,
+            subcategories: selectedSubcategories,
+            primary_subcategory: primarySubcategory,
+            address: document.getElementById('editAddress').value.trim() || null,
+            city: document.getElementById('editCity').value.trim() || null,
+            state: document.getElementById('editState').value.trim() || null,
+            zip_code: document.getElementById('editZipCode').value.trim() || null,
+            phone: document.getElementById('editPhone').value.trim() || null,
+            email: document.getElementById('editEmail').value.trim() || null,
+            website: document.getElementById('editWebsite').value.trim() || null,
+            hours: {
+                monday: document.getElementById('editHoursMonday').value.trim() || null,
+                tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
+                wednesday: document.getElementById('editHoursWednesday').value.trim() || null,
+                thursday: document.getElementById('editHoursThursday').value.trim() || null,
+                friday: document.getElementById('editHoursFriday').value.trim() || null,
+                saturday: document.getElementById('editHoursSaturday').value.trim() || null,
+                sunday: document.getElementById('editHoursSunday').value.trim() || null
+            },
+            social_media: {
+                facebook: document.getElementById('editFacebook').value.trim() || null,
+                instagram: document.getElementById('editInstagram').value.trim() || null,
+                twitter: document.getElementById('editTwitter').value.trim() || null,
+                youtube: document.getElementById('editYoutube').value.trim() || null,
+                tiktok: document.getElementById('editTiktok').value.trim() || null,
+                linkedin: document.getElementById('editLinkedin').value.trim() || null
+            },
+            reviews: {
+                ...currentListing.reviews,
+                google: currentListing.reviews?.google || document.getElementById('editGoogleReviews').value.trim() || null,
+                yelp: currentListing.reviews?.yelp || document.getElementById('editYelp').value.trim() || null,
+                tripadvisor: currentListing.reviews?.tripadvisor || document.getElementById('editTripadvisor').value.trim() || null
+            }
+        };
+        
+        // Update in Supabase
+        const { data, error } = await window.TGDAuth.supabaseClient
+            .from('listings')
+            .update(updates)
+            .eq('id', currentListing.id)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        currentListing = data;
+        
+        alert('✅ Changes saved successfully!');
+        renderDashboard();
+        switchTab('overview');
+        
+    } catch (error) {
+        console.error('Error saving changes:', error);
+        alert('❌ Failed to save changes: ' + error.message);
+    }
+}
+
+function renderAnalytics() {
+    if (!currentListing) return;
+    
+    const tier = currentListing.tier || 'FREE';
+    const analytics = currentListing.analytics || {
+        views: 0,
+        call_clicks: 0,
+        website_clicks: 0,
+        direction_clicks: 0,
+        share_clicks: 0,
+        video_plays: 0,
+        last_viewed: null,
+        detailed_views: []
+    };
+    
+    const content = document.getElementById('content-analytics');
+    
+    let html = '';
+    
+    if (tier === 'FREE') {
+        html = `
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Analytics</h2>
+                    <button onclick="loadListingData()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">🔄 Refresh</button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="analytics-stat-card">
+                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
+                        <div class="text-sm opacity-90">Total Views</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="text-4xl font-bold mb-2">${(analytics.call_clicks || 0) + (analytics.website_clicks || 0) + (analytics.direction_clicks || 0) + (analytics.share_clicks || 0)}</div>
+                        <div class="text-sm opacity-90">Total Engagement</div>
+                    </div>
+                </div>
+                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-900"><strong>Want more detailed analytics?</strong> Upgrade to Verified tier or higher to see individual click breakdowns, trends, and more!</p>
+                </div>
+            </div>
+        `;
+    } else if (tier === 'VERIFIED') {
+        html = `
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Analytics</h2>
+                    <button onclick="loadListingData()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">🔄 Refresh</button>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="analytics-stat-card">
+                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
+                        <div class="text-sm opacity-90">Total Views</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
+                        <div class="text-sm opacity-90">Call Clicks</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
+                        <div class="text-sm opacity-90">Website Clicks</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
+                        <div class="text-sm opacity-90">Direction Clicks</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
+                        <div class="text-sm opacity-90">Share Clicks</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                        <div class="text-lg font-bold mb-2">${analytics.last_viewed ? new Date(analytics.last_viewed).toLocaleString() : 'Never'}</div>
+                        <div class="text-sm opacity-90">Last Viewed</div>
+                    </div>
+                </div>
+                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-900"><strong>Want advanced analytics?</strong> Upgrade to Featured or Premium tier for click breakdowns, trends, and comparative performance!</p>
+                </div>
+            </div>
+        `;
+    } else {
+        const recentViews = analytics.detailed_views?.slice(-30) || [];
+        html = `
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Analytics</h2>
+                    <button onclick="loadListingData()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">🔄 Refresh</button>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                    <div class="analytics-stat-card">
+                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
+                        <div class="text-sm opacity-90">Total Views</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
+                        <div class="text-sm opacity-90">Call Clicks</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
+                        <div class="text-sm opacity-90">Website Clicks</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
+                        <div class="text-sm opacity-90">Direction Clicks</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
+                        <div class="text-sm opacity-90">Share Clicks</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                        <div class="text-4xl font-bold mb-2">${recentViews.length}</div>
+                        <div class="text-sm opacity-90">Recent Activity</div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-bold text-gray-900 mb-3">Recent Activity (Last 30 actions)</h3>
+                    <div class="space-y-2">
+                        ${recentViews.slice(-10).reverse().map(v => `
+                            <div class="flex justify-between text-sm">
+                                <span class="font-medium">${v.action}</span>
+                                <span class="text-gray-600">${new Date(v.timestamp).toLocaleString()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = html;
+}
+
 function renderSettings() {
     if (!ownerData) return;
-    
-    document.getElementById('settingsOwnerEmail').value = ownerData.owner_email || '';
-    document.getElementById('settingsOwnerPhone').value = ownerData.owner_phone || '';
     
     settingsVisibility = {
         email: ownerData.email_visible || false,
         phone: ownerData.phone_visible || false
     };
     
-    document.querySelectorAll('.visibility-toggle').forEach(btn => {
-        const field = btn.getAttribute('data-field');
-        if (settingsVisibility[field]) {
-            btn.className = 'visibility-toggle visible';
-            btn.textContent = 'Visible';
-        } else {
-            btn.className = 'visibility-toggle hidden';
-            btn.textContent = 'Hidden';
-        }
-    });
+    const content = document.getElementById('content-settings');
+    content.innerHTML = `
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Account Settings</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
+                    <p class="text-sm text-gray-600 mb-4">This information is stored securely and can be displayed on your listing page.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="owner-field">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email</label>
+                                <input type="email" id="settingsOwnerEmail" value="${ownerData.owner_email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="owner@email.com">
+                            </div>
+                            <div class="mt-6">
+                                <button class="visibility-toggle ${settingsVisibility.email ? 'visible' : 'hidden'}" data-field="email" onclick="toggleSettingsFieldVisibility('email')">
+                                    ${settingsVisibility.email ? 'Visible' : 'Hidden'}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="owner-field">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Owner Phone</label>
+                                <input type="tel" id="settingsOwnerPhone" value="${ownerData.owner_phone || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(555) 123-4567">
+                            </div>
+                            <div class="mt-6">
+                                <button class="visibility-toggle ${settingsVisibility.phone ? 'visible' : 'hidden'}" data-field="phone" onclick="toggleSettingsFieldVisibility('phone')">
+                                    ${settingsVisibility.phone ? 'Visible' : 'Hidden'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 mt-4">
+                        <strong>Note:</strong> Toggle visibility to control whether these details appear on your public listing page.
+                    </p>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Password</h3>
+                    <div class="max-w-md space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                            <input type="password" id="settingsNewPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Enter new password">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                            <input type="password" id="settingsConfirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Confirm new password">
+                        </div>
+                        <button onclick="updatePassword()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Update Password</button>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-6">
+                    <button onclick="saveSettings()" class="px-6 py-3 text-white rounded-lg font-medium" style="background-color: #055193;">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 window.toggleSettingsFieldVisibility = function(field) {
@@ -238,7 +781,7 @@ async function saveSettings() {
     const result = await window.TGDAuth.updateBusinessOwnerContact(updates);
     
     if (result.success) {
-        ownerData = result.data;
+        ownerData = result.data[0];
         alert('Settings saved successfully!');
         renderSettings();
     } else {
@@ -248,535 +791,4 @@ async function saveSettings() {
 
 window.saveSettings = saveSettings;
 window.updatePassword = updatePassword;
-window.switchTab = switchTab;
-window.loadListingData = loadListingData;
-// ============================================
-// ANALYTICS RENDERING
-// ============================================
-
-function renderAnalytics() {
-    if (!currentListing) return;
-    
-    const tier = currentListing.tier || 'FREE';
-    const analytics = currentListing.analytics || {
-        views: 0,
-        callClicks: 0,
-        websiteClicks: 0,
-        directionClicks: 0,
-        shareClicks: 0,
-        videoPlays: 0,
-        lastViewed: 'Never',
-        detailedViews: []
-    };
-    
-    let html = '';
-    
-    if (tier === 'FREE') {
-        html = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="analytics-stat-card">
-                    <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                    <div class="text-sm opacity-90">Total Views</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <div class="text-4xl font-bold mb-2">${(analytics.callClicks || 0) + (analytics.websiteClicks || 0) + (analytics.directionClicks || 0) + (analytics.shareClicks || 0)}</div>
-                    <div class="text-sm opacity-90">Total Engagement</div>
-                </div>
-            </div>
-            <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-blue-900"><strong>Want more detailed analytics?</strong> Upgrade to Verified tier or higher to see individual click breakdowns, trends, and more!</p>
-            </div>
-        `;
-    } else if (tier === 'VERIFIED') {
-        html = `
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div class="analytics-stat-card">
-                    <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                    <div class="text-sm opacity-90">Total Views</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.callClicks || 0}</div>
-                    <div class="text-sm opacity-90">Call Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.websiteClicks || 0}</div>
-                    <div class="text-sm opacity-90">Website Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.directionClicks || 0}</div>
-                    <div class="text-sm opacity-90">Direction Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.shareClicks || 0}</div>
-                    <div class="text-sm opacity-90">Share Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
-                    <div class="text-lg font-bold mb-2">${analytics.lastViewed ? new Date(analytics.lastViewed).toLocaleString() : 'Never'}</div>
-                    <div class="text-sm opacity-90">Last Viewed</div>
-                </div>
-            </div>
-            <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-blue-900"><strong>Want advanced analytics?</strong> Upgrade to Featured or Premium tier for click breakdowns, trends, and comparative performance!</p>
-            </div>
-        `;
-    } else {
-        const recentViews = analytics.detailedViews?.slice(-30) || [];
-        html = `
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                <div class="analytics-stat-card">
-                    <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                    <div class="text-sm opacity-90">Total Views</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.callClicks || 0}</div>
-                    <div class="text-sm opacity-90">Call Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.websiteClicks || 0}</div>
-                    <div class="text-sm opacity-90">Website Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.directionClicks || 0}</div>
-                    <div class="text-sm opacity-90">Direction Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                    <div class="text-4xl font-bold mb-2">${analytics.shareClicks || 0}</div>
-                    <div class="text-sm opacity-90">Share Clicks</div>
-                </div>
-                <div class="analytics-stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
-                    <div class="text-4xl font-bold mb-2">${recentViews.length}</div>
-                    <div class="text-sm opacity-90">Recent Activity</div>
-                </div>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-4">
-                <h3 class="font-bold text-gray-900 mb-3">Recent Activity (Last 30 actions)</h3>
-                <div class="space-y-2">
-                    ${recentViews.slice(-10).reverse().map(v => `
-                        <div class="flex justify-between text-sm">
-                            <span class="font-medium">${v.action}</span>
-                            <span class="text-gray-600">${new Date(v.timestamp).toLocaleString()}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }
-    
-    document.getElementById('analyticsContent').innerHTML = html;
-}
-// ============================================
-// EDIT FORM RENDERING
-// ============================================
-
-function renderEditForm() {
-    if (!currentListing) return;
-    
-    const tier = currentListing.tier || 'FREE';
-    const maxDesc = tier === 'FREE' ? 1000 : 2000;
-    const maxPhotos = tier === 'FREE' ? 1 : tier === 'FEATURED' ? 5 : tier === 'PREMIUM' ? 15 : 1;
-    
-    selectedSubcategories = currentListing.subcategories || [];
-    
-    let html = `
-        <div>
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="md:col-span-2 disabled-field">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Listing ID</label>
-                    <input type="text" value="#${currentListing.listingId}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
-                    <p class="info-notice">Listing ID number cannot be changed.</p>
-                </div>
-                <div class="md:col-span-2 disabled-field">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
-                    <input type="text" value="${currentListing.businessName}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
-                    <p class="info-notice">Contact Support to change this information.</p>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (max 75 chars) *</label>
-                    <input type="text" id="editTagline" value="${currentListing.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('tagline')">
-                    <p class="char-counter mt-1"><span id="taglineCount">${(currentListing.tagline || '').length}</span>/75 characters</p>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description (max ${maxDesc} chars)</label>
-                    <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('description')">${currentListing.description || ''}</textarea>
-                    <p class="char-counter mt-1"><span id="descriptionCount">${(currentListing.description || '').length}</span>/<span id="descriptionMax">${maxDesc}</span> characters</p>
-                </div>
-                <div class="disabled-field">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                    <input type="text" value="${currentListing.category}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
-                    <p class="info-notice">Contact Support to change this information.</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Subcategories</label>
-                    <div id="subcategoriesGrid" class="grid grid-cols-2 gap-2"></div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                    <input type="tel" id="editPhone" value="${currentListing.phone || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" id="editEmail" value="${currentListing.email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
-                    <input type="url" id="editWebsite" value="${currentListing.website || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                    <input type="text" id="editAddress" value="${currentListing.address || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
-                    <input type="text" id="editCity" value="${currentListing.city || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
-                    <input type="text" id="editState" value="${currentListing.state || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
-                    <input type="text" id="editZipCode" value="${currentListing.zipCode || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                </div>
-            </div>
-        </div>
-    `;
-    
-    html += `
-        <div>
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Hours of Operation</h3>
-            <div class="grid grid-cols-1 gap-3">
-                ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => `
-                    <div class="flex gap-2">
-                        <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
-                        <input type="text" id="editHours${day}" value="${currentListing.hours && currentListing.hours[day.toLowerCase()] ? currentListing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('editForm').innerHTML = html;
-    
-    renderSubcategories();
-    
-    if (currentListing.photos && currentListing.photos.length > 0) {
-        uploadedImages.photos = currentListing.photos.map(url => ({ url: url, existing: true }));
-        renderPhotosPreview();
-    }
-    
-    setupImageHandlers();
-}
-
-function renderSubcategories() {
-    const category = currentListing.category;
-    const grid = document.getElementById('subcategoriesGrid');
-    
-    if (SUBCATEGORIES[category] && SUBCATEGORIES[category].length > 0) {
-        grid.innerHTML = '';
-        SUBCATEGORIES[category].forEach(sub => {
-            const div = document.createElement('div');
-            div.className = 'subcategory-checkbox';
-            
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = `subcat-${sub}`;
-            checkbox.value = sub;
-            checkbox.checked = selectedSubcategories.includes(sub);
-            checkbox.onchange = () => toggleSubcategory(sub);
-            
-            const label = document.createElement('label');
-            label.htmlFor = `subcat-${sub}`;
-            label.textContent = sub;
-            label.className = 'cursor-pointer flex-1 text-sm';
-            
-            div.appendChild(checkbox);
-            div.appendChild(label);
-            grid.appendChild(div);
-        });
-    }
-}
-
-function toggleSubcategory(subcategory) {
-    const index = selectedSubcategories.indexOf(subcategory);
-    if (index > -1) {
-        selectedSubcategories.splice(index, 1);
-    } else {
-        selectedSubcategories.push(subcategory);
-    }
-}
-window.updateCharCounter = function(field) {
-    if (field === 'tagline') {
-        const input = document.getElementById('editTagline');
-        const counter = document.getElementById('taglineCount');
-        counter.textContent = input.value.length;
-    } else if (field === 'description') {
-        const input = document.getElementById('editDescription');
-        const counter = document.getElementById('descriptionCount');
-        const max = parseInt(document.getElementById('descriptionMax').textContent);
-        const current = input.value.length;
-        
-        counter.textContent = current;
-        counter.parentElement.className = 'char-counter mt-1';
-        
-        if (current > max) {
-            counter.parentElement.className = 'char-counter error mt-1';
-            input.value = input.value.substring(0, max);
-            counter.textContent = max;
-        } else if (current > max * 0.9) {
-            counter.parentElement.className = 'char-counter warning mt-1';
-        }
-    }
-};
-
-function setupImageHandlers() {
-    const logoUpload = document.getElementById('logoUpload');
-    const photosUpload = document.getElementById('photosUpload');
-    
-    if (logoUpload) {
-        logoUpload.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    uploadedImages.logo = { 
-                        file: file,
-                        base64: event.target.result.split(',')[1],
-                        url: event.target.result
-                    };
-                    const logoPreview = document.getElementById('logoPreview');
-                    if (logoPreview) {
-                        logoPreview.innerHTML = `<img src="${event.target.result}" class="image-preview">`;
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    if (photosUpload) {
-        photosUpload.addEventListener('change', async (e) => {
-            const tier = currentListing.tier || 'FREE';
-            const maxPhotos = tier === 'FREE' ? 1 : tier === 'FEATURED' ? 5 : tier === 'PREMIUM' ? 15 : 1;
-            
-            const files = Array.from(e.target.files).slice(0, maxPhotos - uploadedImages.photos.length);
-            
-            for (const file of files) {
-                const reader = new FileReader();
-                await new Promise((resolve) => {
-                    reader.onload = (event) => {
-                        uploadedImages.photos.push({ 
-                            file: file,
-                            base64: event.target.result.split(',')[1],
-                            url: event.target.result
-                        });
-                        renderPhotosPreview();
-                        resolve();
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
-        });
-    }
-}
-
-function renderPhotosPreview() {
-    const preview = document.getElementById('photosPreview');
-    if (!preview) return;
-    
-    preview.innerHTML = uploadedImages.photos.map((photo, idx) => `
-        <div class="photo-item" data-index="${idx}">
-            <div class="photo-number">#${idx + 1}</div>
-            <img src="${photo.url}" class="image-preview">
-            <div class="delete-photo" onclick="deletePhoto(${idx})">×</div>
-        </div>
-    `).join('');
-    
-    if (photosSortable) {
-        photosSortable.destroy();
-    }
-    initPhotosSortable();
-}
-
-function initPhotosSortable() {
-    const preview = document.getElementById('photosPreview');
-    if (preview && preview.children.length > 0) {
-        photosSortable = Sortable.create(preview, {
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            onEnd: function(evt) {
-                const oldIndex = evt.oldIndex;
-                const newIndex = evt.newIndex;
-                const item = uploadedImages.photos.splice(oldIndex, 1)[0];
-                uploadedImages.photos.splice(newIndex, 0, item);
-                renderPhotosPreview();
-            }
-        });
-    }
-}
-
-window.deletePhoto = function(index) {
-    uploadedImages.photos.splice(index, 1);
-    renderPhotosPreview();
-};
-// ============================================
-// SAVE CHANGES FUNCTIONALITY
-// ============================================
-
-async function saveChanges() {
-    const tagline = document.getElementById('editTagline').value.trim();
-    if (!tagline) {
-        alert('Tagline is required');
-        return;
-    }
-    
-    const tier = currentListing.tier || 'FREE';
-    const maxDesc = tier === 'FREE' ? 1000 : 2000;
-    const description = document.getElementById('editDescription').value;
-    
-    if (description.length > maxDesc) {
-        alert(`Description too long! Maximum ${maxDesc} characters for ${tier} tier.`);
-        return;
-    }
-    
-    const changes = [];
-    if (currentListing.tagline !== tagline) changes.push(`Tagline: "${currentListing.tagline}" → "${tagline}"`);
-    if (currentListing.description !== description) changes.push('Description updated');
-    
-    const newSubcategories = selectedSubcategories.sort().join(',');
-    const oldSubcategories = (currentListing.subcategories || []).sort().join(',');
-    if (oldSubcategories !== newSubcategories) changes.push(`Subcategories: ${oldSubcategories || 'None'} → ${newSubcategories}`);
-    
-    const newPhone = document.getElementById('editPhone').value || null;
-    if (currentListing.phone !== newPhone) changes.push(`Phone: ${currentListing.phone || 'None'} → ${newPhone || 'None'}`);
-    
-    const newEmail = document.getElementById('editEmail').value || null;
-    if (currentListing.email !== newEmail) changes.push(`Email: ${currentListing.email || 'None'} → ${newEmail || 'None'}`);
-    
-    const newWebsite = document.getElementById('editWebsite').value || null;
-    if (currentListing.website !== newWebsite) changes.push(`Website: ${currentListing.website || 'None'} → ${newWebsite || 'None'}`);
-    
-    const newAddress = document.getElementById('editAddress').value || null;
-    if (currentListing.address !== newAddress) changes.push(`Address: ${currentListing.address || 'None'} → ${newAddress || 'None'}`);
-    
-    if (uploadedImages.logo && !uploadedImages.logo.existing) changes.push('Logo updated');
-    if (uploadedImages.photos.some(p => !p.existing)) changes.push('Photos updated');
-    
-    if (changes.length === 0) {
-        alert('No changes detected.');
-        return;
-    }
-    
-    const confirmMessage = `Are you sure you want to save these changes?\n\nChanges:\n${changes.map(c => `• ${c}`).join('\n')}\n\nThese changes will be submitted for review.`;
-    
-    if (!confirm(confirmMessage)) return;
-    
-    // Update listing data
-    currentListing.tagline = tagline;
-    currentListing.description = description;
-    currentListing.subcategories = selectedSubcategories;
-    currentListing.phone = newPhone;
-    currentListing.email = newEmail;
-    currentListing.website = newWebsite;
-    currentListing.address = newAddress;
-    currentListing.city = document.getElementById('editCity').value || null;
-    currentListing.state = document.getElementById('editState').value || null;
-    currentListing.zipCode = document.getElementById('editZipCode').value || null;
-    
-    currentListing.hours = {
-        monday: document.getElementById('editHoursMonday').value || null,
-        tuesday: document.getElementById('editHoursTuesday').value || null,
-        wednesday: document.getElementById('editHoursWednesday').value || null,
-        thursday: document.getElementById('editHoursThursday').value || null,
-        friday: document.getElementById('editHoursFriday').value || null,
-        saturday: document.getElementById('editHoursSaturday').value || null,
-        sunday: document.getElementById('editHoursSunday').value || null
-    };
-    
-    if (uploadedImages.photos.length > 0) {
-        currentListing.photos = uploadedImages.photos.map(p => p.url);
-    }
-    
-    currentListing.metadata.updatedAt = new Date().toISOString();
-    
-    // Update in allListings array
-    const index = allListings.findIndex(l => l.id === currentListing.id);
-    if (index !== -1) {
-        allListings[index] = currentListing;
-        
-        // Prepare for GitHub update
-        const databaseContent = { listings: allListings };
-        const jsonString = JSON.stringify(databaseContent, null, 2);
-        
-        // Use Supabase Edge Function to update GitHub
-        const result = await window.TGDAuth.updateGitHubFile(
-            GITHUB_OWNER,
-            GITHUB_REPO,
-            DATABASE_PATH,
-            jsonString,
-            `Update ${currentListing.businessName} - Business Portal`
-        );
-        
-        if (result.success) {
-            alert('✅ Changes submitted successfully! They will be reviewed and published soon.');
-            renderDashboard();
-            switchTab('overview');
-        } else {
-            alert('❌ Failed to save changes: ' + result.error);
-        }
-    }
-}
-
 window.saveChanges = saveChanges;
-// ============================================
-// SOCIAL MEDIA & REVIEWS SECTIONS
-// ============================================
-
-function renderSocialMediaSection() {
-    if (!currentListing || !currentListing.socialMedia) return '';
-    
-    const sm = currentListing.socialMedia;
-    let socialLinks = '';
-    
-    if (sm.facebook) socialLinks += `<a href="https://facebook.com/${sm.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon">Facebook</a>`;
-    if (sm.instagram) socialLinks += `<a href="https://instagram.com/${sm.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon">Instagram</a>`;
-    if (sm.twitter) socialLinks += `<a href="https://twitter.com/${sm.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon">Twitter</a>`;
-    if (sm.youtube) socialLinks += `<a href="https://youtube.com/@${sm.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon">YouTube</a>`;
-    if (sm.tiktok) socialLinks += `<a href="https://tiktok.com/@${sm.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon">TikTok</a>`;
-    if (sm.linkedin) socialLinks += `<a href="${sm.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon">LinkedIn</a>`;
-    
-    if (socialLinks) {
-        return `
-            <div class="mt-4">
-                <h4 class="font-semibold text-gray-700 mb-2">Social Media</h4>
-                <div class="flex flex-wrap gap-2">
-                    ${socialLinks}
-                </div>
-            </div>
-        `;
-    }
-    return '';
-}
-
-function renderReviewsSection() {
-    if (!currentListing || !currentListing.reviews) return '';
-    
-    const r = currentListing.reviews;
-    let reviewLinks = '';
-    
-    if (r.google) reviewLinks += `<a href="${r.google}" target="_blank" rel="noopener noreferrer" class="social-icon">Google</a>`;
-    if (r.yelp) reviewLinks += `<a href="${r.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon">Yelp</a>`;
-    if (r.tripadvisor) reviewLinks += `<a href="${r.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon">TripAdvisor</a>`;
-    
-    if (reviewLinks) {
-        return `
-            <div class="mt-4">
-                <h4 class="font-semibold text-gray-700 mb-2">Reviews</h4>
-                <div class="flex flex-wrap gap-2">
-                    ${reviewLinks}
-                </div>
-            </div>
-        `;
-    }
-    return '';
-}
