@@ -50,7 +50,7 @@ async function getCurrentSession() {
 }
 // ============================================
 // SUPABASE CLIENT CONFIGURATION - PART 2
-// Sign Up & Sign In Functions
+// Sign Up with Confirmation Key Logic
 // ============================================
 
 /**
@@ -80,11 +80,15 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
         }
         
         // Check if listing is already claimed
-        if (ownerRecord.user_id) {
+        if (ownerRecord.owner_user_id) {
             throw new Error('This listing has already been claimed');
         }
         
-        // 2. Sign up the user
+        // 2. Create username from email and listing ID
+        const emailUsername = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase();
+        const ownerUserId = `${emailUsername}${listingId}`;
+        
+        // 3. Sign up the user
         const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
             email: email,
             password: password,
@@ -92,7 +96,8 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
                 emailRedirectTo: window.location.origin + '/business.html',
                 data: {
                     listing_id: listingId,
-                    role: 'business_owner'
+                    role: 'business_owner',
+                    owner_user_id: ownerUserId
                 }
             }
         });
@@ -104,13 +109,14 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
 
         console.log('Auth signup successful, user ID:', authData.user.id);
 
-        // 3. Update business_owners record with user_id and contact info
+        // 4. Update business_owners record
         const { data: updatedOwner, error: updateError } = await supabaseClient
             .from('business_owners')
             .update({
-                user_id: authData.user.id,
+                owner_user_id: ownerUserId,
                 owner_email: email,
-                owner_phone: phone
+                owner_phone: phone,
+                confirmation_key: null // Clear confirmation key after claiming
             })
             .eq('listing_id', listingId)
             .select()
@@ -128,7 +134,7 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
             user: authData.user,
             session: authData.session,
             owner: updatedOwner,
-            message: 'Sign up successful! You can now sign in.'
+            message: 'Account created successfully! Please check your email to verify your account, then sign in.'
         };
 
     } catch (error) {
@@ -166,7 +172,7 @@ async function signInBusinessOwner(email, password) {
         const { data: ownerData, error: ownerError } = await supabaseClient
             .from('business_owners')
             .select('*')
-            .eq('user_id', data.user.id);
+            .eq('owner_email', email);
 
         console.log('Owner data fetch:', { ownerData, ownerError });
 
@@ -219,10 +225,10 @@ async function getBusinessOwnerData() {
         const user = await getCurrentUser();
         if (!user) return null;
 
-        const { data, error } = await supabaseClient
+        const { data, error} = await supabaseClient
             .from('business_owners')
             .select('*')
-            .eq('user_id', user.id);
+            .eq('owner_email', user.email);
 
         if (error) throw error;
         return data;
@@ -246,7 +252,7 @@ async function updateBusinessOwnerContact(updates) {
         const { data, error } = await supabaseClient
             .from('business_owners')
             .update(updates)
-            .eq('user_id', user.id)
+            .eq('owner_email', user.email)
             .select();
 
         if (error) throw error;
