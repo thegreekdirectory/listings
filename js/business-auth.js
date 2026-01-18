@@ -1,5 +1,6 @@
 // ============================================
-// BUSINESS PORTAL AUTHENTICATION
+// BUSINESS PORTAL AUTHENTICATION - PART 1
+// Initialization & Auth State Management
 // ============================================
 
 const GITHUB_OWNER = 'thegreekdirectory';
@@ -48,7 +49,7 @@ async function handleAuthSuccess(session) {
     
     ownerData = await window.TGDAuth.getBusinessOwnerData();
     
-    if (!ownerData) {
+    if (!ownerData || ownerData.length === 0) {
         showError('Could not load business owner data. Please contact support.');
         await window.TGDAuth.signOut();
         showAuthPage();
@@ -130,6 +131,10 @@ async function handleSignIn() {
         showError(result.error);
     }
 }
+// ============================================
+// BUSINESS PORTAL AUTHENTICATION - PART 2
+// Listing Search & Sign Up with Confirmation Key
+// ============================================
 
 async function searchListingForSignup() {
     const searchTerm = document.getElementById('signUpListingSearch').value.trim().toLowerCase();
@@ -139,20 +144,26 @@ async function searchListingForSignup() {
     
     if (searchTerm.length < 2) {
         resultsDiv.innerHTML = '';
+        document.getElementById('confirmationKeyContainer').classList.add('hidden');
         return;
     }
     
     if (!allListings || allListings.length === 0) {
         try {
-            console.log('Loading listings from GitHub...');
-            const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
+            console.log('Loading listings from Supabase...');
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            const { data, error } = await window.TGDAuth.supabaseClient
+                .from('listings')
+                .select(`
+                    *,
+                    owner:business_owners(*)
+                `)
+                .eq('visible', true)
+                .order('business_name');
             
-            const data = await response.json();
-            allListings = data.listings;
+            if (error) throw error;
+            
+            allListings = data;
             console.log('Loaded listings:', allListings.length);
         } catch (error) {
             console.error('Error loading listings:', error);
@@ -162,30 +173,46 @@ async function searchListingForSignup() {
     }
     
     const matches = allListings.filter(l => 
-        l.businessName.toLowerCase().includes(searchTerm) ||
-        (l.listingId && l.listingId.toString().includes(searchTerm)) ||
-        (l.id && l.id.includes(searchTerm))
+        l.business_name.toLowerCase().includes(searchTerm) ||
+        (l.id && l.id.toString().includes(searchTerm))
     ).slice(0, 5);
     
     console.log('Matches found:', matches.length);
     
     if (matches.length === 0) {
         resultsDiv.innerHTML = '<p class="text-sm text-gray-500 p-2">No listings found</p>';
+        document.getElementById('confirmationKeyContainer').classList.add('hidden');
         return;
     }
     
-    resultsDiv.innerHTML = matches.map(l => `
-        <div class="p-2 hover:bg-gray-100 cursor-pointer rounded" onclick="selectListing('${l.id}', '${l.businessName.replace(/'/g, "\\'")}')">
-            <div class="font-medium">${l.businessName}</div>
-            <div class="text-xs text-gray-500">ID: ${l.listingId} • ${l.city}, ${l.state}</div>
+    resultsDiv.innerHTML = matches.map(l => {
+        const owner = l.owner && l.owner.length > 0 ? l.owner[0] : null;
+        const isClaimed = owner && owner.owner_user_id;
+        
+        return `
+        <div class="p-2 hover:bg-gray-100 cursor-pointer rounded ${isClaimed ? 'opacity-50' : ''}" 
+             onclick="${isClaimed ? '' : `selectListing('${l.id}', '${l.business_name.replace(/'/g, "\\'")}', ${!!owner?.confirmation_key})`}">
+            <div class="font-medium">${l.business_name}</div>
+            <div class="text-xs text-gray-500">
+                ID: ${l.id} • ${l.city}, ${l.state}
+                ${isClaimed ? ' • <span class="text-red-600">Already Claimed</span>' : ''}
+            </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
-function selectListing(listingId, businessName) {
+function selectListing(listingId, businessName, hasConfirmationKey) {
     document.getElementById('signUpListingId').value = listingId;
     document.getElementById('signUpListingSearch').value = businessName;
     document.getElementById('listingSearchResults').innerHTML = '';
+    
+    // Show confirmation key field if the listing has one
+    const confirmationKeyContainer = document.getElementById('confirmationKeyContainer');
+    if (hasConfirmationKey) {
+        confirmationKeyContainer.classList.remove('hidden');
+    } else {
+        confirmationKeyContainer.classList.add('hidden');
+    }
 }
 
 async function handleSignUp() {
@@ -194,6 +221,7 @@ async function handleSignUp() {
     const phone = document.getElementById('signUpPhone').value.trim();
     const password = document.getElementById('signUpPassword').value;
     const confirmPassword = document.getElementById('signUpPasswordConfirm').value;
+    const confirmationKey = document.getElementById('signUpConfirmationKey')?.value.trim();
     const agreeTerms = document.getElementById('agreeTerms').checked;
     
     if (!listingId) {
@@ -216,13 +244,28 @@ async function handleSignUp() {
         return;
     }
     
+    // Check if confirmation key is required
+    const confirmationKeyContainer = document.getElementById('confirmationKeyContainer');
+    if (!confirmationKeyContainer.classList.contains('hidden')) {
+        if (!confirmationKey) {
+            showError('Please enter the confirmation key');
+            return;
+        }
+    }
+    
     if (!agreeTerms) {
         showError('Please agree to the Terms of Service and Privacy Policy');
         return;
     }
     
     clearAuthMessage();
-    const result = await window.TGDAuth.signUpBusinessOwner(email, password, listingId, phone);
+    const result = await window.TGDAuth.signUpBusinessOwner(
+        email, 
+        password, 
+        listingId, 
+        confirmationKey || '', 
+        phone
+    );
     
     if (result.success) {
         showSuccess(result.message);
@@ -256,6 +299,7 @@ async function logout() {
         showAuthPage();
     }
 }
+
 window.handleSignIn = handleSignIn;
 window.handleSignUp = handleSignUp;
 window.handlePasswordReset = handlePasswordReset;
