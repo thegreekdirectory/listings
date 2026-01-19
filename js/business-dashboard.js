@@ -26,6 +26,32 @@ let selectedSubcategories = [];
 let primarySubcategory = null;
 let settingsVisibility = { email: false, phone: false };
 
+async function loadListingData() {
+    if (!ownerData || ownerData.length === 0) {
+        console.error('No owner data available');
+        return;
+    }
+    
+    const listingId = ownerData[0].listing_id;
+    
+    try {
+        const { data, error } = await window.TGDAuth.supabaseClient
+            .from('listings')
+            .select('*')
+            .eq('id', listingId)
+            .single();
+        
+        if (error) throw error;
+        
+        currentListing = data;
+        console.log('Listing loaded:', currentListing);
+        
+    } catch (error) {
+        console.error('Error loading listing:', error);
+        alert('Failed to load listing data');
+    }
+}
+
 function renderDashboard() {
     if (!currentListing) return;
     
@@ -39,7 +65,11 @@ function renderDashboard() {
     
     const categorySlug = currentListing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${currentListing.slug}`;
-    document.getElementById('viewLiveBtn').href = listingUrl;
+    
+    const viewBtn = document.getElementById('viewLiveBtn');
+    if (viewBtn) {
+        viewBtn.href = listingUrl;
+    }
     
     renderOverview();
     renderEditForm();
@@ -118,7 +148,7 @@ function renderOverview() {
             
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 class="font-semibold text-blue-900 mb-2">Quick Actions</h3>
-                <div class="flex gap-3">
+                <div class="flex gap-3 flex-wrap">
                     <button onclick="switchTab('edit')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Edit Listing</button>
                     <button onclick="switchTab('analytics')" class="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50">View Analytics</button>
                     <a id="viewLiveBtn" href="${listingUrl}" target="_blank" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">View Live Page</a>
@@ -137,7 +167,7 @@ function renderOverview() {
                             <p id="previewTagline" class="text-gray-600 italic text-sm mb-2">${currentListing.tagline || ''}</p>
                             <div id="previewCategory" class="inline-block px-3 py-1 text-sm font-semibold text-white rounded-full mb-2" style="background-color:#055193;">${currentListing.category}</div>
                         </div>
-                        <img id="previewLogo" src="${currentListing.logo}" alt="Logo" class="preview-logo ml-4">
+                        ${currentListing.logo ? `<img id="previewLogo" src="${currentListing.logo}" alt="Logo" class="preview-logo ml-4">` : ''}
                     </div>
                     <div id="previewDetails" class="text-sm text-gray-700 space-y-1">
                         <div><span class="font-semibold">Listing ID:</span> #${currentListing.id}</div>
@@ -161,8 +191,6 @@ function renderOverview() {
 // BUSINESS DASHBOARD FUNCTIONALITY - PART 3
 // Edit Form Rendering
 // ============================================
-
-// Add to business-dashboard.js after renderOverview function
 
 function renderEditForm() {
     if (!currentListing) return;
@@ -418,8 +446,6 @@ window.updateCharCounter = function(field) {
 // BUSINESS DASHBOARD FUNCTIONALITY - PART 4
 // Save Changes & Analytics
 // ============================================
-
-// Add to business-dashboard.js - Save function
 
 async function saveChanges() {
     const tagline = document.getElementById('editTagline').value.trim();
