@@ -43,8 +43,9 @@ const US_STATES = {
     'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
 };
 
-let supabase = null;
+let adminSupabase = null;
 let currentAdminUser = null;
+let adminGithubToken = null;
 let allListings = [];
 let editingListing = null;
 let selectedSubcategories = [];
@@ -53,69 +54,60 @@ let primarySubcategory = null;
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing Admin Portal...');
     
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    adminSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('✅ Supabase initialized');
     
-    await checkAuthState();
     setupEventListeners();
 });
 
-async function checkAuthState() {
-    const session = await supabase.auth.getSession();
-    
-    if (session.data.session) {
-        currentAdminUser = session.data.session.user;
-        
-        const { data: adminData } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', currentAdminUser.id)
-            .single();
-        
-        if (adminData) {
-            showDashboard();
-            await loadListings();
-        } else {
-            showError('You do not have admin access');
-            showLoginPage();
-        }
-    } else {
-        showLoginPage();
+function setupEventListeners() {
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', handleAdminLogin);
     }
+    
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('newListingBtn')?.addEventListener('click', newListing);
+    document.getElementById('refreshBtn')?.addEventListener('click', loadListings);
+    document.getElementById('adminSearch')?.addEventListener('input', renderTable);
+    document.getElementById('saveEdit')?.addEventListener('click', saveListing);
+    document.getElementById('cancelEdit')?.addEventListener('click', () => {
+        if (confirm('Discard changes?')) {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+    });
+    document.getElementById('closeModal')?.addEventListener('click', () => {
+        if (confirm('Discard changes?')) {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+    });
 }
 
 async function handleAdminLogin() {
-    const email = document.getElementById('adminEmail').value.trim();
-    const password = document.getElementById('adminPassword').value;
+    const token = document.getElementById('githubToken').value.trim();
     
-    if (!email || !password) {
-        showError('Please enter both email and password');
+    if (!token) {
+        showError('Please enter your GitHub token');
         return;
     }
     
     clearAuthMessage();
     
     try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
+        // Verify token by trying to access the repo
+        const response = await fetch('https://api.github.com/repos/thegreekdirectory/listings', {
+            headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
         });
         
-        if (error) throw error;
-        
-        currentAdminUser = data.user;
-        
-        const { data: adminData, error: adminError } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', currentAdminUser.id)
-            .single();
-        
-        if (adminError || !adminData) {
-            await supabase.auth.signOut();
-            showError('You do not have admin access');
-            return;
+        if (!response.ok) {
+            throw new Error('Invalid GitHub token');
         }
+        
+        adminGithubToken = token;
+        localStorage.setItem('tgd_admin_token', token);
         
         showSuccess('Login successful!');
         showDashboard();
@@ -123,7 +115,7 @@ async function handleAdminLogin() {
         
     } catch (error) {
         console.error('Login error:', error);
-        showError(error.message || 'Login failed');
+        showError('Invalid GitHub token. Please check and try again.');
     }
 }
 
@@ -139,8 +131,8 @@ function showDashboard() {
 
 async function logout() {
     if (confirm('Are you sure you want to logout?')) {
-        await supabase.auth.signOut();
-        currentAdminUser = null;
+        adminGithubToken = null;
+        localStorage.removeItem('tgd_admin_token');
         showLoginPage();
     }
 }
@@ -165,17 +157,33 @@ function clearAuthMessage() {
     msgDiv.textContent = '';
 }
 
+// Check for saved token on load
+window.addEventListener('load', () => {
+    const savedToken = localStorage.getItem('tgd_admin_token');
+    if (savedToken) {
+        document.getElementById('githubToken').value = savedToken;
+        handleAdminLogin();
+    }
+});
+
+window.handleAdminLogin = handleAdminLogin;
+window.logout = logout;
+// ============================================
+// ADMIN PORTAL - PART 2
+// Load & Render Listings
+// ============================================
+
 async function loadListings() {
     try {
         console.log('📥 Loading listings from Supabase...');
         
-        const { data: listings, error } = await supabase
+        const { data: listings, error } = await adminSupabase
             .from('listings')
             .select(`
                 *,
                 owner:business_owners(*)
             `)
-            .order('business_name');
+            .order('id', { ascending: true });
         
         if (error) throw error;
         
@@ -197,7 +205,8 @@ function renderTable() {
     const filtered = searchTerm ? allListings.filter(l => 
         l.business_name.toLowerCase().includes(searchTerm) ||
         l.category.toLowerCase().includes(searchTerm) ||
-        (l.city && l.city.toLowerCase().includes(searchTerm))
+        (l.city && l.city.toLowerCase().includes(searchTerm)) ||
+        (l.id && l.id.toString().includes(searchTerm))
     ) : allListings;
     
     tbody.innerHTML = filtered.map(l => {
@@ -212,7 +221,7 @@ function renderTable() {
         };
         
         const ownerInfo = l.owner && l.owner.length > 0 ? l.owner[0] : null;
-        const isClaimed = ownerInfo && ownerInfo.user_id;
+        const isClaimed = ownerInfo && ownerInfo.owner_user_id;
         
         return `
         <tr class="border-b hover:bg-gray-50">
@@ -225,7 +234,7 @@ function renderTable() {
             </td>
             <td class="py-4 px-4">
                 <span class="px-2 py-1 rounded text-xs font-medium ${tierColors[tier]}">${tier}</span>
-                ${isClaimed ? '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">Claimed</span>' : ''}
+                ${isClaimed ? '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">✓ Claimed</span>' : ''}
                 ${l.is_chain ? '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">Chain</span>' : ''}
             </td>
             <td class="py-4 px-4 font-medium">${l.business_name}</td>
@@ -237,6 +246,7 @@ function renderTable() {
                     <button onclick="editListing('${l.id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
                     <a href="${listingUrl}" target="_blank" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View</a>
                     ${isClaimed ? `<button onclick="sendMagicLink('${l.id}')" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200">🔗</button>` : ''}
+                    <button onclick="deleteListing('${l.id}')" class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
                 </div>
             </td>
         </tr>
@@ -248,7 +258,7 @@ window.toggleVisibility = async function(id) {
         const listing = allListings.find(l => l.id === id);
         const newVisible = !listing.visible;
         
-        const { error } = await supabase
+        const { error } = await adminSupabase
             .from('listings')
             .update({ visible: newVisible })
             .eq('id', id);
@@ -264,35 +274,15 @@ window.toggleVisibility = async function(id) {
     }
 };
 
-function setupEventListeners() {
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
-    document.getElementById('newListingBtn')?.addEventListener('click', newListing);
-    document.getElementById('refreshBtn')?.addEventListener('click', loadListings);
-    document.getElementById('adminSearch')?.addEventListener('input', renderTable);
-    document.getElementById('saveEdit')?.addEventListener('click', saveListing);
-    document.getElementById('cancelEdit')?.addEventListener('click', () => {
-        if (confirm('Discard changes?')) {
-            document.getElementById('editModal').classList.add('hidden');
-        }
-    });
-    document.getElementById('closeModal')?.addEventListener('click', () => {
-        if (confirm('Discard changes?')) {
-            document.getElementById('editModal').classList.add('hidden');
-        }
-    });
-}
-
-window.handleAdminLogin = handleAdminLogin;
-window.logout = logout;
 window.loadListings = loadListings;
 // ============================================
-// ADMIN PORTAL - PART 2
+// ADMIN PORTAL - PART 3
 // Edit Listing & Form Management
 // ============================================
 
 window.editListing = async function(id) {
     try {
-        const { data: listing, error } = await supabase
+        const { data: listing, error } = await adminSupabase
             .from('listings')
             .select(`
                 *,
@@ -317,13 +307,43 @@ window.editListing = async function(id) {
     }
 };
 
-window.newListing = function() {
-    editingListing = null;
-    selectedSubcategories = [];
-    primarySubcategory = null;
-    document.getElementById('modalTitle').textContent = 'New Listing';
-    fillEditForm(null);
-    document.getElementById('editModal').classList.remove('hidden');
+window.newListing = async function() {
+    try {
+        // Get next available ID
+        const { data: maxIdResult, error: maxIdError } = await adminSupabase
+            .from('listings')
+            .select('id')
+            .order('id', { ascending: false })
+            .limit(1);
+        
+        if (maxIdError) throw maxIdError;
+        
+        const nextId = maxIdResult && maxIdResult.length > 0 ? maxIdResult[0].id + 1 : 1;
+        
+        editingListing = {
+            id: nextId,
+            business_name: '',
+            tagline: '',
+            description: '',
+            category: CATEGORIES[0],
+            subcategories: [],
+            tier: 'FREE',
+            verified: false,
+            visible: true,
+            is_chain: false
+        };
+        
+        selectedSubcategories = [];
+        primarySubcategory = null;
+        
+        document.getElementById('modalTitle').textContent = 'New Listing';
+        fillEditForm(editingListing);
+        document.getElementById('editModal').classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('Error creating new listing:', error);
+        alert('Failed to create new listing');
+    }
 };
 
 function fillEditForm(listing) {
@@ -342,12 +362,12 @@ function fillEditForm(listing) {
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-2">Tagline (max 75) *</label>
-                        <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg">
+                        <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">
                         <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span>/75</p>
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-2">Description *</label>
-                        <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg">${listing?.description || ''}</textarea>
+                        <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">${listing?.description || ''}</textarea>
                         <p class="text-xs text-gray-500 mt-1"><span id="descCount">${(listing?.description || '').length}</span> characters</p>
                     </div>
                     <div>
@@ -390,7 +410,7 @@ function fillEditForm(listing) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Chain ID</label>
-                        <input type="text" id="editChainId" value="${listing?.chain_id || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <input type="text" id="editChainId" value="${listing?.chain_id || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Auto-generated if empty">
                     </div>
                 </div>
             </div>
@@ -451,7 +471,7 @@ function fillEditForm(listing) {
             <!-- Owner Info -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Owner Information</h3>
-                ${owner?.user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : ''}
+                ${owner?.owner_user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : '<p class="text-sm text-gray-600 mb-4">This listing is not claimed</p>'}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-2">Owner Name</label>
@@ -475,7 +495,7 @@ function fillEditForm(listing) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Confirmation Key</label>
-                        <input type="text" id="editConfirmationKey" value="${owner?.confirmation_key || ''}" class="w-full px-4 py-2 border rounded-lg" ${owner?.user_id ? 'disabled' : ''}>
+                        <input type="text" id="editConfirmationKey" value="${owner?.confirmation_key || ''}" class="w-full px-4 py-2 border rounded-lg" ${owner?.owner_user_id ? 'disabled title="Cannot change - listing is claimed"' : ''} placeholder="${owner?.owner_user_id ? 'Listing is claimed' : 'Auto-generated if empty'}">
                     </div>
                 </div>
             </div>
@@ -498,10 +518,6 @@ function fillEditForm(listing) {
     `;
     
     updateSubcategoriesForCategory();
-    
-    // Add input listeners
-    document.getElementById('editTagline')?.addEventListener('input', updateCharCounters);
-    document.getElementById('editDescription')?.addEventListener('input', updateCharCounters);
 }
 
 function updateCharCounters() {
@@ -583,8 +599,8 @@ window.toggleChainFields = function() {
     }
 };
 // ============================================
-// ADMIN PORTAL - PART 3
-// Save Listing & Magic Link
+// ADMIN PORTAL - PART 4
+// Save Listing & Delete Functions
 // ============================================
 
 async function saveListing() {
@@ -618,10 +634,16 @@ async function saveListing() {
         const photosText = document.getElementById('editPhotos').value;
         const photos = photosText ? photosText.split('\n').map(url => url.trim()).filter(url => url) : [];
         
+        // Generate chain_id if needed
+        let chainId = document.getElementById('editChainId')?.value.trim();
+        if (isChain && !chainId) {
+            chainId = `chain-${chainName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
+        }
+        
         const listingData = {
             business_name: businessName,
             tagline: tagline,
-            description: document.getElementById('editDescription').value,
+            description: document.getElementById('editDescription').value.trim(),
             category: document.getElementById('editCategory').value,
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
@@ -629,7 +651,7 @@ async function saveListing() {
             verified: document.getElementById('editTier').value !== 'FREE',
             is_chain: isChain,
             chain_name: isChain ? chainName : null,
-            chain_id: isChain ? document.getElementById('editChainId').value.trim() : null,
+            chain_id: isChain ? chainId : null,
             address: document.getElementById('editAddress').value.trim() || null,
             city: document.getElementById('editCity').value.trim() || null,
             state: document.getElementById('editState').value || null,
@@ -639,14 +661,15 @@ async function saveListing() {
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
             logo: document.getElementById('editLogo').value.trim() || null,
-            photos: photos
+            photos: photos,
+            visible: true
         };
         
         let savedListing;
         
-        if (editingListing) {
+        if (editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id)) {
             // Update existing listing
-            const { data, error } = await supabase
+            const { data, error } = await adminSupabase
                 .from('listings')
                 .update(listingData)
                 .eq('id', editingListing.id)
@@ -661,7 +684,9 @@ async function saveListing() {
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-|-$/g, '');
             
-            const { data, error } = await supabase
+            listingData.id = editingListing.id; // Use pre-determined ID
+            
+            const { data, error } = await adminSupabase
                 .from('listings')
                 .insert(listingData)
                 .select()
@@ -696,34 +721,35 @@ async function saveOwnerInfo(listingId) {
     };
     
     // Check if owner info exists
-    const { data: existing } = await supabase
+    const { data: existing } = await adminSupabase
         .from('business_owners')
         .select('*')
         .eq('listing_id', listingId)
-        .single();
+        .maybeSingle();
     
     if (existing) {
-        // Update existing (don't overwrite user_id if already set)
+        // Update existing (don't overwrite owner_user_id if already set)
         const updates = { ...ownerData };
-        delete updates.confirmation_key; // Don't change confirmation key if listing is claimed
         
-        if (!existing.user_id && ownerData.confirmation_key) {
-            updates.confirmation_key = ownerData.confirmation_key;
+        // Don't change confirmation key if listing is claimed
+        if (existing.owner_user_id) {
+            delete updates.confirmation_key;
         }
         
-        const { error } = await supabase
+        const { error } = await adminSupabase
             .from('business_owners')
             .update(updates)
             .eq('listing_id', listingId);
         
         if (error) throw error;
+        
     } else {
         // Create new - generate confirmation key if not provided
         if (!ownerData.confirmation_key) {
             const words = [
                 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
                 'iota', 'kappa', 'lambda', 'sigma', 'omega', 'phoenix', 'apollo',
-                'athena', 'zeus', 'hera', 'poseidon'
+                'athena', 'zeus', 'hera', 'poseidon', 'demeter', 'ares', 'hermes'
             ];
             const word1 = words[Math.floor(Math.random() * words.length)];
             const word2 = words[Math.floor(Math.random() * words.length)];
@@ -731,7 +757,7 @@ async function saveOwnerInfo(listingId) {
             ownerData.confirmation_key = `${word1}-${word2}-${word3}`;
         }
         
-        const { error } = await supabase
+        const { error } = await adminSupabase
             .from('business_owners')
             .insert(ownerData);
         
@@ -741,11 +767,11 @@ async function saveOwnerInfo(listingId) {
 
 window.sendMagicLink = async function(listingId) {
     try {
-        const { data: listing, error: listingError } = await supabase
+        const { data: listing, error: listingError } = await adminSupabase
             .from('listings')
             .select(`
                 business_name,
-                owner:business_owners(owner_email, user_id)
+                owner:business_owners(owner_email, owner_user_id)
             `)
             .eq('id', listingId)
             .single();
@@ -753,7 +779,7 @@ window.sendMagicLink = async function(listingId) {
         if (listingError) throw listingError;
         
         const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-        if (!owner || !owner.owner_email || !owner.user_id) {
+        if (!owner || !owner.owner_email || !owner.owner_user_id) {
             alert('No claimed owner email found for this listing');
             return;
         }
@@ -765,7 +791,7 @@ window.sendMagicLink = async function(listingId) {
         }
         
         // Send magic link
-        const { error } = await supabase.auth.signInWithOtp({
+        const { error } = await adminSupabase.auth.signInWithOtp({
             email: owner.owner_email,
             options: {
                 emailRedirectTo: `${window.location.origin}/business.html`
@@ -782,130 +808,89 @@ window.sendMagicLink = async function(listingId) {
     }
 };
 
+window.deleteListing = async function(listingId) {
+    const listing = allListings.find(l => l.id === listingId);
+    if (!listing) return;
+    
+    const confirmText = prompt(`Are you sure you want to DELETE "${listing.business_name}"?\n\nThis action CANNOT be undone.\n\nType "DELETE" to confirm.`);
+    
+    if (confirmText !== 'DELETE') {
+        return;
+    }
+    
+    try {
+        // Delete owner info first
+        const { error: ownerError } = await adminSupabase
+            .from('business_owners')
+            .delete()
+            .eq('listing_id', listingId);
+        
+        if (ownerError) console.error('Error deleting owner:', ownerError);
+        
+        // Delete listing
+        const { error } = await adminSupabase
+            .from('listings')
+            .delete()
+            .eq('id', listingId);
+        
+        if (error) throw error;
+        
+        alert('✅ Listing deleted successfully');
+        await loadListings();
+        
+    } catch (error) {
+        console.error('Error deleting listing:', error);
+        alert('Failed to delete listing: ' + error.message);
+    }
+};
+
 window.saveListing = saveListing;
-// ============================================
-// ADMIN PORTAL - PART 4
-// Hours, Social Media & Reviews Management
-// ============================================
+window.editListing = editListing;
+window.newListing = newListing;
+window.deleteListing = deleteListing;
+window.sendMagicLink = sendMagicLink;
+window.toggleVisibility = toggleVisibility;
+window.updateSubcategoriesForCategory = updateSubcategoriesForCategory;
+window.toggleSubcategory = toggleSubcategory;
+window.setPrimarySubcategory = setPrimarySubcategory;
+window.toggleChainFields = toggleChainFields;
+// Add these functions to admin.js after the fillEditForm function
 
-function renderHoursSection() {
-    const hours = editingListing?.hours || {};
+function getHoursFromForm() {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const hours = {};
     
-    return `
-        <div>
-            <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
-            <div class="space-y-2">
-                ${days.map(day => `
-                    <div class="flex items-center gap-3">
-                        <label class="w-28 text-sm font-medium">${day}</label>
-                        <input type="text" id="editHours${day}" 
-                            value="${hours[day.toLowerCase()] || ''}" 
-                            class="flex-1 px-4 py-2 border rounded-lg" 
-                            placeholder="9:00 AM - 5:00 PM or Closed">
-                    </div>
-                `).join('')}
-            </div>
-            <p class="text-xs text-gray-500 mt-2">Leave blank or enter "Closed" for closed days</p>
-        </div>
-    `;
-}
-
-function renderSocialMediaSection() {
-    const social = editingListing?.social_media || {};
+    days.forEach(day => {
+        const value = document.getElementById(`editHours${day}`)?.value.trim();
+        if (value) {
+            hours[day.toLowerCase()] = value;
+        }
+    });
     
-    return `
-        <div>
-            <h3 class="text-lg font-bold mb-4">Social Media</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Facebook</label>
-                    <input type="text" id="editFacebook" value="${social.facebook || ''}" 
-                        class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Instagram</label>
-                    <input type="text" id="editInstagram" value="${social.instagram || ''}" 
-                        class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Twitter/X</label>
-                    <input type="text" id="editTwitter" value="${social.twitter || ''}" 
-                        class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">YouTube</label>
-                    <input type="text" id="editYoutube" value="${social.youtube || ''}" 
-                        class="w-full px-4 py-2 border rounded-lg" placeholder="channel">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">TikTok</label>
-                    <input type="text" id="editTiktok" value="${social.tiktok || ''}" 
-                        class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">LinkedIn</label>
-                    <input type="url" id="editLinkedin" value="${social.linkedin || ''}" 
-                        class="w-full px-4 py-2 border rounded-lg" placeholder="Full URL">
-                </div>
-            </div>
-            <div class="mt-4">
-                <label class="block text-sm font-medium mb-2">Other Links (JSON format)</label>
-                <textarea id="editSocialOther" rows="3" class="w-full px-4 py-2 border rounded-lg" 
-                    placeholder='{"link": "https://example.com", "name": "Custom Site"}'>${social.other ? JSON.stringify(social.other, null, 2) : ''}</textarea>
-                <p class="text-xs text-gray-500 mt-1">Add custom social links as JSON array</p>
-            </div>
-        </div>
-    `;
+    return hours;
 }
 
-function renderReviewsSection() {
-    const reviews = editingListing?.reviews || {};
-    
-    return `
-        <div>
-            <h3 class="text-lg font-bold mb-4">Review Sites</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Google Reviews URL</label>
-                    <input type="url" id="editGoogleReviews" value="${reviews.google || ''}" 
-                        class="w-full px-4 py-2 border rounded-lg" placeholder="Full Google Reviews URL">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Yelp URL</label>
-                    <input type="url" id="editYelp" value="${reviews.yelp || ''}" 
-                        class="w-full px-4 py-2 border rounded-lg" placeholder="Full Yelp URL">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">TripAdvisor URL</label>
-                    <input type="url" id="editTripadvisor" value="${reviews.tripadvisor || ''}" 
-                        class="w-full px-4 py-2 border rounded-lg" placeholder="Full TripAdvisor URL">
-                </div>
-            </div>
-        </div>
-    `;
+function getSocialMediaFromForm() {
+    return {
+        facebook: document.getElementById('editFacebook')?.value.trim() || null,
+        instagram: document.getElementById('editInstagram')?.value.trim() || null,
+        twitter: document.getElementById('editTwitter')?.value.trim() || null,
+        youtube: document.getElementById('editYoutube')?.value.trim() || null,
+        tiktok: document.getElementById('editTiktok')?.value.trim() || null,
+        linkedin: document.getElementById('editLinkedin')?.value.trim() || null
+    };
 }
 
-function renderVisibilitySection() {
-    return `
-        <div>
-            <h3 class="text-lg font-bold mb-4">Visibility & Status</h3>
-            <div class="space-y-3">
-                <label class="flex items-center gap-2">
-                    <input type="checkbox" id="editVisible" ${editingListing?.visible !== false ? 'checked' : ''}>
-                    <span class="text-sm font-medium">Listing is visible on site</span>
-                </label>
-                <label class="flex items-center gap-2">
-                    <input type="checkbox" id="editShowClaimButton" ${editingListing?.show_claim_button !== false ? 'checked' : ''}>
-                    <span class="text-sm font-medium">Show "Claim this listing" button</span>
-                </label>
-            </div>
-        </div>
-    `;
+function getReviewsFromForm() {
+    return {
+        google: document.getElementById('editGoogleReviews')?.value.trim() || null,
+        yelp: document.getElementById('editYelp')?.value.trim() || null,
+        tripadvisor: document.getElementById('editTripadvisor')?.value.trim() || null
+    };
 }
+// REPLACE the existing fillEditForm function in admin.js with this complete version
 
-// Update fillEditForm to include new sections
-function fillEditFormComplete(listing) {
+function fillEditForm(listing) {
     const owner = listing?.owner && listing.owner.length > 0 ? listing.owner[0] : null;
     
     const formContent = document.getElementById('editFormContent');
@@ -951,9 +936,9 @@ function fillEditFormComplete(listing) {
             <div id="subcategoriesContainer">
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium">Subcategories *</label>
-                    <span class="text-xs text-gray-500">Select at least one and mark primary</span>
+                    <span class="text-xs text-gray-500">Select at least one</span>
                 </div>
-                <div id="subcategoryCheckboxes" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
+                <div id="subcategoryCheckboxes" class="grid grid-cols-2 gap-2"></div>
             </div>
 
             <!-- Chain Info -->
@@ -1005,10 +990,6 @@ function fillEditFormComplete(listing) {
                             <option value="USA" ${listing?.country === 'USA' ? 'selected' : ''}>USA</option>
                         </select>
                     </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Google Maps URL Ending</label>
-                        <input type="text" id="editPlacesUrl" value="${listing?.places_url_ending || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., ChIJ...">
-                    </div>
                 </div>
             </div>
 
@@ -1031,10 +1012,73 @@ function fillEditFormComplete(listing) {
                 </div>
             </div>
 
+            <!-- Hours -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
+                <div class="grid grid-cols-1 gap-3">
+                    ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => `
+                        <div class="flex gap-2">
+                            <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
+                            <input type="text" id="editHours${day}" value="${listing?.hours && listing.hours[day.toLowerCase()] ? listing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Social Media -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Social Media Links</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Facebook</label>
+                        <input type="text" id="editFacebook" value="${listing?.social_media?.facebook || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Instagram</label>
+                        <input type="text" id="editInstagram" value="${listing?.social_media?.instagram || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Twitter/X</label>
+                        <input type="text" id="editTwitter" value="${listing?.social_media?.twitter || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">YouTube</label>
+                        <input type="text" id="editYoutube" value="${listing?.social_media?.youtube || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="channel">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">TikTok</label>
+                        <input type="text" id="editTiktok" value="${listing?.social_media?.tiktok || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">LinkedIn</label>
+                        <input type="url" id="editLinkedin" value="${listing?.social_media?.linkedin || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full URL">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Review Sites</h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Google Reviews</label>
+                        <input type="url" id="editGoogleReviews" value="${listing?.reviews?.google || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Google Reviews URL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Yelp</label>
+                        <input type="url" id="editYelp" value="${listing?.reviews?.yelp || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Yelp URL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">TripAdvisor</label>
+                        <input type="url" id="editTripadvisor" value="${listing?.reviews?.tripadvisor || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full TripAdvisor URL">
+                    </div>
+                </div>
+            </div>
+
             <!-- Owner Info -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Owner Information</h3>
-                ${owner?.user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : '<p class="text-sm text-gray-600 mb-4">This listing has not been claimed yet</p>'}
+                ${owner?.owner_user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : '<p class="text-sm text-gray-600 mb-4">This listing is not claimed</p>'}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-2">Owner Name</label>
@@ -1042,11 +1086,11 @@ function fillEditFormComplete(listing) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Title</label>
-                        <input type="text" id="editOwnerTitle" value="${owner?.title || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., Owner, Manager">
+                        <input type="text" id="editOwnerTitle" value="${owner?.title || ''}" class="w-full px-4 py-2 border rounded-lg">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">From Greece</label>
-                        <input type="text" id="editOwnerGreece" value="${owner?.from_greece || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., Athens, Crete">
+                        <input type="text" id="editOwnerGreece" value="${owner?.from_greece || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g. Athens">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Owner Email</label>
@@ -1058,48 +1102,87 @@ function fillEditFormComplete(listing) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Confirmation Key</label>
-                        <input type="text" id="editConfirmationKey" value="${owner?.confirmation_key || ''}" class="w-full px-4 py-2 border rounded-lg" ${owner?.user_id ? 'disabled title="Cannot change - listing is claimed"' : ''}>
-                        ${!owner?.user_id ? '<p class="text-xs text-gray-500 mt-1">Leave blank to auto-generate</p>' : ''}
+                        <input type="text" id="editConfirmationKey" value="${owner?.confirmation_key || ''}" class="w-full px-4 py-2 border rounded-lg" ${owner?.owner_user_id ? 'disabled title="Cannot change - listing is claimed"' : ''} placeholder="${owner?.owner_user_id ? 'Listing is claimed' : 'Auto-generated if empty'}">
                     </div>
                 </div>
             </div>
 
-            ${renderHoursSection()}
-            ${renderSocialMediaSection()}
-            ${renderReviewsSection()}
-
-            <!-- Media -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Media</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Logo URL</label>
-                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
+function addHoursSection(listing) {
+    return `
+        <!-- Hours of Operation -->
+        <div>
+            <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
+            <div class="grid grid-cols-1 gap-3">
+                ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => `
+                    <div class="flex gap-2">
+                        <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
+                        <input type="text" id="editHours${day}" value="${listing?.hours && listing.hours[day.toLowerCase()] ? listing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
-                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg" placeholder="https://example.com/photo1.jpg
-https://example.com/photo2.jpg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
-                        <p class="text-xs text-gray-500 mt-1">Enter one URL per line</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Video URL (YouTube embed link)</label>
-                        <input type="url" id="editVideo" value="${listing?.video || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="https://www.youtube.com/embed/...">
-                    </div>
-                </div>
+                `).join('')}
             </div>
-
-            ${renderVisibilitySection()}
         </div>
     `;
-    
-    updateSubcategoriesForCategory();
 }
-// ============================================
-// ADMIN PORTAL - PART 5
-// Complete Save with All Fields
-// ============================================
 
+function addSocialMediaSection(listing) {
+    return `
+        <!-- Social Media -->
+        <div>
+            <h3 class="text-lg font-bold mb-4">Social Media Links</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Facebook</label>
+                    <input type="text" id="editFacebook" value="${listing?.social_media?.facebook || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Instagram</label>
+                    <input type="text" id="editInstagram" value="${listing?.social_media?.instagram || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Twitter/X</label>
+                    <input type="text" id="editTwitter" value="${listing?.social_media?.twitter || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">YouTube</label>
+                    <input type="text" id="editYoutube" value="${listing?.social_media?.youtube || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="channel">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">TikTok</label>
+                    <input type="text" id="editTiktok" value="${listing?.social_media?.tiktok || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">LinkedIn</label>
+                    <input type="url" id="editLinkedin" value="${listing?.social_media?.linkedin || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full URL">
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function addReviewsSection(listing) {
+    return `
+        <!-- Review Sites -->
+        <div>
+            <h3 class="text-lg font-bold mb-4">Review Sites</h3>
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Google Reviews</label>
+                    <input type="url" id="editGoogleReviews" value="${listing?.reviews?.google || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Google Reviews URL">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Yelp</label>
+                    <input type="url" id="editYelp" value="${listing?.reviews?.yelp || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Yelp URL">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">TripAdvisor</label>
+                    <input type="url" id="editTripadvisor" value="${listing?.reviews?.tripadvisor || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full TripAdvisor URL">
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Update the saveListing function to include these new fields
 async function saveListingComplete() {
     try {
         const businessName = document.getElementById('editBusinessName').value.trim();
@@ -1120,43 +1203,16 @@ async function saveListingComplete() {
             return;
         }
         
-        if (!primarySubcategory) {
-            alert('Please select a primary subcategory');
-            return;
-        }
-        
         const isChain = document.getElementById('editIsChain').checked;
-        const chainName = document.getElementById('editChainName')?.value.trim();
+        const chainName = document.getElementById('editChainName').value.trim();
         
         if (isChain && !chainName) {
             alert('Chain name is required for chain listings');
             return;
         }
         
-        // Parse photos
         const photosText = document.getElementById('editPhotos').value;
         const photos = photosText ? photosText.split('\n').map(url => url.trim()).filter(url => url) : [];
-        
-        // Parse social media other
-        let socialOther = null;
-        const socialOtherText = document.getElementById('editSocialOther')?.value.trim();
-        if (socialOtherText) {
-            try {
-                socialOther = JSON.parse(socialOtherText);
-            } catch (e) {
-                alert('Invalid JSON format for other social links');
-                return;
-            }
-        }
-        
-        // Collect hours
-        const hours = {};
-        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach(day => {
-            const value = document.getElementById(`editHours${day}`)?.value.trim();
-            if (value) {
-                hours[day.toLowerCase()] = value;
-            }
-        });
         
         // Generate chain_id if needed
         let chainId = document.getElementById('editChainId')?.value.trim();
@@ -1181,37 +1237,22 @@ async function saveListingComplete() {
             state: document.getElementById('editState').value || null,
             zip_code: document.getElementById('editZipCode').value.trim() || null,
             country: document.getElementById('editCountry').value || 'USA',
-            places_url_ending: document.getElementById('editPlacesUrl')?.value.trim() || null,
             phone: document.getElementById('editPhone').value.trim() || null,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
             logo: document.getElementById('editLogo').value.trim() || null,
             photos: photos,
-            video: document.getElementById('editVideo')?.value.trim() || null,
-            hours: hours,
-            social_media: {
-                facebook: document.getElementById('editFacebook')?.value.trim() || null,
-                instagram: document.getElementById('editInstagram')?.value.trim() || null,
-                twitter: document.getElementById('editTwitter')?.value.trim() || null,
-                youtube: document.getElementById('editYoutube')?.value.trim() || null,
-                tiktok: document.getElementById('editTiktok')?.value.trim() || null,
-                linkedin: document.getElementById('editLinkedin')?.value.trim() || null,
-                other: socialOther
-            },
-            reviews: {
-                google: document.getElementById('editGoogleReviews')?.value.trim() || null,
-                yelp: document.getElementById('editYelp')?.value.trim() || null,
-                tripadvisor: document.getElementById('editTripadvisor')?.value.trim() || null
-            },
-            visible: document.getElementById('editVisible')?.checked !== false,
-            show_claim_button: document.getElementById('editShowClaimButton')?.checked !== false
+            visible: true,
+            hours: getHoursFromForm(),
+            social_media: getSocialMediaFromForm(),
+            reviews: getReviewsFromForm()
         };
         
         let savedListing;
         
-        if (editingListing) {
+        if (editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id)) {
             // Update existing listing
-            const { data, error } = await supabase
+            const { data, error } = await adminSupabase
                 .from('listings')
                 .update(listingData)
                 .eq('id', editingListing.id)
@@ -1220,26 +1261,15 @@ async function saveListingComplete() {
             
             if (error) throw error;
             savedListing = data;
-            
-            console.log('✅ Listing updated:', savedListing.id);
         } else {
             // Create new listing - generate slug
             listingData.slug = businessName.toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-|-$/g, '');
             
-            // Check if slug exists
-            const { data: existingSlug } = await supabase
-                .from('listings')
-                .select('slug')
-                .eq('slug', listingData.slug)
-                .single();
+            listingData.id = editingListing.id; // Use pre-determined ID
             
-            if (existingSlug) {
-                listingData.slug = `${listingData.slug}-${Date.now()}`;
-            }
-            
-            const { data, error } = await supabase
+            const { data, error } = await adminSupabase
                 .from('listings')
                 .insert(listingData)
                 .select()
@@ -1247,159 +1277,39 @@ async function saveListingComplete() {
             
             if (error) throw error;
             savedListing = data;
-            
-            console.log('✅ New listing created:', savedListing.id);
         }
         
         // Handle owner info
-        await saveOwnerInfoComplete(savedListing.id);
+        await saveOwnerInfo(savedListing.id);
         
-        alert('✅ Listing saved successfully!');
+        alert('Listing saved successfully!');
         document.getElementById('editModal').classList.add('hidden');
         await loadListings();
         
     } catch (error) {
-        console.error('❌ Error saving listing:', error);
+        console.error('Error saving listing:', error);
         alert('Failed to save listing: ' + error.message);
     }
 }
 
-async function saveOwnerInfoComplete(listingId) {
-    const ownerData = {
-        listing_id: listingId,
-        full_name: document.getElementById('editOwnerName')?.value.trim() || null,
-        title: document.getElementById('editOwnerTitle')?.value.trim() || null,
-        from_greece: document.getElementById('editOwnerGreece')?.value.trim() || null,
-        owner_email: document.getElementById('editOwnerEmail')?.value.trim() || null,
-        owner_phone: document.getElementById('editOwnerPhone')?.value.trim() || null,
-        confirmation_key: document.getElementById('editConfirmationKey')?.value.trim() || null
-    };
-    
-    // Check if owner info exists
-    const { data: existing } = await supabase
-        .from('business_owners')
-        .select('*')
-        .eq('listing_id', listingId)
-        .maybeSingle();
-    
-    if (existing) {
-        // Update existing (don't overwrite user_id if already set)
-        const updates = { ...ownerData };
-        
-        // Don't change confirmation key if listing is claimed
-        if (existing.user_id) {
-            delete updates.confirmation_key;
-        }
-        
-        const { error } = await supabase
-            .from('business_owners')
-            .update(updates)
-            .eq('listing_id', listingId);
-        
-        if (error) throw error;
-        
-        console.log('✅ Owner info updated');
-    } else {
-        // Create new - generate confirmation key if not provided
-        if (!ownerData.confirmation_key) {
-            const words = [
-                'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
-                'iota', 'kappa', 'lambda', 'sigma', 'omega', 'phoenix', 'apollo',
-                'athena', 'zeus', 'hera', 'poseidon', 'demeter', 'ares', 'hermes',
-                'helios', 'selene', 'nike', 'tyche', 'eros', 'chaos', 'gaia'
-            ];
-            const word1 = words[Math.floor(Math.random() * words.length)];
-            const word2 = words[Math.floor(Math.random() * words.length)];
-            const word3 = words[Math.floor(Math.random() * words.length)];
-            ownerData.confirmation_key = `${word1}-${word2}-${word3}`;
-        }
-        
-        const { error } = await supabase
-            .from('business_owners')
-            .insert(ownerData);
-        
-        if (error) throw error;
-        
-        console.log('✅ Owner info created with key:', ownerData.confirmation_key);
-    }
-}
-
-// Send password reset email
-window.sendPasswordReset = async function(listingId) {
-    try {
-        const { data: listing, error: listingError } = await supabase
-            .from('listings')
-            .select(`
-                business_name,
-                owner:business_owners(owner_email, user_id)
-            `)
-            .eq('id', listingId)
-            .single();
-        
-        if (listingError) throw listingError;
-        
-        const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-        if (!owner || !owner.owner_email || !owner.user_id) {
-            alert('No claimed owner email found for this listing');
-            return;
-        }
-        
-        const confirmText = prompt(`Send password reset email to ${owner.owner_email}?\n\nType "CONFIRM" to proceed.`);
-        
-        if (confirmText !== 'CONFIRM') {
-            return;
-        }
-        
-        const { error } = await supabase.auth.resetPasswordForEmail(owner.owner_email, {
-            redirectTo: `${window.location.origin}/business.html?reset=true`
-        });
-        
-        if (error) throw error;
-        
-        alert(`✅ Password reset email sent to ${owner.owner_email}`);
-        
-    } catch (error) {
-        console.error('Error sending password reset:', error);
-        alert('Failed to send password reset: ' + error.message);
-    }
-};
-
-// Delete listing
-window.deleteListing = async function(listingId) {
-    const listing = allListings.find(l => l.id === listingId);
-    if (!listing) return;
-    
-    const confirmText = prompt(`Are you sure you want to DELETE "${listing.business_name}"?\n\nThis action CANNOT be undone.\n\nType "DELETE" to confirm.`);
-    
-    if (confirmText !== 'DELETE') {
-        return;
-    }
-    
-    try {
-        // Delete owner info first (cascade should handle this but being explicit)
-        const { error: ownerError } = await supabase
-            .from('business_owners')
-            .delete()
-            .eq('listing_id', listingId);
-        
-        if (ownerError) throw ownerError;
-        
-        // Delete listing
-        const { error } = await supabase
-            .from('listings')
-            .delete()
-            .eq('id', listingId);
-        
-        if (error) throw error;
-        
-        alert('✅ Listing deleted successfully');
-        await loadListings();
-        
-    } catch (error) {
-        console.error('Error deleting listing:', error);
-        alert('Failed to delete listing: ' + error.message);
-    }
-};
-
-// Update the main save function reference
+// Replace the old saveListing with this complete version
 window.saveListing = saveListingComplete;
+            <!-- Media -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Media</h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Logo URL</label>
+                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
+                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    updateSubcategoriesForCategory();
+}
