@@ -74,10 +74,16 @@
                     
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Listing ID or Business Name *</label>
-                            <input type="text" id="signUpListingSearch" class="tgd-input" placeholder="Search for your business..." oninput="searchListingForSignup()">
-                            <div id="listingSearchResults" class="mt-2 max-h-48 overflow-y-auto"></div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Find Your Business *</label>
+                            <input type="text" id="signUpListingSearch" class="tgd-input" placeholder="Search by business name or ID..." oninput="searchListingForSignup()">
+                            <div id="listingSearchResults" class="mt-2 max-h-48 overflow-y-auto border rounded-lg"></div>
                             <input type="hidden" id="signUpListingId">
+                        </div>
+                        
+                        <div id="confirmationKeyContainer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirmation Key *</label>
+                            <input type="text" id="signUpConfirmationKey" class="tgd-input" placeholder="Enter confirmation key">
+                            <p class="text-xs text-gray-500 mt-1">Contact admin@thegreekdirectory.org if you need your confirmation key</p>
                         </div>
                         
                         <div>
@@ -179,123 +185,16 @@
             </div>
             
             <!-- Overview Tab -->
-            <div id="content-overview" class="space-y-6">
-                <div class="bg-white rounded-lg p-6 shadow-sm">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome!</h2>
-                    <p class="text-gray-700 mb-4">Manage your listing on The Greek Directory. Your current tier allows you to access the following features:</p>
-                    
-                    <div id="tierFeatures" class="space-y-2 mb-6"></div>
-                    
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h3 class="font-semibold text-blue-900 mb-2">Quick Actions</h3>
-                        <div class="flex gap-3">
-                            <button onclick="switchTab('edit')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Edit Listing</button>
-                            <button onclick="switchTab('analytics')" class="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50">View Analytics</button>
-                            <a id="viewLiveBtn" href="#" target="_blank" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">View Live Page</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg p-6 shadow-sm">
-                    <h3 class="text-xl font-bold text-gray-900 mb-4">Listing Preview</h3>
-                    <div class="preview-card">
-                        <img id="previewMainImage" src="" alt="Main preview" class="preview-main-image">
-                        <div class="preview-info">
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex-1">
-                                    <h4 id="previewBusinessName" class="text-2xl font-bold text-gray-900 mb-1"></h4>
-                                    <p id="previewTagline" class="text-gray-600 italic text-sm mb-2"></p>
-                                    <div id="previewCategory" class="inline-block px-3 py-1 text-sm font-semibold text-white rounded-full mb-2" style="background-color:#055193;"></div>
-                                </div>
-                                <img id="previewLogo" src="" alt="Logo" class="preview-logo ml-4">
-                            </div>
-                            <div id="previewDetails" class="text-sm text-gray-700 space-y-1"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div id="content-overview" class="space-y-6"></div>
 
             <!-- Edit Tab -->
-            <div id="content-edit" class="hidden">
-                <div class="bg-white rounded-lg p-6 shadow-sm">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Edit Your Listing</h2>
-                        <button onclick="saveChanges()" class="px-6 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">Save Changes</button>
-                    </div>
-                    
-                    <div class="space-y-6" id="editForm"></div>
-                </div>
-            </div>
+            <div id="content-edit" class="hidden"></div>
             
             <!-- Analytics Tab -->
-            <div id="content-analytics" class="hidden">
-                <div class="bg-white rounded-lg p-6 shadow-sm">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Analytics</h2>
-                        <button onclick="loadListingData()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">🔄 Refresh</button>
-                    </div>
-                    
-                    <div id="analyticsContent"></div>
-                </div>
-            </div>
+            <div id="content-analytics" class="hidden"></div>
+            
             <!-- Settings Tab -->
-            <div id="content-settings" class="hidden">
-                <div class="bg-white rounded-lg p-6 shadow-sm">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Account Settings</h2>
-                    
-                    <div class="space-y-6">
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
-                            <p class="text-sm text-gray-600 mb-4">This information is stored securely in Supabase and can be displayed on your listing page.</p>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="owner-field">
-                                    <div class="flex-1">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Business Email</label>
-                                        <input type="email" id="settingsOwnerEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="business@email.com">
-                                    </div>
-                                    <div class="mt-6">
-                                        <button class="visibility-toggle hidden" data-field="email" onclick="toggleSettingsFieldVisibility('email')">Hidden</button>
-                                    </div>
-                                </div>
-                                
-                                <div class="owner-field">
-                                    <div class="flex-1">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Business Phone</label>
-                                        <input type="tel" id="settingsOwnerPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(555) 123-4567">
-                                    </div>
-                                    <div class="mt-6">
-                                        <button class="visibility-toggle hidden" data-field="phone" onclick="toggleSettingsFieldVisibility('phone')">Hidden</button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <p class="text-xs text-gray-500 mt-4">
-                                <strong>Note:</strong> Toggle visibility to control whether these details appear on your public listing page.
-                            </p>
-                        </div>
-                        
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-4">Password</h3>
-                            <div class="max-w-md space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                                    <input type="password" id="settingsNewPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Enter new password">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                                    <input type="password" id="settingsConfirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Confirm new password">
-                                </div>
-                                <button onclick="updatePassword()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Update Password</button>
-                            </div>
-                        </div>
-                        
-                        <div class="border-t pt-6">
-                            <button onclick="saveSettings()" class="px-6 py-3 text-white rounded-lg font-medium" style="background-color: #055193;">Save Settings</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div id="content-settings" class="hidden"></div>
         </div>
     </div>
     <script src="js/supabase-config.js"></script>
