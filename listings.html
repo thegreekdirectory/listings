@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Greek Directory - Local Greek-Owned Businesses, Churches & Cultural Centers</title>
+    
+    <meta name="apple-mobile-web-app-status-bar-style" content="white">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Greek Directory">
+    <link rel="apple-touch-startup-image" href="https://social.thegreekdirectory.org/Logocircleonly2.png">
+    <link rel="apple-touch-icon" href="https://social.thegreekdirectory.org/Logocircleonly2.png" type="image/x-icon">
+    
+    <meta name="description" content="Discover Greek and Hellenic American businesses, restaurants, churches, schools, and cultural centers. Your complete guide to the Greek-American community.">
+    <meta name="keywords" content="greek, greek american, greek-american, greek americans, greek-americans, directory, greek directory, the greek directory, greek american directory, the greek american directory, local greek, local greeks, hellenic, hellenic american, hellenic-american, hellenic americans, hellenic-americans, hellenic directory, hellenic-american directory, hellenic american directory, local hellenic, greek businesses, greek restaurants, greek orthodox churches, greek cultural centers">
+    <link rel="icon" href="https://static.thegreekdirectory.org/bluefavicon.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/whitefavicon.png" media="(prefers-color-scheme: dark)">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="css/index.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
+                    <div>
+                        <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
+                        <p class="text-xs text-gray-600" id="locationSubtitle">Loading...</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="lang-switch">
+                        <button class="lang-btn" data-lang="en" onclick="switchLanguage('en')">
+                            <img src="https://flagcdn.com/w40/us.png" alt="English" class="flag-icon">
+                        </button>
+                        <button class="lang-btn" data-lang="el" onclick="switchLanguage('el')">
+                            <img src="https://flagcdn.com/w40/gr.png" alt="Ελληνικά" class="flag-icon">
+                        </button>
+                    </div>
+                    <button id="starredBtn" class="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <svg class="star-icon" style="width: 18px; height: 18px;" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span class="text-sm font-medium"><span class="hidden sm:inline" data-i18n="view">View </span><span data-i18n="starred">Starred</span></span>
+                        <span id="starredCount" class="text-xs bg-gray-200 px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative mb-4">
+                <input type="text" id="searchInput" placeholder="Search businesses, churches, schools..." 
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" 
+                    style="--tw-ring-color: #055193;" data-i18n-placeholder="searchPlaceholder">
+            </div>
+
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:hidden" id="mobileControls">
+                <button id="filterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                    <span>🔍</span>
+                    <span class="text-sm font-medium" data-i18n="filters">Filters</span>
+                </button>
+                <button id="mapBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                    <span>🗺️</span>
+                    <span class="text-sm font-medium" data-i18n="map">Map</span>
+                </button>
+                <button id="refreshBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap" style="display: none;">
+                    <span>🔄</span>
+                </button>
+                <div class="flex items-center gap-1 ml-auto bg-gray-100 rounded-lg p-1">
+                    <button id="gridViewBtn" class="p-2 rounded bg-white shadow-sm"><span>⊞</span></button>
+                    <button id="listViewBtn" class="p-2 rounded"><span>☰</span></button>
+                </div>
+            </div>
+
+            <div id="filterPanel" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden lg:hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold text-gray-900" data-i18n="filters">Filters</h3>
+                    <div class="flex gap-2">
+                        <button id="clearFiltersBtn" class="text-sm text-blue-600 hover:text-blue-800" data-i18n="clearAll">Clear All</button>
+                        <button id="closeFilterBtn" class="text-gray-500 lg:hidden">✕</button>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="searchCategories">Search Categories & Subcategories</label>
+                        <input type="text" id="categorySearch" placeholder="Type to search..." 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2" data-i18n-placeholder="typeToSearch">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="category">Category</label>
+                        <div id="categoryFilters" class="grid grid-cols-2 gap-2"></div>
+                    </div>
+                    <div id="subcategoryContainer" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-700" data-i18n="subcategories">Subcategories</label>
+                            <div class="toggle-group">
+                                <button class="toggle-option active" data-mode="any" onclick="setSubcategoryMode('any')" data-i18n="any">Any</button>
+                                <button class="toggle-option" data-mode="all" onclick="setSubcategoryMode('all')" data-i18n="all">All</button>
+                            </div>
+                        </div>
+                        <div id="subcategoryFilters" class="flex flex-wrap"></div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="openNowFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700" data-i18n="openNow">Open Now</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="closedNowFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700" data-i18n="closedNow">Closed Now</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="openingSoonFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700" data-i18n="openingSoon">Opening Soon (60 min)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="closingSoonFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700" data-i18n="closingSoon">Closing Soon (60 min)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="hoursUnknownFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700" data-i18n="hoursUnknown">Hours Unknown</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="onlineOnlyFilter" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-700" data-i18n="onlineOnly">Online Only</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><span data-i18n="radius">Radius</span>: <span class="radius-value" id="radiusValue">Any distance</span></label>
+                        <input type="range" id="radiusFilter" min="0" max="100" value="0" step="1" class="w-full">
+                    </div>
+                    <div class="location-search-container">
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="locationSearch">Location Search</label>
+                        <input type="text" id="locationSearch" placeholder="City, State, Zip, or Country..." 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg" data-i18n-placeholder="locationPlaceholder">
+                        <div id="locationSearchResults" class="location-search-results"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="country">Country</label>
+                        <select id="countryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <option value="" data-i18n="allCountries">All Countries</option>
+                        </select>
+                    </div>
+                    <div id="stateFilterContainer" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="state">State</label>
+                        <select id="stateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <option value="" data-i18n="allStates">All States</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div id="mapContainer" class="hidden border-b relative">
+        <div class="map-loading" id="mapLoading">
+            <div class="spinner"></div>
+            <p class="text-sm text-gray-600 mt-2 text-center" data-i18n="loadingMap">Loading map...</p>
+        </div>
+        <div id="map"></div>
+        <div class="map-controls">
+            <button class="map-control-btn" id="splitViewBtn" title="Toggle split view">
+                <span>⊞</span>
+                <span class="desktop-only" data-i18n="splitView">Split View</span>
+            </button>
+            <button class="map-control-btn" id="locateBtn" title="Find my location">
+                <img src="https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/7e877be3da64a66caf9a6dfb5fddad8f.png" alt="Location">
+                <span class="desktop-only" data-i18n="currentLocation">Current Location</span>
+            </button>
+            <button class="map-control-btn" id="resetMapBtn" title="Reset map view">
+                <span>🔄</span>
+                <span class="desktop-only" data-i18n="reload">Reload</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="splitViewContainer" class="hidden"></div>
+
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <div class="desktop-layout" id="desktopLayout">
+            <div class="desktop-filters hidden" id="desktopFiltersContainer">
+                <div id="desktopFilterPanel" class="desktop-sidebar">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-gray-900" data-i18n="filters">Filters</h3>
+                        <button id="toggleFilterPosition" class="text-xs px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" title="Toggle filter position">⇄</button>
+                    </div>
+                    <button id="clearFiltersBtn2" class="text-sm text-blue-600 hover:text-blue-800 mb-4 block" data-i18n="clearAll">Clear All</button>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="search">Search</label>
+                            <input type="text" id="categorySearch2" placeholder="Categories & subcategories..." 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2" data-i18n-placeholder="categoriesSubcategories">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="category">Category</label>
+                            <div id="categoryFilters2" class="grid grid-cols-2 gap-2"></div>
+                        </div>
+                        <div id="subcategoryContainer2" class="hidden">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium text-gray-700" data-i18n="subcategories">Subcategories</label>
+                                <div class="toggle-group">
+                                    <button class="toggle-option active text-xs" data-mode="any" onclick="setSubcategoryMode('any')" data-i18n="any">Any</button>
+                                    <button class="toggle-option text-xs" data-mode="all" onclick="setSubcategoryMode('all')" data-i18n="all">All</button>
+                                </div>
+                            </div>
+                            <div id="subcategoryFilters2" class="flex flex-wrap"></div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="openNowFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700" data-i18n="openNow">Open Now</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="closedNowFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700" data-i18n="closedNow">Closed Now</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="openingSoonFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700" data-i18n="openingSoon">Opening Soon</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="closingSoonFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700" data-i18n="closingSoon">Closing Soon</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="hoursUnknownFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700" data-i18n="hoursUnknown">Hours Unknown</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="onlineOnlyFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700" data-i18n="onlineOnly">Online Only</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><span data-i18n="radius">Radius</span>: <span class="radius-value" id="radiusValue2">Any distance</span></label>
+                            <input type="range" id="radiusFilter2" min="0" max="100" value="0" step="1" class="w-full">
+                        </div>
+                        <div class="location-search-container">
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="locationSearch">Location Search</label>
+                            <input type="text" id="locationSearch2" placeholder="City, State, Zip, or Country..." 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" data-i18n-placeholder="locationPlaceholder">
+                            <div id="locationSearchResults2" class="location-search-results"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="country">Country</label>
+                            <select id="countryFilter2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="" data-i18n="allCountries">All Countries</option>
+                            </select>
+                        </div>
+                        <div id="stateFilterContainer2" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="state">State</label>
+                            <select id="stateFilter2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="" data-i18n="allStates">All States</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="desktop-content">
+                <div id="normalViewControls" class="flex items-center justify-between mb-4">
+                    <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
+                    <div class="flex items-center gap-2">
+                        <button id="mapBtnDesktop" class="hidden lg:flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                            <span>🗺️</span>
+                            <span class="text-sm font-medium" data-i18n="map">Map</span>
+                        </button>
+                        <div class="hidden lg:flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                            <button id="gridViewBtn2" class="p-2 rounded bg-white shadow-sm"><span>⊞</span></button>
+                            <button id="listViewBtn2" class="p-2 rounded"><span>☰</span></button>
+                        </div>
+                        <select id="sortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                            <option value="default" data-i18n="sortDefault">Default</option>
+                            <option value="az" data-i18n="sortAZ">A-Z</option>
+                            <option value="closest" data-i18n="sortClosest">Closest to Me</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="normalViewListings">
+                    <div id="listingsContainer"></div>
+                    <button id="loadMoreBtn" class="load-more-btn hidden" data-i18n="loadMore">Load More Listings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="js/index.js"></script>
+</body>
+</html>
