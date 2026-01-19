@@ -1,5 +1,5 @@
 // ============================================
-// BUSINESS PORTAL AUTHENTICATION - PART 1
+// BUSINESS PORTAL AUTHENTICATION - FIXED
 // Initialization & Auth State Management
 // ============================================
 
@@ -131,9 +131,9 @@ async function handleSignIn() {
         showError(result.error);
     }
 }
+
 // ============================================
-// BUSINESS PORTAL AUTHENTICATION - PART 2
-// Listing Search & Sign Up with Confirmation Key
+// LISTING SEARCH & SIGN UP WITH FIX
 // ============================================
 
 async function searchListingForSignup() {
@@ -188,20 +188,24 @@ async function searchListingForSignup() {
     resultsDiv.innerHTML = matches.map(l => {
         const owner = l.owner && l.owner.length > 0 ? l.owner[0] : null;
         const isClaimed = owner && owner.owner_user_id;
+        const hasConfirmationKey = owner && owner.confirmation_key;
         
         return `
         <div class="p-2 hover:bg-gray-100 cursor-pointer rounded ${isClaimed ? 'opacity-50' : ''}" 
-             onclick="${isClaimed ? '' : `selectListing('${l.id}', '${l.business_name.replace(/'/g, "\\'")}', ${!!owner?.confirmation_key})`}">
+             onclick="${isClaimed ? '' : `selectListing('${l.id}', '${l.business_name.replace(/'/g, "\\'")}', ${!!hasConfirmationKey})`}">
             <div class="font-medium">${l.business_name}</div>
             <div class="text-xs text-gray-500">
                 ID: ${l.id} • ${l.city}, ${l.state}
                 ${isClaimed ? ' • <span class="text-red-600">Already Claimed</span>' : ''}
+                ${hasConfirmationKey && !isClaimed ? ' • <span class="text-green-600">Requires Key</span>' : ''}
             </div>
         </div>
     `}).join('');
 }
 
 function selectListing(listingId, businessName, hasConfirmationKey) {
+    console.log('Selected listing:', listingId, 'Has key:', hasConfirmationKey);
+    
     document.getElementById('signUpListingId').value = listingId;
     document.getElementById('signUpListingSearch').value = businessName;
     document.getElementById('listingSearchResults').innerHTML = '';
@@ -209,8 +213,10 @@ function selectListing(listingId, businessName, hasConfirmationKey) {
     // Show confirmation key field if the listing has one
     const confirmationKeyContainer = document.getElementById('confirmationKeyContainer');
     if (hasConfirmationKey) {
+        console.log('Showing confirmation key container');
         confirmationKeyContainer.classList.remove('hidden');
     } else {
+        console.log('Hiding confirmation key container');
         confirmationKeyContainer.classList.add('hidden');
     }
 }
@@ -221,7 +227,8 @@ async function handleSignUp() {
     const phone = document.getElementById('signUpPhone').value.trim();
     const password = document.getElementById('signUpPassword').value;
     const confirmPassword = document.getElementById('signUpPasswordConfirm').value;
-    const confirmationKey = document.getElementById('signUpConfirmationKey')?.value.trim();
+    const confirmationKeyInput = document.getElementById('signUpConfirmationKey');
+    const confirmationKey = confirmationKeyInput ? confirmationKeyInput.value.trim() : '';
     const agreeTerms = document.getElementById('agreeTerms').checked;
     
     if (!listingId) {
@@ -244,11 +251,11 @@ async function handleSignUp() {
         return;
     }
     
-    // Check if confirmation key is required
+    // Check if confirmation key is required and provided
     const confirmationKeyContainer = document.getElementById('confirmationKeyContainer');
     if (!confirmationKeyContainer.classList.contains('hidden')) {
         if (!confirmationKey) {
-            showError('Please enter the confirmation key');
+            showError('Please enter the confirmation key for this listing');
             return;
         }
     }
@@ -259,11 +266,14 @@ async function handleSignUp() {
     }
     
     clearAuthMessage();
+    
+    console.log('Attempting signup with confirmation key:', confirmationKey);
+    
     const result = await window.TGDAuth.signUpBusinessOwner(
         email, 
         password, 
         listingId, 
-        confirmationKey || '', 
+        confirmationKey, 
         phone
     );
     
@@ -300,6 +310,38 @@ async function logout() {
     }
 }
 
+async function loadListingData() {
+    if (!ownerData || ownerData.length === 0) return;
+    
+    try {
+        const listingIds = ownerData.map(o => o.listing_id);
+        
+        const { data, error } = await window.TGDAuth.supabaseClient
+            .from('listings')
+            .select(`
+                *,
+                analytics_summary(*)
+            `)
+            .in('id', listingIds)
+            .single();
+        
+        if (error) throw error;
+        
+        currentListing = data;
+        
+        // Merge analytics if present
+        if (data.analytics_summary && data.analytics_summary.length > 0) {
+            currentListing.analytics = data.analytics_summary[0];
+        }
+        
+        console.log('✅ Listing loaded:', currentListing.business_name);
+        
+    } catch (error) {
+        console.error('Error loading listing:', error);
+        showError('Failed to load listing data');
+    }
+}
+
 window.handleSignIn = handleSignIn;
 window.handleSignUp = handleSignUp;
 window.handlePasswordReset = handlePasswordReset;
@@ -309,3 +351,4 @@ window.showForgotPassword = showForgotPassword;
 window.searchListingForSignup = searchListingForSignup;
 window.selectListing = selectListing;
 window.logout = logout;
+window.loadListingData = loadListingData;
