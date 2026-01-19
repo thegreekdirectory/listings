@@ -1,6 +1,6 @@
 // ============================================
 // ADMIN PORTAL - PART 1
-// Configuration & State Management
+// Configuration & State Management - FIXED
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
@@ -45,7 +45,6 @@ const US_STATES = {
 
 let adminSupabase = null;
 let currentAdminUser = null;
-let adminGithubToken = null;
 let allListings = [];
 let editingListing = null;
 let selectedSubcategories = [];
@@ -57,6 +56,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     adminSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('✅ Supabase initialized');
     
+    const savedSession = localStorage.getItem('tgd_admin_session');
+    if (savedSession) {
+        try {
+            const sessionData = JSON.parse(savedSession);
+            currentAdminUser = sessionData;
+            showDashboard();
+            await loadListings();
+        } catch (e) {
+            console.error('Invalid saved session');
+            showLoginPage();
+        }
+    } else {
+        showLoginPage();
+    }
+    
     setupEventListeners();
 });
 
@@ -64,6 +78,15 @@ function setupEventListeners() {
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) {
         loginBtn.addEventListener('click', handleAdminLogin);
+    }
+    
+    const githubTokenInput = document.getElementById('githubToken');
+    if (githubTokenInput) {
+        githubTokenInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleAdminLogin();
+            }
+        });
     }
     
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
@@ -84,87 +107,90 @@ function setupEventListeners() {
 }
 
 async function handleAdminLogin() {
-    const token = document.getElementById('githubToken').value.trim();
+    const emailInput = document.getElementById('githubToken');
+    const email = emailInput.value.trim();
     
-    if (!token) {
-        showError('Please enter your GitHub token');
+    if (!email) {
+        showError('Please enter your admin email');
         return;
     }
     
     clearAuthMessage();
     
     try {
-        // Verify token by trying to access the repo
-        const response = await fetch('https://api.github.com/repos/thegreekdirectory/listings', {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
+        const { data, error } = await adminSupabase.auth.signInWithOtp({
+            email: email,
+            options: {
+                emailRedirectTo: window.location.origin + '/admin.html'
             }
         });
         
-        if (!response.ok) {
-            throw new Error('Invalid GitHub token');
-        }
+        if (error) throw error;
         
-        adminGithubToken = token;
-        localStorage.setItem('tgd_admin_token', token);
+        showSuccess('Magic link sent! Check your email to sign in.');
         
-        showSuccess('Login successful!');
-        showDashboard();
-        await loadListings();
+        const checkAuth = setInterval(async () => {
+            const { data: { session } } = await adminSupabase.auth.getSession();
+            if (session) {
+                clearInterval(checkAuth);
+                currentAdminUser = session.user;
+                localStorage.setItem('tgd_admin_session', JSON.stringify(session.user));
+                showSuccess('Login successful!');
+                showDashboard();
+                await loadListings();
+            }
+        }, 2000);
         
     } catch (error) {
         console.error('Login error:', error);
-        showError('Invalid GitHub token. Please check and try again.');
+        showError('Login failed: ' + error.message);
     }
 }
 
 function showLoginPage() {
-    document.getElementById('loginPage').classList.remove('hidden');
-    document.getElementById('dashboardPage').classList.add('hidden');
+    document.getElementById('loginPage')?.classList.remove('hidden');
+    document.getElementById('dashboardPage')?.classList.add('hidden');
 }
 
 function showDashboard() {
-    document.getElementById('loginPage').classList.add('hidden');
-    document.getElementById('dashboardPage').classList.remove('hidden');
+    document.getElementById('loginPage')?.classList.add('hidden');
+    document.getElementById('dashboardPage')?.classList.remove('hidden');
 }
 
 async function logout() {
     if (confirm('Are you sure you want to logout?')) {
-        adminGithubToken = null;
-        localStorage.removeItem('tgd_admin_token');
+        await adminSupabase.auth.signOut();
+        localStorage.removeItem('tgd_admin_session');
+        currentAdminUser = null;
         showLoginPage();
     }
 }
 
 function showError(message) {
     const msgDiv = document.getElementById('authMessage');
-    msgDiv.className = 'error-message';
-    msgDiv.textContent = message;
-    msgDiv.classList.remove('hidden');
+    if (msgDiv) {
+        msgDiv.className = 'error-message';
+        msgDiv.textContent = message;
+        msgDiv.classList.remove('hidden');
+    }
 }
 
 function showSuccess(message) {
     const msgDiv = document.getElementById('authMessage');
-    msgDiv.className = 'success-message';
-    msgDiv.textContent = message;
-    msgDiv.classList.remove('hidden');
+    if (msgDiv) {
+        msgDiv.className = 'success-message';
+        msgDiv.textContent = message;
+        msgDiv.classList.remove('hidden');
+    }
 }
 
 function clearAuthMessage() {
     const msgDiv = document.getElementById('authMessage');
-    msgDiv.classList.add('hidden');
-    msgDiv.textContent = '';
-}
-
-// Check for saved token on load
-window.addEventListener('load', () => {
-    const savedToken = localStorage.getItem('tgd_admin_token');
-    if (savedToken) {
-        document.getElementById('githubToken').value = savedToken;
-        handleAdminLogin();
+    if (msgDiv) {
+        msgDiv.classList.add('hidden');
+        msgDiv.textContent = '';
     }
-});
+}
 
 window.handleAdminLogin = handleAdminLogin;
 window.logout = logout;
@@ -309,7 +335,6 @@ window.editListing = async function(id) {
 
 window.newListing = async function() {
     try {
-        // Get next available ID
         const { data: maxIdResult, error: maxIdError } = await adminSupabase
             .from('listings')
             .select('id')
@@ -352,7 +377,6 @@ function fillEditForm(listing) {
     const formContent = document.getElementById('editFormContent');
     formContent.innerHTML = `
         <div class="space-y-6">
-            <!-- Basic Info -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Basic Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -388,7 +412,6 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
-            <!-- Subcategories -->
             <div id="subcategoriesContainer">
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium">Subcategories *</label>
@@ -397,7 +420,6 @@ function fillEditForm(listing) {
                 <div id="subcategoryCheckboxes" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <!-- Chain Info -->
             <div>
                 <label class="flex items-center gap-2 mb-4">
                     <input type="checkbox" id="editIsChain" ${listing?.is_chain ? 'checked' : ''} onchange="toggleChainFields()">
@@ -415,7 +437,6 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
-            <!-- Location -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Location</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -449,7 +470,6 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
-            <!-- Contact -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Contact Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -468,7 +488,66 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
-            <!-- Owner Info -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
+                <div class="grid grid-cols-1 gap-3">
+                    ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => `
+                        <div class="flex gap-2">
+                            <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
+                            <input type="text" id="editHours${day}" value="${listing?.hours && listing.hours[day.toLowerCase()] ? listing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-bold mb-4">Social Media Links</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Facebook</label>
+                        <input type="text" id="editFacebook" value="${listing?.social_media?.facebook || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Instagram</label>
+                        <input type="text" id="editInstagram" value="${listing?.social_media?.instagram || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Twitter/X</label>
+                        <input type="text" id="editTwitter" value="${listing?.social_media?.twitter || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">YouTube</label>
+                        <input type="text" id="editYoutube" value="${listing?.social_media?.youtube || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="channel">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">TikTok</label>
+                        <input type="text" id="editTiktok" value="${listing?.social_media?.tiktok || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">LinkedIn</label>
+                        <input type="url" id="editLinkedin" value="${listing?.social_media?.linkedin || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full URL">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-bold mb-4">Review Sites</h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Google Reviews</label>
+                        <input type="url" id="editGoogleReviews" value="${listing?.reviews?.google || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Google Reviews URL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Yelp</label>
+                        <input type="url" id="editYelp" value="${listing?.reviews?.yelp || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Yelp URL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">TripAdvisor</label>
+                        <input type="url" id="editTripadvisor" value="${listing?.reviews?.tripadvisor || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full TripAdvisor URL">
+                    </div>
+                </div>
+            </div>
+
             <div>
                 <h3 class="text-lg font-bold mb-4">Owner Information</h3>
                 ${owner?.owner_user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : '<p class="text-sm text-gray-600 mb-4">This listing is not claimed</p>'}
@@ -500,7 +579,6 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
-            <!-- Media -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Media</h3>
                 <div class="grid grid-cols-1 gap-4">
@@ -634,7 +712,6 @@ async function saveListing() {
         const photosText = document.getElementById('editPhotos').value;
         const photos = photosText ? photosText.split('\n').map(url => url.trim()).filter(url => url) : [];
         
-        // Generate chain_id if needed
         let chainId = document.getElementById('editChainId')?.value.trim();
         if (isChain && !chainId) {
             chainId = `chain-${chainName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
@@ -662,13 +739,34 @@ async function saveListing() {
             website: document.getElementById('editWebsite').value.trim() || null,
             logo: document.getElementById('editLogo').value.trim() || null,
             photos: photos,
-            visible: true
+            visible: true,
+            hours: {
+                monday: document.getElementById('editHoursMonday').value.trim() || null,
+                tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
+                wednesday: document.getElementById('editHoursWednesday').value.trim() || null,
+                thursday: document.getElementById('editHoursThursday').value.trim() || null,
+                friday: document.getElementById('editHoursFriday').value.trim() || null,
+                saturday: document.getElementById('editHoursSaturday').value.trim() || null,
+                sunday: document.getElementById('editHoursSunday').value.trim() || null
+            },
+            social_media: {
+                facebook: document.getElementById('editFacebook').value.trim() || null,
+                instagram: document.getElementById('editInstagram').value.trim() || null,
+                twitter: document.getElementById('editTwitter').value.trim() || null,
+                youtube: document.getElementById('editYoutube').value.trim() || null,
+                tiktok: document.getElementById('editTiktok').value.trim() || null,
+                linkedin: document.getElementById('editLinkedin').value.trim() || null
+            },
+            reviews: {
+                google: document.getElementById('editGoogleReviews').value.trim() || null,
+                yelp: document.getElementById('editYelp').value.trim() || null,
+                tripadvisor: document.getElementById('editTripadvisor').value.trim() || null
+            }
         };
         
         let savedListing;
         
         if (editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id)) {
-            // Update existing listing
             const { data, error } = await adminSupabase
                 .from('listings')
                 .update(listingData)
@@ -679,12 +777,11 @@ async function saveListing() {
             if (error) throw error;
             savedListing = data;
         } else {
-            // Create new listing - generate slug
             listingData.slug = businessName.toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-|-$/g, '');
             
-            listingData.id = editingListing.id; // Use pre-determined ID
+            listingData.id = editingListing.id;
             
             const { data, error } = await adminSupabase
                 .from('listings')
@@ -696,7 +793,6 @@ async function saveListing() {
             savedListing = data;
         }
         
-        // Handle owner info
         await saveOwnerInfo(savedListing.id);
         
         alert('Listing saved successfully!');
@@ -720,7 +816,6 @@ async function saveOwnerInfo(listingId) {
         confirmation_key: document.getElementById('editConfirmationKey').value.trim() || null
     };
     
-    // Check if owner info exists
     const { data: existing } = await adminSupabase
         .from('business_owners')
         .select('*')
@@ -728,10 +823,8 @@ async function saveOwnerInfo(listingId) {
         .maybeSingle();
     
     if (existing) {
-        // Update existing (don't overwrite owner_user_id if already set)
         const updates = { ...ownerData };
         
-        // Don't change confirmation key if listing is claimed
         if (existing.owner_user_id) {
             delete updates.confirmation_key;
         }
@@ -744,7 +837,6 @@ async function saveOwnerInfo(listingId) {
         if (error) throw error;
         
     } else {
-        // Create new - generate confirmation key if not provided
         if (!ownerData.confirmation_key) {
             const words = [
                 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
@@ -790,7 +882,6 @@ window.sendMagicLink = async function(listingId) {
             return;
         }
         
-        // Send magic link
         const { error } = await adminSupabase.auth.signInWithOtp({
             email: owner.owner_email,
             options: {
@@ -819,7 +910,6 @@ window.deleteListing = async function(listingId) {
     }
     
     try {
-        // Delete owner info first
         const { error: ownerError } = await adminSupabase
             .from('business_owners')
             .delete()
@@ -827,7 +917,6 @@ window.deleteListing = async function(listingId) {
         
         if (ownerError) console.error('Error deleting owner:', ownerError);
         
-        // Delete listing
         const { error } = await adminSupabase
             .from('listings')
             .delete()
@@ -854,462 +943,3 @@ window.updateSubcategoriesForCategory = updateSubcategoriesForCategory;
 window.toggleSubcategory = toggleSubcategory;
 window.setPrimarySubcategory = setPrimarySubcategory;
 window.toggleChainFields = toggleChainFields;
-// Add these functions to admin.js after the fillEditForm function
-
-function getHoursFromForm() {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const hours = {};
-    
-    days.forEach(day => {
-        const value = document.getElementById(`editHours${day}`)?.value.trim();
-        if (value) {
-            hours[day.toLowerCase()] = value;
-        }
-    });
-    
-    return hours;
-}
-
-function getSocialMediaFromForm() {
-    return {
-        facebook: document.getElementById('editFacebook')?.value.trim() || null,
-        instagram: document.getElementById('editInstagram')?.value.trim() || null,
-        twitter: document.getElementById('editTwitter')?.value.trim() || null,
-        youtube: document.getElementById('editYoutube')?.value.trim() || null,
-        tiktok: document.getElementById('editTiktok')?.value.trim() || null,
-        linkedin: document.getElementById('editLinkedin')?.value.trim() || null
-    };
-}
-
-function getReviewsFromForm() {
-    return {
-        google: document.getElementById('editGoogleReviews')?.value.trim() || null,
-        yelp: document.getElementById('editYelp')?.value.trim() || null,
-        tripadvisor: document.getElementById('editTripadvisor')?.value.trim() || null
-    };
-}
-// REPLACE the existing fillEditForm function in admin.js with this complete version
-
-function fillEditForm(listing) {
-    const owner = listing?.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    
-    const formContent = document.getElementById('editFormContent');
-    formContent.innerHTML = `
-        <div class="space-y-6">
-            <!-- Basic Info -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Basic Information</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Business Name *</label>
-                        <input type="text" id="editBusinessName" value="${listing?.business_name || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Tagline (max 75) *</label>
-                        <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">
-                        <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span>/75</p>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Description *</label>
-                        <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">${listing?.description || ''}</textarea>
-                        <p class="text-xs text-gray-500 mt-1"><span id="descCount">${(listing?.description || '').length}</span> characters</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Category *</label>
-                        <select id="editCategory" class="w-full px-4 py-2 border rounded-lg" onchange="updateSubcategoriesForCategory()">
-                            ${CATEGORIES.map(cat => `<option value="${cat}" ${listing?.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Tier</label>
-                        <select id="editTier" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="FREE" ${listing?.tier === 'FREE' ? 'selected' : ''}>FREE</option>
-                            <option value="VERIFIED" ${listing?.tier === 'VERIFIED' ? 'selected' : ''}>VERIFIED</option>
-                            <option value="FEATURED" ${listing?.tier === 'FEATURED' ? 'selected' : ''}>FEATURED</option>
-                            <option value="PREMIUM" ${listing?.tier === 'PREMIUM' ? 'selected' : ''}>PREMIUM</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Subcategories -->
-            <div id="subcategoriesContainer">
-                <div class="flex items-center justify-between mb-2">
-                    <label class="block text-sm font-medium">Subcategories *</label>
-                    <span class="text-xs text-gray-500">Select at least one</span>
-                </div>
-                <div id="subcategoryCheckboxes" class="grid grid-cols-2 gap-2"></div>
-            </div>
-
-            <!-- Chain Info -->
-            <div>
-                <label class="flex items-center gap-2 mb-4">
-                    <input type="checkbox" id="editIsChain" ${listing?.is_chain ? 'checked' : ''} onchange="toggleChainFields()">
-                    <span class="text-sm font-medium">This is a chain business</span>
-                </label>
-                <div id="chainFieldsContainer" class="${listing?.is_chain ? '' : 'hidden'} grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Chain Name</label>
-                        <input type="text" id="editChainName" value="${listing?.chain_name || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Chain ID</label>
-                        <input type="text" id="editChainId" value="${listing?.chain_id || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Auto-generated if empty">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Location -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Location</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Address</label>
-                        <input type="text" id="editAddress" value="${listing?.address || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">City</label>
-                        <input type="text" id="editCity" value="${listing?.city || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">State</label>
-                        <select id="editState" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="">Select State</option>
-                            ${Object.entries(US_STATES).map(([code, name]) => 
-                                `<option value="${code}" ${listing?.state === code ? 'selected' : ''}>${name}</option>`
-                            ).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Zip Code</label>
-                        <input type="text" id="editZipCode" value="${listing?.zip_code || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Country</label>
-                        <select id="editCountry" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="USA" ${listing?.country === 'USA' ? 'selected' : ''}>USA</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Contact Information</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Phone</label>
-                        <input type="tel" id="editPhone" value="${listing?.phone || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Email</label>
-                        <input type="email" id="editEmail" value="${listing?.email || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Website</label>
-                        <input type="url" id="editWebsite" value="${listing?.website || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Hours -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
-                <div class="grid grid-cols-1 gap-3">
-                    ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => `
-                        <div class="flex gap-2">
-                            <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
-                            <input type="text" id="editHours${day}" value="${listing?.hours && listing.hours[day.toLowerCase()] ? listing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-
-            <!-- Social Media -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Social Media Links</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Facebook</label>
-                        <input type="text" id="editFacebook" value="${listing?.social_media?.facebook || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Instagram</label>
-                        <input type="text" id="editInstagram" value="${listing?.social_media?.instagram || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Twitter/X</label>
-                        <input type="text" id="editTwitter" value="${listing?.social_media?.twitter || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">YouTube</label>
-                        <input type="text" id="editYoutube" value="${listing?.social_media?.youtube || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="channel">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">TikTok</label>
-                        <input type="text" id="editTiktok" value="${listing?.social_media?.tiktok || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">LinkedIn</label>
-                        <input type="url" id="editLinkedin" value="${listing?.social_media?.linkedin || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full URL">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reviews -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Review Sites</h3>
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Google Reviews</label>
-                        <input type="url" id="editGoogleReviews" value="${listing?.reviews?.google || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Google Reviews URL">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Yelp</label>
-                        <input type="url" id="editYelp" value="${listing?.reviews?.yelp || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Yelp URL">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">TripAdvisor</label>
-                        <input type="url" id="editTripadvisor" value="${listing?.reviews?.tripadvisor || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full TripAdvisor URL">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Owner Info -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Owner Information</h3>
-                ${owner?.owner_user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : '<p class="text-sm text-gray-600 mb-4">This listing is not claimed</p>'}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Owner Name</label>
-                        <input type="text" id="editOwnerName" value="${owner?.full_name || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Title</label>
-                        <input type="text" id="editOwnerTitle" value="${owner?.title || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">From Greece</label>
-                        <input type="text" id="editOwnerGreece" value="${owner?.from_greece || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g. Athens">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Owner Email</label>
-                        <input type="email" id="editOwnerEmail" value="${owner?.owner_email || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Owner Phone</label>
-                        <input type="tel" id="editOwnerPhone" value="${owner?.owner_phone || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Confirmation Key</label>
-                        <input type="text" id="editConfirmationKey" value="${owner?.confirmation_key || ''}" class="w-full px-4 py-2 border rounded-lg" ${owner?.owner_user_id ? 'disabled title="Cannot change - listing is claimed"' : ''} placeholder="${owner?.owner_user_id ? 'Listing is claimed' : 'Auto-generated if empty'}">
-                    </div>
-                </div>
-            </div>
-
-function addHoursSection(listing) {
-    return `
-        <!-- Hours of Operation -->
-        <div>
-            <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
-            <div class="grid grid-cols-1 gap-3">
-                ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => `
-                    <div class="flex gap-2">
-                        <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
-                        <input type="text" id="editHours${day}" value="${listing?.hours && listing.hours[day.toLowerCase()] ? listing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
-
-function addSocialMediaSection(listing) {
-    return `
-        <!-- Social Media -->
-        <div>
-            <h3 class="text-lg font-bold mb-4">Social Media Links</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Facebook</label>
-                    <input type="text" id="editFacebook" value="${listing?.social_media?.facebook || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Instagram</label>
-                    <input type="text" id="editInstagram" value="${listing?.social_media?.instagram || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Twitter/X</label>
-                    <input type="text" id="editTwitter" value="${listing?.social_media?.twitter || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">YouTube</label>
-                    <input type="text" id="editYoutube" value="${listing?.social_media?.youtube || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="channel">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">TikTok</label>
-                    <input type="text" id="editTiktok" value="${listing?.social_media?.tiktok || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">LinkedIn</label>
-                    <input type="url" id="editLinkedin" value="${listing?.social_media?.linkedin || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full URL">
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function addReviewsSection(listing) {
-    return `
-        <!-- Review Sites -->
-        <div>
-            <h3 class="text-lg font-bold mb-4">Review Sites</h3>
-            <div class="grid grid-cols-1 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Google Reviews</label>
-                    <input type="url" id="editGoogleReviews" value="${listing?.reviews?.google || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Google Reviews URL">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Yelp</label>
-                    <input type="url" id="editYelp" value="${listing?.reviews?.yelp || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Yelp URL">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">TripAdvisor</label>
-                    <input type="url" id="editTripadvisor" value="${listing?.reviews?.tripadvisor || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full TripAdvisor URL">
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Update the saveListing function to include these new fields
-async function saveListingComplete() {
-    try {
-        const businessName = document.getElementById('editBusinessName').value.trim();
-        const tagline = document.getElementById('editTagline').value.trim();
-        
-        if (!businessName) {
-            alert('Business name is required');
-            return;
-        }
-        
-        if (!tagline) {
-            alert('Tagline is required');
-            return;
-        }
-        
-        if (selectedSubcategories.length === 0) {
-            alert('At least one subcategory is required');
-            return;
-        }
-        
-        const isChain = document.getElementById('editIsChain').checked;
-        const chainName = document.getElementById('editChainName').value.trim();
-        
-        if (isChain && !chainName) {
-            alert('Chain name is required for chain listings');
-            return;
-        }
-        
-        const photosText = document.getElementById('editPhotos').value;
-        const photos = photosText ? photosText.split('\n').map(url => url.trim()).filter(url => url) : [];
-        
-        // Generate chain_id if needed
-        let chainId = document.getElementById('editChainId')?.value.trim();
-        if (isChain && !chainId) {
-            chainId = `chain-${chainName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
-        }
-        
-        const listingData = {
-            business_name: businessName,
-            tagline: tagline,
-            description: document.getElementById('editDescription').value.trim(),
-            category: document.getElementById('editCategory').value,
-            subcategories: selectedSubcategories,
-            primary_subcategory: primarySubcategory,
-            tier: document.getElementById('editTier').value,
-            verified: document.getElementById('editTier').value !== 'FREE',
-            is_chain: isChain,
-            chain_name: isChain ? chainName : null,
-            chain_id: isChain ? chainId : null,
-            address: document.getElementById('editAddress').value.trim() || null,
-            city: document.getElementById('editCity').value.trim() || null,
-            state: document.getElementById('editState').value || null,
-            zip_code: document.getElementById('editZipCode').value.trim() || null,
-            country: document.getElementById('editCountry').value || 'USA',
-            phone: document.getElementById('editPhone').value.trim() || null,
-            email: document.getElementById('editEmail').value.trim() || null,
-            website: document.getElementById('editWebsite').value.trim() || null,
-            logo: document.getElementById('editLogo').value.trim() || null,
-            photos: photos,
-            visible: true,
-            hours: getHoursFromForm(),
-            social_media: getSocialMediaFromForm(),
-            reviews: getReviewsFromForm()
-        };
-        
-        let savedListing;
-        
-        if (editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id)) {
-            // Update existing listing
-            const { data, error } = await adminSupabase
-                .from('listings')
-                .update(listingData)
-                .eq('id', editingListing.id)
-                .select()
-                .single();
-            
-            if (error) throw error;
-            savedListing = data;
-        } else {
-            // Create new listing - generate slug
-            listingData.slug = businessName.toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            
-            listingData.id = editingListing.id; // Use pre-determined ID
-            
-            const { data, error } = await adminSupabase
-                .from('listings')
-                .insert(listingData)
-                .select()
-                .single();
-            
-            if (error) throw error;
-            savedListing = data;
-        }
-        
-        // Handle owner info
-        await saveOwnerInfo(savedListing.id);
-        
-        alert('Listing saved successfully!');
-        document.getElementById('editModal').classList.add('hidden');
-        await loadListings();
-        
-    } catch (error) {
-        console.error('Error saving listing:', error);
-        alert('Failed to save listing: ' + error.message);
-    }
-}
-
-// Replace the old saveListing with this complete version
-window.saveListing = saveListingComplete;
-            <!-- Media -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Media</h3>
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Logo URL</label>
-                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
-                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    updateSubcategoriesForCategory();
-}
