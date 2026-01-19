@@ -162,6 +162,8 @@ function renderOverview() {
 // Edit Form Rendering
 // ============================================
 
+// Add to business-dashboard.js after renderOverview function
+
 function renderEditForm() {
     if (!currentListing) return;
     
@@ -188,22 +190,22 @@ function renderEditForm() {
                         <div class="md:col-span-2 disabled-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
                             <input type="text" value="${currentListing.business_name}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
-                            <p class="info-notice">Contact Support to change this information.</p>
+                            <p class="info-notice">Contact Support to change this</p>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (max 75 chars) *</label>
                             <input type="text" id="editTagline" value="${currentListing.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('tagline')">
-                            <p class="char-counter mt-1"><span id="taglineCount">${(currentListing.tagline || '').length}</span>/75 characters</p>
+                            <p class="char-counter mt-1"><span id="taglineCount">${(currentListing.tagline || '').length}</span>/75</p>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Description (max ${maxDesc} chars)</label>
                             <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('description')">${currentListing.description || ''}</textarea>
-                            <p class="char-counter mt-1"><span id="descriptionCount">${(currentListing.description || '').length}</span>/<span id="descriptionMax">${maxDesc}</span> characters</p>
+                            <p class="char-counter mt-1"><span id="descriptionCount">${(currentListing.description || '').length}</span>/<span id="descriptionMax">${maxDesc}</span></p>
                         </div>
                         <div class="disabled-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
                             <input type="text" value="${currentListing.category}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
-                            <p class="info-notice">Contact Support to change this information.</p>
+                            <p class="info-notice">Contact Support to change this</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Subcategories</label>
@@ -254,7 +256,7 @@ function renderEditForm() {
                     </div>
                 </div>
 
-                <!-- Hours of Operation -->
+                <!-- Hours -->
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Hours of Operation</h3>
                     <div class="grid grid-cols-1 gap-3">
@@ -270,7 +272,6 @@ function renderEditForm() {
                 <!-- Social Media -->
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Social Media Links</h3>
-                    <p class="text-sm text-gray-600 mb-4">Add or update your social media profiles</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Facebook</label>
@@ -302,7 +303,7 @@ function renderEditForm() {
                 <!-- Review Sites -->
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Review Sites</h3>
-                    <p class="text-sm text-gray-600 mb-4">Add review links if not already present (locked fields require Support to change)</p>
+                    <p class="text-sm text-gray-600 mb-4">Add review links if not present (locked fields require Support)</p>
                     <div class="grid grid-cols-1 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Google Reviews</label>
@@ -310,7 +311,7 @@ function renderEditForm() {
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
                                 ${currentListing.reviews?.google ? 'disabled' : ''} 
                                 placeholder="Full Google Reviews URL">
-                            ${currentListing.reviews?.google ? '<p class="info-notice">Contact Support to change this link</p>' : ''}
+                            ${currentListing.reviews?.google ? '<p class="info-notice">Contact Support to change</p>' : ''}
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Yelp</label>
@@ -318,7 +319,7 @@ function renderEditForm() {
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
                                 ${currentListing.reviews?.yelp ? 'disabled' : ''} 
                                 placeholder="Full Yelp URL">
-                            ${currentListing.reviews?.yelp ? '<p class="info-notice">Contact Support to change this link</p>' : ''}
+                            ${currentListing.reviews?.yelp ? '<p class="info-notice">Contact Support to change</p>' : ''}
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">TripAdvisor</label>
@@ -326,7 +327,7 @@ function renderEditForm() {
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
                                 ${currentListing.reviews?.tripadvisor ? 'disabled' : ''} 
                                 placeholder="Full TripAdvisor URL">
-                            ${currentListing.reviews?.tripadvisor ? '<p class="info-notice">Contact Support to change this link</p>' : ''}
+                            ${currentListing.reviews?.tripadvisor ? '<p class="info-notice">Contact Support to change</p>' : ''}
                         </div>
                     </div>
                 </div>
@@ -360,7 +361,7 @@ function renderSubcategories() {
                     ${isPrimary ? 'checked' : ''} 
                     ${!isSelected ? 'disabled' : ''}
                     onchange="setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')"
-                    title="Set as primary">
+                    title="Primary">
             `;
             grid.appendChild(div);
         });
@@ -418,6 +419,8 @@ window.updateCharCounter = function(field) {
 // Save Changes & Analytics
 // ============================================
 
+// Add to business-dashboard.js - Save function
+
 async function saveChanges() {
     const tagline = document.getElementById('editTagline').value.trim();
     if (!tagline) {
@@ -452,7 +455,7 @@ async function saveChanges() {
         return;
     }
     
-    const confirmMessage = `Are you sure you want to save these changes?\n\nChanges:\n${changes.map(c => `• ${c}`).join('\n')}`;
+    const confirmMessage = `Save these changes?\n\n${changes.map(c => `• ${c}`).join('\n')}`;
     
     if (!confirm(confirmMessage)) return;
     
@@ -527,9 +530,7 @@ function renderAnalytics() {
         website_clicks: 0,
         direction_clicks: 0,
         share_clicks: 0,
-        video_plays: 0,
-        last_viewed: null,
-        detailed_views: []
+        video_plays: 0
     };
     
     const content = document.getElementById('content-analytics');
@@ -539,10 +540,7 @@ function renderAnalytics() {
     if (tier === 'FREE') {
         html = `
             <div class="bg-white rounded-lg p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Analytics</h2>
-                    <button onclick="loadListingData()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">🔄 Refresh</button>
-                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="analytics-stat-card">
@@ -555,93 +553,68 @@ function renderAnalytics() {
                     </div>
                 </div>
                 <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-sm text-blue-900"><strong>Want more detailed analytics?</strong> Upgrade to Verified tier or higher to see individual click breakdowns, trends, and more!</p>
+                    <p class="text-sm text-blue-900"><strong>Want more?</strong> Upgrade to see detailed analytics!</p>
                 </div>
             </div>
         `;
     } else if (tier === 'VERIFIED') {
         html = `
             <div class="bg-white rounded-lg p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Analytics</h2>
-                    <button onclick="loadListingData()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">🔄 Refresh</button>
-                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
                 
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div class="analytics-stat-card">
                         <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                        <div class="text-sm opacity-90">Total Views</div>
+                        <div class="text-sm opacity-90">Views</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Call Clicks</div>
+                        <div class="text-sm opacity-90">Calls</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Website Clicks</div>
+                        <div class="text-sm opacity-90">Website</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Direction Clicks</div>
+                        <div class="text-sm opacity-90">Directions</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Share Clicks</div>
+                        <div class="text-sm opacity-90">Shares</div>
                     </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
-                        <div class="text-lg font-bold mb-2">${analytics.last_viewed ? new Date(analytics.last_viewed).toLocaleString() : 'Never'}</div>
-                        <div class="text-sm opacity-90">Last Viewed</div>
-                    </div>
-                </div>
-                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-sm text-blue-900"><strong>Want advanced analytics?</strong> Upgrade to Featured or Premium tier for click breakdowns, trends, and comparative performance!</p>
                 </div>
             </div>
         `;
     } else {
-        const recentViews = analytics.detailed_views?.slice(-30) || [];
         html = `
             <div class="bg-white rounded-lg p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Analytics</h2>
-                    <button onclick="loadListingData()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">🔄 Refresh</button>
-                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
                 
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div class="analytics-stat-card">
                         <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                        <div class="text-sm opacity-90">Total Views</div>
+                        <div class="text-sm opacity-90">Views</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Call Clicks</div>
+                        <div class="text-sm opacity-90">Calls</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Website Clicks</div>
+                        <div class="text-sm opacity-90">Website</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Direction Clicks</div>
+                        <div class="text-sm opacity-90">Directions</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Share Clicks</div>
+                        <div class="text-sm opacity-90">Shares</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
-                        <div class="text-4xl font-bold mb-2">${recentViews.length}</div>
-                        <div class="text-sm opacity-90">Recent Activity</div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h3 class="font-bold text-gray-900 mb-3">Recent Activity (Last 30 actions)</h3>
-                    <div class="space-y-2">
-                        ${recentViews.slice(-10).reverse().map(v => `
-                            <div class="flex justify-between text-sm">
-                                <span class="font-medium">${v.action}</span>
-                                <span class="text-gray-600">${new Date(v.timestamp).toLocaleString()}</span>
-                            </div>
-                        `).join('')}
+                        <div class="text-4xl font-bold mb-2">${analytics.video_plays || 0}</div>
+                        <div class="text-sm opacity-90">Video Plays</div>
                     </div>
                 </div>
             </div>
@@ -652,11 +625,12 @@ function renderAnalytics() {
 }
 
 function renderSettings() {
-    if (!ownerData) return;
+    if (!ownerData || ownerData.length === 0) return;
     
+    const owner = ownerData[0];
     settingsVisibility = {
-        email: ownerData.email_visible || false,
-        phone: ownerData.phone_visible || false
+        email: owner.email_visible || false,
+        phone: owner.phone_visible || false
     };
     
     const content = document.getElementById('content-settings');
@@ -667,16 +641,14 @@ function renderSettings() {
             <div class="space-y-6">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
-                    <p class="text-sm text-gray-600 mb-4">This information is stored securely and can be displayed on your listing page.</p>
-                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="owner-field">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email</label>
-                                <input type="email" id="settingsOwnerEmail" value="${ownerData.owner_email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="owner@email.com">
+                                <input type="email" id="settingsOwnerEmail" value="${owner.owner_email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                             </div>
-                            <div class="mt-6">
-                                <button class="visibility-toggle ${settingsVisibility.email ? 'visible' : 'hidden'}" data-field="email" onclick="toggleSettingsFieldVisibility('email')">
+                            <div class="mt-2">
+                                <button class="visibility-toggle ${settingsVisibility.email ? 'visible' : 'hidden'}" onclick="toggleSettingsFieldVisibility('email')">
                                     ${settingsVisibility.email ? 'Visible' : 'Hidden'}
                                 </button>
                             </div>
@@ -685,19 +657,15 @@ function renderSettings() {
                         <div class="owner-field">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Owner Phone</label>
-                                <input type="tel" id="settingsOwnerPhone" value="${ownerData.owner_phone || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(555) 123-4567">
+                                <input type="tel" id="settingsOwnerPhone" value="${owner.owner_phone || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                             </div>
-                            <div class="mt-6">
-                                <button class="visibility-toggle ${settingsVisibility.phone ? 'visible' : 'hidden'}" data-field="phone" onclick="toggleSettingsFieldVisibility('phone')">
+                            <div class="mt-2">
+                                <button class="visibility-toggle ${settingsVisibility.phone ? 'visible' : 'hidden'}" onclick="toggleSettingsFieldVisibility('phone')">
                                     ${settingsVisibility.phone ? 'Visible' : 'Hidden'}
                                 </button>
                             </div>
                         </div>
                     </div>
-                    
-                    <p class="text-xs text-gray-500 mt-4">
-                        <strong>Note:</strong> Toggle visibility to control whether these details appear on your public listing page.
-                    </p>
                 </div>
                 
                 <div>
@@ -705,11 +673,11 @@ function renderSettings() {
                     <div class="max-w-md space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                            <input type="password" id="settingsNewPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Enter new password">
+                            <input type="password" id="settingsNewPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                            <input type="password" id="settingsConfirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Confirm new password">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                            <input type="password" id="settingsConfirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
                         <button onclick="updatePassword()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Update Password</button>
                     </div>
@@ -725,7 +693,7 @@ function renderSettings() {
 
 window.toggleSettingsFieldVisibility = function(field) {
     settingsVisibility[field] = !settingsVisibility[field];
-    const button = document.querySelector(`.visibility-toggle[data-field="${field}"]`);
+    const button = document.querySelector(`.visibility-toggle[onclick*="${field}"]`);
     if (settingsVisibility[field]) {
         button.className = 'visibility-toggle visible';
         button.textContent = 'Visible';
@@ -766,7 +734,7 @@ async function updatePassword() {
 }
 
 async function saveSettings() {
-    if (!ownerData) return;
+    if (!ownerData || ownerData.length === 0) return;
     
     const updatedEmail = document.getElementById('settingsOwnerEmail').value.trim();
     const updatedPhone = document.getElementById('settingsOwnerPhone').value.trim();
@@ -781,7 +749,7 @@ async function saveSettings() {
     const result = await window.TGDAuth.updateBusinessOwnerContact(updates);
     
     if (result.success) {
-        ownerData = result.data[0];
+        ownerData = result.data;
         alert('Settings saved successfully!');
         renderSettings();
     } else {
