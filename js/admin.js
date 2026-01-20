@@ -1,6 +1,6 @@
 // ============================================
 // ADMIN PORTAL - PART 1
-// Configuration & State Management - FIXED
+// Configuration & State Management
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
@@ -45,6 +45,7 @@ const US_STATES = {
 
 let adminSupabase = null;
 let currentAdminUser = null;
+let adminGithubToken = null;
 let allListings = [];
 let editingListing = null;
 let selectedSubcategories = [];
@@ -56,37 +57,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     adminSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('✅ Supabase initialized');
     
-    const savedSession = localStorage.getItem('tgd_admin_session');
-    if (savedSession) {
-        try {
-            const sessionData = JSON.parse(savedSession);
-            currentAdminUser = sessionData;
-            showDashboard();
-            await loadListings();
-        } catch (e) {
-            console.error('Invalid saved session');
-            showLoginPage();
-        }
-    } else {
-        showLoginPage();
-    }
-    
     setupEventListeners();
+    
+    // Check for saved token
+    const savedToken = localStorage.getItem('tgd_admin_token');
+    if (savedToken) {
+        document.getElementById('githubToken').value = savedToken;
+        handleAdminLogin();
+    }
 });
 
 function setupEventListeners() {
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) {
         loginBtn.addEventListener('click', handleAdminLogin);
-    }
-    
-    const githubTokenInput = document.getElementById('githubToken');
-    if (githubTokenInput) {
-        githubTokenInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleAdminLogin();
-            }
-        });
     }
     
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
@@ -107,89 +91,77 @@ function setupEventListeners() {
 }
 
 async function handleAdminLogin() {
-    const emailInput = document.getElementById('githubToken');
-    const email = emailInput.value.trim();
+    const token = document.getElementById('githubToken').value.trim();
     
-    if (!email) {
-        showError('Please enter your admin email');
+    if (!token) {
+        showError('Please enter your GitHub token');
         return;
     }
     
     clearAuthMessage();
     
     try {
-        const { data, error } = await adminSupabase.auth.signInWithOtp({
-            email: email,
-            options: {
-                emailRedirectTo: window.location.origin + '/admin.html'
+        // Verify token by trying to access the repo
+        const response = await fetch('https://api.github.com/repos/thegreekdirectory/listings', {
+            headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
             }
         });
         
-        if (error) throw error;
+        if (!response.ok) {
+            throw new Error('Invalid GitHub token');
+        }
         
-        showSuccess('Magic link sent! Check your email to sign in.');
+        adminGithubToken = token;
+        localStorage.setItem('tgd_admin_token', token);
         
-        const checkAuth = setInterval(async () => {
-            const { data: { session } } = await adminSupabase.auth.getSession();
-            if (session) {
-                clearInterval(checkAuth);
-                currentAdminUser = session.user;
-                localStorage.setItem('tgd_admin_session', JSON.stringify(session.user));
-                showSuccess('Login successful!');
-                showDashboard();
-                await loadListings();
-            }
-        }, 2000);
+        showSuccess('Login successful!');
+        showDashboard();
+        await loadListings();
         
     } catch (error) {
         console.error('Login error:', error);
-        showError('Login failed: ' + error.message);
+        showError('Invalid GitHub token. Please check and try again.');
     }
 }
 
 function showLoginPage() {
-    document.getElementById('loginPage')?.classList.remove('hidden');
-    document.getElementById('dashboardPage')?.classList.add('hidden');
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('dashboardPage').classList.add('hidden');
 }
 
 function showDashboard() {
-    document.getElementById('loginPage')?.classList.add('hidden');
-    document.getElementById('dashboardPage')?.classList.remove('hidden');
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('dashboardPage').classList.remove('hidden');
 }
 
 async function logout() {
     if (confirm('Are you sure you want to logout?')) {
-        await adminSupabase.auth.signOut();
-        localStorage.removeItem('tgd_admin_session');
-        currentAdminUser = null;
+        adminGithubToken = null;
+        localStorage.removeItem('tgd_admin_token');
         showLoginPage();
     }
 }
 
 function showError(message) {
     const msgDiv = document.getElementById('authMessage');
-    if (msgDiv) {
-        msgDiv.className = 'error-message';
-        msgDiv.textContent = message;
-        msgDiv.classList.remove('hidden');
-    }
+    msgDiv.className = 'error-message';
+    msgDiv.textContent = message;
+    msgDiv.classList.remove('hidden');
 }
 
 function showSuccess(message) {
     const msgDiv = document.getElementById('authMessage');
-    if (msgDiv) {
-        msgDiv.className = 'success-message';
-        msgDiv.textContent = message;
-        msgDiv.classList.remove('hidden');
-    }
+    msgDiv.className = 'success-message';
+    msgDiv.textContent = message;
+    msgDiv.classList.remove('hidden');
 }
 
 function clearAuthMessage() {
     const msgDiv = document.getElementById('authMessage');
-    if (msgDiv) {
-        msgDiv.classList.add('hidden');
-        msgDiv.textContent = '';
-    }
+    msgDiv.classList.add('hidden');
+    msgDiv.textContent = '';
 }
 
 window.handleAdminLogin = handleAdminLogin;
@@ -249,6 +221,25 @@ function renderTable() {
         const ownerInfo = l.owner && l.owner.length > 0 ? l.owner[0] : null;
         const isClaimed = ownerInfo && ownerInfo.owner_user_id;
         
+        // Premium shows both Featured and Verified badges
+        let badges = '';
+        if (tier === 'PREMIUM') {
+            badges = '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700">⭐ Featured</span>';
+            badges += '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">✓ Verified</span>';
+        } else if (tier === 'FEATURED') {
+            badges = '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700">⭐ Featured</span>';
+        } else if (tier === 'VERIFIED') {
+            badges = '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">✓ Verified</span>';
+        }
+        
+        if (isClaimed) {
+            badges += '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">✓ Claimed</span>';
+        }
+        
+        if (l.is_chain) {
+            badges += '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">🔗 Chain</span>';
+        }
+        
         return `
         <tr class="border-b hover:bg-gray-50">
             <td class="py-4 px-4 text-sm font-mono text-gray-600">#${l.id}</td>
@@ -260,8 +251,7 @@ function renderTable() {
             </td>
             <td class="py-4 px-4">
                 <span class="px-2 py-1 rounded text-xs font-medium ${tierColors[tier]}">${tier}</span>
-                ${isClaimed ? '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">✓ Claimed</span>' : ''}
-                ${l.is_chain ? '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">Chain</span>' : ''}
+                ${badges}
             </td>
             <td class="py-4 px-4 font-medium">${l.business_name}</td>
             <td class="py-4 px-4 text-gray-600">${l.category}</td>
@@ -377,6 +367,7 @@ function fillEditForm(listing) {
     const formContent = document.getElementById('editFormContent');
     formContent.innerHTML = `
         <div class="space-y-6">
+            <!-- Basic Info -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Basic Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -412,6 +403,7 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
+            <!-- Subcategories -->
             <div id="subcategoriesContainer">
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium">Subcategories *</label>
@@ -420,6 +412,7 @@ function fillEditForm(listing) {
                 <div id="subcategoryCheckboxes" class="grid grid-cols-2 gap-2"></div>
             </div>
 
+            <!-- Chain Info -->
             <div>
                 <label class="flex items-center gap-2 mb-4">
                     <input type="checkbox" id="editIsChain" ${listing?.is_chain ? 'checked' : ''} onchange="toggleChainFields()">
@@ -437,6 +430,7 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
+            <!-- Location -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Location</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -470,6 +464,7 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
+            <!-- Contact -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Contact Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -488,6 +483,7 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
+            <!-- Hours -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
                 <div class="grid grid-cols-1 gap-3">
@@ -500,6 +496,7 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
+            <!-- Social Media -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Social Media Links</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -530,6 +527,7 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
+            <!-- Reviews -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Review Sites</h3>
                 <div class="grid grid-cols-1 gap-4">
@@ -548,6 +546,7 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
+            <!-- Owner Info -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Owner Information</h3>
                 ${owner?.owner_user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : '<p class="text-sm text-gray-600 mb-4">This listing is not claimed</p>'}
@@ -579,6 +578,7 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
+            <!-- Media -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Media</h3>
                 <div class="grid grid-cols-1 gap-4">
@@ -589,6 +589,10 @@ function fillEditForm(listing) {
                     <div>
                         <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
                         <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Video URL (YouTube/Vimeo embed)</label>
+                        <input type="url" id="editVideo" value="${listing?.video || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="https://www.youtube.com/embed/...">
                     </div>
                 </div>
             </div>
@@ -739,6 +743,7 @@ async function saveListing() {
             website: document.getElementById('editWebsite').value.trim() || null,
             logo: document.getElementById('editLogo').value.trim() || null,
             photos: photos,
+            video: document.getElementById('editVideo').value.trim() || null,
             visible: true,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
