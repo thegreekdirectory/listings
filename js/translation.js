@@ -5,14 +5,12 @@
 
 const TRANSLATIONS = {
     en: {
-        // Header & Navigation
         'nav.directory': 'Directory',
         'nav.about': 'About',
         'nav.contact': 'Contact',
         'nav.business': 'For Businesses',
         'nav.admin': 'Admin',
         
-        // Home Page
         'home.title': 'The Greek Directory',
         'home.subtitle': 'Discover Greek-owned businesses across America',
         'home.search.placeholder': 'Search businesses, categories, or locations...',
@@ -21,7 +19,6 @@ const TRANSLATIONS = {
         'home.featured': 'Featured Businesses',
         'home.recent': 'Recently Added',
         
-        // Categories
         'category.automotive': 'Automotive & Transportation',
         'category.beauty': 'Beauty & Health',
         'category.church': 'Church & Religious Organization',
@@ -37,7 +34,6 @@ const TRANSLATIONS = {
         'category.realestate': 'Real Estate & Development',
         'category.retail': 'Retail & Shopping',
         
-        // Listing Page
         'listing.call': 'Call',
         'listing.website': 'Website',
         'listing.directions': 'Directions',
@@ -59,7 +55,6 @@ const TRANSLATIONS = {
         'listing.claim.button': 'Claim This Listing',
         'listing.share.title': 'Share This Listing',
         
-        // Days of Week
         'day.monday': 'Monday',
         'day.tuesday': 'Tuesday',
         'day.wednesday': 'Wednesday',
@@ -68,7 +63,6 @@ const TRANSLATIONS = {
         'day.saturday': 'Saturday',
         'day.sunday': 'Sunday',
         
-        // Common
         'common.loading': 'Loading...',
         'common.error': 'Error',
         'common.success': 'Success',
@@ -89,14 +83,12 @@ const TRANSLATIONS = {
     },
     
     el: {
-        // Header & Navigation
         'nav.directory': 'Κατάλογος',
         'nav.about': 'Σχετικά',
         'nav.contact': 'Επικοινωνία',
         'nav.business': 'Για Επιχειρήσεις',
         'nav.admin': 'Διαχειριστής',
         
-        // Home Page
         'home.title': 'Ο Ελληνικός Κατάλογος',
         'home.subtitle': 'Ανακαλύψτε ελληνόκτητες επιχειρήσεις σε όλη την Αμερική',
         'home.search.placeholder': 'Αναζήτηση επιχειρήσεων, κατηγοριών ή τοποθεσιών...',
@@ -105,7 +97,6 @@ const TRANSLATIONS = {
         'home.featured': 'Προτεινόμενες Επιχειρήσεις',
         'home.recent': 'Πρόσφατα Προστεθείσες',
         
-        // Categories
         'category.automotive': 'Αυτοκίνητα & Μεταφορές',
         'category.beauty': 'Ομορφιά & Υγεία',
         'category.church': 'Εκκλησία & Θρησκευτικός Οργανισμός',
@@ -121,7 +112,6 @@ const TRANSLATIONS = {
         'category.realestate': 'Ακίνητα & Ανάπτυξη',
         'category.retail': 'Λιανική & Αγορές',
         
-        // Listing Page
         'listing.call': 'Τηλέφωνο',
         'listing.website': 'Ιστοσελίδα',
         'listing.directions': 'Οδηγίες',
@@ -143,7 +133,6 @@ const TRANSLATIONS = {
         'listing.claim.button': 'Διεκδίκηση Καταχώρησης',
         'listing.share.title': 'Κοινοποίηση Καταχώρησης',
         
-        // Days of Week
         'day.monday': 'Δευτέρα',
         'day.tuesday': 'Τρίτη',
         'day.wednesday': 'Τετάρτη',
@@ -152,7 +141,6 @@ const TRANSLATIONS = {
         'day.saturday': 'Σάββατο',
         'day.sunday': 'Κυριακή',
         
-        // Common
         'common.loading': 'Φόρτωση...',
         'common.error': 'Σφάλμα',
         'common.success': 'Επιτυχία',
@@ -209,7 +197,6 @@ class TranslationSystem {
             <img src="https://flagcdn.com/w40/gr.png" alt="Greek" class="flag-icon" id="flagEl">
         `;
         
-        // Find nav or append to header
         const nav = header.querySelector('.header-nav') || header.querySelector('nav');
         if (nav) {
             nav.appendChild(toggle);
@@ -237,7 +224,6 @@ class TranslationSystem {
     }
     
     applyTranslations() {
-        // Translate all elements with data-translate attribute
         document.querySelectorAll('[data-translate]').forEach(element => {
             const key = element.getAttribute('data-translate');
             const translation = this.translate(key);
@@ -247,28 +233,24 @@ class TranslationSystem {
                     element.placeholder = translation;
                 }
             } else {
-                // Don't translate if element contains specific non-translatable content
                 if (!this.shouldSkipTranslation(element)) {
                     element.textContent = translation;
                 }
             }
         });
         
-        // Translate specific known elements by ID or class
         this.translateKnownElements();
     }
     
     shouldSkipTranslation(element) {
-        // Skip elements that contain addresses, emails, phone numbers, website URLs, or business names
         const text = element.textContent || '';
         const skipPatterns = [
-            /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/, // Phone numbers
-            /[\w\.-]+@[\w\.-]+\.\w+/, // Email addresses
-            /https?:\/\//, // URLs
-            /\d{1,5}\s\w+\s(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct)/ // Street addresses
+            /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/,
+            /[\w\.-]+@[\w\.-]+\.\w+/,
+            /https?:\/\//,
+            /\d{1,5}\s\w+\s(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct)/
         ];
         
-        // Check if element has class indicating it should not be translated
         if (element.classList.contains('no-translate') || 
             element.hasAttribute('data-no-translate')) {
             return true;
@@ -278,7 +260,6 @@ class TranslationSystem {
     }
     
     translateKnownElements() {
-        // Header navigation
         const navLinks = {
             'Directory': 'nav.directory',
             'About': 'nav.about',
@@ -294,19 +275,16 @@ class TranslationSystem {
             }
         });
         
-        // Listing page specific elements
         if (window.location.pathname.includes('/listings/')) {
             this.translateListingPage();
         }
         
-        // Home page specific elements
         if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
             this.translateHomePage();
         }
     }
     
     translateListingPage() {
-        // Action buttons
         const actionMappings = {
             'Call': 'listing.call',
             'Website': 'listing.website',
@@ -323,7 +301,6 @@ class TranslationSystem {
             });
         });
         
-        // Section headings
         const headingMappings = {
             'Hours': 'listing.hours',
             'Contact Information': 'listing.contact',
@@ -343,7 +320,6 @@ class TranslationSystem {
             }
         });
         
-        // Days of week
         ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach(day => {
             document.querySelectorAll('.hours-day').forEach(element => {
                 if (element.textContent.trim() === day) {
@@ -352,7 +328,6 @@ class TranslationSystem {
             });
         });
         
-        // Open/Closed status
         const statusMappings = {
             'Open Now': 'listing.open',
             'Closed': 'listing.closed',
@@ -369,19 +344,16 @@ class TranslationSystem {
     }
     
     translateHomePage() {
-        // Search placeholder
         const searchInput = document.querySelector('input[type="search"], .search-input');
         if (searchInput) {
             searchInput.placeholder = this.translate('home.search.placeholder');
         }
         
-        // Search button
         const searchButton = document.querySelector('.search-button, button[type="submit"]');
         if (searchButton) {
             searchButton.textContent = this.translate('home.search.button');
         }
         
-        // Section titles
         const sectionMappings = {
             'Browse Categories': 'home.categories',
             'Featured Businesses': 'home.featured',
@@ -397,7 +369,6 @@ class TranslationSystem {
     }
     
     setupLanguagePersistence() {
-        // On page load, ensure toggle reflects saved language
         window.addEventListener('load', () => {
             const toggle = document.getElementById('translationToggle');
             if (toggle) {
@@ -408,7 +379,6 @@ class TranslationSystem {
     }
 }
 
-// Initialize translation system when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         window.translationSystem = new TranslationSystem();
@@ -417,7 +387,6 @@ if (document.readyState === 'loading') {
     window.translationSystem = new TranslationSystem();
 }
 
-// Export for use in other scripts
 window.TGDTranslate = {
     get: (key) => window.translationSystem.translate(key),
     getCurrentLanguage: () => window.translationSystem.currentLanguage,
