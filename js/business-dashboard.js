@@ -174,13 +174,13 @@ function renderOverview() {
                         ${currentListing.subcategories && currentListing.subcategories.length > 0 ? 
                             `<div><span class="font-semibold">Subcategories:</span> ${currentListing.subcategories.join(', ')}</div>` : ''}
                         ${currentListing.city && currentListing.state ? 
-                            `<div><span class="font-semibold">Location:</span> ${currentListing.city}, ${currentListing.state}</div>` : ''}
+                            `<div><span class="font-semibold">📍 Location:</span> ${currentListing.city}, ${currentListing.state}</div>` : ''}
                         ${currentListing.phone ? 
-                            `<div><span class="font-semibold">Phone:</span> ${currentListing.phone}</div>` : ''}
+                            `<div><span class="font-semibold">📞 Phone:</span> ${formatPhoneNumber(currentListing.phone)}</div>` : ''}
                         ${currentListing.email ? 
-                            `<div><span class="font-semibold">Email:</span> ${currentListing.email}</div>` : ''}
+                            `<div><span class="font-semibold">✉️ Email:</span> ${currentListing.email}</div>` : ''}
                         ${currentListing.website ? 
-                            `<div><span class="font-semibold">Website:</span> <a href="${currentListing.website}" target="_blank" class="text-blue-600 hover:underline">${currentListing.website}</a></div>` : ''}
+                            `<div><span class="font-semibold">🌐 Website:</span> <a href="${currentListing.website}" target="_blank" class="text-blue-600 hover:underline">${currentListing.website}</a></div>` : ''}
                     </div>
                 </div>
             </div>
@@ -270,15 +270,15 @@ function renderEditForm() {
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                            <input type="tel" id="editPhone" value="${currentListing.phone || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">📞 Phone</label>
+                            <div id="editPhoneContainer"></div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">✉️ Email</label>
                             <input type="email" id="editEmail" value="${currentListing.email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">🌐 Website</label>
                             <input type="url" id="editWebsite" value="${currentListing.website || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
                     </div>
@@ -362,6 +362,11 @@ function renderEditForm() {
             </div>
         </div>
     `;
+    
+    const phoneContainer = document.getElementById('editPhoneContainer');
+    if (phoneContainer) {
+        phoneContainer.innerHTML = createPhoneInput(currentListing.phone || '', userCountry);
+    }
     
     renderSubcategories();
 }
@@ -468,6 +473,9 @@ async function saveChanges() {
         return;
     }
     
+    const phoneContainer = document.getElementById('editPhoneContainer');
+    const phone = getPhoneValue(phoneContainer);
+    
     const changes = [];
     if (currentListing.tagline !== tagline) changes.push(`Tagline updated`);
     if (currentListing.description !== description) changes.push('Description updated');
@@ -486,7 +494,6 @@ async function saveChanges() {
     if (!confirm(confirmMessage)) return;
     
     try {
-        // Prepare update data
         const updates = {
             tagline: tagline,
             description: description,
@@ -496,7 +503,7 @@ async function saveChanges() {
             city: document.getElementById('editCity').value.trim() || null,
             state: document.getElementById('editState').value.trim() || null,
             zip_code: document.getElementById('editZipCode').value.trim() || null,
-            phone: document.getElementById('editPhone').value.trim() || null,
+            phone: phone,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
             hours: {
@@ -524,7 +531,6 @@ async function saveChanges() {
             }
         };
         
-        // Update in Supabase
         const { data, error } = await window.TGDAuth.supabaseClient
             .from('listings')
             .update(updates)
@@ -595,15 +601,15 @@ function renderAnalytics() {
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Calls</div>
+                        <div class="text-sm opacity-90">📞 Calls</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Website</div>
+                        <div class="text-sm opacity-90">🌐 Website</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Directions</div>
+                        <div class="text-sm opacity-90">🗺️ Directions</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
@@ -624,15 +630,15 @@ function renderAnalytics() {
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Calls</div>
+                        <div class="text-sm opacity-90">📞 Calls</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Website</div>
+                        <div class="text-sm opacity-90">🌐 Website</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Directions</div>
+                        <div class="text-sm opacity-90">🗺️ Directions</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
@@ -670,7 +676,7 @@ function renderSettings() {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="owner-field">
                             <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">✉️ Owner Email</label>
                                 <input type="email" id="settingsOwnerEmail" value="${owner.owner_email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                             </div>
                             <div class="mt-2">
@@ -682,8 +688,8 @@ function renderSettings() {
                         
                         <div class="owner-field">
                             <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Owner Phone</label>
-                                <input type="tel" id="settingsOwnerPhone" value="${owner.owner_phone || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">📞 Owner Phone</label>
+                                <div id="settingsOwnerPhoneContainer"></div>
                             </div>
                             <div class="mt-2">
                                 <button class="visibility-toggle ${settingsVisibility.phone ? 'visible' : 'hidden'}" onclick="toggleSettingsFieldVisibility('phone')">
@@ -715,6 +721,11 @@ function renderSettings() {
             </div>
         </div>
     `;
+    
+    const ownerPhoneContainer = document.getElementById('settingsOwnerPhoneContainer');
+    if (ownerPhoneContainer) {
+        ownerPhoneContainer.innerHTML = createPhoneInput(owner.owner_phone || '', userCountry);
+    }
 }
 
 window.toggleSettingsFieldVisibility = function(field) {
@@ -763,7 +774,8 @@ async function saveSettings() {
     if (!ownerData || ownerData.length === 0) return;
     
     const updatedEmail = document.getElementById('settingsOwnerEmail').value.trim();
-    const updatedPhone = document.getElementById('settingsOwnerPhone').value.trim();
+    const ownerPhoneContainer = document.getElementById('settingsOwnerPhoneContainer');
+    const updatedPhone = getPhoneValue(ownerPhoneContainer);
     
     const updates = {
         owner_email: updatedEmail,
