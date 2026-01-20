@@ -29,19 +29,11 @@ let allListings = [];
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing homepage...');
     
-    // Initialize Supabase
     indexSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // Setup search
     setupSearch();
-    
-    // Render categories
     renderCategories();
-    
-    // Load listings
     await loadListings();
-    
-    // Render featured and recent
     renderFeaturedListings();
     renderRecentListings();
 });
@@ -80,7 +72,6 @@ function renderCategories() {
         </a>
     `).join('');
     
-    // Update counts
     updateCategoryCounts();
 }
 
@@ -137,7 +128,6 @@ function renderFeaturedListings() {
     
     if (!container) return;
     
-    // Get featured and premium listings
     const featured = allListings
         .filter(l => l.tier === 'FEATURED' || l.tier === 'PREMIUM')
         .slice(0, 6);
@@ -155,7 +145,6 @@ function renderRecentListings() {
     
     if (!container) return;
     
-    // Get most recent listings
     const recent = allListings.slice(0, 6);
     
     if (recent.length === 0) {
@@ -174,9 +163,17 @@ function renderListingCard(listing) {
     const mainImage = photos.length > 0 ? photos[0] : listing.logo;
     
     const badges = [];
-    if (listing.verified) badges.push('<span class="badge badge-verified">✓ Verified</span>');
-    if (listing.tier === 'FEATURED') badges.push('<span class="badge badge-featured">⭐ Featured</span>');
-    if (listing.tier === 'PREMIUM') badges.push('<span class="badge badge-premium">👑 Premium</span>');
+    if (listing.tier === 'PREMIUM') {
+        badges.push('<span class="badge badge-featured">⭐ Featured</span>');
+        badges.push('<span class="badge badge-verified">✓ Verified</span>');
+    } else {
+        if (listing.tier === 'FEATURED') {
+            badges.push('<span class="badge badge-featured">⭐ Featured</span>');
+        }
+        if (listing.verified || listing.tier === 'VERIFIED') {
+            badges.push('<span class="badge badge-verified">✓ Verified</span>');
+        }
+    }
     
     return `
         <a href="${url}" class="listing-card" data-no-translate>
@@ -188,6 +185,9 @@ function renderListingCard(listing) {
                 <span class="listing-category" data-translate="category.${getCategoryKey(listing.category)}">${listing.category}</span>
                 ${listing.city && listing.state ? `
                     <p class="listing-location">📍 ${listing.city}, ${listing.state}</p>
+                ` : ''}
+                ${listing.phone ? `
+                    <p class="listing-location">📞 ${listing.phone}</p>
                 ` : ''}
             </div>
         </a>
