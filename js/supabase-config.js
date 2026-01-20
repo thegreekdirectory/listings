@@ -1,5 +1,5 @@
 // ============================================
-// SUPABASE CLIENT CONFIGURATION
+// SUPABASE CLIENT CONFIGURATION - FIXED
 // Complete configuration and utilities
 // ============================================
 
@@ -40,15 +40,23 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
     try {
         console.log('Starting signup for:', email, 'with listing:', listingId);
         
+        if (!confirmationKey) {
+            throw new Error('Confirmation key is required');
+        }
+        
         const { data: ownerRecord, error: ownerCheckError } = await supabaseClient
             .from('business_owners')
             .select('*')
             .eq('listing_id', listingId)
             .eq('confirmation_key', confirmationKey)
-            .single();
+            .maybeSingle();
         
-        if (ownerCheckError || !ownerRecord) {
-            console.error('Invalid confirmation key:', ownerCheckError);
+        if (ownerCheckError) {
+            console.error('Error checking confirmation key:', ownerCheckError);
+            throw new Error('Error verifying confirmation key');
+        }
+        
+        if (!ownerRecord) {
             throw new Error('Invalid confirmation key for this listing');
         }
         
