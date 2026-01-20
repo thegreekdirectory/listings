@@ -1,16 +1,27 @@
 // ============================================
-// BUSINESS PORTAL AUTHENTICATION
+// BUSINESS PORTAL AUTHENTICATION - FIXED
 // Complete authentication handling
 // ============================================
+
+const COUNTRY_CODES = {
+    'USA': '+1',
+    'Greece': '+30',
+    'Canada': '+1',
+    'UK': '+44',
+    'Cyprus': '+357',
+    'Australia': '+61'
+};
 
 let currentUser = null;
 let currentListing = null;
 let ownerData = null;
 let allListings = [];
+let userCountry = 'USA';
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing Business Portal...');
     
+    await detectUserCountry();
     await checkAuthState();
     
     window.TGDAuth.onAuthStateChange(async (event, session) => {
@@ -24,6 +35,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
+
+async function detectUserCountry() {
+    try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        if (data.country_code === 'US') {
+            userCountry = 'USA';
+        } else if (data.country_code === 'GR') {
+            userCountry = 'Greece';
+        } else if (data.country_code === 'CA') {
+            userCountry = 'Canada';
+        } else if (data.country_code === 'GB') {
+            userCountry = 'UK';
+        } else if (data.country_code === 'CY') {
+            userCountry = 'Cyprus';
+        } else if (data.country_code === 'AU') {
+            userCountry = 'Australia';
+        }
+    } catch (error) {
+        console.log('Could not detect country, defaulting to USA');
+        userCountry = 'USA';
+    }
+}
 
 async function checkAuthState() {
     console.log('🔍 Checking authentication state...');
@@ -180,10 +214,11 @@ async function searchListingForSignup() {
     resultsDiv.innerHTML = matches.map(l => {
         const owner = l.owner && l.owner.length > 0 ? l.owner[0] : null;
         const isClaimed = owner && owner.owner_user_id;
+        const hasKey = owner && owner.confirmation_key;
         
         return `
         <div class="p-2 hover:bg-gray-100 cursor-pointer rounded ${isClaimed ? 'opacity-50' : ''}" 
-             onclick="${isClaimed ? '' : `selectListing('${l.id}', '${l.business_name.replace(/'/g, "\\'")}', ${!!owner?.confirmation_key})`}">
+             onclick="${isClaimed ? '' : `selectListing('${l.id}', '${l.business_name.replace(/'/g, "\\'")}', ${hasKey})`}">
             <div class="font-medium">${l.business_name}</div>
             <div class="text-xs text-gray-500">
                 ID: ${l.id} • ${l.city}, ${l.state}
