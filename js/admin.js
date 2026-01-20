@@ -43,6 +43,15 @@ const US_STATES = {
     'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
 };
 
+const COUNTRY_CODES = {
+    'USA': '+1',
+    'Greece': '+30',
+    'Canada': '+1',
+    'UK': '+44',
+    'Cyprus': '+357',
+    'Australia': '+61'
+};
+
 let adminSupabase = null;
 let currentAdminUser = null;
 let adminGithubToken = null;
@@ -50,6 +59,7 @@ let allListings = [];
 let editingListing = null;
 let selectedSubcategories = [];
 let primarySubcategory = null;
+let userCountry = 'USA';
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing Admin Portal...');
@@ -57,15 +67,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     adminSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('✅ Supabase initialized');
     
+    await detectUserCountry();
     setupEventListeners();
     
-    // Check for saved token
     const savedToken = localStorage.getItem('tgd_admin_token');
     if (savedToken) {
         document.getElementById('githubToken').value = savedToken;
         handleAdminLogin();
     }
 });
+
+async function detectUserCountry() {
+    try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        if (data.country_code === 'US') {
+            userCountry = 'USA';
+        } else if (data.country_code === 'GR') {
+            userCountry = 'Greece';
+        } else if (data.country_code === 'CA') {
+            userCountry = 'Canada';
+        } else if (data.country_code === 'GB') {
+            userCountry = 'UK';
+        } else if (data.country_code === 'CY') {
+            userCountry = 'Cyprus';
+        } else if (data.country_code === 'AU') {
+            userCountry = 'Australia';
+        }
+    } catch (error) {
+        console.log('Could not detect country, defaulting to USA');
+        userCountry = 'USA';
+    }
+}
 
 function setupEventListeners() {
     const loginBtn = document.getElementById('loginBtn');
@@ -101,7 +134,6 @@ async function handleAdminLogin() {
     clearAuthMessage();
     
     try {
-        // Verify token by trying to access the repo
         const response = await fetch('https://api.github.com/repos/thegreekdirectory/listings', {
             headers: {
                 'Authorization': `token ${token}`,
@@ -164,6 +196,77 @@ function clearAuthMessage() {
     msgDiv.textContent = '';
 }
 
+function formatPhoneNumber(phone, country = 'USA') {
+    if (!phone) return '';
+    
+    const digits = phone.replace(/\D/g, '');
+    
+    if (country === 'USA' && digits.length === 10) {
+        return `(${digits.substr(0, 3)}) ${digits.substr(3, 3)}-${digits.substr(6, 4)}`;
+    }
+    
+    return phone;
+}
+
+function createPhoneInput(value = '', country = 'USA') {
+    const digits = value ? value.replace(/\D/g, '') : '';
+    
+    return `
+        <div class="flex gap-2">
+            <select class="phone-country-select px-3 py-2 border border-gray-300 rounded-lg" onchange="updatePhoneFormat(this)">
+                ${Object.entries(COUNTRY_CODES).map(([c, code]) => 
+                    `<option value="${c}" ${country === c ? 'selected' : ''}>${c} ${code}</option>`
+                ).join('')}
+            </select>
+            <input type="tel" class="phone-number-input flex-1 px-4 py-2 border border-gray-300 rounded-lg" 
+                value="${digits}" 
+                placeholder="${country === 'USA' ? '(555) 123-4567' : 'Phone number'}"
+                oninput="formatPhoneInput(this)">
+        </div>
+    `;
+}
+
+window.formatPhoneInput = function(input) {
+    const country = input.closest('.flex').querySelector('.phone-country-select').value;
+    let value = input.value.replace(/\D/g, '');
+    
+    if (country === 'USA' && value.length > 10) {
+        value = value.substr(0, 10);
+    }
+    
+    if (country === 'USA') {
+        if (value.length >= 6) {
+            input.value = `(${value.substr(0, 3)}) ${value.substr(3, 3)}-${value.substr(6)}`;
+        } else if (value.length >= 3) {
+            input.value = `(${value.substr(0, 3)}) ${value.substr(3)}`;
+        } else {
+            input.value = value;
+        }
+    } else {
+        input.value = value;
+    }
+};
+
+window.updatePhoneFormat = function(select) {
+    const input = select.closest('.flex').querySelector('.phone-number-input');
+    const digits = input.value.replace(/\D/g, '');
+    input.value = digits;
+    formatPhoneInput(input);
+};
+
+function getPhoneValue(container) {
+    const countrySelect = container.querySelector('.phone-country-select');
+    const phoneInput = container.querySelector('.phone-number-input');
+    
+    if (!phoneInput || !phoneInput.value.trim()) return null;
+    
+    const country = countrySelect ? countrySelect.value : 'USA';
+    const digits = phoneInput.value.replace(/\D/g, '');
+    const code = COUNTRY_CODES[country];
+    
+    return `${code}${digits}`;
+}
+
 window.handleAdminLogin = handleAdminLogin;
 window.logout = logout;
 // ============================================
@@ -221,7 +324,6 @@ function renderTable() {
         const ownerInfo = l.owner && l.owner.length > 0 ? l.owner[0] : null;
         const isClaimed = ownerInfo && ownerInfo.owner_user_id;
         
-        // Premium shows both Featured and Verified badges
         let badges = '';
         if (tier === 'PREMIUM') {
             badges = '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700">⭐ Featured</span>';
@@ -376,6 +478,14 @@ function fillEditForm(listing) {
                         <input type="text" id="editBusinessName" value="${listing?.business_name || ''}" class="w-full px-4 py-2 border rounded-lg">
                     </div>
                     <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Slug</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="editSlug" value="${listing?.slug || ''}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="auto-generated">
+                            <button type="button" onclick="checkSlugAvailability()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">Check</button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1" id="slugStatus"></p>
+                    </div>
+                    <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-2">Tagline (max 75) *</label>
                         <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">
                         <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span>/75</p>
@@ -470,7 +580,7 @@ function fillEditForm(listing) {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-2">Phone</label>
-                        <input type="tel" id="editPhone" value="${listing?.phone || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <div id="editPhoneContainer"></div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Email</label>
@@ -569,7 +679,7 @@ function fillEditForm(listing) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Owner Phone</label>
-                        <input type="tel" id="editOwnerPhone" value="${owner?.owner_phone || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <div id="editOwnerPhoneContainer"></div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Confirmation Key</label>
@@ -599,8 +709,50 @@ function fillEditForm(listing) {
         </div>
     `;
     
+    const phoneContainer = document.getElementById('editPhoneContainer');
+    if (phoneContainer) {
+        phoneContainer.innerHTML = createPhoneInput(listing?.phone || '', userCountry);
+    }
+    
+    const ownerPhoneContainer = document.getElementById('editOwnerPhoneContainer');
+    if (ownerPhoneContainer) {
+        ownerPhoneContainer.innerHTML = createPhoneInput(owner?.owner_phone || '', userCountry);
+    }
+    
     updateSubcategoriesForCategory();
 }
+
+window.checkSlugAvailability = async function() {
+    const slug = document.getElementById('editSlug').value.trim();
+    const statusEl = document.getElementById('slugStatus');
+    
+    if (!slug) {
+        statusEl.textContent = 'Enter a slug to check';
+        statusEl.className = 'text-xs text-gray-500 mt-1';
+        return;
+    }
+    
+    try {
+        const { data, error } = await adminSupabase
+            .from('listings')
+            .select('id')
+            .eq('slug', slug)
+            .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data && data.id !== editingListing?.id) {
+            statusEl.textContent = '❌ Slug already in use';
+            statusEl.className = 'text-xs text-red-600 mt-1';
+        } else {
+            statusEl.textContent = '✅ Slug available';
+            statusEl.className = 'text-xs text-green-600 mt-1';
+        }
+    } catch (error) {
+        statusEl.textContent = 'Error checking slug';
+        statusEl.className = 'text-xs text-red-600 mt-1';
+    }
+};
 
 function updateCharCounters() {
     const tagline = document.getElementById('editTagline')?.value || '';
@@ -721,8 +873,19 @@ async function saveListing() {
             chainId = `chain-${chainName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
         }
         
+        const phoneContainer = document.getElementById('editPhoneContainer');
+        const phone = getPhoneValue(phoneContainer);
+        
+        let slug = document.getElementById('editSlug').value.trim();
+        if (!slug) {
+            slug = businessName.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+        }
+        
         const listingData = {
             business_name: businessName,
+            slug: slug,
             tagline: tagline,
             description: document.getElementById('editDescription').value.trim(),
             category: document.getElementById('editCategory').value,
@@ -738,13 +901,13 @@ async function saveListing() {
             state: document.getElementById('editState').value || null,
             zip_code: document.getElementById('editZipCode').value.trim() || null,
             country: document.getElementById('editCountry').value || 'USA',
-            phone: document.getElementById('editPhone').value.trim() || null,
+            phone: phone,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
             logo: document.getElementById('editLogo').value.trim() || null,
             photos: photos,
             video: document.getElementById('editVideo').value.trim() || null,
-            visible: true,
+            visible: editingListing?.visible !== false,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
                 tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
@@ -770,24 +933,25 @@ async function saveListing() {
         };
         
         let savedListing;
+        const isExisting = editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id);
         
-        if (editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id)) {
+        if (isExisting) {
             const { data, error } = await adminSupabase
                 .from('listings')
                 .update(listingData)
-                .eq('id', editingListing.id)
-                .select()
-                .single();
+                .eq('id', editingListing.id);
             
             if (error) throw error;
-            savedListing = data;
+            
+            const { data: updated, error: fetchError } = await adminSupabase
+                .from('listings')
+                .select('*')
+                .eq('id', editingListing.id)
+                .single();
+            
+            if (fetchError) throw fetchError;
+            savedListing = updated;
         } else {
-            listingData.slug = businessName.toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            
-            listingData.id = editingListing.id;
-            
             const { data, error } = await adminSupabase
                 .from('listings')
                 .insert(listingData)
@@ -811,13 +975,16 @@ async function saveListing() {
 }
 
 async function saveOwnerInfo(listingId) {
+    const ownerPhoneContainer = document.getElementById('editOwnerPhoneContainer');
+    const ownerPhone = getPhoneValue(ownerPhoneContainer);
+    
     const ownerData = {
         listing_id: listingId,
         full_name: document.getElementById('editOwnerName').value.trim() || null,
         title: document.getElementById('editOwnerTitle').value.trim() || null,
         from_greece: document.getElementById('editOwnerGreece').value.trim() || null,
         owner_email: document.getElementById('editOwnerEmail').value.trim() || null,
-        owner_phone: document.getElementById('editOwnerPhone').value.trim() || null,
+        owner_phone: ownerPhone,
         confirmation_key: document.getElementById('editConfirmationKey').value.trim() || null
     };
     
@@ -948,3 +1115,203 @@ window.updateSubcategoriesForCategory = updateSubcategoriesForCategory;
 window.toggleSubcategory = toggleSubcategory;
 window.setPrimarySubcategory = setPrimarySubcategory;
 window.toggleChainFields = toggleChainFields;
+window.checkSlugAvailability = checkSlugAvailability;
+// ============================================
+// ADMIN PORTAL - PART 5
+// CSV Upload Functionality
+// ============================================
+
+window.uploadCSV = function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = handleCSVUpload;
+    input.click();
+};
+
+async function handleCSVUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const text = e.target.result;
+        const rows = parseCSV(text);
+        
+        if (rows.length === 0) {
+            alert('No data found in CSV');
+            return;
+        }
+        
+        const headers = rows[0];
+        const data = rows.slice(1);
+        
+        if (!confirm(`Upload ${data.length} listings from CSV?\n\nThis will create new listings.`)) {
+            return;
+        }
+        
+        let successful = 0;
+        let failed = 0;
+        
+        for (let row of data) {
+            try {
+                const listing = parseCSVRow(headers, row);
+                
+                const { error } = await adminSupabase
+                    .from('listings')
+                    .insert(listing);
+                
+                if (error) throw error;
+                
+                successful++;
+            } catch (error) {
+                console.error('Failed to upload row:', error);
+                failed++;
+            }
+        }
+        
+        alert(`Upload complete!\n\nSuccessful: ${successful}\nFailed: ${failed}`);
+        await loadListings();
+    };
+    
+    reader.readAsText(file);
+}
+
+function parseCSV(text) {
+    const lines = text.split('\n');
+    const result = [];
+    
+    for (let line of lines) {
+        if (!line.trim()) continue;
+        
+        const row = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                row.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        
+        row.push(current.trim());
+        result.push(row);
+    }
+    
+    return result;
+}
+
+function parseCSVRow(headers, row) {
+    const listing = {
+        visible: true,
+        verified: false,
+        tier: 'FREE'
+    };
+    
+    headers.forEach((header, index) => {
+        const value = row[index] ? row[index].trim() : '';
+        
+        switch (header.toLowerCase()) {
+            case 'business_name':
+            case 'businessname':
+            case 'name':
+                listing.business_name = value;
+                listing.slug = value.toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-|-$/g, '');
+                break;
+            case 'tagline':
+                listing.tagline = value.substring(0, 75);
+                break;
+            case 'description':
+                listing.description = value;
+                break;
+            case 'category':
+                listing.category = value;
+                break;
+            case 'subcategories':
+                if (value) {
+                    listing.subcategories = value.split('|').map(s => s.trim());
+                    listing.primary_subcategory = listing.subcategories[0];
+                }
+                break;
+            case 'phone':
+                listing.phone = value;
+                break;
+            case 'email':
+                listing.email = value;
+                break;
+            case 'website':
+                listing.website = value;
+                break;
+            case 'address':
+                listing.address = value;
+                break;
+            case 'city':
+                listing.city = value;
+                break;
+            case 'state':
+                listing.state = value;
+                break;
+            case 'zip_code':
+            case 'zipcode':
+            case 'zip':
+                listing.zip_code = value;
+                break;
+            case 'country':
+                listing.country = value || 'USA';
+                break;
+            case 'tier':
+                if (['FREE', 'VERIFIED', 'FEATURED', 'PREMIUM'].includes(value.toUpperCase())) {
+                    listing.tier = value.toUpperCase();
+                    listing.verified = listing.tier !== 'FREE';
+                }
+                break;
+            case 'logo':
+                listing.logo = value;
+                break;
+            case 'photos':
+                if (value) {
+                    listing.photos = value.split('|').map(s => s.trim());
+                }
+                break;
+        }
+    });
+    
+    if (!listing.business_name) {
+        throw new Error('Business name is required');
+    }
+    
+    if (!listing.category) {
+        throw new Error('Category is required');
+    }
+    
+    return listing;
+}
+
+function addCSVUploadButton() {
+    const container = document.querySelector('.max-w-7xl.mx-auto.px-4.py-6 .mb-6');
+    if (!container) return;
+    
+    const existingBtn = document.getElementById('csvUploadBtn');
+    if (existingBtn) return;
+    
+    const button = document.createElement('button');
+    button.id = 'csvUploadBtn';
+    button.className = 'px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700';
+    button.textContent = '📁 Upload CSV';
+    button.onclick = uploadCSV;
+    
+    container.insertBefore(button, container.children[1]);
+}
+
+setTimeout(addCSVUploadButton, 100);
+
+window.uploadCSV = uploadCSV;
