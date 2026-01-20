@@ -3,7 +3,6 @@
    Styling for business owner dashboard
    ============================================ */
 
-/* CSS Variables */
 :root {
     --primary-blue: #055193;
     --primary-blue-dark: #044174;
@@ -17,7 +16,6 @@
     --bg-light: #f9fafb;
 }
 
-/* Reset */
 * {
     margin: 0;
     padding: 0;
@@ -30,7 +28,6 @@ body {
     background: var(--bg-light);
 }
 
-/* Auth Page Styles */
 .auth-container {
     min-height: 100vh;
     display: flex;
@@ -86,7 +83,6 @@ body {
     font-size: 0.875rem;
 }
 
-/* Messages */
 .error-message {
     background: #fee2e2;
     border: 1px solid #fca5a5;
@@ -114,7 +110,6 @@ body {
     font-style: italic;
 }
 
-/* Inputs */
 .tgd-input {
     width: 100%;
     padding: 0.875rem 1rem;
@@ -136,7 +131,6 @@ body {
     opacity: 0.6;
 }
 
-/* Buttons */
 .tgd-button-primary {
     width: 100%;
     padding: 0.875rem 1.5rem;
@@ -173,7 +167,6 @@ body {
     background: var(--bg-light);
 }
 
-/* Listing Search Results */
 #listingSearchResults {
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -191,7 +184,6 @@ body {
     background: var(--bg-light);
 }
 
-/* Dashboard Badges */
 .id-badge {
     display: inline-block;
     background: var(--bg-light);
@@ -231,13 +223,11 @@ body {
     color: #6b21a8;
 }
 
-/* Tabs */
 button[id^="tab-"] {
     transition: all 0.2s;
-    white-space: nowrap;
+    whitespace: nowrap;
 }
 
-/* Preview Card */
 .preview-card {
     background: white;
     border-radius: 12px;
@@ -265,7 +255,6 @@ button[id^="tab-"] {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Disabled Fields */
 .disabled-field {
     position: relative;
 }
@@ -275,7 +264,6 @@ button[id^="tab-"] {
     cursor: not-allowed;
 }
 
-/* Character Counters */
 .char-counter {
     font-size: 0.75rem;
     color: var(--text-light);
@@ -291,7 +279,6 @@ button[id^="tab-"] {
     font-weight: 600;
 }
 
-/* Subcategory Selection */
 .subcategory-checkbox {
     display: flex;
     align-items: center;
@@ -326,7 +313,6 @@ button[id^="tab-"] {
     font-size: 0.875rem;
 }
 
-/* Analytics */
 .analytics-stat-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -341,7 +327,6 @@ button[id^="tab-"] {
     margin-bottom: 0.5rem;
 }
 
-/* Settings */
 .owner-field {
     display: flex;
     flex-direction: column;
@@ -373,7 +358,6 @@ button[id^="tab-"] {
     transform: scale(1.05);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .auth-container {
         padding: 1rem;
@@ -388,7 +372,6 @@ button[id^="tab-"] {
     }
 }
 
-/* Loading States */
 .loading {
     display: inline-block;
     width: 20px;
@@ -403,7 +386,6 @@ button[id^="tab-"] {
     to { transform: rotate(360deg); }
 }
 
-/* Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
