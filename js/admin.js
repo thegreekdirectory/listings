@@ -299,6 +299,11 @@ async function loadListings() {
     }
 }
 
+// ============================================
+// ADMIN PORTAL - UPDATED TABLE RENDERING
+// Include Generate Page button in actions
+// ============================================
+
 function renderTable() {
     const tbody = document.getElementById('listingsTableBody');
     const searchTerm = document.getElementById('adminSearch')?.value.toLowerCase() || '';
@@ -360,9 +365,10 @@ function renderTable() {
             <td class="py-4 px-4 text-sm text-gray-600">${l.city || ''}, ${l.state || ''}</td>
             <td class="py-4 px-4 text-sm text-gray-600">${new Date(l.updated_at).toLocaleString()}</td>
             <td class="py-4 px-4">
-                <div class="flex justify-end gap-2">
+                <div class="flex justify-end gap-2 flex-wrap">
                     <button onclick="editListing('${l.id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
                     <a href="${listingUrl}" target="_blank" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View</a>
+                    <button onclick="generateListingPage('${l.id}')" class="px-3 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200" title="Generate Static Page">🔨</button>
                     ${isClaimed ? `<button onclick="sendMagicLink('${l.id}')" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200">🔗</button>` : ''}
                     <button onclick="deleteListing('${l.id}')" class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
                 </div>
@@ -1315,3 +1321,832 @@ function addCSVUploadButton() {
 setTimeout(addCSVUploadButton, 100);
 
 window.uploadCSV = uploadCSV;
+// ============================================
+// ADMIN PORTAL - PAGE GENERATION PART 1
+// ADD THIS TO END OF admin.js (after all existing code)
+// ============================================
+
+// Category default images mapping
+const CATEGORY_DEFAULT_IMAGES = {
+    'Automotive & Transportation': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3',
+    'Beauty & Health': 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8',
+    'Church & Religious Organization': 'https://images.unsplash.com/photo-1601231656153-73aa7f115365',
+    'Cultural/Fraternal Organization': 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac',
+    'Education & Community': 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1',
+    'Entertainment, Arts & Recreation': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819',
+    'Food & Hospitality': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
+    'Grocery & Imports': 'https://images.unsplash.com/photo-1542838132-92c53300491e',
+    'Home & Construction': 'https://images.unsplash.com/photo-1503387762-592deb58ef4e',
+    'Industrial & Manufacturing': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
+    'Pets & Veterinary': 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b',
+    'Professional & Business Services': 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40',
+    'Real Estate & Development': 'https://images.unsplash.com/photo-1560518883-ce09059eeffa',
+    'Retail & Shopping': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'
+};
+
+async function generateListingPage(listing) {
+    try {
+        console.log('📄 Generating page for:', listing.business_name);
+        
+        // Fetch template
+        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
+        if (!templateResponse.ok) {
+            throw new Error('Failed to fetch template');
+        }
+        
+        let template = await templateResponse.text();
+        
+        // Apply default images if needed
+        const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
+        
+        if (!listing.logo && defaultImage) {
+            listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
+        }
+        
+        if (!listing.photos || listing.photos.length === 0) {
+            listing.photos = [`${defaultImage}?w=800&q=80`];
+        }
+        
+        // Generate all replacements
+        const replacements = generateTemplateReplacements(listing);
+        
+        // Replace all placeholders
+        Object.keys(replacements).forEach(key => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            template = template.replace(regex, replacements[key]);
+        });
+        
+        // Save to GitHub
+        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
+        
+        const success = await saveToGitHub(filePath, template, listing.business_name);
+        
+        if (success) {
+            console.log('✅ Page generated successfully');
+            return true;
+        } else {
+            console.error('❌ Failed to save page to GitHub');
+            return false;
+        }
+        
+    } catch (error) {
+        console.error('Error generating page:', error);
+        return false;
+    }
+}
+
+function generateTemplateReplacements(listing) {
+    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
+    
+    const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
+    const inCity = listing.city ? ` in ${listing.city}` : '';
+    
+    return {
+        'BUSINESS_NAME': escapeHtml(listing.business_name),
+        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
+        'CITY_STATE': cityState,
+        'IN_CITY': inCity,
+        'TAGLINE': escapeHtml(listing.tagline || ''),
+        'DESCRIPTION': escapeHtml(listing.description || ''),
+        'CATEGORY': escapeHtml(listing.category),
+        'LISTING_URL': listingUrl,
+        'LOGO': listing.logo || '',
+        'ADDRESS': escapeHtml(listing.address || ''),
+        'CITY': escapeHtml(listing.city || ''),
+        'STATE': escapeHtml(listing.state || ''),
+        'ZIP_CODE': escapeHtml(listing.zip_code || ''),
+        'COUNTRY': escapeHtml(listing.country || 'USA'),
+        'PHONE': listing.phone || '',
+        'EMAIL': listing.email || '',
+        'WEBSITE': listing.website || '',
+        
+        'PHOTOS_SLIDES': generatePhotoSlides(listing),
+        'CAROUSEL_CONTROLS': generateCarouselControls(listing),
+        'SUBCATEGORIES_TAGS': generateSubcategoryTags(listing),
+        'STATUS_BADGES': generateStatusBadges(listing),
+        'TAGLINE_DISPLAY': listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '',
+        
+        'ADDRESS_SECTION': generateAddressSection(listing),
+        'PHONE_SECTION': generatePhoneSection(listing),
+        'EMAIL_SECTION': generateEmailSection(listing),
+        'WEBSITE_SECTION': generateWebsiteSection(listing),
+        'HOURS_SECTION': generateHoursSection(listing),
+        
+        'PHONE_BUTTON': generatePhoneButton(listing),
+        'EMAIL_BUTTON': generateEmailButton(listing),
+        'WEBSITE_BUTTON': generateWebsiteButton(listing),
+        'DIRECTIONS_BUTTON': generateDirectionsButton(listing),
+        
+        'OWNER_INFO_SECTION': generateOwnerInfoSection(listing),
+        'SOCIAL_MEDIA_SECTION': generateSocialMediaSection(listing),
+        'REVIEW_SECTION': generateReviewSection(listing),
+        'MAP_SECTION': generateMapSection(listing),
+        'CLAIM_BUTTON': listing.show_claim_button ? generateClaimButton() : '',
+        
+        'HOURS_SCHEMA': generateHoursSchema(listing)
+    };
+}
+
+function generatePhotoSlides(listing) {
+    const photos = listing.photos || [];
+    if (photos.length === 0) return '';
+    
+    return photos.map((photo, index) => `
+        <div class="carousel-slide ${index === 0 ? 'active' : ''}" style="background-image: url('${photo}')"></div>
+    `).join('');
+}
+
+function generateCarouselControls(listing) {
+    const photos = listing.photos || [];
+    if (photos.length <= 1) return '';
+    
+    return `
+        <button class="carousel-btn prev" onclick="changeSlide(-1)">❮</button>
+        <button class="carousel-btn next" onclick="changeSlide(1)">❯</button>
+        <div class="carousel-dots">
+            ${photos.map((_, index) => `
+                <span class="dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>
+            `).join('')}
+        </div>
+    `;
+}
+
+function generateSubcategoryTags(listing) {
+    if (!listing.subcategories || listing.subcategories.length === 0) return '';
+    
+    return listing.subcategories.map(sub => {
+        const isPrimary = sub === listing.primary_subcategory;
+        return `<span class="text-xs px-2 py-1 rounded ${isPrimary ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700'}">${escapeHtml(sub)}</span>`;
+    }).join(' ');
+}
+
+function generateStatusBadges(listing) {
+    const badges = [];
+    
+    if (listing.tier === 'PREMIUM') {
+        badges.push('<span class="text-xs px-2 py-1 rounded bg-purple-100 text-purple-800">👑 Premium</span>');
+        badges.push('<span class="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">⭐ Featured</span>');
+        badges.push('<span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">✓ Verified</span>');
+    } else if (listing.tier === 'FEATURED') {
+        badges.push('<span class="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">⭐ Featured</span>');
+        badges.push('<span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">✓ Verified</span>');
+    } else if (listing.tier === 'VERIFIED') {
+        badges.push('<span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">✓ Verified</span>');
+    }
+    
+    if (listing.is_chain) {
+        badges.push('<span class="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">🔗 Chain</span>');
+    }
+    
+    return badges.join(' ');
+}
+
+function generateAddressSection(listing) {
+    if (!listing.address && !listing.city) return '';
+    
+    const parts = [];
+    if (listing.address) parts.push(listing.address);
+    if (listing.city) parts.push(listing.city);
+    if (listing.state) parts.push(listing.state);
+    if (listing.zip_code) parts.push(listing.zip_code);
+    
+    return `
+        <div class="flex items-start gap-2">
+            <span class="text-gray-600">📍</span>
+            <span class="text-gray-700">${escapeHtml(parts.join(', '))}</span>
+        </div>
+    `;
+}
+
+function generatePhoneSection(listing) {
+    if (!listing.phone) return '';
+    
+    const formatted = formatPhoneForDisplay(listing.phone);
+    return `
+        <div class="flex items-start gap-2">
+            <span class="text-gray-600">📞</span>
+            <a href="tel:${listing.phone}" class="text-blue-600 hover:underline">${formatted}</a>
+        </div>
+    `;
+}
+
+function generateEmailSection(listing) {
+    if (!listing.email) return '';
+    
+    return `
+        <div class="flex items-start gap-2">
+            <span class="text-gray-600">✉️</span>
+            <a href="mailto:${listing.email}" class="text-blue-600 hover:underline">${escapeHtml(listing.email)}</a>
+        </div>
+    `;
+}
+
+function generateWebsiteSection(listing) {
+    if (!listing.website) return '';
+    
+    let displayUrl = listing.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    
+    return `
+        <div class="flex items-start gap-2">
+            <span class="text-gray-600">🌐</span>
+            <a href="${listing.website}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
+        </div>
+    `;
+}
+
+function generateHoursSection(listing) {
+    if (!listing.hours || Object.keys(listing.hours).length === 0) return '';
+    
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    
+    return `
+        <div class="border-t pt-3">
+            <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+            <div class="space-y-1 text-sm">
+                ${dayKeys.map((key, index) => {
+                    const hours = listing.hours[key] || 'Closed';
+                    return `<div class="flex justify-between"><span>${days[index]}:</span><span class="text-gray-600">${escapeHtml(hours)}</span></div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function generatePhoneButton(listing) {
+    if (!listing.phone) return '';
+    return `<a href="tel:${listing.phone}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"><span>📞</span><span>Call</span></a>`;
+}
+
+function generateEmailButton(listing) {
+    if (!listing.email) return '';
+    return `<a href="mailto:${listing.email}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"><span>✉️</span><span>Email</span></a>`;
+}
+
+function generateWebsiteButton(listing) {
+    if (!listing.website) return '';
+    return `<a href="${listing.website}" target="_blank" rel="noopener" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"><span>🌐</span><span>Website</span></a>`;
+}
+
+function generateDirectionsButton(listing) {
+    if (!listing.address && !listing.city) return '';
+    
+    const query = listing.address ? `${listing.address}, ${listing.city}, ${listing.state}` : `${listing.business_name}, ${listing.city}, ${listing.state}`;
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    
+    return `<a href="${mapsUrl}" target="_blank" rel="noopener" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2"><span>🗺️</span><span>Directions</span></a>`;
+}
+
+function formatPhoneForDisplay(phone) {
+    if (!phone) return '';
+    
+    const digits = phone.replace(/\D/g, '');
+    
+    if (phone.startsWith('+1') && digits.length === 11) {
+        const usDigits = digits.substr(1);
+        return `(${usDigits.substr(0, 3)}) ${usDigits.substr(3, 3)}-${usDigits.substr(6, 4)}`;
+    }
+    
+    if (digits.length === 10) {
+        return `(${digits.substr(0, 3)}) ${digits.substr(3, 3)}-${digits.substr(6, 4)}`;
+    }
+    
+    return phone;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+// ============================================
+// ADMIN PORTAL - PART 6
+// Generate Listing Pages Functionality
+// ============================================
+
+window.generateListingPage = async function(listingId) {
+    try {
+        const listing = allListings.find(l => l.id === listingId);
+        if (!listing) {
+            alert('Listing not found');
+            return;
+        }
+        
+        if (!confirm(`Generate static HTML page for "${listing.business_name}"?\n\nThis will create/update the listing page.`)) {
+            return;
+        }
+        
+        // Fetch the template
+        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
+        if (!templateResponse.ok) {
+            throw new Error('Failed to fetch template');
+        }
+        
+        let template = await templateResponse.text();
+        
+        // Replace template variables
+        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
+        
+        // Basic replacements
+        template = template.replace(/{{BUSINESS_NAME}}/g, listing.business_name);
+        template = template.replace(/{{TAGLINE}}/g, listing.tagline || '');
+        template = template.replace(/{{LISTING_URL}}/g, listingUrl);
+        template = template.replace(/{{BUSINESS_NAME_ENCODED}}/g, encodeURIComponent(listing.business_name));
+        template = template.replace(/{{CATEGORY}}/g, listing.category);
+        template = template.replace(/{{LOGO}}/g, listing.logo || '');
+        template = template.replace(/{{DESCRIPTION}}/g, listing.description || '');
+        
+        // City/State
+        if (listing.city && listing.state) {
+            template = template.replace(/{{CITY_STATE}}/g, ` in ${listing.city}, ${listing.state}`);
+            template = template.replace(/{{IN_CITY}}/g, ` in ${listing.city}, ${listing.state}`);
+        } else {
+            template = template.replace(/{{CITY_STATE}}/g, '');
+            template = template.replace(/{{IN_CITY}}/g, '');
+        }
+        
+        // Address components
+        template = template.replace(/{{ADDRESS}}/g, listing.address || '');
+        template = template.replace(/{{CITY}}/g, listing.city || '');
+        template = template.replace(/{{STATE}}/g, listing.state || '');
+        template = template.replace(/{{ZIP_CODE}}/g, listing.zip_code || '');
+        template = template.replace(/{{COUNTRY}}/g, listing.country || 'USA');
+        template = template.replace(/{{PHONE}}/g, listing.phone || '');
+        
+        // Status badges
+        let statusBadges = '';
+        if (listing.tier === 'PREMIUM') {
+            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">⭐ Featured</span>';
+            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-800 ml-2">✓ Verified</span>';
+        } else if (listing.tier === 'FEATURED') {
+            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">⭐ Featured</span>';
+        } else if (listing.tier === 'VERIFIED') {
+            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-800">✓ Verified</span>';
+        }
+        
+        if (listing.is_chain) {
+            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-purple-100 text-purple-800 ml-2">🔗 Chain</span>';
+        }
+        
+        template = template.replace(/{{STATUS_BADGES}}/g, statusBadges);
+        
+        // Subcategories
+        let subcategoriesTags = '';
+        if (listing.subcategories && listing.subcategories.length > 0) {
+            subcategoriesTags = listing.subcategories.map(sub => {
+                const isPrimary = sub === listing.primary_subcategory;
+                return `<span class="text-xs font-medium px-2 py-1 rounded-full ${isPrimary ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700'}">${sub}</span>`;
+            }).join('');
+        }
+        template = template.replace(/{{SUBCATEGORIES_TAGS}}/g, subcategoriesTags);
+        
+        // Tagline display
+        let taglineDisplay = '';
+        if (listing.tagline) {
+            taglineDisplay = `<p class="text-gray-600 italic mb-2">"${listing.tagline}"</p>`;
+        }
+        template = template.replace(/{{TAGLINE_DISPLAY}}/g, taglineDisplay);
+        
+        // Photos/carousel
+        const photos = listing.photos || [];
+        let photosSlides = '';
+        let carouselControls = '';
+        
+        if (photos.length > 0) {
+            photosSlides = photos.map((photo, index) => 
+                `<img src="${photo}" alt="Photo ${index + 1}" class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">`
+            ).join('');
+            
+            if (photos.length > 1) {
+                carouselControls = `
+                    <button class="carousel-prev" onclick="changeSlide(-1)">❮</button>
+                    <button class="carousel-next" onclick="changeSlide(1)">❯</button>
+                    <div class="carousel-dots">
+                        ${photos.map((_, index) => 
+                            `<span class="dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+        } else if (listing.logo) {
+            photosSlides = `<img src="${listing.logo}" alt="${listing.business_name} logo" class="carousel-slide active">`;
+        }
+        
+        template = template.replace(/{{PHOTOS_SLIDES}}/g, photosSlides);
+        template = template.replace(/{{CAROUSEL_CONTROLS}}/g, carouselControls);
+        
+        // Contact sections
+        let addressSection = '';
+        if (listing.address || listing.city || listing.state) {
+            const addressParts = [];
+            if (listing.address) addressParts.push(listing.address);
+            if (listing.city && listing.state) addressParts.push(`${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim());
+            
+            addressSection = `
+                <div class="flex items-start gap-2 text-sm">
+                    <span class="text-gray-600">📍</span>
+                    <span class="text-gray-700">${addressParts.join(', ')}</span>
+                </div>
+            `;
+        }
+        template = template.replace(/{{ADDRESS_SECTION}}/g, addressSection);
+        
+        let phoneSection = '';
+        if (listing.phone) {
+            phoneSection = `
+                <div class="flex items-start gap-2 text-sm">
+                    <span class="text-gray-600">📞</span>
+                    <a href="tel:${listing.phone}" class="text-blue-600 hover:underline" onclick="trackClick('call')">${formatPhoneNumber(listing.phone)}</a>
+                </div>
+            `;
+        }
+        template = template.replace(/{{PHONE_SECTION}}/g, phoneSection);
+        
+        let emailSection = '';
+        if (listing.email) {
+            emailSection = `
+                <div class="flex items-start gap-2 text-sm">
+                    <span class="text-gray-600">✉️</span>
+                    <a href="mailto:${listing.email}" class="text-blue-600 hover:underline" onclick="trackClick('email')">${listing.email}</a>
+                </div>
+            `;
+        }
+        template = template.replace(/{{EMAIL_SECTION}}/g, emailSection);
+        
+        let websiteSection = '';
+        if (listing.website) {
+            websiteSection = `
+                <div class="flex items-start gap-2 text-sm">
+                    <span class="text-gray-600">🌐</span>
+                    <a href="${listing.website}" target="_blank" rel="noopener" class="text-blue-600 hover:underline" onclick="trackClick('website')">${new URL(listing.website).hostname}</a>
+                </div>
+            `;
+        }
+        template = template.replace(/{{WEBSITE_SECTION}}/g, websiteSection);
+        
+        // Hours section
+        let hoursSection = '';
+        if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const today = new Date().getDay();
+            const todayIndex = today === 0 ? 6 : today - 1;
+            
+            const hoursRows = days.map((day, index) => {
+                const dayKey = day.toLowerCase();
+                const hours = listing.hours[dayKey] || 'Closed';
+                const isToday = index === todayIndex;
+                
+                return `
+                    <div class="flex justify-between py-2 border-b ${isToday ? 'font-bold' : ''}">
+                        <span>${day}${isToday ? ' (Today)' : ''}</span>
+                        <span>${hours}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            hoursSection = `
+                <div class="mb-4">
+                    <h3 class="font-bold text-gray-900 mb-2">Hours</h3>
+                    <div class="space-y-1 text-sm">
+                        ${hoursRows}
+                    </div>
+                </div>
+            `;
+        }
+        template = template.replace(/{{HOURS_SECTION}}/g, hoursSection);
+        
+        // Action buttons
+        let phoneButton = '';
+        if (listing.phone) {
+            phoneButton = `
+                <a href="tel:${listing.phone}" class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg text-center font-medium hover:bg-green-700" onclick="trackClick('call')">
+                    📞 Call
+                </a>
+            `;
+        }
+        template = template.replace(/{{PHONE_BUTTON}}/g, phoneButton);
+        
+        let emailButton = '';
+        if (listing.email) {
+            emailButton = `
+                <a href="mailto:${listing.email}" class="flex-1 py-3 px-4 rounded-lg text-center font-medium border-2 hover:bg-gray-50" style="border-color:#055193;color:#055193;" onclick="trackClick('email')">
+                    ✉️ Email
+                </a>
+            `;
+        }
+        template = template.replace(/{{EMAIL_BUTTON}}/g, emailButton);
+        
+        let websiteButton = '';
+        if (listing.website) {
+            websiteButton = `
+                <a href="${listing.website}" target="_blank" rel="noopener" class="flex-1 text-white py-3 px-4 rounded-lg text-center font-medium hover:opacity-90" style="background-color:#055193;" onclick="trackClick('website')">
+                    🌐 Website
+                </a>
+            `;
+        }
+        template = template.replace(/{{WEBSITE_BUTTON}}/g, websiteButton);
+        
+        let directionsButton = '';
+        if (listing.address || listing.places_url_ending) {
+            const mapsUrl = listing.places_url_ending 
+                ? `https://www.google.com/maps/place/?q=place_id:${listing.places_url_ending}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.address || listing.business_name)}`;
+            
+            directionsButton = `
+                <a href="${mapsUrl}" target="_blank" rel="noopener" class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg text-center font-medium hover:bg-blue-700" onclick="trackClick('directions')">
+                    🗺️ Directions
+                </a>
+            `;
+        }
+        template = template.replace(/{{DIRECTIONS_BUTTON}}/g, directionsButton);
+        
+        // Owner info section
+        let ownerInfoSection = '';
+        const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+        
+        if (owner && (owner.full_name || owner.title || owner.from_greece || 
+            (owner.email_visible && owner.owner_email) || 
+            (owner.phone_visible && owner.owner_phone))) {
+            
+            let ownerDetails = '';
+            
+            if (owner.full_name) {
+                ownerDetails += `<div class="text-sm"><span class="font-semibold">Name:</span> ${owner.full_name}</div>`;
+            }
+            if (owner.title) {
+                ownerDetails += `<div class="text-sm"><span class="font-semibold">Title:</span> ${owner.title}</div>`;
+            }
+            if (owner.from_greece) {
+                ownerDetails += `<div class="text-sm"><span class="font-semibold">From:</span> ${owner.from_greece}, Greece</div>`;
+            }
+            if (owner.email_visible && owner.owner_email) {
+                ownerDetails += `<div class="text-sm"><span class="font-semibold">Email:</span> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${owner.owner_email}</a></div>`;
+            }
+            if (owner.phone_visible && owner.owner_phone) {
+                ownerDetails += `<div class="text-sm"><span class="font-semibold">Phone:</span> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></div>`;
+            }
+            
+            ownerInfoSection = `
+                <div class="mb-4 p-4 rounded-lg" style="background-color:#f0f9ff;">
+                    <h3 class="font-bold text-gray-900 mb-2">Owner Information</h3>
+                    <div class="space-y-1">
+                        ${ownerDetails}
+                    </div>
+                </div>
+            `;
+        }
+        template = template.replace(/{{OWNER_INFO_SECTION}}/g, ownerInfoSection);
+        
+        // Social media section
+        let socialMediaSection = '';
+        const socialMedia = listing.social_media || {};
+        const hasSocial = Object.values(socialMedia).some(v => v);
+        
+        if (hasSocial) {
+            let socialIcons = '';
+            
+            if (socialMedia.facebook) {
+                socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800" onclick="trackClick('social', 'facebook')">📘 Facebook</a>`;
+            }
+            if (socialMedia.instagram) {
+                socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener" class="text-pink-600 hover:text-pink-800" onclick="trackClick('social', 'instagram')">📷 Instagram</a>`;
+            }
+            if (socialMedia.twitter) {
+                socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-600" onclick="trackClick('social', 'twitter')">𝕏 Twitter</a>`;
+            }
+            if (socialMedia.youtube) {
+                socialIcons += `<a href="https://youtube.com/${socialMedia.youtube}" target="_blank" rel="noopener" class="text-red-600 hover:text-red-800" onclick="trackClick('social', 'youtube')">▶️ YouTube</a>`;
+            }
+            if (socialMedia.tiktok) {
+                socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener" class="text-black hover:text-gray-700" onclick="trackClick('social', 'tiktok')">♪ TikTok</a>`;
+            }
+            if (socialMedia.linkedin) {
+                socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener" class="text-blue-700 hover:text-blue-900" onclick="trackClick('social', 'linkedin')">💼 LinkedIn</a>`;
+            }
+            
+            if (socialIcons) {
+                socialMediaSection = `
+                    <div class="mb-4">
+                        <h3 class="font-bold text-gray-900 mb-2">Social Media</h3>
+                        <div class="flex flex-wrap gap-3 text-sm">
+                            ${socialIcons}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        template = template.replace(/{{SOCIAL_MEDIA_SECTION}}/g, socialMediaSection);
+        
+        // Review section
+        let reviewSection = '';
+        const reviews = listing.reviews || {};
+        const hasReviews = Object.values(reviews).some(v => v);
+        
+        if (hasReviews) {
+            let reviewLinks = '';
+            
+            if (reviews.google) {
+                reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener" class="inline-block px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium">⭐ Google Reviews</a>`;
+            }
+            if (reviews.yelp) {
+                reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener" class="inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">Yelp Reviews</a>`;
+            }
+            if (reviews.tripadvisor) {
+                reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener" class="inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">TripAdvisor</a>`;
+            }
+            
+            if (reviewLinks) {
+                reviewSection = `
+                    <div class="mb-4">
+                        <h3 class="font-bold text-gray-900 mb-2">Reviews</h3>
+                        <div class="flex flex-wrap gap-2">
+                            ${reviewLinks}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        template = template.replace(/{{REVIEW_SECTION}}/g, reviewSection);
+        
+        // Map section
+        let mapSection = '';
+        if (listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
+            mapSection = `
+                <div class="mb-4">
+                    <h3 class="font-bold text-gray-900 mb-2">Location</h3>
+                    <div id="listingMap" class="w-full h-64 rounded-lg bg-gray-200" data-lat="${listing.coordinates.lat}" data-lng="${listing.coordinates.lng}"></div>
+                </div>
+            `;
+        }
+        template = template.replace(/{{MAP_SECTION}}/g, mapSection);
+        
+        // Claim button
+        let claimButton = '';
+        const isClaimed = owner && owner.owner_user_id;
+        
+        if (!isClaimed && listing.show_claim_button) {
+            claimButton = `
+                <div class="mt-6 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg text-center">
+                    <h3 class="font-bold text-gray-900 mb-2">Is this your business?</h3>
+                    <p class="text-sm text-gray-700 mb-3">Claim your listing to manage your information and connect with customers.</p>
+                    <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-medium" style="background-color:#055193;">Claim This Listing</a>
+                </div>
+            `;
+        }
+        template = template.replace(/{{CLAIM_BUTTON}}/g, claimButton);
+        
+        // Hours schema for structured data
+        let hoursSchema = '[]';
+        if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
+            const schemaHours = [];
+            const dayMap = {
+                'monday': 'Monday',
+                'tuesday': 'Tuesday',
+                'wednesday': 'Wednesday',
+                'thursday': 'Thursday',
+                'friday': 'Friday',
+                'saturday': 'Saturday',
+                'sunday': 'Sunday'
+            };
+            
+            Object.entries(listing.hours).forEach(([day, hours]) => {
+                if (hours && hours.toLowerCase() !== 'closed') {
+                    const match = hours.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?\s*-\s*(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
+                    if (match) {
+                        schemaHours.push({
+                            "@type": "OpeningHoursSpecification",
+                            "dayOfWeek": dayMap[day],
+                            "opens": match[1] + (match[2] || ':00') + (match[3] || ''),
+                            "closes": match[4] + (match[5] || ':00') + (match[6] || '')
+                        });
+                    }
+                }
+            });
+            
+            if (schemaHours.length > 0) {
+                hoursSchema = JSON.stringify(schemaHours);
+            }
+        }
+        template = template.replace(/{{HOURS_SCHEMA}}/g, hoursSchema);
+        
+        // Data attribute for listing ID
+        template = template.replace('<body class="bg-gray-50">', `<body class="bg-gray-50" data-listing-id="${listing.id}">`);
+        
+        console.log('Generated HTML for:', listing.business_name);
+        
+        // Now upload to GitHub
+        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
+        
+        // Check if file exists
+        let currentSha = null;
+        try {
+            const fileInfoResponse = await fetch(
+                `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
+                {
+                    headers: {
+                        'Authorization': `token ${adminGithubToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                }
+            );
+            
+            if (fileInfoResponse.ok) {
+                const fileInfo = await fileInfoResponse.json();
+                currentSha = fileInfo.sha;
+            }
+        } catch (error) {
+            console.log('File does not exist, will create new');
+        }
+        
+        // Upload to GitHub
+        const base64Content = btoa(unescape(encodeURIComponent(template)));
+        
+        const uploadBody = {
+            message: `${currentSha ? 'Update' : 'Create'} listing page for ${listing.business_name}`,
+            content: base64Content,
+            committer: {
+                name: 'TGD Admin',
+                email: 'admin@thegreekdirectory.org'
+            }
+        };
+        
+        if (currentSha) {
+            uploadBody.sha = currentSha;
+        }
+        
+        const uploadResponse = await fetch(
+            `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${adminGithubToken}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(uploadBody)
+            }
+        );
+        
+        if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            throw new Error(`GitHub upload failed: ${errorData.message}`);
+        }
+        
+        alert(`✅ Listing page generated successfully!\n\nURL: ${listingUrl}`);
+        
+    } catch (error) {
+        console.error('Error generating listing page:', error);
+        alert('❌ Failed to generate listing page: ' + error.message);
+    }
+};
+
+window.generateAllListingPages = async function() {
+    if (!confirm('Generate static HTML pages for ALL listings?\n\nThis may take several minutes.')) {
+        return;
+    }
+    
+    const visibleListings = allListings.filter(l => l.visible);
+    
+    let successful = 0;
+    let failed = 0;
+    
+    for (const listing of visibleListings) {
+        try {
+            await generateListingPage(listing.id);
+            successful++;
+            
+            // Add small delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+            console.error(`Failed to generate page for ${listing.business_name}:`, error);
+            failed++;
+        }
+    }
+    
+    alert(`Generation complete!\n\nSuccessful: ${successful}\nFailed: ${failed}`);
+};
+
+function addGeneratePageButtons() {
+    const container = document.querySelector('.max-w-7xl.mx-auto.px-4.py-6 .mb-6');
+    if (!container) return;
+    
+    const existingBtn = document.getElementById('generateAllBtn');
+    if (existingBtn) return;
+    
+    const button = document.createElement('button');
+    button.id = 'generateAllBtn';
+    button.className = 'px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700';
+    button.textContent = '🔨 Generate All Pages';
+    button.onclick = generateAllListingPages;
+    
+    container.appendChild(button);
+}
+
+setTimeout(addGeneratePageButtons, 100);
+
+window.generateListingPage = generateListingPage;
+window.generateAllListingPages = generateAllListingPages;
