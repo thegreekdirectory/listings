@@ -1,6 +1,6 @@
 // ============================================
-// SUPABASE CLIENT CONFIGURATION - PART 1
-// Initialization & Core Functions
+// SUPABASE CLIENT CONFIGURATION
+// Complete configuration and utilities
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
@@ -10,19 +10,10 @@ console.log('✅ Supabase configured correctly');
 console.log('URL:', SUPABASE_URL);
 console.log('Key valid:', SUPABASE_ANON_KEY.split('.').length === 3);
 
-// Initialize Supabase client
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 console.log('Supabase client initialized:', supabaseClient ? 'Success' : 'Failed');
 
-// ============================================
-// AUTHENTICATION UTILITIES
-// ============================================
-
-/**
- * Check if user is currently authenticated
- * @returns {Promise<Object|null>} User object or null
- */
 async function getCurrentUser() {
     try {
         const { data: { user }, error } = await supabaseClient.auth.getUser();
@@ -34,10 +25,6 @@ async function getCurrentUser() {
     }
 }
 
-/**
- * Get current session
- * @returns {Promise<Object|null>} Session object or null
- */
 async function getCurrentSession() {
     try {
         const { data: { session }, error } = await supabaseClient.auth.getSession();
@@ -48,25 +35,11 @@ async function getCurrentSession() {
         return null;
     }
 }
-// ============================================
-// SUPABASE CLIENT CONFIGURATION - PART 2
-// Sign Up with Confirmation Key Logic
-// ============================================
 
-/**
- * Sign up a new business owner
- * @param {string} email - Business owner email
- * @param {string} password - Password
- * @param {string} listingId - Listing ID to link
- * @param {string} confirmationKey - Confirmation key for claiming
- * @param {string} phone - Optional phone number
- * @returns {Promise<Object>} Result object
- */
 async function signUpBusinessOwner(email, password, listingId, confirmationKey, phone = null) {
     try {
         console.log('Starting signup for:', email, 'with listing:', listingId);
         
-        // 1. Verify confirmation key matches listing
         const { data: ownerRecord, error: ownerCheckError } = await supabaseClient
             .from('business_owners')
             .select('*')
@@ -79,16 +52,13 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
             throw new Error('Invalid confirmation key for this listing');
         }
         
-        // Check if listing is already claimed
         if (ownerRecord.owner_user_id) {
             throw new Error('This listing has already been claimed');
         }
         
-        // 2. Create username from email and listing ID
         const emailUsername = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase();
         const ownerUserId = `${emailUsername}${listingId}`;
         
-        // 3. Sign up the user
         const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
             email: email,
             password: password,
@@ -109,14 +79,13 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
 
         console.log('Auth signup successful, user ID:', authData.user.id);
 
-        // 4. Update business_owners record
         const { data: updatedOwner, error: updateError } = await supabaseClient
             .from('business_owners')
             .update({
                 owner_user_id: ownerUserId,
                 owner_email: email,
                 owner_phone: phone,
-                confirmation_key: null // Clear confirmation key after claiming
+                confirmation_key: null
             })
             .eq('listing_id', listingId)
             .select()
@@ -146,12 +115,6 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
     }
 }
 
-/**
- * Sign in a business owner
- * @param {string} email - Business owner email
- * @param {string} password - Password
- * @returns {Promise<Object>} Result object
- */
 async function signInBusinessOwner(email, password) {
     try {
         console.log('Attempting sign in for:', email);
@@ -168,7 +131,6 @@ async function signInBusinessOwner(email, password) {
             throw error;
         }
 
-        // Get all business owner data for this user
         const { data: ownerData, error: ownerError } = await supabaseClient
             .from('business_owners')
             .select('*')
@@ -196,15 +158,7 @@ async function signInBusinessOwner(email, password) {
         };
     }
 }
-// ============================================
-// SUPABASE CLIENT CONFIGURATION - PART 3
-// Utility & Helper Functions
-// ============================================
 
-/**
- * Sign out current user
- * @returns {Promise<boolean>} Success status
- */
 async function signOut() {
     try {
         const { error } = await supabaseClient.auth.signOut();
@@ -216,10 +170,6 @@ async function signOut() {
     }
 }
 
-/**
- * Get business owner data for current user
- * @returns {Promise<Array|null>} Owner data array or null
- */
 async function getBusinessOwnerData() {
     try {
         const user = await getCurrentUser();
@@ -239,11 +189,6 @@ async function getBusinessOwnerData() {
     }
 }
 
-/**
- * Update business owner contact info
- * @param {Object} updates - Fields to update
- * @returns {Promise<Object>} Result object
- */
 async function updateBusinessOwnerContact(updates) {
     try {
         const user = await getCurrentUser();
@@ -272,11 +217,6 @@ async function updateBusinessOwnerContact(updates) {
     }
 }
 
-/**
- * Reset password
- * @param {string} email - User email
- * @returns {Promise<Object>} Result object
- */
 async function resetPassword(email) {
     try {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
@@ -299,11 +239,6 @@ async function resetPassword(email) {
     }
 }
 
-/**
- * Update password
- * @param {string} newPassword - New password
- * @returns {Promise<Object>} Result object
- */
 async function updatePassword(newPassword) {
     try {
         const { error } = await supabaseClient.auth.updateUser({
@@ -326,10 +261,6 @@ async function updatePassword(newPassword) {
     }
 }
 
-/**
- * Set up auth state change listener
- * @param {Function} callback - Callback function to handle auth changes
- */
 function onAuthStateChange(callback) {
     supabaseClient.auth.onAuthStateChange((event, session) => {
         console.log('Auth state changed:', event);
@@ -337,7 +268,6 @@ function onAuthStateChange(callback) {
     });
 }
 
-// Export functions for use in other scripts
 window.TGDAuth = {
     supabaseClient,
     getCurrentUser,
