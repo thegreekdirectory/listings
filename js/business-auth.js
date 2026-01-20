@@ -334,3 +334,82 @@ window.showForgotPassword = showForgotPassword;
 window.searchListingForSignup = searchListingForSignup;
 window.selectListing = selectListing;
 window.logout = logout;
+// ============================================
+// BUSINESS PORTAL AUTHENTICATION - Part 2
+// Phone formatting utilities
+// ============================================
+
+function formatPhoneNumber(phone, country = 'USA') {
+    if (!phone) return '';
+    
+    const digits = phone.replace(/\D/g, '');
+    
+    if (country === 'USA' && digits.length === 10) {
+        return `(${digits.substr(0, 3)}) ${digits.substr(3, 3)}-${digits.substr(6, 4)}`;
+    }
+    
+    return phone;
+}
+
+function createPhoneInput(value = '', country = 'USA') {
+    const digits = value ? value.replace(/\D/g, '') : '';
+    
+    return `
+        <div class="flex gap-2">
+            <select class="phone-country-select px-3 py-2 border border-gray-300 rounded-lg" onchange="updatePhoneFormat(this)">
+                ${Object.entries(COUNTRY_CODES).map(([c, code]) => 
+                    `<option value="${c}" ${country === c ? 'selected' : ''}>${c} ${code}</option>`
+                ).join('')}
+            </select>
+            <input type="tel" class="phone-number-input flex-1 px-4 py-2 border border-gray-300 rounded-lg" 
+                value="${digits}" 
+                placeholder="${country === 'USA' ? '(555) 123-4567' : 'Phone number'}"
+                oninput="formatPhoneInput(this)">
+        </div>
+    `;
+}
+
+window.formatPhoneInput = function(input) {
+    const country = input.closest('.flex').querySelector('.phone-country-select').value;
+    let value = input.value.replace(/\D/g, '');
+    
+    if (country === 'USA' && value.length > 10) {
+        value = value.substr(0, 10);
+    }
+    
+    if (country === 'USA') {
+        if (value.length >= 6) {
+            input.value = `(${value.substr(0, 3)}) ${value.substr(3, 3)}-${value.substr(6)}`;
+        } else if (value.length >= 3) {
+            input.value = `(${value.substr(0, 3)}) ${value.substr(3)}`;
+        } else {
+            input.value = value;
+        }
+    } else {
+        input.value = value;
+    }
+};
+
+window.updatePhoneFormat = function(select) {
+    const input = select.closest('.flex').querySelector('.phone-number-input');
+    const digits = input.value.replace(/\D/g, '');
+    input.value = digits;
+    formatPhoneInput(input);
+};
+
+function getPhoneValue(container) {
+    const countrySelect = container.querySelector('.phone-country-select');
+    const phoneInput = container.querySelector('.phone-number-input');
+    
+    if (!phoneInput || !phoneInput.value.trim()) return null;
+    
+    const country = countrySelect ? countrySelect.value : 'USA';
+    const digits = phoneInput.value.replace(/\D/g, '');
+    const code = COUNTRY_CODES[country];
+    
+    return `${code}${digits}`;
+}
+
+window.formatPhoneNumber = formatPhoneNumber;
+window.createPhoneInput = createPhoneInput;
+window.getPhoneValue = getPhoneValue;
