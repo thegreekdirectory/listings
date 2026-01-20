@@ -3,7 +3,6 @@
    Styling for admin dashboard
    ============================================ */
 
-/* CSS Variables */
 :root {
     --primary-blue: #055193;
     --primary-blue-dark: #044174;
@@ -16,7 +15,6 @@
     --bg-light: #f9fafb;
 }
 
-/* Reset */
 * {
     margin: 0;
     padding: 0;
@@ -29,7 +27,6 @@ body {
     background: var(--bg-light);
 }
 
-/* Auth Page */
 .auth-container {
     min-height: 100vh;
     display: flex;
@@ -64,7 +61,6 @@ body {
     padding: 2rem;
 }
 
-/* Messages */
 .error-message {
     background: #fee2e2;
     border: 1px solid #fca5a5;
@@ -85,7 +81,6 @@ body {
     font-size: 0.875rem;
 }
 
-/* Inputs */
 .tgd-input {
     width: 100%;
     padding: 0.875rem 1rem;
@@ -101,7 +96,6 @@ body {
     box-shadow: 0 0 0 3px rgba(5, 81, 147, 0.1);
 }
 
-/* Button */
 .tgd-button-primary {
     width: 100%;
     padding: 0.875rem 1.5rem;
@@ -121,7 +115,6 @@ body {
     box-shadow: 0 4px 12px rgba(5, 81, 147, 0.3);
 }
 
-/* Table Styles */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -149,7 +142,6 @@ tbody tr:hover {
     background: var(--bg-light);
 }
 
-/* Badges */
 .badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
@@ -186,7 +178,6 @@ tbody tr:hover {
     color: #6b21a8;
 }
 
-/* Modal */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -212,7 +203,6 @@ tbody tr:hover {
     display: none;
 }
 
-/* Form Elements */
 input[type="text"],
 input[type="email"],
 input[type="tel"],
@@ -230,7 +220,6 @@ select:disabled {
     opacity: 0.6;
 }
 
-/* Edit Form Specific */
 #editFormContent h3 {
     color: var(--text-dark);
     font-size: 1.125rem;
@@ -243,7 +232,6 @@ select:disabled {
     font-weight: 500;
 }
 
-/* Subcategories in Edit Form */
 #subcategoryCheckboxes > div {
     background: white;
     border: 2px solid var(--border-color);
@@ -277,7 +265,6 @@ select:disabled {
     font-size: 0.875rem;
 }
 
-/* Action Buttons */
 button {
     font-family: inherit;
     cursor: pointer;
@@ -288,7 +275,6 @@ button:hover {
     opacity: 0.9;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .modal-content {
         max-width: 100%;
@@ -305,7 +291,6 @@ button:hover {
     }
 }
 
-/* Loading State */
 .loading {
     display: inline-block;
     width: 20px;
@@ -320,7 +305,6 @@ button:hover {
     to { transform: rotate(360deg); }
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -339,7 +323,6 @@ button:hover {
     background: #a0aec0;
 }
 
-/* Info Notice */
 .info-notice {
     font-size: 0.75rem;
     color: var(--text-light);
