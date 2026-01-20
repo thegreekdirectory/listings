@@ -496,8 +496,7 @@ header {
 .hours-item.today .hours-day {
     color: var(--primary-blue);
 }
-
-/* Social Media */
+        /* Social Media */
 .social-media-section {
     margin-bottom: 2rem;
 }
@@ -955,7 +954,6 @@ header {
         color: #9ca3af;
     }
     
-    /* Dark mode fix for claim section */
     .claim-section {
         background: linear-gradient(135deg, #3a3a00 0%, #5a5a00 100%);
         border-color: #8a7a00;
@@ -1117,8 +1115,9 @@ header {
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-// ============================================
+        // ============================================
 // LISTING TEMPLATE JAVASCRIPT - PART 1
 // Core functionality for individual listing pages
 // ============================================
@@ -1131,14 +1130,11 @@ let currentListing = null;
 let chainLocations = [];
 let currentPhotoIndex = 0;
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing listing page...');
     
-    // Initialize Supabase
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // Get listing ID from URL or data attribute
     const listingId = getListingId();
     
     if (listingId) {
@@ -1150,20 +1146,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function getListingId() {
-    // Try to get from data attribute first
     const container = document.querySelector('[data-listing-id]');
     if (container) {
         return container.getAttribute('data-listing-id');
     }
     
-    // Try to get from URL path (e.g., /listings/category/slug)
     const pathParts = window.location.pathname.split('/').filter(p => p);
     if (pathParts.length >= 3 && pathParts[0] === 'listings') {
-        // Slug is last part
         return pathParts[pathParts.length - 1];
     }
     
-    // Try to get from query parameter
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('id');
 }
@@ -1172,7 +1164,6 @@ async function loadListing(identifier) {
     try {
         console.log('📥 Loading listing:', identifier);
         
-        // Try to load by slug first, then by ID
         let query = supabase
             .from('listings')
             .select(`
@@ -1189,7 +1180,6 @@ async function loadListing(identifier) {
             `)
             .eq('visible', true);
         
-        // Check if identifier looks like a slug or ID
         if (identifier.includes('-')) {
             query = query.eq('slug', identifier);
         } else {
@@ -1207,18 +1197,14 @@ async function loadListing(identifier) {
         currentListing = listing;
         console.log('✅ Listing loaded:', listing.business_name);
         
-        // Track view
         await trackAnalytics('view');
         
-        // Load chain locations if applicable
         if (listing.is_chain && listing.chain_id) {
             await loadChainLocations(listing.chain_id);
         }
         
-        // Render the listing
         renderListing();
         
-        // Initialize interactive features
         initializePhotoGallery();
         initializeMap();
         initializeShareButtons();
@@ -1265,7 +1251,6 @@ async function trackAnalytics(action, platform = null) {
         
     } catch (error) {
         console.error('Analytics tracking error:', error);
-        // Don't show error to user, just log it
     }
 }
 
@@ -1281,7 +1266,24 @@ function showError(message) {
         </div>
     `;
 }
-    // ============================================
+
+function formatPhoneNumber(phone) {
+    if (!phone) return '';
+    
+    const digits = phone.replace(/\D/g, '');
+    
+    if (phone.startsWith('+1') && digits.length === 11) {
+        const usDigits = digits.substr(1);
+        return `(${usDigits.substr(0, 3)}) ${usDigits.substr(3, 3)}-${usDigits.substr(6, 4)}`;
+    }
+    
+    if (digits.length === 10) {
+        return `(${digits.substr(0, 3)}) ${digits.substr(3, 3)}-${digits.substr(6, 4)}`;
+    }
+    
+    return phone;
+}
+        // ============================================
 // LISTING TEMPLATE JAVASCRIPT - PART 2
 // Rendering Functions
 // ============================================
@@ -1292,10 +1294,8 @@ function renderListing() {
     const owner = currentListing.owner && currentListing.owner.length > 0 ? currentListing.owner[0] : null;
     const isClaimed = owner && owner.owner_email;
     
-    // Update page title
     document.title = `${currentListing.business_name} - The Greek Directory`;
     
-    // Update meta description
     if (currentListing.meta_description) {
         let metaDesc = document.querySelector('meta[name="description"]');
         if (!metaDesc) {
@@ -1306,21 +1306,14 @@ function renderListing() {
         metaDesc.content = currentListing.meta_description;
     }
     
-    // Render hero section
     renderHero();
-    
-    // Render main content
     renderMainContent();
-    
-    // Render sidebar
     renderSidebar(owner);
     
-    // Render chain locations if applicable
     if (chainLocations.length > 0) {
         renderChainLocations();
     }
     
-    // Render claim button if not claimed
     if (!isClaimed && currentListing.show_claim_button) {
         renderClaimButton();
     }
@@ -1446,7 +1439,6 @@ function renderMainContent() {
     
     let html = '';
     
-    // Description
     if (currentListing.description) {
         html += `
             <div class="content-card">
@@ -1456,29 +1448,24 @@ function renderMainContent() {
         `;
     }
     
-    // Hours
     if (currentListing.hours && Object.keys(currentListing.hours).length > 0) {
         html += renderHours();
     }
     
-    // Social Media
     const socialMedia = currentListing.social_media || {};
     if (Object.values(socialMedia).some(v => v)) {
         html += renderSocialMedia(socialMedia);
     }
     
-    // Reviews
     const reviews = currentListing.reviews || {};
     if (Object.values(reviews).some(v => v)) {
         html += renderReviews(reviews);
     }
     
-    // Video
     if (currentListing.video) {
         html += renderVideo();
     }
     
-    // Share Section
     html += renderShareSection();
     
     mainContent.innerHTML = html;
@@ -1533,8 +1520,8 @@ function renderHours() {
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     
-    const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const todayIndex = today === 0 ? 6 : today - 1; // Convert to our array index
+    const today = new Date().getDay();
+    const todayIndex = today === 0 ? 6 : today - 1;
     const todayKey = days[todayIndex];
     
     const status = getOpenStatus(hours[todayKey]);
@@ -1570,7 +1557,6 @@ function getOpenStatus(todayHours) {
         const now = new Date();
         const currentTime = now.getHours() * 60 + now.getMinutes();
         
-        // Parse hours like "9:00 AM - 5:00 PM"
         const match = todayHours.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?\s*-\s*(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
         
         if (!match) return null;
@@ -1665,7 +1651,6 @@ function renderSocialMedia(socialMedia) {
         `);
     }
     
-    // Handle "other" links
     if (socialMedia.other) {
         try {
             const others = Array.isArray(socialMedia.other) ? socialMedia.other : [socialMedia.other];
@@ -1777,7 +1762,6 @@ function renderSidebar(owner) {
     
     let html = '';
     
-    // Map
     html += `
         <div class="content-card map-section">
             <div id="listingMap"></div>
@@ -1785,10 +1769,8 @@ function renderSidebar(owner) {
         </div>
     `;
     
-    // Contact Info
     html += renderContactInfo();
     
-    // Owner Info
     if (owner && (owner.full_name || owner.title || owner.from_greece || 
         (owner.email_visible && owner.owner_email) || 
         (owner.phone_visible && owner.owner_phone))) {
@@ -1810,7 +1792,7 @@ function renderAddress() {
     
     return `
         <div class="address-display" data-no-translate>
-            ${parts.join(', ')}
+            📍 ${parts.join(', ')}
         </div>
     `;
 }
@@ -1822,7 +1804,7 @@ function renderContactInfo() {
         items.push(`
             <div class="contact-item">
                 <span class="contact-icon">📞</span>
-                <a href="tel:${currentListing.phone}" data-no-translate>${currentListing.phone}</a>
+                <a href="tel:${currentListing.phone}" data-no-translate>${formatPhoneNumber(currentListing.phone)}</a>
             </div>
         `);
     }
@@ -1865,7 +1847,7 @@ function renderOwnerInfo(owner) {
             ${owner.title ? `<div class="owner-detail"><strong>Title:</strong> <span data-no-translate>${owner.title}</span></div>` : ''}
             ${owner.from_greece ? `<div class="owner-detail"><strong>From:</strong> <span data-no-translate>${owner.from_greece}, Greece</span></div>` : ''}
             ${owner.email_visible && owner.owner_email ? `<div class="owner-detail"><strong>Email:</strong> <span data-no-translate>${owner.owner_email}</span></div>` : ''}
-            ${owner.phone_visible && owner.owner_phone ? `<div class="owner-detail"><strong>Phone:</strong> <span data-no-translate>${owner.phone_visible}</span></div>` : ''}
+            ${owner.phone_visible && owner.owner_phone ? `<div class="owner-detail"><strong>Phone:</strong> <span data-no-translate>${formatPhoneNumber(owner.owner_phone)}</span></div>` : ''}
         </div>
     `;
 }
@@ -1901,7 +1883,7 @@ function renderChainLocations() {
                 return `
                     <div class="chain-location-item">
                         <a href="${url}" class="chain-location-name" data-no-translate>${loc.business_name}</a>
-                        <div class="chain-location-address" data-no-translate>${loc.city}, ${loc.state}</div>
+                        <div class="chain-location-address" data-no-translate>📍 ${loc.city}, ${loc.state}</div>
                     </div>
                 `;
             }).join('')}
@@ -1926,7 +1908,6 @@ function renderClaimButton() {
     container.appendChild(section);
 }
 
-// Photo Gallery
 function initializePhotoGallery() {
     const photos = currentListing.photos || [];
     if (photos.length <= 1) return;
@@ -1945,7 +1926,6 @@ window.changeMainPhoto = function(index) {
         mainImage.src = photos[index];
     }
     
-    // Update active thumbnail
     document.querySelectorAll('.gallery-thumbnail').forEach((thumb, i) => {
         if (i === index) {
             thumb.classList.add('active');
@@ -1955,16 +1935,13 @@ window.changeMainPhoto = function(index) {
     });
 };
 
-// Map Initialization
 function initializeMap() {
     const mapElement = document.getElementById('listingMap');
     if (!mapElement) return;
     
-    // If Google Maps is available
-    if (window.google && window.google.maps) {
-        initGoogleMap(mapElement);
+    if (window.L) {
+        initLeafletMap(mapElement);
     } else {
-        // Show static map or address only
         mapElement.innerHTML = `
             <div style="padding: 2rem; text-align: center; background: #f3f4f6; border-radius: 12px;">
                 <p style="color: #666;">Map loading...</p>
@@ -1973,35 +1950,29 @@ function initializeMap() {
     }
 }
 
-function initGoogleMap(element) {
+function initLeafletMap(element) {
     try {
         const lat = currentListing.coordinates?.lat || 41.8781;
         const lng = currentListing.coordinates?.lng || -87.6298;
         
-        const map = new google.maps.Map(element, {
-            center: { lat, lng },
-            zoom: 15,
-            styles: [
-                {
-                    featureType: 'poi',
-                    elementType: 'labels',
-                    stylers: [{ visibility: 'off' }]
-                }
-            ]
-        });
+        const map = L.map(element).setView([lat, lng], 15);
         
-        new google.maps.Marker({
-            position: { lat, lng },
-            map: map,
-            title: currentListing.business_name
-        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        L.marker([lat, lng]).addTo(map)
+            .bindPopup(currentListing.business_name);
         
     } catch (error) {
         console.error('Error initializing map:', error);
     }
 }
 
-// Share Functions
+function initializeShareButtons() {
+    // Share buttons are rendered, no additional initialization needed
+}
+
 window.shareOn = async function(platform) {
     const url = window.location.href;
     const title = currentListing.business_name;
@@ -2038,7 +2009,6 @@ window.copyLink = async function() {
         await navigator.clipboard.writeText(url);
         await trackAnalytics('share', 'copy');
         
-        // Show feedback
         const button = event.target.closest('button');
         const originalText = button.textContent;
         button.textContent = '✓ Copied!';
@@ -2056,19 +2026,39 @@ window.copyLink = async function() {
 };
 
 window.toggleShareMenu = function() {
-    // Scroll to share section
     const shareSection = document.querySelector('.share-section');
     if (shareSection) {
         shareSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 };
 
-// Export functions for global access
+window.shareNative = async function() {
+    const url = window.location.href;
+    const title = currentListing.business_name;
+    const text = currentListing.tagline || `Check out ${currentListing.business_name} on The Greek Directory`;
+    
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: title,
+                text: text,
+                url: url
+            });
+            await trackAnalytics('share', 'native');
+        } catch (error) {
+            console.log('Share cancelled or failed');
+        }
+    } else {
+        copyLink();
+    }
+};
+
 window.trackAnalytics = trackAnalytics;
 window.changeMainPhoto = changeMainPhoto;
 window.shareOn = shareOn;
 window.copyLink = copyLink;
 window.toggleShareMenu = toggleShareMenu;
+window.shareNative = shareNative;
     </script>
 </body>
 </html>
