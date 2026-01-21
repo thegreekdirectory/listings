@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="css/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
@@ -291,6 +292,104 @@
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    <script src="js/index.js"></script>
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let allListings = [];
+        let filteredListings = [];
+        let displayedListings = [];
+        
+        async function loadListings() {
+            try {
+                console.log('📥 Loading listings from Supabase...');
+                
+                const { data, error } = await supabase
+                    .from('listings')
+                    .select('*')
+                    .eq('visible', true)
+                    .order('business_name');
+                
+                if (error) throw error;
+                
+                allListings = data || [];
+                filteredListings = [...allListings];
+                
+                console.log(`✅ Loaded ${allListings.length} listings`);
+                
+                renderListings();
+                updateResultsCount();
+                
+            } catch (error) {
+                console.error('❌ Error loading listings:', error);
+                document.getElementById('listingsContainer').innerHTML = '<p class="text-center text-red-600 p-8">Failed to load listings. Please refresh the page.</p>';
+            }
+        }
+        
+        function renderListings() {
+            const container = document.getElementById('listingsContainer');
+            
+            if (filteredListings.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-600 p-8">No listings found matching your criteria.</p>';
+                return;
+            }
+            
+            displayedListings = filteredListings.slice(0, 20);
+            
+            container.innerHTML = displayedListings.map(listing => {
+                const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const url = `/listings/${categorySlug}/${listing.slug}`;
+                
+                const photos = listing.photos || [];
+                const mainImage = photos.length > 0 ? photos[0] : listing.logo;
+                
+                const badges = [];
+                if (listing.tier === 'PREMIUM') {
+                    badges.push('<span class="badge badge-featured">⭐ Featured</span>');
+                    badges.push('<span class="badge badge-verified">✓ Verified</span>');
+                } else {
+                    if (listing.tier === 'FEATURED') {
+                        badges.push('<span class="badge badge-featured">⭐ Featured</span>');
+                    }
+                    if (listing.verified || listing.tier === 'VERIFIED') {
+                        badges.push('<span class="badge badge-verified">✓ Verified</span>');
+                    }
+                }
+                
+                return `
+                    <a href="${url}" class="listing-card" data-no-translate>
+                        ${mainImage ? `<img src="${mainImage}" alt="${listing.business_name}" class="listing-image" onerror="this.style.display='none'">` : ''}
+                        <div class="listing-content">
+                            ${badges.length > 0 ? `<div class="listing-badges">${badges.join('')}</div>` : ''}
+                            <h3 class="listing-name">${listing.business_name}</h3>
+                            ${listing.tagline ? `<p class="listing-tagline">"${listing.tagline}"</p>` : ''}
+                            <span class="listing-category">${listing.category}</span>
+                            ${listing.city && listing.state ? `
+                                <p class="listing-location">📍 ${listing.city}, ${listing.state}</p>
+                            ` : ''}
+                            ${listing.phone ? `
+                                <p class="listing-location">📞 ${listing.phone}</p>
+                            ` : ''}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+        
+        function updateResultsCount() {
+            const countEl = document.getElementById('resultsCount');
+            if (countEl) {
+                countEl.textContent = `Showing ${displayedListings.length} of ${filteredListings.length} listings`;
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadListings();
+        });
+    </script>
 </body>
 </html>
