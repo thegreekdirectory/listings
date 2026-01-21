@@ -2150,3 +2150,519 @@ setTimeout(addGeneratePageButtons, 100);
 
 window.generateListingPage = generateListingPage;
 window.generateAllListingPages = generateAllListingPages;
+// ============================================
+// LISTING PAGE GENERATION - COMPLETE IMPLEMENTATION
+// Add to end of admin.js
+// ============================================
+
+function generateTemplateReplacements(listing) {
+    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
+    
+    const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
+    const inCity = listing.city ? ` in ${listing.city}` : '';
+    
+    const photos = listing.photos || [];
+    const totalSlides = photos.length || 1;
+    
+    // Generate photo slides
+    let photosSlides = '';
+    if (photos.length > 0) {
+        photosSlides = photos.map((photo, index) => 
+            `<div class="carousel-slide h-full"><img src="${photo}" alt="${listing.business_name}" class="w-full h-full object-cover"></div>`
+        ).join('');
+    } else if (listing.logo) {
+        photosSlides = `<div class="carousel-slide h-full"><img src="${listing.logo}" alt="${listing.business_name}" class="w-full h-full object-cover"></div>`;
+    }
+    
+    // Generate carousel controls
+    let carouselControls = '';
+    if (photos.length > 1) {
+        const dots = photos.map((_, index) => 
+            `<span class="carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>`
+        ).join('');
+        carouselControls = `
+            <button class="carousel-nav carousel-prev" onclick="prevSlide()">❮</button>
+            <button class="carousel-nav carousel-next" onclick="nextSlide()">❯</button>
+            <div class="carousel-dots">${dots}</div>
+        `;
+    }
+    
+    // Generate subcategory tags
+    let subcategoriesTags = '';
+    if (listing.subcategories && listing.subcategories.length > 0) {
+        subcategoriesTags = listing.subcategories.map(sub => 
+            `<span class="subcategory-tag">${sub}</span>`
+        ).join('');
+    }
+    
+    // Generate status badge
+    let statusBadge = '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
+    
+    // Generate tier badges (if any)
+    let tierBadges = '';
+    if (listing.tier === 'PREMIUM' || listing.tier === 'FEATURED') {
+        tierBadges += ' ';
+    }
+    if (listing.verified || listing.tier !== 'FREE') {
+        tierBadges += ' ';
+    }
+    
+    // Tagline display
+    const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${listing.tagline}"</p>` : '';
+    
+    // Address section
+    let addressSection = '';
+    if (listing.address || listing.city || listing.state) {
+        const addressParts = [];
+        if (listing.address) addressParts.push(listing.address);
+        if (listing.city && listing.state) {
+            addressParts.push(`${listing.city}, ${listing.state}${listing.zip_code ? ' ' + listing.zip_code : ''}`);
+        }
+        
+        addressSection = `
+            <div class="flex items-start gap-2">
+                <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>${addressParts.join(', ')}</span>
+            </div>
+        `;
+    }
+    
+    // Phone section
+    let phoneSection = '';
+    if (listing.phone) {
+        phoneSection = `
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+                <span>${formatPhoneNumber(listing.phone)}</span>
+            </div>
+        `;
+    }
+    
+    // Email section
+    let emailSection = '';
+    if (listing.email) {
+        emailSection = `
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <span>${listing.email}</span>
+            </div>
+        `;
+    }
+    
+    // Website section
+    let websiteSection = '';
+    if (listing.website) {
+        websiteSection = `
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+                <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${listing.website}</a>
+            </div>
+        `;
+    }
+    
+    // Hours section
+    let hoursSection = '';
+    if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        const hoursRows = dayKeys.map((key, index) => {
+            const hours = listing.hours[key] || 'Closed';
+            return `<div class="flex justify-between text-sm"><span class="font-medium">${days[index]}:</span><span>${hours}</span></div>`;
+        }).join('');
+        
+        hoursSection = `
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+                        <div class="space-y-1">${hoursRows}</div>
+                        <div id="openStatusText" class="closed-now">Closed Now</div>
+                        <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
+                    </div>
+                `;
+    }
+    
+    // Phone button
+    let phoneButton = '';
+    if (listing.phone) {
+        phoneButton = `
+            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+                Call
+            </a>
+        `;
+    }
+    
+    // Email button
+    let emailButton = '';
+    if (listing.email) {
+        emailButton = `
+            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Email
+            </a>
+        `;
+    }
+    
+    // Website button
+    let websiteButton = '';
+    if (listing.website) {
+        websiteButton = `
+            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+                Website
+            </a>
+        `;
+    }
+    
+    // Directions button
+    let directionsButton = '';
+    if (listing.address || listing.city) {
+        const destination = listing.address 
+            ? `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim()
+            : `${listing.business_name}, ${listing.city}, ${listing.state}`;
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+        
+        directionsButton = `
+            <a href="${mapsUrl}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                </svg>
+                Directions
+            </a>
+        `;
+    }
+    
+    // Owner info section
+    let ownerInfoSection = '';
+    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+    if (owner && (owner.full_name || owner.title)) {
+        let ownerDetails = '';
+        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${owner.full_name}</p>`;
+        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${owner.title}</p>`;
+        
+        ownerInfoSection = `
+                    <div class="owner-info-section">
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
+                        ${ownerDetails}
+                    </div>
+                `;
+    }
+    
+    // Social media section (continued in next artifact)
+    return {
+        'BUSINESS_NAME': listing.business_name,
+        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
+        'CITY_STATE': cityState,
+        'IN_CITY': inCity,
+        'TAGLINE': listing.tagline || '',
+        'DESCRIPTION': listing.description || '',
+        'CATEGORY': listing.category,
+        'LISTING_URL': listingUrl,
+        'LISTING_ID': listing.id,
+        'LOGO': listing.logo || '',
+        'ADDRESS': listing.address || '',
+        'CITY': listing.city || '',
+        'STATE': listing.state || '',
+        'ZIP_CODE': listing.zip_code || '',
+        'COUNTRY': listing.country || 'USA',
+        'PHONE': listing.phone || '',
+        'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
+        'TOTAL_SLIDES': totalSlides,
+        'PHOTOS_SLIDES': photosSlides,
+        'CAROUSEL_CONTROLS': carouselControls,
+        'SUBCATEGORIES_TAGS': subcategoriesTags,
+        'STATUS_BADGE': statusBadge + tierBadges,
+        'TAGLINE_DISPLAY': taglineDisplay,
+        'ADDRESS_SECTION': addressSection,
+        'PHONE_SECTION': phoneSection,
+        'EMAIL_SECTION': emailSection,
+        'WEBSITE_SECTION': websiteSection,
+        'HOURS_SECTION': hoursSection,
+        'PHONE_BUTTON': phoneButton,
+        'EMAIL_BUTTON': emailButton,
+        'WEBSITE_BUTTON': websiteButton,
+        'DIRECTIONS_BUTTON': directionsButton,
+        'OWNER_INFO_SECTION': ownerInfoSection,
+        'COORDINATES': listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '',
+        'FULL_ADDRESS': [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', '),
+        'HOURS_JSON': listing.hours ? JSON.stringify(listing.hours) : 'null'
+    };
+}
+// Continuing generateTemplateReplacements function...
+
+function generateSocialMediaSection(listing) {
+    const socialMedia = listing.social_media || {};
+    const hasSocial = Object.values(socialMedia).some(v => v);
+    
+    if (!hasSocial) return '';
+    
+    let socialIcons = '';
+    
+    const socialSVGs = {
+        facebook: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+        instagram: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>',
+        twitter: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+        youtube: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+        tiktok: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>',
+        linkedin: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>'
+    };
+    
+    if (socialMedia.facebook) {
+        socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook">${socialSVGs.facebook}</a>`;
+    }
+    if (socialMedia.instagram) {
+        socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram">${socialSVGs.instagram}</a>`;
+    }
+    if (socialMedia.twitter) {
+        socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon social-twitter">${socialSVGs.twitter}</a>`;
+    }
+    if (socialMedia.youtube) {
+        socialIcons += `<a href="https://youtube.com/@${socialMedia.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube">${socialSVGs.youtube}</a>`;
+    }
+    if (socialMedia.tiktok) {
+        socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok">${socialSVGs.tiktok}</a>`;
+    }
+    if (socialMedia.linkedin) {
+        socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin">${socialSVGs.linkedin}</a>`;
+    }
+    
+    if (!socialIcons) return '';
+    
+    return `
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
+                        <div class="flex flex-wrap gap-2">
+                            ${socialIcons}
+                        </div>
+                    </div>
+                `;
+}
+
+function generateReviewSection(listing) {
+    const reviews = listing.reviews || {};
+    const hasReviews = Object.values(reviews).some(v => v);
+    
+    if (!hasReviews) return '';
+    
+    let reviewLinks = '';
+    
+    const reviewSVGs = {
+        google: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>',
+        yelp: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M21.111 18.226c-.141.969-2.119 3.483-3.029 3.847-.311.124-.611.094-.85-.09-.154-.12-2.314-2.164-2.762-2.728-.347-.437-.387-.8-.098-1.146.098-.117 1.433-1.575 1.722-1.903.422-.48 1.055-.595 1.601-.257.582.364 3.204 1.75 3.379 2.035.176.284.176.607.037.876zM11.883 4.348h-.002c-.022.011-.047.021-.07.032-.021.01-.042.019-.062.029l-.013.005a.45.45 0 0 0-.07.043l-.01.006-.014.01-.012.007-.011.007L5.896 7.842l-.028.017a.63.63 0 0 0-.271.34c-.104.326.121.77.6 1.247l.002.002c.015.015.03.029.046.044l.01.01.014.013 3.836 3.667a.45.45 0 0 0 .628.005l1.993-1.865a.626.626 0 0 0 .005-.851l-3.836-3.667-.014-.014-.013-.012a.451.451 0 0 0-.044-.044l-.002-.002c-.477-.478-.921-.703-1.247-.6-.107.034-.2.103-.294.178l-.012.01.001-.001z"/></svg>',
+        tripadvisor: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.006 4.295c-2.67 0-5.338.784-7.645 2.353H0l1.963 2.135a5.997 5.997 0 0 0 4.04 10.43 5.976 5.976 0 0 0 4.075-1.6L12 19.705l1.922-2.09a5.972 5.972 0 0 0 4.072 1.598 6 6 0 0 0 4.039-10.429L24 6.647h-4.361c-2.307-1.569-4.974-2.352-7.633-2.352zm-5.99 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm11.985 0a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm-11.985 1.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm11.985 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>'
+    };
+    
+    if (reviews.google) {
+        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google">${reviewSVGs.google}</a>`;
+    }
+    if (reviews.yelp) {
+        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp">${reviewSVGs.yelp}</a>`;
+    }
+    if (reviews.tripadvisor) {
+        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor">${reviewSVGs.tripadvisor}</a>`;
+    }
+    
+    if (!reviewLinks) return '';
+    
+    return `
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
+                        <div class="flex flex-wrap gap-2">
+                            ${reviewLinks}
+                        </div>
+                    </div>
+                `;
+}
+
+function generateMapSection(listing) {
+    if (!listing.coordinates || !listing.coordinates.lat || !listing.coordinates.lng) {
+        return '';
+    }
+    
+    return `
+            <div>
+                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
+                <div id="listingMap"></div>
+            </div>
+        `;
+}
+
+function generateClaimButton(listing) {
+    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+    const isClaimed = owner && owner.owner_user_id;
+    
+    if (isClaimed || !listing.show_claim_button) {
+        return '';
+    }
+    
+    const fullAddress = [listing.city, listing.state, listing.country].filter(Boolean).join(', ');
+    const subject = `Claim My Listing: ${listing.business_name} - ${fullAddress}`;
+    
+    return `
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                   <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
+                   <p class="text-gray-700 mb-4">Claim this listing to manage your information and tag it as Claimed.</p>
+                   <a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(subject)}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Business</a>
+               </div>
+    `;
+}
+
+function generateHoursSchema(listing) {
+    if (!listing.hours || Object.keys(listing.hours).length === 0) {
+        return '[]';
+    }
+    
+    const dayMap = {
+        'monday': 'Monday',
+        'tuesday': 'Tuesday',
+        'wednesday': 'Wednesday',
+        'thursday': 'Thursday',
+        'friday': 'Friday',
+        'saturday': 'Saturday',
+        'sunday': 'Sunday'
+    };
+    
+    const schemaHours = [];
+    
+    Object.entries(listing.hours).forEach(([day, hours]) => {
+        if (hours && hours.toLowerCase() !== 'closed') {
+            const match = hours.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?\s*-\s*(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
+            if (match) {
+                schemaHours.push({
+                    "@type": "OpeningHoursSpecification",
+                    "dayOfWeek": dayMap[day],
+                    "opens": match[1] + (match[2] || ':00') + (match[3] || ''),
+                    "closes": match[4] + (match[5] || ':00') + (match[6] || '')
+                });
+            }
+        }
+    });
+    
+    return JSON.stringify(schemaHours);
+}
+
+// Update generateListingPage function to use these helpers
+window.generateListingPage = async function(listingId) {
+    try {
+        const listing = allListings.find(l => l.id === listingId);
+        if (!listing) {
+            alert('Listing not found');
+            return;
+        }
+        
+        if (!confirm(`Generate static HTML page for "${listing.business_name}"?`)) {
+            return;
+        }
+        
+        // Fetch template
+        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
+        if (!templateResponse.ok) {
+            throw new Error('Failed to fetch template');
+        }
+        
+        let template = await templateResponse.text();
+        
+        // Generate all replacements
+        const replacements = generateTemplateReplacements(listing);
+        
+        // Add social media, reviews, map, claim button
+        replacements.SOCIAL_MEDIA_SECTION = generateSocialMediaSection(listing);
+        replacements.REVIEW_SECTION = generateReviewSection(listing);
+        replacements.MAP_SECTION = generateMapSection(listing);
+        replacements.CLAIM_BUTTON = generateClaimButton(listing);
+        replacements.HOURS_SCHEMA = generateHoursSchema(listing);
+        
+        // Replace all placeholders
+        Object.keys(replacements).forEach(key => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            template = template.replace(regex, replacements[key]);
+        });
+        
+        // Save to GitHub
+        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
+        
+        await saveToGitHub(filePath, template, listing.business_name);
+        
+        alert(`✅ Page generated successfully!\n\nURL: ${replacements.LISTING_URL}`);
+        
+    } catch (error) {
+        console.error('Error generating listing page:', error);
+        alert('❌ Failed to generate listing page: ' + error.message);
+    }
+};
+
+async function saveToGitHub(filePath, content, businessName) {
+    // Check if file exists
+    let currentSha = null;
+    try {
+        const fileInfoResponse = await fetch(
+            `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
+            {
+                headers: {
+                    'Authorization': `token ${adminGithubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (fileInfoResponse.ok) {
+            const fileInfo = await fileInfoResponse.json();
+            currentSha = fileInfo.sha;
+        }
+    } catch (error) {
+        console.log('File does not exist, will create new');
+    }
+    
+    // Upload to GitHub
+    const base64Content = btoa(unescape(encodeURIComponent(content)));
+    
+    const uploadBody = {
+        message: `${currentSha ? 'Update' : 'Create'} listing page for ${businessName}`,
+        content: base64Content,
+        committer: {
+            name: 'TGD Admin',
+            email: 'admin@thegreekdirectory.org'
+        }
+    };
+    
+    if (currentSha) {
+        uploadBody.sha = currentSha;
+    }
+    
+    const uploadResponse = await fetch(
+        `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
+        {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${adminGithubToken}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(uploadBody)
+        }
+    );
+    
+    if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        throw new Error(`GitHub upload failed: ${errorData.message}`);
+    }
+    
+    return true;
+}
