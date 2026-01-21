@@ -1327,6 +1327,11 @@ window.uploadCSV = uploadCSV;
 // ============================================
 
 // Category default images mapping
+// ============================================
+// ADMIN PORTAL - PAGE GENERATION FUNCTIONS
+// Add to end of admin.js after existing code
+// ============================================
+
 const CATEGORY_DEFAULT_IMAGES = {
     'Automotive & Transportation': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3',
     'Beauty & Health': 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8',
@@ -1344,816 +1349,12 @@ const CATEGORY_DEFAULT_IMAGES = {
     'Retail & Shopping': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'
 };
 
-async function generateListingPage(listing) {
-    try {
-        console.log('📄 Generating page for:', listing.business_name);
-        
-        // Fetch template
-        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
-        if (!templateResponse.ok) {
-            throw new Error('Failed to fetch template');
-        }
-        
-        let template = await templateResponse.text();
-        
-        // Apply default images if needed
-        const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
-        
-        if (!listing.logo && defaultImage) {
-            listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
-        }
-        
-        if (!listing.photos || listing.photos.length === 0) {
-            listing.photos = [`${defaultImage}?w=800&q=80`];
-        }
-        
-        // Generate all replacements
-        const replacements = generateTemplateReplacements(listing);
-        
-        // Replace all placeholders
-        Object.keys(replacements).forEach(key => {
-            const regex = new RegExp(`{{${key}}}`, 'g');
-            template = template.replace(regex, replacements[key]);
-        });
-        
-        // Save to GitHub
-        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
-        
-        const success = await saveToGitHub(filePath, template, listing.business_name);
-        
-        if (success) {
-            console.log('✅ Page generated successfully');
-            return true;
-        } else {
-            console.error('❌ Failed to save page to GitHub');
-            return false;
-        }
-        
-    } catch (error) {
-        console.error('Error generating page:', error);
-        return false;
-    }
-}
-
-function generateTemplateReplacements(listing) {
-    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
-    
-    const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
-    const inCity = listing.city ? ` in ${listing.city}` : '';
-    
-    return {
-        'BUSINESS_NAME': escapeHtml(listing.business_name),
-        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
-        'CITY_STATE': cityState,
-        'IN_CITY': inCity,
-        'TAGLINE': escapeHtml(listing.tagline || ''),
-        'DESCRIPTION': escapeHtml(listing.description || ''),
-        'CATEGORY': escapeHtml(listing.category),
-        'LISTING_URL': listingUrl,
-        'LOGO': listing.logo || '',
-        'ADDRESS': escapeHtml(listing.address || ''),
-        'CITY': escapeHtml(listing.city || ''),
-        'STATE': escapeHtml(listing.state || ''),
-        'ZIP_CODE': escapeHtml(listing.zip_code || ''),
-        'COUNTRY': escapeHtml(listing.country || 'USA'),
-        'PHONE': listing.phone || '',
-        'EMAIL': listing.email || '',
-        'WEBSITE': listing.website || '',
-        
-        'PHOTOS_SLIDES': generatePhotoSlides(listing),
-        'CAROUSEL_CONTROLS': generateCarouselControls(listing),
-        'SUBCATEGORIES_TAGS': generateSubcategoryTags(listing),
-        'STATUS_BADGES': generateStatusBadges(listing),
-        'TAGLINE_DISPLAY': listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '',
-        
-        'ADDRESS_SECTION': generateAddressSection(listing),
-        'PHONE_SECTION': generatePhoneSection(listing),
-        'EMAIL_SECTION': generateEmailSection(listing),
-        'WEBSITE_SECTION': generateWebsiteSection(listing),
-        'HOURS_SECTION': generateHoursSection(listing),
-        
-        'PHONE_BUTTON': generatePhoneButton(listing),
-        'EMAIL_BUTTON': generateEmailButton(listing),
-        'WEBSITE_BUTTON': generateWebsiteButton(listing),
-        'DIRECTIONS_BUTTON': generateDirectionsButton(listing),
-        
-        'OWNER_INFO_SECTION': generateOwnerInfoSection(listing),
-        'SOCIAL_MEDIA_SECTION': generateSocialMediaSection(listing),
-        'REVIEW_SECTION': generateReviewSection(listing),
-        'MAP_SECTION': generateMapSection(listing),
-        'CLAIM_BUTTON': listing.show_claim_button ? generateClaimButton() : '',
-        
-        'HOURS_SCHEMA': generateHoursSchema(listing)
-    };
-}
-
-function generatePhotoSlides(listing) {
-    const photos = listing.photos || [];
-    if (photos.length === 0) return '';
-    
-    return photos.map((photo, index) => `
-        <div class="carousel-slide ${index === 0 ? 'active' : ''}" style="background-image: url('${photo}')"></div>
-    `).join('');
-}
-
-function generateCarouselControls(listing) {
-    const photos = listing.photos || [];
-    if (photos.length <= 1) return '';
-    
-    return `
-        <button class="carousel-btn prev" onclick="changeSlide(-1)">❮</button>
-        <button class="carousel-btn next" onclick="changeSlide(1)">❯</button>
-        <div class="carousel-dots">
-            ${photos.map((_, index) => `
-                <span class="dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>
-            `).join('')}
-        </div>
-    `;
-}
-
-function generateSubcategoryTags(listing) {
-    if (!listing.subcategories || listing.subcategories.length === 0) return '';
-    
-    return listing.subcategories.map(sub => {
-        const isPrimary = sub === listing.primary_subcategory;
-        return `<span class="text-xs px-2 py-1 rounded ${isPrimary ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700'}">${escapeHtml(sub)}</span>`;
-    }).join(' ');
-}
-
-function generateStatusBadges(listing) {
-    const badges = [];
-    
-    if (listing.tier === 'PREMIUM') {
-        badges.push('<span class="text-xs px-2 py-1 rounded bg-purple-100 text-purple-800">👑 Premium</span>');
-        badges.push('<span class="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">⭐ Featured</span>');
-        badges.push('<span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">✓ Verified</span>');
-    } else if (listing.tier === 'FEATURED') {
-        badges.push('<span class="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">⭐ Featured</span>');
-        badges.push('<span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">✓ Verified</span>');
-    } else if (listing.tier === 'VERIFIED') {
-        badges.push('<span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">✓ Verified</span>');
-    }
-    
-    if (listing.is_chain) {
-        badges.push('<span class="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">🔗 Chain</span>');
-    }
-    
-    return badges.join(' ');
-}
-
-function generateAddressSection(listing) {
-    if (!listing.address && !listing.city) return '';
-    
-    const parts = [];
-    if (listing.address) parts.push(listing.address);
-    if (listing.city) parts.push(listing.city);
-    if (listing.state) parts.push(listing.state);
-    if (listing.zip_code) parts.push(listing.zip_code);
-    
-    return `
-        <div class="flex items-start gap-2">
-            <span class="text-gray-600">📍</span>
-            <span class="text-gray-700">${escapeHtml(parts.join(', '))}</span>
-        </div>
-    `;
-}
-
-function generatePhoneSection(listing) {
-    if (!listing.phone) return '';
-    
-    const formatted = formatPhoneForDisplay(listing.phone);
-    return `
-        <div class="flex items-start gap-2">
-            <span class="text-gray-600">📞</span>
-            <a href="tel:${listing.phone}" class="text-blue-600 hover:underline">${formatted}</a>
-        </div>
-    `;
-}
-
-function generateEmailSection(listing) {
-    if (!listing.email) return '';
-    
-    return `
-        <div class="flex items-start gap-2">
-            <span class="text-gray-600">✉️</span>
-            <a href="mailto:${listing.email}" class="text-blue-600 hover:underline">${escapeHtml(listing.email)}</a>
-        </div>
-    `;
-}
-
-function generateWebsiteSection(listing) {
-    if (!listing.website) return '';
-    
-    let displayUrl = listing.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    
-    return `
-        <div class="flex items-start gap-2">
-            <span class="text-gray-600">🌐</span>
-            <a href="${listing.website}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
-        </div>
-    `;
-}
-
-function generateHoursSection(listing) {
-    if (!listing.hours || Object.keys(listing.hours).length === 0) return '';
-    
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    
-    return `
-        <div class="border-t pt-3">
-            <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
-            <div class="space-y-1 text-sm">
-                ${dayKeys.map((key, index) => {
-                    const hours = listing.hours[key] || 'Closed';
-                    return `<div class="flex justify-between"><span>${days[index]}:</span><span class="text-gray-600">${escapeHtml(hours)}</span></div>`;
-                }).join('')}
-            </div>
-        </div>
-    `;
-}
-
-function generatePhoneButton(listing) {
-    if (!listing.phone) return '';
-    return `<a href="tel:${listing.phone}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"><span>📞</span><span>Call</span></a>`;
-}
-
-function generateEmailButton(listing) {
-    if (!listing.email) return '';
-    return `<a href="mailto:${listing.email}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"><span>✉️</span><span>Email</span></a>`;
-}
-
-function generateWebsiteButton(listing) {
-    if (!listing.website) return '';
-    return `<a href="${listing.website}" target="_blank" rel="noopener" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"><span>🌐</span><span>Website</span></a>`;
-}
-
-function generateDirectionsButton(listing) {
-    if (!listing.address && !listing.city) return '';
-    
-    const query = listing.address ? `${listing.address}, ${listing.city}, ${listing.state}` : `${listing.business_name}, ${listing.city}, ${listing.state}`;
-    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-    
-    return `<a href="${mapsUrl}" target="_blank" rel="noopener" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2"><span>🗺️</span><span>Directions</span></a>`;
-}
-
-function formatPhoneForDisplay(phone) {
-    if (!phone) return '';
-    
-    const digits = phone.replace(/\D/g, '');
-    
-    if (phone.startsWith('+1') && digits.length === 11) {
-        const usDigits = digits.substr(1);
-        return `(${usDigits.substr(0, 3)}) ${usDigits.substr(3, 3)}-${usDigits.substr(6, 4)}`;
-    }
-    
-    if (digits.length === 10) {
-        return `(${digits.substr(0, 3)}) ${digits.substr(3, 3)}-${digits.substr(6, 4)}`;
-    }
-    
-    return phone;
-}
-
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
-// ============================================
-// ADMIN PORTAL - PART 6
-// Generate Listing Pages Functionality
-// ============================================
-
-window.generateListingPage = async function(listingId) {
-    try {
-        const listing = allListings.find(l => l.id === listingId);
-        if (!listing) {
-            alert('Listing not found');
-            return;
-        }
-        
-        if (!confirm(`Generate static HTML page for "${listing.business_name}"?\n\nThis will create/update the listing page.`)) {
-            return;
-        }
-        
-        // Fetch the template
-        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
-        if (!templateResponse.ok) {
-            throw new Error('Failed to fetch template');
-        }
-        
-        let template = await templateResponse.text();
-        
-        // Replace template variables
-        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
-        
-        // Basic replacements
-        template = template.replace(/{{BUSINESS_NAME}}/g, listing.business_name);
-        template = template.replace(/{{TAGLINE}}/g, listing.tagline || '');
-        template = template.replace(/{{LISTING_URL}}/g, listingUrl);
-        template = template.replace(/{{BUSINESS_NAME_ENCODED}}/g, encodeURIComponent(listing.business_name));
-        template = template.replace(/{{CATEGORY}}/g, listing.category);
-        template = template.replace(/{{LOGO}}/g, listing.logo || '');
-        template = template.replace(/{{DESCRIPTION}}/g, listing.description || '');
-        
-        // City/State
-        if (listing.city && listing.state) {
-            template = template.replace(/{{CITY_STATE}}/g, ` in ${listing.city}, ${listing.state}`);
-            template = template.replace(/{{IN_CITY}}/g, ` in ${listing.city}, ${listing.state}`);
-        } else {
-            template = template.replace(/{{CITY_STATE}}/g, '');
-            template = template.replace(/{{IN_CITY}}/g, '');
-        }
-        
-        // Address components
-        template = template.replace(/{{ADDRESS}}/g, listing.address || '');
-        template = template.replace(/{{CITY}}/g, listing.city || '');
-        template = template.replace(/{{STATE}}/g, listing.state || '');
-        template = template.replace(/{{ZIP_CODE}}/g, listing.zip_code || '');
-        template = template.replace(/{{COUNTRY}}/g, listing.country || 'USA');
-        template = template.replace(/{{PHONE}}/g, listing.phone || '');
-        
-        // Status badges
-        let statusBadges = '';
-        if (listing.tier === 'PREMIUM') {
-            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">⭐ Featured</span>';
-            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-800 ml-2">✓ Verified</span>';
-        } else if (listing.tier === 'FEATURED') {
-            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">⭐ Featured</span>';
-        } else if (listing.tier === 'VERIFIED') {
-            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-800">✓ Verified</span>';
-        }
-        
-        if (listing.is_chain) {
-            statusBadges += '<span class="text-sm font-semibold px-3 py-1 rounded-full bg-purple-100 text-purple-800 ml-2">🔗 Chain</span>';
-        }
-        
-        template = template.replace(/{{STATUS_BADGES}}/g, statusBadges);
-        
-        // Subcategories
-        let subcategoriesTags = '';
-        if (listing.subcategories && listing.subcategories.length > 0) {
-            subcategoriesTags = listing.subcategories.map(sub => {
-                const isPrimary = sub === listing.primary_subcategory;
-                return `<span class="text-xs font-medium px-2 py-1 rounded-full ${isPrimary ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700'}">${sub}</span>`;
-            }).join('');
-        }
-        template = template.replace(/{{SUBCATEGORIES_TAGS}}/g, subcategoriesTags);
-        
-        // Tagline display
-        let taglineDisplay = '';
-        if (listing.tagline) {
-            taglineDisplay = `<p class="text-gray-600 italic mb-2">"${listing.tagline}"</p>`;
-        }
-        template = template.replace(/{{TAGLINE_DISPLAY}}/g, taglineDisplay);
-        
-        // Photos/carousel
-        const photos = listing.photos || [];
-        let photosSlides = '';
-        let carouselControls = '';
-        
-        if (photos.length > 0) {
-            photosSlides = photos.map((photo, index) => 
-                `<img src="${photo}" alt="Photo ${index + 1}" class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">`
-            ).join('');
-            
-            if (photos.length > 1) {
-                carouselControls = `
-                    <button class="carousel-prev" onclick="changeSlide(-1)">❮</button>
-                    <button class="carousel-next" onclick="changeSlide(1)">❯</button>
-                    <div class="carousel-dots">
-                        ${photos.map((_, index) => 
-                            `<span class="dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>`
-                        ).join('')}
-                    </div>
-                `;
-            }
-        } else if (listing.logo) {
-            photosSlides = `<img src="${listing.logo}" alt="${listing.business_name} logo" class="carousel-slide active">`;
-        }
-        
-        template = template.replace(/{{PHOTOS_SLIDES}}/g, photosSlides);
-        template = template.replace(/{{CAROUSEL_CONTROLS}}/g, carouselControls);
-        
-        // Contact sections
-        let addressSection = '';
-        if (listing.address || listing.city || listing.state) {
-            const addressParts = [];
-            if (listing.address) addressParts.push(listing.address);
-            if (listing.city && listing.state) addressParts.push(`${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim());
-            
-            addressSection = `
-                <div class="flex items-start gap-2 text-sm">
-                    <span class="text-gray-600">📍</span>
-                    <span class="text-gray-700">${addressParts.join(', ')}</span>
-                </div>
-            `;
-        }
-        template = template.replace(/{{ADDRESS_SECTION}}/g, addressSection);
-        
-        let phoneSection = '';
-        if (listing.phone) {
-            phoneSection = `
-                <div class="flex items-start gap-2 text-sm">
-                    <span class="text-gray-600">📞</span>
-                    <a href="tel:${listing.phone}" class="text-blue-600 hover:underline" onclick="trackClick('call')">${formatPhoneNumber(listing.phone)}</a>
-                </div>
-            `;
-        }
-        template = template.replace(/{{PHONE_SECTION}}/g, phoneSection);
-        
-        let emailSection = '';
-        if (listing.email) {
-            emailSection = `
-                <div class="flex items-start gap-2 text-sm">
-                    <span class="text-gray-600">✉️</span>
-                    <a href="mailto:${listing.email}" class="text-blue-600 hover:underline" onclick="trackClick('email')">${listing.email}</a>
-                </div>
-            `;
-        }
-        template = template.replace(/{{EMAIL_SECTION}}/g, emailSection);
-        
-        let websiteSection = '';
-        if (listing.website) {
-            websiteSection = `
-                <div class="flex items-start gap-2 text-sm">
-                    <span class="text-gray-600">🌐</span>
-                    <a href="${listing.website}" target="_blank" rel="noopener" class="text-blue-600 hover:underline" onclick="trackClick('website')">${new URL(listing.website).hostname}</a>
-                </div>
-            `;
-        }
-        template = template.replace(/{{WEBSITE_SECTION}}/g, websiteSection);
-        
-        // Hours section
-        let hoursSection = '';
-        if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            const today = new Date().getDay();
-            const todayIndex = today === 0 ? 6 : today - 1;
-            
-            const hoursRows = days.map((day, index) => {
-                const dayKey = day.toLowerCase();
-                const hours = listing.hours[dayKey] || 'Closed';
-                const isToday = index === todayIndex;
-                
-                return `
-                    <div class="flex justify-between py-2 border-b ${isToday ? 'font-bold' : ''}">
-                        <span>${day}${isToday ? ' (Today)' : ''}</span>
-                        <span>${hours}</span>
-                    </div>
-                `;
-            }).join('');
-            
-            hoursSection = `
-                <div class="mb-4">
-                    <h3 class="font-bold text-gray-900 mb-2">Hours</h3>
-                    <div class="space-y-1 text-sm">
-                        ${hoursRows}
-                    </div>
-                </div>
-            `;
-        }
-        template = template.replace(/{{HOURS_SECTION}}/g, hoursSection);
-        
-        // Action buttons
-        let phoneButton = '';
-        if (listing.phone) {
-            phoneButton = `
-                <a href="tel:${listing.phone}" class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg text-center font-medium hover:bg-green-700" onclick="trackClick('call')">
-                    📞 Call
-                </a>
-            `;
-        }
-        template = template.replace(/{{PHONE_BUTTON}}/g, phoneButton);
-        
-        let emailButton = '';
-        if (listing.email) {
-            emailButton = `
-                <a href="mailto:${listing.email}" class="flex-1 py-3 px-4 rounded-lg text-center font-medium border-2 hover:bg-gray-50" style="border-color:#055193;color:#055193;" onclick="trackClick('email')">
-                    ✉️ Email
-                </a>
-            `;
-        }
-        template = template.replace(/{{EMAIL_BUTTON}}/g, emailButton);
-        
-        let websiteButton = '';
-        if (listing.website) {
-            websiteButton = `
-                <a href="${listing.website}" target="_blank" rel="noopener" class="flex-1 text-white py-3 px-4 rounded-lg text-center font-medium hover:opacity-90" style="background-color:#055193;" onclick="trackClick('website')">
-                    🌐 Website
-                </a>
-            `;
-        }
-        template = template.replace(/{{WEBSITE_BUTTON}}/g, websiteButton);
-        
-        let directionsButton = '';
-        if (listing.address || listing.places_url_ending) {
-            const mapsUrl = listing.places_url_ending 
-                ? `https://www.google.com/maps/place/?q=place_id:${listing.places_url_ending}`
-                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.address || listing.business_name)}`;
-            
-            directionsButton = `
-                <a href="${mapsUrl}" target="_blank" rel="noopener" class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg text-center font-medium hover:bg-blue-700" onclick="trackClick('directions')">
-                    🗺️ Directions
-                </a>
-            `;
-        }
-        template = template.replace(/{{DIRECTIONS_BUTTON}}/g, directionsButton);
-        
-        // Owner info section
-        let ownerInfoSection = '';
-        const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-        
-        if (owner && (owner.full_name || owner.title || owner.from_greece || 
-            (owner.email_visible && owner.owner_email) || 
-            (owner.phone_visible && owner.owner_phone))) {
-            
-            let ownerDetails = '';
-            
-            if (owner.full_name) {
-                ownerDetails += `<div class="text-sm"><span class="font-semibold">Name:</span> ${owner.full_name}</div>`;
-            }
-            if (owner.title) {
-                ownerDetails += `<div class="text-sm"><span class="font-semibold">Title:</span> ${owner.title}</div>`;
-            }
-            if (owner.from_greece) {
-                ownerDetails += `<div class="text-sm"><span class="font-semibold">From:</span> ${owner.from_greece}, Greece</div>`;
-            }
-            if (owner.email_visible && owner.owner_email) {
-                ownerDetails += `<div class="text-sm"><span class="font-semibold">Email:</span> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${owner.owner_email}</a></div>`;
-            }
-            if (owner.phone_visible && owner.owner_phone) {
-                ownerDetails += `<div class="text-sm"><span class="font-semibold">Phone:</span> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></div>`;
-            }
-            
-            ownerInfoSection = `
-                <div class="mb-4 p-4 rounded-lg" style="background-color:#f0f9ff;">
-                    <h3 class="font-bold text-gray-900 mb-2">Owner Information</h3>
-                    <div class="space-y-1">
-                        ${ownerDetails}
-                    </div>
-                </div>
-            `;
-        }
-        template = template.replace(/{{OWNER_INFO_SECTION}}/g, ownerInfoSection);
-        
-        // Social media section
-        let socialMediaSection = '';
-        const socialMedia = listing.social_media || {};
-        const hasSocial = Object.values(socialMedia).some(v => v);
-        
-        if (hasSocial) {
-            let socialIcons = '';
-            
-            if (socialMedia.facebook) {
-                socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800" onclick="trackClick('social', 'facebook')">📘 Facebook</a>`;
-            }
-            if (socialMedia.instagram) {
-                socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener" class="text-pink-600 hover:text-pink-800" onclick="trackClick('social', 'instagram')">📷 Instagram</a>`;
-            }
-            if (socialMedia.twitter) {
-                socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-600" onclick="trackClick('social', 'twitter')">𝕏 Twitter</a>`;
-            }
-            if (socialMedia.youtube) {
-                socialIcons += `<a href="https://youtube.com/${socialMedia.youtube}" target="_blank" rel="noopener" class="text-red-600 hover:text-red-800" onclick="trackClick('social', 'youtube')">▶️ YouTube</a>`;
-            }
-            if (socialMedia.tiktok) {
-                socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener" class="text-black hover:text-gray-700" onclick="trackClick('social', 'tiktok')">♪ TikTok</a>`;
-            }
-            if (socialMedia.linkedin) {
-                socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener" class="text-blue-700 hover:text-blue-900" onclick="trackClick('social', 'linkedin')">💼 LinkedIn</a>`;
-            }
-            
-            if (socialIcons) {
-                socialMediaSection = `
-                    <div class="mb-4">
-                        <h3 class="font-bold text-gray-900 mb-2">Social Media</h3>
-                        <div class="flex flex-wrap gap-3 text-sm">
-                            ${socialIcons}
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        template = template.replace(/{{SOCIAL_MEDIA_SECTION}}/g, socialMediaSection);
-        
-        // Review section
-        let reviewSection = '';
-        const reviews = listing.reviews || {};
-        const hasReviews = Object.values(reviews).some(v => v);
-        
-        if (hasReviews) {
-            let reviewLinks = '';
-            
-            if (reviews.google) {
-                reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener" class="inline-block px-4 py-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium">⭐ Google Reviews</a>`;
-            }
-            if (reviews.yelp) {
-                reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener" class="inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">Yelp Reviews</a>`;
-            }
-            if (reviews.tripadvisor) {
-                reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener" class="inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">TripAdvisor</a>`;
-            }
-            
-            if (reviewLinks) {
-                reviewSection = `
-                    <div class="mb-4">
-                        <h3 class="font-bold text-gray-900 mb-2">Reviews</h3>
-                        <div class="flex flex-wrap gap-2">
-                            ${reviewLinks}
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        template = template.replace(/{{REVIEW_SECTION}}/g, reviewSection);
-        
-        // Map section
-        let mapSection = '';
-        if (listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
-            mapSection = `
-                <div class="mb-4">
-                    <h3 class="font-bold text-gray-900 mb-2">Location</h3>
-                    <div id="listingMap" class="w-full h-64 rounded-lg bg-gray-200" data-lat="${listing.coordinates.lat}" data-lng="${listing.coordinates.lng}"></div>
-                </div>
-            `;
-        }
-        template = template.replace(/{{MAP_SECTION}}/g, mapSection);
-        
-        // Claim button
-        let claimButton = '';
-        const isClaimed = owner && owner.owner_user_id;
-        
-        if (!isClaimed && listing.show_claim_button) {
-            claimButton = `
-                <div class="mt-6 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg text-center">
-                    <h3 class="font-bold text-gray-900 mb-2">Is this your business?</h3>
-                    <p class="text-sm text-gray-700 mb-3">Claim your listing to manage your information and connect with customers.</p>
-                    <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-medium" style="background-color:#055193;">Claim This Listing</a>
-                </div>
-            `;
-        }
-        template = template.replace(/{{CLAIM_BUTTON}}/g, claimButton);
-        
-        // Hours schema for structured data
-        let hoursSchema = '[]';
-        if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
-            const schemaHours = [];
-            const dayMap = {
-                'monday': 'Monday',
-                'tuesday': 'Tuesday',
-                'wednesday': 'Wednesday',
-                'thursday': 'Thursday',
-                'friday': 'Friday',
-                'saturday': 'Saturday',
-                'sunday': 'Sunday'
-            };
-            
-            Object.entries(listing.hours).forEach(([day, hours]) => {
-                if (hours && hours.toLowerCase() !== 'closed') {
-                    const match = hours.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?\s*-\s*(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
-                    if (match) {
-                        schemaHours.push({
-                            "@type": "OpeningHoursSpecification",
-                            "dayOfWeek": dayMap[day],
-                            "opens": match[1] + (match[2] || ':00') + (match[3] || ''),
-                            "closes": match[4] + (match[5] || ':00') + (match[6] || '')
-                        });
-                    }
-                }
-            });
-            
-            if (schemaHours.length > 0) {
-                hoursSchema = JSON.stringify(schemaHours);
-            }
-        }
-        template = template.replace(/{{HOURS_SCHEMA}}/g, hoursSchema);
-        
-        // Data attribute for listing ID
-        template = template.replace('<body class="bg-gray-50">', `<body class="bg-gray-50" data-listing-id="${listing.id}">`);
-        
-        console.log('Generated HTML for:', listing.business_name);
-        
-        // Now upload to GitHub
-        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
-        
-        // Check if file exists
-        let currentSha = null;
-        try {
-            const fileInfoResponse = await fetch(
-                `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
-                {
-                    headers: {
-                        'Authorization': `token ${adminGithubToken}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                }
-            );
-            
-            if (fileInfoResponse.ok) {
-                const fileInfo = await fileInfoResponse.json();
-                currentSha = fileInfo.sha;
-            }
-        } catch (error) {
-            console.log('File does not exist, will create new');
-        }
-        
-        // Upload to GitHub
-        const base64Content = btoa(unescape(encodeURIComponent(template)));
-        
-        const uploadBody = {
-            message: `${currentSha ? 'Update' : 'Create'} listing page for ${listing.business_name}`,
-            content: base64Content,
-            committer: {
-                name: 'TGD Admin',
-                email: 'admin@thegreekdirectory.org'
-            }
-        };
-        
-        if (currentSha) {
-            uploadBody.sha = currentSha;
-        }
-        
-        const uploadResponse = await fetch(
-            `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
-            {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${adminGithubToken}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(uploadBody)
-            }
-        );
-        
-        if (!uploadResponse.ok) {
-            const errorData = await uploadResponse.json();
-            throw new Error(`GitHub upload failed: ${errorData.message}`);
-        }
-        
-        alert(`✅ Listing page generated successfully!\n\nURL: ${listingUrl}`);
-        
-    } catch (error) {
-        console.error('Error generating listing page:', error);
-        alert('❌ Failed to generate listing page: ' + error.message);
-    }
-};
-
-window.generateAllListingPages = async function() {
-    if (!confirm('Generate static HTML pages for ALL listings?\n\nThis may take several minutes.')) {
-        return;
-    }
-    
-    const visibleListings = allListings.filter(l => l.visible);
-    
-    let successful = 0;
-    let failed = 0;
-    
-    for (const listing of visibleListings) {
-        try {
-            await generateListingPage(listing.id);
-            successful++;
-            
-            // Add small delay to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-            console.error(`Failed to generate page for ${listing.business_name}:`, error);
-            failed++;
-        }
-    }
-    
-    alert(`Generation complete!\n\nSuccessful: ${successful}\nFailed: ${failed}`);
-};
-
-function addGeneratePageButtons() {
-    const container = document.querySelector('.max-w-7xl.mx-auto.px-4.py-6 .mb-6');
-    if (!container) return;
-    
-    const existingBtn = document.getElementById('generateAllBtn');
-    if (existingBtn) return;
-    
-    const button = document.createElement('button');
-    button.id = 'generateAllBtn';
-    button.className = 'px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700';
-    button.textContent = '🔨 Generate All Pages';
-    button.onclick = generateAllListingPages;
-    
-    container.appendChild(button);
-}
-
-setTimeout(addGeneratePageButtons, 100);
-
-window.generateListingPage = generateListingPage;
-window.generateAllListingPages = generateAllListingPages;
-// ============================================
-// LISTING PAGE GENERATION - COMPLETE IMPLEMENTATION
-// Add to end of admin.js
-// ============================================
 
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -2162,17 +1363,29 @@ function generateTemplateReplacements(listing) {
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
     
-    const photos = listing.photos || [];
-    const totalSlides = photos.length || 1;
+    // Apply default images if needed
+    const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
+    
+    let logo = listing.logo;
+    if (!logo && defaultImage) {
+        logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
+    }
+    
+    let photos = listing.photos || [];
+    if (photos.length === 0 && defaultImage) {
+        photos = [`${defaultImage}?w=800&q=80`];
+    }
+    
+    const totalPhotos = photos.length || 1;
     
     // Generate photo slides
     let photosSlides = '';
     if (photos.length > 0) {
-        photosSlides = photos.map((photo, index) => 
-            `<div class="carousel-slide h-full"><img src="${photo}" alt="${listing.business_name}" class="w-full h-full object-cover"></div>`
+        photosSlides = photos.map(photo => 
+            `<div class="carousel-slide h-full"><img src="${photo}" alt="${escapeHtml(listing.business_name)}" class="w-full h-full object-cover"></div>`
         ).join('');
-    } else if (listing.logo) {
-        photosSlides = `<div class="carousel-slide h-full"><img src="${listing.logo}" alt="${listing.business_name}" class="w-full h-full object-cover"></div>`;
+    } else if (logo) {
+        photosSlides = `<div class="carousel-slide h-full"><img src="${logo}" alt="${escapeHtml(listing.business_name)}" class="w-full h-full object-cover"></div>`;
     }
     
     // Generate carousel controls
@@ -2192,32 +1405,39 @@ function generateTemplateReplacements(listing) {
     let subcategoriesTags = '';
     if (listing.subcategories && listing.subcategories.length > 0) {
         subcategoriesTags = listing.subcategories.map(sub => 
-            `<span class="subcategory-tag">${sub}</span>`
+            `<span class="subcategory-tag">${escapeHtml(sub)}</span>`
         ).join('');
     }
     
-    // Generate status badge
-    let statusBadge = '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
+    // Generate status badges
+    let statusBadges = '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
     
-    // Generate tier badges (if any)
-    let tierBadges = '';
-    if (listing.tier === 'PREMIUM' || listing.tier === 'FEATURED') {
-        tierBadges += ' ';
+    if (listing.tier === 'PREMIUM') {
+        statusBadges += ' <span class="badge badge-premium">👑 Premium</span>';
+        statusBadges += ' <span class="badge badge-featured">⭐ Featured</span>';
+        statusBadges += ' <span class="badge badge-verified">✓ Verified</span>';
+    } else if (listing.tier === 'FEATURED') {
+        statusBadges += ' <span class="badge badge-featured">⭐ Featured</span>';
+        statusBadges += ' <span class="badge badge-verified">✓ Verified</span>';
+    } else if (listing.tier === 'VERIFIED') {
+        statusBadges += ' <span class="badge badge-verified">✓ Verified</span>';
     }
-    if (listing.verified || listing.tier !== 'FREE') {
-        tierBadges += ' ';
+    
+    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+    if (owner && owner.owner_user_id) {
+        statusBadges += ' <span class="badge badge-claimed">✓ Claimed</span>';
     }
     
     // Tagline display
-    const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${listing.tagline}"</p>` : '';
+    const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '';
     
     // Address section
     let addressSection = '';
     if (listing.address || listing.city || listing.state) {
         const addressParts = [];
-        if (listing.address) addressParts.push(listing.address);
+        if (listing.address) addressParts.push(escapeHtml(listing.address));
         if (listing.city && listing.state) {
-            addressParts.push(`${listing.city}, ${listing.state}${listing.zip_code ? ' ' + listing.zip_code : ''}`);
+            addressParts.push(`${escapeHtml(listing.city)}, ${escapeHtml(listing.state)}${listing.zip_code ? ' ' + escapeHtml(listing.zip_code) : ''}`);
         }
         
         addressSection = `
@@ -2252,45 +1472,88 @@ function generateTemplateReplacements(listing) {
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
-                <span>${listing.email}</span>
+                <span>${escapeHtml(listing.email)}</span>
             </div>
         `;
     }
     
     // Website section
     let websiteSection = '';
+    let websiteDomain = '';
     if (listing.website) {
+        try {
+            websiteDomain = new URL(listing.website).hostname;
+        } catch (e) {
+            websiteDomain = listing.website;
+        }
         websiteSection = `
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
                 </svg>
-                <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${listing.website}</a>
+                <a href="${listing.website}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">${escapeHtml(websiteDomain)}</a>
             </div>
         `;
     }
     
     // Hours section
     let hoursSection = '';
+    let hoursJson = 'null';
     if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
+        hoursJson = JSON.stringify(listing.hours);
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         
         const hoursRows = dayKeys.map((key, index) => {
             const hours = listing.hours[key] || 'Closed';
-            return `<div class="flex justify-between text-sm"><span class="font-medium">${days[index]}:</span><span>${hours}</span></div>`;
+            return `<div class="flex justify-between text-sm"><span class="font-medium">${days[index]}:</span><span>${escapeHtml(hours)}</span></div>`;
         }).join('');
         
         hoursSection = `
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
-                        <div class="space-y-1">${hoursRows}</div>
-                        <div id="openStatusText" class="closed-now">Closed Now</div>
-                        <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
-                    </div>
-                `;
+            <div>
+                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+                <div class="space-y-1">${hoursRows}</div>
+                <div id="openStatusText" class="closed-now mt-2">Closed Now</div>
+                <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
+            </div>
+        `;
     }
     
+    return {
+        BUSINESS_NAME: escapeHtml(listing.business_name),
+        BUSINESS_NAME_ENCODED: encodeURIComponent(listing.business_name),
+        CITY_STATE: cityState,
+        IN_CITY: inCity,
+        TAGLINE: escapeHtml(listing.tagline || ''),
+        DESCRIPTION: escapeHtml(listing.description || ''),
+        CATEGORY: escapeHtml(listing.category),
+        LISTING_URL: listingUrl,
+        LISTING_ID: listing.id,
+        LOGO: logo || '',
+        ADDRESS: escapeHtml(listing.address || ''),
+        CITY: escapeHtml(listing.city || ''),
+        STATE: escapeHtml(listing.state || ''),
+        ZIP_CODE: escapeHtml(listing.zip_code || ''),
+        COUNTRY: escapeHtml(listing.country || 'USA'),
+        PHONE: listing.phone || '',
+        WEBSITE_DOMAIN: websiteDomain,
+        TOTAL_PHOTOS: totalPhotos,
+        PHOTOS_SLIDES: photosSlides,
+        CAROUSEL_CONTROLS: carouselControls,
+        SUBCATEGORIES_TAGS: subcategoriesTags,
+        STATUS_BADGES: statusBadges,
+        TAGLINE_DISPLAY: taglineDisplay,
+        ADDRESS_SECTION: addressSection,
+        PHONE_SECTION: phoneSection,
+        EMAIL_SECTION: emailSection,
+        WEBSITE_SECTION: websiteSection,
+        HOURS_SECTION: hoursSection,
+        HOURS_JSON: hoursJson,
+        COORDINATES: listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '',
+        FULL_ADDRESS: [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ')
+    };
+}
+function generateActionButtons(listing, replacements) {
     // Phone button
     let phoneButton = '';
     if (listing.phone) {
@@ -2321,7 +1584,7 @@ function generateTemplateReplacements(listing) {
     let websiteButton = '';
     if (listing.website) {
         websiteButton = `
-            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
+            <a href="${listing.website}" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
                 </svg>
@@ -2339,7 +1602,7 @@ function generateTemplateReplacements(listing) {
         const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
         
         directionsButton = `
-            <a href="${mapsUrl}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
+            <a href="${mapsUrl}" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                 </svg>
@@ -2348,63 +1611,49 @@ function generateTemplateReplacements(listing) {
         `;
     }
     
-    // Owner info section
-    let ownerInfoSection = '';
-    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    if (owner && (owner.full_name || owner.title)) {
-        let ownerDetails = '';
-        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${owner.full_name}</p>`;
-        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${owner.title}</p>`;
-        
-        ownerInfoSection = `
-                    <div class="owner-info-section">
-                        <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                        ${ownerDetails}
-                    </div>
-                `;
-    }
-    
-    // Social media section (continued in next artifact)
     return {
-        'BUSINESS_NAME': listing.business_name,
-        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
-        'CITY_STATE': cityState,
-        'IN_CITY': inCity,
-        'TAGLINE': listing.tagline || '',
-        'DESCRIPTION': listing.description || '',
-        'CATEGORY': listing.category,
-        'LISTING_URL': listingUrl,
-        'LISTING_ID': listing.id,
-        'LOGO': listing.logo || '',
-        'ADDRESS': listing.address || '',
-        'CITY': listing.city || '',
-        'STATE': listing.state || '',
-        'ZIP_CODE': listing.zip_code || '',
-        'COUNTRY': listing.country || 'USA',
-        'PHONE': listing.phone || '',
-        'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
-        'TOTAL_SLIDES': totalSlides,
-        'PHOTOS_SLIDES': photosSlides,
-        'CAROUSEL_CONTROLS': carouselControls,
-        'SUBCATEGORIES_TAGS': subcategoriesTags,
-        'STATUS_BADGE': statusBadge + tierBadges,
-        'TAGLINE_DISPLAY': taglineDisplay,
-        'ADDRESS_SECTION': addressSection,
-        'PHONE_SECTION': phoneSection,
-        'EMAIL_SECTION': emailSection,
-        'WEBSITE_SECTION': websiteSection,
-        'HOURS_SECTION': hoursSection,
-        'PHONE_BUTTON': phoneButton,
-        'EMAIL_BUTTON': emailButton,
-        'WEBSITE_BUTTON': websiteButton,
-        'DIRECTIONS_BUTTON': directionsButton,
-        'OWNER_INFO_SECTION': ownerInfoSection,
-        'COORDINATES': listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '',
-        'FULL_ADDRESS': [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', '),
-        'HOURS_JSON': listing.hours ? JSON.stringify(listing.hours) : 'null'
+        PHONE_BUTTON: phoneButton,
+        EMAIL_BUTTON: emailButton,
+        WEBSITE_BUTTON: websiteButton,
+        DIRECTIONS_BUTTON: directionsButton
     };
 }
-// Continuing generateTemplateReplacements function...
+
+function generateOwnerInfoSection(listing) {
+    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+    if (!owner || (!owner.full_name && !owner.title && !owner.from_greece && 
+        !(owner.email_visible && owner.owner_email) && 
+        !(owner.phone_visible && owner.owner_phone))) {
+        return '';
+    }
+    
+    let ownerDetails = '';
+    
+    if (owner.full_name) {
+        ownerDetails += `<p class="text-sm"><strong>Name:</strong> ${escapeHtml(owner.full_name)}</p>`;
+    }
+    if (owner.title) {
+        ownerDetails += `<p class="text-sm"><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
+    }
+    if (owner.from_greece) {
+        ownerDetails += `<p class="text-sm"><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
+    }
+    if (owner.email_visible && owner.owner_email) {
+        ownerDetails += `<p class="text-sm"><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
+    }
+    if (owner.phone_visible && owner.owner_phone) {
+        ownerDetails += `<p class="text-sm"><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
+    }
+    
+    return `
+        <div class="owner-info-section">
+            <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
+            <div class="space-y-2">
+                ${ownerDetails}
+            </div>
+        </div>
+    `;
+}
 
 function generateSocialMediaSection(listing) {
     const socialMedia = listing.social_media || {};
@@ -2414,44 +1663,47 @@ function generateSocialMediaSection(listing) {
     
     let socialIcons = '';
     
-    const socialSVGs = {
-        facebook: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
-        instagram: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>',
-        twitter: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
-        youtube: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
-        tiktok: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>',
-        linkedin: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>'
-    };
-    
     if (socialMedia.facebook) {
-        socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook">${socialSVGs.facebook}</a>`;
+        socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook" title="Facebook">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>`;
     }
     if (socialMedia.instagram) {
-        socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram">${socialSVGs.instagram}</a>`;
+        socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram" title="Instagram">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>`;
     }
     if (socialMedia.twitter) {
-        socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon social-twitter">${socialSVGs.twitter}</a>`;
+        socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon social-twitter" title="Twitter/X">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>`;
     }
     if (socialMedia.youtube) {
-        socialIcons += `<a href="https://youtube.com/@${socialMedia.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube">${socialSVGs.youtube}</a>`;
+        socialIcons += `<a href="https://youtube.com/@${socialMedia.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube" title="YouTube">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </a>`;
     }
     if (socialMedia.tiktok) {
-        socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok">${socialSVGs.tiktok}</a>`;
+        socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok" title="TikTok">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+        </a>`;
     }
     if (socialMedia.linkedin) {
-        socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin">${socialSVGs.linkedin}</a>`;
+        socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin" title="LinkedIn">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>`;
     }
     
     if (!socialIcons) return '';
     
     return `
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
-                        <div class="flex flex-wrap gap-2">
-                            ${socialIcons}
-                        </div>
-                    </div>
-                `;
+        <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
+            <div class="flex flex-wrap gap-2">
+                ${socialIcons}
+            </div>
+        </div>
+    `;
 }
 
 function generateReviewSection(listing) {
@@ -2462,32 +1714,32 @@ function generateReviewSection(listing) {
     
     let reviewLinks = '';
     
-    const reviewSVGs = {
-        google: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>',
-        yelp: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M21.111 18.226c-.141.969-2.119 3.483-3.029 3.847-.311.124-.611.094-.85-.09-.154-.12-2.314-2.164-2.762-2.728-.347-.437-.387-.8-.098-1.146.098-.117 1.433-1.575 1.722-1.903.422-.48 1.055-.595 1.601-.257.582.364 3.204 1.75 3.379 2.035.176.284.176.607.037.876zM11.883 4.348h-.002c-.022.011-.047.021-.07.032-.021.01-.042.019-.062.029l-.013.005a.45.45 0 0 0-.07.043l-.01.006-.014.01-.012.007-.011.007L5.896 7.842l-.028.017a.63.63 0 0 0-.271.34c-.104.326.121.77.6 1.247l.002.002c.015.015.03.029.046.044l.01.01.014.013 3.836 3.667a.45.45 0 0 0 .628.005l1.993-1.865a.626.626 0 0 0 .005-.851l-3.836-3.667-.014-.014-.013-.012a.451.451 0 0 0-.044-.044l-.002-.002c-.477-.478-.921-.703-1.247-.6-.107.034-.2.103-.294.178l-.012.01.001-.001z"/></svg>',
-        tripadvisor: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.006 4.295c-2.67 0-5.338.784-7.645 2.353H0l1.963 2.135a5.997 5.997 0 0 0 4.04 10.43 5.976 5.976 0 0 0 4.075-1.6L12 19.705l1.922-2.09a5.972 5.972 0 0 0 4.072 1.598 6 6 0 0 0 4.039-10.429L24 6.647h-4.361c-2.307-1.569-4.974-2.352-7.633-2.352zm-5.99 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm11.985 0a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm-11.985 1.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm11.985 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>'
-    };
-    
     if (reviews.google) {
-        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google">${reviewSVGs.google}</a>`;
+        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        </a>`;
     }
     if (reviews.yelp) {
-        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp">${reviewSVGs.yelp}</a>`;
+        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M21.111 18.226c-.141.969-2.119 3.483-3.029 3.847-.311.124-.611.094-.85-.09-.154-.12-2.314-2.164-2.762-2.728-.347-.437-.387-.8-.098-1.146.098-.117 1.433-1.575 1.722-1.903.422-.48 1.055-.595 1.601-.257.582.364 3.204 1.75 3.379 2.035.176.284.176.607.037.876z"/></svg>
+        </a>`;
     }
     if (reviews.tripadvisor) {
-        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor">${reviewSVGs.tripadvisor}</a>`;
+        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.006 4.295c-2.67 0-5.338.784-7.645 2.353H0l1.963 2.135a5.997 5.997 0 0 0 4.04 10.43 5.976 5.976 0 0 0 4.075-1.6L12 19.705l1.922-2.09a5.972 5.972 0 0 0 4.072 1.598 6 6 0 0 0 4.039-10.429L24 6.647h-4.361c-2.307-1.569-4.974-2.352-7.633-2.352zm-5.99 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm11.985 0a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm-11.985 1.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm11.985 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+        </a>`;
     }
     
     if (!reviewLinks) return '';
     
     return `
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
-                        <div class="flex flex-wrap gap-2">
-                            ${reviewLinks}
-                        </div>
-                    </div>
-                `;
+        <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
+            <div class="flex flex-wrap gap-2">
+                ${reviewLinks}
+            </div>
+        </div>
+    `;
 }
 
 function generateMapSection(listing) {
@@ -2496,11 +1748,11 @@ function generateMapSection(listing) {
     }
     
     return `
-            <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
-                <div id="listingMap"></div>
-            </div>
-        `;
+        <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
+            <div id="listingMap"></div>
+        </div>
+    `;
 }
 
 function generateClaimButton(listing) {
@@ -2511,15 +1763,12 @@ function generateClaimButton(listing) {
         return '';
     }
     
-    const fullAddress = [listing.city, listing.state, listing.country].filter(Boolean).join(', ');
-    const subject = `Claim My Listing: ${listing.business_name} - ${fullAddress}`;
-    
     return `
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-                   <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-                   <p class="text-gray-700 mb-4">Claim this listing to manage your information and tag it as Claimed.</p>
-                   <a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(subject)}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Business</a>
-               </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
+            <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
+            <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
+        </div>
     `;
 }
 
@@ -2555,114 +1804,4 @@ function generateHoursSchema(listing) {
     });
     
     return JSON.stringify(schemaHours);
-}
-
-// Update generateListingPage function to use these helpers
-window.generateListingPage = async function(listingId) {
-    try {
-        const listing = allListings.find(l => l.id === listingId);
-        if (!listing) {
-            alert('Listing not found');
-            return;
-        }
-        
-        if (!confirm(`Generate static HTML page for "${listing.business_name}"?`)) {
-            return;
-        }
-        
-        // Fetch template
-        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
-        if (!templateResponse.ok) {
-            throw new Error('Failed to fetch template');
-        }
-        
-        let template = await templateResponse.text();
-        
-        // Generate all replacements
-        const replacements = generateTemplateReplacements(listing);
-        
-        // Add social media, reviews, map, claim button
-        replacements.SOCIAL_MEDIA_SECTION = generateSocialMediaSection(listing);
-        replacements.REVIEW_SECTION = generateReviewSection(listing);
-        replacements.MAP_SECTION = generateMapSection(listing);
-        replacements.CLAIM_BUTTON = generateClaimButton(listing);
-        replacements.HOURS_SCHEMA = generateHoursSchema(listing);
-        
-        // Replace all placeholders
-        Object.keys(replacements).forEach(key => {
-            const regex = new RegExp(`{{${key}}}`, 'g');
-            template = template.replace(regex, replacements[key]);
-        });
-        
-        // Save to GitHub
-        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
-        
-        await saveToGitHub(filePath, template, listing.business_name);
-        
-        alert(`✅ Page generated successfully!\n\nURL: ${replacements.LISTING_URL}`);
-        
-    } catch (error) {
-        console.error('Error generating listing page:', error);
-        alert('❌ Failed to generate listing page: ' + error.message);
-    }
-};
-
-async function saveToGitHub(filePath, content, businessName) {
-    // Check if file exists
-    let currentSha = null;
-    try {
-        const fileInfoResponse = await fetch(
-            `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
-            {
-                headers: {
-                    'Authorization': `token ${adminGithubToken}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            }
-        );
-        
-        if (fileInfoResponse.ok) {
-            const fileInfo = await fileInfoResponse.json();
-            currentSha = fileInfo.sha;
-        }
-    } catch (error) {
-        console.log('File does not exist, will create new');
-    }
-    
-    // Upload to GitHub
-    const base64Content = btoa(unescape(encodeURIComponent(content)));
-    
-    const uploadBody = {
-        message: `${currentSha ? 'Update' : 'Create'} listing page for ${businessName}`,
-        content: base64Content,
-        committer: {
-            name: 'TGD Admin',
-            email: 'admin@thegreekdirectory.org'
-        }
-    };
-    
-    if (currentSha) {
-        uploadBody.sha = currentSha;
-    }
-    
-    const uploadResponse = await fetch(
-        `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
-        {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${adminGithubToken}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(uploadBody)
-        }
-    );
-    
-    if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        throw new Error(`GitHub upload failed: ${errorData.message}`);
-    }
-    
-    return true;
 }
