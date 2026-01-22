@@ -52,6 +52,23 @@ const COUNTRY_CODES = {
     'Australia': '+61'
 };
 
+const CATEGORY_DEFAULT_IMAGES = {
+    'Automotive & Transportation': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3',
+    'Beauty & Health': 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8',
+    'Church & Religious Organization': 'https://images.unsplash.com/photo-1601231656153-73aa7f115365',
+    'Cultural/Fraternal Organization': 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac',
+    'Education & Community': 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1',
+    'Entertainment, Arts & Recreation': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819',
+    'Food & Hospitality': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
+    'Grocery & Imports': 'https://images.unsplash.com/photo-1542838132-92c53300491e',
+    'Home & Construction': 'https://images.unsplash.com/photo-1503387762-592deb58ef4e',
+    'Industrial & Manufacturing': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
+    'Pets & Veterinary': 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b',
+    'Professional & Business Services': 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40',
+    'Real Estate & Development': 'https://images.unsplash.com/photo-1560518883-ce09059eeffa',
+    'Retail & Shopping': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'
+};
+
 let adminSupabase = null;
 let currentAdminUser = null;
 let adminGithubToken = null;
@@ -298,11 +315,6 @@ async function loadListings() {
         alert('Failed to load listings: ' + error.message);
     }
 }
-
-// ============================================
-// ADMIN PORTAL - UPDATED TABLE RENDERING
-// Include Generate Page button in actions
-// ============================================
 
 function renderTable() {
     const tbody = document.getElementById('listingsTableBody');
@@ -598,7 +610,24 @@ function fillEditForm(listing) {
                     </div>
                 </div>
             </div>
+`;
+    
+    const phoneContainer = document.getElementById('editPhoneContainer');
+    if (phoneContainer) {
+        phoneContainer.innerHTML = createPhoneInput(listing?.phone || '', userCountry);
+    }
+    
+    // Continue in next artifact
+}
+// ============================================
+// ADMIN PORTAL - PART 4
+// Edit Form Continuation (Hours, Social, Reviews, Owner, Media)
+// ============================================
 
+// Continuing fillEditForm function...
+function fillEditFormContinuation(listing, owner) {
+    const formContent = document.getElementById('editFormContent');
+    formContent.innerHTML += `
             <!-- Hours -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
@@ -715,17 +744,152 @@ function fillEditForm(listing) {
         </div>
     `;
     
-    const phoneContainer = document.getElementById('editPhoneContainer');
-    if (phoneContainer) {
-        phoneContainer.innerHTML = createPhoneInput(listing?.phone || '', userCountry);
-    }
-    
     const ownerPhoneContainer = document.getElementById('editOwnerPhoneContainer');
     if (ownerPhoneContainer) {
         ownerPhoneContainer.innerHTML = createPhoneInput(owner?.owner_phone || '', userCountry);
     }
     
     updateSubcategoriesForCategory();
+}
+
+// Complete fillEditForm by calling continuation
+function fillEditForm(listing) {
+    const owner = listing?.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+    
+    const formContent = document.getElementById('editFormContent');
+    formContent.innerHTML = `
+        <div class="space-y-6">
+            <!-- Basic Info -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Basic Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Business Name *</label>
+                        <input type="text" id="editBusinessName" value="${listing?.business_name || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Slug</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="editSlug" value="${listing?.slug || ''}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="auto-generated">
+                            <button type="button" onclick="checkSlugAvailability()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">Check</button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1" id="slugStatus"></p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Tagline (max 75) *</label>
+                        <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">
+                        <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span>/75</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Description *</label>
+                        <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">${listing?.description || ''}</textarea>
+                        <p class="text-xs text-gray-500 mt-1"><span id="descCount">${(listing?.description || '').length}</span> characters</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Category *</label>
+                        <select id="editCategory" class="w-full px-4 py-2 border rounded-lg" onchange="updateSubcategoriesForCategory()">
+                            ${CATEGORIES.map(cat => `<option value="${cat}" ${listing?.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Tier</label>
+                        <select id="editTier" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="FREE" ${listing?.tier === 'FREE' ? 'selected' : ''}>FREE</option>
+                            <option value="VERIFIED" ${listing?.tier === 'VERIFIED' ? 'selected' : ''}>VERIFIED</option>
+                            <option value="FEATURED" ${listing?.tier === 'FEATURED' ? 'selected' : ''}>FEATURED</option>
+                            <option value="PREMIUM" ${listing?.tier === 'PREMIUM' ? 'selected' : ''}>PREMIUM</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subcategories -->
+            <div id="subcategoriesContainer">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium">Subcategories *</label>
+                    <span class="text-xs text-gray-500">Select at least one</span>
+                </div>
+                <div id="subcategoryCheckboxes" class="grid grid-cols-2 gap-2"></div>
+            </div>
+
+            <!-- Chain Info -->
+            <div>
+                <label class="flex items-center gap-2 mb-4">
+                    <input type="checkbox" id="editIsChain" ${listing?.is_chain ? 'checked' : ''} onchange="toggleChainFields()">
+                    <span class="text-sm font-medium">This is a chain business</span>
+                </label>
+                <div id="chainFieldsContainer" class="${listing?.is_chain ? '' : 'hidden'} grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Chain Name</label>
+                        <input type="text" id="editChainName" value="${listing?.chain_name || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Chain ID</label>
+                        <input type="text" id="editChainId" value="${listing?.chain_id || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Auto-generated if empty">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Location</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Address</label>
+                        <input type="text" id="editAddress" value="${listing?.address || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">City</label>
+                        <input type="text" id="editCity" value="${listing?.city || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">State</label>
+                        <select id="editState" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">Select State</option>
+                            ${Object.entries(US_STATES).map(([code, name]) => 
+                                `<option value="${code}" ${listing?.state === code ? 'selected' : ''}>${name}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Zip Code</label>
+                        <input type="text" id="editZipCode" value="${listing?.zip_code || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Country</label>
+                        <select id="editCountry" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="USA" ${listing?.country === 'USA' ? 'selected' : ''}>USA</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Contact Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Phone</label>
+                        <div id="editPhoneContainer"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Email</label>
+                        <input type="email" id="editEmail" value="${listing?.email || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Website</label>
+                        <input type="url" id="editWebsite" value="${listing?.website || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+            </div>
+`;
+    
+    const phoneContainer = document.getElementById('editPhoneContainer');
+    if (phoneContainer) {
+        phoneContainer.innerHTML = createPhoneInput(listing?.phone || '', userCountry);
+    }
+    
+    fillEditFormContinuation(listing, owner);
 }
 
 window.checkSlugAvailability = async function() {
@@ -839,7 +1003,7 @@ window.toggleChainFields = function() {
     }
 };
 // ============================================
-// ADMIN PORTAL - PART 4
+// ADMIN PORTAL - PART 5
 // Save Listing & Delete Functions
 // ============================================
 
@@ -970,9 +1134,12 @@ async function saveListing() {
         
         await saveOwnerInfo(savedListing.id);
         
-        alert('Listing saved successfully!');
         document.getElementById('editModal').classList.add('hidden');
         await loadListings();
+        
+        // Auto-generate page after save
+        console.log('🔨 Auto-generating listing page...');
+        await generateListingPage(savedListing.id);
         
     } catch (error) {
         console.error('Error saving listing:', error);
@@ -1116,245 +1283,62 @@ window.editListing = editListing;
 window.newListing = newListing;
 window.deleteListing = deleteListing;
 window.sendMagicLink = sendMagicLink;
-window.toggleVisibility = toggleVisibility;
-window.updateSubcategoriesForCategory = updateSubcategoriesForCategory;
-window.toggleSubcategory = toggleSubcategory;
-window.setPrimarySubcategory = setPrimarySubcategory;
-window.toggleChainFields = toggleChainFields;
-window.checkSlugAvailability = checkSlugAvailability;
 // ============================================
-// ADMIN PORTAL - PART 5
-// CSV Upload Functionality
+// ADMIN PORTAL - PART 6
+// Page Generation Functions - Part 1
 // ============================================
 
-window.uploadCSV = function() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv';
-    input.onchange = handleCSVUpload;
-    input.click();
-};
-
-async function handleCSVUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const text = e.target.result;
-        const rows = parseCSV(text);
-        
-        if (rows.length === 0) {
-            alert('No data found in CSV');
+window.generateListingPage = async function(listingId) {
+    try {
+        const listing = allListings.find(l => l.id === listingId);
+        if (!listing) {
+            console.error('Listing not found');
             return;
         }
         
-        const headers = rows[0];
-        const data = rows.slice(1);
+        console.log('📄 Generating page for:', listing.business_name);
         
-        if (!confirm(`Upload ${data.length} listings from CSV?\n\nThis will create new listings.`)) {
-            return;
+        // Apply default images if needed
+        const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
+        
+        if (!listing.logo && defaultImage) {
+            listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
         }
         
-        let successful = 0;
-        let failed = 0;
-        
-        for (let row of data) {
-            try {
-                const listing = parseCSVRow(headers, row);
-                
-                const { error } = await adminSupabase
-                    .from('listings')
-                    .insert(listing);
-                
-                if (error) throw error;
-                
-                successful++;
-            } catch (error) {
-                console.error('Failed to upload row:', error);
-                failed++;
-            }
+        if (!listing.photos || listing.photos.length === 0) {
+            listing.photos = [`${defaultImage}?w=800&q=80`];
         }
         
-        alert(`Upload complete!\n\nSuccessful: ${successful}\nFailed: ${failed}`);
-        await loadListings();
-    };
-    
-    reader.readAsText(file);
-}
-
-function parseCSV(text) {
-    const lines = text.split('\n');
-    const result = [];
-    
-    for (let line of lines) {
-        if (!line.trim()) continue;
-        
-        const row = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                row.push(current.trim());
-                current = '';
-            } else {
-                current += char;
-            }
+        // Fetch template
+        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
+        if (!templateResponse.ok) {
+            throw new Error('Failed to fetch template');
         }
         
-        row.push(current.trim());
-        result.push(row);
+        let template = await templateResponse.text();
+        
+        // Generate all replacements
+        const replacements = generateTemplateReplacements(listing);
+        
+        // Replace all placeholders
+        Object.keys(replacements).forEach(key => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            template = template.replace(regex, replacements[key]);
+        });
+        
+        // Save to GitHub
+        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
+        
+        await saveToGitHub(filePath, template, listing.business_name);
+        
+        console.log('✅ Page generated successfully');
+        
+    } catch (error) {
+        console.error('Error generating page:', error);
+        alert('❌ Failed to generate listing page: ' + error.message);
     }
-    
-    return result;
-}
-
-function parseCSVRow(headers, row) {
-    const listing = {
-        visible: true,
-        verified: false,
-        tier: 'FREE'
-    };
-    
-    headers.forEach((header, index) => {
-        const value = row[index] ? row[index].trim() : '';
-        
-        switch (header.toLowerCase()) {
-            case 'business_name':
-            case 'businessname':
-            case 'name':
-                listing.business_name = value;
-                listing.slug = value.toLowerCase()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-|-$/g, '');
-                break;
-            case 'tagline':
-                listing.tagline = value.substring(0, 75);
-                break;
-            case 'description':
-                listing.description = value;
-                break;
-            case 'category':
-                listing.category = value;
-                break;
-            case 'subcategories':
-                if (value) {
-                    listing.subcategories = value.split('|').map(s => s.trim());
-                    listing.primary_subcategory = listing.subcategories[0];
-                }
-                break;
-            case 'phone':
-                listing.phone = value;
-                break;
-            case 'email':
-                listing.email = value;
-                break;
-            case 'website':
-                listing.website = value;
-                break;
-            case 'address':
-                listing.address = value;
-                break;
-            case 'city':
-                listing.city = value;
-                break;
-            case 'state':
-                listing.state = value;
-                break;
-            case 'zip_code':
-            case 'zipcode':
-            case 'zip':
-                listing.zip_code = value;
-                break;
-            case 'country':
-                listing.country = value || 'USA';
-                break;
-            case 'tier':
-                if (['FREE', 'VERIFIED', 'FEATURED', 'PREMIUM'].includes(value.toUpperCase())) {
-                    listing.tier = value.toUpperCase();
-                    listing.verified = listing.tier !== 'FREE';
-                }
-                break;
-            case 'logo':
-                listing.logo = value;
-                break;
-            case 'photos':
-                if (value) {
-                    listing.photos = value.split('|').map(s => s.trim());
-                }
-                break;
-        }
-    });
-    
-    if (!listing.business_name) {
-        throw new Error('Business name is required');
-    }
-    
-    if (!listing.category) {
-        throw new Error('Category is required');
-    }
-    
-    return listing;
-}
-
-function addCSVUploadButton() {
-    const container = document.querySelector('.max-w-7xl.mx-auto.px-4.py-6 .mb-6');
-    if (!container) return;
-    
-    const existingBtn = document.getElementById('csvUploadBtn');
-    if (existingBtn) return;
-    
-    const button = document.createElement('button');
-    button.id = 'csvUploadBtn';
-    button.className = 'px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700';
-    button.textContent = '📁 Upload CSV';
-    button.onclick = uploadCSV;
-    
-    container.insertBefore(button, container.children[1]);
-}
-
-setTimeout(addCSVUploadButton, 100);
-
-window.uploadCSV = uploadCSV;
-// ============================================
-// ADMIN PORTAL - PAGE GENERATION PART 1
-// ADD THIS TO END OF admin.js (after all existing code)
-// ============================================
-
-// Category default images mapping
-// ============================================
-// ADMIN PORTAL - PAGE GENERATION FUNCTIONS
-// Add to end of admin.js after existing code
-// ============================================
-
-const CATEGORY_DEFAULT_IMAGES = {
-    'Automotive & Transportation': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3',
-    'Beauty & Health': 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8',
-    'Church & Religious Organization': 'https://images.unsplash.com/photo-1601231656153-73aa7f115365',
-    'Cultural/Fraternal Organization': 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac',
-    'Education & Community': 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1',
-    'Entertainment, Arts & Recreation': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819',
-    'Food & Hospitality': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
-    'Grocery & Imports': 'https://images.unsplash.com/photo-1542838132-92c53300491e',
-    'Home & Construction': 'https://images.unsplash.com/photo-1503387762-592deb58ef4e',
-    'Industrial & Manufacturing': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
-    'Pets & Veterinary': 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b',
-    'Professional & Business Services': 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40',
-    'Real Estate & Development': 'https://images.unsplash.com/photo-1560518883-ce09059eeffa',
-    'Retail & Shopping': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'
 };
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
 
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -1363,29 +1347,17 @@ function generateTemplateReplacements(listing) {
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
     
-    // Apply default images if needed
-    const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
-    
-    let logo = listing.logo;
-    if (!logo && defaultImage) {
-        logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
-    }
-    
-    let photos = listing.photos || [];
-    if (photos.length === 0 && defaultImage) {
-        photos = [`${defaultImage}?w=800&q=80`];
-    }
-    
+    const photos = listing.photos || [];
     const totalPhotos = photos.length || 1;
     
     // Generate photo slides
     let photosSlides = '';
     if (photos.length > 0) {
-        photosSlides = photos.map(photo => 
-            `<div class="carousel-slide h-full"><img src="${photo}" alt="${escapeHtml(listing.business_name)}" class="w-full h-full object-cover"></div>`
+        photosSlides = photos.map((photo, index) => 
+            `<div class="carousel-slide" style="background: url('${photo}') center/cover;"></div>`
         ).join('');
-    } else if (logo) {
-        photosSlides = `<div class="carousel-slide h-full"><img src="${logo}" alt="${escapeHtml(listing.business_name)}" class="w-full h-full object-cover"></div>`;
+    } else if (listing.logo) {
+        photosSlides = `<div class="carousel-slide" style="background: url('${listing.logo}') center/cover;"></div>`;
     }
     
     // Generate carousel controls
@@ -1410,23 +1382,21 @@ function generateTemplateReplacements(listing) {
     }
     
     // Generate status badges
-    let statusBadges = '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
-    
+    let statusBadges = '';
     if (listing.tier === 'PREMIUM') {
-        statusBadges += ' <span class="badge badge-premium">👑 Premium</span>';
-        statusBadges += ' <span class="badge badge-featured">⭐ Featured</span>';
-        statusBadges += ' <span class="badge badge-verified">✓ Verified</span>';
+        statusBadges += '<span class="badge badge-featured">Featured</span>';
+        statusBadges += '<span class="badge badge-verified">Verified</span>';
     } else if (listing.tier === 'FEATURED') {
-        statusBadges += ' <span class="badge badge-featured">⭐ Featured</span>';
-        statusBadges += ' <span class="badge badge-verified">✓ Verified</span>';
-    } else if (listing.tier === 'VERIFIED') {
-        statusBadges += ' <span class="badge badge-verified">✓ Verified</span>';
+        statusBadges += '<span class="badge badge-featured">Featured</span>';
+    } else if (listing.verified || listing.tier === 'VERIFIED') {
+        statusBadges += '<span class="badge badge-verified">Verified</span>';
     }
     
-    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    if (owner && owner.owner_user_id) {
-        statusBadges += ' <span class="badge badge-claimed">✓ Claimed</span>';
+    if (listing.is_chain) {
+        statusBadges += '<span class="badge" style="background:#9333ea;color:white;">Chain</span>';
     }
+    
+    statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
     
     // Tagline display
     const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '';
@@ -1479,28 +1449,21 @@ function generateTemplateReplacements(listing) {
     
     // Website section
     let websiteSection = '';
-    let websiteDomain = '';
     if (listing.website) {
-        try {
-            websiteDomain = new URL(listing.website).hostname;
-        } catch (e) {
-            websiteDomain = listing.website;
-        }
+        const displayUrl = listing.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
         websiteSection = `
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
                 </svg>
-                <a href="${listing.website}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">${escapeHtml(websiteDomain)}</a>
+                <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
             </div>
         `;
     }
     
     // Hours section
     let hoursSection = '';
-    let hoursJson = 'null';
     if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
-        hoursJson = JSON.stringify(listing.hours);
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         
@@ -1513,47 +1476,12 @@ function generateTemplateReplacements(listing) {
             <div>
                 <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
                 <div class="space-y-1">${hoursRows}</div>
-                <div id="openStatusText" class="closed-now mt-2">Closed Now</div>
+                <div id="openStatusText" class="mt-2 text-sm"></div>
                 <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
             </div>
         `;
     }
     
-    return {
-        BUSINESS_NAME: escapeHtml(listing.business_name),
-        BUSINESS_NAME_ENCODED: encodeURIComponent(listing.business_name),
-        CITY_STATE: cityState,
-        IN_CITY: inCity,
-        TAGLINE: escapeHtml(listing.tagline || ''),
-        DESCRIPTION: escapeHtml(listing.description || ''),
-        CATEGORY: escapeHtml(listing.category),
-        LISTING_URL: listingUrl,
-        LISTING_ID: listing.id,
-        LOGO: logo || '',
-        ADDRESS: escapeHtml(listing.address || ''),
-        CITY: escapeHtml(listing.city || ''),
-        STATE: escapeHtml(listing.state || ''),
-        ZIP_CODE: escapeHtml(listing.zip_code || ''),
-        COUNTRY: escapeHtml(listing.country || 'USA'),
-        PHONE: listing.phone || '',
-        WEBSITE_DOMAIN: websiteDomain,
-        TOTAL_PHOTOS: totalPhotos,
-        PHOTOS_SLIDES: photosSlides,
-        CAROUSEL_CONTROLS: carouselControls,
-        SUBCATEGORIES_TAGS: subcategoriesTags,
-        STATUS_BADGES: statusBadges,
-        TAGLINE_DISPLAY: taglineDisplay,
-        ADDRESS_SECTION: addressSection,
-        PHONE_SECTION: phoneSection,
-        EMAIL_SECTION: emailSection,
-        WEBSITE_SECTION: websiteSection,
-        HOURS_SECTION: hoursSection,
-        HOURS_JSON: hoursJson,
-        COORDINATES: listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '',
-        FULL_ADDRESS: [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ')
-    };
-}
-function generateActionButtons(listing, replacements) {
     // Phone button
     let phoneButton = '';
     if (listing.phone) {
@@ -1567,6 +1495,53 @@ function generateActionButtons(listing, replacements) {
         `;
     }
     
+    // Continue in next artifact...
+    return {
+        'BUSINESS_NAME': escapeHtml(listing.business_name),
+        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
+        'CITY_STATE': cityState,
+        'IN_CITY': inCity,
+        'TAGLINE': escapeHtml(listing.tagline || ''),
+        'DESCRIPTION': escapeHtml(listing.description || ''),
+        'CATEGORY': escapeHtml(listing.category),
+        'LISTING_URL': listingUrl,
+        'LISTING_ID': listing.id,
+        'LOGO': listing.logo || '',
+        'ADDRESS': escapeHtml(listing.address || ''),
+        'CITY': escapeHtml(listing.city || ''),
+        'STATE': escapeHtml(listing.state || ''),
+        'ZIP_CODE': escapeHtml(listing.zip_code || ''),
+        'COUNTRY': escapeHtml(listing.country || 'USA'),
+        'PHONE': listing.phone || '',
+        'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
+        'TOTAL_PHOTOS': totalPhotos,
+        'PHOTOS_SLIDES': photosSlides,
+        'CAROUSEL_CONTROLS': carouselControls,
+        'SUBCATEGORIES_TAGS': subcategoriesTags,
+        'STATUS_BADGES': statusBadges,
+        'TAGLINE_DISPLAY': taglineDisplay,
+        'ADDRESS_SECTION': addressSection,
+        'PHONE_SECTION': phoneSection,
+        'EMAIL_SECTION': emailSection,
+        'WEBSITE_SECTION': websiteSection,
+        'HOURS_SECTION': hoursSection,
+        'PHONE_BUTTON': phoneButton
+    };
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+// ============================================
+// ADMIN PORTAL - PART 7
+// Page Generation Functions - Part 2 (Buttons & Sections)
+// ============================================
+
+// Continuing generateTemplateReplacements function...
+function generateTemplateReplacementsContinued(listing) {
     // Email button
     let emailButton = '';
     if (listing.email) {
@@ -1584,7 +1559,7 @@ function generateActionButtons(listing, replacements) {
     let websiteButton = '';
     if (listing.website) {
         websiteButton = `
-            <a href="${listing.website}" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
+            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
                 </svg>
@@ -1602,7 +1577,7 @@ function generateActionButtons(listing, replacements) {
         const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
         
         directionsButton = `
-            <a href="${mapsUrl}" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
+            <a href="${mapsUrl}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                 </svg>
@@ -1611,48 +1586,77 @@ function generateActionButtons(listing, replacements) {
         `;
     }
     
-    return {
-        PHONE_BUTTON: phoneButton,
-        EMAIL_BUTTON: emailButton,
-        WEBSITE_BUTTON: websiteButton,
-        DIRECTIONS_BUTTON: directionsButton
-    };
-}
-
-function generateOwnerInfoSection(listing) {
+    // Owner info section
+    let ownerInfoSection = '';
     const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    if (!owner || (!owner.full_name && !owner.title && !owner.from_greece && 
-        !(owner.email_visible && owner.owner_email) && 
-        !(owner.phone_visible && owner.owner_phone))) {
-        return '';
-    }
-    
-    let ownerDetails = '';
-    
-    if (owner.full_name) {
-        ownerDetails += `<p class="text-sm"><strong>Name:</strong> ${escapeHtml(owner.full_name)}</p>`;
-    }
-    if (owner.title) {
-        ownerDetails += `<p class="text-sm"><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
-    }
-    if (owner.from_greece) {
-        ownerDetails += `<p class="text-sm"><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
-    }
-    if (owner.email_visible && owner.owner_email) {
-        ownerDetails += `<p class="text-sm"><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
-    }
-    if (owner.phone_visible && owner.owner_phone) {
-        ownerDetails += `<p class="text-sm"><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
-    }
-    
-    return `
-        <div class="owner-info-section">
-            <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-            <div class="space-y-2">
+    if (owner && (owner.full_name || owner.title)) {
+        let ownerDetails = '';
+        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
+        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
+        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
+        if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
+        if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
+        
+        ownerInfoSection = `
+            <div class="owner-info-section">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
                 ${ownerDetails}
             </div>
-        </div>
-    `;
+        `;
+    }
+    
+    // Social media section
+    let socialMediaSection = generateSocialMediaSection(listing);
+    
+    // Review section
+    let reviewSection = generateReviewSection(listing);
+    
+    // Map section
+    let mapSection = '';
+    if (listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
+        mapSection = `
+            <div>
+                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
+                <div id="listingMap"></div>
+            </div>
+        `;
+    }
+    
+    // Claim button
+    let claimButton = '';
+    const isClaimed = owner && owner.owner_user_id;
+    if (!isClaimed && listing.show_claim_button) {
+        claimButton = `
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
+                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
+                <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
+            </div>
+        `;
+    }
+    
+    // Hours schema
+    let hoursSchema = generateHoursSchema(listing);
+    
+    // Coordinates
+    const coordinates = listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
+    const fullAddress = [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ');
+    const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
+    
+    return {
+        'EMAIL_BUTTON': emailButton,
+        'WEBSITE_BUTTON': websiteButton,
+        'DIRECTIONS_BUTTON': directionsButton,
+        'OWNER_INFO_SECTION': ownerInfoSection,
+        'SOCIAL_MEDIA_SECTION': socialMediaSection,
+        'REVIEW_SECTION': reviewSection,
+        'MAP_SECTION': mapSection,
+        'CLAIM_BUTTON': claimButton,
+        'HOURS_SCHEMA': hoursSchema,
+        'COORDINATES': coordinates,
+        'FULL_ADDRESS': fullAddress,
+        'HOURS_JSON': hoursJson
+    };
 }
 
 function generateSocialMediaSection(listing) {
@@ -1663,35 +1667,32 @@ function generateSocialMediaSection(listing) {
     
     let socialIcons = '';
     
+    const socialSVGs = {
+        facebook: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+        instagram: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>',
+        twitter: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+        youtube: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+        tiktok: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>',
+        linkedin: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>'
+    };
+    
     if (socialMedia.facebook) {
-        socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook" title="Facebook">
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-        </a>`;
+        socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook">${socialSVGs.facebook}</a>`;
     }
     if (socialMedia.instagram) {
-        socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram" title="Instagram">
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-        </a>`;
+        socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram">${socialSVGs.instagram}</a>`;
     }
     if (socialMedia.twitter) {
-        socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon social-twitter" title="Twitter/X">
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        </a>`;
+        socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon social-twitter">${socialSVGs.twitter}</a>`;
     }
     if (socialMedia.youtube) {
-        socialIcons += `<a href="https://youtube.com/@${socialMedia.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube" title="YouTube">
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-        </a>`;
+        socialIcons += `<a href="https://youtube.com/@${socialMedia.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube">${socialSVGs.youtube}</a>`;
     }
     if (socialMedia.tiktok) {
-        socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok" title="TikTok">
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
-        </a>`;
+        socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok">${socialSVGs.tiktok}</a>`;
     }
     if (socialMedia.linkedin) {
-        socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin" title="LinkedIn">
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-        </a>`;
+        socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin">${socialSVGs.linkedin}</a>`;
     }
     
     if (!socialIcons) return '';
@@ -1714,20 +1715,20 @@ function generateReviewSection(listing) {
     
     let reviewLinks = '';
     
+    const reviewSVGs = {
+        google: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>',
+        yelp: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M21.111 18.226c-.141.969-2.119 3.483-3.029 3.847-.311.124-.611.094-.85-.09-.154-.12-2.314-2.164-2.762-2.728-.347-.437-.387-.8-.098-1.146.098-.117 1.433-1.575 1.722-1.903.422-.48 1.055-.595 1.601-.257.582.364 3.204 1.75 3.379 2.035.176.284.176.607.037.876zM11.883 4.348h-.002c-.022.011-.047.021-.07.032-.021.01-.042.019-.062.029l-.013.005a.45.45 0 0 0-.07.043l-.01.006-.014.01-.012.007-.011.007L5.896 7.842l-.028.017a.63.63 0 0 0-.271.34c-.104.326.121.77.6 1.247l.002.002c.015.015.03.029.046.044l.01.01.014.013 3.836 3.667a.45.45 0 0 0 .628.005l1.993-1.865a.626.626 0 0 0 .005-.851l-3.836-3.667-.014-.014-.013-.012a.451.451 0 0 0-.044-.044l-.002-.002c-.477-.478-.921-.703-1.247-.6-.107.034-.2.103-.294.178l-.012.01.001-.001z"/></svg>',
+        tripadvisor: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.006 4.295c-2.67 0-5.338.784-7.645 2.353H0l1.963 2.135a5.997 5.997 0 0 0 4.04 10.43 5.976 5.976 0 0 0 4.075-1.6L12 19.705l1.922-2.09a5.972 5.972 0 0 0 4.072 1.598 6 6 0 0 0 4.039-10.429L24 6.647h-4.361c-2.307-1.569-4.974-2.352-7.633-2.352zm-5.99 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm11.985 0a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm-11.985 1.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm11.985 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>'
+    };
+    
     if (reviews.google) {
-        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews">
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        </a>`;
+        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google">${reviewSVGs.google}</a>`;
     }
     if (reviews.yelp) {
-        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp">
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M21.111 18.226c-.141.969-2.119 3.483-3.029 3.847-.311.124-.611.094-.85-.09-.154-.12-2.314-2.164-2.762-2.728-.347-.437-.387-.8-.098-1.146.098-.117 1.433-1.575 1.722-1.903.422-.48 1.055-.595 1.601-.257.582.364 3.204 1.75 3.379 2.035.176.284.176.607.037.876z"/></svg>
-        </a>`;
+        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp">${reviewSVGs.yelp}</a>`;
     }
     if (reviews.tripadvisor) {
-        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor">
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.006 4.295c-2.67 0-5.338.784-7.645 2.353H0l1.963 2.135a5.997 5.997 0 0 0 4.04 10.43 5.976 5.976 0 0 0 4.075-1.6L12 19.705l1.922-2.09a5.972 5.972 0 0 0 4.072 1.598 6 6 0 0 0 4.039-10.429L24 6.647h-4.361c-2.307-1.569-4.974-2.352-7.633-2.352zm-5.99 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm11.985 0a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm-11.985 1.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm11.985 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
-        </a>`;
+        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor">${reviewSVGs.tripadvisor}</a>`;
     }
     
     if (!reviewLinks) return '';
@@ -1738,36 +1739,6 @@ function generateReviewSection(listing) {
             <div class="flex flex-wrap gap-2">
                 ${reviewLinks}
             </div>
-        </div>
-    `;
-}
-
-function generateMapSection(listing) {
-    if (!listing.coordinates || !listing.coordinates.lat || !listing.coordinates.lng) {
-        return '';
-    }
-    
-    return `
-        <div>
-            <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
-            <div id="listingMap"></div>
-        </div>
-    `;
-}
-
-function generateClaimButton(listing) {
-    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    const isClaimed = owner && owner.owner_user_id;
-    
-    if (isClaimed || !listing.show_claim_button) {
-        return '';
-    }
-    
-    return `
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-            <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-            <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
         </div>
     `;
 }
@@ -1805,3 +1776,402 @@ function generateHoursSchema(listing) {
     
     return JSON.stringify(schemaHours);
 }
+// ============================================
+// ADMIN PORTAL - PART 8
+// Page Generation Functions - Part 3 (Complete & Upload)
+// ============================================
+
+// Complete version of generateTemplateReplacements that combines both parts
+function generateTemplateReplacements(listing) {
+    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
+    
+    const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
+    const inCity = listing.city ? ` in ${listing.city}` : '';
+    
+    const photos = listing.photos || [];
+    const totalPhotos = photos.length || 1;
+    
+    // Generate photo slides
+    let photosSlides = '';
+    if (photos.length > 0) {
+        photosSlides = photos.map((photo, index) => 
+            `<div class="carousel-slide" style="background: url('${photo}') center/cover;"></div>`
+        ).join('');
+    } else if (listing.logo) {
+        photosSlides = `<div class="carousel-slide" style="background: url('${listing.logo}') center/cover;"></div>`;
+    }
+    
+    // Generate carousel controls
+    let carouselControls = '';
+    if (photos.length > 1) {
+        const dots = photos.map((_, index) => 
+            `<span class="carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>`
+        ).join('');
+        carouselControls = `
+            <button class="carousel-nav carousel-prev" onclick="prevSlide()">❮</button>
+            <button class="carousel-nav carousel-next" onclick="nextSlide()">❯</button>
+            <div class="carousel-dots">${dots}</div>
+        `;
+    }
+    
+    // Generate subcategory tags
+    let subcategoriesTags = '';
+    if (listing.subcategories && listing.subcategories.length > 0) {
+        subcategoriesTags = listing.subcategories.map(sub => 
+            `<span class="subcategory-tag">${escapeHtml(sub)}</span>`
+        ).join('');
+    }
+    
+    // Generate status badges
+    let statusBadges = '';
+    if (listing.tier === 'PREMIUM') {
+        statusBadges += '<span class="badge badge-featured">Featured</span>';
+        statusBadges += '<span class="badge badge-verified">Verified</span>';
+    } else if (listing.tier === 'FEATURED') {
+        statusBadges += '<span class="badge badge-featured">Featured</span>';
+    } else if (listing.verified || listing.tier === 'VERIFIED') {
+        statusBadges += '<span class="badge badge-verified">Verified</span>';
+    }
+    
+    if (listing.is_chain) {
+        statusBadges += '<span class="badge" style="background:#9333ea;color:white;">Chain</span>';
+    }
+    
+    statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
+    
+    const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '';
+    
+    // Address section
+    let addressSection = '';
+    if (listing.address || listing.city || listing.state) {
+        const addressParts = [];
+        if (listing.address) addressParts.push(escapeHtml(listing.address));
+        if (listing.city && listing.state) {
+            addressParts.push(`${escapeHtml(listing.city)}, ${escapeHtml(listing.state)}${listing.zip_code ? ' ' + escapeHtml(listing.zip_code) : ''}`);
+        }
+        
+        addressSection = `
+            <div class="flex items-start gap-2">
+                <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>${addressParts.join(', ')}</span>
+            </div>
+        `;
+    }
+    
+    let phoneSection = '';
+    if (listing.phone) {
+        phoneSection = `
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+                <span>${formatPhoneNumber(listing.phone)}</span>
+            </div>
+        `;
+    }
+    
+    let emailSection = '';
+    if (listing.email) {
+        emailSection = `
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <span>${escapeHtml(listing.email)}</span>
+            </div>
+        `;
+    }
+    
+    let websiteSection = '';
+    if (listing.website) {
+        const displayUrl = listing.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        websiteSection = `
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+                <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
+            </div>
+        `;
+    }
+    
+    let hoursSection = '';
+    if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        const hoursRows = dayKeys.map((key, index) => {
+            const hours = listing.hours[key] || 'Closed';
+            return `<div class="flex justify-between text-sm"><span class="font-medium">${days[index]}:</span><span>${escapeHtml(hours)}</span></div>`;
+        }).join('');
+        
+        hoursSection = `
+            <div>
+                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+                <div class="space-y-1">${hoursRows}</div>
+                <div id="openStatusText" class="mt-2 text-sm"></div>
+                <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
+            </div>
+        `;
+    }
+    
+    let phoneButton = '';
+    if (listing.phone) {
+        phoneButton = `
+            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+                Call
+            </a>
+        `;
+    }
+    
+    let emailButton = '';
+    if (listing.email) {
+        emailButton = `
+            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Email
+            </a>
+        `;
+    }
+    
+    let websiteButton = '';
+    if (listing.website) {
+        websiteButton = `
+            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+                Website
+            </a>
+        `;
+    }
+    
+    let directionsButton = '';
+    if (listing.address || listing.city) {
+        const destination = listing.address 
+            ? `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim()
+            : `${listing.business_name}, ${listing.city}, ${listing.state}`;
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+        
+        directionsButton = `
+            <a href="${mapsUrl}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                </svg>
+                Directions
+            </a>
+        `;
+    }
+    
+    let ownerInfoSection = '';
+    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+    if (owner && (owner.full_name || owner.title)) {
+        let ownerDetails = '';
+        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
+        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
+        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
+        if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
+        if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
+        
+        ownerInfoSection = `
+            <div class="owner-info-section">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
+                ${ownerDetails}
+            </div>
+        `;
+    }
+    
+    const socialMediaSection = generateSocialMediaSection(listing);
+    const reviewSection = generateReviewSection(listing);
+    
+    let mapSection = '';
+    if (listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
+        mapSection = `
+            <div>
+                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
+                <div id="listingMap"></div>
+            </div>
+        `;
+    }
+    
+    let claimButton = '';
+    const isClaimed = owner && owner.owner_user_id;
+    if (!isClaimed && listing.show_claim_button) {
+        claimButton = `
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
+                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
+                <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
+            </div>
+        `;
+    }
+    
+    const hoursSchema = generateHoursSchema(listing);
+    const coordinates = listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
+    const fullAddress = [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ');
+    const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
+    
+    return {
+        'BUSINESS_NAME': escapeHtml(listing.business_name),
+        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
+        'CITY_STATE': cityState,
+        'IN_CITY': inCity,
+        'TAGLINE': escapeHtml(listing.tagline || ''),
+        'DESCRIPTION': escapeHtml(listing.description || ''),
+        'CATEGORY': escapeHtml(listing.category),
+        'LISTING_URL': listingUrl,
+        'LISTING_ID': listing.id,
+        'LOGO': listing.logo || '',
+        'ADDRESS': escapeHtml(listing.address || ''),
+        'CITY': escapeHtml(listing.city || ''),
+        'STATE': escapeHtml(listing.state || ''),
+        'ZIP_CODE': escapeHtml(listing.zip_code || ''),
+        'COUNTRY': escapeHtml(listing.country || 'USA'),
+        'PHONE': listing.phone || '',
+        'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
+        'TOTAL_PHOTOS': totalPhotos,
+        'PHOTOS_SLIDES': photosSlides,
+        'CAROUSEL_CONTROLS': carouselControls,
+        'SUBCATEGORIES_TAGS': subcategoriesTags,
+        'STATUS_BADGES': statusBadges,
+        'TAGLINE_DISPLAY': taglineDisplay,
+        'ADDRESS_SECTION': addressSection,
+        'PHONE_SECTION': phoneSection,
+        'EMAIL_SECTION': emailSection,
+        'WEBSITE_SECTION': websiteSection,
+        'HOURS_SECTION': hoursSection,
+        'PHONE_BUTTON': phoneButton,
+        'EMAIL_BUTTON': emailButton,
+        'WEBSITE_BUTTON': websiteButton,
+        'DIRECTIONS_BUTTON': directionsButton,
+        'OWNER_INFO_SECTION': ownerInfoSection,
+        'SOCIAL_MEDIA_SECTION': socialMediaSection,
+        'REVIEW_SECTION': reviewSection,
+        'MAP_SECTION': mapSection,
+        'CLAIM_BUTTON': claimButton,
+        'HOURS_SCHEMA': hoursSchema,
+        'COORDINATES': coordinates,
+        'FULL_ADDRESS': fullAddress,
+        'HOURS_JSON': hoursJson
+    };
+}
+
+async function saveToGitHub(filePath, content, businessName) {
+    try {
+        // Check if file exists
+        let currentSha = null;
+        try {
+            const fileInfoResponse = await fetch(
+                `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
+                {
+                    headers: {
+                        'Authorization': `token ${adminGithubToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                }
+            );
+            
+            if (fileInfoResponse.ok) {
+                const fileInfo = await fileInfoResponse.json();
+                currentSha = fileInfo.sha;
+            }
+        } catch (error) {
+            console.log('File does not exist, will create new');
+        }
+        
+        // Upload to GitHub
+        const base64Content = btoa(unescape(encodeURIComponent(content)));
+        
+        const uploadBody = {
+            message: `${currentSha ? 'Update' : 'Create'} listing page for ${businessName}`,
+            content: base64Content,
+            committer: {
+                name: 'TGD Admin',
+                email: 'admin@thegreekdirectory.org'
+            }
+        };
+        
+        if (currentSha) {
+            uploadBody.sha = currentSha;
+        }
+        
+        const uploadResponse = await fetch(
+            `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${adminGithubToken}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(uploadBody)
+            }
+        );
+        
+        if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            throw new Error(`GitHub upload failed: ${errorData.message}`);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error saving to GitHub:', error);
+        throw error;
+    }
+}
+
+window.generateAllListingPages = async function() {
+    const visibleListings = allListings.filter(l => l.visible);
+    
+    console.log(`🔨 Generating ${visibleListings.length} listing pages...`);
+    
+    let successful = 0;
+    let failed = 0;
+    
+    for (const listing of visibleListings) {
+        try {
+            await generateListingPage(listing.id);
+            successful++;
+            console.log(`✅ Generated: ${listing.business_name}`);
+            
+            // Small delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+            console.error(`❌ Failed: ${listing.business_name}`, error);
+            failed++;
+        }
+    }
+    
+    alert(`Generation complete!\n\nSuccessful: ${successful}\nFailed: ${failed}`);
+};
+
+// Add button to trigger generateAll
+function addGenerateAllButton() {
+    const container = document.querySelector('.max-w-7xl.mx-auto.px-4.py-6 .mb-6');
+    if (!container) return;
+    
+    const existingBtn = document.getElementById('generateAllBtn');
+    if (existingBtn) return;
+    
+    const button = document.createElement('button');
+    button.id = 'generateAllBtn';
+    button.className = 'px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700';
+    button.textContent = '🔨 Generate All Pages';
+    button.onclick = generateAllListingPages;
+    
+    container.appendChild(button);
+}
+
+setTimeout(addGenerateAllButton, 100);
+
+window.generateListingPage = generateListingPage;
+window.generateAllListingPages = generateAllListingPages;
