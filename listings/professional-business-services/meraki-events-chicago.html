@@ -133,7 +133,7 @@
         <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
-                    <div class="carousel-slide h-full"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80" alt="Meraki Events Chicago" class="w-full h-full object-cover"></div>
+                    <div class="carousel-slide" style="background: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80') center/cover;"></div>
                 </div>
                 
             </div>
@@ -144,12 +144,12 @@
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-4 flex-wrap">
                         <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
-                            Professional & Business Services
+                            Professional &amp; Business Services
                         </span>
                         <div class="subcategories-display" id="subcategoriesDisplay">
                             <span class="subcategory-tag">Wedding Planner</span>
                         </div>
-                        {{STATUS_BADGES}}
+                        <span class="badge badge-featured">Featured</span><span class="badge badge-closed" id="openClosedBadge">Closed</span>
                     </div>
                     <h2 class="text-3xl font-bold text-gray-900 mb-2">Meraki Events Chicago</h2>
                     <p class="text-gray-600 italic mb-2">"Wedding planning service in Niles, IL."</p>
@@ -157,8 +157,8 @@
                 <img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/professional-business-services/meraki-events-chicago/logo/logo/logo.jpeg" alt="Meraki Events Chicago logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
             </div>
 
-            <p class="text-gray-700 mb-6">At Meraki Event Designs & Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.
-We provide for each of our clients a courteous and professional environment from set up to service breakdown. Meraki Event Designs & Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs & Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.</p>
+            <p class="text-gray-700 mb-6">At Meraki Event Designs &amp; Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.
+We provide for each of our clients a courteous and professional environment from set up to service breakdown. Meraki Event Designs &amp; Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs &amp; Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.</p>
 
             <div class="space-y-3 mb-6">
                 
@@ -191,7 +191,7 @@ We provide for each of our clients a courteous and professional environment from
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
                 </svg>
-                <a href="https://merakieventschicago.com/" target="_blank" class="text-blue-600 hover:underline">https://merakieventschicago.com/</a>
+                <a href="https://merakieventschicago.com/" target="_blank" class="text-blue-600 hover:underline">merakieventschicago.com</a>
             </div>
         
                 
@@ -266,7 +266,7 @@ We provide for each of our clients a courteous and professional environment from
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const totalSlides = {{TOTAL_PHOTOS}};
+        const totalSlides = 1;
         const businessName = 'Meraki Events Chicago';
         const listingUrl = 'https://listings.thegreekdirectory.org/listings/professional-business-services/meraki-events-chicago';
         const listingId = '5';
