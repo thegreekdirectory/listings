@@ -26,6 +26,15 @@ const CATEGORIES = [
 let indexSupabase = null;
 let allListings = [];
 
+function formatPhoneDisplay(phone) {
+    if (!phone) return '';
+    const digits = phone.replace(/\D/g, '');
+    if (phone.startsWith('+1') && digits.length === 11) {
+        return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
+    }
+    return phone;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing homepage...');
     
@@ -157,7 +166,7 @@ function renderRecentListings() {
 
 function renderListingCard(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const url = `/listings/${categorySlug}/${listing.slug}`;
+    const url = `/listing/${listing.slug}`;
     
     const photos = listing.photos || [];
     const mainImage = photos.length > 0 ? photos[0] : listing.logo;
@@ -175,19 +184,26 @@ function renderListingCard(listing) {
         }
     }
     
+    const phoneDisplay = listing.phone ? formatPhoneDisplay(listing.phone) : '';
+    
     return `
         <a href="${url}" class="listing-card" data-no-translate>
             ${mainImage ? `<img src="${mainImage}" alt="${listing.business_name}" class="listing-image" onerror="this.style.display='none'">` : ''}
             <div class="listing-content">
-                ${badges.length > 0 ? `<div class="listing-badges">${badges.join('')}</div>` : ''}
-                <h3 class="listing-name">${listing.business_name}</h3>
-                ${listing.tagline ? `<p class="listing-tagline">"${listing.tagline}"</p>` : ''}
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1">
+                        ${badges.length > 0 ? `<div class="listing-badges mb-2">${badges.join('')}</div>` : ''}
+                        <h3 class="listing-name">${listing.business_name}</h3>
+                        ${listing.tagline ? `<p class="listing-tagline">"${listing.tagline}"</p>` : ''}
+                    </div>
+                    ${listing.logo && mainImage !== listing.logo ? `<img src="${listing.logo}" alt="${listing.business_name} logo" class="w-12 h-12 rounded-lg object-cover ml-2 flex-shrink-0">` : ''}
+                </div>
                 <span class="listing-category" data-translate="category.${getCategoryKey(listing.category)}">${listing.category}</span>
                 ${listing.city && listing.state ? `
                     <p class="listing-location">📍 ${listing.city}, ${listing.state}</p>
                 ` : ''}
                 ${listing.phone ? `
-                    <p class="listing-location">📞 ${listing.phone}</p>
+                    <p class="listing-location">📞 ${phoneDisplay}</p>
                 ` : ''}
             </div>
         </a>
