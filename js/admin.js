@@ -218,8 +218,8 @@ function formatPhoneNumber(phone, country = 'USA') {
     
     const digits = phone.replace(/\D/g, '');
     
-    if (country === 'USA' && digits.length === 10) {
-        return `(${digits.substr(0, 3)}) ${digits.substr(3, 3)}-${digits.substr(6, 4)}`;
+    if (phone.startsWith('+1') && digits.length === 11) {
+        return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
     }
     
     return phone;
@@ -237,7 +237,7 @@ function createPhoneInput(value = '', country = 'USA') {
             </select>
             <input type="tel" class="phone-number-input flex-1 px-4 py-2 border border-gray-300 rounded-lg" 
                 value="${digits}" 
-                placeholder="${country === 'USA' ? '(555) 123-4567' : 'Phone number'}"
+                placeholder="${country === 'USA' ? '5551234567' : 'Phone number'}"
                 oninput="formatPhoneInput(this)">
         </div>
     `;
@@ -251,17 +251,7 @@ window.formatPhoneInput = function(input) {
         value = value.substr(0, 10);
     }
     
-    if (country === 'USA') {
-        if (value.length >= 6) {
-            input.value = `(${value.substr(0, 3)}) ${value.substr(3, 3)}-${value.substr(6)}`;
-        } else if (value.length >= 3) {
-            input.value = `(${value.substr(0, 3)}) ${value.substr(3)}`;
-        } else {
-            input.value = value;
-        }
-    } else {
-        input.value = value;
-    }
+    input.value = value;
 };
 
 window.updatePhoneFormat = function(select) {
@@ -329,7 +319,7 @@ function renderTable() {
     
     tbody.innerHTML = filtered.map(l => {
         const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+        const listingUrl = `/listing/${l.slug}`;
         const tier = l.tier || 'FREE';
         const tierColors = {
             FREE: 'bg-gray-100 text-gray-700',
@@ -413,7 +403,7 @@ window.toggleVisibility = async function(id) {
 window.loadListings = loadListings;
 // ============================================
 // ADMIN PORTAL - PART 3
-// Edit Listing & Form Management
+// Edit Listing & Form Management - Part 1
 // ============================================
 
 window.editListing = async function(id) {
@@ -589,6 +579,10 @@ function fillEditForm(listing) {
                             <option value="USA" ${listing?.country === 'USA' ? 'selected' : ''}>USA</option>
                         </select>
                     </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Coordinates (lat, lng)</label>
+                        <input type="text" id="editCoordinates" value="${listing?.coordinates ? listing.coordinates.lat + ',' + listing.coordinates.lng : ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="41.8781,-87.6298">
+                    </div>
                 </div>
             </div>
 
@@ -610,21 +604,131 @@ function fillEditForm(listing) {
                     </div>
                 </div>
             </div>
-`;
+    `;
     
     const phoneContainer = document.getElementById('editPhoneContainer');
     if (phoneContainer) {
         phoneContainer.innerHTML = createPhoneInput(listing?.phone || '', userCountry);
     }
     
-    // Continue in next artifact
+    fillEditFormContinuation(listing, owner);
 }
+
+window.checkSlugAvailability = async function() {
+    const slug = document.getElementById('editSlug').value.trim();
+    const statusEl = document.getElementById('slugStatus');
+    
+    if (!slug) {
+        statusEl.textContent = 'Enter a slug to check';
+        statusEl.className = 'text-xs text-gray-500 mt-1';
+        return;
+    }
+    
+    try {
+        const { data, error } = await adminSupabase
+            .from('listings')
+            .select('id')
+            .eq('slug', slug)
+            .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data && data.id !== editingListing?.id) {
+            statusEl.textContent = '❌ Slug already in use';
+            statusEl.className = 'text-xs text-red-600 mt-1';
+        } else {
+            statusEl.textContent = '✅ Slug available';
+            statusEl.className = 'text-xs text-green-600 mt-1';
+        }
+    } catch (error) {
+        statusEl.textContent = 'Error checking slug';
+        statusEl.className = 'text-xs text-red-600 mt-1';
+    }
+};
+
+function updateCharCounters() {
+    const tagline = document.getElementById('editTagline')?.value || '';
+    const desc = document.getElementById('editDescription')?.value || '';
+    
+    const taglineCount = document.getElementById('taglineCount');
+    const descCount = document.getElementById('descCount');
+    
+    if (taglineCount) taglineCount.textContent = tagline.length;
+    if (descCount) descCount.textContent = desc.length;
+}
+
+window.updateSubcategoriesForCategory = function() {
+    const category = document.getElementById('editCategory')?.value;
+    const container = document.getElementById('subcategoriesContainer');
+    const checkboxDiv = document.getElementById('subcategoryCheckboxes');
+    
+    if (!category || !SUBCATEGORIES[category] || SUBCATEGORIES[category].length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+    
+    container.classList.remove('hidden');
+    checkboxDiv.innerHTML = '';
+    
+    SUBCATEGORIES[category].forEach(sub => {
+        const isSelected = selectedSubcategories.includes(sub);
+        const isPrimary = sub === primarySubcategory;
+        
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2 p-2 border rounded';
+        div.innerHTML = `
+            <input type="checkbox" id="subcat-${sub.replace(/\s+/g, '-')}" 
+                ${isSelected ? 'checked' : ''} 
+                onchange="toggleSubcategory('${sub.replace(/'/g, "\\'")}')">
+            <label for="subcat-${sub.replace(/\s+/g, '-')}" class="flex-1 text-sm">${sub}</label>
+            <input type="radio" name="primarySub" 
+                ${isPrimary ? 'checked' : ''} 
+                ${!isSelected ? 'disabled' : ''}
+                onchange="setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')"
+                title="Primary">
+        `;
+        checkboxDiv.appendChild(div);
+    });
+};
+
+window.toggleSubcategory = function(subcategory) {
+    const index = selectedSubcategories.indexOf(subcategory);
+    
+    if (index > -1) {
+        selectedSubcategories.splice(index, 1);
+        if (primarySubcategory === subcategory) {
+            primarySubcategory = selectedSubcategories.length > 0 ? selectedSubcategories[0] : null;
+        }
+    } else {
+        selectedSubcategories.push(subcategory);
+        if (!primarySubcategory) {
+            primarySubcategory = subcategory;
+        }
+    }
+    
+    updateSubcategoriesForCategory();
+};
+
+window.setPrimarySubcategory = function(subcategory) {
+    primarySubcategory = subcategory;
+    updateSubcategoriesForCategory();
+};
+
+window.toggleChainFields = function() {
+    const isChain = document.getElementById('editIsChain')?.checked;
+    const container = document.getElementById('chainFieldsContainer');
+    
+    if (isChain) {
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+    }
+};
 // ============================================
 // ADMIN PORTAL - PART 4
 // Edit Form Continuation (Hours, Social, Reviews, Owner, Media)
 // ============================================
 
-// Continuing fillEditForm function...
 function fillEditFormContinuation(listing, owner) {
     const formContent = document.getElementById('editFormContent');
     formContent.innerHTML += `
@@ -751,257 +855,6 @@ function fillEditFormContinuation(listing, owner) {
     
     updateSubcategoriesForCategory();
 }
-
-// Complete fillEditForm by calling continuation
-function fillEditForm(listing) {
-    const owner = listing?.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    
-    const formContent = document.getElementById('editFormContent');
-    formContent.innerHTML = `
-        <div class="space-y-6">
-            <!-- Basic Info -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Basic Information</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Business Name *</label>
-                        <input type="text" id="editBusinessName" value="${listing?.business_name || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Slug</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="editSlug" value="${listing?.slug || ''}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="auto-generated">
-                            <button type="button" onclick="checkSlugAvailability()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">Check</button>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1" id="slugStatus"></p>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Tagline (max 75) *</label>
-                        <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">
-                        <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span>/75</p>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Description *</label>
-                        <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">${listing?.description || ''}</textarea>
-                        <p class="text-xs text-gray-500 mt-1"><span id="descCount">${(listing?.description || '').length}</span> characters</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Category *</label>
-                        <select id="editCategory" class="w-full px-4 py-2 border rounded-lg" onchange="updateSubcategoriesForCategory()">
-                            ${CATEGORIES.map(cat => `<option value="${cat}" ${listing?.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Tier</label>
-                        <select id="editTier" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="FREE" ${listing?.tier === 'FREE' ? 'selected' : ''}>FREE</option>
-                            <option value="VERIFIED" ${listing?.tier === 'VERIFIED' ? 'selected' : ''}>VERIFIED</option>
-                            <option value="FEATURED" ${listing?.tier === 'FEATURED' ? 'selected' : ''}>FEATURED</option>
-                            <option value="PREMIUM" ${listing?.tier === 'PREMIUM' ? 'selected' : ''}>PREMIUM</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Subcategories -->
-            <div id="subcategoriesContainer">
-                <div class="flex items-center justify-between mb-2">
-                    <label class="block text-sm font-medium">Subcategories *</label>
-                    <span class="text-xs text-gray-500">Select at least one</span>
-                </div>
-                <div id="subcategoryCheckboxes" class="grid grid-cols-2 gap-2"></div>
-            </div>
-
-            <!-- Chain Info -->
-            <div>
-                <label class="flex items-center gap-2 mb-4">
-                    <input type="checkbox" id="editIsChain" ${listing?.is_chain ? 'checked' : ''} onchange="toggleChainFields()">
-                    <span class="text-sm font-medium">This is a chain business</span>
-                </label>
-                <div id="chainFieldsContainer" class="${listing?.is_chain ? '' : 'hidden'} grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Chain Name</label>
-                        <input type="text" id="editChainName" value="${listing?.chain_name || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Chain ID</label>
-                        <input type="text" id="editChainId" value="${listing?.chain_id || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Auto-generated if empty">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Location -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Location</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Address</label>
-                        <input type="text" id="editAddress" value="${listing?.address || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">City</label>
-                        <input type="text" id="editCity" value="${listing?.city || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">State</label>
-                        <select id="editState" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="">Select State</option>
-                            ${Object.entries(US_STATES).map(([code, name]) => 
-                                `<option value="${code}" ${listing?.state === code ? 'selected' : ''}>${name}</option>`
-                            ).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Zip Code</label>
-                        <input type="text" id="editZipCode" value="${listing?.zip_code || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Country</label>
-                        <select id="editCountry" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="USA" ${listing?.country === 'USA' ? 'selected' : ''}>USA</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact -->
-            <div>
-                <h3 class="text-lg font-bold mb-4">Contact Information</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Phone</label>
-                        <div id="editPhoneContainer"></div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Email</label>
-                        <input type="email" id="editEmail" value="${listing?.email || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Website</label>
-                        <input type="url" id="editWebsite" value="${listing?.website || ''}" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                </div>
-            </div>
-`;
-    
-    const phoneContainer = document.getElementById('editPhoneContainer');
-    if (phoneContainer) {
-        phoneContainer.innerHTML = createPhoneInput(listing?.phone || '', userCountry);
-    }
-    
-    fillEditFormContinuation(listing, owner);
-}
-
-window.checkSlugAvailability = async function() {
-    const slug = document.getElementById('editSlug').value.trim();
-    const statusEl = document.getElementById('slugStatus');
-    
-    if (!slug) {
-        statusEl.textContent = 'Enter a slug to check';
-        statusEl.className = 'text-xs text-gray-500 mt-1';
-        return;
-    }
-    
-    try {
-        const { data, error } = await adminSupabase
-            .from('listings')
-            .select('id')
-            .eq('slug', slug)
-            .maybeSingle();
-        
-        if (error) throw error;
-        
-        if (data && data.id !== editingListing?.id) {
-            statusEl.textContent = '❌ Slug already in use';
-            statusEl.className = 'text-xs text-red-600 mt-1';
-        } else {
-            statusEl.textContent = '✅ Slug available';
-            statusEl.className = 'text-xs text-green-600 mt-1';
-        }
-    } catch (error) {
-        statusEl.textContent = 'Error checking slug';
-        statusEl.className = 'text-xs text-red-600 mt-1';
-    }
-};
-
-function updateCharCounters() {
-    const tagline = document.getElementById('editTagline')?.value || '';
-    const desc = document.getElementById('editDescription')?.value || '';
-    
-    const taglineCount = document.getElementById('taglineCount');
-    const descCount = document.getElementById('descCount');
-    
-    if (taglineCount) taglineCount.textContent = tagline.length;
-    if (descCount) descCount.textContent = desc.length;
-}
-
-window.updateSubcategoriesForCategory = function() {
-    const category = document.getElementById('editCategory')?.value;
-    const container = document.getElementById('subcategoriesContainer');
-    const checkboxDiv = document.getElementById('subcategoryCheckboxes');
-    
-    if (!category || !SUBCATEGORIES[category] || SUBCATEGORIES[category].length === 0) {
-        container.classList.add('hidden');
-        return;
-    }
-    
-    container.classList.remove('hidden');
-    checkboxDiv.innerHTML = '';
-    
-    SUBCATEGORIES[category].forEach(sub => {
-        const isSelected = selectedSubcategories.includes(sub);
-        const isPrimary = sub === primarySubcategory;
-        
-        const div = document.createElement('div');
-        div.className = 'flex items-center gap-2 p-2 border rounded';
-        div.innerHTML = `
-            <input type="checkbox" id="subcat-${sub.replace(/\s+/g, '-')}" 
-                ${isSelected ? 'checked' : ''} 
-                onchange="toggleSubcategory('${sub.replace(/'/g, "\\'")}')">
-            <label for="subcat-${sub.replace(/\s+/g, '-')}" class="flex-1 text-sm">${sub}</label>
-            <input type="radio" name="primarySub" 
-                ${isPrimary ? 'checked' : ''} 
-                ${!isSelected ? 'disabled' : ''}
-                onchange="setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')"
-                title="Primary">
-        `;
-        checkboxDiv.appendChild(div);
-    });
-};
-
-window.toggleSubcategory = function(subcategory) {
-    const index = selectedSubcategories.indexOf(subcategory);
-    
-    if (index > -1) {
-        selectedSubcategories.splice(index, 1);
-        if (primarySubcategory === subcategory) {
-            primarySubcategory = selectedSubcategories.length > 0 ? selectedSubcategories[0] : null;
-        }
-    } else {
-        selectedSubcategories.push(subcategory);
-        if (!primarySubcategory) {
-            primarySubcategory = subcategory;
-        }
-    }
-    
-    updateSubcategoriesForCategory();
-};
-
-window.setPrimarySubcategory = function(subcategory) {
-    primarySubcategory = subcategory;
-    updateSubcategoriesForCategory();
-};
-
-window.toggleChainFields = function() {
-    const isChain = document.getElementById('editIsChain')?.checked;
-    const container = document.getElementById('chainFieldsContainer');
-    
-    if (isChain) {
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
-    }
-};
 // ============================================
 // ADMIN PORTAL - PART 5
 // Save Listing & Delete Functions
@@ -1053,6 +906,19 @@ async function saveListing() {
                 .replace(/^-|-$/g, '');
         }
         
+        const coordinatesInput = document.getElementById('editCoordinates').value.trim();
+        let coordinates = null;
+        if (coordinatesInput) {
+            const parts = coordinatesInput.split(',');
+            if (parts.length === 2) {
+                const lat = parseFloat(parts[0].trim());
+                const lng = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    coordinates = { lat, lng };
+                }
+            }
+        }
+        
         const listingData = {
             business_name: businessName,
             slug: slug,
@@ -1071,6 +937,7 @@ async function saveListing() {
             state: document.getElementById('editState').value || null,
             zip_code: document.getElementById('editZipCode').value.trim() || null,
             country: document.getElementById('editCountry').value || 'USA',
+            coordinates: coordinates,
             phone: phone,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
@@ -1137,7 +1004,6 @@ async function saveListing() {
         document.getElementById('editModal').classList.add('hidden');
         await loadListings();
         
-        // Auto-generate page after save
         console.log('🔨 Auto-generating listing page...');
         await generateListingPage(savedListing.id);
         
@@ -1285,378 +1151,14 @@ window.deleteListing = deleteListing;
 window.sendMagicLink = sendMagicLink;
 // ============================================
 // ADMIN PORTAL - PART 6
-// Page Generation Functions - Part 1
+// Page Generation Helper Functions
 // ============================================
-
-window.generateListingPage = async function(listingId) {
-    try {
-        const listing = allListings.find(l => l.id === listingId);
-        if (!listing) {
-            console.error('Listing not found');
-            return;
-        }
-        
-        console.log('📄 Generating page for:', listing.business_name);
-        
-        // Apply default images if needed
-        const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
-        
-        if (!listing.logo && defaultImage) {
-            listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
-        }
-        
-        if (!listing.photos || listing.photos.length === 0) {
-            listing.photos = [`${defaultImage}?w=800&q=80`];
-        }
-        
-        // Fetch template
-        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
-        if (!templateResponse.ok) {
-            throw new Error('Failed to fetch template');
-        }
-        
-        let template = await templateResponse.text();
-        
-        // Generate all replacements
-        const replacements = generateTemplateReplacements(listing);
-        
-        // Replace all placeholders
-        Object.keys(replacements).forEach(key => {
-            const regex = new RegExp(`{{${key}}}`, 'g');
-            template = template.replace(regex, replacements[key]);
-        });
-        
-        // Save to GitHub
-        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
-        
-        await saveToGitHub(filePath, template, listing.business_name);
-        
-        console.log('✅ Page generated successfully');
-        
-    } catch (error) {
-        console.error('Error generating page:', error);
-        alert('❌ Failed to generate listing page: ' + error.message);
-    }
-};
-
-function generateTemplateReplacements(listing) {
-    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
-    
-    const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
-    const inCity = listing.city ? ` in ${listing.city}` : '';
-    
-    const photos = listing.photos || [];
-    const totalPhotos = photos.length || 1;
-    
-    // Generate photo slides
-    let photosSlides = '';
-    if (photos.length > 0) {
-        photosSlides = photos.map((photo, index) => 
-            `<div class="carousel-slide" style="background: url('${photo}') center/cover;"></div>`
-        ).join('');
-    } else if (listing.logo) {
-        photosSlides = `<div class="carousel-slide" style="background: url('${listing.logo}') center/cover;"></div>`;
-    }
-    
-    // Generate carousel controls
-    let carouselControls = '';
-    if (photos.length > 1) {
-        const dots = photos.map((_, index) => 
-            `<span class="carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>`
-        ).join('');
-        carouselControls = `
-            <button class="carousel-nav carousel-prev" onclick="prevSlide()">❮</button>
-            <button class="carousel-nav carousel-next" onclick="nextSlide()">❯</button>
-            <div class="carousel-dots">${dots}</div>
-        `;
-    }
-    
-    // Generate subcategory tags
-    let subcategoriesTags = '';
-    if (listing.subcategories && listing.subcategories.length > 0) {
-        subcategoriesTags = listing.subcategories.map(sub => 
-            `<span class="subcategory-tag">${escapeHtml(sub)}</span>`
-        ).join('');
-    }
-    
-    // Generate status badges
-    let statusBadges = '';
-    if (listing.tier === 'PREMIUM') {
-        statusBadges += '<span class="badge badge-featured">Featured</span>';
-        statusBadges += '<span class="badge badge-verified">Verified</span>';
-    } else if (listing.tier === 'FEATURED') {
-        statusBadges += '<span class="badge badge-featured">Featured</span>';
-    } else if (listing.verified || listing.tier === 'VERIFIED') {
-        statusBadges += '<span class="badge badge-verified">Verified</span>';
-    }
-    
-    if (listing.is_chain) {
-        statusBadges += '<span class="badge" style="background:#9333ea;color:white;">Chain</span>';
-    }
-    
-    statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
-    
-    // Tagline display
-    const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '';
-    
-    // Address section
-    let addressSection = '';
-    if (listing.address || listing.city || listing.state) {
-        const addressParts = [];
-        if (listing.address) addressParts.push(escapeHtml(listing.address));
-        if (listing.city && listing.state) {
-            addressParts.push(`${escapeHtml(listing.city)}, ${escapeHtml(listing.state)}${listing.zip_code ? ' ' + escapeHtml(listing.zip_code) : ''}`);
-        }
-        
-        addressSection = `
-            <div class="flex items-start gap-2">
-                <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <span>${addressParts.join(', ')}</span>
-            </div>
-        `;
-    }
-    
-    // Phone section
-    let phoneSection = '';
-    if (listing.phone) {
-        phoneSection = `
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                </svg>
-                <span>${formatPhoneNumber(listing.phone)}</span>
-            </div>
-        `;
-    }
-    
-    // Email section
-    let emailSection = '';
-    if (listing.email) {
-        emailSection = `
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                <span>${escapeHtml(listing.email)}</span>
-            </div>
-        `;
-    }
-    
-    // Website section
-    let websiteSection = '';
-    if (listing.website) {
-        const displayUrl = listing.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        websiteSection = `
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                </svg>
-                <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
-            </div>
-        `;
-    }
-    
-    // Hours section
-    let hoursSection = '';
-    if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
-        const hoursRows = dayKeys.map((key, index) => {
-            const hours = listing.hours[key] || 'Closed';
-            return `<div class="flex justify-between text-sm"><span class="font-medium">${days[index]}:</span><span>${escapeHtml(hours)}</span></div>`;
-        }).join('');
-        
-        hoursSection = `
-            <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
-                <div class="space-y-1">${hoursRows}</div>
-                <div id="openStatusText" class="mt-2 text-sm"></div>
-                <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
-            </div>
-        `;
-    }
-    
-    // Phone button
-    let phoneButton = '';
-    if (listing.phone) {
-        phoneButton = `
-            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                </svg>
-                Call
-            </a>
-        `;
-    }
-    
-    // Continue in next artifact...
-    return {
-        'BUSINESS_NAME': escapeHtml(listing.business_name),
-        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
-        'CITY_STATE': cityState,
-        'IN_CITY': inCity,
-        'TAGLINE': escapeHtml(listing.tagline || ''),
-        'DESCRIPTION': escapeHtml(listing.description || ''),
-        'CATEGORY': escapeHtml(listing.category),
-        'LISTING_URL': listingUrl,
-        'LISTING_ID': listing.id,
-        'LOGO': listing.logo || '',
-        'ADDRESS': escapeHtml(listing.address || ''),
-        'CITY': escapeHtml(listing.city || ''),
-        'STATE': escapeHtml(listing.state || ''),
-        'ZIP_CODE': escapeHtml(listing.zip_code || ''),
-        'COUNTRY': escapeHtml(listing.country || 'USA'),
-        'PHONE': listing.phone || '',
-        'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
-        'TOTAL_PHOTOS': totalPhotos,
-        'PHOTOS_SLIDES': photosSlides,
-        'CAROUSEL_CONTROLS': carouselControls,
-        'SUBCATEGORIES_TAGS': subcategoriesTags,
-        'STATUS_BADGES': statusBadges,
-        'TAGLINE_DISPLAY': taglineDisplay,
-        'ADDRESS_SECTION': addressSection,
-        'PHONE_SECTION': phoneSection,
-        'EMAIL_SECTION': emailSection,
-        'WEBSITE_SECTION': websiteSection,
-        'HOURS_SECTION': hoursSection,
-        'PHONE_BUTTON': phoneButton
-    };
-}
 
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-// ============================================
-// ADMIN PORTAL - PART 7
-// Page Generation Functions - Part 2 (Buttons & Sections)
-// ============================================
-
-// Continuing generateTemplateReplacements function...
-function generateTemplateReplacementsContinued(listing) {
-    // Email button
-    let emailButton = '';
-    if (listing.email) {
-        emailButton = `
-            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                Email
-            </a>
-        `;
-    }
-    
-    // Website button
-    let websiteButton = '';
-    if (listing.website) {
-        websiteButton = `
-            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                </svg>
-                Website
-            </a>
-        `;
-    }
-    
-    // Directions button
-    let directionsButton = '';
-    if (listing.address || listing.city) {
-        const destination = listing.address 
-            ? `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim()
-            : `${listing.business_name}, ${listing.city}, ${listing.state}`;
-        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
-        
-        directionsButton = `
-            <a href="${mapsUrl}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                </svg>
-                Directions
-            </a>
-        `;
-    }
-    
-    // Owner info section
-    let ownerInfoSection = '';
-    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    if (owner && (owner.full_name || owner.title)) {
-        let ownerDetails = '';
-        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
-        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
-        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
-        if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
-        if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
-        
-        ownerInfoSection = `
-            <div class="owner-info-section">
-                <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                ${ownerDetails}
-            </div>
-        `;
-    }
-    
-    // Social media section
-    let socialMediaSection = generateSocialMediaSection(listing);
-    
-    // Review section
-    let reviewSection = generateReviewSection(listing);
-    
-    // Map section
-    let mapSection = '';
-    if (listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
-        mapSection = `
-            <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
-                <div id="listingMap"></div>
-            </div>
-        `;
-    }
-    
-    // Claim button
-    let claimButton = '';
-    const isClaimed = owner && owner.owner_user_id;
-    if (!isClaimed && listing.show_claim_button) {
-        claimButton = `
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
-            </div>
-        `;
-    }
-    
-    // Hours schema
-    let hoursSchema = generateHoursSchema(listing);
-    
-    // Coordinates
-    const coordinates = listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
-    const fullAddress = [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ');
-    const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
-    
-    return {
-        'EMAIL_BUTTON': emailButton,
-        'WEBSITE_BUTTON': websiteButton,
-        'DIRECTIONS_BUTTON': directionsButton,
-        'OWNER_INFO_SECTION': ownerInfoSection,
-        'SOCIAL_MEDIA_SECTION': socialMediaSection,
-        'REVIEW_SECTION': reviewSection,
-        'MAP_SECTION': mapSection,
-        'CLAIM_BUTTON': claimButton,
-        'HOURS_SCHEMA': hoursSchema,
-        'COORDINATES': coordinates,
-        'FULL_ADDRESS': fullAddress,
-        'HOURS_JSON': hoursJson
-    };
 }
 
 function generateSocialMediaSection(listing) {
@@ -1715,20 +1217,20 @@ function generateReviewSection(listing) {
     
     let reviewLinks = '';
     
-    const reviewSVGs = {
-        google: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>',
-        yelp: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M21.111 18.226c-.141.969-2.119 3.483-3.029 3.847-.311.124-.611.094-.85-.09-.154-.12-2.314-2.164-2.762-2.728-.347-.437-.387-.8-.098-1.146.098-.117 1.433-1.575 1.722-1.903.422-.48 1.055-.595 1.601-.257.582.364 3.204 1.75 3.379 2.035.176.284.176.607.037.876zM11.883 4.348h-.002c-.022.011-.047.021-.07.032-.021.01-.042.019-.062.029l-.013.005a.45.45 0 0 0-.07.043l-.01.006-.014.01-.012.007-.011.007L5.896 7.842l-.028.017a.63.63 0 0 0-.271.34c-.104.326.121.77.6 1.247l.002.002c.015.015.03.029.046.044l.01.01.014.013 3.836 3.667a.45.45 0 0 0 .628.005l1.993-1.865a.626.626 0 0 0 .005-.851l-3.836-3.667-.014-.014-.013-.012a.451.451 0 0 0-.044-.044l-.002-.002c-.477-.478-.921-.703-1.247-.6-.107.034-.2.103-.294.178l-.012.01.001-.001z"/></svg>',
-        tripadvisor: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.006 4.295c-2.67 0-5.338.784-7.645 2.353H0l1.963 2.135a5.997 5.997 0 0 0 4.04 10.43 5.976 5.976 0 0 0 4.075-1.6L12 19.705l1.922-2.09a5.972 5.972 0 0 0 4.072 1.598 6 6 0 0 0 4.039-10.429L24 6.647h-4.361c-2.307-1.569-4.974-2.352-7.633-2.352zm-5.99 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm11.985 0a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm-11.985 1.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm11.985 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>'
-    };
+    const googleSVG = '<svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>';
+    
+    const yelpSVG = '<svg width="22" height="22" viewBox="0 0 256 290" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M50.614 300.84c-6.416 8.174-16.39 14.524-27.563 17.363-9.316 2.37-16.713 1.138-20.294-3.406-5.19-6.592-4.188-19.254 2.854-35.74l.047-.11c7.015-16.448 15.347-28.03 23.499-32.594 5.71-3.197 10.81-3.578 14.341-1.074 2.505 1.777 5.743 6.283 8.26 12.924 2.77 7.308 3.997 15.408 3.484 22.805-.514 7.39-2.218 12.845-4.628 15.831l.001.001z" fill="#D32323"/><path d="M184.585 204.93c-7.86 6.05-20.21 8.538-34.813 7.018l-.105-.01c-14.633-1.506-27.136-6.38-35.23-13.722-5.671-5.143-8.143-10.606-6.952-15.36.846-3.377 4.486-7.277 10.477-10.69 6.59-3.755 14.951-6.233 23.537-6.986 8.578-.753 15.887 1.034 20.6 5.033 7.105 6.03 13.38 16.96 17.693 30.764 1.45 4.645 2.58 9.125 3.37 13.336.38 2.028.667 3.944.88 5.713.096.816.168 1.59.216 2.323.028.447.046.854.058 1.234.004.183.006.354.008.506l.002.141v.022c0 .003 0 .003-.003-.033a5.537 5.537 0 0 1-.054-.59 25.835 25.835 0 0 1-.08-1.725 66.953 66.953 0 0 1 .395-6.04c.318-2.794.79-5.894 1.423-9.195.63-3.289 1.42-6.78 2.367-10.377 1.882-7.155 4.368-14.532 7.458-21.728 3.082-7.177 6.77-14.156 11.06-20.514 2.149-3.182 4.465-6.186 6.96-8.948 2.504-2.774 5.206-5.3 8.116-7.52l.01-.008c9.682-7.387 20.398-11.002 30.2-10.188 6.868.57 12.41 3.066 15.163 6.863 3.988 5.502 3.55 14.096-1.246 24.263-4.826 10.228-13.226 21.038-23.66 30.473-10.456 9.455-21.86 16.493-32.145 19.83-7.211 2.34-13.404 2.518-17.435.487l.001-.001z" fill="#D32323"/><path d="M147.415 120.315c9.446 3.74 16.557 12.875 20.044 25.732l.025.092c3.494 12.878 2.907 25.948-1.653 36.824-3.193 7.617-8.05 13.017-13.662 15.18-3.984 1.536-9.076.684-13.947-2.447-5.36-3.445-10.272-9.133-13.844-16.02-3.576-6.894-5.61-14.418-5.73-21.2-.18-10.227 3.006-18.56 8.979-23.483 6.004-4.95 16.113-10.4 27.792-14.023 3.928-1.22 7.7-2.23 11.233-3.018 1.696-.379 3.31-.7 4.83-.962.697-.121 1.366-.222 2.01-.305.392-.05.758-.091 1.103-.125.164-.016.316-.028.459-.04l.165-.011.019-.002h.003c.001 0 .002 0-.032.003-.05.004-.14.012-.267.022a22.887 22.887 0 0 0-1.213.146c-.716.097-1.58.228-2.575.39a145.662 145.662 0 0 0-5.433.984c-4.075.82-8.994 1.92-14.57 3.287-11.123 2.727-24.418 6.834-38.697 12.348-14.248 5.498-28.454 12.41-41.41 20.683-6.48 4.137-12.676 8.663-18.438 13.568-5.778 4.919-11.107 10.223-15.82 15.862l-.006.007c-15.68 18.766-25.018 39.99-26.322 59.808-.913 13.875 1.761 25.883 7.337 33.027 8.084 10.354 23.28 13.276 42.87 8.266 19.716-5.043 40.973-17.04 59.866-33.768 18.926-16.758 34.308-36.865 43.33-56.647 6.324-13.876 8.922-26.623 7.742-35.934-1.18-9.303-5.222-15.182-11.228-17.548l.001-.002z" fill="#D32323"/></svg>';
+    
+    const tripadvisorSVG = '<svg width="22" height="22" viewBox="0 0 256 191" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M128.023 95.364c.18-.003 21.732-.043 41.012 10.96 10.505 5.996 18.636 14.103 24.156 24.095 3.808 6.895 6.255 14.181 7.28 21.691.96 7.02.559 13.946-1.193 20.593-3.504 13.289-11.443 24.806-23.631 34.29a84.124 84.124 0 0 1-15.377 9.274c-11.309 5.282-23.201 7.819-35.39 7.555-12.066-.26-23.573-3.333-34.24-9.142a83.773 83.773 0 0 1-14.84-9.588c-11.893-9.397-19.793-20.743-23.5-33.746-1.85-6.495-2.387-13.163-1.6-19.924a84.124 84.124 0 0 1 7.28-21.691c5.52-9.992 13.65-18.099 24.156-24.095 19.278-11.003 40.83-10.963 41.012-10.96l4.875-.313z" fill="#34E0A1"/><path d="M185.17 95.053c.006.11.012.22.015.333v.015a95.512 95.512 0 0 1-1.885 28.078 95.567 95.567 0 0 1-12.645 30.534 95.513 95.513 0 0 1-42.632 37.06 95.552 95.552 0 0 1-57.13 3.735 95.56 95.56 0 0 1-30.016-13.305 95.516 95.516 0 0 1-25.733-25.3 95.539 95.539 0 0 1-13.42-30.06 95.514 95.514 0 0 1-.866-49.19A95.561 95.561 0 0 1 13.35 46.393a95.515 95.515 0 0 1 23.28-27.208A95.559 95.559 0 0 1 66.01 4.66a95.522 95.522 0 0 1 49.103.973A95.563 95.563 0 0 1 145.24 19.08a95.517 95.517 0 0 1 27.257 23.252 95.54 95.54 0 0 1 14.558 29.984c2.2 8.187 3.327 16.59 3.35 24.998-.021-.001 0 .003 0 .003l-5.234-2.264z" fill="#00AF87"/><path d="M128 60.364c-28.862 0-52.272 23.41-52.272 52.272S99.138 165 128 165s52.272-23.41 52.272-52.272S156.862 60.364 128 60.364zm0 87.273c-19.314 0-35-15.686-35-35s15.686-35 35-35 35 15.686 35 35-15.686 35-35 35z" fill="#FEFEFE"/></svg>';
     
     if (reviews.google) {
-        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google">${reviewSVGs.google}</a>`;
+        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google">${googleSVG}</a>`;
     }
     if (reviews.yelp) {
-        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp">${reviewSVGs.yelp}</a>`;
+        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp">${yelpSVG}</a>`;
     }
     if (reviews.tripadvisor) {
-        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor">${reviewSVGs.tripadvisor}</a>`;
+        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor">${tripadvisorSVG}</a>`;
     }
     
     if (!reviewLinks) return '';
@@ -1777,14 +1279,13 @@ function generateHoursSchema(listing) {
     return JSON.stringify(schemaHours);
 }
 // ============================================
-// ADMIN PORTAL - PART 8
-// Page Generation Functions - Part 3 (Complete & Upload)
+// ADMIN PORTAL - PART 7
+// Generate Template Replacements - Part 1
 // ============================================
 
-// Complete version of generateTemplateReplacements that combines both parts
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
+    const listingUrl = `https://listings.thegreekdirectory.org/listing/${listing.slug}`;
     
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
@@ -1854,8 +1355,8 @@ function generateTemplateReplacements(listing) {
         addressSection = `
             <div class="flex items-start gap-2">
                 <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
                 <span>${addressParts.join(', ')}</span>
             </div>
@@ -1867,9 +1368,9 @@ function generateTemplateReplacements(listing) {
         phoneSection = `
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                 </svg>
-                <span>${formatPhoneNumber(listing.phone)}</span>
+                <span>${listing.phone}</span>
             </div>
         `;
     }
@@ -1879,7 +1380,7 @@ function generateTemplateReplacements(listing) {
         emailSection = `
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 <span>${escapeHtml(listing.email)}</span>
             </div>
@@ -1892,7 +1393,7 @@ function generateTemplateReplacements(listing) {
         websiteSection = `
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
                 <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
             </div>
@@ -1924,7 +1425,7 @@ function generateTemplateReplacements(listing) {
         phoneButton = `
             <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                 </svg>
                 Call
             </a>
@@ -1936,7 +1437,7 @@ function generateTemplateReplacements(listing) {
         emailButton = `
             <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 Email
             </a>
@@ -1948,7 +1449,7 @@ function generateTemplateReplacements(listing) {
         websiteButton = `
             <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
                 Website
             </a>
@@ -1965,60 +1466,12 @@ function generateTemplateReplacements(listing) {
         directionsButton = `
             <a href="${mapsUrl}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
                 Directions
             </a>
         `;
     }
-    
-    let ownerInfoSection = '';
-    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    if (owner && (owner.full_name || owner.title)) {
-        let ownerDetails = '';
-        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
-        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
-        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
-        if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
-        if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
-        
-        ownerInfoSection = `
-            <div class="owner-info-section">
-                <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                ${ownerDetails}
-            </div>
-        `;
-    }
-    
-    const socialMediaSection = generateSocialMediaSection(listing);
-    const reviewSection = generateReviewSection(listing);
-    
-    let mapSection = '';
-    if (listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
-        mapSection = `
-            <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
-                <div id="listingMap"></div>
-            </div>
-        `;
-    }
-    
-    let claimButton = '';
-    const isClaimed = owner && owner.owner_user_id;
-    if (!isClaimed && listing.show_claim_button) {
-        claimButton = `
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
-            </div>
-        `;
-    }
-    
-    const hoursSchema = generateHoursSchema(listing);
-    const coordinates = listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
-    const fullAddress = [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ');
-    const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
     
     return {
         'BUSINESS_NAME': escapeHtml(listing.business_name),
@@ -2052,7 +1505,64 @@ function generateTemplateReplacements(listing) {
         'PHONE_BUTTON': phoneButton,
         'EMAIL_BUTTON': emailButton,
         'WEBSITE_BUTTON': websiteButton,
-        'DIRECTIONS_BUTTON': directionsButton,
+        'DIRECTIONS_BUTTON': directionsButton
+    };
+}
+// ============================================
+// ADMIN PORTAL - PART 8
+// Generate Template Replacements Part 2 & Page Generation
+// ============================================
+
+function generateTemplateReplacementsPart2(listing) {
+    let ownerInfoSection = '';
+    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+    if (owner && (owner.full_name || owner.title)) {
+        let ownerDetails = '';
+        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
+        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
+        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
+        if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
+        if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${owner.owner_phone}</a></p>`;
+        
+        ownerInfoSection = `
+            <div class="owner-info-section">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
+                ${ownerDetails}
+            </div>
+        `;
+    }
+    
+    const socialMediaSection = generateSocialMediaSection(listing);
+    const reviewSection = generateReviewSection(listing);
+    
+    let mapSection = '';
+    if (listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
+        mapSection = `
+            <div>
+                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
+                <div id="listingMap"></div>
+            </div>
+        `;
+    }
+    
+    let claimButton = '';
+    const isClaimed = owner && owner.owner_user_id;
+    if (!isClaimed && listing.show_claim_button !== false) {
+        claimButton = `
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
+                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
+                <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
+            </div>
+        `;
+    }
+    
+    const hoursSchema = generateHoursSchema(listing);
+    const coordinates = listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
+    const fullAddress = [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ');
+    const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
+    
+    return {
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
         'REVIEW_SECTION': reviewSection,
@@ -2065,9 +1575,57 @@ function generateTemplateReplacements(listing) {
     };
 }
 
+window.generateListingPage = async function(listingId) {
+    try {
+        const listing = allListings.find(l => l.id === listingId);
+        if (!listing) {
+            console.error('Listing not found');
+            return;
+        }
+        
+        console.log('📄 Generating page for:', listing.business_name);
+        
+        const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
+        
+        if (!listing.logo && defaultImage) {
+            listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
+        }
+        
+        if (!listing.photos || listing.photos.length === 0) {
+            listing.photos = [`${defaultImage}?w=800&q=80`];
+        }
+        
+        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
+        if (!templateResponse.ok) {
+            throw new Error('Failed to fetch template');
+        }
+        
+        let template = await templateResponse.text();
+        
+        const replacements1 = generateTemplateReplacements(listing);
+        const replacements2 = generateTemplateReplacementsPart2(listing);
+        const replacements = { ...replacements1, ...replacements2 };
+        
+        Object.keys(replacements).forEach(key => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            template = template.replace(regex, replacements[key]);
+        });
+        
+        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const filePath = `listing/${listing.slug}.html`;
+        
+        await saveToGitHub(filePath, template, listing.business_name);
+        
+        console.log('✅ Page generated successfully');
+        
+    } catch (error) {
+        console.error('Error generating page:', error);
+        alert('❌ Failed to generate listing page: ' + error.message);
+    }
+};
+
 async function saveToGitHub(filePath, content, businessName) {
     try {
-        // Check if file exists
         let currentSha = null;
         try {
             const fileInfoResponse = await fetch(
@@ -2088,7 +1646,6 @@ async function saveToGitHub(filePath, content, businessName) {
             console.log('File does not exist, will create new');
         }
         
-        // Upload to GitHub
         const base64Content = btoa(unescape(encodeURIComponent(content)));
         
         const uploadBody = {
@@ -2143,7 +1700,6 @@ window.generateAllListingPages = async function() {
             successful++;
             console.log(`✅ Generated: ${listing.business_name}`);
             
-            // Small delay to avoid rate limiting
             await new Promise(resolve => setTimeout(resolve, 1000));
         } catch (error) {
             console.error(`❌ Failed: ${listing.business_name}`, error);
@@ -2154,7 +1710,6 @@ window.generateAllListingPages = async function() {
     alert(`Generation complete!\n\nSuccessful: ${successful}\nFailed: ${failed}`);
 };
 
-// Add button to trigger generateAll
 function addGenerateAllButton() {
     const container = document.querySelector('.max-w-7xl.mx-auto.px-4.py-6 .mb-6');
     if (!container) return;
