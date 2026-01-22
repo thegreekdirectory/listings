@@ -133,7 +133,7 @@
         <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
-                    <div class="carousel-slide h-full"><img src="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/brillakis-import-foods/photos/photos/photo-1.jpeg" alt="Brillakis Import Foods" class="w-full h-full object-cover"></div>
+                    <div class="carousel-slide" style="background: url('https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/brillakis-import-foods/photos/photos/photo-1.jpeg') center/cover;"></div>
                 </div>
                 
             </div>
@@ -144,12 +144,12 @@
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-4 flex-wrap">
                         <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
-                            Grocery & Imports
+                            Grocery &amp; Imports
                         </span>
                         <div class="subcategories-display" id="subcategoriesDisplay">
                             <span class="subcategory-tag">Market</span>
                         </div>
-                        {{STATUS_BADGES}}
+                        <span class="badge badge-closed" id="openClosedBadge">Closed</span>
                     </div>
                     <h2 class="text-3xl font-bold text-gray-900 mb-2">Brillakis Import Foods</h2>
                     <p class="text-gray-600 italic mb-2">"Family-owned grocery store with Greek imports."</p>
@@ -180,13 +180,13 @@
                 
                 
                 
-                    <div>
-                        <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
-                        <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>9:00 AM - 4:00 PM</span></div></div>
-                        <div id="openStatusText" class="closed-now">Closed Now</div>
-                        <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
-                    </div>
-                
+            <div>
+                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+                <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>9:00 AM - 4:00 PM</span></div></div>
+                <div id="openStatusText" class="mt-2 text-sm"></div>
+                <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
+            </div>
+        
             </div>
 
             <div class="flex flex-wrap gap-3 mb-6">
@@ -244,7 +244,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const totalSlides = {{TOTAL_PHOTOS}};
+        const totalSlides = 1;
         const businessName = 'Brillakis Import Foods';
         const listingUrl = 'https://listings.thegreekdirectory.org/listings/grocery-imports/brillakis-import-foods';
         const listingId = '4';
