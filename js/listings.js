@@ -28,86 +28,6 @@ const US_STATES = {
     'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
 };
 
-const TRANSLATIONS = {
-    en: {
-        view: 'View ',
-        starred: 'Starred',
-        searchPlaceholder: 'Search businesses, churches, schools...',
-        filters: 'Filters',
-        map: 'Map',
-        clearAll: 'Clear All',
-        searchCategories: 'Search Categories & Subcategories',
-        typeToSearch: 'Type to search...',
-        category: 'Category',
-        subcategories: 'Subcategories',
-        any: 'Any',
-        all: 'All',
-        openNow: 'Open Now',
-        closedNow: 'Closed Now',
-        openingSoon: 'Opening Soon (60 min)',
-        closingSoon: 'Closing Soon (60 min)',
-        hoursUnknown: 'Hours Unknown',
-        onlineOnly: 'Online Only',
-        radius: 'Radius',
-        anyDistance: 'Any distance',
-        locationSearch: 'Location Search',
-        locationPlaceholder: 'City, State, Zip, or Country...',
-        country: 'Country',
-        allCountries: 'All Countries',
-        state: 'State',
-        allStates: 'All States',
-        loadingMap: 'Loading map...',
-        splitView: 'Split View',
-        currentLocation: 'Current Location',
-        reload: 'Reload',
-        search: 'Search',
-        categoriesSubcategories: 'Categories & subcategories...',
-        sortDefault: 'Default',
-        sortAZ: 'A-Z',
-        sortClosest: 'Closest to Me',
-        loadMore: 'Load More Listings'
-    },
-    el: {
-        view: 'Δείτε ',
-        starred: 'Αγαπημένα',
-        searchPlaceholder: 'Ψάξτε επιχειρήσεις, εκκλησίες, σχολεία...',
-        filters: 'Φίλτρα',
-        map: 'Χάρτης',
-        clearAll: 'Εκκαθάριση Όλων',
-        searchCategories: 'Αναζήτηση Κατηγοριών & Υποκατηγοριών',
-        typeToSearch: 'Πληκτρολογήστε για αναζήτηση...',
-        category: 'Κατηγορία',
-        subcategories: 'Υποκατηγορίες',
-        any: 'Οποιαδήποτε',
-        all: 'Όλες',
-        openNow: 'Ανοιχτά Τώρα',
-        closedNow: 'Κλειστά Τώρα',
-        openingSoon: 'Ανοίγει Σύντομα (60 λεπτά)',
-        closingSoon: 'Κλείνει Σύντομα (60 λεπτά)',
-        hoursUnknown: 'Άγνωστο Ωράριο',
-        onlineOnly: 'Μόνο Online',
-        radius: 'Ακτίνα',
-        anyDistance: 'Οποιαδήποτε απόσταση',
-        locationSearch: 'Αναζήτηση Τοποθεσίας',
-        locationPlaceholder: 'Πόλη, Πολιτεία, Τ.Κ., ή Χώρα...',
-        country: 'Χώρα',
-        allCountries: 'Όλες Χώρες',
-        state: 'Πολιτεία',
-        allStates: 'Όλες Πολιτείες',
-        loadingMap: 'Φόρτωση χάρτη...',
-        splitView: 'Διαχωρισμένη Προβολή',
-        currentLocation: 'Τρέχουσα Τοποθεσία',
-        reload: 'Ανανέωση',
-        search: 'Αναζήτηση',
-        categoriesSubcategories: 'Κατηγορίες & υποκατηγορίες...',
-        sortDefault: 'Προεπιλογή',
-        sortAZ: 'Α-Ω',
-        sortClosest: 'Πιο Κοντά σε Μένα',
-        loadMore: 'Φόρτωση Περισσότερων Καταχωρίσεων'
-    }
-};
-
-let currentLanguage = getCookie('language') || 'en';
 let supabase = null;
 let allListings = [], filteredListings = [], currentView = 'grid', selectedCategory = 'All';
 let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '';
@@ -116,7 +36,7 @@ let closingSoonOnly = false, hoursUnknownOnly = false, onlineOnly = false, userL
 let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
 let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
 let userLocationMarker = null, mapReady = false, allListingsGeocoded = false;
-let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
+let starredListingsArray = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
 let filterPosition = 'left';
 let searchDebounceTimer = null;
 let displayedListingsCount = 25;
@@ -159,10 +79,6 @@ function extractSubcategoriesFromListings(listings) {
     
     return result;
 }
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 2
-// Initialization and Language Functions
-// ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -178,41 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initMap();
     syncFilters();
     checkFilterPosition();
-    translatePage();
 });
-
-function switchLanguage(lang) {
-    currentLanguage = lang;
-    setCookie('language', lang, 365);
-    
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        if (btn.dataset.lang === lang) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
-    translatePage();
-}
-
-function translatePage() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage][key]) {
-            el.textContent = TRANSLATIONS[currentLanguage][key];
-        }
-    });
-    
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-i18n-placeholder');
-        if (TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage][key]) {
-            el.placeholder = TRANSLATIONS[currentLanguage][key];
-        }
-    });
-    
-    updateRadiusValue();
-}
 
 async function estimateLocationByIP() {
     try {
@@ -256,38 +138,38 @@ function requestLocationOnLoad() {
 function loadStarredListings() {
     const stored = getCookie('starredListings');
     if (stored) {
-        try { starredListings = JSON.parse(stored); } catch (e) { starredListings = []; }
+        try { starredListingsArray = JSON.parse(stored); } catch (e) { starredListingsArray = []; }
     }
     updateStarredCount();
 }
 
 function saveStarredListings() {
-    setCookie('starredListings', JSON.stringify(starredListings), 365);
+    setCookie('starredListings', JSON.stringify(starredListingsArray), 365);
     updateStarredCount();
 }
 
 function toggleStar(listingId, event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    const index = starredListings.indexOf(listingId);
-    if (index > -1) starredListings.splice(index, 1);
-    else starredListings.push(listingId);
+    const index = starredListingsArray.indexOf(listingId);
+    if (index > -1) starredListingsArray.splice(index, 1);
+    else starredListingsArray.push(listingId);
     saveStarredListings();
     renderListings();
 }
 
 function updateStarredCount() {
-    document.getElementById('starredCount').textContent = starredListings.length;
+    document.getElementById('starredCount').textContent = starredListingsArray.length;
 }
 
 function toggleStarredView() {
     viewingStarredOnly = !viewingStarredOnly;
     if (viewingStarredOnly) {
-        if (starredListings.length === 0) {
+        if (starredListingsArray.length === 0) {
             alert('You haven\'t starred any listings yet!');
             viewingStarredOnly = false;
             return;
         }
-        filteredListings = allListings.filter(l => starredListings.includes(l.id));
+        filteredListings = allListings.filter(l => starredListingsArray.includes(l.id));
         displayedListingsCount = filteredListings.length;
         document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
         document.getElementById('starredBtn').style.backgroundColor = '#fbbf24';
@@ -303,7 +185,6 @@ function toggleStarredView() {
 }
 
 window.toggleStar = toggleStar;
-window.switchLanguage = switchLanguage;
 
 async function loadListings() {
     try {
@@ -334,6 +215,285 @@ async function loadListings() {
             '<p class="text-center text-gray-600 py-12">Error loading listings. Please try again.</p>';
     }
 }
+// ============================================
+// LISTINGS PAGE JAVASCRIPT - PART 2
+// Event Listeners & Category Management
+// ============================================
+
+function setupEventListeners() {
+    document.getElementById('searchInput')?.addEventListener('input', (e) => {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            if (!viewingStarredOnly) applyFilters();
+        }, 300);
+    });
+    
+    document.getElementById('filterBtn')?.addEventListener('click', () => {
+        filtersOpen = !filtersOpen;
+        document.getElementById('filterPanel').classList.toggle('hidden', !filtersOpen);
+    });
+    
+    document.getElementById('closeFilterBtn')?.addEventListener('click', () => {
+        filtersOpen = false;
+        document.getElementById('filterPanel').classList.add('hidden');
+    });
+    
+    document.getElementById('mapBtn')?.addEventListener('click', () => {
+        mapOpen = !mapOpen;
+        document.getElementById('mapContainer').classList.toggle('hidden', !mapOpen);
+        if (mapOpen && map) {
+            setTimeout(() => {
+                map.invalidateSize();
+                updateMapMarkers();
+            }, 100);
+        }
+    });
+    
+    document.getElementById('mapBtnDesktop')?.addEventListener('click', () => {
+        mapOpen = !mapOpen;
+        document.getElementById('mapContainer').classList.toggle('hidden', !mapOpen);
+        if (mapOpen && map) {
+            setTimeout(() => {
+                map.invalidateSize();
+                updateMapMarkers();
+            }, 100);
+        }
+    });
+    
+    document.getElementById('gridViewBtn')?.addEventListener('click', () => setView('grid'));
+    document.getElementById('listViewBtn')?.addEventListener('click', () => setView('list'));
+    document.getElementById('gridViewBtn2')?.addEventListener('click', () => setView('grid'));
+    document.getElementById('listViewBtn2')?.addEventListener('click', () => setView('list'));
+    
+    document.getElementById('sortSelect')?.addEventListener('change', () => {
+        if (!viewingStarredOnly) applyFilters();
+    });
+    
+    document.getElementById('clearFiltersBtn')?.addEventListener('click', clearAllFilters);
+    document.getElementById('clearFiltersBtn2')?.addEventListener('click', clearAllFilters);
+    
+    ['openNowFilter', 'openNowFilter2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', (e) => {
+            openNowOnly = e.target.checked;
+            syncFilters();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    });
+    
+    ['closedNowFilter', 'closedNowFilter2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', (e) => {
+            closedNowOnly = e.target.checked;
+            syncFilters();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    });
+    
+    ['openingSoonFilter', 'openingSoonFilter2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', (e) => {
+            openingSoonOnly = e.target.checked;
+            syncFilters();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    });
+    
+    ['closingSoonFilter', 'closingSoonFilter2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', (e) => {
+            closingSoonOnly = e.target.checked;
+            syncFilters();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    });
+    
+    ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', (e) => {
+            hoursUnknownOnly = e.target.checked;
+            syncFilters();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    });
+    
+    ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', (e) => {
+            onlineOnly = e.target.checked;
+            syncFilters();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    });
+    
+    ['radiusFilter', 'radiusFilter2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', (e) => {
+            selectedRadius = parseInt(e.target.value);
+            syncFilters();
+            updateRadiusValue();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    });
+    
+    ['countryFilter', 'countryFilter2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', (e) => {
+            selectedCountry = e.target.value;
+            syncFilters();
+            if (selectedCountry === 'USA') {
+                ['stateFilterContainer', 'stateFilterContainer2'].forEach(containerId => {
+                    document.getElementById(containerId)?.classList.remove('hidden');
+                });
+                populateStateFilter('USA');
+            } else {
+                ['stateFilterContainer', 'stateFilterContainer2'].forEach(containerId => {
+                    document.getElementById(containerId)?.classList.add('hidden');
+                });
+                selectedState = '';
+            }
+            if (!viewingStarredOnly) applyFilters();
+        });
+    });
+    
+    ['stateFilter', 'stateFilter2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', (e) => {
+            selectedState = e.target.value;
+            syncFilters();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    });
+    
+    document.getElementById('starredBtn')?.addEventListener('click', toggleStarredView);
+    
+    document.getElementById('splitViewBtn')?.addEventListener('click', toggleSplitView);
+    document.getElementById('locateBtn')?.addEventListener('click', centerOnUserLocation);
+    document.getElementById('resetMapBtn')?.addEventListener('click', resetMap);
+    
+    document.getElementById('toggleFilterPosition')?.addEventListener('click', () => {
+        filterPosition = filterPosition === 'left' ? 'none' : 'left';
+        checkFilterPosition();
+    });
+    
+    window.addEventListener('resize', checkFilterPosition);
+}
+
+function syncFilters() {
+    ['openNowFilter', 'openNowFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = openNowOnly;
+    });
+    ['closedNowFilter', 'closedNowFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = closedNowOnly;
+    });
+    ['openingSoonFilter', 'openingSoonFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = openingSoonOnly;
+    });
+    ['closingSoonFilter', 'closingSoonFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = closingSoonOnly;
+    });
+    ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = hoursUnknownOnly;
+    });
+    ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = onlineOnly;
+    });
+    ['radiusFilter', 'radiusFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = selectedRadius;
+    });
+    ['countryFilter', 'countryFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = selectedCountry;
+    });
+    ['stateFilter', 'stateFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = selectedState;
+    });
+}
+
+function createCategoryButtons() {
+    ['categoryFilters', 'categoryFilters2'].forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = CATEGORIES.map(cat => {
+            const isSelected = selectedCategory === cat;
+            return `
+                <button 
+                    class="px-3 py-2 text-sm rounded-lg border ${isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:opacity-80"
+                    onclick="selectCategory('${cat.replace(/'/g, "\\'")}')"
+                >
+                    ${cat}
+                </button>
+            `;
+        }).join('');
+    });
+    
+    if (selectedCategory !== 'All' && SUBCATEGORIES[selectedCategory]) {
+        ['subcategoryContainer', 'subcategoryContainer2'].forEach(containerId => {
+            document.getElementById(containerId)?.classList.remove('hidden');
+        });
+        renderSubcategoryFilters();
+    }
+}
+
+function renderSubcategoryFilters() {
+    if (selectedCategory === 'All' || !SUBCATEGORIES[selectedCategory]) return;
+    
+    const subcats = SUBCATEGORIES[selectedCategory];
+    
+    ['subcategoryFilters', 'subcategoryFilters2'].forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = subcats.map(sub => {
+            const isSelected = selectedSubcategories.includes(sub);
+            return `<span class="subcategory-tag ${isSelected ? 'selected' : ''}" onclick="toggleSubcategory('${sub.replace(/'/g, "\\'")}')">${sub}</span>`;
+        }).join('');
+    });
+}
+
+window.selectCategory = function(category) {
+    selectedCategory = category;
+    selectedSubcategories = [];
+    createCategoryButtons();
+    
+    if (category !== 'All' && SUBCATEGORIES[category]) {
+        ['subcategoryContainer', 'subcategoryContainer2'].forEach(containerId => {
+            document.getElementById(containerId)?.classList.remove('hidden');
+        });
+        renderSubcategoryFilters();
+    } else {
+        ['subcategoryContainer', 'subcategoryContainer2'].forEach(containerId => {
+            document.getElementById(containerId)?.classList.add('hidden');
+        });
+    }
+    
+    updateURL();
+    if (!viewingStarredOnly) applyFilters();
+};
+
+window.toggleSubcategory = function(subcategory) {
+    const index = selectedSubcategories.indexOf(subcategory);
+    if (index > -1) {
+        selectedSubcategories.splice(index, 1);
+    } else {
+        selectedSubcategories.push(subcategory);
+    }
+    renderSubcategoryFilters();
+    updateURL();
+    if (!viewingStarredOnly) applyFilters();
+};
+
+window.setSubcategoryMode = function(mode, skipUpdate) {
+    subcategoryMode = mode;
+    document.querySelectorAll('.toggle-option').forEach(opt => {
+        if (opt.dataset.mode === mode) opt.classList.add('active');
+        else opt.classList.remove('active');
+    });
+    if (!skipUpdate) {
+        updateURL();
+        if (!viewingStarredOnly) applyFilters();
+    }
+};
 
 function checkFilterPosition() {
     const screenWidth = window.innerWidth;
@@ -479,18 +639,6 @@ function updateURL() {
     window.history.replaceState({}, '', url);
 }
 
-window.setSubcategoryMode = function(mode, skipUpdate) {
-    subcategoryMode = mode;
-    document.querySelectorAll('.toggle-option').forEach(opt => {
-        if (opt.dataset.mode === mode) opt.classList.add('active');
-        else opt.classList.remove('active');
-    });
-    if (!skipUpdate) {
-        updateURL();
-        if (!viewingStarredOnly) applyFilters();
-    }
-};
-
 function normalizeString(str) {
     return str.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
 }
@@ -564,7 +712,7 @@ function updateRadiusValue() {
     ['radiusValue', 'radiusValue2'].forEach(id => {
         const valueSpan = document.getElementById(id);
         if (selectedRadius === 0) {
-            valueSpan.textContent = currentLanguage === 'el' ? TRANSLATIONS.el.anyDistance : TRANSLATIONS.en.anyDistance;
+            valueSpan.textContent = 'Any distance';
         } else {
             valueSpan.textContent = `${selectedRadius} ${selectedRadius === 1 ? 'mile' : 'miles'}`;
         }
@@ -712,6 +860,7 @@ function loadMoreListings() {
     displayedListingsCount += 25;
     renderListings();
 }
+
 // ============================================
 // LISTINGS PAGE JAVASCRIPT - PART 5
 // Apply Filters Function
@@ -871,7 +1020,7 @@ function renderListings() {
             const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+            const listingUrl = `/listing/${categorySlug}/${l.slug}`;
             const badges = [];
             
             const openStatus = isOpenNow(l.hours);
@@ -885,7 +1034,7 @@ function renderListings() {
             if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
             if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
             
-            const isStarred = starredListings.includes(l.id);
+            const isStarred = starredListingsArray.includes(l.id);
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
@@ -923,7 +1072,7 @@ function renderListings() {
         container.innerHTML = displayedListings.map(l => {
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+            const listingUrl = `/listing/${categorySlug}/${l.slug}`;
             const badges = [];
             
             const openStatus = isOpenNow(l.hours);
@@ -937,7 +1086,7 @@ function renderListings() {
             if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
             if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
             
-            const isStarred = starredListings.includes(l.id);
+            const isStarred = starredListingsArray.includes(l.id);
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block relative">
@@ -975,180 +1124,6 @@ function renderListings() {
         loadMoreBtn.classList.add('hidden');
     }
 }
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 7
-// Render Listings & Display Functions
-// ============================================
-
-function renderListings() {
-    const start = 0;
-    const end = displayedListingsCount;
-    const toDisplay = filteredListings.slice(start, end);
-    
-    const container = document.getElementById('listingsContainer');
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    
-    if (!container) return;
-    
-    updateResultsCount();
-    
-    if (loadMoreBtn) {
-        if (end < filteredListings.length) {
-            loadMoreBtn.classList.remove('hidden');
-            loadMoreBtn.textContent = `Load More Listings (${filteredListings.length - end} remaining)`;
-        } else {
-            loadMoreBtn.classList.add('hidden');
-        }
-    }
-    
-    if (toDisplay.length === 0) {
-        container.innerHTML = `
-            <div class="col-span-full text-center py-16">
-                <p class="text-gray-600 text-lg mb-4">No listings found matching your criteria</p>
-                <button onclick="clearAllFilters()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Clear All Filters
-                </button>
-            </div>
-        `;
-        
-        if (map && markerClusterGroup) {
-            markerClusterGroup.clearLayers();
-        }
-        return;
-    }
-    
-    if (currentView === 'list') {
-        renderListView(container, toDisplay);
-    } else {
-        renderGridView(container, toDisplay);
-    }
-    
-    if (map) {
-        updateMapMarkers();
-    }
-}
-
-function renderGridView(container, listings) {
-    const screenWidth = window.innerWidth;
-    let gridClass = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
-    
-    if (screenWidth >= 1024) {
-        if (filterPosition === 'left') {
-            gridClass = 'grid grid-cols-1 md:grid-cols-2 gap-6 listings-2-col';
-        } else {
-            gridClass = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 listings-3-col';
-        }
-    }
-    
-    container.className = gridClass;
-    container.innerHTML = listings.map(l => {
-        const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
-        const fullAddress = getFullAddress(l);
-        const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-        const badges = [];
-        
-        const openStatus = isOpenNow(l.hours);
-        if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-        else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-        if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-        if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-        if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-        
-        if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-        if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-        if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-        
-        const isStarred = starredListings.includes(l.id);
-        
-        return `
-            <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
-                <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)">
-                    <svg class="star-icon" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                </button>
-                <div class="h-48 bg-gray-200 relative">
-                    <img src="${firstPhoto}" alt="${l.business_name}" class="w-full h-full object-cover">
-                    ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2 flex-wrap">${badges.join('')}</div>` : ''}
-                </div>
-                <div class="p-4">
-                    <div class="flex gap-3 mb-3">
-                        <img src="${l.logo}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">
-                        <div class="flex-1 min-w-0">
-                            <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${l.category}</span>
-                            <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${l.business_name}</h3>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
-                    <div class="text-sm text-gray-600 space-y-1">
-                        <div class="flex items-center gap-2">
-                            <span>📍</span>
-                            <span class="truncate">${fullAddress}</span>
-                        </div>
-                        ${l.phone ? `<div class="flex items-center gap-2"><span>📞</span><span class="truncate">${l.phone}</span></div>` : ''}
-                    </div>
-                </div>
-            </a>
-        `;
-    }).join('');
-}
-
-function renderListView(container, listings) {
-    container.className = 'space-y-4';
-    container.innerHTML = listings.map(l => {
-        const fullAddress = getFullAddress(l);
-        const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-        const badges = [];
-        
-        const openStatus = isOpenNow(l.hours);
-        if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-        else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-        if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-        if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-        if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-        
-        if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-        if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-        if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-        
-        const isStarred = starredListings.includes(l.id);
-        
-        return `
-            <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block relative">
-                <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 12px; right: 12px;">
-                    <svg class="star-icon" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                </button>
-                <img src="${l.logo}" alt="${l.business_name}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
-                <div class="flex-1 min-w-0 overflow-hidden pr-12">
-                    <div class="flex gap-2 mb-2 flex-wrap">
-                        <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
-                        ${badges.join('')}
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-1 truncate">${l.business_name}</h3>
-                    <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
-                    <div class="flex flex-col gap-1 text-sm text-gray-600">
-                        <div class="flex items-center gap-1">
-                            <span>📍</span>
-                            <span class="truncate">${fullAddress}</span>
-                        </div>
-                        ${l.phone ? `<div class="flex items-center gap-1"><span>📞</span><span class="truncate">${l.phone}</span></div>` : ''}
-                    </div>
-                </div>
-            </a>
-        `;
-    }).join('');
-}
-
-function updateResultsCount() {
-    const count = filteredListings.length;
-    if (!viewingStarredOnly) {
-        document.getElementById('resultsCount').textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
-    }
-}
 
 function setView(view) {
     currentView = view;
@@ -1159,15 +1134,10 @@ function setView(view) {
     renderListings();
 }
 
-function loadMoreListings() {
-    displayedListingsCount += 25;
-    renderListings();
-}
-
 window.setView = setView;
 window.loadMoreListings = loadMoreListings;
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 8
+// LISTINGS PAGE JAVASCRIPT - PART 7
 // Map Functions & UI Controls
 // ============================================
 
@@ -1250,6 +1220,41 @@ function addUserLocationMarker() {
         icon: userIcon, zIndexOffset: 1000
     }).addTo(map);
     userLocationMarker.bindPopup('<strong>Your Location</strong>');
+}
+
+function centerOnUserLocation() {
+    if (!map) return;
+    
+    if (!userLocation) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+                    map.setView([userLocation.lat, userLocation.lng], 13);
+                    addUserLocationMarker();
+                    locationButtonActive = true;
+                    mapMoved = false;
+                    document.getElementById('locateBtn').classList.add('active');
+                },
+                error => alert('Unable to get your location')
+            );
+        } else {
+            alert('Geolocation is not supported by your browser');
+        }
+    } else {
+        map.setView([userLocation.lat, userLocation.lng], 13);
+        locationButtonActive = true;
+        mapMoved = false;
+        document.getElementById('locateBtn').classList.add('active');
+    }
+}
+
+function resetMap() {
+    if (!map) return;
+    map.setView(defaultMapCenter, defaultMapZoom);
+    mapMoved = false;
+    locationButtonActive = false;
+    document.getElementById('locateBtn').classList.remove('active');
 }
 
 function updateMapMarkers() {
@@ -1351,6 +1356,14 @@ function toggleSplitView() {
     }
 }
 
+window.toggleSplitView = toggleSplitView;
+window.centerOnUserLocation = centerOnUserLocation;
+window.resetMap = resetMap;
+// ============================================
+// LISTINGS PAGE JAVASCRIPT - PART 8
+// Split View & Geocoding Functions
+// ============================================
+
 function renderSplitViewListings() {
     const container = document.getElementById('splitListingsContainer');
     if (!container) return;
@@ -1376,7 +1389,7 @@ function renderSplitViewListings() {
         if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
         if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
         
-        const isStarred = starredListings.includes(l.id);
+        const isStarred = starredListingsArray.includes(l.id);
         
         return `
             <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
@@ -1496,12 +1509,6 @@ function initSplitMap() {
     setTimeout(() => splitMap.invalidateSize(), 250);
 }
 
-window.toggleSplitView = toggleSplitView;
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 9
-// Geocoding & Final Functions
-// ============================================
-
 async function geocodeAllListings() {
     let geocodedCount = 0;
     for (let listing of allListings) {
@@ -1530,473 +1537,5 @@ async function geocodeListing(listing) {
         console.error('Geocoding failed for', listing.business_name, e);
     }
 }
-
-function switchLanguage(lang) {
-    currentLanguage = lang;
-    setCookie('language', lang, 365);
-    
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        if (btn.dataset.lang === lang) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
-    translatePage();
-}
-
-function translatePage() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage][key]) {
-            el.textContent = TRANSLATIONS[currentLanguage][key];
-        }
-    });
-    
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-i18n-placeholder');
-        if (TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage][key]) {
-            el.placeholder = TRANSLATIONS[currentLanguage][key];
-        }
-    });
-    
-    updateRadiusValue();
-}
-
-window.switchLanguage = switchLanguage;
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 10
-// Starred Listings & Cookie Management
-// ============================================
-
-let starredListings = [];
-
-function loadStarredListings() {
-    const stored = getCookie('starredListings');
-    if (stored) {
-        try {
-            starredListings = JSON.parse(stored);
-        } catch (e) {
-            starredListings = [];
-        }
-    }
-    updateStarredCount();
-}
-
-function saveStarredListings() {
-    setCookie('starredListings', JSON.stringify(starredListings), 365);
-    updateStarredCount();
-}
-
-function toggleStar(listingId, event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-    
-    const index = starredListings.indexOf(listingId);
-    if (index > -1) {
-        starredListings.splice(index, 1);
-    } else {
-        starredListings.push(listingId);
-    }
-    
-    saveStarredListings();
-    renderListings();
-}
-
-function updateStarredCount() {
-    const countEl = document.getElementById('starredCount');
-    if (countEl) {
-        countEl.textContent = starredListings.length;
-    }
-}
-
-function toggleStarredView() {
-    const viewingStarredOnly = filteredListings.length > 0 && 
-                               filteredListings.every(l => starredListings.includes(l.id));
-    
-    if (viewingStarredOnly) {
-        // Return to normal view
-        applyFilters();
-        const starredBtn = document.getElementById('starredBtn');
-        if (starredBtn) {
-            starredBtn.style.backgroundColor = '';
-            starredBtn.style.color = '';
-        }
-    } else {
-        // Show only starred
-        if (starredListings.length === 0) {
-            alert("You haven't starred any listings yet!");
-            return;
-        }
-        
-        filteredListings = allListings.filter(l => starredListings.includes(l.id));
-        currentPage = 1;
-        renderListings();
-        
-        const starredBtn = document.getElementById('starredBtn');
-        if (starredBtn) {
-            starredBtn.style.backgroundColor = '#fbbf24';
-            starredBtn.style.color = '#78350f';
-        }
-        
-        // Update results count
-        const countEl = document.getElementById('resultsCount');
-        if (countEl) {
-            countEl.textContent = `Showing ${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
-        }
-    }
-}
-
-function setCookie(name, value, days) {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
-}
-
-function getCookie(name) {
-    return document.cookie.split('; ').reduce((r, v) => {
-        const parts = v.split('=');
-        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
-    }, '');
-}
-
-// Make functions globally available
-window.toggleStar = toggleStar;
-window.toggleStarredView = toggleStarredView;
-
-// Load starred listings on page load
-document.addEventListener('DOMContentLoaded', () => {
-    loadStarredListings();
-    
-    const starredBtn = document.getElementById('starredBtn');
-    if (starredBtn) {
-        starredBtn.addEventListener('click', toggleStarredView);
-    }
-});
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 11
-// Analytics Tracking
-// ============================================
-
-async function trackAnalytics(listingId, action, platform = null) {
-    try {
-        const payload = {
-            event_type: 'track_analytics',
-            client_payload: {
-                listingId: listingId,
-                action: action,
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent
-            }
-        };
-        
-        if (action === 'share' && platform) {
-            payload.client_payload.platform = platform;
-        }
-        
-        await fetch('https://api.github.com/repos/thegreekdirectory/listings/dispatches', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github+json'
-            },
-            body: JSON.stringify(payload)
-        });
-    } catch (e) {
-        console.log('Analytics tracking error:', e.message);
-    }
-}
-
-// Track page view
-window.addEventListener('load', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const listingId = urlParams.get('id');
-    if (listingId) {
-        trackAnalytics(listingId, 'view');
-    }
-});
-
-// Track clicks on listings
-document.addEventListener('click', (e) => {
-    const listingCard = e.target.closest('.listing-card, .listing-row');
-    if (listingCard) {
-        const url = listingCard.href;
-        if (url) {
-            const match = url.match(/listing\/[^\/]+\/([^\/\?]+)/);
-            if (match) {
-                const slug = match[1];
-                const listing = allListings.find(l => l.slug === slug);
-                if (listing) {
-                    trackAnalytics(listing.id, 'view');
-                }
-            }
-        }
-    }
-});
-
-window.trackAnalytics = trackAnalytics;
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 12
-// URL Parameter Handling & Deep Linking
-// ============================================
-
-function loadFiltersFromURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Search query
-    const searchQuery = urlParams.get('q');
-    if (searchQuery) {
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.value = searchQuery;
-        }
-    }
-    
-    // Category
-    const category = urlParams.get('category');
-    if (category) {
-        const decodedCategory = decodeURIComponent(category);
-        selectedCategories = [decodedCategory];
-    }
-    
-    // Subcategories
-    const subcategories = urlParams.get('subcategories');
-    if (subcategories) {
-        selectedSubcategories = subcategories.split(',').map(s => decodeURIComponent(s));
-    }
-    
-    // Subcategory mode
-    const subMode = urlParams.get('submode');
-    if (subMode === 'all' || subMode === 'any') {
-        subcategoryMode = subMode;
-        window.setSubcategoryMode(subMode);
-    }
-    
-    // Country
-    const country = urlParams.get('country');
-    if (country) {
-        selectedCountry = country;
-    }
-    
-    // State
-    const state = urlParams.get('state');
-    if (state) {
-        selectedState = state;
-    }
-    
-    // Radius
-    const radius = urlParams.get('radius');
-    if (radius) {
-        radiusKm = parseInt(radius);
-    }
-    
-    // Hours filters
-    if (urlParams.get('open') === 'true') {
-        const openNowFilter = document.getElementById('openNowFilter');
-        const openNowFilter2 = document.getElementById('openNowFilter2');
-        if (openNowFilter) openNowFilter.checked = true;
-        if (openNowFilter2) openNowFilter2.checked = true;
-    }
-    
-    if (urlParams.get('closed') === 'true') {
-        const closedNowFilter = document.getElementById('closedNowFilter');
-        const closedNowFilter2 = document.getElementById('closedNowFilter2');
-        if (closedNowFilter) closedNowFilter.checked = true;
-        if (closedNowFilter2) closedNowFilter2.checked = true;
-    }
-    
-    if (urlParams.get('opening') === 'true') {
-        const openingSoonFilter = document.getElementById('openingSoonFilter');
-        const openingSoonFilter2 = document.getElementById('openingSoonFilter2');
-        if (openingSoonFilter) openingSoonFilter.checked = true;
-        if (openingSoonFilter2) openingSoonFilter2.checked = true;
-    }
-    
-    if (urlParams.get('closing') === 'true') {
-        const closingSoonFilter = document.getElementById('closingSoonFilter');
-        const closingSoonFilter2 = document.getElementById('closingSoonFilter2');
-        if (closingSoonFilter) closingSoonFilter.checked = true;
-        if (closingSoonFilter2) closingSoonFilter2.checked = true;
-    }
-    
-    if (urlParams.get('hours') === 'unknown') {
-        const hoursUnknownFilter = document.getElementById('hoursUnknownFilter');
-        const hoursUnknownFilter2 = document.getElementById('hoursUnknownFilter2');
-        if (hoursUnknownFilter) hoursUnknownFilter.checked = true;
-        if (hoursUnknownFilter2) hoursUnknownFilter2.checked = true;
-    }
-    
-    if (urlParams.get('online') === 'true') {
-        const onlineOnlyFilter = document.getElementById('onlineOnlyFilter');
-        const onlineOnlyFilter2 = document.getElementById('onlineOnlyFilter2');
-        if (onlineOnlyFilter) onlineOnlyFilter.checked = true;
-        if (onlineOnlyFilter2) onlineOnlyFilter2.checked = true;
-    }
-    
-    // Apply loaded filters
-    syncDualFilters();
-    renderSubcategoryFilters();
-}
-
-function updateURL() {
-    const url = new URL(window.location);
-    url.search = '';
-    
-    const searchInput = document.getElementById('searchInput');
-    const searchTerm = searchInput?.value.trim() || '';
-    
-    if (selectedCategories.length > 0) {
-        url.searchParams.set('category', encodeURIComponent(selectedCategories[0]));
-    }
-    
-    if (selectedSubcategories.length > 0) {
-        url.searchParams.set('subcategories', selectedSubcategories.map(s => encodeURIComponent(s)).join(','));
-        url.searchParams.set('submode', subcategoryMode);
-    }
-    
-    if (selectedCountry) {
-        url.searchParams.set('country', selectedCountry);
-    }
-    
-    if (selectedState) {
-        url.searchParams.set('state', selectedState);
-    }
-    
-    if (radiusKm > 0) {
-        url.searchParams.set('radius', radiusKm);
-    }
-    
-    const openNowFilter = document.getElementById('openNowFilter');
-    if (openNowFilter?.checked) {
-        url.searchParams.set('open', 'true');
-    }
-    
-    const closedNowFilter = document.getElementById('closedNowFilter');
-    if (closedNowFilter?.checked) {
-        url.searchParams.set('closed', 'true');
-    }
-    
-    const openingSoonFilter = document.getElementById('openingSoonFilter');
-    if (openingSoonFilter?.checked) {
-        url.searchParams.set('opening', 'true');
-    }
-    
-    const closingSoonFilter = document.getElementById('closingSoonFilter');
-    if (closingSoonFilter?.checked) {
-        url.searchParams.set('closing', 'true');
-    }
-    
-    const hoursUnknownFilter = document.getElementById('hoursUnknownFilter');
-    if (hoursUnknownFilter?.checked) {
-        url.searchParams.set('hours', 'unknown');
-    }
-    
-    const onlineOnlyFilter = document.getElementById('onlineOnlyFilter');
-    if (onlineOnlyFilter?.checked) {
-        url.searchParams.set('online', 'true');
-    }
-    
-    if (searchTerm) {
-        url.searchParams.set('q', searchTerm);
-    }
-    
-    window.history.replaceState({}, '', url);
-}
-
-// Load filters from URL on page load
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        loadFiltersFromURL();
-        applyFilters();
-    }, 100);
-});
-
-// Update URL when filters change
-const originalApplyFilters = applyFilters;
-applyFilters = function() {
-    originalApplyFilters();
-    updateURL();
-};
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 13 (FINAL)
-// Utility Functions & Exports
-// ============================================
-
-// Update location subtitle based on current filters
-function updateLocationSubtitle() {
-    const locationSubtitle = document.getElementById('locationSubtitle');
-    if (!locationSubtitle) return;
-    
-    if (customLocation) {
-        locationSubtitle.textContent = `${customLocation.city}, ${customLocation.state}`;
-    } else if (userLocation) {
-        locationSubtitle.textContent = 'Your Location';
-    } else if (selectedState) {
-        const stateName = US_STATES[selectedState] || selectedState;
-        locationSubtitle.textContent = `${stateName}`;
-    } else if (selectedCountry) {
-        locationSubtitle.textContent = selectedCountry;
-    } else {
-        locationSubtitle.textContent = 'All Locations';
-    }
-}
-
-// Call this when filters change
-const originalHandleCountryChange = handleCountryChange;
-handleCountryChange = function(e) {
-    originalHandleCountryChange(e);
-    updateLocationSubtitle();
-};
-
-const originalHandleStateChange = handleStateChange;
-handleStateChange = function(e) {
-    originalHandleStateChange(e);
-    updateLocationSubtitle();
-};
-
-// Refresh button for iOS web app
-function isIOSWebApp() {
-    return ('standalone' in window.navigator) && window.navigator.standalone;
-}
-
-if (isIOSWebApp()) {
-    const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) {
-        refreshBtn.style.display = 'flex';
-    }
-}
-
-// Handle iOS web app status bar
-if (isIOSWebApp()) {
-    document.body.style.paddingTop = '20px';
-}
-
-// Export all necessary functions
-window.listingsApp = {
-    applyFilters,
-    clearAllFilters,
-    toggleFilterPanel,
-    toggleMap,
-    toggleSplitView,
-    switchView,
-    loadMoreListings,
-    handleSearch,
-    handleSort,
-    handleCategoryChange,
-    handleSubcategoryChange,
-    handleCountryChange,
-    handleStateChange,
-    handleRadiusChange,
-    handleLocationSearch,
-    selectLocation,
-    setSubcategoryMode,
-    toggleStar,
-    toggleStarredView,
-    centerOnUserLocation,
-    resetMap,
-    trackAnalytics
-};
 
 console.log('✅ Listings page fully initialized');
