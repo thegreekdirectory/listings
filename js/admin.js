@@ -1937,3 +1937,4 @@ setTimeout(addGenerateAllButton, 100);
 
 window.generateListingPage = generateListingPage;
 window.generateAllListingPages = generateAllListingPages;
+}
