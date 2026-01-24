@@ -1,3 +1,10 @@
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 /* ============================================
    INDEX PAGE - COMPLETE CSS
    Homepage styling
@@ -24,6 +31,10 @@ body {
     color: var(--text-dark);
     background: white;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Header */
 header {
@@ -97,6 +108,10 @@ header {
     opacity: 0.95;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Search Container */
 .search-container {
     display: flex;
@@ -112,6 +127,12 @@ header {
     border-radius: 8px;
     font-size: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: white;
+    color: #1a1a1a;
+}
+
+.search-input::placeholder {
+    color: #666;
 }
 
 .search-input:focus {
@@ -136,6 +157,10 @@ header {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Sections */
 .categories-section,
@@ -202,6 +227,10 @@ header {
     font-size: 0.875rem;
     color: var(--text-light);
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Listings Grid */
 .listings-grid {
@@ -301,6 +330,10 @@ header {
     margin-top: auto;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Loading State */
 .loading {
     text-align: center;
@@ -373,6 +406,10 @@ footer {
     color: rgba(255, 255, 255, 0.6);
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Responsive */
 @media (max-width: 768px) {
     .header-nav {
@@ -442,4 +479,20 @@ footer {
     .recent-section {
         background: #1f2937;
     }
+    
+    .search-input {
+        background: #1a1a1a;
+        color: #e5e7eb;
+    }
+    
+    .search-input::placeholder {
+        color: #9ca3af;
+    }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
