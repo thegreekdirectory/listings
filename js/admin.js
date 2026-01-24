@@ -281,6 +281,18 @@ window.logout = logout;
 // Load & Render Listings
 // ============================================
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 2
+// Load & Render Listings
+// ============================================
+
 async function loadListings() {
     try {
         console.log('📥 Loading listings from Supabase...');
@@ -306,6 +318,10 @@ async function loadListings() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function renderTable() {
     const tbody = document.getElementById('listingsTableBody');
     const searchTerm = document.getElementById('adminSearch')?.value.toLowerCase() || '';
@@ -318,8 +334,8 @@ function renderTable() {
     ) : allListings;
     
     tbody.innerHTML = filtered.map(l => {
-    const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `/listing/${categorySlug}/${l.slug}`; 
+        const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const listingUrl = `/listing/${categorySlug}/${l.slug}`; 
         const tier = l.tier || 'FREE';
         const tierColors = {
             FREE: 'bg-gray-100 text-gray-700',
@@ -338,7 +354,7 @@ function renderTable() {
         } else if (tier === 'FEATURED') {
             badges = '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700">⭐ Featured</span>';
         } else if (tier === 'VERIFIED') {
-            badges = '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">✓ Verified</span>';
+            badges += '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">✓ Verified</span>';
         }
         
         if (isClaimed) {
@@ -348,6 +364,13 @@ function renderTable() {
         if (l.is_chain) {
             badges += '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">🔗 Chain</span>';
         }
+        
+        const analytics = l.analytics || {};
+        const views = analytics.views || 0;
+        const calls = analytics.call_clicks || 0;
+        const website = analytics.website_clicks || 0;
+        const directions = analytics.direction_clicks || 0;
+        const shares = analytics.share_clicks || 0;
         
         return `
         <tr class="border-b hover:bg-gray-50">
@@ -365,6 +388,15 @@ function renderTable() {
             <td class="py-4 px-4 font-medium">${l.business_name}</td>
             <td class="py-4 px-4 text-gray-600">${l.category}</td>
             <td class="py-4 px-4 text-sm text-gray-600">${l.city || ''}, ${l.state || ''}</td>
+            <td class="py-4 px-4 text-sm text-gray-600">
+                <div class="text-xs space-y-1">
+                    <div>👁️ ${views} views</div>
+                    <div>📞 ${calls} calls</div>
+                    <div>🌐 ${website} web</div>
+                    <div>🗺️ ${directions} dir</div>
+                    <div>📤 ${shares} shares</div>
+                </div>
+            </td>
             <td class="py-4 px-4 text-sm text-gray-600">${new Date(l.updated_at).toLocaleString()}</td>
             <td class="py-4 px-4">
                 <div class="flex justify-end gap-2 flex-wrap">
@@ -378,6 +410,10 @@ function renderTable() {
         </tr>
     `}).join('');
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 window.toggleVisibility = async function(id) {
     try {
@@ -401,6 +437,9 @@ window.toggleVisibility = async function(id) {
 };
 
 window.loadListings = loadListings;
+
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed  without written permission from The Greek Directory. Unauthorized use, copying, modification,  or distribution of this code will result in legal action to the fullest extent permitted by law.
+
 // ============================================
 // ADMIN PORTAL - PART 3
 // Edit Listing & Form Management - Part 1
@@ -860,6 +899,10 @@ function fillEditFormContinuation(listing, owner) {
 // Save Listing & Delete Functions
 // ============================================
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 async function saveListing() {
     try {
         const businessName = document.getElementById('editBusinessName').value.trim();
@@ -906,16 +949,19 @@ async function saveListing() {
                 .replace(/^-|-$/g, '');
         }
         
-        const coordinatesInput = document.getElementById('editCoordinates').value.trim();
+        const address = document.getElementById('editAddress').value.trim() || null;
+        const city = document.getElementById('editCity').value.trim() || null;
+        const state = document.getElementById('editState').value || null;
+        const zipCode = document.getElementById('editZipCode').value.trim() || null;
+        
         let coordinates = null;
-        if (coordinatesInput) {
-            const parts = coordinatesInput.split(',');
-            if (parts.length === 2) {
-                const lat = parseFloat(parts[0].trim());
-                const lng = parseFloat(parts[1].trim());
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    coordinates = { lat, lng };
-                }
+        if (address && city && state) {
+            console.log('🌍 Auto-geocoding address...');
+            coordinates = await geocodeAddress(address, city, state, zipCode);
+            if (coordinates) {
+                console.log('✅ Coordinates found:', coordinates);
+            } else {
+                console.log('⚠️ Could not geocode address');
             }
         }
         
@@ -932,10 +978,10 @@ async function saveListing() {
             is_chain: isChain,
             chain_name: isChain ? chainName : null,
             chain_id: isChain ? chainId : null,
-            address: document.getElementById('editAddress').value.trim() || null,
-            city: document.getElementById('editCity').value.trim() || null,
-            state: document.getElementById('editState').value || null,
-            zip_code: document.getElementById('editZipCode').value.trim() || null,
+            address: address,
+            city: city,
+            state: state,
+            zip_code: zipCode,
             country: document.getElementById('editCountry').value || 'USA',
             coordinates: coordinates,
             phone: phone,
@@ -1068,6 +1114,10 @@ async function saveOwnerInfo(listingId) {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 window.sendMagicLink = async function(listingId) {
     try {
         const { data: listing, error: listingError } = await adminSupabase
@@ -1149,6 +1199,9 @@ window.editListing = editListing;
 window.newListing = newListing;
 window.deleteListing = deleteListing;
 window.sendMagicLink = sendMagicLink;
+
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
+
 // ============================================
 // ADMIN PORTAL - PART 6
 // Page Generation Helper Functions
