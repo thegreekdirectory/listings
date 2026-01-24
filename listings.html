@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Greek Directory - Local Greek-Owned Businesses, Churches & Cultural Centers</title>
     
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="white">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Greek Directory">
@@ -25,157 +26,158 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="stylesheet" href="css/listings.css">
+    <link rel="stylesheet" href="css/index.css">
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4">
-            <a href="/" class="logo-link flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2">
-                <span>←</span>
-                <span data-translate="nav.backToDirectory">Back to The Greek Directory</span>
-            </a>
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-3">
-                    <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
-                    <div>
-                        <h1 class="text-xl font-bold" style="color: #055193;" data-translate="home.title">The Greek Directory</h1>
-                        <p class="text-xs text-gray-600" id="locationSubtitle">Loading...</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button id="starredBtn" class="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                        <svg class="star-icon" style="width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;" viewBox="0 0 24 24">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                        <span class="text-sm font-medium"><span class="hidden sm:inline" data-translate="listings.view">View </span><span data-translate="listings.starred">Starred</span></span>
-                        <span id="starredCount" class="text-xs bg-gray-200 px-2 py-0.5 rounded-full">0</span>
-                    </button>
+    <div data-partial="header"></div>
+
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <a href="/" class="logo-link flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2">
+            <span>←</span>
+            <span>Back to The Greek Directory</span>
+        </a>
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
+                <div>
+                    <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
+                    <p class="text-xs text-gray-600" id="locationSubtitle">Loading...</p>
                 </div>
             </div>
-
-            <div class="relative mb-4">
-                <input type="text" id="searchInput" placeholder="Search businesses, categories, or locations..." 
-                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" 
-                    style="--tw-ring-color: #055193;" data-translate="placeholder" data-translate-attr="placeholder" data-translate-key="home.search.placeholder">
+            <div class="flex items-center gap-3">
+                <button id="starredBtn" class="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <svg class="star-icon" style="width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    <span class="text-sm font-medium"><span class="hidden sm:inline">View </span>Starred</span>
+                    <span id="starredCount" class="text-xs bg-gray-200 px-2 py-0.5 rounded-full">0</span>
+                </button>
             </div>
+        </div>
 
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:hidden" id="mobileControls">
-                <button id="filterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
-                    <span>🔍</span>
-                    <span class="text-sm font-medium" data-translate="listings.filters">Filters</span>
-                </button>
-                <button id="mapBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
-                    <span>🗺️</span>
-                    <span class="text-sm font-medium" data-translate="listings.map">Map</span>
-                </button>
-                <button id="refreshBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap" style="display: none;">
-                    <span>🔄</span>
-                </button>
-                <div class="flex items-center gap-1 ml-auto bg-gray-100 rounded-lg p-1">
-                    <button id="gridViewBtn" class="p-2 rounded bg-white shadow-sm"><span>⊞</span></button>
-                    <button id="listViewBtn" class="p-2 rounded"><span>☰</span></button>
+        <div class="relative mb-4">
+            <input type="text" id="searchInput" placeholder="Search businesses, categories, or locations..." 
+                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" 
+                style="--tw-ring-color: #055193;">
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:hidden" id="mobileControls">
+            <button id="filterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                <span>🔍</span>
+                <span class="text-sm font-medium">Filters</span>
+            </button>
+            <button id="mapBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                <span>🗺️</span>
+                <span class="text-sm font-medium">Map</span>
+            </button>
+            <button id="refreshBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap" style="display: none;">
+                <span>🔄</span>
+            </button>
+            <div class="flex items-center gap-1 ml-auto bg-gray-100 rounded-lg p-1">
+                <button id="gridViewBtn" class="p-2 rounded bg-white shadow-sm"><span>⊞</span></button>
+                <button id="listViewBtn" class="p-2 rounded"><span>☰</span></button>
+            </div>
+        </div>
+
+        <div id="filterPanel" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden lg:hidden">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-900">Filters</h3>
+                <div class="flex gap-2">
+                    <button id="clearFiltersBtn" class="text-sm text-blue-600 hover:text-blue-800">Clear All</button>
+                    <button id="closeFilterBtn" class="text-gray-500 lg:hidden">✕</button>
                 </div>
             </div>
-
-            <div id="filterPanel" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden lg:hidden">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-semibold text-gray-900" data-translate="listings.filters">Filters</h3>
-                    <div class="flex gap-2">
-                        <button id="clearFiltersBtn" class="text-sm text-blue-600 hover:text-blue-800" data-translate="listings.clearAll">Clear All</button>
-                        <button id="closeFilterBtn" class="text-gray-500 lg:hidden">✕</button>
-                    </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Categories & Subcategories</label>
+                    <input type="text" id="categorySearch" placeholder="Type to search..." 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2">
                 </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.searchCategories">Search Categories & Subcategories</label>
-                        <input type="text" id="categorySearch" placeholder="Type to search..." 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2" data-translate="placeholder" data-translate-attr="placeholder" data-translate-key="listings.typeToSearch">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.category">Category</label>
-                        <div id="categoryFilters" class="grid grid-cols-2 gap-2"></div>
-                    </div>
-                    <div id="subcategoryContainer" class="hidden">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-medium text-gray-700" data-translate="listings.subcategories">Subcategories</label>
-                            <div class="toggle-group">
-                                <button class="toggle-option active" data-mode="any" onclick="setSubcategoryMode('any')" data-translate="listings.any">Any</button>
-                                <button class="toggle-option" data-mode="all" onclick="setSubcategoryMode('all')" data-translate="listings.all">All</button>
-                            </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <div id="categoryFilters" class="grid grid-cols-2 gap-2"></div>
+                </div>
+                <div id="subcategoryContainer" class="hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Subcategories</label>
+                        <div class="toggle-group">
+                            <button class="toggle-option active" data-mode="any" onclick="setSubcategoryMode('any')">Any</button>
+                            <button class="toggle-option" data-mode="all" onclick="setSubcategoryMode('all')">All</button>
                         </div>
-                        <div id="subcategoryFilters" class="flex flex-wrap"></div>
                     </div>
-                    <div class="space-y-2">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="openNowFilter" class="w-4 h-4">
-                            <span class="text-sm font-medium text-gray-700" data-translate="listings.openNow">Open Now</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="closedNowFilter" class="w-4 h-4">
-                            <span class="text-sm font-medium text-gray-700" data-translate="listings.closedNow">Closed Now</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="openingSoonFilter" class="w-4 h-4">
-                            <span class="text-sm font-medium text-gray-700" data-translate="listings.openingSoon">Opening Soon (60 min)</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="closingSoonFilter" class="w-4 h-4">
-                            <span class="text-sm font-medium text-gray-700" data-translate="listings.closingSoon">Closing Soon (60 min)</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="hoursUnknownFilter" class="w-4 h-4">
-                            <span class="text-sm font-medium text-gray-700" data-translate="listings.hoursUnknown">Hours Unknown</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="onlineOnlyFilter" class="w-4 h-4">
-                            <span class="text-sm font-medium text-gray-700" data-translate="listings.onlineOnly">Online Only</span>
-                        </label>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2"><span data-translate="listings.radius">Radius</span>: <span class="radius-value" id="radiusValue">Any distance</span></label>
-                        <input type="range" id="radiusFilter" min="0" max="100" value="0" step="1" class="w-full">
-                    </div>
-                    <div class="location-search-container">
-                        <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.locationSearch">Location Search</label>
-                        <input type="text" id="locationSearch" placeholder="City, State, Zip, or Country..." 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg" data-translate="placeholder" data-translate-attr="placeholder" data-translate-key="listings.locationPlaceholder">
-                        <div id="locationSearchResults" class="location-search-results"></div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.country">Country</label>
-                        <select id="countryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                            <option value="" data-translate="listings.allCountries">All Countries</option>
-                        </select>
-                    </div>
-                    <div id="stateFilterContainer" class="hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.state">State</label>
-                        <select id="stateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                            <option value="" data-translate="listings.allStates">All States</option>
-                        </select>
-                    </div>
+                    <div id="subcategoryFilters" class="flex flex-wrap"></div>
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="openNowFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Open Now</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="closedNowFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Closed Now</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="openingSoonFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Opening Soon (60 min)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="closingSoonFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Closing Soon (60 min)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="hoursUnknownFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Hours Unknown</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="onlineOnlyFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Online Only</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><span>Radius</span>: <span class="radius-value" id="radiusValue">Any distance</span></label>
+                    <input type="range" id="radiusFilter" min="0" max="100" value="0" step="1" class="w-full">
+                </div>
+                <div class="location-search-container">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location Search</label>
+                    <input type="text" id="locationSearch" placeholder="City, State, Zip, or Country..." 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <div id="locationSearchResults" class="location-search-results"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <select id="countryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="">All Countries</option>
+                    </select>
+                </div>
+                <div id="stateFilterContainer" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <select id="stateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="">All States</option>
+                    </select>
                 </div>
             </div>
         </div>
-    </header>
+    </div>
     
     <div id="mapContainer" class="hidden border-b relative">
         <div class="map-loading" id="mapLoading">
             <div class="spinner"></div>
-            <p class="text-sm text-gray-600 mt-2 text-center" data-translate="listings.loadingMap">Loading map...</p>
+            <p class="text-sm text-gray-600 mt-2 text-center">Loading map...</p>
         </div>
         <div id="map"></div>
         <div class="map-controls">
             <button class="map-control-btn" id="splitViewBtn" title="Toggle split view">
                 <span>⊞</span>
-                <span class="desktop-only" data-translate="listings.splitView">Split View</span>
+                <span class="desktop-only">Split View</span>
             </button>
             <button class="map-control-btn" id="locateBtn" title="Find my location">
                 <img src="https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/7e877be3da64a66caf9a6dfb5fddad8f.png" alt="Location">
-                <span class="desktop-only" data-translate="listings.currentLocation">Current Location</span>
+                <span class="desktop-only">Current Location</span>
             </button>
             <button class="map-control-btn" id="resetMapBtn" title="Reset map view">
                 <span>🔄</span>
-                <span class="desktop-only" data-translate="listings.reload">Reload</span>
+                <span class="desktop-only">Reload</span>
             </button>
         </div>
     </div>
@@ -187,26 +189,26 @@
             <div class="desktop-filters hidden" id="desktopFiltersContainer">
                 <div id="desktopFilterPanel" class="desktop-sidebar">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-semibold text-gray-900" data-translate="listings.filters">Filters</h3>
+                        <h3 class="font-semibold text-gray-900">Filters</h3>
                         <button id="toggleFilterPosition" class="text-xs px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" title="Toggle filter position">⇄</button>
                     </div>
-                    <button id="clearFiltersBtn2" class="text-sm text-blue-600 hover:text-blue-800 mb-4 block" data-translate="listings.clearAll">Clear All</button>
+                    <button id="clearFiltersBtn2" class="text-sm text-blue-600 hover:text-blue-800 mb-4 block">Clear All</button>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.search">Search</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
                             <input type="text" id="categorySearch2" placeholder="Categories & subcategories..." 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2" data-translate="placeholder" data-translate-attr="placeholder" data-translate-key="listings.categoriesSubcategories">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.category">Category</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
                             <div id="categoryFilters2" class="grid grid-cols-2 gap-2"></div>
                         </div>
                         <div id="subcategoryContainer2" class="hidden">
                             <div class="flex items-center justify-between mb-2">
-                                <label class="block text-sm font-medium text-gray-700" data-translate="listings.subcategories">Subcategories</label>
+                                <label class="block text-sm font-medium text-gray-700">Subcategories</label>
                                 <div class="toggle-group">
-                                    <button class="toggle-option active text-xs" data-mode="any" onclick="setSubcategoryMode('any')" data-translate="listings.any">Any</button>
-                                    <button class="toggle-option text-xs" data-mode="all" onclick="setSubcategoryMode('all')" data-translate="listings.all">All</button>
+                                    <button class="toggle-option active text-xs" data-mode="any" onclick="setSubcategoryMode('any')">Any</button>
+                                    <button class="toggle-option text-xs" data-mode="all" onclick="setSubcategoryMode('all')">All</button>
                                 </div>
                             </div>
                             <div id="subcategoryFilters2" class="flex flex-wrap"></div>
@@ -214,49 +216,49 @@
                         <div class="space-y-2">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="openNowFilter2" class="w-4 h-4">
-                                <span class="text-sm font-medium text-gray-700" data-translate="listings.openNow">Open Now</span>
+                                <span class="text-sm font-medium text-gray-700">Open Now</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="closedNowFilter2" class="w-4 h-4">
-                                <span class="text-sm font-medium text-gray-700" data-translate="listings.closedNow">Closed Now</span>
+                                <span class="text-sm font-medium text-gray-700">Closed Now</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="openingSoonFilter2" class="w-4 h-4">
-                                <span class="text-sm font-medium text-gray-700" data-translate="listings.openingSoon">Opening Soon</span>
+                                <span class="text-sm font-medium text-gray-700">Opening Soon</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="closingSoonFilter2" class="w-4 h-4">
-                                <span class="text-sm font-medium text-gray-700" data-translate="listings.closingSoon">Closing Soon</span>
+                                <span class="text-sm font-medium text-gray-700">Closing Soon</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="hoursUnknownFilter2" class="w-4 h-4">
-                                <span class="text-sm font-medium text-gray-700" data-translate="listings.hoursUnknown">Hours Unknown</span>
+                                <span class="text-sm font-medium text-gray-700">Hours Unknown</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="onlineOnlyFilter2" class="w-4 h-4">
-                                <span class="text-sm font-medium text-gray-700" data-translate="listings.onlineOnly">Online Only</span>
+                                <span class="text-sm font-medium text-gray-700">Online Only</span>
                             </label>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2"><span data-translate="listings.radius">Radius</span>: <span class="radius-value" id="radiusValue2">Any distance</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><span>Radius</span>: <span class="radius-value" id="radiusValue2">Any distance</span></label>
                             <input type="range" id="radiusFilter2" min="0" max="100" value="0" step="1" class="w-full">
                         </div>
                         <div class="location-search-container">
-                            <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.locationSearch">Location Search</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Location Search</label>
                             <input type="text" id="locationSearch2" placeholder="City, State, Zip, or Country..." 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" data-translate="placeholder" data-translate-attr="placeholder" data-translate-key="listings.locationPlaceholder">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                             <div id="locationSearchResults2" class="location-search-results"></div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.country">Country</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
                             <select id="countryFilter2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <option value="" data-translate="listings.allCountries">All Countries</option>
+                                <option value="">All Countries</option>
                             </select>
                         </div>
                         <div id="stateFilterContainer2" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="listings.state">State</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
                             <select id="stateFilter2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <option value="" data-translate="listings.allStates">All States</option>
+                                <option value="">All States</option>
                             </select>
                         </div>
                     </div>
@@ -269,69 +271,34 @@
                     <div class="flex items-center gap-2">
                         <button id="mapBtnDesktop" class="hidden lg:flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
                             <span>🗺️</span>
-                            <span class="text-sm font-medium" data-translate="listings.map">Map</span>
+                            <span class="text-sm font-medium">Map</span>
                         </button>
                         <div class="hidden lg:flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                             <button id="gridViewBtn2" class="p-2 rounded bg-white shadow-sm"><span>⊞</span></button>
                             <button id="listViewBtn2" class="p-2 rounded"><span>☰</span></button>
                         </div>
                         <select id="sortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                            <option value="default" data-translate="listings.sortDefault">Default</option>
-                            <option value="az" data-translate="listings.sortAZ">A-Z</option>
-                            <option value="closest" data-translate="listings.sortClosest">Closest to Me</option>
+                            <option value="default">Default</option>
+                            <option value="az">A-Z</option>
+                            <option value="closest">Closest to Me</option>
                         </select>
                     </div>
                 </div>
 
                 <div id="normalViewListings">
                     <div id="listingsContainer"></div>
-                    <button id="loadMoreBtn" class="load-more-btn hidden" data-translate="listings.loadMore">Load More Listings</button>
+                    <button id="loadMoreBtn" class="load-more-btn hidden">Load More Listings</button>
                 </div>
             </div>
         </div>
     </div>
     
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12 mt-12">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                <div>
-                    <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-10 w-auto mb-4">
-                    <p class="text-gray-400 text-sm" data-translate="footer.tagline">Connecting Greek-owned businesses with communities across America.</p>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4 text-lg" data-translate="footer.quickLinks">Quick Links</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="/" class="hover:text-white transition-colors" data-translate="nav.directory">Directory</a></li>
-                        <li><a href="/about.html" class="hover:text-white transition-colors" data-translate="nav.about">About Us</a></li>
-                        <li><a href="/contact.html" class="hover:text-white transition-colors" data-translate="nav.contact">Contact</a></li>
-                        <li><a href="/business.html" class="hover:text-white transition-colors" data-translate="nav.business">List Your Business</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4 text-lg" data-translate="footer.legal">Legal</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="/privacy.html" class="hover:text-white transition-colors" data-translate="footer.privacy">Privacy Policy</a></li>
-                        <li><a href="/terms.html" class="hover:text-white transition-colors" data-translate="footer.terms">Terms of Service</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4 text-lg" data-translate="footer.connect">Connect</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="mailto:contact@thegreekdirectory.org" class="hover:text-white transition-colors" data-translate="footer.email">Email Us</a></li>
-                        <li><a href="https://facebook.com/thegreekdirectory" target="_blank" class="hover:text-white transition-colors">Facebook</a></li>
-                        <li><a href="https://instagram.com/thegreekdirectory" target="_blank" class="hover:text-white transition-colors">Instagram</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
-                <p>&copy; 2025 The Greek Directory. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+    <div data-partial="footer"></div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="js/partials-loader.js"></script>
     <script src="js/translation.js"></script>
     <script src="js/listings.js"></script>
 </body>
