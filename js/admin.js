@@ -1260,7 +1260,7 @@ without written permission from The Greek Directory. Unauthorized use, copying, 
 or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
-}
+
 function generateHoursSchema(listing) {
     if (!listing.hours || Object.keys(listing.hours).length === 0) {
         return '[]';
