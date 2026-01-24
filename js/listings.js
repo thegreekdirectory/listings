@@ -655,7 +655,7 @@ function renderListings() {
         
         container.className = gridClass;
         container.innerHTML = displayedListings.map(l => {
-            const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
+            const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : (l.logo || '');
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const listingUrl = `/listing/${categorySlug}/${l.slug}`;
@@ -673,6 +673,7 @@ function renderListings() {
             if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
             
             const isStarred = starredListings.includes(l.id);
+            const logoImage = l.logo || '';
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
@@ -682,12 +683,12 @@ function renderListings() {
                         </svg>
                     </button>
                     <div class="h-48 bg-gray-200 relative">
-                        <img src="${firstPhoto}" alt="${l.business_name}" class="w-full h-full object-cover">
+                        ${firstPhoto ? `<img src="${firstPhoto}" alt="${l.business_name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">No image</div>'}
                         ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2 flex-wrap">${badges.join('')}</div>` : ''}
                     </div>
                     <div class="p-4">
                         <div class="flex gap-3 mb-3">
-                            <img src="${l.logo}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">
+                            ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                             <div class="flex-1 min-w-0">
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${l.category}</span>
                                 <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${l.business_name}</h3>
@@ -725,6 +726,7 @@ function renderListings() {
             if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
             
             const isStarred = starredListings.includes(l.id);
+            const logoImage = l.logo || '';
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block relative">
@@ -733,7 +735,7 @@ function renderListings() {
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                     </button>
-                    <img src="${l.logo}" alt="${l.business_name}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
+                    ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">` : '<div class="w-24 h-24 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                     <div class="flex-1 min-w-0 overflow-hidden pr-12">
                         <div class="flex gap-2 mb-2 flex-wrap">
                             <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
@@ -1550,9 +1552,13 @@ function updateMapMarkers() {
         if (listing.coordinates && !isBasedIn(listing)) {
             const openStatus = isOpenNow(listing.hours);
             const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : listing.logo;
+            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
+            const logoImage = listing.logo || '';
+            
             const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
-            const iconHtml = `<div class="${iconClass}"><img src="${listing.logo}" alt="${listing.business_name}"></div>`;
+            const iconHtml = logoImage ? 
+                `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
+                `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
             const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
             const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
             const badges = [];
@@ -1568,11 +1574,12 @@ function updateMapMarkers() {
             if (!listing.show_claim_button && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
             
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const heroImage = firstPhoto || '';
             const popupContent = `
                 <div class="map-popup">
-                    <img src="${firstPhoto}" alt="${listing.business_name}" class="map-popup-hero">
+                    ${heroImage ? `<img src="${heroImage}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
                     <div class="map-popup-content">
-                        <img src="${listing.logo}" alt="${listing.business_name}" class="map-popup-logo">
+                        ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
                         <div class="map-popup-info">
                             <div class="map-popup-badges">${badges.join('')}</div>
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.business_name}</a>
@@ -1667,6 +1674,7 @@ function renderSplitViewListings() {
         if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
         
         const isStarred = starredListings.includes(l.id);
+        const logoImage = l.logo || '';
         
         return `
             <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
@@ -1675,7 +1683,7 @@ function renderSplitViewListings() {
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </button>
-                <img src="${l.logo}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
+                ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                 <div class="flex-1 min-w-0 overflow-hidden pr-8">
                     <div class="flex gap-1 mb-1 flex-wrap">
                         ${badges.join('')}
@@ -1741,8 +1749,12 @@ function initSplitMap() {
         if (listing.coordinates && !isBasedIn(listing)) {
             const openStatus = isOpenNow(listing.hours);
             const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+            const logoImage = listing.logo || '';
+            
             const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
-            const iconHtml = `<div class="${iconClass}"><img src="${listing.logo}" alt="${listing.business_name}"></div>`;
+            const iconHtml = logoImage ?
+                `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
+                `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
             const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
             const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
             const badges = [];
@@ -1758,12 +1770,12 @@ function initSplitMap() {
             if (!listing.show_claim_button && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
             
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : listing.logo;
+            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
             const popupContent = `
                 <div class="map-popup">
-                    <img src="${firstPhoto}" alt="${listing.business_name}" class="map-popup-hero">
+                    ${firstPhoto ? `<img src="${firstPhoto}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
                     <div class="map-popup-content">
-                        <img src="${listing.logo}" alt="${listing.business_name}" class="map-popup-logo">
+                        ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
                         <div class="map-popup-info">
                             <div class="map-popup-badges">${badges.join('')}</div>
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.business_name}</a>
