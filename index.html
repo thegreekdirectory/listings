@@ -15,29 +15,17 @@
 </head>
 <body>
     <!-- Header -->
-    <header>
-        <div class="header-content">
-            <a href="/" class="logo-link">
-                <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="logo">
-            </a>
-            <nav class="header-nav">
-                <a href="/" data-translate="nav.directory">Directory</a>
-                <a href="/about.html" data-translate="nav.about">About</a>
-                <a href="/contact.html" data-translate="nav.contact">Contact</a>
-                <a href="/business.html" data-translate="nav.business">For Businesses</a>
-            </nav>
-        </div>
-    </header>
+    <div data-partial="header"></div>
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <h1 class="hero-title" data-translate="home.title">The Greek Directory</h1>
-            <p class="hero-subtitle" data-translate="home.subtitle">Discover Greek-owned businesses across America</p>
+            <h1 class="hero-title">The Greek Directory</h1>
+            <p class="hero-subtitle">Discover Greek-owned businesses across America</p>
             
             <div class="search-container">
-                <input type="search" id="mainSearch" class="search-input" placeholder="Search businesses, categories, or locations..." data-translate="home.search.placeholder">
-                <button onclick="performSearch()" class="search-button" data-translate="home.search.button">Search</button>
+                <input type="search" id="mainSearch" class="search-input" placeholder="Search businesses, categories, or locations...">
+                <button onclick="performSearch()" class="search-button">Search</button>
             </div>
         </div>
     </section>
@@ -45,7 +33,7 @@
     <!-- Categories Section -->
     <section class="categories-section">
         <div class="container">
-            <h2 class="section-title" data-translate="home.categories">Browse Categories</h2>
+            <h2 class="section-title">Browse Categories</h2>
             <div class="categories-grid" id="categoriesGrid">
                 <!-- Populated by JavaScript -->
             </div>
@@ -55,7 +43,7 @@
     <!-- Featured Businesses -->
     <section class="featured-section">
         <div class="container">
-            <h2 class="section-title" data-translate="home.featured">Featured Businesses</h2>
+            <h2 class="section-title">Featured Businesses</h2>
             <div class="listings-grid" id="featuredListings">
                 <!-- Populated by JavaScript -->
             </div>
@@ -65,7 +53,7 @@
     <!-- Recent Businesses -->
     <section class="recent-section">
         <div class="container">
-            <h2 class="section-title" data-translate="home.recent">Recently Added</h2>
+            <h2 class="section-title">Recently Added</h2>
             <div class="listings-grid" id="recentListings">
                 <!-- Populated by JavaScript -->
             </div>
@@ -73,44 +61,9 @@
     </section>
 
     <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="footer-logo">
-                    <p>Connecting Greek-owned businesses with communities across America.</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="/">Directory</a></li>
-                        <li><a href="/about.html">About Us</a></li>
-                        <li><a href="/contact.html">Contact</a></li>
-                        <li><a href="/business.html">List Your Business</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="/privacy.html">Privacy Policy</a></li>
-                        <li><a href="/terms.html">Terms of Service</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Connect</h4>
-                    <ul>
-                        <li><a href="mailto:contact@thegreekdirectory.org">Email Us</a></li>
-                        <li><a href="https://facebook.com/thegreekdirectory" target="_blank">Facebook</a></li>
-                        <li><a href="https://instagram.com/thegreekdirectory" target="_blank">Instagram</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 The Greek Directory. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+    <div data-partial="footer"></div>
 
+    <script src="js/partials-loader.js"></script>
     <script src="js/translation.js"></script>
     <script src="js/index.js"></script>
 </body>
