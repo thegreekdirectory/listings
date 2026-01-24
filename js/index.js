@@ -1,3 +1,10 @@
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
 // INDEX PAGE JAVASCRIPT
 // Homepage functionality
@@ -25,6 +32,10 @@ const CATEGORIES = [
 
 let indexSupabase = null;
 let allListings = [];
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function formatPhoneDisplay(phone) {
     if (!phone) return '';
@@ -67,6 +78,10 @@ function performSearch() {
         window.location.href = `/listings?q=${encodeURIComponent(query)}`;
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function renderCategories() {
     const grid = document.getElementById('categoriesGrid');
@@ -132,6 +147,10 @@ async function loadListings() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function renderFeaturedListings() {
     const container = document.getElementById('featuredListings');
     
@@ -166,7 +185,7 @@ function renderRecentListings() {
 
 function renderListingCard(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const url = `/listing/${listing.slug}`;
+    const url = `/listing/${categorySlug}/${listing.slug}`;
     
     const photos = listing.photos || [];
     const mainImage = photos.length > 0 ? photos[0] : listing.logo;
@@ -231,3 +250,5 @@ function getCategoryKey(category) {
 }
 
 window.performSearch = performSearch;
+
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
