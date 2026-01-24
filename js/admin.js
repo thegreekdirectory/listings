@@ -1154,6 +1154,10 @@ window.sendMagicLink = sendMagicLink;
 // Page Generation Helper Functions
 // ============================================
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -1209,6 +1213,10 @@ function generateSocialMediaSection(listing) {
     `;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function generateReviewSection(listing) {
     const reviews = listing.reviews || {};
     const hasReviews = Object.values(reviews).some(v => v);
@@ -1219,7 +1227,7 @@ function generateReviewSection(listing) {
     
     const googleSVG = '<svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>';
     
-    const yelpSVG = '<svg width="22" height="22" viewBox="0 0 256 290" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M50.614 300.84c-6.416 8.174-16.39 14.524-27.563 17.363-9.316 2.37-16.713 1.138-20.294-3.406-5.19-6.592-4.188-19.254 2.854-35.74l.047-.11c7.015-16.448 15.347-28.03 23.499-32.594 5.71-3.197 10.81-3.578 14.341-1.074 2.505 1.777 5.743 6.283 8.26 12.924 2.77 7.308 3.997 15.408 3.484 22.805-.514 7.39-2.218 12.845-4.628 15.831l.001.001z" fill="#D32323"/><path d="M184.585 204.93c-7.86 6.05-20.21 8.538-34.813 7.018l-.105-.01c-14.633-1.506-27.136-6.38-35.23-13.722-5.671-5.143-8.143-10.606-6.952-15.36.846-3.377 4.486-7.277 10.477-10.69 6.59-3.755 14.951-6.233 23.537-6.986 8.578-.753 15.887 1.034 20.6 5.033 7.105 6.03 13.38 16.96 17.693 30.764 1.45 4.645 2.58 9.125 3.37 13.336.38 2.028.667 3.944.88 5.713.096.816.168 1.59.216 2.323.028.447.046.854.058 1.234.004.183.006.354.008.506l.002.141v.022c0 .003 0 .003-.003-.033a5.537 5.537 0 0 1-.054-.59 25.835 25.835 0 0 1-.08-1.725 66.953 66.953 0 0 1 .395-6.04c.318-2.794.79-5.894 1.423-9.195.63-3.289 1.42-6.78 2.367-10.377 1.882-7.155 4.368-14.532 7.458-21.728 3.082-7.177 6.77-14.156 11.06-20.514 2.149-3.182 4.465-6.186 6.96-8.948 2.504-2.774 5.206-5.3 8.116-7.52l.01-.008c9.682-7.387 20.398-11.002 30.2-10.188 6.868.57 12.41 3.066 15.163 6.863 3.988 5.502 3.55 14.096-1.246 24.263-4.826 10.228-13.226 21.038-23.66 30.473-10.456 9.455-21.86 16.493-32.145 19.83-7.211 2.34-13.404 2.518-17.435.487l.001-.001z" fill="#D32323"/><path d="M147.415 120.315c9.446 3.74 16.557 12.875 20.044 25.732l.025.092c3.494 12.878 2.907 25.948-1.653 36.824-3.193 7.617-8.05 13.017-13.662 15.18-3.984 1.536-9.076.684-13.947-2.447-5.36-3.445-10.272-9.133-13.844-16.02-3.576-6.894-5.61-14.418-5.73-21.2-.18-10.227 3.006-18.56 8.979-23.483 6.004-4.95 16.113-10.4 27.792-14.023 3.928-1.22 7.7-2.23 11.233-3.018 1.696-.379 3.31-.7 4.83-.962.697-.121 1.366-.222 2.01-.305.392-.05.758-.091 1.103-.125.164-.016.316-.028.459-.04l.165-.011.019-.002h.003c.001 0 .002 0-.032.003-.05.004-.14.012-.267.022a22.887 22.887 0 0 0-1.213.146c-.716.097-1.58.228-2.575.39a145.662 145.662 0 0 0-5.433.984c-4.075.82-8.994 1.92-14.57 3.287-11.123 2.727-24.418 6.834-38.697 12.348-14.248 5.498-28.454 12.41-41.41 20.683-6.48 4.137-12.676 8.663-18.438 13.568-5.778 4.919-11.107 10.223-15.82 15.862l-.006.007c-15.68 18.766-25.018 39.99-26.322 59.808-.913 13.875 1.761 25.883 7.337 33.027 8.084 10.354 23.28 13.276 42.87 8.266 19.716-5.043 40.973-17.04 59.866-33.768 18.926-16.758 34.308-36.865 43.33-56.647 6.324-13.876 8.922-26.623 7.742-35.934-1.18-9.303-5.222-15.182-11.228-17.548l.001-.002z" fill="#D32323"/></svg>';
+    const yelpSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 1000 385" fill="none"><path d="M806.495 227.151L822.764 223.392C823.106 223.313 823.671 223.183 824.361 222.96C828.85 221.753 832.697 218.849 835.091 214.862C837.485 210.874 838.241 206.113 837.198 201.582C837.175 201.482 837.153 201.388 837.13 201.289C836.596 199.117 835.66 197.065 834.37 195.239C832.547 192.926 830.291 190.991 827.728 189.542C824.711 187.82 821.553 186.358 818.289 185.171L800.452 178.659C790.441 174.937 780.432 171.309 770.328 167.771C763.776 165.439 758.224 163.393 753.4 161.901C752.49 161.62 751.485 161.34 750.669 161.058C744.837 159.271 740.739 158.53 737.272 158.505C734.956 158.42 732.649 158.841 730.511 159.738C728.283 160.699 726.282 162.119 724.639 163.906C723.822 164.835 723.054 165.806 722.337 166.815C721.665 167.843 721.049 168.907 720.491 170.001C719.876 171.174 719.348 172.391 718.911 173.642C715.6 183.428 713.951 193.7 714.032 204.029C714.091 213.368 714.342 225.354 719.475 233.479C720.712 235.564 722.372 237.366 724.348 238.769C728.004 241.294 731.7 241.627 735.544 241.904C741.289 242.316 746.855 240.905 752.403 239.623L806.45 227.135L806.495 227.151Z" fill="#FF1A1A"/><path d="M987.995 140.779C983.553 131.457 977.581 122.947 970.328 115.601C969.39 114.669 968.385 113.806 967.321 113.02C966.339 112.283 965.318 111.598 964.264 110.967C963.18 110.373 962.065 109.837 960.924 109.362C958.668 108.476 956.25 108.077 953.829 108.19C951.513 108.322 949.254 108.956 947.207 110.049C944.105 111.591 940.748 114.07 936.283 118.221C935.666 118.834 934.891 119.525 934.195 120.177C930.511 123.641 926.413 127.911 921.536 132.883C914.002 140.497 906.583 148.152 899.21 155.89L886.017 169.571C883.601 172.071 881.401 174.771 879.441 177.643C877.771 180.07 876.59 182.799 875.963 185.678C875.6 187.886 875.653 190.142 876.12 192.329C876.143 192.429 876.164 192.523 876.187 192.622C877.229 197.154 879.988 201.103 883.883 203.637C887.778 206.172 892.505 207.094 897.068 206.211C897.791 206.106 898.352 205.982 898.693 205.898L969.033 189.646C974.576 188.365 980.202 187.191 985.182 184.3C988.522 182.363 991.699 180.443 993.878 176.569C995.043 174.441 995.748 172.092 995.948 169.675C997.027 160.089 992.021 149.202 987.995 140.779Z" fill="#FF1A1A"/><path d="M862.1 170.358C867.197 163.955 867.184 154.41 867.64 146.607C869.174 120.536 870.79 94.4619 872.07 68.3766C872.56 58.4962 873.624 48.7498 873.036 38.7944C872.552 30.5816 872.492 21.1521 867.307 14.4122C858.154 2.52688 838.636 3.50371 825.319 5.34732C821.239 5.91358 817.153 6.6749 813.099 7.64807C809.045 8.62124 805.033 9.6841 801.108 10.9412C788.329 15.127 770.365 22.8103 767.323 37.5341C765.608 45.858 769.672 54.3727 772.824 61.9691C776.645 71.1774 781.865 79.4721 786.622 88.1401C799.198 111.024 812.008 133.765 824.782 156.53C828.597 163.326 832.755 171.933 840.135 175.454C840.623 175.667 841.121 175.856 841.628 176.018C844.937 177.272 848.545 177.513 851.993 176.712C852.201 176.664 852.405 176.617 852.608 176.57C855.792 175.704 858.675 173.973 860.937 171.568C861.345 171.185 861.734 170.782 862.1 170.358Z" fill="#FF1A1A"/><path d="M855.997 240.155C854.008 237.355 851.184 235.258 847.931 234.162C844.677 233.065 841.16 233.027 837.881 234.051C837.111 234.307 836.361 234.618 835.636 234.983C834.515 235.554 833.445 236.221 832.439 236.976C829.507 239.148 827.039 241.97 824.791 244.8C824.221 245.522 823.7 246.483 823.022 247.1L811.708 262.663C805.295 271.382 798.971 280.123 792.7 289.003C788.608 294.735 785.068 299.576 782.273 303.859C781.743 304.666 781.193 305.567 780.689 306.284C777.338 311.469 775.441 315.252 774.467 318.622C773.735 320.862 773.503 323.234 773.788 325.572C774.1 328.008 774.92 330.35 776.195 332.447C776.873 333.499 777.604 334.516 778.385 335.495C779.196 336.436 780.058 337.332 780.966 338.18C781.936 339.105 782.973 339.957 784.07 340.729C791.879 346.162 800.428 350.066 809.421 353.083C816.904 355.567 824.682 357.053 832.555 357.504C833.894 357.572 835.237 357.543 836.572 357.417C837.809 357.309 839.04 357.136 840.26 356.9C841.479 356.615 842.681 356.266 843.863 355.853C846.162 354.993 848.255 353.66 850.008 351.94C851.667 350.279 852.944 348.276 853.749 346.07C855.057 342.81 855.917 338.671 856.483 332.526C856.532 331.652 856.657 330.604 856.744 329.644C857.19 324.545 857.395 318.556 857.723 311.514C858.276 300.685 858.71 289.903 859.053 279.09C859.053 279.09 859.782 259.875 859.78 259.865C859.946 255.437 859.81 250.53 858.582 246.121C858.042 244.008 857.17 241.994 855.997 240.155V240.155Z" fill="#FF1A1A"/><path d="M983.707 270.24C981.346 267.651 978 265.069 972.722 261.878C971.961 261.453 971.068 260.886 970.244 260.392C965.85 257.749 960.557 254.969 954.374 251.611C944.876 246.396 935.372 241.312 925.778 236.271L908.825 227.28C907.946 227.024 907.053 226.389 906.225 225.989C902.968 224.432 899.516 222.978 895.932 222.311C894.697 222.074 893.444 221.944 892.186 221.923C891.375 221.913 890.565 221.962 889.761 222.07C886.371 222.595 883.234 224.178 880.795 226.591C878.356 229.005 876.74 232.128 876.178 235.513C875.919 237.667 875.998 239.847 876.411 241.976C877.24 246.487 879.254 250.95 881.338 254.858L890.391 271.824C895.428 281.394 900.526 290.907 905.752 300.391C909.123 306.578 911.929 311.871 914.557 316.26C915.055 317.085 915.62 317.974 916.046 318.738C919.245 324.013 921.815 327.333 924.421 329.715C926.109 331.345 928.132 332.586 930.349 333.351C932.68 334.124 935.146 334.398 937.59 334.155C938.832 334.008 940.066 333.795 941.286 333.516C942.488 333.193 943.672 332.808 944.833 332.362C946.087 331.889 947.305 331.327 948.478 330.678C955.36 326.82 961.703 322.07 967.345 316.552C974.112 309.894 980.093 302.633 984.745 294.321C985.392 293.145 985.952 291.924 986.422 290.667C986.86 289.504 987.24 288.319 987.558 287.118C987.834 285.896 988.045 284.662 988.191 283.418C988.422 280.977 988.138 278.514 987.358 276.19C986.591 273.963 985.345 271.932 983.707 270.24V270.24Z" fill="#FF1A1A"/></svg>';
     
     const tripadvisorSVG = '<svg width="22" height="22" viewBox="0 0 256 191" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M128.023 95.364c.18-.003 21.732-.043 41.012 10.96 10.505 5.996 18.636 14.103 24.156 24.095 3.808 6.895 6.255 14.181 7.28 21.691.96 7.02.559 13.946-1.193 20.593-3.504 13.289-11.443 24.806-23.631 34.29a84.124 84.124 0 0 1-15.377 9.274c-11.309 5.282-23.201 7.819-35.39 7.555-12.066-.26-23.573-3.333-34.24-9.142a83.773 83.773 0 0 1-14.84-9.588c-11.893-9.397-19.793-20.743-23.5-33.746-1.85-6.495-2.387-13.163-1.6-19.924a84.124 84.124 0 0 1 7.28-21.691c5.52-9.992 13.65-18.099 24.156-24.095 19.278-11.003 40.83-10.963 41.012-10.96l4.875-.313z" fill="#34E0A1"/><path d="M185.17 95.053c.006.11.012.22.015.333v.015a95.512 95.512 0 0 1-1.885 28.078 95.567 95.567 0 0 1-12.645 30.534 95.513 95.513 0 0 1-42.632 37.06 95.552 95.552 0 0 1-57.13 3.735 95.56 95.56 0 0 1-30.016-13.305 95.516 95.516 0 0 1-25.733-25.3 95.539 95.539 0 0 1-13.42-30.06 95.514 95.514 0 0 1-.866-49.19A95.561 95.561 0 0 1 13.35 46.393a95.515 95.515 0 0 1 23.28-27.208A95.559 95.559 0 0 1 66.01 4.66a95.522 95.522 0 0 1 49.103.973A95.563 95.563 0 0 1 145.24 19.08a95.517 95.517 0 0 1 27.257 23.252 95.54 95.54 0 0 1 14.558 29.984c2.2 8.187 3.327 16.59 3.35 24.998-.021-.001 0 .003 0 .003l-5.234-2.264z" fill="#00AF87"/><path d="M128 60.364c-28.862 0-52.272 23.41-52.272 52.272S99.138 165 128 165s52.272-23.41 52.272-52.272S156.862 60.364 128 60.364zm0 87.273c-19.314 0-35-15.686-35-35s15.686-35 35-35 35 15.686 35 35-15.686 35-35 35z" fill="#FEFEFE"/></svg>';
     
@@ -1245,6 +1253,14 @@ function generateReviewSection(listing) {
     `;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+}
 function generateHoursSchema(listing) {
     if (!listing.hours || Object.keys(listing.hours).length === 0) {
         return '[]';
@@ -1277,7 +1293,7 @@ function generateHoursSchema(listing) {
     });
     
     return JSON.stringify(schemaHours);
-}
+
 // ============================================
 // ADMIN PORTAL - PART 7
 // Generate Template Replacements - Part 1
@@ -1513,6 +1529,10 @@ function generateTemplateReplacements(listing) {
 // Generate Template Replacements Part 2 & Page Generation
 // ============================================
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function generateTemplateReplacementsPart2(listing) {
     let ownerInfoSection = '';
     const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
@@ -1548,11 +1568,16 @@ function generateTemplateReplacementsPart2(listing) {
     let claimButton = '';
     const isClaimed = owner && owner.owner_user_id;
     if (!isClaimed && listing.show_claim_button !== false) {
+        const cityState = listing.city && listing.state ? `${listing.city}, ${listing.state}` : '';
+        const country = listing.country && listing.country !== 'USA' ? `, ${listing.country}` : '';
+        const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
+        const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
+        
         claimButton = `
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
+                <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
             </div>
         `;
     }
@@ -1574,6 +1599,10 @@ function generateTemplateReplacementsPart2(listing) {
         'HOURS_JSON': hoursJson
     };
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 window.generateListingPage = async function(listingId) {
     try {
@@ -1616,6 +1645,8 @@ window.generateListingPage = async function(listingId) {
         
         await saveToGitHub(filePath, template, listing.business_name);
         
+        await updateSitemap();
+        
         console.log('✅ Page generated successfully');
         
     } catch (error) {
@@ -1623,6 +1654,121 @@ window.generateListingPage = async function(listingId) {
         alert('❌ Failed to generate listing page: ' + error.message);
     }
 };
+
+async function updateSitemap() {
+    try {
+        const scriptResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/generate-sitemap.js');
+        if (!scriptResponse.ok) {
+            throw new Error('Failed to fetch sitemap generator script');
+        }
+        
+        const scriptContent = await scriptResponse.text();
+        
+        const { data: listings, error } = await adminSupabase
+            .from('listings')
+            .select('*')
+            .eq('visible', true);
+        
+        if (error) throw error;
+        
+        const database = { listings: listings || [] };
+        
+        const now = new Date().toISOString().split('T')[0];
+        const baseUrl = 'https://listings.thegreekdirectory.org';
+        
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+`;
+        
+        const places = new Set();
+        const usStates = new Set();
+        
+        database.listings.forEach(listing => {
+            if (listing.visible !== false) {
+                if (listing.city && listing.state && (listing.country || 'USA') === 'USA') {
+                    const citySlug = listing.city.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    const stateSlug = listing.state.toLowerCase();
+                    places.add(`${stateSlug}/${citySlug}`);
+                    usStates.add(stateSlug);
+                }
+            }
+        });
+        
+        usStates.forEach(state => {
+            xml += `  <url>
+    <loc>${baseUrl}/places/usa/${state}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+`;
+        });
+        
+        places.forEach(place => {
+            xml += `  <url>
+    <loc>${baseUrl}/places/usa/${place}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+        });
+        
+        const categories = new Set();
+        database.listings.forEach(listing => {
+            if (listing.visible !== false && listing.category) {
+                categories.add(listing.category);
+            }
+        });
+        
+        categories.forEach(category => {
+            const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            xml += `  <url>
+    <loc>${baseUrl}/listings/${categorySlug}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+        });
+        
+        database.listings.forEach(listing => {
+            if (listing.visible !== false) {
+                const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const listingSlug = listing.slug;
+                const lastMod = listing.updated_at ? 
+                    listing.updated_at.split('T')[0] : now;
+                
+                xml += `  <url>
+    <loc>${baseUrl}/listing/${categorySlug}/${listingSlug}</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+            }
+        });
+        
+        xml += `</urlset>`;
+        
+        await saveToGitHub('sitemap.xml', xml, 'Sitemap');
+        
+        console.log('✅ Sitemap updated successfully');
+        
+    } catch (error) {
+        console.error('Error updating sitemap:', error);
+    }
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function saveToGitHub(filePath, content, businessName) {
     try {
@@ -1730,3 +1876,10 @@ setTimeout(addGenerateAllButton, 100);
 
 window.generateListingPage = generateListingPage;
 window.generateAllListingPages = generateAllListingPages;
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
