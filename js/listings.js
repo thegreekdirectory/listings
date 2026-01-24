@@ -453,6 +453,10 @@ function applyFilters() {
                matchesOpeningSoon && matchesClosingSoon && matchesHoursUnknown && matchesOnlineOnly;
     });
     
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     const effectiveUserLocation = userLocation || estimatedUserLocation;
     if (effectiveUserLocation) {
         filteredListings.forEach(listing => {
@@ -475,8 +479,12 @@ function applyFilters() {
         });
     }
     
+    // UPDATED SORTING LOGIC WITH RANDOM OPTION
     filteredListings.sort((a, b) => {
-        if (sortOption === 'default') {
+        if (sortOption === 'random') {
+            // Pure random sort - no tier precedence
+            return Math.random() - 0.5;
+        } else if (sortOption === 'default') {
             const aTier = a.tier || 'FREE';
             const bTier = b.tier || 'FREE';
             const tierPriority = { PREMIUM: 3, FEATURED: 2, VERIFIED: 1, FREE: 0 };
@@ -505,11 +513,16 @@ function applyFilters() {
         return 0;
     });
     
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     displayedListingsCount = 25;
     renderListings();
     updateResultsCount();
     if (map) updateMapMarkers();
 }
+
 
 function loadMoreListings() {
     displayedListingsCount += 25;
