@@ -954,6 +954,11 @@ async function saveListing() {
         const state = document.getElementById('editState').value || null;
         const zipCode = document.getElementById('editZipCode').value.trim() || null;
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        // AUTO-GEOCODING
         let coordinates = null;
         if (address && city && state) {
             console.log('🌍 Auto-geocoding address...');
@@ -1015,6 +1020,10 @@ async function saveListing() {
             }
         };
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         let savedListing;
         const isExisting = editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id);
         
@@ -1052,6 +1061,17 @@ async function saveListing() {
         
         console.log('🔨 Auto-generating listing page...');
         await generateListingPage(savedListing.id);
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        // UPDATE SITEMAP
+        console.log('🗺️ Updating sitemap...');
+        await updateSitemap();
+        console.log('✅ Sitemap updated successfully!');
+        
+        alert('✅ Listing saved and sitemap updated!');
         
     } catch (error) {
         console.error('Error saving listing:', error);
