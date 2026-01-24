@@ -1932,8 +1932,8 @@ function addGenerateAllButton() {
 }
 
 setTimeout(addGenerateAllButton, 100);
+    
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
 
 window.generateListingPage = generateListingPage;
 window.generateAllListingPages = generateAllListingPages;
-
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
