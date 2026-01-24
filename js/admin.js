@@ -1154,9 +1154,7 @@ window.sendMagicLink = sendMagicLink;
 // Page Generation Helper Functions
 // ============================================
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -1213,9 +1211,8 @@ function generateSocialMediaSection(listing) {
     `;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
 
 function generateReviewSection(listing) {
     const reviews = listing.reviews || {};
@@ -1253,12 +1250,7 @@ function generateReviewSection(listing) {
     `;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
 
 
 function generateHoursSchema(listing) {
@@ -1529,9 +1521,7 @@ function generateTemplateReplacements(listing) {
 // Generate Template Replacements Part 2 & Page Generation
 // ============================================
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function generateTemplateReplacementsPart2(listing) {
     let ownerInfoSection = '';
@@ -1600,9 +1590,7 @@ function generateTemplateReplacementsPart2(listing) {
     };
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 window.generateListingPage = async function(listingId) {
     try {
@@ -1766,9 +1754,7 @@ async function updateSitemap() {
     }
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 async function saveToGitHub(filePath, content, businessName) {
     try {
@@ -1877,9 +1863,4 @@ setTimeout(addGenerateAllButton, 100);
 window.generateListingPage = generateListingPage;
 window.generateAllListingPages = generateAllListingPages;
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
