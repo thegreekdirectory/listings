@@ -55,13 +55,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/category/real-estate-development</loc>
+    <loc>https://listings.thegreekdirectory.org/category/industrial-manufacturing</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/category/industrial-manufacturing</loc>
+    <loc>https://listings.thegreekdirectory.org/category/real-estate-development</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -139,12 +139,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listing/real-estate-development/test</loc>
-    <lastmod>2026-01-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://listings.thegreekdirectory.org/listing/automotive-transportation/testing-glen</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>monthly</changefreq>
@@ -182,6 +176,12 @@
   </url>
   <url>
     <loc>https://listings.thegreekdirectory.org/listing/automotive-transportation/sadz</loc>
+    <lastmod>2026-01-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://listings.thegreekdirectory.org/listing/real-estate-development/test</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
