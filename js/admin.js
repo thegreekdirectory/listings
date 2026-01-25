@@ -2420,3 +2420,438 @@ This source code is proprietary and no part may not be used, reproduced, or dist
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
 or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 13
+// Generate All Pages & Sitemap Update
+// ============================================
+
+window.generateAllListingPages = async function() {
+    if (!confirm('This will generate pages for ALL visible listings. This may take several minutes. Continue?')) {
+        return;
+    }
+    
+    const visibleListings = allListings.filter(l => l.visible);
+    
+    console.log(`🔨 Generating ${visibleListings.length} listing pages...`);
+    
+    let successful = 0;
+    let failed = 0;
+    const failedListings = [];
+    
+    for (const listing of visibleListings) {
+        try {
+            await generateListingPage(listing.id);
+            successful++;
+            console.log(`✅ Generated: ${listing.business_name}`);
+            
+            // Rate limit: wait 1 second between GitHub API calls
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+            console.error(`❌ Failed: ${listing.business_name}`, error);
+            failed++;
+            failedListings.push(listing.business_name);
+        }
+    }
+    
+    console.log('📊 Generation Summary:');
+    console.log(`   ✅ Successful: ${successful}`);
+    console.log(`   ❌ Failed: ${failed}`);
+    if (failedListings.length > 0) {
+        console.log('   Failed listings:', failedListings.join(', '));
+    }
+    
+    alert(`Generation complete!\n\nSuccessful: ${successful}\nFailed: ${failed}${failedListings.length > 0 ? '\n\nFailed listings:\n' + failedListings.join('\n') : ''}`);
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+async function updateSitemap() {
+    try {
+        console.log('🗺️ Updating sitemap...');
+        
+        const { data: listings, error } = await adminSupabase
+            .from('listings')
+            .select('*')
+            .eq('visible', true);
+        
+        if (error) throw error;
+        
+        const database = { listings: listings || [] };
+        
+        const now = new Date().toISOString().split('T')[0];
+        const baseUrl = 'https://listings.thegreekdirectory.org';
+        
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+`;
+        
+        // Collect unique places (cities)
+        const places = new Set();
+        const usStates = new Set();
+        
+        database.listings.forEach(listing => {
+            if (listing.visible !== false) {
+                if (listing.city && listing.state && (listing.country || 'USA') === 'USA') {
+                    const citySlug = listing.city.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    const stateSlug = listing.state.toLowerCase();
+                    places.add(`${stateSlug}/${citySlug}`);
+                    usStates.add(stateSlug);
+                }
+            }
+        });
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        // Add state pages
+        usStates.forEach(state => {
+            xml += `  <url>
+    <loc>${baseUrl}/places/usa/${state}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+`;
+        });
+        
+        // Add place pages
+        places.forEach(place => {
+            xml += `  <url>
+    <loc>${baseUrl}/places/usa/${place}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+        });
+        
+        // Collect unique categories
+        const categories = new Set();
+        database.listings.forEach(listing => {
+            if (listing.visible !== false && listing.category) {
+                categories.add(listing.category);
+            }
+        });
+        
+        // Add category pages
+        categories.forEach(category => {
+            const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            xml += `  <url>
+    <loc>${baseUrl}/category/${categorySlug}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+        });
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        // Add individual listings
+        database.listings.forEach(listing => {
+            if (listing.visible !== false) {
+                const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const listingSlug = listing.slug;
+                const lastMod = listing.updated_at ? 
+                    listing.updated_at.split('T')[0] : now;
+                
+                xml += `  <url>
+    <loc>${baseUrl}/listing/${categorySlug}/${listingSlug}</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+            }
+        });
+        
+        xml += `</urlset>`;
+        
+        // Save sitemap to GitHub
+        await saveToGitHub('sitemap.xml', xml, 'Sitemap');
+        
+        console.log('✅ Sitemap updated successfully');
+        console.log(`   - Homepage: 1`);
+        console.log(`   - States: ${usStates.size}`);
+        console.log(`   - Places: ${places.size}`);
+        console.log(`   - Categories: ${categories.size}`);
+        console.log(`   - Listings: ${database.listings.length}`);
+        console.log(`   - Total URLs: ${1 + usStates.size + places.size + categories.size + database.listings.length}`);
+        
+    } catch (error) {
+        console.error('Error updating sitemap:', error);
+        throw error;
+    }
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 14
+// CSV Upload Functionality
+// ============================================
+
+window.handleCSVUpload = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    console.log('📁 Processing CSV file:', file.name);
+    
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const text = e.target.result;
+            const rows = text.split('\n').map(row => row.trim()).filter(row => row);
+            
+            if (rows.length < 2) {
+                alert('CSV file is empty or invalid');
+                return;
+            }
+            
+            const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            console.log('📋 CSV Headers:', headers);
+            
+            const listings = [];
+            
+            for (let i = 1; i < rows.length; i++) {
+                const values = rows[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                
+                if (values.length < headers.length) {
+                    console.warn(`⚠️ Row ${i + 1} has fewer columns than headers, skipping`);
+                    continue;
+                }
+                
+                const listing = {};
+                headers.forEach((header, index) => {
+                    listing[header] = values[index] || '';
+                });
+                
+                listings.push(listing);
+            }
+            
+            console.log(`✅ Parsed ${listings.length} listings from CSV`);
+            
+            if (!confirm(`Upload ${listings.length} listings to database?\n\nThis will create new listings for all entries in the CSV.`)) {
+                return;
+            }
+            
+            await uploadListingsFromCSV(listings);
+            
+        } catch (error) {
+            console.error('Error parsing CSV:', error);
+            alert('Failed to parse CSV: ' + error.message);
+        }
+    };
+    
+    reader.readAsText(file);
+    event.target.value = '';
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+async function uploadListingsFromCSV(listings) {
+    let successful = 0;
+    let failed = 0;
+    const failedListings = [];
+    
+    console.log('📤 Starting bulk upload...');
+    
+    for (const csvListing of listings) {
+        try {
+            const businessName = csvListing.business_name || csvListing.BusinessName || csvListing['Business Name'];
+            
+            if (!businessName) {
+                console.warn('⚠️ Skipping row without business name');
+                failed++;
+                continue;
+            }
+            
+            const slug = (csvListing.slug || businessName.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, ''));
+            
+            const category = csvListing.category || csvListing.Category || CATEGORIES[0];
+            
+            const subcategoriesStr = csvListing.subcategories || csvListing.Subcategories || '';
+            const subcategories = subcategoriesStr ? subcategoriesStr.split('|').map(s => s.trim()).filter(s => s) : [];
+            
+            const photosStr = csvListing.photos || csvListing.Photos || '';
+            const photos = photosStr ? photosStr.split('|').map(p => p.trim()).filter(p => p) : [];
+            
+            let coordinates = null;
+            const coordsStr = csvListing.coordinates || csvListing.Coordinates || '';
+            if (coordsStr) {
+                const [lat, lng] = coordsStr.split(',').map(c => parseFloat(c.trim()));
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    coordinates = { lat, lng };
+                }
+            }
+            
+            /*
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            */
+            
+            const listingData = {
+                business_name: businessName,
+                slug: slug,
+                tagline: csvListing.tagline || csvListing.Tagline || '',
+                description: csvListing.description || csvListing.Description || '',
+                category: category,
+                subcategories: subcategories,
+                primary_subcategory: subcategories.length > 0 ? subcategories[0] : null,
+                tier: csvListing.tier || csvListing.Tier || 'FREE',
+                verified: (csvListing.tier || csvListing.Tier || 'FREE') !== 'FREE',
+                visible: csvListing.visible === 'false' ? false : true,
+                is_chain: csvListing.is_chain === 'true',
+                chain_name: csvListing.chain_name || csvListing.ChainName || null,
+                chain_id: csvListing.chain_id || csvListing.ChainID || null,
+                address: csvListing.address || csvListing.Address || null,
+                city: csvListing.city || csvListing.City || null,
+                state: csvListing.state || csvListing.State || null,
+                zip_code: csvListing.zip_code || csvListing.ZipCode || csvListing['Zip Code'] || null,
+                country: csvListing.country || csvListing.Country || 'USA',
+                coordinates: coordinates,
+                phone: csvListing.phone || csvListing.Phone || null,
+                email: csvListing.email || csvListing.Email || null,
+                website: csvListing.website || csvListing.Website || null,
+                logo: csvListing.logo || csvListing.Logo || null,
+                photos: photos,
+                video: csvListing.video || csvListing.Video || null,
+                hours: parseHours(csvListing),
+                social_media: parseSocialMedia(csvListing),
+                reviews: parseReviews(csvListing)
+            };
+            
+            /*
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            */
+            
+            const { data, error } = await adminSupabase
+                .from('listings')
+                .insert(listingData)
+                .select()
+                .single();
+            
+            if (error) throw error;
+            
+            const ownerData = {
+                listing_id: data.id,
+                full_name: csvListing.owner_name || csvListing.OwnerName || csvListing['Owner Name'] || null,
+                title: csvListing.owner_title || csvListing.OwnerTitle || csvListing['Owner Title'] || null,
+                from_greece: csvListing.from_greece || csvListing.FromGreece || csvListing['From Greece'] || null,
+                owner_email: csvListing.owner_email || csvListing.OwnerEmail || csvListing['Owner Email'] || null,
+                owner_phone: csvListing.owner_phone || csvListing.OwnerPhone || csvListing['Owner Phone'] || null,
+                confirmation_key: csvListing.confirmation_key || null
+            };
+            
+            if (!ownerData.confirmation_key) {
+                const words = [
+                    'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
+                    'iota', 'kappa', 'lambda', 'sigma', 'omega', 'phoenix', 'apollo'
+                ];
+                const word1 = words[Math.floor(Math.random() * words.length)];
+                const word2 = words[Math.floor(Math.random() * words.length)];
+                const word3 = words[Math.floor(Math.random() * words.length)];
+                ownerData.confirmation_key = `${word1}-${word2}-${word3}`;
+            }
+            
+            const { error: ownerError } = await adminSupabase
+                .from('business_owners')
+                .insert(ownerData);
+            
+            if (ownerError) {
+                console.warn('⚠️ Failed to create owner record for', businessName, ownerError);
+            }
+            
+            successful++;
+            console.log(`✅ Uploaded: ${businessName}`);
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+        } catch (error) {
+            console.error(`❌ Failed to upload:`, error);
+            failed++;
+            failedListings.push(csvListing.business_name || 'Unknown');
+        }
+    }
+    
+    console.log('📊 Upload Summary:');
+    console.log(`   ✅ Successful: ${successful}`);
+    console.log(`   ❌ Failed: ${failed}`);
+    
+    await loadListings();
+    
+    alert(`CSV Upload complete!\n\nSuccessful: ${successful}\nFailed: ${failed}${failedListings.length > 0 ? '\n\nFailed listings:\n' + failedListings.join('\n') : ''}`);
+}
+
+function parseHours(csvListing) {
+    const hours = {};
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    
+    days.forEach(day => {
+        const value = csvListing[`hours_${day}`] || csvListing[`Hours${day.charAt(0).toUpperCase() + day.slice(1)}`] || null;
+        if (value) {
+            hours[day] = value;
+        }
+    });
+    
+    return Object.keys(hours).length > 0 ? hours : null;
+}
+
+function parseSocialMedia(csvListing) {
+    return {
+        facebook: csvListing.facebook || csvListing.Facebook || null,
+        instagram: csvListing.instagram || csvListing.Instagram || null,
+        twitter: csvListing.twitter || csvListing.Twitter || null,
+        youtube: csvListing.youtube || csvListing.YouTube || null,
+        tiktok: csvListing.tiktok || csvListing.TikTok || null,
+        linkedin: csvListing.linkedin || csvListing.LinkedIn || null
+    };
+}
+
+function parseReviews(csvListing) {
+    return {
+        google: csvListing.google_reviews || csvListing.GoogleReviews || null,
+        yelp: csvListing.yelp || csvListing.Yelp || null,
+        tripadvisor: csvListing.tripadvisor || csvListing.TripAdvisor || null
+    };
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
