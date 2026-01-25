@@ -1,12 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Page Generator - The Greek Directory</title>
+    <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f9fafb;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .header img {
+            height: 64px;
+            margin-bottom: 1rem;
+        }
+        .header h1 {
+            color: #055193;
+            margin-bottom: 0.5rem;
+        }
+        .console-output {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            min-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .btn {
+            background: #055193;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .btn:hover {
+            background: #044080;
+        }
+        .info-box {
+            background: #e0f2fe;
+            border: 1px solid #0284c7;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .info-box h3 {
+            margin: 0 0 0.5rem 0;
+            color: #0284c7;
+        }
+    </style>
 </head>
 <body>
-  <script>console.log('started')</script>
-  <script src="generate-category-pages.js">
-  <script>console.log('finished')</script>
+    <div class="header">
+        <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory">
+        <h1>Category Page Generator</h1>
+        <p>Generate category-specific listing pages for all categories</p>
+    </div>
 
+    <div class="info-box">
+        <h3>ℹ️ How to Use</h3>
+        <p><strong>1.</strong> Click "Generate Category Pages" below</p>
+        <p><strong>2.</strong> Check the console output for generated pages</p>
+        <p><strong>3.</strong> Create folders in /category/ for each category slug</p>
+        <p><strong>4.</strong> Save the generated HTML as index.html in each folder</p>
+    </div>
+
+    <button class="btn" onclick="runGenerator()">🔨 Generate Category Pages</button>
+
+    <div id="consoleOutput" class="console-output">Ready to generate category pages...</div>
+
+    <script>
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+
+        // Override console.log to display in the page
+        const consoleOutput = document.getElementById('consoleOutput');
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            consoleOutput.textContent += args.join(' ') + '\n';
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+
+        function runGenerator() {
+            consoleOutput.textContent = '';
+            console.log('Starting category page generator...\n');
+            
+            // Run the generator script
+            const script = document.createElement('script');
+            script.src = 'generate-category-pages.js';
+            document.body.appendChild(script);
+        }
+
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+    </script>
 </body>
-  </html>
+</html>
