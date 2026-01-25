@@ -2193,9 +2193,6 @@ window.generateListingPage = async function(listingId) {
             listing.photos = [`${defaultImage}?w=800&q=80`];
         }
         
-        /*
-        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        */
         
         const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
         if (!templateResponse.ok) {
@@ -2228,9 +2225,7 @@ window.generateListingPage = async function(listingId) {
     }
 };
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+
 
 async function updateSitemap() {
     try {
@@ -2414,19 +2409,6 @@ async function saveToGitHub(filePath, content, businessName) {
     }
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
 
 // ============================================
 // ADMIN PORTAL - PART 13
