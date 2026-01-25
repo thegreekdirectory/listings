@@ -1,8 +1,16 @@
+<!--
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>eh in Niles, IL | The Greek Directory</title>
 
     <meta name="description" content="erstyj in Niles. View address, phone, hours, and photos.">
@@ -37,6 +45,11 @@
         "openingHoursSpecification": [{"@type":"OpeningHoursSpecification","dayOfWeek":"Friday","opens":"730AM","closes":"600PM"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Monday","opens":"800AM","closes":"530PM"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Tuesday","opens":"800AM","closes":"530PM"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Saturday","opens":"800AM","closes":"100PM"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Thursday","opens":"800AM","closes":"530PM"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Wednesday","opens":"1030AM","closes":"800PM"}]
     }
     </script>
+
+<!--
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+-->
+    
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .carousel-container { position: relative; width: 100%; overflow: hidden; }
@@ -64,6 +77,7 @@
         .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
         .share-button:hover { transform: scale(1.1); }
         .share-sms { background: #10b981; color: white; }
+        .share-email { background: #ea580c; color: white; }
         #listingMap { width: 100%; height: 400px; border-radius: 8px; pointer-events: none; }
         #listingMap.active { pointer-events: auto; }
         .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
@@ -82,6 +96,11 @@
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         @media (min-width: 768px) {
             .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
         }
@@ -90,18 +109,18 @@
         }
         
         @media (prefers-color-scheme: dark) {
-            body { background: #1a1a1a; color: #e5e5e5; }
+            body { background: #1a1a1a; color: #e5e7eb; }
             header { background: #2a2a2a !important; border-color: #3a3a3a; }
             .bg-white { background: #2a2a2a !important; }
             .bg-gray-50 { background: #1a1a1a !important; }
             .bg-gray-100 { background: #3a3a3a !important; }
             .bg-gray-200 { background: #404040 !important; }
-            .text-gray-900 { color: #e5e5e5 !important; }
+            .text-gray-900 { color: #e5e7eb !important; }
             .text-gray-700 { color: #b0b0b0 !important; }
             .text-gray-600 { color: #999 !important; }
             .border-gray-300 { border-color: #404040 !important; }
             .shadow-sm, .shadow, .shadow-lg, .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
-            .hover\:text-gray-900:hover { color: #e5e5e5 !important; }
+            .hover\:text-gray-900:hover { color: #e5e7eb !important; }
             img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
             .social-icon svg { pointer-events: none; user-select: none; }
             .social-google { background: white; border: 2px solid #e5e7eb; }
@@ -117,18 +136,12 @@
     </style>
 </head>
 <body class="bg-gray-50">
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4">
-            <a href="/" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2">
-                <span>←</span>
-                <span>Back to The Greek Directory</span>
-            </a>
-            <div class="flex items-center gap-3">
-                <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
-                <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
-            </div>
-        </div>
-    </header>
+    <!-- Header -->
+    <div data-partial="header"></div>
+
+<!--
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+-->
 
     <div class="max-w-4xl mx-auto px-4 py-8">
         <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
@@ -256,7 +269,7 @@ hbfijfo</p>
         <div>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
             <div class="flex flex-wrap gap-2">
-                <a href="https://g.page/s" target="_blank" rel="noopener noreferrer" class="social-icon social-google"><svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg></a><a href="https://www.yelp.com/biz/test" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp"><svg width="22" height="22" viewBox="0 0 256 290" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M50.614 300.84c-6.416 8.174-16.39 14.524-27.563 17.363-9.316 2.37-16.713 1.138-20.294-3.406-5.19-6.592-4.188-19.254 2.854-35.74l.047-.11c7.015-16.448 15.347-28.03 23.499-32.594 5.71-3.197 10.81-3.578 14.341-1.074 2.505 1.777 5.743 6.283 8.26 12.924 2.77 7.308 3.997 15.408 3.484 22.805-.514 7.39-2.218 12.845-4.628 15.831l.001.001z" fill="#D32323"/><path d="M184.585 204.93c-7.86 6.05-20.21 8.538-34.813 7.018l-.105-.01c-14.633-1.506-27.136-6.38-35.23-13.722-5.671-5.143-8.143-10.606-6.952-15.36.846-3.377 4.486-7.277 10.477-10.69 6.59-3.755 14.951-6.233 23.537-6.986 8.578-.753 15.887 1.034 20.6 5.033 7.105 6.03 13.38 16.96 17.693 30.764 1.45 4.645 2.58 9.125 3.37 13.336.38 2.028.667 3.944.88 5.713.096.816.168 1.59.216 2.323.028.447.046.854.058 1.234.004.183.006.354.008.506l.002.141v.022c0 .003 0 .003-.003-.033a5.537 5.537 0 0 1-.054-.59 25.835 25.835 0 0 1-.08-1.725 66.953 66.953 0 0 1 .395-6.04c.318-2.794.79-5.894 1.423-9.195.63-3.289 1.42-6.78 2.367-10.377 1.882-7.155 4.368-14.532 7.458-21.728 3.082-7.177 6.77-14.156 11.06-20.514 2.149-3.182 4.465-6.186 6.96-8.948 2.504-2.774 5.206-5.3 8.116-7.52l.01-.008c9.682-7.387 20.398-11.002 30.2-10.188 6.868.57 12.41 3.066 15.163 6.863 3.988 5.502 3.55 14.096-1.246 24.263-4.826 10.228-13.226 21.038-23.66 30.473-10.456 9.455-21.86 16.493-32.145 19.83-7.211 2.34-13.404 2.518-17.435.487l.001-.001z" fill="#D32323"/><path d="M147.415 120.315c9.446 3.74 16.557 12.875 20.044 25.732l.025.092c3.494 12.878 2.907 25.948-1.653 36.824-3.193 7.617-8.05 13.017-13.662 15.18-3.984 1.536-9.076.684-13.947-2.447-5.36-3.445-10.272-9.133-13.844-16.02-3.576-6.894-5.61-14.418-5.73-21.2-.18-10.227 3.006-18.56 8.979-23.483 6.004-4.95 16.113-10.4 27.792-14.023 3.928-1.22 7.7-2.23 11.233-3.018 1.696-.379 3.31-.7 4.83-.962.697-.121 1.366-.222 2.01-.305.392-.05.758-.091 1.103-.125.164-.016.316-.028.459-.04l.165-.011.019-.002h.003c.001 0 .002 0-.032.003-.05.004-.14.012-.267.022a22.887 22.887 0 0 0-1.213.146c-.716.097-1.58.228-2.575.39a145.662 145.662 0 0 0-5.433.984c-4.075.82-8.994 1.92-14.57 3.287-11.123 2.727-24.418 6.834-38.697 12.348-14.248 5.498-28.454 12.41-41.41 20.683-6.48 4.137-12.676 8.663-18.438 13.568-5.778 4.919-11.107 10.223-15.82 15.862l-.006.007c-15.68 18.766-25.018 39.99-26.322 59.808-.913 13.875 1.761 25.883 7.337 33.027 8.084 10.354 23.28 13.276 42.87 8.266 19.716-5.043 40.973-17.04 59.866-33.768 18.926-16.758 34.308-36.865 43.33-56.647 6.324-13.876 8.922-26.623 7.742-35.934-1.18-9.303-5.222-15.182-11.228-17.548l.001-.002z" fill="#D32323"/></svg></a><a href="https://www.tripadvisor.com/test" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor"><svg width="22" height="22" viewBox="0 0 256 191" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M128.023 95.364c.18-.003 21.732-.043 41.012 10.96 10.505 5.996 18.636 14.103 24.156 24.095 3.808 6.895 6.255 14.181 7.28 21.691.96 7.02.559 13.946-1.193 20.593-3.504 13.289-11.443 24.806-23.631 34.29a84.124 84.124 0 0 1-15.377 9.274c-11.309 5.282-23.201 7.819-35.39 7.555-12.066-.26-23.573-3.333-34.24-9.142a83.773 83.773 0 0 1-14.84-9.588c-11.893-9.397-19.793-20.743-23.5-33.746-1.85-6.495-2.387-13.163-1.6-19.924a84.124 84.124 0 0 1 7.28-21.691c5.52-9.992 13.65-18.099 24.156-24.095 19.278-11.003 40.83-10.963 41.012-10.96l4.875-.313z" fill="#34E0A1"/><path d="M185.17 95.053c.006.11.012.22.015.333v.015a95.512 95.512 0 0 1-1.885 28.078 95.567 95.567 0 0 1-12.645 30.534 95.513 95.513 0 0 1-42.632 37.06 95.552 95.552 0 0 1-57.13 3.735 95.56 95.56 0 0 1-30.016-13.305 95.516 95.516 0 0 1-25.733-25.3 95.539 95.539 0 0 1-13.42-30.06 95.514 95.514 0 0 1-.866-49.19A95.561 95.561 0 0 1 13.35 46.393a95.515 95.515 0 0 1 23.28-27.208A95.559 95.559 0 0 1 66.01 4.66a95.522 95.522 0 0 1 49.103.973A95.563 95.563 0 0 1 145.24 19.08a95.517 95.517 0 0 1 27.257 23.252 95.54 95.54 0 0 1 14.558 29.984c2.2 8.187 3.327 16.59 3.35 24.998-.021-.001 0 .003 0 .003l-5.234-2.264z" fill="#00AF87"/><path d="M128 60.364c-28.862 0-52.272 23.41-52.272 52.272S99.138 165 128 165s52.272-23.41 52.272-52.272S156.862 60.364 128 60.364zm0 87.273c-19.314 0-35-15.686-35-35s15.686-35 35-35 35 15.686 35 35-15.686 35-35 35z" fill="#FEFEFE"/></svg></a>
+                <a href="https://g.page/s" target="_blank" rel="noopener noreferrer" class="social-icon social-google"><svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg></a><a href="https://www.yelp.com/biz/test" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 1000 385" fill="none"><path d="M806.495 227.151L822.764 223.392C823.106 223.313 823.671 223.183 824.361 222.96C828.85 221.753 832.697 218.849 835.091 214.862C837.485 210.874 838.241 206.113 837.198 201.582C837.175 201.482 837.153 201.388 837.13 201.289C836.596 199.117 835.66 197.065 834.37 195.239C832.547 192.926 830.291 190.991 827.728 189.542C824.711 187.82 821.553 186.358 818.289 185.171L800.452 178.659C790.441 174.937 780.432 171.309 770.328 167.771C763.776 165.439 758.224 163.393 753.4 161.901C752.49 161.62 751.485 161.34 750.669 161.058C744.837 159.271 740.739 158.53 737.272 158.505C734.956 158.42 732.649 158.841 730.511 159.738C728.283 160.699 726.282 162.119 724.639 163.906C723.822 164.835 723.054 165.806 722.337 166.815C721.665 167.843 721.049 168.907 720.491 170.001C719.876 171.174 719.348 172.391 718.911 173.642C715.6 183.428 713.951 193.7 714.032 204.029C714.091 213.368 714.342 225.354 719.475 233.479C720.712 235.564 722.372 237.366 724.348 238.769C728.004 241.294 731.7 241.627 735.544 241.904C741.289 242.316 746.855 240.905 752.403 239.623L806.45 227.135L806.495 227.151Z" fill="#FF1A1A"/></svg></a><a href="https://www.tripadvisor.com/test" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor"><svg width="22" height="22" viewBox="0 0 256 191" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M128.023 95.364c.18-.003 21.732-.043 41.012 10.96 10.505 5.996 18.636 14.103 24.156 24.095 3.808 6.895 6.255 14.181 7.28 21.691.96 7.02.559 13.946-1.193 20.593-3.504 13.289-11.443 24.806-23.631 34.29a84.124 84.124 0 0 1-15.377 9.274c-11.309 5.282-23.201 7.819-35.39 7.555-12.066-.26-23.573-3.333-34.24-9.142a83.773 83.773 0 0 1-14.84-9.588c-11.893-9.397-19.793-20.743-23.5-33.746-1.85-6.495-2.387-13.163-1.6-19.924a84.124 84.124 0 0 1 7.28-21.691c5.52-9.992 13.65-18.099 24.156-24.095 19.278-11.003 40.83-10.963 41.012-10.96l4.875-.313z" fill="#34E0A1"/></svg></a>
             </div>
         </div>
     
@@ -275,6 +288,9 @@ hbfijfo</p>
                             <a href="sms:?&body=Check%20out%20eh%20on%20The%20Greek%20Directory!%20https://listings.thegreekdirectory.org/listing/professional-business-services/eh%3Futm_source%3Dsms%26utm_medium%3Dsocial%26utm_campaign%3Dshare" class="share-button share-sms" title="Share via SMS" onclick="trackClick('share', 'sms')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
                             </a>
+                            <a href="mailto:?subject=eh%20on%20The%20Greek%20Directory&body=Check%20out%20eh%20on%20The%20Greek%20Directory!%0Ahttps://listings.thegreekdirectory.org/listing/professional-business-services/eh%3Futm_source%3Demail%26utm_medium%3Dsocial%26utm_campaign%3Dshare" class="share-button share-email" title="Share via Email" onclick="trackClick('share', 'email')">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            </a>
                             <button onclick="shareNative()" class="share-button social-other" title="Share">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
                             </button>
@@ -287,15 +303,25 @@ hbfijfo</p>
         </div>
 
         
+
+        
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="/business.html" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
+                <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20eh%20-%20Niles%2C%20IL" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
             </div>
         
     </div>
 
+    <!-- Footer -->
+    <div data-partial="footer"></div>
+
+<!--
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+-->
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/partials-loader.js"></script>
     <script>
         const totalSlides = 1;
         const businessName = 'eh';
@@ -330,27 +356,17 @@ hbfijfo</p>
         
         async function trackAnalytics(action, platform) {
             try {
-                const payload = {
-                    event_type: 'track_analytics',
-                    client_payload: {
-                        listingId: listingId,
-                        action: action,
-                        timestamp: new Date().toISOString(),
-                        userAgent: navigator.userAgent
-                    }
-                };
-                
-                if (action === 'share' && platform) {
-                    payload.client_payload.platform = platform;
-                }
-                
-                await fetch(`https://api.github.com/repos/thegreekdirectory/listings/dispatches`, {
+                const response = await fetch(`https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/rpc/track_analytics`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github+json'
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        p_listing_id: listingId,
+                        p_action: action,
+                        p_platform: platform
+                    })
                 });
             } catch (e) {
                 console.log('Analytics tracking error:', e.message);
@@ -456,6 +472,10 @@ hbfijfo</p>
             }
         }
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         if (totalSlides > 1) {
             function goToSlide(index) {
                 const carousel = document.getElementById('photoCarousel');
@@ -501,8 +521,7 @@ hbfijfo</p>
                 }).catch(err => {
                     if (err.name !== 'AbortError') {
                         console.log('Share failed:', err);
-                    }
-                });
+                        });
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => {
                     alert('Link copied to clipboard!');
@@ -602,3 +621,10 @@ hbfijfo</p>
     </script>
 </body>
 </html>
+
+<!--
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+-->
