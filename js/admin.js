@@ -1,3 +1,10 @@
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
 // ADMIN PORTAL - PART 1
 // Configuration & State Management
@@ -5,6 +12,10 @@
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 const CATEGORIES = [
     'Automotive & Transportation', 'Beauty & Health', 'Church & Religious Organization',
@@ -30,6 +41,10 @@ const SUBCATEGORIES = {
     'Retail & Shopping': ['Boutique Shop', 'ECommerce', 'Jewelry', 'Souvenir Shop']
 };
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 const US_STATES = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
     'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
@@ -52,6 +67,10 @@ const COUNTRY_CODES = {
     'Australia': '+61'
 };
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 const CATEGORY_DEFAULT_IMAGES = {
     'Automotive & Transportation': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3',
     'Beauty & Health': 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8',
@@ -68,6 +87,10 @@ const CATEGORY_DEFAULT_IMAGES = {
     'Real Estate & Development': 'https://images.unsplash.com/photo-1560518883-ce09059eeffa',
     'Retail & Shopping': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'
 };
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 let adminSupabase = null;
 let currentAdminUser = null;
@@ -94,6 +117,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 async function detectUserCountry() {
     try {
         const response = await fetch('https://ipapi.co/json/');
@@ -117,6 +144,10 @@ async function detectUserCountry() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function setupEventListeners() {
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) {
@@ -139,6 +170,24 @@ function setupEventListeners() {
         }
     });
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 2
+// Authentication & Login Functions
+// ============================================
 
 async function handleAdminLogin() {
     const token = document.getElementById('githubToken').value.trim();
@@ -175,6 +224,10 @@ async function handleAdminLogin() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function showLoginPage() {
     document.getElementById('loginPage').classList.remove('hidden');
     document.getElementById('dashboardPage').classList.add('hidden');
@@ -192,6 +245,10 @@ async function logout() {
         showLoginPage();
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function showError(message) {
     const msgDiv = document.getElementById('authMessage');
@@ -212,6 +269,10 @@ function clearAuthMessage() {
     msgDiv.classList.add('hidden');
     msgDiv.textContent = '';
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function formatPhoneNumber(phone, country = 'USA') {
     if (!phone) return '';
@@ -242,6 +303,10 @@ function createPhoneInput(value = '', country = 'USA') {
         </div>
     `;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 window.formatPhoneInput = function(input) {
     const country = input.closest('.flex').querySelector('.phone-country-select').value;
@@ -274,13 +339,19 @@ function getPhoneValue(container) {
     return `${code}${digits}`;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 window.handleAdminLogin = handleAdminLogin;
 window.logout = logout;
-// ============================================
-// ADMIN PORTAL - PART 2
-// Load & Render Listings
-// ============================================
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -289,7 +360,7 @@ or distribution of this code will result in legal action to the fullest extent p
 */
 
 // ============================================
-// ADMIN PORTAL - PART 2
+// ADMIN PORTAL - PART 3
 // Load & Render Listings
 // ============================================
 
@@ -372,6 +443,10 @@ function renderTable() {
         const directions = analytics.direction_clicks || 0;
         const shares = analytics.share_clicks || 0;
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         return `
         <tr class="border-b hover:bg-gray-50">
             <td class="py-4 px-4 text-sm font-mono text-gray-600">#${l.id}</td>
@@ -389,13 +464,9 @@ function renderTable() {
             <td class="py-4 px-4 text-gray-600">${l.category}</td>
             <td class="py-4 px-4 text-sm text-gray-600">${l.city || ''}, ${l.state || ''}</td>
             <td class="py-4 px-4 text-sm text-gray-600">
-                <div class="text-xs space-y-1">
-                    <div>👁️ ${views} views</div>
-                    <div>📞 ${calls} calls</div>
-                    <div>🌐 ${website} web</div>
-                    <div>🗺️ ${directions} dir</div>
-                    <div>📤 ${shares} shares</div>
-                </div>
+                <button onclick="viewAnalytics('${l.id}')" class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200">
+                    📊 Analytics
+                </button>
             </td>
             <td class="py-4 px-4 text-sm text-gray-600">${new Date(l.updated_at).toLocaleString()}</td>
             <td class="py-4 px-4">
@@ -438,10 +509,234 @@ window.toggleVisibility = async function(id) {
 
 window.loadListings = loadListings;
 
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed  without written permission from The Greek Directory. Unauthorized use, copying, modification,  or distribution of this code will result in legal action to the fullest extent permitted by law.
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
 
 // ============================================
-// ADMIN PORTAL - PART 3
+// ADMIN PORTAL - PART 4
+// Analytics Modal & Viewing
+// ============================================
+
+window.viewAnalytics = function(listingId) {
+    const listing = allListings.find(l => l.id === listingId);
+    if (!listing) return;
+    
+    const analytics = listing.analytics || {};
+    const detailedViews = analytics.detailedViews || [];
+    const sharePlatforms = analytics.sharePlatforms || {};
+    
+    // Create analytics modal HTML
+    const modalHTML = `
+        <div id="analyticsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div class="bg-white rounded-lg max-w-6xl w-full my-8">
+                <div class="p-6 border-b flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-900">Analytics: ${listing.business_name}</h2>
+                    <button onclick="closeAnalyticsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                </div>
+                <div class="p-6 max-h-[70vh] overflow-y-auto">
+                    ${generateAnalyticsContent(listing, analytics, detailedViews, sharePlatforms)}
+                </div>
+                <div class="p-6 border-t flex justify-end">
+                    <button onclick="closeAnalyticsModal()" class="px-6 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('analyticsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatforms) {
+    const views = analytics.views || 0;
+    const callClicks = analytics.call_clicks || 0;
+    const websiteClicks = analytics.website_clicks || 0;
+    const directionClicks = analytics.direction_clicks || 0;
+    const shareClicks = analytics.share_clicks || 0;
+    const videoPlays = analytics.video_plays || 0;
+    const lastViewed = analytics.last_viewed ? new Date(analytics.last_viewed).toLocaleString() : 'Never';
+    
+    // Summary stats
+    let content = `
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+                <div class="text-3xl font-bold">${views}</div>
+                <div class="text-sm opacity-90">Total Views</div>
+            </div>
+            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg">
+                <div class="text-3xl font-bold">${callClicks}</div>
+                <div class="text-sm opacity-90">Call Clicks</div>
+            </div>
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-lg">
+                <div class="text-3xl font-bold">${websiteClicks}</div>
+                <div class="text-sm opacity-90">Website Clicks</div>
+            </div>
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg">
+                <div class="text-3xl font-bold">${directionClicks}</div>
+                <div class="text-sm opacity-90">Direction Clicks</div>
+            </div>
+            <div class="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-4 rounded-lg">
+                <div class="text-3xl font-bold">${shareClicks}</div>
+                <div class="text-sm opacity-90">Shares</div>
+            </div>
+            <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-4 rounded-lg">
+                <div class="text-3xl font-bold">${videoPlays}</div>
+                <div class="text-sm opacity-90">Video Plays</div>
+            </div>
+        </div>
+        
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="text-sm text-gray-600">Last Viewed: <span class="font-semibold text-gray-900">${lastViewed}</span></div>
+        </div>
+    `;
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
+    // Share platforms breakdown
+    if (Object.keys(sharePlatforms).length > 0) {
+        content += `
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Share Platform Breakdown</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        `;
+        
+        Object.entries(sharePlatforms).forEach(([platform, count]) => {
+            const platformNames = {
+                'facebook': '📘 Facebook',
+                'twitter': '🐦 Twitter/X',
+                'linkedin': '💼 LinkedIn',
+                'sms': '💬 SMS',
+                'email': '📧 Email',
+                'native': '📱 Native Share'
+            };
+            
+            content += `
+                <div class="bg-white border border-gray-200 p-3 rounded-lg">
+                    <div class="text-2xl font-bold text-gray-900">${count}</div>
+                    <div class="text-xs text-gray-600">${platformNames[platform] || platform}</div>
+                </div>
+            `;
+        });
+        
+        content += `
+                </div>
+            </div>
+        `;
+    }
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
+    // Detailed activity log
+    if (detailedViews.length > 0) {
+        content += `
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Activity Log (Last ${Math.min(detailedViews.length, 100)} Events)</h3>
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="text-left py-2 px-4 font-semibold">Timestamp</th>
+                                <th class="text-left py-2 px-4 font-semibold">Action</th>
+                                <th class="text-left py-2 px-4 font-semibold">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        // Show latest 100 events
+        const recentViews = detailedViews.slice(-100).reverse();
+        
+        recentViews.forEach(view => {
+            const timestamp = new Date(view.timestamp).toLocaleString();
+            const actionIcons = {
+                'view': '👁️ View',
+                'call': '📞 Call',
+                'website': '🌐 Website',
+                'directions': '🗺️ Directions',
+                'share': '📤 Share'
+            };
+            
+            const actionText = actionIcons[view.action] || view.action;
+            const platform = view.platform ? ` (${view.platform})` : '';
+            const userAgent = view.userAgent ? view.userAgent.substring(0, 50) + '...' : 'Unknown';
+            
+            content += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="py-2 px-4 text-gray-600">${timestamp}</td>
+                    <td class="py-2 px-4 font-medium">${actionText}${platform}</td>
+                    <td class="py-2 px-4 text-xs text-gray-500">${userAgent}</td>
+                </tr>
+            `;
+        });
+        
+        content += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } else {
+        content += `
+            <div class="p-8 text-center bg-gray-50 rounded-lg">
+                <div class="text-gray-400 text-4xl mb-2">📊</div>
+                <div class="text-gray-600">No detailed analytics available yet</div>
+            </div>
+        `;
+    }
+    
+    return content;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+window.closeAnalyticsModal = function() {
+    const modal = document.getElementById('analyticsModal');
+    if (modal) {
+        modal.remove();
+    }
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 5
 // Edit Listing & Form Management - Part 1
 // ============================================
 
@@ -471,6 +766,10 @@ window.editListing = async function(id) {
         alert('Failed to load listing');
     }
 };
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 window.newListing = async function() {
     try {
@@ -509,6 +808,10 @@ window.newListing = async function() {
         alert('Failed to create new listing');
     }
 };
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function fillEditForm(listing) {
     const owner = listing?.owner && listing.owner.length > 0 ? listing.owner[0] : null;
@@ -653,118 +956,21 @@ function fillEditForm(listing) {
     fillEditFormContinuation(listing, owner);
 }
 
-window.checkSlugAvailability = async function() {
-    const slug = document.getElementById('editSlug').value.trim();
-    const statusEl = document.getElementById('slugStatus');
-    
-    if (!slug) {
-        statusEl.textContent = 'Enter a slug to check';
-        statusEl.className = 'text-xs text-gray-500 mt-1';
-        return;
-    }
-    
-    try {
-        const { data, error } = await adminSupabase
-            .from('listings')
-            .select('id')
-            .eq('slug', slug)
-            .maybeSingle();
-        
-        if (error) throw error;
-        
-        if (data && data.id !== editingListing?.id) {
-            statusEl.textContent = '❌ Slug already in use';
-            statusEl.className = 'text-xs text-red-600 mt-1';
-        } else {
-            statusEl.textContent = '✅ Slug available';
-            statusEl.className = 'text-xs text-green-600 mt-1';
-        }
-    } catch (error) {
-        statusEl.textContent = 'Error checking slug';
-        statusEl.className = 'text-xs text-red-600 mt-1';
-    }
-};
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
 
-function updateCharCounters() {
-    const tagline = document.getElementById('editTagline')?.value || '';
-    const desc = document.getElementById('editDescription')?.value || '';
-    
-    const taglineCount = document.getElementById('taglineCount');
-    const descCount = document.getElementById('descCount');
-    
-    if (taglineCount) taglineCount.textContent = tagline.length;
-    if (descCount) descCount.textContent = desc.length;
-}
-
-window.updateSubcategoriesForCategory = function() {
-    const category = document.getElementById('editCategory')?.value;
-    const container = document.getElementById('subcategoriesContainer');
-    const checkboxDiv = document.getElementById('subcategoryCheckboxes');
-    
-    if (!category || !SUBCATEGORIES[category] || SUBCATEGORIES[category].length === 0) {
-        container.classList.add('hidden');
-        return;
-    }
-    
-    container.classList.remove('hidden');
-    checkboxDiv.innerHTML = '';
-    
-    SUBCATEGORIES[category].forEach(sub => {
-        const isSelected = selectedSubcategories.includes(sub);
-        const isPrimary = sub === primarySubcategory;
-        
-        const div = document.createElement('div');
-        div.className = 'flex items-center gap-2 p-2 border rounded';
-        div.innerHTML = `
-            <input type="checkbox" id="subcat-${sub.replace(/\s+/g, '-')}" 
-                ${isSelected ? 'checked' : ''} 
-                onchange="toggleSubcategory('${sub.replace(/'/g, "\\'")}')">
-            <label for="subcat-${sub.replace(/\s+/g, '-')}" class="flex-1 text-sm">${sub}</label>
-            <input type="radio" name="primarySub" 
-                ${isPrimary ? 'checked' : ''} 
-                ${!isSelected ? 'disabled' : ''}
-                onchange="setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')"
-                title="Primary">
-        `;
-        checkboxDiv.appendChild(div);
-    });
-};
-
-window.toggleSubcategory = function(subcategory) {
-    const index = selectedSubcategories.indexOf(subcategory);
-    
-    if (index > -1) {
-        selectedSubcategories.splice(index, 1);
-        if (primarySubcategory === subcategory) {
-            primarySubcategory = selectedSubcategories.length > 0 ? selectedSubcategories[0] : null;
-        }
-    } else {
-        selectedSubcategories.push(subcategory);
-        if (!primarySubcategory) {
-            primarySubcategory = subcategory;
-        }
-    }
-    
-    updateSubcategoriesForCategory();
-};
-
-window.setPrimarySubcategory = function(subcategory) {
-    primarySubcategory = subcategory;
-    updateSubcategoriesForCategory();
-};
-
-window.toggleChainFields = function() {
-    const isChain = document.getElementById('editIsChain')?.checked;
-    const container = document.getElementById('chainFieldsContainer');
-    
-    if (isChain) {
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
-    }
-};
 // ============================================
-// ADMIN PORTAL - PART 4
+// ADMIN PORTAL - PART 6
 // Edit Form Continuation (Hours, Social, Reviews, Owner, Media)
 // ============================================
 
@@ -894,10 +1100,176 @@ function fillEditFormContinuation(listing, owner) {
     
     updateSubcategoriesForCategory();
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+window.checkSlugAvailability = async function() {
+    const slug = document.getElementById('editSlug').value.trim();
+    const statusEl = document.getElementById('slugStatus');
+    
+    if (!slug) {
+        statusEl.textContent = 'Enter a slug to check';
+        statusEl.className = 'text-xs text-gray-500 mt-1';
+        return;
+    }
+    
+    try {
+        const { data, error } = await adminSupabase
+            .from('listings')
+            .select('id')
+            .eq('slug', slug)
+            .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data && data.id !== editingListing?.id) {
+            statusEl.textContent = '❌ Slug already in use';
+            statusEl.className = 'text-xs text-red-600 mt-1';
+        } else {
+            statusEl.textContent = '✅ Slug available';
+            statusEl.className = 'text-xs text-green-600 mt-1';
+        }
+    } catch (error) {
+        statusEl.textContent = 'Error checking slug';
+        statusEl.className = 'text-xs text-red-600 mt-1';
+    }
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+function updateCharCounters() {
+    const tagline = document.getElementById('editTagline')?.value || '';
+    const desc = document.getElementById('editDescription')?.value || '';
+    
+    const taglineCount = document.getElementById('taglineCount');
+    const descCount = document.getElementById('descCount');
+    
+    if (taglineCount) taglineCount.textContent = tagline.length;
+    if (descCount) descCount.textContent = desc.length;
+}
+
+window.updateSubcategoriesForCategory = function() {
+    const category = document.getElementById('editCategory')?.value;
+    const container = document.getElementById('subcategoriesContainer');
+    const checkboxDiv = document.getElementById('subcategoryCheckboxes');
+    
+    if (!category || !SUBCATEGORIES[category] || SUBCATEGORIES[category].length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+    
+    container.classList.remove('hidden');
+    checkboxDiv.innerHTML = '';
+    
+    SUBCATEGORIES[category].forEach(sub => {
+        const isSelected = selectedSubcategories.includes(sub);
+        const isPrimary = sub === primarySubcategory;
+        
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2 p-2 border rounded';
+        div.innerHTML = `
+            <input type="checkbox" id="subcat-${sub.replace(/\s+/g, '-')}" 
+                ${isSelected ? 'checked' : ''} 
+                onchange="toggleSubcategory('${sub.replace(/'/g, "\\'")}')">
+            <label for="subcat-${sub.replace(/\s+/g, '-')}" class="flex-1 text-sm">${sub}</label>
+            <input type="radio" name="primarySub" 
+                ${isPrimary ? 'checked' : ''} 
+                ${!isSelected ? 'disabled' : ''}
+                onchange="setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')"
+                title="Primary">
+        `;
+        checkboxDiv.appendChild(div);
+    });
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+window.toggleSubcategory = function(subcategory) {
+    const index = selectedSubcategories.indexOf(subcategory);
+    
+    if (index > -1) {
+        selectedSubcategories.splice(index, 1);
+        if (primarySubcategory === subcategory) {
+            primarySubcategory = selectedSubcategories.length > 0 ? selectedSubcategories[0] : null;
+        }
+    } else {
+        selectedSubcategories.push(subcategory);
+        if (!primarySubcategory) {
+            primarySubcategory = subcategory;
+        }
+    }
+    
+    updateSubcategoriesForCategory();
+};
+
+window.setPrimarySubcategory = function(subcategory) {
+    primarySubcategory = subcategory;
+    updateSubcategoriesForCategory();
+};
+
+window.toggleChainFields = function() {
+    const isChain = document.getElementById('editIsChain')?.checked;
+    const container = document.getElementById('chainFieldsContainer');
+    
+    if (isChain) {
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+    }
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
-// ADMIN PORTAL - PART 5
-// Save Listing & Delete Functions
+// ADMIN PORTAL - PART 7
+// Geocoding & Save Listing Functions
 // ============================================
+
+async function geocodeAddress(address, city, state, zipCode) {
+    try {
+        const fullAddress = [address, city, state, zipCode].filter(Boolean).join(', ');
+        
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`,
+            {
+                headers: {
+                    'User-Agent': 'TheGreekDirectory/1.0'
+                }
+            }
+        );
+        
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+            return {
+                lat: parseFloat(data[0].lat),
+                lng: parseFloat(data[0].lon)
+            };
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        return null;
+    }
+}
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -1079,6 +1451,10 @@ async function saveListing() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 async function saveOwnerInfo(listingId) {
     const ownerPhoneContainer = document.getElementById('editOwnerPhoneContainer');
     const ownerPhone = getPhoneValue(ownerPhoneContainer);
@@ -1138,6 +1514,26 @@ async function saveOwnerInfo(listingId) {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+window.saveListing = saveListing;
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 8
+// Delete Listing & Magic Link Functions
+// ============================================
+
 window.sendMagicLink = async function(listingId) {
     try {
         const { data: listing, error: listingError } = await adminSupabase
@@ -1180,6 +1576,10 @@ window.sendMagicLink = async function(listingId) {
     }
 };
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 window.deleteListing = async function(listingId) {
     const listing = allListings.find(l => l.id === listingId);
     if (!listing) return;
@@ -1214,20 +1614,32 @@ window.deleteListing = async function(listingId) {
     }
 };
 
-window.saveListing = saveListing;
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 window.editListing = editListing;
 window.newListing = newListing;
 window.deleteListing = deleteListing;
 window.sendMagicLink = sendMagicLink;
 
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
 
 // ============================================
-// ADMIN PORTAL - PART 6
+// ADMIN PORTAL - PART 9
 // Page Generation Helper Functions
 // ============================================
-
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -1235,6 +1647,10 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function generateSocialMediaSection(listing) {
     const socialMedia = listing.social_media || {};
@@ -1284,8 +1700,9 @@ function generateSocialMediaSection(listing) {
     `;
 }
 
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function generateReviewSection(listing) {
     const reviews = listing.reviews || {};
@@ -1297,9 +1714,9 @@ function generateReviewSection(listing) {
     
     const googleSVG = '<svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>';
     
-    const yelpSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 1000 385" fill="none"><path d="M806.495 227.151L822.764 223.392C823.106 223.313 823.671 223.183 824.361 222.96C828.85 221.753 832.697 218.849 835.091 214.862C837.485 210.874 838.241 206.113 837.198 201.582C837.175 201.482 837.153 201.388 837.13 201.289C836.596 199.117 835.66 197.065 834.37 195.239C832.547 192.926 830.291 190.991 827.728 189.542C824.711 187.82 821.553 186.358 818.289 185.171L800.452 178.659C790.441 174.937 780.432 171.309 770.328 167.771C763.776 165.439 758.224 163.393 753.4 161.901C752.49 161.62 751.485 161.34 750.669 161.058C744.837 159.271 740.739 158.53 737.272 158.505C734.956 158.42 732.649 158.841 730.511 159.738C728.283 160.699 726.282 162.119 724.639 163.906C723.822 164.835 723.054 165.806 722.337 166.815C721.665 167.843 721.049 168.907 720.491 170.001C719.876 171.174 719.348 172.391 718.911 173.642C715.6 183.428 713.951 193.7 714.032 204.029C714.091 213.368 714.342 225.354 719.475 233.479C720.712 235.564 722.372 237.366 724.348 238.769C728.004 241.294 731.7 241.627 735.544 241.904C741.289 242.316 746.855 240.905 752.403 239.623L806.45 227.135L806.495 227.151Z" fill="#FF1A1A"/><path d="M987.995 140.779C983.553 131.457 977.581 122.947 970.328 115.601C969.39 114.669 968.385 113.806 967.321 113.02C966.339 112.283 965.318 111.598 964.264 110.967C963.18 110.373 962.065 109.837 960.924 109.362C958.668 108.476 956.25 108.077 953.829 108.19C951.513 108.322 949.254 108.956 947.207 110.049C944.105 111.591 940.748 114.07 936.283 118.221C935.666 118.834 934.891 119.525 934.195 120.177C930.511 123.641 926.413 127.911 921.536 132.883C914.002 140.497 906.583 148.152 899.21 155.89L886.017 169.571C883.601 172.071 881.401 174.771 879.441 177.643C877.771 180.07 876.59 182.799 875.963 185.678C875.6 187.886 875.653 190.142 876.12 192.329C876.143 192.429 876.164 192.523 876.187 192.622C877.229 197.154 879.988 201.103 883.883 203.637C887.778 206.172 892.505 207.094 897.068 206.211C897.791 206.106 898.352 205.982 898.693 205.898L969.033 189.646C974.576 188.365 980.202 187.191 985.182 184.3C988.522 182.363 991.699 180.443 993.878 176.569C995.043 174.441 995.748 172.092 995.948 169.675C997.027 160.089 992.021 149.202 987.995 140.779Z" fill="#FF1A1A"/><path d="M862.1 170.358C867.197 163.955 867.184 154.41 867.64 146.607C869.174 120.536 870.79 94.4619 872.07 68.3766C872.56 58.4962 873.624 48.7498 873.036 38.7944C872.552 30.5816 872.492 21.1521 867.307 14.4122C858.154 2.52688 838.636 3.50371 825.319 5.34732C821.239 5.91358 817.153 6.6749 813.099 7.64807C809.045 8.62124 805.033 9.6841 801.108 10.9412C788.329 15.127 770.365 22.8103 767.323 37.5341C765.608 45.858 769.672 54.3727 772.824 61.9691C776.645 71.1774 781.865 79.4721 786.622 88.1401C799.198 111.024 812.008 133.765 824.782 156.53C828.597 163.326 832.755 171.933 840.135 175.454C840.623 175.667 841.121 175.856 841.628 176.018C844.937 177.272 848.545 177.513 851.993 176.712C852.201 176.664 852.405 176.617 852.608 176.57C855.792 175.704 858.675 173.973 860.937 171.568C861.345 171.185 861.734 170.782 862.1 170.358Z" fill="#FF1A1A"/><path d="M855.997 240.155C854.008 237.355 851.184 235.258 847.931 234.162C844.677 233.065 841.16 233.027 837.881 234.051C837.111 234.307 836.361 234.618 835.636 234.983C834.515 235.554 833.445 236.221 832.439 236.976C829.507 239.148 827.039 241.97 824.791 244.8C824.221 245.522 823.7 246.483 823.022 247.1L811.708 262.663C805.295 271.382 798.971 280.123 792.7 289.003C788.608 294.735 785.068 299.576 782.273 303.859C781.743 304.666 781.193 305.567 780.689 306.284C777.338 311.469 775.441 315.252 774.467 318.622C773.735 320.862 773.503 323.234 773.788 325.572C774.1 328.008 774.92 330.35 776.195 332.447C776.873 333.499 777.604 334.516 778.385 335.495C779.196 336.436 780.058 337.332 780.966 338.18C781.936 339.105 782.973 339.957 784.07 340.729C791.879 346.162 800.428 350.066 809.421 353.083C816.904 355.567 824.682 357.053 832.555 357.504C833.894 357.572 835.237 357.543 836.572 357.417C837.809 357.309 839.04 357.136 840.26 356.9C841.479 356.615 842.681 356.266 843.863 355.853C846.162 354.993 848.255 353.66 850.008 351.94C851.667 350.279 852.944 348.276 853.749 346.07C855.057 342.81 855.917 338.671 856.483 332.526C856.532 331.652 856.657 330.604 856.744 329.644C857.19 324.545 857.395 318.556 857.723 311.514C858.276 300.685 858.71 289.903 859.053 279.09C859.053 279.09 859.782 259.875 859.78 259.865C859.946 255.437 859.81 250.53 858.582 246.121C858.042 244.008 857.17 241.994 855.997 240.155V240.155Z" fill="#FF1A1A"/><path d="M983.707 270.24C981.346 267.651 978 265.069 972.722 261.878C971.961 261.453 971.068 260.886 970.244 260.392C965.85 257.749 960.557 254.969 954.374 251.611C944.876 246.396 935.372 241.312 925.778 236.271L908.825 227.28C907.946 227.024 907.053 226.389 906.225 225.989C902.968 224.432 899.516 222.978 895.932 222.311C894.697 222.074 893.444 221.944 892.186 221.923C891.375 221.913 890.565 221.962 889.761 222.07C886.371 222.595 883.234 224.178 880.795 226.591C878.356 229.005 876.74 232.128 876.178 235.513C875.919 237.667 875.998 239.847 876.411 241.976C877.24 246.487 879.254 250.95 881.338 254.858L890.391 271.824C895.428 281.394 900.526 290.907 905.752 300.391C909.123 306.578 911.929 311.871 914.557 316.26C915.055 317.085 915.62 317.974 916.046 318.738C919.245 324.013 921.815 327.333 924.421 329.715C926.109 331.345 928.132 332.586 930.349 333.351C932.68 334.124 935.146 334.398 937.59 334.155C938.832 334.008 940.066 333.795 941.286 333.516C942.488 333.193 943.672 332.808 944.833 332.362C946.087 331.889 947.305 331.327 948.478 330.678C955.36 326.82 961.703 322.07 967.345 316.552C974.112 309.894 980.093 302.633 984.745 294.321C985.392 293.145 985.952 291.924 986.422 290.667C986.86 289.504 987.24 288.319 987.558 287.118C987.834 285.896 988.045 284.662 988.191 283.418C988.422 280.977 988.138 278.514 987.358 276.19C986.591 273.963 985.345 271.932 983.707 270.24V270.24Z" fill="#FF1A1A"/></svg>';
+    const yelpSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 1000 385" fill="none"><path d="M806.495 227.151L822.764 223.392C823.106 223.313 823.671 223.183 824.361 222.96C828.85 221.753 832.697 218.849 835.091 214.862C837.485 210.874 838.241 206.113 837.198 201.582C837.175 201.482 837.153 201.388 837.13 201.289C836.596 199.117 835.66 197.065 834.37 195.239C832.547 192.926 830.291 190.991 827.728 189.542C824.711 187.82 821.553 186.358 818.289 185.171L800.452 178.659C790.441 174.937 780.432 171.309 770.328 167.771C763.776 165.439 758.224 163.393 753.4 161.901C752.49 161.62 751.485 161.34 750.669 161.058C744.837 159.271 740.739 158.53 737.272 158.505C734.956 158.42 732.649 158.841 730.511 159.738C728.283 160.699 726.282 162.119 724.639 163.906C723.822 164.835 723.054 165.806 722.337 166.815C721.665 167.843 721.049 168.907 720.491 170.001C719.876 171.174 719.348 172.391 718.911 173.642C715.6 183.428 713.951 193.7 714.032 204.029C714.091 213.368 714.342 225.354 719.475 233.479C720.712 235.564 722.372 237.366 724.348 238.769C728.004 241.294 731.7 241.627 735.544 241.904C741.289 242.316 746.855 240.905 752.403 239.623L806.45 227.135L806.495 227.151Z" fill="#FF1A1A"/><path d="M987.995 140.779C983.553 131.457 977.581 122.947 970.328 115.601C969.39 114.669 968.385 113.806 967.321 113.02C966.339 112.283 965.318 111.598 964.264 110.967C963.18 110.373 962.065 109.837 960.924 109.362C958.668 108.476 956.25 108.077 953.829 108.19C951.513 108.322 949.254 108.956 947.207 110.049C944.105 111.591 940.748 114.07 936.283 118.221C935.666 118.834 934.891 119.525 934.195 120.177C930.511 123.641 926.413 127.911 921.536 132.883C914.002 140.497 906.583 148.152 899.21 155.89L886.017 169.571C883.601 172.071 881.401 174.771 879.441 177.643C877.771 180.07 876.59 182.799 875.963 185.678C875.6 187.886 875.653 190.142 876.12 192.329C876.143 192.429 876.164 192.523 876.187 192.622C877.229 197.154 879.988 201.103 883.883 203.637C887.778 206.172 892.505 207.094 897.068 206.211C897.791 206.106 898.352 205.982 898.693 205.898L969.033 189.646C974.576 188.365 980.202 187.191 985.182 184.3C988.522 182.363 991.699 180.443 993.878 176.569C995.043 174.441 995.748 172.092 995.948 169.675C997.027 160.089 992.021 149.202 987.995 140.779Z" fill="#FF1A1A"/></svg>';
     
-    const tripadvisorSVG = '<svg width="22" height="22" viewBox="0 0 256 191" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M128.023 95.364c.18-.003 21.732-.043 41.012 10.96 10.505 5.996 18.636 14.103 24.156 24.095 3.808 6.895 6.255 14.181 7.28 21.691.96 7.02.559 13.946-1.193 20.593-3.504 13.289-11.443 24.806-23.631 34.29a84.124 84.124 0 0 1-15.377 9.274c-11.309 5.282-23.201 7.819-35.39 7.555-12.066-.26-23.573-3.333-34.24-9.142a83.773 83.773 0 0 1-14.84-9.588c-11.893-9.397-19.793-20.743-23.5-33.746-1.85-6.495-2.387-13.163-1.6-19.924a84.124 84.124 0 0 1 7.28-21.691c5.52-9.992 13.65-18.099 24.156-24.095 19.278-11.003 40.83-10.963 41.012-10.96l4.875-.313z" fill="#34E0A1"/><path d="M185.17 95.053c.006.11.012.22.015.333v.015a95.512 95.512 0 0 1-1.885 28.078 95.567 95.567 0 0 1-12.645 30.534 95.513 95.513 0 0 1-42.632 37.06 95.552 95.552 0 0 1-57.13 3.735 95.56 95.56 0 0 1-30.016-13.305 95.516 95.516 0 0 1-25.733-25.3 95.539 95.539 0 0 1-13.42-30.06 95.514 95.514 0 0 1-.866-49.19A95.561 95.561 0 0 1 13.35 46.393a95.515 95.515 0 0 1 23.28-27.208A95.559 95.559 0 0 1 66.01 4.66a95.522 95.522 0 0 1 49.103.973A95.563 95.563 0 0 1 145.24 19.08a95.517 95.517 0 0 1 27.257 23.252 95.54 95.54 0 0 1 14.558 29.984c2.2 8.187 3.327 16.59 3.35 24.998-.021-.001 0 .003 0 .003l-5.234-2.264z" fill="#00AF87"/><path d="M128 60.364c-28.862 0-52.272 23.41-52.272 52.272S99.138 165 128 165s52.272-23.41 52.272-52.272S156.862 60.364 128 60.364zm0 87.273c-19.314 0-35-15.686-35-35s15.686-35 35-35 35 15.686 35 35-15.686 35-35 35z" fill="#FEFEFE"/></svg>';
+    const tripadvisorSVG = '<svg width="22" height="22" viewBox="0 0 256 191" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M128.023 95.364c.18-.003 21.732-.043 41.012 10.96 10.505 5.996 18.636 14.103 24.156 24.095 3.808 6.895 6.255 14.181 7.28 21.691.96 7.02.559 13.946-1.193 20.593-3.504 13.289-11.443 24.806-23.631 34.29a84.124 84.124 0 0 1-15.377 9.274c-11.309 5.282-23.201 7.819-35.39 7.555-12.066-.26-23.573-3.333-34.24-9.142a83.773 83.773 0 0 1-14.84-9.588c-11.893-9.397-19.793-20.743-23.5-33.746-1.85-6.495-2.387-13.163-1.6-19.924a84.124 84.124 0 0 1 7.28-21.691c5.52-9.992 13.65-18.099 24.156-24.095 19.278-11.003 40.83-10.963 41.012-10.96l4.875-.313z" fill="#34E0A1"/></svg>';
     
     if (reviews.google) {
         reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google">${googleSVG}</a>`;
@@ -1323,8 +1740,9 @@ function generateReviewSection(listing) {
     `;
 }
 
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
-
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function generateHoursSchema(listing) {
     if (!listing.hours || Object.keys(listing.hours).length === 0) {
@@ -1358,10 +1776,24 @@ function generateHoursSchema(listing) {
     });
     
     return JSON.stringify(schemaHours);
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
 
 // ============================================
-// ADMIN PORTAL - PART 7
-// Generate Template Replacements - Part 1
+// ADMIN PORTAL - PART 10
+// Template Replacements Generation - Part 1
 // ============================================
 
 function generateTemplateReplacements(listing) {
@@ -1384,6 +1816,10 @@ function generateTemplateReplacements(listing) {
         photosSlides = `<div class="carousel-slide" style="background: url('${listing.logo}') center/cover;"></div>`;
     }
     
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     // Generate carousel controls
     let carouselControls = '';
     if (photos.length > 1) {
@@ -1405,6 +1841,10 @@ function generateTemplateReplacements(listing) {
         ).join('');
     }
     
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     // Generate status badges
     let statusBadges = '';
     if (listing.tier === 'PREMIUM') {
@@ -1423,6 +1863,10 @@ function generateTemplateReplacements(listing) {
     statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
     
     const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '';
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
     
     // Address section
     let addressSection = '';
@@ -1443,6 +1887,10 @@ function generateTemplateReplacements(listing) {
             </div>
         `;
     }
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
     
     let phoneSection = '';
     if (listing.phone) {
@@ -1468,6 +1916,10 @@ function generateTemplateReplacements(listing) {
         `;
     }
     
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     let websiteSection = '';
     if (listing.website) {
         const displayUrl = listing.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -1480,6 +1932,10 @@ function generateTemplateReplacements(listing) {
             </div>
         `;
     }
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
     
     let hoursSection = '';
     if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
@@ -1500,6 +1956,10 @@ function generateTemplateReplacements(listing) {
             </div>
         `;
     }
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
     
     let phoneButton = '';
     if (listing.phone) {
@@ -1524,6 +1984,10 @@ function generateTemplateReplacements(listing) {
             </a>
         `;
     }
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
     
     let websiteButton = '';
     if (listing.website) {
@@ -1553,6 +2017,10 @@ function generateTemplateReplacements(listing) {
             </a>
         `;
     }
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
     
     return {
         'BUSINESS_NAME': escapeHtml(listing.business_name),
@@ -1589,12 +2057,24 @@ function generateTemplateReplacements(listing) {
         'DIRECTIONS_BUTTON': directionsButton
     };
 }
-// ============================================
-// ADMIN PORTAL - PART 8
-// Generate Template Replacements Part 2 & Page Generation
-// ============================================
 
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 11
+// Template Replacements Generation - Part 2
+// ============================================
 
 function generateTemplateReplacementsPart2(listing) {
     let ownerInfoSection = '';
@@ -1615,6 +2095,10 @@ function generateTemplateReplacementsPart2(listing) {
         `;
     }
     
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     const socialMediaSection = generateSocialMediaSection(listing);
     const reviewSection = generateReviewSection(listing);
     
@@ -1627,6 +2111,10 @@ function generateTemplateReplacementsPart2(listing) {
             </div>
         `;
     }
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
     
     let claimButton = '';
     const isClaimed = owner && owner.owner_user_id;
@@ -1650,6 +2138,10 @@ function generateTemplateReplacementsPart2(listing) {
     const fullAddress = [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ');
     const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
     
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     return {
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
@@ -1663,7 +2155,23 @@ function generateTemplateReplacementsPart2(listing) {
     };
 }
 
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 12
+// Generate Listing Page Function
+// ============================================
 
 window.generateListingPage = async function(listingId) {
     try {
@@ -1684,6 +2192,10 @@ window.generateListingPage = async function(listingId) {
         if (!listing.photos || listing.photos.length === 0) {
             listing.photos = [`${defaultImage}?w=800&q=80`];
         }
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
         
         const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
         if (!templateResponse.ok) {
@@ -1716,15 +2228,12 @@ window.generateListingPage = async function(listingId) {
     }
 };
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 async function updateSitemap() {
     try {
-        const scriptResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/generate-sitemap.js');
-        if (!scriptResponse.ok) {
-            throw new Error('Failed to fetch sitemap generator script');
-        }
-        
-        const scriptContent = await scriptResponse.text();
-        
         const { data: listings, error } = await adminSupabase
             .from('listings')
             .select('*')
@@ -1760,6 +2269,10 @@ async function updateSitemap() {
                 }
             }
         });
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
         
         usStates.forEach(state => {
             xml += `  <url>
@@ -1799,6 +2312,10 @@ async function updateSitemap() {
 `;
         });
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         database.listings.forEach(listing => {
             if (listing.visible !== false) {
                 const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -1827,7 +2344,9 @@ async function updateSitemap() {
     }
 }
 
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function saveToGitHub(filePath, content, businessName) {
     try {
@@ -1866,6 +2385,10 @@ async function saveToGitHub(filePath, content, businessName) {
             uploadBody.sha = currentSha;
         }
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         const uploadResponse = await fetch(
             `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
             {
@@ -1891,50 +2414,9 @@ async function saveToGitHub(filePath, content, businessName) {
     }
 }
 
-window.generateAllListingPages = async function() {
-    const visibleListings = allListings.filter(l => l.visible);
-    
-    console.log(`🔨 Generating ${visibleListings.length} listing pages...`);
-    
-    let successful = 0;
-    let failed = 0;
-    
-    for (const listing of visibleListings) {
-        try {
-            await generateListingPage(listing.id);
-            successful++;
-            console.log(`✅ Generated: ${listing.business_name}`);
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-            console.error(`❌ Failed: ${listing.business_name}`, error);
-            failed++;
-        }
-    }
-    
-    alert(`Generation complete!\n\nSuccessful: ${successful}\nFailed: ${failed}`);
-};
-
-function addGenerateAllButton() {
-    const container = document.querySelector('.max-w-7xl.mx-auto.px-4.py-6 .mb-6');
-    if (!container) return;
-    
-    const existingBtn = document.getElementById('generateAllBtn');
-    if (existingBtn) return;
-    
-    const button = document.createElement('button');
-    button.id = 'generateAllBtn';
-    button.className = 'px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700';
-    button.textContent = '🔨 Generate All Pages';
-    button.onclick = generateAllListingPages;
-    
-    container.appendChild(button);
-}
-
-setTimeout(addGenerateAllButton, 100);
-    
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
-
-window.generateListingPage = generateListingPage;
-window.generateAllListingPages = generateAllListingPages;
-}
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
