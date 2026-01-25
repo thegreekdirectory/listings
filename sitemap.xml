@@ -43,43 +43,49 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listings/education-community</loc>
+    <loc>https://listings.thegreekdirectory.org/category/education-community</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listings/food-hospitality</loc>
+    <loc>https://listings.thegreekdirectory.org/category/food-hospitality</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listings/beauty-health</loc>
+    <loc>https://listings.thegreekdirectory.org/category/beauty-health</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listings/grocery-imports</loc>
+    <loc>https://listings.thegreekdirectory.org/category/grocery-imports</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listings/professional-business-services</loc>
+    <loc>https://listings.thegreekdirectory.org/category/professional-business-services</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listings/automotive-transportation</loc>
+    <loc>https://listings.thegreekdirectory.org/category/automotive-transportation</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listings/real-estate-development</loc>
+    <loc>https://listings.thegreekdirectory.org/category/real-estate-development</loc>
+    <lastmod>2026-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://listings.thegreekdirectory.org/category/industrial-manufacturing</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -206,6 +212,12 @@
   </url>
   <url>
     <loc>https://listings.thegreekdirectory.org/listing/automotive-transportation/testing-glen</loc>
+    <lastmod>2026-01-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://listings.thegreekdirectory.org/listing/industrial-manufacturing/def</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
