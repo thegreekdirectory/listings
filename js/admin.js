@@ -159,6 +159,8 @@ function setupEventListeners() {
     document.getElementById('refreshBtn')?.addEventListener('click', loadListings);
     document.getElementById('adminSearch')?.addEventListener('input', renderTable);
     document.getElementById('saveEdit')?.addEventListener('click', saveListing);
+    document.getElementById('generateAllBtn')?.addEventListener('click', generateAllListingPages);
+    document.getElementById('csvUpload')?.addEventListener('change', handleCSVUpload);
     document.getElementById('cancelEdit')?.addEventListener('click', () => {
         if (confirm('Discard changes?')) {
             document.getElementById('editModal').classList.add('hidden');
@@ -406,7 +408,7 @@ function renderTable() {
     
     tbody.innerHTML = filtered.map(l => {
         const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `/listing/${categorySlug}/${l.slug}`; 
+        const listingUrl = `/listing/${categorySlug}/${l.slug}`;
         const tier = l.tier || 'FREE';
         const tierColors = {
             FREE: 'bg-gray-100 text-gray-700',
@@ -435,13 +437,6 @@ function renderTable() {
         if (l.is_chain) {
             badges += '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">🔗 Chain</span>';
         }
-        
-        const analytics = l.analytics || {};
-        const views = analytics.views || 0;
-        const calls = analytics.call_clicks || 0;
-        const website = analytics.website_clicks || 0;
-        const directions = analytics.direction_clicks || 0;
-        const shares = analytics.share_clicks || 0;
         
         /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -527,40 +522,95 @@ or distribution of this code will result in legal action to the fullest extent p
 // Analytics Modal & Viewing
 // ============================================
 
-window.viewAnalytics = function(listingId) {
+window.viewAnalytics = async function(listingId) {
     const listing = allListings.find(l => l.id === listingId);
     if (!listing) return;
     
-    const analytics = listing.analytics || {};
-    const detailedViews = analytics.detailedViews || [];
-    const sharePlatforms = analytics.sharePlatforms || {};
-    
-    // Create analytics modal HTML
-    const modalHTML = `
-        <div id="analyticsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div class="bg-white rounded-lg max-w-6xl w-full my-8">
-                <div class="p-6 border-b flex items-center justify-between">
-                    <h2 class="text-2xl font-bold text-gray-900">Analytics: ${listing.business_name}</h2>
-                    <button onclick="closeAnalyticsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
-                </div>
-                <div class="p-6 max-h-[70vh] overflow-y-auto">
-                    ${generateAnalyticsContent(listing, analytics, detailedViews, sharePlatforms)}
-                </div>
-                <div class="p-6 border-t flex justify-end">
-                    <button onclick="closeAnalyticsModal()" class="px-6 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">Close</button>
+    try {
+        // Fetch analytics data from Supabase
+        const { data: analyticsData, error } = await adminSupabase
+            .from('listing_analytics')
+            .select('*')
+            .eq('listing_id', listingId)
+            .order('timestamp', { ascending: false });
+        
+        if (error) throw error;
+        
+        // Aggregate analytics
+        const analytics = {
+            views: 0,
+            call_clicks: 0,
+            website_clicks: 0,
+            direction_clicks: 0,
+            share_clicks: 0,
+            video_plays: 0,
+            detailedViews: analyticsData || [],
+            sharePlatforms: {}
+        };
+        
+        if (analyticsData && analyticsData.length > 0) {
+            analyticsData.forEach(event => {
+                switch(event.action) {
+                    case 'view':
+                        analytics.views++;
+                        break;
+                    case 'call':
+                        analytics.call_clicks++;
+                        break;
+                    case 'website':
+                        analytics.website_clicks++;
+                        break;
+                    case 'directions':
+                        analytics.direction_clicks++;
+                        break;
+                    case 'share':
+                        analytics.share_clicks++;
+                        if (event.platform) {
+                            analytics.sharePlatforms[event.platform] = (analytics.sharePlatforms[event.platform] || 0) + 1;
+                        }
+                        break;
+                    case 'video':
+                        analytics.video_plays++;
+                        break;
+                }
+            });
+        }
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        // Create analytics modal HTML
+        const modalHTML = `
+            <div id="analyticsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+                <div class="bg-white rounded-lg max-w-6xl w-full my-8">
+                    <div class="p-6 border-b flex items-center justify-between">
+                        <h2 class="text-2xl font-bold text-gray-900">Analytics: ${listing.business_name}</h2>
+                        <button onclick="closeAnalyticsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                    </div>
+                    <div class="p-6 max-h-[70vh] overflow-y-auto">
+                        ${generateAnalyticsContent(listing, analytics, analytics.detailedViews, analytics.sharePlatforms)}
+                    </div>
+                    <div class="p-6 border-t flex justify-end">
+                        <button onclick="closeAnalyticsModal()" class="px-6 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">Close</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
-    
-    // Remove existing modal if present
-    const existingModal = document.getElementById('analyticsModal');
-    if (existingModal) {
-        existingModal.remove();
+        `;
+        
+        // Remove existing modal if present
+        const existingModal = document.getElementById('analyticsModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        alert('Failed to load analytics: ' + error.message);
     }
-    
-    // Add modal to page
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
 };
 
 /*
@@ -574,7 +624,7 @@ function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatfo
     const directionClicks = analytics.direction_clicks || 0;
     const shareClicks = analytics.share_clicks || 0;
     const videoPlays = analytics.video_plays || 0;
-    const lastViewed = analytics.last_viewed ? new Date(analytics.last_viewed).toLocaleString() : 'Never';
+    const lastViewed = detailedViews.length > 0 ? new Date(detailedViews[0].timestamp).toLocaleString() : 'Never';
     
     // Summary stats
     let content = `
@@ -668,7 +718,7 @@ function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatfo
         `;
         
         // Show latest 100 events
-        const recentViews = detailedViews.slice(-100).reverse();
+        const recentViews = detailedViews.slice(0, 100);
         
         recentViews.forEach(view => {
             const timestamp = new Date(view.timestamp).toLocaleString();
@@ -677,12 +727,13 @@ function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatfo
                 'call': '📞 Call',
                 'website': '🌐 Website',
                 'directions': '🗺️ Directions',
-                'share': '📤 Share'
+                'share': '📤 Share',
+                'video': '🎥 Video'
             };
             
             const actionText = actionIcons[view.action] || view.action;
             const platform = view.platform ? ` (${view.platform})` : '';
-            const userAgent = view.userAgent ? view.userAgent.substring(0, 50) + '...' : 'Unknown';
+            const userAgent = view.user_agent ? view.user_agent.substring(0, 50) + '...' : 'Unknown';
             
             content += `
                 <tr class="border-b hover:bg-gray-50">
@@ -920,10 +971,6 @@ function fillEditForm(listing) {
                         <select id="editCountry" class="w-full px-4 py-2 border rounded-lg">
                             <option value="USA" ${listing?.country === 'USA' ? 'selected' : ''}>USA</option>
                         </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Coordinates (lat, lng)</label>
-                        <input type="text" id="editCoordinates" value="${listing?.coordinates ? listing.coordinates.lat + ',' + listing.coordinates.lng : ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="41.8781,-87.6298">
                     </div>
                 </div>
             </div>
@@ -1403,18 +1450,12 @@ async function saveListing() {
             const { data, error } = await adminSupabase
                 .from('listings')
                 .update(listingData)
-                .eq('id', editingListing.id);
-            
-            if (error) throw error;
-            
-            const { data: updated, error: fetchError } = await adminSupabase
-                .from('listings')
-                .select('*')
                 .eq('id', editingListing.id)
+                .select()
                 .single();
             
-            if (fetchError) throw fetchError;
-            savedListing = updated;
+            if (error) throw error;
+            savedListing = data;
         } else {
             const { data, error } = await adminSupabase
                 .from('listings')
@@ -1652,6 +1693,44 @@ function escapeHtml(text) {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+function generateHoursSchema(listing) {
+    if (!listing.hours || Object.keys(listing.hours).length === 0) {
+        return '[]';
+    }
+    
+    const dayMap = {
+        'monday': 'Monday',
+        'tuesday': 'Tuesday',
+        'wednesday': 'Wednesday',
+        'thursday': 'Thursday',
+        'friday': 'Friday',
+        'saturday': 'Saturday',
+        'sunday': 'Sunday'
+    };
+    
+    const schemaHours = [];
+    
+    Object.entries(listing.hours).forEach(([day, hours]) => {
+        if (hours && hours.toLowerCase() !== 'closed') {
+            const match = hours.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?\s*-\s*(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
+            if (match) {
+                schemaHours.push({
+                    "@type": "OpeningHoursSpecification",
+                    "dayOfWeek": dayMap[day],
+                    "opens": match[1] + (match[2] || ':00') + (match[3] || ''),
+                    "closes": match[4] + (match[5] || ':00') + (match[6] || '')
+                });
+            }
+        }
+    });
+    
+    return JSON.stringify(schemaHours);
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function generateSocialMediaSection(listing) {
     const socialMedia = listing.social_media || {};
     const hasSocial = Object.values(socialMedia).some(v => v);
@@ -1714,7 +1793,7 @@ function generateReviewSection(listing) {
     
     const googleSVG = '<svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>';
     
-    const yelpSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 1000 385" fill="none"><path d="M806.495 227.151L822.764 223.392C823.106 223.313 823.671 223.183 824.361 222.96C828.85 221.753 832.697 218.849 835.091 214.862C837.485 210.874 838.241 206.113 837.198 201.582C837.175 201.482 837.153 201.388 837.13 201.289C836.596 199.117 835.66 197.065 834.37 195.239C832.547 192.926 830.291 190.991 827.728 189.542C824.711 187.82 821.553 186.358 818.289 185.171L800.452 178.659C790.441 174.937 780.432 171.309 770.328 167.771C763.776 165.439 758.224 163.393 753.4 161.901C752.49 161.62 751.485 161.34 750.669 161.058C744.837 159.271 740.739 158.53 737.272 158.505C734.956 158.42 732.649 158.841 730.511 159.738C728.283 160.699 726.282 162.119 724.639 163.906C723.822 164.835 723.054 165.806 722.337 166.815C721.665 167.843 721.049 168.907 720.491 170.001C719.876 171.174 719.348 172.391 718.911 173.642C715.6 183.428 713.951 193.7 714.032 204.029C714.091 213.368 714.342 225.354 719.475 233.479C720.712 235.564 722.372 237.366 724.348 238.769C728.004 241.294 731.7 241.627 735.544 241.904C741.289 242.316 746.855 240.905 752.403 239.623L806.45 227.135L806.495 227.151Z" fill="#FF1A1A"/><path d="M987.995 140.779C983.553 131.457 977.581 122.947 970.328 115.601C969.39 114.669 968.385 113.806 967.321 113.02C966.339 112.283 965.318 111.598 964.264 110.967C963.18 110.373 962.065 109.837 960.924 109.362C958.668 108.476 956.25 108.077 953.829 108.19C951.513 108.322 949.254 108.956 947.207 110.049C944.105 111.591 940.748 114.07 936.283 118.221C935.666 118.834 934.891 119.525 934.195 120.177C930.511 123.641 926.413 127.911 921.536 132.883C914.002 140.497 906.583 148.152 899.21 155.89L886.017 169.571C883.601 172.071 881.401 174.771 879.441 177.643C877.771 180.07 876.59 182.799 875.963 185.678C875.6 187.886 875.653 190.142 876.12 192.329C876.143 192.429 876.164 192.523 876.187 192.622C877.229 197.154 879.988 201.103 883.883 203.637C887.778 206.172 892.505 207.094 897.068 206.211C897.791 206.106 898.352 205.982 898.693 205.898L969.033 189.646C974.576 188.365 980.202 187.191 985.182 184.3C988.522 182.363 991.699 180.443 993.878 176.569C995.043 174.441 995.748 172.092 995.948 169.675C997.027 160.089 992.021 149.202 987.995 140.779Z" fill="#FF1A1A"/></svg>';
+    const yelpSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 1000 385" fill="none"><path d="M806.495 227.151L822.764 223.392C823.106 223.313 823.671 223.183 824.361 222.96C828.85 221.753 832.697 218.849 835.091 214.862C837.485 210.874 838.241 206.113 837.198 201.582C837.175 201.482 837.153 201.388 837.13 201.289C836.596 199.117 835.66 197.065 834.37 195.239C832.547 192.926 830.291 190.991 827.728 189.542C824.711 187.82 821.553 186.358 818.289 185.171L800.452 178.659C790.441 174.937 780.432 171.309 770.328 167.771C763.776 165.439 758.224 163.393 753.4 161.901C752.49 161.62 751.485 161.34 750.669 161.058C744.837 159.271 740.739 158.53 737.272 158.505C734.956 158.42 732.649 158.841 730.511 159.738C728.283 160.699 726.282 162.119 724.639 163.906C723.822 164.835 723.054 165.806 722.337 166.815C721.665 167.843 721.049 168.907 720.491 170.001C719.876 171.174 719.348 172.391 718.911 173.642C715.6 183.428 713.951 193.7 714.032 204.029C714.091 213.368 714.342 225.354 719.475 233.479C720.712 235.564 722.372 237.366 724.348 238.769C728.004 241.294 731.7 241.627 735.544 241.904C741.289 242.316 746.855 240.905 752.403 239.623L806.45 227.135L806.495 227.151Z" fill="#FF1A1A"/></svg>';
     
     const tripadvisorSVG = '<svg width="22" height="22" viewBox="0 0 256 191" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M128.023 95.364c.18-.003 21.732-.043 41.012 10.96 10.505 5.996 18.636 14.103 24.156 24.095 3.808 6.895 6.255 14.181 7.28 21.691.96 7.02.559 13.946-1.193 20.593-3.504 13.289-11.443 24.806-23.631 34.29a84.124 84.124 0 0 1-15.377 9.274c-11.309 5.282-23.201 7.819-35.39 7.555-12.066-.26-23.573-3.333-34.24-9.142a83.773 83.773 0 0 1-14.84-9.588c-11.893-9.397-19.793-20.743-23.5-33.746-1.85-6.495-2.387-13.163-1.6-19.924a84.124 84.124 0 0 1 7.28-21.691c5.52-9.992 13.65-18.099 24.156-24.095 19.278-11.003 40.83-10.963 41.012-10.96l4.875-.313z" fill="#34E0A1"/></svg>';
     
@@ -1738,44 +1817,6 @@ function generateReviewSection(listing) {
             </div>
         </div>
     `;
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function generateHoursSchema(listing) {
-    if (!listing.hours || Object.keys(listing.hours).length === 0) {
-        return '[]';
-    }
-    
-    const dayMap = {
-        'monday': 'Monday',
-        'tuesday': 'Tuesday',
-        'wednesday': 'Wednesday',
-        'thursday': 'Thursday',
-        'friday': 'Friday',
-        'saturday': 'Saturday',
-        'sunday': 'Sunday'
-    };
-    
-    const schemaHours = [];
-    
-    Object.entries(listing.hours).forEach(([day, hours]) => {
-        if (hours && hours.toLowerCase() !== 'closed') {
-            const match = hours.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?\s*-\s*(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
-            if (match) {
-                schemaHours.push({
-                    "@type": "OpeningHoursSpecification",
-                    "dayOfWeek": dayMap[day],
-                    "opens": match[1] + (match[2] || ':00') + (match[3] || ''),
-                    "closes": match[4] + (match[5] || ':00') + (match[6] || '')
-                });
-            }
-        }
-    });
-    
-    return JSON.stringify(schemaHours);
 }
 
 /*
@@ -2073,7 +2114,7 @@ or distribution of this code will result in legal action to the fullest extent p
 
 // ============================================
 // ADMIN PORTAL - PART 11
-// Template Replacements Generation - Part 2
+// Template Replacements Generation - Part 2 & Related Listings
 // ============================================
 
 function generateTemplateReplacementsPart2(listing) {
@@ -2116,6 +2157,82 @@ function generateTemplateReplacementsPart2(listing) {
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
     
+    // Generate Related Listings section for chain businesses
+    let relatedListingsSection = '';
+    if (listing.is_chain && listing.chain_id) {
+        relatedListingsSection = `
+            <div class="mt-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Related Listings</h2>
+                <div id="relatedListingsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p class="text-gray-600 col-span-full">Loading related locations...</p>
+                </div>
+            </div>
+            <script>
+            /*
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            */
+            
+            // Load related chain listings
+            (async function() {
+                try {
+                    const chainId = '${listing.chain_id}';
+                    const currentListingId = '${listing.id}';
+                    
+                    const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?chain_id=eq.' + chainId + '&visible=eq.true&select=*', {
+                        headers: {
+                            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg'
+                        }
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to load related listings');
+                    
+                    const data = await response.json();
+                    const relatedListings = data.filter(l => l.id !== currentListingId);
+                    
+                    const container = document.getElementById('relatedListingsContainer');
+                    
+                    if (relatedListings.length === 0) {
+                        container.innerHTML = '<p class="text-gray-600 col-span-full">No other locations found.</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = relatedListings.map(l => {
+                        const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        const listingUrl = '/listing/' + categorySlug + '/' + l.slug;
+                        const location = (l.city && l.state) ? l.city + ', ' + l.state : (l.city || l.state || 'Location TBD');
+                        
+                        return \`
+                            <a href="\${listingUrl}" class="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
+                                <div class="flex items-start gap-3">
+                                    \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">\` : ''}
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-gray-900 mb-1">\${l.business_name}</h3>
+                                        <p class="text-sm text-gray-600 mb-1">📍 \${location}</p>
+                                        \${l.phone ? \`<p class="text-sm text-gray-600">📞 \${l.phone}</p>\` : ''}
+                                    </div>
+                                </div>
+                            </a>
+                        \`;
+                    }).join('');
+                    
+                } catch (error) {
+                    console.error('Error loading related listings:', error);
+                    document.getElementById('relatedListingsContainer').innerHTML = 
+                        '<p class="text-gray-600 col-span-full">Failed to load related locations.</p>';
+                }
+            })();
+            
+            /*
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            */
+            </script>
+        `;
+    }
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     let claimButton = '';
     const isClaimed = owner && owner.owner_user_id;
     if (!isClaimed && listing.show_claim_button !== false) {
@@ -2147,6 +2264,7 @@ function generateTemplateReplacementsPart2(listing) {
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
         'REVIEW_SECTION': reviewSection,
         'MAP_SECTION': mapSection,
+        'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,
@@ -2170,12 +2288,21 @@ or distribution of this code will result in legal action to the fullest extent p
 
 // ============================================
 // ADMIN PORTAL - PART 12
-// Generate Listing Page Function
+// Generate Listing Page & Analytics Tracking
 // ============================================
 
 window.generateListingPage = async function(listingId) {
     try {
-        const listing = allListings.find(l => l.id === listingId);
+        const { data: listing, error } = await adminSupabase
+            .from('listings')
+            .select(`
+                *,
+                owner:business_owners(*)
+            `)
+            .eq('id', listingId)
+            .single();
+        
+        if (error) throw error;
         if (!listing) {
             console.error('Listing not found');
             return;
@@ -2183,16 +2310,55 @@ window.generateListingPage = async function(listingId) {
         
         console.log('📄 Generating page for:', listing.business_name);
         
+        // Apply default images if needed
         const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
         
         if (!listing.logo && defaultImage) {
             listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
+            
+            // Update in database
+            await adminSupabase
+                .from('listings')
+                .update({ logo: listing.logo })
+                .eq('id', listingId);
         }
         
         if (!listing.photos || listing.photos.length === 0) {
             listing.photos = [`${defaultImage}?w=800&q=80`];
+            
+            // Update in database
+            await adminSupabase
+                .from('listings')
+                .update({ photos: listing.photos })
+                .eq('id', listingId);
         }
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        // Create analytics entry if it doesn't exist
+        const { data: analyticsEntry } = await adminSupabase
+            .from('analytics')
+            .select('*')
+            .eq('listing_id', listingId)
+            .maybeSingle();
+        
+        if (!analyticsEntry) {
+            console.log('Creating analytics entry for listing:', listingId);
+            await adminSupabase
+                .from('analytics')
+                .insert({
+                    listing_id: listingId,
+                    views: 0,
+                    call_clicks: 0,
+                    website_clicks: 0,
+                    direction_clicks: 0,
+                    share_clicks: 0,
+                    video_plays: 0,
+                    last_viewed: new Date().toISOString()
+                });
+        }
         
         const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
         if (!templateResponse.ok) {
@@ -2210,6 +2376,10 @@ window.generateListingPage = async function(listingId) {
             template = template.replace(regex, replacements[key]);
         });
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const filePath = `listing/${categorySlug}/${listing.slug}.html`;
         
@@ -2225,7 +2395,9 @@ window.generateListingPage = async function(listingId) {
     }
 };
 
-
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function updateSitemap() {
     try {
@@ -2251,16 +2423,62 @@ async function updateSitemap() {
   </url>
 `;
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        // Collect unique places (cities)
         const places = new Set();
         const usStates = new Set();
         
+        // Define major city mappings for each state
+        const majorCityMappings = {
+            'IL': {
+                'Chicago': 'chicago',
+                'Chicagoland': 'chicagoland', // For suburbs
+                'Springfield': 'springfield',
+                'Rockford': 'rockford',
+                'Peoria': 'peoria',
+                'Champaign': 'champaign',
+                'Urbana': 'champaign' // Combined with Champaign
+            }
+        };
+        
+        // Chicago suburbs that should map to "chicagoland"
+        const chicagolandCities = [
+            'oak forest', 'deerfield', 'downers grove', 'oakbrook terrace', 
+            'niles', 'glenview', 'evanston', 'skokie', 'northbrook',
+            'schaumburg', 'naperville', 'aurora', 'joliet', 'elgin',
+            'cicero', 'arlington heights', 'palatine', 'bolingbrook',
+            'des plaines', 'orland park', 'tinley park', 'oak lawn',
+            'berwyn', 'mount prospect', 'wheaton', 'hoffman estates',
+            'oak park', 'buffalo grove', 'bartlett', 'streamwood',
+            'carol stream', 'lombard', 'elmhurst', 'park ridge'
+        ];
+        
         database.listings.forEach(listing => {
-            if (listing.visible !== false) {
-                if (listing.city && listing.state && (listing.country || 'USA') === 'USA') {
-                    const citySlug = listing.city.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                    const stateSlug = listing.state.toLowerCase();
+            if (listing.visible !== false && listing.city && listing.state && (listing.country || 'USA') === 'USA') {
+                const city = listing.city.toLowerCase();
+                const state = listing.state;
+                
+                let citySlug;
+                
+                // Check if it's Illinois and a Chicago suburb
+                if (state === 'IL' && chicagolandCities.includes(city)) {
+                    citySlug = 'chicagoland';
+                } else if (majorCityMappings[state] && majorCityMappings[state][listing.city]) {
+                    // Use major city mapping if available
+                    citySlug = majorCityMappings[state][listing.city];
+                } else {
+                    // For non-major cities, just use state
+                    citySlug = null;
+                }
+                
+                const stateSlug = state.toLowerCase();
+                usStates.add(stateSlug);
+                
+                if (citySlug) {
                     places.add(`${stateSlug}/${citySlug}`);
-                    usStates.add(stateSlug);
                 }
             }
         });
@@ -2269,6 +2487,7 @@ async function updateSitemap() {
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         */
         
+        // Add state pages
         usStates.forEach(state => {
             xml += `  <url>
     <loc>${baseUrl}/places/usa/${state}</loc>
@@ -2279,6 +2498,7 @@ async function updateSitemap() {
 `;
         });
         
+        // Add place pages
         places.forEach(place => {
             xml += `  <url>
     <loc>${baseUrl}/places/usa/${place}</loc>
@@ -2289,6 +2509,7 @@ async function updateSitemap() {
 `;
         });
         
+        // Collect unique categories
         const categories = new Set();
         database.listings.forEach(listing => {
             if (listing.visible !== false && listing.category) {
@@ -2296,10 +2517,11 @@ async function updateSitemap() {
             }
         });
         
+        // Add category pages
         categories.forEach(category => {
             const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             xml += `  <url>
-    <loc>${baseUrl}/listings/${categorySlug}</loc>
+    <loc>${baseUrl}/category/${categorySlug}</loc>
     <lastmod>${now}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -2311,6 +2533,7 @@ async function updateSitemap() {
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         */
         
+        // Add individual listings
         database.listings.forEach(listing => {
             if (listing.visible !== false) {
                 const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -2409,10 +2632,22 @@ async function saveToGitHub(filePath, content, businessName) {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
 
 // ============================================
 // ADMIN PORTAL - PART 13
-// Generate All Pages & Sitemap Update
+// Generate All Pages & CSV Upload
 // ============================================
 
 window.generateAllListingPages = async function() {
@@ -2456,152 +2691,6 @@ window.generateAllListingPages = async function() {
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
-
-async function updateSitemap() {
-    try {
-        console.log('🗺️ Updating sitemap...');
-        
-        const { data: listings, error } = await adminSupabase
-            .from('listings')
-            .select('*')
-            .eq('visible', true);
-        
-        if (error) throw error;
-        
-        const database = { listings: listings || [] };
-        
-        const now = new Date().toISOString().split('T')[0];
-        const baseUrl = 'https://listings.thegreekdirectory.org';
-        
-        let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${baseUrl}/</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-`;
-        
-        // Collect unique places (cities)
-        const places = new Set();
-        const usStates = new Set();
-        
-        database.listings.forEach(listing => {
-            if (listing.visible !== false) {
-                if (listing.city && listing.state && (listing.country || 'USA') === 'USA') {
-                    const citySlug = listing.city.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                    const stateSlug = listing.state.toLowerCase();
-                    places.add(`${stateSlug}/${citySlug}`);
-                    usStates.add(stateSlug);
-                }
-            }
-        });
-        
-        /*
-        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        */
-        
-        // Add state pages
-        usStates.forEach(state => {
-            xml += `  <url>
-    <loc>${baseUrl}/places/usa/${state}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-`;
-        });
-        
-        // Add place pages
-        places.forEach(place => {
-            xml += `  <url>
-    <loc>${baseUrl}/places/usa/${place}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
-        });
-        
-        // Collect unique categories
-        const categories = new Set();
-        database.listings.forEach(listing => {
-            if (listing.visible !== false && listing.category) {
-                categories.add(listing.category);
-            }
-        });
-        
-        // Add category pages
-        categories.forEach(category => {
-            const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            xml += `  <url>
-    <loc>${baseUrl}/category/${categorySlug}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-`;
-        });
-        
-        /*
-        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        */
-        
-        // Add individual listings
-        database.listings.forEach(listing => {
-            if (listing.visible !== false) {
-                const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                const listingSlug = listing.slug;
-                const lastMod = listing.updated_at ? 
-                    listing.updated_at.split('T')[0] : now;
-                
-                xml += `  <url>
-    <loc>${baseUrl}/listing/${categorySlug}/${listingSlug}</loc>
-    <lastmod>${lastMod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-`;
-            }
-        });
-        
-        xml += `</urlset>`;
-        
-        // Save sitemap to GitHub
-        await saveToGitHub('sitemap.xml', xml, 'Sitemap');
-        
-        console.log('✅ Sitemap updated successfully');
-        console.log(`   - Homepage: 1`);
-        console.log(`   - States: ${usStates.size}`);
-        console.log(`   - Places: ${places.size}`);
-        console.log(`   - Categories: ${categories.size}`);
-        console.log(`   - Listings: ${database.listings.length}`);
-        console.log(`   - Total URLs: ${1 + usStates.size + places.size + categories.size + database.listings.length}`);
-        
-    } catch (error) {
-        console.error('Error updating sitemap:', error);
-        throw error;
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// ADMIN PORTAL - PART 14
-// CSV Upload Functionality
-// ============================================
 
 window.handleCSVUpload = async function(event) {
     const file = event.target.files[0];
@@ -2748,6 +2837,20 @@ async function uploadListingsFromCSV(listings) {
             
             if (error) throw error;
             
+            // Create analytics entry
+            await adminSupabase
+                .from('analytics')
+                .insert({
+                    listing_id: data.id,
+                    views: 0,
+                    call_clicks: 0,
+                    website_clicks: 0,
+                    direction_clicks: 0,
+                    share_clicks: 0,
+                    video_plays: 0,
+                    last_viewed: new Date().toISOString()
+                });
+            
             const ownerData = {
                 listing_id: data.id,
                 full_name: csvListing.owner_name || csvListing.OwnerName || csvListing['Owner Name'] || null,
@@ -2830,6 +2933,18 @@ function parseReviews(csvListing) {
         tripadvisor: csvListing.tripadvisor || csvListing.TripAdvisor || null
     };
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// Bind to button click
+document.addEventListener('DOMContentLoaded', () => {
+    const generateAllBtn = document.getElementById('generateAllBtn');
+    if (generateAllBtn) {
+        generateAllBtn.addEventListener('click', generateAllListingPages);
+    }
+});
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
