@@ -109,12 +109,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listing/automotive-transportation/nysbh-haxv</loc>
-    <lastmod>2026-01-22</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://listings.thegreekdirectory.org/listing/food-hospitality/testing</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>monthly</changefreq>
@@ -128,6 +122,12 @@
   </url>
   <url>
     <loc>https://listings.thegreekdirectory.org/listing/professional-business-services/eh</loc>
+    <lastmod>2026-01-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://listings.thegreekdirectory.org/listing/automotive-transportation/nysbh-haxv</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
