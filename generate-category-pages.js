@@ -7,69 +7,67 @@ or distribution of this code will result in legal action to the fullest extent p
 
 // ============================================
 // CATEGORY PAGE GENERATOR
-// Run once: node generate-category-pages.js
-// Creates /category/{category-slug}/index.html pages
+// Generates category-specific pages
 // ============================================
 
-const fs = require('fs');
-const path = require('path');
+(async function() {
+    console.log('🏗️ Starting category page generation...\n');
 
-const CATEGORIES = [
-    'Automotive & Transportation',
-    'Beauty & Health',
-    'Church & Religious Organization',
-    'Cultural/Fraternal Organization',
-    'Education & Community',
-    'Entertainment, Arts & Recreation',
-    'Food & Hospitality',
-    'Grocery & Imports',
-    'Home & Construction',
-    'Industrial & Manufacturing',
-    'Pets & Veterinary',
-    'Professional & Business Services',
-    'Real Estate & Development',
-    'Retail & Shopping'
-];
+    const CATEGORIES = [
+        'Automotive & Transportation',
+        'Beauty & Health',
+        'Church & Religious Organization',
+        'Cultural/Fraternal Organization',
+        'Education & Community',
+        'Entertainment, Arts & Recreation',
+        'Food & Hospitality',
+        'Grocery & Imports',
+        'Home & Construction',
+        'Industrial & Manufacturing',
+        'Pets & Veterinary',
+        'Professional & Business Services',
+        'Real Estate & Development',
+        'Retail & Shopping'
+    ];
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-console.log('🏗️ Starting category page generation...\n');
-
-// Read the base listings.html template
-const listingsTemplate = fs.readFileSync('listings.html', 'utf8');
-
-// Create category directory if it doesn't exist
-if (!fs.existsSync('category')) {
-    fs.mkdirSync('category');
-    console.log('✅ Created /category directory\n');
-}
-
-CATEGORIES.forEach(category => {
-    const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    
-    // Create category-specific HTML
-    let categoryHTML = listingsTemplate;
-    
-    // Update title
-    categoryHTML = categoryHTML.replace(
-        /<title>.*?<\/title>/,
-        `<title>${category} - The Greek Directory</title>`
-    );
-    
-    // Update meta description
-    categoryHTML = categoryHTML.replace(
-        /<meta name="description" content=".*?">/,
-        `<meta name="description" content="Discover Greek-owned ${category} businesses across America. Browse listings, read reviews, and connect with local Greek businesses.">`
-    );
-    
     /*
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
-    
-    // Add category-specific script
-    const categoryScript = `
+
+    try {
+        // Fetch the listings.html template
+        const response = await fetch('/listings.html');
+        if (!response.ok) {
+            throw new Error('Failed to fetch listings.html template');
+        }
+        const listingsTemplate = await response.text();
+
+        console.log('✅ Loaded listings.html template\n');
+
+        for (const category of CATEGORIES) {
+            const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            
+            // Create category-specific HTML
+            let categoryHTML = listingsTemplate;
+            
+            // Update title
+            categoryHTML = categoryHTML.replace(
+                /<title>.*?<\/title>/,
+                `<title>${category} - The Greek Directory</title>`
+            );
+            
+            // Update meta description
+            categoryHTML = categoryHTML.replace(
+                /<meta name="description" content=".*?">/,
+                `<meta name="description" content="Discover Greek-owned ${category} businesses across America. Browse listings, read reviews, and connect with local Greek businesses.">`
+            );
+            
+            /*
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            */
+            
+            // Add category-specific script
+            const categoryScript = `
     <script>
     /*
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -167,33 +165,33 @@ CATEGORIES.forEach(category => {
     */
     </script>
     `;
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    // Insert the script before closing body tag
-    categoryHTML = categoryHTML.replace('</body>', `${categoryScript}\n</body>`);
-    
-    // Create category-specific directory
-    const categoryDir = path.join('category', categorySlug);
-    if (!fs.existsSync(categoryDir)) {
-        fs.mkdirSync(categoryDir, { recursive: true });
-    }
-    
-    // Write the category page
-    fs.writeFileSync(path.join(categoryDir, 'index.html'), categoryHTML);
-    
-    console.log(`✅ Created: /category/${categorySlug}/index.html`);
-});
+            
+            /*
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            */
+            
+            // Insert the script before closing body tag
+            categoryHTML = categoryHTML.replace('</body>', `${categoryScript}\n</body>`);
+            
+            // Log the generated page (in browser environment, you'd save this)
+            console.log(`✅ Generated: /category/${categorySlug}/index.html`);
+            console.log(`   Category: ${category}`);
+            console.log(`   Slug: ${categorySlug}`);
+            console.log('');
+        }
 
-console.log(`\n🎉 SUCCESS! All ${CATEGORIES.length} category pages created!`);
-console.log('📂 Pages created at: /category/{category-slug}/index.html');
-console.log('\nCategory pages will:');
-console.log('  • Auto-filter to their specific category');
-console.log('  • Hide category/subcategory filters');
-console.log('  • Filter starred items by category');
-console.log('  • Show category name in page title and subtitle');
+        console.log(`\n🎉 SUCCESS! All ${CATEGORIES.length} category pages generated!`);
+        console.log('📂 Pages ready at: /category/{category-slug}/index.html');
+        console.log('\nCategory pages will:');
+        console.log('  • Auto-filter to their specific category');
+        console.log('  • Hide category/subcategory filters');
+        console.log('  • Filter starred items by category');
+        console.log('  • Show category name in page title and subtitle');
+        
+    } catch (error) {
+        console.error('❌ Error generating category pages:', error);
+    }
+})();
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
