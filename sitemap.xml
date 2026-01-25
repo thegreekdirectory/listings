@@ -55,13 +55,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/category/industrial-manufacturing</loc>
+    <loc>https://listings.thegreekdirectory.org/category/real-estate-development</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/category/real-estate-development</loc>
+    <loc>https://listings.thegreekdirectory.org/category/industrial-manufacturing</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -139,12 +139,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://listings.thegreekdirectory.org/listing/industrial-manufacturing/def</loc>
-    <lastmod>2026-01-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://listings.thegreekdirectory.org/listing/automotive-transportation/test-business</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>monthly</changefreq>
@@ -188,6 +182,12 @@
   </url>
   <url>
     <loc>https://listings.thegreekdirectory.org/listing/automotive-transportation/vfg</loc>
+    <lastmod>2026-01-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://listings.thegreekdirectory.org/listing/industrial-manufacturing/def</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
