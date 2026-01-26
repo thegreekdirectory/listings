@@ -2,7 +2,7 @@
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
+or distribution of this code can result in legal action to the fullest extent permitted by law.
 -->
 
 <!DOCTYPE html>
@@ -20,9 +20,9 @@ or distribution of this code will result in legal action to the fullest extent p
     <meta property="og:url" content="{{LISTING_URL}}">
     <meta property="og:image" content="{{LOGO}}">
     <link rel="canonical" href="{{LISTING_URL}}">
-    <link rel="icon" href="https://static.thegreekdirectory.org/bluefavicon.png" media="(prefers-color-scheme: light)">
-    <link rel="icon" href="https://static.thegreekdirectory.org/whitefavicon.png" media="(prefers-color-scheme: dark)">
-    <link rel="apple-touch-icon" href="https://social.thegreekdirectory.org/Logo2.png">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="application/ld+json">
@@ -70,9 +70,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         .social-youtube { background: #FF0000; color: white; }
         .social-tiktok { background: #000000; color: white; }
         .social-linkedin { background: #0077B5; color: white; }
-        .social-google { background: white; color: #4285F4; border: 2px solid #4285F4; }
-        .social-yelp { background: white; color: #D32323; border: 2px solid #D32323; }
-        .social-tripadvisor { background: white; color: #00AF87; border: 2px solid #00AF87; }
         .social-other { background: #6B7280; color: white; }
         .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
         .share-button:hover { transform: scale(1.1); }
@@ -123,9 +120,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
             .hover\:text-gray-900:hover { color: #e5e7eb !important; }
             img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
             .social-icon svg { pointer-events: none; user-select: none; }
-            .social-google { background: white; border: 2px solid #e5e7eb; }
-            .social-yelp { background: white; border: 2px solid #e5e7eb; }
-            .social-tripadvisor { background: white; border: 2px solid #e5e7eb; }
             .hours-disclaimer { background: #3a3a00; border-color: #8a7a00; color: #ffd700; }
             .leaflet-container { background: #1a1a1a; }
             .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
@@ -194,6 +188,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
                 <div>
                     {{SOCIAL_MEDIA_SECTION}}
                     {{REVIEW_SECTION}}
+                    {{OTHER_LINKS_SECTION}}
                     <div class="share-section">
                         <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                         <div class="flex flex-wrap gap-2">
@@ -234,10 +229,20 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 <!--
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 -->
+    <!--
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+-->
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="js/partials-loader.js"></script>
+    <script src="/js/partials-loader.js"></script>
     <script>
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         const totalSlides = {{TOTAL_PHOTOS}};
         const businessName = '{{BUSINESS_NAME}}';
         const listingUrl = '{{LISTING_URL}}';
@@ -296,6 +301,10 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
             trackAnalytics(action, platform);
         }
         
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('a[href^="tel:"]').forEach(el => {
                 el.addEventListener('click', () => trackClick('call'));
@@ -346,6 +355,19 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
                 return;
             }
             
+            // Check for 24 hours
+            if (todayHours.toLowerCase().includes('24') || todayHours.toLowerCase().includes('open 24')) {
+                if (badge) {
+                    badge.textContent = 'Open';
+                    badge.className = 'badge badge-open';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Open 24 Hours';
+                    statusText.className = 'open-now';
+                }
+                return;
+            }
+            
             const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
             if (!match) {
                 if (badge) badge.style.display = 'none';
@@ -364,25 +386,50 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
             
             const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
             const startMinutes = start * 60 + parseInt(startMin);
-            const endMinutes = end * 60 + parseInt(endMin);
+            let endMinutes = end * 60 + parseInt(endMin);
             
-            if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
-                if (badge) {
-                    badge.textContent = 'Open';
-                    badge.className = 'badge badge-open';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Open Now';
-                    statusText.className = 'open-now';
+            // Handle overnight hours
+            if (endMinutes < startMinutes) {
+                // If end is before start, it's overnight
+                if (currentMinutes >= startMinutes || currentMinutes <= endMinutes) {
+                    if (badge) {
+                        badge.textContent = 'Open';
+                        badge.className = 'badge badge-open';
+                    }
+                    if (statusText) {
+                        statusText.textContent = 'Open Now';
+                        statusText.className = 'open-now';
+                    }
+                } else {
+                    if (badge) {
+                        badge.textContent = 'Closed';
+                        badge.className = 'badge badge-closed';
+                    }
+                    if (statusText) {
+                        statusText.textContent = 'Closed Now';
+                        statusText.className = 'closed-now';
+                    }
                 }
             } else {
-                if (badge) {
-                    badge.textContent = 'Closed';
-                    badge.className = 'badge badge-closed';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Closed Now';
-                    statusText.className = 'closed-now';
+                // Normal hours
+                if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+                    if (badge) {
+                        badge.textContent = 'Open';
+                        badge.className = 'badge badge-open';
+                    }
+                    if (statusText) {
+                        statusText.textContent = 'Open Now';
+                        statusText.className = 'open-now';
+                    }
+                } else {
+                    if (badge) {
+                        badge.textContent = 'Closed';
+                        badge.className = 'badge badge-closed';
+                    }
+                    if (statusText) {
+                        statusText.textContent = 'Closed Now';
+                        statusText.className = 'closed-now';
+                    }
                 }
             }
         }
@@ -436,7 +483,8 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
                 }).catch(err => {
                     if (err.name !== 'AbortError') {
                         console.log('Share failed:', err);
-                        });
+                    }
+                });
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => {
                     alert('Link copied to clipboard!');
@@ -445,6 +493,10 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
                 });
             }
         }
+
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
 
         const coordinatesStr = '{{COORDINATES}}';
         const fullAddress = '{{FULL_ADDRESS}}';
@@ -517,6 +569,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
                     map.scrollWheelZoom.disable();
                 });
             } catch (e) {
+                console.error('Map error:', e);
                 if (mapElement && mapElement.parentElement) {
                     mapElement.parentElement.style.display = 'none';
                 }
@@ -533,6 +586,10 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
         updateOpenClosedBadge();
         setInterval(updateOpenClosedBadge, 60000);
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
     </script>
 </body>
 </html>
@@ -541,5 +598,5 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
+or distribution of this code can result in legal action to the fullest extent permitted by law.
 -->
