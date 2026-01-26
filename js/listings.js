@@ -1,3 +1,10 @@
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
 // LISTINGS PAGE JAVASCRIPT - PART 1
 // Configuration & State Management
@@ -12,6 +19,10 @@ const CATEGORIES = [
     'Food & Hospitality', 'Grocery & Imports', 'Home & Construction', 'Industrial & Manufacturing',
     'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
 ];
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 const US_STATES = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
@@ -41,6 +52,10 @@ let searchDebounceTimer = null;
 let displayedListingsCount = 25;
 let estimatedUserLocation = null;
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function formatPhoneDisplay(phone) {
     if (!phone) return '';
     const digits = phone.replace(/\D/g, '');
@@ -53,7 +68,11 @@ function formatPhoneDisplay(phone) {
 function loadStarredListings() {
     const stored = getCookie('starredListings');
     if (stored) {
-        try { starredListings = JSON.parse(stored); } catch (e) { starredListings = []; }
+        try { 
+            starredListings = JSON.parse(stored); 
+        } catch (e) { 
+            starredListings = []; 
+        }
     }
     updateStarredCount();
 }
@@ -63,21 +82,49 @@ function saveStarredListings() {
     updateStarredCount();
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function toggleStar(listingId, event) {
-    if (event) { event.preventDefault(); event.stopPropagation(); }
+    if (event) { 
+        event.preventDefault(); 
+        event.stopPropagation(); 
+    }
     const index = starredListings.indexOf(listingId);
-    if (index > -1) starredListings.splice(index, 1);
-    else starredListings.push(listingId);
+    if (index > -1) {
+        starredListings.splice(index, 1);
+    } else {
+        starredListings.push(listingId);
+    }
     saveStarredListings();
-    renderListings();
+    
+    // Update the specific star button
+    const starButtons = document.querySelectorAll(`[onclick*="toggleStar('${listingId}'"]`);
+    starButtons.forEach(btn => {
+        if (starredListings.includes(listingId)) {
+            btn.classList.add('starred');
+        } else {
+            btn.classList.remove('starred');
+        }
+    });
 }
 
 function updateStarredCount() {
-    document.getElementById('starredCount').textContent = starredListings.length;
+    const countEl = document.getElementById('starredCount');
+    if (countEl) {
+        countEl.textContent = starredListings.length;
+    }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function toggleStarredView() {
     viewingStarredOnly = !viewingStarredOnly;
+    const starredBtn = document.getElementById('starredBtn');
+    
     if (viewingStarredOnly) {
         if (starredListings.length === 0) {
             alert('You haven\'t starred any listings yet!');
@@ -87,17 +134,25 @@ function toggleStarredView() {
         filteredListings = allListings.filter(l => starredListings.includes(l.id));
         displayedListingsCount = filteredListings.length;
         document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
-        document.getElementById('starredBtn').style.backgroundColor = '#fbbf24';
-        document.getElementById('starredBtn').style.color = '#78350f';
+        if (starredBtn) {
+            starredBtn.style.backgroundColor = '#fbbf24';
+            starredBtn.style.color = '#78350f';
+        }
     } else {
         displayedListingsCount = 25;
         applyFilters();
-        document.getElementById('starredBtn').style.backgroundColor = '';
-        document.getElementById('starredBtn').style.color = '';
+        if (starredBtn) {
+            starredBtn.style.backgroundColor = '';
+            starredBtn.style.color = '';
+        }
     }
     renderListings();
     updateResultsCount();
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function setCookie(name, value, days) {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
@@ -114,6 +169,10 @@ function getCookie(name) {
 function isIOSWebApp() {
     return ('standalone' in window.navigator) && window.navigator.standalone;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function estimateLocationByIP() {
     try {
@@ -139,6 +198,10 @@ async function estimateLocationByIP() {
     return null;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function extractSubcategoriesFromListings(listings) {
     const subcatsByCategory = {};
     
@@ -161,8 +224,15 @@ function extractSubcategoriesFromListings(listings) {
     return result;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 document.addEventListener('DOMContentLoaded', () => {
-    if (isIOSWebApp()) document.getElementById('refreshBtn').style.display = 'flex';
+    if (isIOSWebApp()) {
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) refreshBtn.style.display = 'flex';
+    }
     loadStarredListings();
     loadListings();
     setupEventListeners();
@@ -175,6 +245,24 @@ document.addEventListener('DOMContentLoaded', () => {
     checkFilterPosition();
 });
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// LISTINGS PAGE JAVASCRIPT - PART 2
+// Filter Position & URL Management
+// ============================================
+
 function checkFilterPosition() {
     const screenWidth = window.innerWidth;
     const toggleBtn = document.getElementById('toggleFilterPosition');
@@ -184,38 +272,46 @@ function checkFilterPosition() {
     const listingsContainer = document.getElementById('listingsContainer');
     
     if (screenWidth >= 1024) {
-        toggleBtn.style.display = 'block';
-        mapBtn.classList.remove('hidden');
+        if (toggleBtn) toggleBtn.style.display = 'block';
+        if (mapBtn) mapBtn.classList.remove('hidden');
+        
         if (filterPosition === 'left') {
-            desktopLayout.classList.add('with-left-filters');
-            desktopFilters.classList.remove('hidden');
-            if (currentView === 'grid') {
+            if (desktopLayout) desktopLayout.classList.add('with-left-filters');
+            if (desktopFilters) desktopFilters.classList.remove('hidden');
+            if (currentView === 'grid' && listingsContainer) {
                 listingsContainer.classList.remove('listings-3-col');
                 listingsContainer.classList.add('listings-2-col');
             }
         } else {
-            desktopLayout.classList.remove('with-left-filters');
-            desktopFilters.classList.add('hidden');
-            if (currentView === 'grid') {
+            if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
+            if (desktopFilters) desktopFilters.classList.add('hidden');
+            if (currentView === 'grid' && listingsContainer) {
                 listingsContainer.classList.remove('listings-2-col');
                 listingsContainer.classList.add('listings-3-col');
             }
         }
     } else {
-        toggleBtn.style.display = 'none';
-        desktopLayout.classList.remove('with-left-filters');
-        desktopFilters.classList.add('hidden');
-        mapBtn.classList.add('hidden');
-        if (currentView === 'grid') {
+        if (toggleBtn) toggleBtn.style.display = 'none';
+        if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
+        if (desktopFilters) desktopFilters.classList.add('hidden');
+        if (mapBtn) mapBtn.classList.add('hidden');
+        if (currentView === 'grid' && listingsContainer) {
             listingsContainer.classList.remove('listings-2-col', 'listings-3-col');
         }
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function loadFiltersFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
     const searchQuery = urlParams.get('q');
-    if (searchQuery) document.getElementById('searchInput').value = searchQuery;
+    if (searchQuery) {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.value = searchQuery;
+    }
     
     const category = urlParams.get('category');
     if (category && CATEGORIES.includes(category)) selectedCategory = category;
@@ -232,11 +328,16 @@ function loadFiltersFromURL() {
     const country = urlParams.get('country');
     if (country) {
         selectedCountry = country;
-        document.getElementById('countryFilter').value = country;
-        document.getElementById('countryFilter2').value = country;
+        const countryFilter = document.getElementById('countryFilter');
+        const countryFilter2 = document.getElementById('countryFilter2');
+        if (countryFilter) countryFilter.value = country;
+        if (countryFilter2) countryFilter2.value = country;
+        
         if (country === 'USA') {
-            document.getElementById('stateFilterContainer').classList.remove('hidden');
-            document.getElementById('stateFilterContainer2').classList.remove('hidden');
+            const stateContainer = document.getElementById('stateFilterContainer');
+            const stateContainer2 = document.getElementById('stateFilterContainer2');
+            if (stateContainer) stateContainer.classList.remove('hidden');
+            if (stateContainer2) stateContainer2.classList.remove('hidden');
             populateStateFilter('USA');
         }
     }
@@ -244,54 +345,74 @@ function loadFiltersFromURL() {
     const state = urlParams.get('state');
     if (state) {
         selectedState = state;
-        document.getElementById('stateFilter').value = state;
-        document.getElementById('stateFilter2').value = state;
+        const stateFilter = document.getElementById('stateFilter');
+        const stateFilter2 = document.getElementById('stateFilter2');
+        if (stateFilter) stateFilter.value = state;
+        if (stateFilter2) stateFilter2.value = state;
     }
     
     const radius = urlParams.get('radius');
     if (radius) {
         selectedRadius = parseInt(radius);
-        document.getElementById('radiusFilter').value = radius;
-        document.getElementById('radiusFilter2').value = radius;
+        const radiusFilter = document.getElementById('radiusFilter');
+        const radiusFilter2 = document.getElementById('radiusFilter2');
+        if (radiusFilter) radiusFilter.value = radius;
+        if (radiusFilter2) radiusFilter2.value = radius;
         updateRadiusValue();
     }
     
     if (urlParams.get('open') === 'true') {
         openNowOnly = true;
-        document.getElementById('openNowFilter').checked = true;
-        document.getElementById('openNowFilter2').checked = true;
+        const openFilter = document.getElementById('openNowFilter');
+        const openFilter2 = document.getElementById('openNowFilter2');
+        if (openFilter) openFilter.checked = true;
+        if (openFilter2) openFilter2.checked = true;
     }
     
     if (urlParams.get('closed') === 'true') {
         closedNowOnly = true;
-        document.getElementById('closedNowFilter').checked = true;
-        document.getElementById('closedNowFilter2').checked = true;
+        const closedFilter = document.getElementById('closedNowFilter');
+        const closedFilter2 = document.getElementById('closedNowFilter2');
+        if (closedFilter) closedFilter.checked = true;
+        if (closedFilter2) closedFilter2.checked = true;
     }
     
     if (urlParams.get('opening') === 'true') {
         openingSoonOnly = true;
-        document.getElementById('openingSoonFilter').checked = true;
-        document.getElementById('openingSoonFilter2').checked = true;
+        const openingSoonFilter = document.getElementById('openingSoonFilter');
+        const openingSoonFilter2 = document.getElementById('openingSoonFilter2');
+        if (openingSoonFilter) openingSoonFilter.checked = true;
+        if (openingSoonFilter2) openingSoonFilter2.checked = true;
     }
     
     if (urlParams.get('closing') === 'true') {
         closingSoonOnly = true;
-        document.getElementById('closingSoonFilter').checked = true;
-        document.getElementById('closingSoonFilter2').checked = true;
+        const closingSoonFilter = document.getElementById('closingSoonFilter');
+        const closingSoonFilter2 = document.getElementById('closingSoonFilter2');
+        if (closingSoonFilter) closingSoonFilter.checked = true;
+        if (closingSoonFilter2) closingSoonFilter2.checked = true;
     }
     
     if (urlParams.get('hours') === 'unknown') {
         hoursUnknownOnly = true;
-        document.getElementById('hoursUnknownFilter').checked = true;
-        document.getElementById('hoursUnknownFilter2').checked = true;
+        const hoursUnknownFilter = document.getElementById('hoursUnknownFilter');
+        const hoursUnknownFilter2 = document.getElementById('hoursUnknownFilter2');
+        if (hoursUnknownFilter) hoursUnknownFilter.checked = true;
+        if (hoursUnknownFilter2) hoursUnknownFilter2.checked = true;
     }
     
     if (urlParams.get('online') === 'true') {
         onlineOnly = true;
-        document.getElementById('onlineOnlyFilter').checked = true;
-        document.getElementById('onlineOnlyFilter2').checked = true;
+        const onlineFilter = document.getElementById('onlineOnlyFilter');
+        const onlineFilter2 = document.getElementById('onlineOnlyFilter2');
+        if (onlineFilter) onlineFilter.checked = true;
+        if (onlineFilter2) onlineFilter2.checked = true;
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function updateURL() {
     const url = new URL(window.location);
@@ -314,6 +435,10 @@ function updateURL() {
     if (searchTerm) url.searchParams.set('q', searchTerm);
     window.history.replaceState({}, '', url);
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function requestLocationOnLoad() {
     if (navigator.geolocation) {
@@ -343,6 +468,10 @@ function addUserLocationMarker() {
     userLocationMarker.bindPopup('<strong>Your Location</strong>');
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 window.setSubcategoryMode = function(mode, skipUpdate) {
     subcategoryMode = mode;
     document.querySelectorAll('.toggle-option').forEach(opt => {
@@ -354,6 +483,26 @@ window.setSubcategoryMode = function(mode, skipUpdate) {
         if (!viewingStarredOnly) applyFilters();
     }
 };
+
+window.toggleStar = toggleStar;
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// LISTINGS PAGE JAVASCRIPT - PART 3
+// Load Listings & Filtering Logic
+// ============================================
 
 async function loadListings() {
     try {
@@ -380,20 +529,22 @@ async function loadListings() {
         geocodeAllListings();
     } catch (error) {
         console.error('Error loading listings:', error);
-        document.getElementById('listingsContainer').innerHTML = 
-            '<p class="text-center text-gray-600 py-12">Error loading listings. Please try again.</p>';
+        const listingsContainer = document.getElementById('listingsContainer');
+        if (listingsContainer) {
+            listingsContainer.innerHTML = '<p class="text-center text-gray-600 py-12">Error loading listings. Please try again.</p>';
+        }
     }
 }
 
-window.toggleStar = toggleStar;
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 2
-// Filtering & Business Logic
-// ============================================
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function applyFilters() {
-    const searchTerm = normalizeString(document.getElementById('searchInput').value);
-    const sortOption = document.getElementById('sortSelect').value;
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = normalizeString(searchInput ? searchInput.value : '');
+    const sortSelect = document.getElementById('sortSelect');
+    const sortOption = sortSelect ? sortSelect.value : 'default';
     
     filteredListings = allListings.filter(listing => {
         const fullAddress = getFullAddress(listing);
@@ -479,10 +630,9 @@ function applyFilters() {
         });
     }
     
-    // UPDATED SORTING LOGIC WITH RANDOM OPTION
+    // SORTING LOGIC WITH RANDOM OPTION
     filteredListings.sort((a, b) => {
         if (sortOption === 'random') {
-            // Pure random sort - no tier precedence
             return Math.random() - 0.5;
         } else if (sortOption === 'default') {
             const aTier = a.tier || 'FREE';
@@ -523,7 +673,6 @@ function applyFilters() {
     if (map) updateMapMarkers();
 }
 
-
 function loadMoreListings() {
     displayedListingsCount += 25;
     renderListings();
@@ -532,6 +681,10 @@ function loadMoreListings() {
 function normalizeString(str) {
     return str.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function isOpenNow(hours) {
     if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
@@ -557,6 +710,10 @@ function isOpenNow(hours) {
     const endMinutes = end * 60 + parseInt(endMin);
     return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function isOpeningSoon(hours) {
     if (!hours || typeof hours !== 'object') return false;
@@ -598,6 +755,10 @@ function isClosingSoon(hours) {
     return diff > 0 && diff <= 60;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function hasUnknownHours(listing) {
     if (!listing.address || isBasedIn(listing)) return false;
     if (!listing.hours || typeof listing.hours !== 'object') return true;
@@ -636,8 +797,22 @@ function getFullAddress(listing) {
     }
     return listing.address || '';
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 3
+// LISTINGS PAGE JAVASCRIPT - PART 4
 // Rendering Functions
 // ============================================
 
@@ -645,12 +820,14 @@ function renderListings() {
     const container = document.getElementById('listingsContainer');
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     
+    if (!container) return;
+    
     const displayedListings = filteredListings.slice(0, displayedListingsCount);
     const hasMore = displayedListingsCount < filteredListings.length;
     
     if (filteredListings.length === 0) {
         container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
-        loadMoreBtn.classList.add('hidden');
+        if (loadMoreBtn) loadMoreBtn.classList.add('hidden');
         return;
     }
 
@@ -769,29 +946,38 @@ function renderListings() {
         }).join('');
     }
     
-    if (hasMore) {
-        loadMoreBtn.classList.remove('hidden');
-        loadMoreBtn.textContent = `Load More Listings (${filteredListings.length - displayedListingsCount} remaining)`;
-        loadMoreBtn.onclick = loadMoreListings;
-    } else {
-        loadMoreBtn.classList.add('hidden');
+    if (loadMoreBtn) {
+        if (hasMore) {
+            loadMoreBtn.classList.remove('hidden');
+            loadMoreBtn.textContent = `Load More Listings (${filteredListings.length - displayedListingsCount} remaining)`;
+            loadMoreBtn.onclick = loadMoreListings;
+        } else {
+            loadMoreBtn.classList.add('hidden');
+        }
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function updateResultsCount() {
     const count = filteredListings.length;
-    if (!viewingStarredOnly) {
-        document.getElementById('resultsCount').textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
+    const resultsCount = document.getElementById('resultsCount');
+    if (!viewingStarredOnly && resultsCount) {
+        resultsCount.textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
     }
 }
 
 function updateRadiusValue() {
     ['radiusValue', 'radiusValue2'].forEach(id => {
         const valueSpan = document.getElementById(id);
-        if (selectedRadius === 0) {
-            valueSpan.textContent = 'Any distance';
-        } else {
-            valueSpan.textContent = `${selectedRadius} ${selectedRadius === 1 ? 'mile' : 'miles'}`;
+        if (valueSpan) {
+            if (selectedRadius === 0) {
+                valueSpan.textContent = 'Any distance';
+            } else {
+                valueSpan.textContent = `${selectedRadius} ${selectedRadius === 1 ? 'mile' : 'miles'}`;
+            }
         }
     });
 }
@@ -811,20 +997,29 @@ function updateLocationSubtitle() {
             subtitle = `${country} Listings`;
         }
     }
-    document.getElementById('locationSubtitle').textContent = subtitle;
+    const locationSubtitle = document.getElementById('locationSubtitle');
+    if (locationSubtitle) {
+        locationSubtitle.textContent = subtitle;
+    }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function populateCountryFilter() {
     const countries = [...new Set(allListings.map(l => l.country || 'USA'))].sort();
     ['countryFilter', 'countryFilter2'].forEach(id => {
         const select = document.getElementById(id);
-        select.innerHTML = '<option value="">All Countries</option>';
-        countries.forEach(country => {
-            const option = document.createElement('option');
-            option.value = country;
-            option.textContent = country === 'USA' ? 'United States' : country;
-            select.appendChild(option);
-        });
+        if (select) {
+            select.innerHTML = '<option value="">All Countries</option>';
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country === 'USA' ? 'United States' : country;
+                select.appendChild(option);
+            });
+        }
     });
 }
 
@@ -833,221 +1028,345 @@ function populateStateFilter(country) {
         const states = [...new Set(allListings.filter(l => (l.country || 'USA') === 'USA').map(l => l.state))].sort();
         ['stateFilter', 'stateFilter2'].forEach(id => {
             const select = document.getElementById(id);
-            select.innerHTML = '<option value="">All States</option>';
-            states.forEach(state => {
-                const option = document.createElement('option');
-                option.value = state;
-                option.textContent = `${US_STATES[state] || state} (${state})`;
-                select.appendChild(option);
-            });
+            if (select) {
+                select.innerHTML = '<option value="">All States</option>';
+                states.forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state;
+                    option.textContent = `${US_STATES[state] || state} (${state})`;
+                    select.appendChild(option);
+                });
+            }
         });
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 4
+// LISTINGS PAGE JAVASCRIPT - PART 5
 // Event Listeners & UI Interactions
 // ============================================
 
 function setupEventListeners() {
-    document.getElementById('searchInput').addEventListener('input', () => {
-        updateURL();
-        if (!viewingStarredOnly) {
-            displayedListingsCount = 25;
-            applyFilters();
-        }
-    });
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            updateURL();
+            if (!viewingStarredOnly) {
+                displayedListingsCount = 25;
+                applyFilters();
+            }
+        });
+    }
     
-    document.getElementById('filterBtn').addEventListener('click', toggleFilters);
-    document.getElementById('closeFilterBtn').addEventListener('click', toggleFilters);
-    document.getElementById('mapBtn').addEventListener('click', toggleMap);
-    document.getElementById('mapBtnDesktop').addEventListener('click', toggleMap);
-    document.getElementById('gridViewBtn').addEventListener('click', () => setView('grid'));
-    document.getElementById('listViewBtn').addEventListener('click', () => setView('list'));
-    document.getElementById('gridViewBtn2').addEventListener('click', () => setView('grid'));
-    document.getElementById('listViewBtn2').addEventListener('click', () => setView('list'));
-    document.getElementById('starredBtn').addEventListener('click', toggleStarredView);
-    document.getElementById('splitViewBtn').addEventListener('click', toggleSplitView);
-    document.getElementById('clearFiltersBtn').addEventListener('click', clearAllFilters);
-    document.getElementById('clearFiltersBtn2').addEventListener('click', clearAllFilters);
+    const filterBtn = document.getElementById('filterBtn');
+    if (filterBtn) filterBtn.addEventListener('click', toggleFilters);
     
-    document.getElementById('refreshBtn').addEventListener('click', () => window.location.reload());
+    const closeFilterBtn = document.getElementById('closeFilterBtn');
+    if (closeFilterBtn) closeFilterBtn.addEventListener('click', toggleFilters);
     
-    document.getElementById('toggleFilterPosition').addEventListener('click', () => {
-        if (filterPosition === 'left') {
-            filterPosition = 'top';
-        } else {
-            filterPosition = 'left';
-        }
-        checkFilterPosition();
-    });
+    const mapBtn = document.getElementById('mapBtn');
+    if (mapBtn) mapBtn.addEventListener('click', toggleMap);
+    
+    const mapBtnDesktop = document.getElementById('mapBtnDesktop');
+    if (mapBtnDesktop) mapBtnDesktop.addEventListener('click', toggleMap);
+    
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    if (gridViewBtn) gridViewBtn.addEventListener('click', () => setView('grid'));
+    
+    const listViewBtn = document.getElementById('listViewBtn');
+    if (listViewBtn) listViewBtn.addEventListener('click', () => setView('list'));
+    
+    const gridViewBtn2 = document.getElementById('gridViewBtn2');
+    if (gridViewBtn2) gridViewBtn2.addEventListener('click', () => setView('grid'));
+    
+    const listViewBtn2 = document.getElementById('listViewBtn2');
+    if (listViewBtn2) listViewBtn2.addEventListener('click', () => setView('list'));
+    
+    const starredBtn = document.getElementById('starredBtn');
+    if (starredBtn) starredBtn.addEventListener('click', toggleStarredView);
+    
+    const splitViewBtn = document.getElementById('splitViewBtn');
+    if (splitViewBtn) splitViewBtn.addEventListener('click', toggleSplitView);
+    
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearAllFilters);
+    
+    const clearFiltersBtn2 = document.getElementById('clearFiltersBtn2');
+    if (clearFiltersBtn2) clearFiltersBtn2.addEventListener('click', clearAllFilters);
+    
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => window.location.reload());
+    
+    const toggleFilterPosition = document.getElementById('toggleFilterPosition');
+    if (toggleFilterPosition) {
+        toggleFilterPosition.addEventListener('click', () => {
+            if (filterPosition === 'left') {
+                filterPosition = 'top';
+            } else {
+                filterPosition = 'left';
+            }
+            checkFilterPosition();
+        });
+    }
+
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
 
     ['radiusFilter', 'radiusFilter2'].forEach(id => {
         const slider = document.getElementById(id);
-        slider.addEventListener('input', (e) => {
-            selectedRadius = parseInt(e.target.value);
-            document.getElementById('radiusFilter').value = selectedRadius;
-            document.getElementById('radiusFilter2').value = selectedRadius;
-            updateRadiusValue();
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
+        if (slider) {
+            slider.addEventListener('input', (e) => {
+                selectedRadius = parseInt(e.target.value);
+                const radiusFilter = document.getElementById('radiusFilter');
+                const radiusFilter2 = document.getElementById('radiusFilter2');
+                if (radiusFilter) radiusFilter.value = selectedRadius;
+                if (radiusFilter2) radiusFilter2.value = selectedRadius;
+                updateRadiusValue();
+                updateURL();
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            });
+        }
     });
     
     ['openNowFilter', 'openNowFilter2'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
-            openNowOnly = e.target.checked;
-            document.getElementById('openNowFilter').checked = openNowOnly;
-            document.getElementById('openNowFilter2').checked = openNowOnly;
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                openNowOnly = e.target.checked;
+                const openFilter = document.getElementById('openNowFilter');
+                const openFilter2 = document.getElementById('openNowFilter2');
+                if (openFilter) openFilter.checked = openNowOnly;
+                if (openFilter2) openFilter2.checked = openNowOnly;
+                updateURL();
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            });
+        }
     });
 
     ['closedNowFilter', 'closedNowFilter2'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
-            closedNowOnly = e.target.checked;
-            document.getElementById('closedNowFilter').checked = closedNowOnly;
-            document.getElementById('closedNowFilter2').checked = closedNowOnly;
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                closedNowOnly = e.target.checked;
+                const closedFilter = document.getElementById('closedNowFilter');
+                const closedFilter2 = document.getElementById('closedNowFilter2');
+                if (closedFilter) closedFilter.checked = closedNowOnly;
+                if (closedFilter2) closedFilter2.checked = closedNowOnly;
+                updateURL();
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            });
+        }
     });
 
     ['openingSoonFilter', 'openingSoonFilter2'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
-            openingSoonOnly = e.target.checked;
-            document.getElementById('openingSoonFilter').checked = openingSoonOnly;
-            document.getElementById('openingSoonFilter2').checked = openingSoonOnly;
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                openingSoonOnly = e.target.checked;
+                const openingSoonFilter = document.getElementById('openingSoonFilter');
+                const openingSoonFilter2 = document.getElementById('openingSoonFilter2');
+                if (openingSoonFilter) openingSoonFilter.checked = openingSoonOnly;
+                if (openingSoonFilter2) openingSoonFilter2.checked = openingSoonOnly;
+                updateURL();
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            });
+        }
     });
 
     ['closingSoonFilter', 'closingSoonFilter2'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
-            closingSoonOnly = e.target.checked;
-            document.getElementById('closingSoonFilter').checked = closingSoonOnly;
-            document.getElementById('closingSoonFilter2').checked = closingSoonOnly;
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                closingSoonOnly = e.target.checked;
+                const closingSoonFilter = document.getElementById('closingSoonFilter');
+                const closingSoonFilter2 = document.getElementById('closingSoonFilter2');
+                if (closingSoonFilter) closingSoonFilter.checked = closingSoonOnly;
+                if (closingSoonFilter2) closingSoonFilter2.checked = closingSoonOnly;
+                updateURL();
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            });
+        }
     });
 
     ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
-            hoursUnknownOnly = e.target.checked;
-            document.getElementById('hoursUnknownFilter').checked = hoursUnknownOnly;
-            document.getElementById('hoursUnknownFilter2').checked = hoursUnknownOnly;
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                hoursUnknownOnly = e.target.checked;
+                const hoursUnknownFilter = document.getElementById('hoursUnknownFilter');
+                const hoursUnknownFilter2 = document.getElementById('hoursUnknownFilter2');
+                if (hoursUnknownFilter) hoursUnknownFilter.checked = hoursUnknownOnly;
+                if (hoursUnknownFilter2) hoursUnknownFilter2.checked = hoursUnknownOnly;
+                updateURL();
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            });
+        }
     });
     
     ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
-            onlineOnly = e.target.checked;
-            document.getElementById('onlineOnlyFilter').checked = onlineOnly;
-            document.getElementById('onlineOnlyFilter2').checked = onlineOnly;
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                onlineOnly = e.target.checked;
+                const onlineFilter = document.getElementById('onlineOnlyFilter');
+                const onlineFilter2 = document.getElementById('onlineOnlyFilter2');
+                if (onlineFilter) onlineFilter.checked = onlineOnly;
+                if (onlineFilter2) onlineFilter2.checked = onlineOnly;
+                updateURL();
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            });
+        }
     });
     
-    document.getElementById('sortSelect').addEventListener('change', () => {
-        displayedListingsCount = 25;
-        if (!viewingStarredOnly) applyFilters();
-        else renderListings();
-    });
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            displayedListingsCount = 25;
+            if (!viewingStarredOnly) applyFilters();
+            else renderListings();
+        });
+    }
     
     ['countryFilter', 'countryFilter2'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
-            selectedCountry = e.target.value;
-            document.getElementById('countryFilter').value = selectedCountry;
-            document.getElementById('countryFilter2').value = selectedCountry;
-            if (selectedCountry === 'USA') {
-                document.getElementById('stateFilterContainer').classList.remove('hidden');
-                document.getElementById('stateFilterContainer2').classList.remove('hidden');
-                populateStateFilter('USA');
-            } else {
-                document.getElementById('stateFilterContainer').classList.add('hidden');
-                document.getElementById('stateFilterContainer2').classList.add('hidden');
-                selectedState = '';
-            }
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
+        const select = document.getElementById(id);
+        if (select) {
+            select.addEventListener('change', (e) => {
+                selectedCountry = e.target.value;
+                const countryFilter = document.getElementById('countryFilter');
+                const countryFilter2 = document.getElementById('countryFilter2');
+                if (countryFilter) countryFilter.value = selectedCountry;
+                if (countryFilter2) countryFilter2.value = selectedCountry;
+                
+                if (selectedCountry === 'USA') {
+                    const stateContainer = document.getElementById('stateFilterContainer');
+                    const stateContainer2 = document.getElementById('stateFilterContainer2');
+                    if (stateContainer) stateContainer.classList.remove('hidden');
+                    if (stateContainer2) stateContainer2.classList.remove('hidden');
+                    populateStateFilter('USA');
+                } else {
+                    const stateContainer = document.getElementById('stateFilterContainer');
+                    const stateContainer2 = document.getElementById('stateFilterContainer2');
+                    if (stateContainer) stateContainer.classList.add('hidden');
+                    if (stateContainer2) stateContainer2.classList.add('hidden');
+                    selectedState = '';
+                }
+                updateURL();
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            });
+        }
     });
     
     ['stateFilter', 'stateFilter2'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
-            selectedState = e.target.value;
-            document.getElementById('stateFilter').value = selectedState;
-            document.getElementById('stateFilter2').value = selectedState;
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
+        const select = document.getElementById(id);
+        if (select) {
+            select.addEventListener('change', (e) => {
+                selectedState = e.target.value;
+                const stateFilter = document.getElementById('stateFilter');
+                const stateFilter2 = document.getElementById('stateFilter2');
+                if (stateFilter) stateFilter.value = selectedState;
+                if (stateFilter2) stateFilter2.value = selectedState;
+                updateURL();
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            });
+        }
     });
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
     
     const locateBtn = document.getElementById('locateBtn');
-    locateBtn.addEventListener('click', () => {
-        if (userLocation) {
-            locationButtonActive = true;
-            mapMoved = false;
-            locateBtn.classList.add('active');
-            map.setView([userLocation.lat, userLocation.lng], 13);
-            addUserLocationMarker();
-        } else {
-            requestLocationOnLoad();
-        }
-    });
+    if (locateBtn) {
+        locateBtn.addEventListener('click', () => {
+            if (userLocation) {
+                locationButtonActive = true;
+                mapMoved = false;
+                locateBtn.classList.add('active');
+                if (map) {
+                    map.setView([userLocation.lat, userLocation.lng], 13);
+                    addUserLocationMarker();
+                }
+            } else {
+                requestLocationOnLoad();
+            }
+        });
+    }
     
-    document.getElementById('resetMapBtn').addEventListener('click', () => {
-        if (map) {
-            map.setView(defaultMapCenter, defaultMapZoom);
-            if (mapReady && allListingsGeocoded) updateMapMarkers();
-        }
-    });
+    const resetMapBtn = document.getElementById('resetMapBtn');
+    if (resetMapBtn) {
+        resetMapBtn.addEventListener('click', () => {
+            if (map) {
+                map.setView(defaultMapCenter, defaultMapZoom);
+                if (mapReady && allListingsGeocoded) updateMapMarkers();
+            }
+        });
+    }
     
     ['categorySearch', 'categorySearch2'].forEach(id => {
-        document.getElementById(id).addEventListener('input', (e) => {
-            if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(() => {
-                filterCategoriesAndSubcategories(e.target.value);
-            }, 300);
-        });
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', (e) => {
+                if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    filterCategoriesAndSubcategories(e.target.value);
+                }, 300);
+            });
+        }
     });
 
     setupLocationSearch();
     
     window.addEventListener('resize', checkFilterPosition);
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function syncFilters() {
     const filterPairs = [
@@ -1093,8 +1412,14 @@ function syncFilters() {
     });
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function toggleFilters() {
     const panel = document.getElementById('filterPanel');
+    if (!panel) return;
+    
     filtersOpen = !filtersOpen;
     if (filtersOpen) {
         panel.classList.remove('hidden');
@@ -1106,6 +1431,8 @@ function toggleFilters() {
 
 function toggleMap() {
     const container = document.getElementById('mapContainer');
+    if (!container) return;
+    
     mapOpen = !mapOpen;
     if (mapOpen) {
         container.classList.remove('hidden');
@@ -1124,12 +1451,22 @@ function toggleMap() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function setView(view) {
     currentView = view;
-    document.getElementById('gridViewBtn').className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    document.getElementById('listViewBtn').className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    document.getElementById('gridViewBtn2').className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    document.getElementById('listViewBtn2').className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    const gridViewBtn2 = document.getElementById('gridViewBtn2');
+    const listViewBtn2 = document.getElementById('listViewBtn2');
+    
+    if (gridViewBtn) gridViewBtn.className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+    if (listViewBtn) listViewBtn.className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+    if (gridViewBtn2) gridViewBtn2.className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+    if (listViewBtn2) listViewBtn2.className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+    
     renderListings();
 }
 
@@ -1142,8 +1479,22 @@ function hideMapLoading() {
     const loading = document.getElementById('mapLoading');
     if (loading) loading.style.display = 'none';
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 5
+// LISTINGS PAGE JAVASCRIPT - PART 6
 // Category & Filter Management
 // ============================================
 
@@ -1178,6 +1529,10 @@ function createCategoryButtons(filteredCategories) {
     });
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function filterByCategory(category) {
     selectedCategory = category || 'All';
     selectedSubcategories = [];
@@ -1193,44 +1548,57 @@ function updateSubcategoryDisplay(matchingSubcategories) {
     if (selectedCategory && selectedCategory !== 'All' && SUBCATEGORIES[selectedCategory]) {
         ['subcategoryContainer', 'subcategoryContainer2'].forEach((containerId, idx) => {
             const filtersId = idx === 0 ? 'subcategoryFilters' : 'subcategoryFilters2';
-            document.getElementById(containerId).classList.remove('hidden');
+            const container = document.getElementById(containerId);
             const filtersDiv = document.getElementById(filtersId);
-            filtersDiv.innerHTML = '';
-            SUBCATEGORIES[selectedCategory].forEach(sub => {
-                const tag = document.createElement('div');
-                tag.className = 'subcategory-tag';
-                tag.textContent = sub;
-                if (selectedSubcategories.includes(sub)) {
-                    tag.classList.add('selected');
-                }
-                tag.onclick = () => toggleSubcategory(sub);
-                filtersDiv.appendChild(tag);
-            });
+            
+            if (container) container.classList.remove('hidden');
+            if (filtersDiv) {
+                filtersDiv.innerHTML = '';
+                SUBCATEGORIES[selectedCategory].forEach(sub => {
+                    const tag = document.createElement('div');
+                    tag.className = 'subcategory-tag';
+                    tag.textContent = sub;
+                    if (selectedSubcategories.includes(sub)) {
+                        tag.classList.add('selected');
+                    }
+                    tag.onclick = () => toggleSubcategory(sub);
+                    filtersDiv.appendChild(tag);
+                });
+            }
         });
     } else if (matchingSubcategories && matchingSubcategories.length > 0) {
         ['subcategoryContainer', 'subcategoryContainer2'].forEach((containerId, idx) => {
             const filtersId = idx === 0 ? 'subcategoryFilters' : 'subcategoryFilters2';
-            document.getElementById(containerId).classList.remove('hidden');
+            const container = document.getElementById(containerId);
             const filtersDiv = document.getElementById(filtersId);
-            filtersDiv.innerHTML = '';
             
-            matchingSubcategories.forEach(item => {
-                const tag = document.createElement('div');
-                tag.className = 'subcategory-tag';
-                tag.textContent = `${item.subcategory} (${item.category})`;
-                if (selectedSubcategories.includes(item.subcategory)) {
-                    tag.classList.add('selected');
-                }
-                tag.onclick = () => toggleSubcategory(item.subcategory);
-                filtersDiv.appendChild(tag);
-            });
+            if (container) container.classList.remove('hidden');
+            if (filtersDiv) {
+                filtersDiv.innerHTML = '';
+                
+                matchingSubcategories.forEach(item => {
+                    const tag = document.createElement('div');
+                    tag.className = 'subcategory-tag';
+                    tag.textContent = `${item.subcategory} (${item.category})`;
+                    if (selectedSubcategories.includes(item.subcategory)) {
+                        tag.classList.add('selected');
+                    }
+                    tag.onclick = () => toggleSubcategory(item.subcategory);
+                    filtersDiv.appendChild(tag);
+                });
+            }
         });
     } else {
         ['subcategoryContainer', 'subcategoryContainer2'].forEach(id => {
-            document.getElementById(id).classList.add('hidden');
+            const container = document.getElementById(id);
+            if (container) container.classList.add('hidden');
         });
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function toggleSubcategory(subcategory) {
     const index = selectedSubcategories.indexOf(subcategory);
@@ -1298,6 +1666,10 @@ function filterCategoriesAndSubcategories(searchTerm) {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function clearAllFilters() {
     selectedCategory = 'All';
     selectedSubcategories = [];
@@ -1311,23 +1683,72 @@ function clearAllFilters() {
     hoursUnknownOnly = false;
     onlineOnly = false;
     
-    document.getElementById('searchInput').value = '';
-    ['categorySearch', 'categorySearch2'].forEach(id => document.getElementById(id).value = '');
-    ['locationSearch', 'locationSearch2'].forEach(id => document.getElementById(id).value = '');
-    ['countryFilter', 'countryFilter2'].forEach(id => document.getElementById(id).value = '');
-    ['stateFilter', 'stateFilter2'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('stateFilterContainer').classList.add('hidden');
-    document.getElementById('stateFilterContainer2').classList.add('hidden');
-    ['radiusFilter', 'radiusFilter2'].forEach(id => document.getElementById(id).value = '0');
-    ['openNowFilter', 'openNowFilter2'].forEach(id => document.getElementById(id).checked = false);
-    ['closedNowFilter', 'closedNowFilter2'].forEach(id => document.getElementById(id).checked = false);
-    ['openingSoonFilter', 'openingSoonFilter2'].forEach(id => document.getElementById(id).checked = false);
-    ['closingSoonFilter', 'closingSoonFilter2'].forEach(id => document.getElementById(id).checked = false);
-    ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => document.getElementById(id).checked = false);
-    ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => document.getElementById(id).checked = false);
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    
+    ['categorySearch', 'categorySearch2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.value = '';
+    });
+    
+    ['locationSearch', 'locationSearch2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.value = '';
+    });
+    
+    ['countryFilter', 'countryFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.value = '';
+    });
+    
+    ['stateFilter', 'stateFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.value = '';
+    });
+    
+    const stateContainer = document.getElementById('stateFilterContainer');
+    const stateContainer2 = document.getElementById('stateFilterContainer2');
+    if (stateContainer) stateContainer.classList.add('hidden');
+    if (stateContainer2) stateContainer2.classList.add('hidden');
+    
+    ['radiusFilter', 'radiusFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.value = '0';
+    });
+    
+    ['openNowFilter', 'openNowFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.checked = false;
+    });
+    
+    ['closedNowFilter', 'closedNowFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.checked = false;
+    });
+    
+    ['openingSoonFilter', 'openingSoonFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.checked = false;
+    });
+    
+    ['closingSoonFilter', 'closingSoonFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.checked = false;
+    });
+    
+    ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.checked = false;
+    });
+    
+    ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.checked = false;
+    });
     
     ['subcategoryContainer', 'subcategoryContainer2'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
+        const elem = document.getElementById(id);
+        if (elem) elem.classList.add('hidden');
     });
     
     updateRadiusValue();
@@ -1337,19 +1758,27 @@ function clearAllFilters() {
     if (!viewingStarredOnly) applyFilters();
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function setupLocationSearch() {
     ['locationSearch', 'locationSearch2'].forEach(id => {
         const input = document.getElementById(id);
         const resultsId = id + 'Results';
         const resultsDiv = document.getElementById(resultsId);
+        
+        if (!input || !resultsDiv) return;
 
         input.addEventListener('input', () => {
             const query = input.value.toLowerCase().trim();
             
             if (id === 'locationSearch') {
-                document.getElementById('locationSearch2').value = input.value;
+                const locationSearch2 = document.getElementById('locationSearch2');
+                if (locationSearch2) locationSearch2.value = input.value;
             } else {
-                document.getElementById('locationSearch').value = input.value;
+                const locationSearch = document.getElementById('locationSearch');
+                if (locationSearch) locationSearch.value = input.value;
             }
 
             if (query.length < 2) {
@@ -1399,52 +1828,88 @@ function setupLocationSearch() {
                             const state = elem.dataset.state;
                             selectedCountry = 'USA';
                             selectedState = state;
-                            document.getElementById('countryFilter').value = 'USA';
-                            document.getElementById('countryFilter2').value = 'USA';
-                            document.getElementById('stateFilterContainer').classList.remove('hidden');
-                            document.getElementById('stateFilterContainer2').classList.remove('hidden');
+                            const countryFilter = document.getElementById('countryFilter');
+                            const countryFilter2 = document.getElementById('countryFilter2');
+                            if (countryFilter) countryFilter.value = 'USA';
+                            if (countryFilter2) countryFilter2.value = 'USA';
+                            
+                            const stateContainer = document.getElementById('stateFilterContainer');
+                            const stateContainer2 = document.getElementById('stateFilterContainer2');
+                            if (stateContainer) stateContainer.classList.remove('hidden');
+                            if (stateContainer2) stateContainer2.classList.remove('hidden');
+                            
                             populateStateFilter('USA');
-                            document.getElementById('stateFilter').value = state;
-                            document.getElementById('stateFilter2').value = state;
+                            
+                            const stateFilter = document.getElementById('stateFilter');
+                            const stateFilter2 = document.getElementById('stateFilter2');
+                            if (stateFilter) stateFilter.value = state;
+                            if (stateFilter2) stateFilter2.value = state;
                         } else if (type === 'state') {
                             selectedCountry = 'USA';
                             selectedState = value;
-                            document.getElementById('countryFilter').value = 'USA';
-                            document.getElementById('countryFilter2').value = 'USA';
-                            document.getElementById('stateFilterContainer').classList.remove('hidden');
-                            document.getElementById('stateFilterContainer2').classList.remove('hidden');
+                            const countryFilter = document.getElementById('countryFilter');
+                            const countryFilter2 = document.getElementById('countryFilter2');
+                            if (countryFilter) countryFilter.value = 'USA';
+                            if (countryFilter2) countryFilter2.value = 'USA';
+                            
+                            const stateContainer = document.getElementById('stateFilterContainer');
+                            const stateContainer2 = document.getElementById('stateFilterContainer2');
+                            if (stateContainer) stateContainer.classList.remove('hidden');
+                            if (stateContainer2) stateContainer2.classList.remove('hidden');
+                            
                             populateStateFilter('USA');
-                            document.getElementById('stateFilter').value = value;
-                            document.getElementById('stateFilter2').value = value;
+                            
+                            const stateFilter = document.getElementById('stateFilter');
+                            const stateFilter2 = document.getElementById('stateFilter2');
+                            if (stateFilter) stateFilter.value = value;
+                            if (stateFilter2) stateFilter2.value = value;
                         } else if (type === 'zip') {
                             const state = elem.dataset.state;
                             selectedCountry = 'USA';
                             selectedState = state;
-                            document.getElementById('countryFilter').value = 'USA';
-                            document.getElementById('countryFilter2').value = 'USA';
-                            document.getElementById('stateFilterContainer').classList.remove('hidden');
-                            document.getElementById('stateFilterContainer2').classList.remove('hidden');
+                            const countryFilter = document.getElementById('countryFilter');
+                            const countryFilter2 = document.getElementById('countryFilter2');
+                            if (countryFilter) countryFilter.value = 'USA';
+                            if (countryFilter2) countryFilter2.value = 'USA';
+                            
+                            const stateContainer = document.getElementById('stateFilterContainer');
+                            const stateContainer2 = document.getElementById('stateFilterContainer2');
+                            if (stateContainer) stateContainer.classList.remove('hidden');
+                            if (stateContainer2) stateContainer2.classList.remove('hidden');
+                            
                             populateStateFilter('USA');
-                            document.getElementById('stateFilter').value = state;
-                            document.getElementById('stateFilter2').value = state;
+                            
+                            const stateFilter = document.getElementById('stateFilter');
+                            const stateFilter2 = document.getElementById('stateFilter2');
+                            if (stateFilter) stateFilter.value = state;
+                            if (stateFilter2) stateFilter2.value = state;
                         } else if (type === 'country') {
                             selectedCountry = value;
                             selectedState = '';
-                            document.getElementById('countryFilter').value = value;
-                            document.getElementById('countryFilter2').value = value;
+                            const countryFilter = document.getElementById('countryFilter');
+                            const countryFilter2 = document.getElementById('countryFilter2');
+                            if (countryFilter) countryFilter.value = value;
+                            if (countryFilter2) countryFilter2.value = value;
+                            
                             if (value === 'USA') {
-                                document.getElementById('stateFilterContainer').classList.remove('hidden');
-                                document.getElementById('stateFilterContainer2').classList.remove('hidden');
+                                const stateContainer = document.getElementById('stateFilterContainer');
+                                const stateContainer2 = document.getElementById('stateFilterContainer2');
+                                if (stateContainer) stateContainer.classList.remove('hidden');
+                                if (stateContainer2) stateContainer2.classList.remove('hidden');
                                 populateStateFilter('USA');
                             } else {
-                                document.getElementById('stateFilterContainer').classList.add('hidden');
-                                document.getElementById('stateFilterContainer2').classList.add('hidden');
+                                const stateContainer = document.getElementById('stateFilterContainer');
+                                const stateContainer2 = document.getElementById('stateFilterContainer2');
+                                if (stateContainer) stateContainer.classList.add('hidden');
+                                if (stateContainer2) stateContainer2.classList.add('hidden');
                             }
                         }
 
                         input.value = '';
-                        document.getElementById('locationSearch').value = '';
-                        document.getElementById('locationSearch2').value = '';
+                        const locationSearch = document.getElementById('locationSearch');
+                        const locationSearch2 = document.getElementById('locationSearch2');
+                        if (locationSearch) locationSearch.value = '';
+                        if (locationSearch2) locationSearch2.value = '';
                         resultsDiv.style.display = 'none';
                         updateURL();
                         if (!viewingStarredOnly) {
@@ -1465,8 +1930,22 @@ function setupLocationSearch() {
         });
     });
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 6
+// LISTINGS PAGE JAVASCRIPT - PART 7
 // Map Functions & Geocoding
 // ============================================
 
@@ -1517,9 +1996,10 @@ function initMap() {
             mapMoved = true;
             locationButtonActive = false;
             const locateBtn = document.getElementById('locateBtn');
-            locateBtn.classList.remove('active');
+            if (locateBtn) locateBtn.classList.remove('active');
         }
     });
+    
     setTimeout(() => {
         map.invalidateSize();
         mapReady = true;
@@ -1527,6 +2007,10 @@ function initMap() {
         if (allListingsGeocoded) hideMapLoading();
     }, 500);
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function geocodeAllListings() {
     let geocodedCount = 0;
@@ -1556,6 +2040,10 @@ async function geocodeListing(listing) {
         console.error('Geocoding failed for', listing.business_name, e);
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function updateMapMarkers() {
     if (!map || !markerClusterGroup || !mapReady) return;
@@ -1614,6 +2102,157 @@ function updateMapMarkers() {
     if (bounds.length > 0) map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+function toggleSplitView() {
+    splitViewActive = !splitViewActive;
+    if (splitViewActive) {
+        const normalViewControls = document.getElementById('normalViewControls');
+        const normalViewListings = document.getElementById('normalViewListings');
+        const mapContainer = document.getElementById('mapContainer');
+        const splitContainer = document.getElementById('splitViewContainer');
+        
+        if (normalViewControls) normalViewControls.classList.add('hidden');
+        if (normalViewListings) normalViewListings.classList.add('hidden');
+        if (mapContainer) mapContainer.classList.add('hidden');
+        
+        if (splitContainer) {
+            splitContainer.classList.remove('hidden');
+            splitContainer.className = 'split-view-container';
+            splitContainer.innerHTML = `
+                <div class="split-view-listings">
+                    <div class="mb-4 flex items-center justify-between">
+                        <p class="text-sm text-gray-600">${filteredListings.length} ${filteredListings.length === 1 ? 'listing' : 'listings'} found</p>
+                        <select id="splitSortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                            <option value="default">Default</option>
+                            <option value="az">A-Z</option>
+                            <option value="closest">Closest to Me</option>
+                            <option value="random">Random</option>
+                        </select>
+                    </div>
+                    <div id="splitListingsContainer"></div>
+                </div>
+                <div class="split-view-map"><div id="splitMap"></div></div>
+            `;
+        }
+        
+        const sortSelect = document.getElementById('sortSelect');
+        const splitSortSelect = document.getElementById('splitSortSelect');
+        if (sortSelect && splitSortSelect) {
+            splitSortSelect.value = sortSelect.value;
+            splitSortSelect.addEventListener('change', (e) => {
+                sortSelect.value = e.target.value;
+                displayedListingsCount = 25;
+                if (!viewingStarredOnly) applyFilters();
+                else renderListings();
+            });
+        }
+        
+        renderSplitViewListings();
+        initSplitMap();
+    } else {
+        const splitContainer = document.getElementById('splitViewContainer');
+        const normalViewControls = document.getElementById('normalViewControls');
+        const normalViewListings = document.getElementById('normalViewListings');
+        const mapContainer = document.getElementById('mapContainer');
+        
+        if (splitContainer) {
+            splitContainer.classList.add('hidden');
+            splitContainer.innerHTML = '';
+        }
+        if (normalViewControls) normalViewControls.classList.remove('hidden');
+        if (normalViewListings) normalViewListings.classList.remove('hidden');
+        if (mapContainer) mapContainer.classList.remove('hidden');
+        
+        setTimeout(() => {
+            if (map) {
+                map.invalidateSize();
+                updateMapMarkers();
+            }
+        }, 100);
+    }
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+function renderSplitViewListings() {
+    const container = document.getElementById('splitListingsContainer');
+    if (!container) return;
+    
+    if (filteredListings.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
+        return;
+    }
+    
+    container.className = 'space-y-3';
+    container.innerHTML = filteredListings.map(l => {
+        const fullAddress = getFullAddress(l);
+        const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const listingUrl = `/listing/${categorySlug}/${l.slug}`;
+        const badges = [];
+        
+        const openStatus = isOpenNow(l.hours);
+        if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+        else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+        if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+        if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+        if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+        
+        if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
+        if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+        if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
+        
+        const isStarred = starredListings.includes(l.id);
+        const logoImage = l.logo || '';
+        
+        return `
+            <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
+                <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 8px; right: 8px; width: 32px; height: 32px;">
+                    <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </button>
+                ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
+                <div class="flex-1 min-w-0 overflow-hidden pr-8">
+                    <div class="flex gap-1 mb-1 flex-wrap">
+                        ${badges.join('')}
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900 mb-1 truncate">${l.business_name}</h3>
+                    <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
+                    <div class="text-xs text-gray-600">
+                        <div class="flex items-center gap-1 truncate">
+                            <span>📍</span>
+                            <span class="truncate">${fullAddress}</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        `;
+    }).join('');
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// LISTINGS PAGE JAVASCRIPT - PART 8
+// Split View Functions
+// ============================================
+
 function toggleSplitView() {
     splitViewActive = !splitViewActive;
     if (splitViewActive) {
@@ -1631,11 +2270,28 @@ function toggleSplitView() {
                         <option value="default">Default</option>
                         <option value="az">A-Z</option>
                         <option value="closest">Closest to Me</option>
+                        <option value="random">Random</option>
                     </select>
                 </div>
                 <div id="splitListingsContainer"></div>
             </div>
-            <div class="split-view-map"><div id="splitMap"></div></div>
+            <div class="split-view-map">
+                <div id="splitMap"></div>
+                <div class="map-controls">
+                    <button class="map-control-btn" id="splitViewToggleBtn" onclick="toggleSplitView()" title="Exit split view">
+                        <span>⊞</span>
+                        <span class="desktop-only">Exit Split View</span>
+                    </button>
+                    <button class="map-control-btn" id="splitLocateBtn" title="Find my location">
+                        <img src="https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/7e877be3da64a66caf9a6dfb5fddad8f.png" alt="Location">
+                        <span class="desktop-only">Current Location</span>
+                    </button>
+                    <button class="map-control-btn" id="splitResetMapBtn" title="Reset map view">
+                        <span>🔄</span>
+                        <span class="desktop-only">Reload</span>
+                    </button>
+                </div>
+            </div>
         `;
         document.getElementById('splitSortSelect').value = document.getElementById('sortSelect').value;
         document.getElementById('splitSortSelect').addEventListener('change', (e) => {
@@ -1660,6 +2316,10 @@ function toggleSplitView() {
         }, 100);
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function renderSplitViewListings() {
     const container = document.getElementById('splitListingsContainer');
@@ -1715,6 +2375,10 @@ function renderSplitViewListings() {
     }).join('');
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function initSplitMap() {
     const splitMapDiv = document.getElementById('splitMap');
     if (!splitMapDiv) return;
@@ -1748,6 +2412,11 @@ function initSplitMap() {
         }
     });
     splitMap.addLayer(splitMarkerClusterGroup);
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     if (userLocation) {
         const userIcon = L.divIcon({
             html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
@@ -1809,4 +2478,26 @@ function initSplitMap() {
     });
     if (bounds.length > 0) splitMap.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
     setTimeout(() => splitMap.invalidateSize(), 250);
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
+    // Add event listeners for split map controls
+    document.getElementById('splitLocateBtn')?.addEventListener('click', () => {
+        if (userLocation) {
+            splitMap.setView([userLocation.lat, userLocation.lng], 13);
+        }
+    });
+    
+    document.getElementById('splitResetMapBtn')?.addEventListener('click', () => {
+        splitMap.setView(defaultMapCenter, defaultMapZoom);
+    });
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
