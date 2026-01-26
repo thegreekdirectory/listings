@@ -5,6 +5,100 @@ without written permission from The Greek Directory. Unauthorized use, copying, 
 or distribution of this code can result in legal action to the fullest extent permitted by law.
 -->
 
+<style>
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+header {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.logo-link:hover {
+    opacity: 0.8;
+}
+
+.logo {
+    height: 48px;
+    width: auto;
+}
+
+.header-nav {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.header-nav a {
+    text-decoration: none;
+    color: #1a1a1a;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.header-nav a:hover {
+    color: #055193;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+@media (max-width: 768px) {
+    .header-nav {
+        gap: 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .logo {
+        height: 40px;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    header {
+        background: #2a2a2a;
+        border-bottom-color: #3a3a3a;
+    }
+    
+    .header-nav a {
+        color: #e5e7eb;
+    }
+    
+    .header-nav a:hover {
+        color: #60a5fa;
+    }
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
+</style>
+
 <header>
     <div class="header-content">
         <a href="/" class="logo-link">
