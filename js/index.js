@@ -2,12 +2,12 @@
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
+or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
 
 // ============================================
-// INDEX PAGE JAVASCRIPT
-// Homepage functionality
+// INDEX PAGE JAVASCRIPT - PART 1
+// Homepage functionality with enhanced search
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
@@ -29,6 +29,23 @@ const CATEGORIES = [
     { name: 'Real Estate & Development', icon: '🏢', slug: 'real-estate-development' },
     { name: 'Retail & Shopping', icon: '🛍️', slug: 'retail-shopping' }
 ];
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+const US_STATES = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+};
 
 let indexSupabase = null;
 let allListings = [];
@@ -70,6 +87,10 @@ function setupSearch() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function performSearch() {
     const searchInput = document.getElementById('mainSearch');
     const query = searchInput?.value.trim();
@@ -79,9 +100,90 @@ function performSearch() {
     }
 }
 
+function searchByCategory(categoryName) {
+    const encodedCategory = encodeURIComponent(categoryName);
+    window.location.href = `/listings?category=${encodedCategory}`;
+}
+
+window.handleHeroLocationSearch = function(query) {
+    const resultsDiv = document.getElementById('heroLocationResults');
+    
+    if (!query || query.length < 2) {
+        resultsDiv.classList.add('hidden');
+        return;
+    }
+    
+    const queryLower = query.toLowerCase();
+    const matches = [];
+    const seen = new Set();
+    
+    // Search cities
+    allListings.forEach(listing => {
+        if (listing.city && listing.city.toLowerCase().includes(queryLower)) {
+            const key = `${listing.city}-${listing.state}`;
+            if (!seen.has(key)) {
+                matches.push({
+                    type: 'city',
+                    city: listing.city,
+                    state: listing.state,
+                    display: `${listing.city}, ${listing.state}`
+                });
+                seen.add(key);
+            }
+        }
+    });
+    
+    // Search states
+    Object.entries(US_STATES).forEach(([code, name]) => {
+        if (name.toLowerCase().includes(queryLower) || code.toLowerCase().includes(queryLower)) {
+            if (!seen.has(code)) {
+                matches.push({
+                    type: 'state',
+                    state: code,
+                    display: `${name} (${code})`
+                });
+                seen.add(code);
+            }
+        }
+    });
+    
+    if (matches.length > 0) {
+        resultsDiv.innerHTML = matches.slice(0, 8).map(match => `
+            <div class="px-4 py-3 hover:bg-gray-100 cursor-pointer text-gray-800" 
+                 onclick="selectHeroLocation('${match.type}', '${match.city || ''}', '${match.state}')">
+                ${match.display}
+            </div>
+        `).join('');
+        resultsDiv.classList.remove('hidden');
+    } else {
+        resultsDiv.classList.add('hidden');
+    }
+};
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
+
+window.selectHeroLocation = function(type, city, state) {
+    const resultsDiv = document.getElementById('heroLocationResults');
+    resultsDiv.classList.add('hidden');
+    
+    if (type === 'city') {
+        window.location.href = `/listings?country=USA&state=${state}`;
+    } else if (type === 'state') {
+        window.location.href = `/listings?country=USA&state=${state}`;
+    }
+};
+
+// Close location results when clicking outside
+document.addEventListener('click', (e) => {
+    const resultsDiv = document.getElementById('heroLocationResults');
+    const searchInput = document.getElementById('heroLocationSearch');
+    
+    if (resultsDiv && searchInput && !resultsDiv.contains(e.target) && !searchInput.contains(e.target)) {
+        resultsDiv.classList.add('hidden');
+    }
+});
 
 function renderCategories() {
     const grid = document.getElementById('categoriesGrid');
@@ -89,7 +191,7 @@ function renderCategories() {
     if (!grid) return;
     
     grid.innerHTML = CATEGORIES.map(category => `
-        <a href="/category/${category.slug}" class="category-card">
+        <a href="/listings?category=${encodeURIComponent(category.name)}" class="category-card">
             <div class="category-icon">${category.icon}</div>
             <div class="category-name" data-translate="category.${getCategoryKey(category.name)}">${category.name}</div>
             <div class="category-count" id="count-${category.slug}">Loading...</div>
@@ -98,6 +200,10 @@ function renderCategories() {
     
     updateCategoryCounts();
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function updateCategoryCounts() {
     try {
@@ -149,7 +255,21 @@ async function loadListings() {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// INDEX PAGE JAVASCRIPT - PART 2
+// Rendering Functions
+// ============================================
 
 function renderFeaturedListings() {
     const container = document.getElementById('featuredListings');
@@ -182,6 +302,10 @@ function renderRecentListings() {
     
     container.innerHTML = recent.map(listing => renderListingCard(listing)).join('');
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function renderListingCard(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -229,6 +353,10 @@ function renderListingCard(listing) {
     `;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function getCategoryKey(category) {
     const keyMap = {
         'Automotive & Transportation': 'automotive',
@@ -250,5 +378,11 @@ function getCategoryKey(category) {
 }
 
 window.performSearch = performSearch;
+window.searchByCategory = searchByCategory;
 
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law.
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
