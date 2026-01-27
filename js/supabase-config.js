@@ -1,3 +1,11 @@
+// supabase-config.js
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
 // SUPABASE CLIENT CONFIGURATION - FIXED
 // Complete configuration and utilities
@@ -13,6 +21,10 @@ console.log('Key valid:', SUPABASE_ANON_KEY.split('.').length === 3);
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 console.log('Supabase client initialized:', supabaseClient ? 'Success' : 'Failed');
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function getCurrentUser() {
     try {
@@ -35,6 +47,10 @@ async function getCurrentSession() {
         return null;
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function signUpBusinessOwner(email, password, listingId, confirmationKey, phone = null) {
     try {
@@ -63,6 +79,10 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
         if (ownerRecord.owner_user_id) {
             throw new Error('This listing has already been claimed');
         }
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
         
         const emailUsername = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase();
         const ownerUserId = `${emailUsername}${listingId}`;
@@ -106,6 +126,10 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
 
         console.log('Business owner record updated:', updatedOwner);
 
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+
         return {
             success: true,
             user: authData.user,
@@ -139,6 +163,10 @@ async function signInBusinessOwner(email, password) {
             throw error;
         }
 
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+
         const { data: ownerData, error: ownerError } = await supabaseClient
             .from('business_owners')
             .select('*')
@@ -166,6 +194,10 @@ async function signInBusinessOwner(email, password) {
         };
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function signOut() {
     try {
@@ -196,6 +228,10 @@ async function getBusinessOwnerData() {
         return null;
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function updateBusinessOwnerContact(updates) {
     try {
@@ -247,6 +283,10 @@ async function resetPassword(email) {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 async function updatePassword(newPassword) {
     try {
         const { error } = await supabaseClient.auth.updateUser({
@@ -276,6 +316,10 @@ function onAuthStateChange(callback) {
     });
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 window.TGDAuth = {
     supabaseClient,
     getCurrentUser,
@@ -289,3 +333,10 @@ window.TGDAuth = {
     updatePassword,
     onAuthStateChange
 };
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
