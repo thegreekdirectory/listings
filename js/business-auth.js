@@ -1,5 +1,13 @@
+// js/business-auth.js - PART 1
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
-// BUSINESS PORTAL AUTHENTICATION - FIXED
+// BUSINESS PORTAL AUTHENTICATION - COMPLETE
 // Complete authentication handling
 // ============================================
 
@@ -11,6 +19,10 @@ const COUNTRY_CODES = {
     'Cyprus': '+357',
     'Australia': '+61'
 };
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 let currentUser = null;
 let currentListing = null;
@@ -35,6 +47,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function detectUserCountry() {
     try {
@@ -74,6 +90,10 @@ async function checkAuthState() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 async function handleAuthSuccess(session) {
     currentUser = session.user;
     
@@ -102,6 +122,10 @@ function showDashboard() {
     renderDashboard();
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function showSignInForm() {
     document.getElementById('signInForm').classList.remove('hidden');
     document.getElementById('signUpForm').classList.add('hidden');
@@ -129,6 +153,10 @@ function showError(message) {
     msgDiv.textContent = message;
     msgDiv.classList.remove('hidden');
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function showSuccess(message) {
     const msgDiv = document.getElementById('authMessage');
@@ -161,6 +189,10 @@ async function handleSignIn() {
         showError(result.error);
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function searchListingForSignup() {
     const searchTerm = document.getElementById('signUpListingSearch').value.trim().toLowerCase();
@@ -211,9 +243,13 @@ async function searchListingForSignup() {
         return;
     }
     
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     resultsDiv.innerHTML = matches.map(l => {
         const owner = l.owner && l.owner.length > 0 ? l.owner[0] : null;
-        const isClaimed = owner && owner.owner_user_id;
+        const isClaimed = l.is_claimed === true;
         const hasKey = owner && owner.confirmation_key;
         
         return `
@@ -240,6 +276,10 @@ function selectListing(listingId, businessName, hasConfirmationKey) {
         confirmationKeyContainer.classList.add('hidden');
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 async function handleSignUp() {
     const listingId = document.getElementById('signUpListingId').value;
@@ -300,6 +340,10 @@ async function handleSignUp() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 async function handlePasswordReset() {
     const email = document.getElementById('resetEmail').value.trim();
     
@@ -334,11 +378,12 @@ window.showForgotPassword = showForgotPassword;
 window.searchListingForSignup = searchListingForSignup;
 window.selectListing = selectListing;
 window.logout = logout;
-// ============================================
-// BUSINESS PORTAL AUTHENTICATION - Part 2
-// Phone formatting utilities
-// ============================================
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// Phone formatting utilities
 function formatPhoneNumber(phone, country = 'USA') {
     if (!phone) return '';
     
@@ -368,6 +413,10 @@ function createPhoneInput(value = '', country = 'USA') {
         </div>
     `;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 window.formatPhoneInput = function(input) {
     const country = input.closest('.flex').querySelector('.phone-country-select').value;
@@ -413,3 +462,10 @@ function getPhoneValue(container) {
 window.formatPhoneNumber = formatPhoneNumber;
 window.createPhoneInput = createPhoneInput;
 window.getPhoneValue = getPhoneValue;
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
