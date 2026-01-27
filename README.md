@@ -5,4 +5,8 @@ The Greek Directory™ is a growing digital hub for Greek and Greek-American lif
 
 ---------------------
 
-Copyright © The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. Any information, text, images, logos, trademarks, or other media associated with a business listing are publicly accessible and are provided for informational purposes only. The Greek Directory does not claim ownership of, nor any rights to, such third-party content. All rights remain the property of their respective owners. Listings may be updated, corrected, or removed upon request by the rightful owner. For more information, visit https://thegreekdirectory.org/legal.
+Copyright © The Greek Directory, 2025-present. All rights reserved. The Greek Directory™, the "The Greek Directory" logo™, and the slogan™ are trademarks of The Greek Directory, with registration pending. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code can result in legal action to the fullest extent permitted by law. 
+
+Any information, text, images, logos, trademarks, or other media associated with a business listing are publicly accessible and are provided for informational purposes only. The Greek Directory does not claim ownership of, nor any rights to, such third-party content. All rights remain the property of their respective owners. Listings may be updated, corrected, or removed upon request by the rightful owner. 
+
+For more information, visit https://thegreekdirectory.org/legal.
