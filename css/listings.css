@@ -1,3 +1,10 @@
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
+
 /* ============================================
    LISTINGS PAGE - COMPLETE CSS
    ============================================ */
@@ -23,6 +30,10 @@ body {
     color: var(--text-dark);
     background: white;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Header Styles */
 header {
@@ -60,6 +71,10 @@ header {
     overflow: hidden;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Map Styles */
 #map {
     width: 100%;
@@ -94,6 +109,10 @@ header {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Badge Styles */
 .badge {
@@ -140,9 +159,13 @@ header {
 }
 
 .badge-claimed {
-    background: #6B7280;
+    background: #10b981;
     color: white;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Image Protection */
 img {
@@ -166,6 +189,10 @@ img {
     position: relative;
     z-index: 50;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Custom Marker Styles */
 .custom-marker {
@@ -201,6 +228,10 @@ img {
     user-select: none;
     -webkit-user-drag: none;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Marker Cluster Styles */
 .marker-cluster {
@@ -238,6 +269,10 @@ img {
     height: 60px;
     font-size: 18px;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Map Controls */
 .map-controls {
@@ -281,6 +316,10 @@ img {
     color: white;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Radius Value */
 .radius-value {
     font-size: 14px;
@@ -316,6 +355,10 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
     border: none;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Map Popup */
 .map-popup {
@@ -385,6 +428,10 @@ input[type="range"]::-moz-range-thumb {
     line-height: 1.6;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Leaflet Popup Close Button */
 .leaflet-popup-close-button {
     width: 30px !important;
@@ -431,6 +478,10 @@ input[type="range"]::-moz-range-thumb {
     color: white;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Star Button */
 .star-button {
     position: absolute;
@@ -470,6 +521,10 @@ input[type="range"]::-moz-range-thumb {
 .star-button.starred .star-icon {
     fill: #78350f;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Split View */
 .split-view-container {
@@ -525,6 +580,10 @@ input[type="range"]::-moz-range-thumb {
     color: white;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Desktop Layout */
 @media (min-width: 1024px) {
     .desktop-layout.with-left-filters {
@@ -562,6 +621,10 @@ input[type="range"]::-moz-range-thumb {
         grid-template-columns: repeat(3, 1fr) !important;
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
@@ -615,6 +678,10 @@ input[type="range"]::-moz-range-thumb {
     color: white;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Load More Button */
 .load-more-btn {
     display: block;
@@ -643,6 +710,10 @@ input[type="range"]::-moz-range-thumb {
     cursor: not-allowed;
     transform: none;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
@@ -770,3 +841,10 @@ input[type="range"]::-moz-range-thumb {
         filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
