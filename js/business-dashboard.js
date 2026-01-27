@@ -1,5 +1,13 @@
+// js/business-dashboard.js - COMPLETE
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
-// BUSINESS DASHBOARD FUNCTIONALITY - PART 1
+// BUSINESS DASHBOARD FUNCTIONALITY - COMPLETE
 // Configuration & State Management
 // ============================================
 
@@ -19,6 +27,10 @@ const SUBCATEGORIES = {
     'Real Estate & Development': ['Appraiser', 'Broker', 'Developer', 'Lender', 'Property Management', 'Real Estate Agent'],
     'Retail & Shopping': ['Boutique Shop', 'ECommerce', 'Jewelry', 'Souvenir Shop']
 };
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 let uploadedImages = { logo: null, photos: [] };
 let photosSortable = null;
@@ -52,6 +64,10 @@ async function loadListingData() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function renderDashboard() {
     if (!currentListing) return;
     
@@ -64,7 +80,7 @@ function renderDashboard() {
     tierBadge.className = `tier-badge tier-${tier}`;
     
     const categorySlug = currentListing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${currentListing.slug}`;
+    const listingUrl = `https://listings.thegreekdirectory.org/listing/${categorySlug}/${currentListing.slug}`;
     
     const viewBtn = document.getElementById('viewLiveBtn');
     if (viewBtn) {
@@ -87,12 +103,9 @@ function switchTab(tab) {
     document.getElementById(`tab-${tab}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600';
 }
 
-window.switchTab = switchTab;
-window.loadListingData = loadListingData;
-// ============================================
-// BUSINESS DASHBOARD FUNCTIONALITY - PART 2
-// Overview & Preview Rendering
-// ============================================
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function renderOverview() {
     if (!currentListing) return;
@@ -134,7 +147,7 @@ function renderOverview() {
     };
     
     const categorySlug = currentListing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${currentListing.slug}`;
+    const listingUrl = `https://listings.thegreekdirectory.org/listing/${categorySlug}/${currentListing.slug}`;
     
     const content = document.getElementById('content-overview');
     content.innerHTML = `
@@ -187,10 +200,10 @@ function renderOverview() {
         </div>
     `;
 }
-// ============================================
-// BUSINESS DASHBOARD FUNCTIONALITY - PART 3
-// Edit Form Rendering
-// ============================================
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function renderEditForm() {
     if (!currentListing) return;
@@ -288,12 +301,26 @@ function renderEditForm() {
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Hours of Operation</h3>
                     <div class="grid grid-cols-1 gap-3">
-                        ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => `
-                            <div class="flex gap-2">
+                        ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                            const dayLower = day.toLowerCase();
+                            const hours = currentListing.hours && currentListing.hours[dayLower] ? currentListing.hours[dayLower] : '';
+                            const isClosed = hours.toLowerCase() === 'closed';
+                            const is24Hours = hours.toLowerCase().includes('24') || hours.toLowerCase().includes('open 24');
+                            
+                            return `
+                            <div class="flex gap-2 items-center">
                                 <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
-                                <input type="text" id="editHours${day}" value="${currentListing.hours && currentListing.hours[day.toLowerCase()] ? currentListing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
+                                <input type="text" id="editHours${day}" value="${hours}" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" placeholder="9:00 AM - 5:00 PM" ${isClosed || is24Hours ? 'disabled' : ''}>
+                                <label class="flex items-center gap-1">
+                                    <input type="checkbox" id="editClosed${day}" ${isClosed ? 'checked' : ''} onchange="toggleDayClosed('${day}')">
+                                    <span class="text-sm">Closed</span>
+                                </label>
+                                <label class="flex items-center gap-1">
+                                    <input type="checkbox" id="edit24Hours${day}" ${is24Hours ? 'checked' : ''} onchange="toggle24Hours('${day}')">
+                                    <span class="text-sm">24 Hours</span>
+                                </label>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
                 </div>
 
@@ -324,6 +351,30 @@ function renderEditForm() {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn</label>
                             <input type="url" id="editLinkedin" value="${currentListing.social_media?.linkedin || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 1 Name</label>
+                            <input type="text" id="editOtherSocial1Name" value="${currentListing.social_media?.other1_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Pinterest">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 1 URL</label>
+                            <input type="url" id="editOtherSocial1" value="${currentListing.social_media?.other1 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 2 Name</label>
+                            <input type="text" id="editOtherSocial2Name" value="${currentListing.social_media?.other2_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Discord">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 2 URL</label>
+                            <input type="url" id="editOtherSocial2" value="${currentListing.social_media?.other2 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 3 Name</label>
+                            <input type="text" id="editOtherSocial3Name" value="${currentListing.social_media?.other3_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Reddit">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 3 URL</label>
+                            <input type="url" id="editOtherSocial3" value="${currentListing.social_media?.other3 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
                         </div>
                     </div>
                 </div>
@@ -357,6 +408,30 @@ function renderEditForm() {
                                 placeholder="Full TripAdvisor URL">
                             ${currentListing.reviews?.tripadvisor ? '<p class="info-notice">Contact Support to change</p>' : ''}
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 1 Name</label>
+                            <input type="text" id="editOtherReview1Name" value="${currentListing.reviews?.other1_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. BBB">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 1 URL</label>
+                            <input type="url" id="editOtherReview1" value="${currentListing.reviews?.other1 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 2 Name</label>
+                            <input type="text" id="editOtherReview2Name" value="${currentListing.reviews?.other2_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Angi">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 2 URL</label>
+                            <input type="url" id="editOtherReview2" value="${currentListing.reviews?.other2 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 3 Name</label>
+                            <input type="text" id="editOtherReview3Name" value="${currentListing.reviews?.other3_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. OpenTable">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 3 URL</label>
+                            <input type="url" id="editOtherReview3" value="${currentListing.reviews?.other3 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -370,6 +445,10 @@ function renderEditForm() {
     
     renderSubcategories();
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function renderSubcategories() {
     const category = currentListing.category;
@@ -419,6 +498,10 @@ window.toggleSubcategory = function(subcategory) {
     renderSubcategories();
 };
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 window.setPrimarySubcategory = function(subcategory) {
     primarySubcategory = subcategory;
     renderSubcategories();
@@ -447,10 +530,44 @@ window.updateCharCounter = function(field) {
         }
     }
 };
-// ============================================
-// BUSINESS DASHBOARD FUNCTIONALITY - PART 4
-// Save Changes & Analytics
-// ============================================
+
+window.toggleDayClosed = function(day) {
+    const input = document.getElementById(`editHours${day}`);
+    const closedCheckbox = document.getElementById(`editClosed${day}`);
+    const hours24Checkbox = document.getElementById(`edit24Hours${day}`);
+    
+    if (closedCheckbox.checked) {
+        input.value = 'Closed';
+        input.disabled = true;
+        hours24Checkbox.checked = false;
+    } else {
+        if (input.value.toLowerCase() === 'closed') {
+            input.value = '';
+        }
+        input.disabled = false;
+    }
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+window.toggle24Hours = function(day) {
+    const input = document.getElementById(`editHours${day}`);
+    const closedCheckbox = document.getElementById(`editClosed${day}`);
+    const hours24Checkbox = document.getElementById(`edit24Hours${day}`);
+    
+    if (hours24Checkbox.checked) {
+        input.value = 'Open 24 Hours';
+        input.disabled = true;
+        closedCheckbox.checked = false;
+    } else {
+        if (input.value.toLowerCase().includes('24') || input.value.toLowerCase().includes('open 24')) {
+            input.value = '';
+        }
+        input.disabled = false;
+    }
+};
 
 async function saveChanges() {
     const tagline = document.getElementById('editTagline').value.trim();
@@ -493,6 +610,10 @@ async function saveChanges() {
     
     if (!confirm(confirmMessage)) return;
     
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
     try {
         const updates = {
             tagline: tagline,
@@ -521,13 +642,25 @@ async function saveChanges() {
                 twitter: document.getElementById('editTwitter').value.trim() || null,
                 youtube: document.getElementById('editYoutube').value.trim() || null,
                 tiktok: document.getElementById('editTiktok').value.trim() || null,
-                linkedin: document.getElementById('editLinkedin').value.trim() || null
+                linkedin: document.getElementById('editLinkedin').value.trim() || null,
+                other1_name: document.getElementById('editOtherSocial1Name').value.trim() || null,
+                other1: document.getElementById('editOtherSocial1').value.trim() || null,
+                other2_name: document.getElementById('editOtherSocial2Name').value.trim() || null,
+                other2: document.getElementById('editOtherSocial2').value.trim() || null,
+                other3_name: document.getElementById('editOtherSocial3Name').value.trim() || null,
+                other3: document.getElementById('editOtherSocial3').value.trim() || null
             },
             reviews: {
                 ...currentListing.reviews,
                 google: currentListing.reviews?.google || document.getElementById('editGoogleReviews').value.trim() || null,
                 yelp: currentListing.reviews?.yelp || document.getElementById('editYelp').value.trim() || null,
-                tripadvisor: currentListing.reviews?.tripadvisor || document.getElementById('editTripadvisor').value.trim() || null
+                tripadvisor: currentListing.reviews?.tripadvisor || document.getElementById('editTripadvisor').value.trim() || null,
+                other1_name: document.getElementById('editOtherReview1Name').value.trim() || null,
+                other1: document.getElementById('editOtherReview1').value.trim() || null,
+                other2_name: document.getElementById('editOtherReview2Name').value.trim() || null,
+                other2: document.getElementById('editOtherReview2').value.trim() || null,
+                other3_name: document.getElementById('editOtherReview3Name').value.trim() || null,
+                other3: document.getElementById('editOtherReview3').value.trim() || null
             }
         };
         
@@ -551,6 +684,10 @@ async function saveChanges() {
         alert('❌ Failed to save changes: ' + error.message);
     }
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 function renderAnalytics() {
     if (!currentListing) return;
@@ -656,6 +793,10 @@ function renderAnalytics() {
     content.innerHTML = html;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function renderSettings() {
     if (!ownerData || ownerData.length === 0) return;
     
@@ -728,6 +869,10 @@ function renderSettings() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 window.toggleSettingsFieldVisibility = function(field) {
     settingsVisibility[field] = !settingsVisibility[field];
     const button = document.querySelector(`.visibility-toggle[onclick*="${field}"]`);
@@ -770,6 +915,10 @@ async function updatePassword() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 async function saveSettings() {
     if (!ownerData || ownerData.length === 0) return;
     
@@ -798,3 +947,12 @@ async function saveSettings() {
 window.saveSettings = saveSettings;
 window.updatePassword = updatePassword;
 window.saveChanges = saveChanges;
+window.switchTab = switchTab;
+window.loadListingData = loadListingData;
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
