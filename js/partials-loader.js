@@ -1,3 +1,11 @@
+// partials-loader.js
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // ============================================
 // PARTIALS LOADER
 // Load header and footer partials
@@ -13,6 +21,10 @@ async function loadPartials() {
                 headerElement.innerHTML = await headerResponse.text();
             }
         }
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
         
         // Load footer
         const footerElement = document.querySelector('[data-partial="footer"]');
@@ -32,9 +44,20 @@ async function loadPartials() {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 // Load partials when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', loadPartials);
 } else {
     loadPartials();
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
