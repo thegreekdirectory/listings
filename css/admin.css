@@ -1,3 +1,10 @@
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
+
 /* ============================================
    ADMIN PORTAL - COMPLETE CSS
    Styling for admin dashboard
@@ -14,6 +21,10 @@
     --border-color: #e5e7eb;
     --bg-light: #f9fafb;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 * {
     margin: 0;
@@ -44,6 +55,10 @@ body {
     width: 100%;
     overflow: hidden;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 .auth-header {
     background: var(--primary-blue);
@@ -81,6 +96,10 @@ body {
     font-size: 0.875rem;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 .tgd-input {
     width: 100%;
     padding: 0.875rem 1rem;
@@ -114,6 +133,10 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(5, 81, 147, 0.3);
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 table {
     width: 100%;
@@ -150,6 +173,10 @@ tbody tr:hover {
     font-weight: 600;
     text-transform: uppercase;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 .tier-badge {
     padding: 0.375rem 0.875rem;
@@ -190,6 +217,10 @@ tbody tr:hover {
     overflow-y: auto;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 .modal-content {
     background: white;
     border-radius: 12px;
@@ -220,6 +251,10 @@ select:disabled {
     opacity: 0.6;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 #editFormContent h3 {
     color: var(--text-dark);
     font-size: 1.125rem;
@@ -247,6 +282,10 @@ select:disabled {
     border-color: var(--primary-blue);
     background: #eff6ff;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 #subcategoryCheckboxes input[type="checkbox"] {
     width: 18px;
@@ -291,6 +330,10 @@ button:hover {
     }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 .loading {
     display: inline-block;
     width: 20px;
@@ -329,3 +372,10 @@ button:hover {
     margin-top: 0.25rem;
     font-style: italic;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
