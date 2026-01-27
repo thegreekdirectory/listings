@@ -1,3 +1,10 @@
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
+
 /* ============================================
    BUSINESS PORTAL - COMPLETE CSS
    Styling for business owner dashboard
@@ -15,6 +22,10 @@
     --border-color: #e5e7eb;
     --bg-light: #f9fafb;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 * {
     margin: 0;
@@ -45,6 +56,10 @@ body {
     width: 100%;
     overflow: hidden;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 .auth-header {
     background: var(--primary-blue);
@@ -83,6 +98,10 @@ body {
     font-size: 0.875rem;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 .error-message {
     background: #fee2e2;
     border: 1px solid #fca5a5;
@@ -109,6 +128,10 @@ body {
     margin-top: 0.25rem;
     font-style: italic;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 .tgd-input {
     width: 100%;
@@ -150,6 +173,10 @@ body {
     box-shadow: 0 4px 12px rgba(5, 81, 147, 0.3);
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 .tgd-button-secondary {
     width: 100%;
     padding: 0.875rem 1.5rem;
@@ -183,6 +210,10 @@ body {
 #listingSearchResults > div:hover {
     background: var(--bg-light);
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 .id-badge {
     display: inline-block;
@@ -223,6 +254,10 @@ body {
     color: #6b21a8;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 button[id^="tab-"] {
     transition: all 0.2s;
     whitespace: nowrap;
@@ -254,6 +289,10 @@ button[id^="tab-"] {
     padding: 0.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 .disabled-field {
     position: relative;
@@ -294,6 +333,10 @@ button[id^="tab-"] {
     background: #eff6ff;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 .subcategory-checkbox input[type="checkbox"] {
     width: 18px;
     height: 18px;
@@ -327,6 +370,10 @@ button[id^="tab-"] {
     margin-bottom: 0.5rem;
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 .owner-field {
     display: flex;
     flex-direction: column;
@@ -358,6 +405,10 @@ button[id^="tab-"] {
     transform: scale(1.05);
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 @media (max-width: 768px) {
     .auth-container {
         padding: 1rem;
@@ -386,6 +437,10 @@ button[id^="tab-"] {
     to { transform: rotate(360deg); }
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -403,3 +458,10 @@ button[id^="tab-"] {
 ::-webkit-scrollbar-thumb:hover {
     background: #a0aec0;
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
