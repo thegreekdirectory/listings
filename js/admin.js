@@ -119,62 +119,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-async function detectUserCountry() {
-    try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        if (data.country_code === 'US') {
-            userCountry = 'USA';
-        } else if (data.country_code === 'GR') {
-            userCountry = 'Greece';
-        } else if (data.country_code === 'CA') {
-            userCountry = 'Canada';
-        } else if (data.country_code === 'GB') {
-            userCountry = 'UK';
-        } else if (data.country_code === 'CY') {
-            userCountry = 'Cyprus';
-        } else if (data.country_code === 'AU') {
-            userCountry = 'Australia';
-        }
-    } catch (error) {
-        console.log('Could not detect country, defaulting to USA');
-        userCountry = 'USA';
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function setupEventListeners() {
-    const loginBtn = document.getElementById('loginBtn');
-    if (loginBtn) {
-        loginBtn.addEventListener('click', handleAdminLogin);
-    }
-    
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
-    document.getElementById('newListingBtn')?.addEventListener('click', newListing);
-    document.getElementById('refreshBtn')?.addEventListener('click', loadListings);
-    document.getElementById('adminSearch')?.addEventListener('input', renderTable);
-    document.getElementById('saveEdit')?.addEventListener('click', saveListing);
-    document.getElementById('generateAllBtn')?.addEventListener('click', generateAllListingPages);
-    document.getElementById('csvUpload')?.addEventListener('change', handleCSVUpload);
-    document.getElementById('cancelEdit')?.addEventListener('click', () => {
-        if (confirm('Discard changes?')) {
-            document.getElementById('editModal').classList.add('hidden');
-        }
-    });
-    document.getElementById('closeModal')?.addEventListener('click', () => {
-        if (confirm('Discard changes?')) {
-            document.getElementById('editModal').classList.add('hidden');
-        }
-    });
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
 or distribution of this code will result in legal action to the fullest extent permitted by law.
@@ -183,7 +127,7 @@ or distribution of this code will result in legal action to the fullest extent p
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
+or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
 
 // ============================================
@@ -352,13 +296,13 @@ window.logout = logout;
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
+or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
+or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
 
 // ============================================
@@ -418,7 +362,7 @@ function renderTable() {
         };
         
         const ownerInfo = l.owner && l.owner.length > 0 ? l.owner[0] : null;
-        const isClaimed = ownerInfo && ownerInfo.owner_user_id;
+        const isClaimed = ownerInfo && ownerInfo.is_claimed;
         
         let badges = '';
         if (tier === 'PREMIUM') {
@@ -508,8 +452,9 @@ window.loadListings = loadListings;
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
+or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
+// admin.js - Part 4
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -527,6 +472,10 @@ window.viewAnalytics = async function(listingId) {
     if (!listing) return;
     
     try {
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
         // Fetch analytics data from Supabase
         const { data: analyticsData, error } = await adminSupabase
             .from('listing_analytics')
@@ -779,6 +728,7 @@ This source code is proprietary and no part may not be used, reproduced, or dist
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
 or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
+// admin.js - Part 5
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -844,7 +794,8 @@ window.newListing = async function() {
             tier: 'FREE',
             verified: false,
             visible: true,
-            is_chain: false
+            is_chain: false,
+            is_claimed: false
         };
         
         selectedSubcategories = [];
@@ -941,6 +892,15 @@ function fillEditForm(listing) {
                 </div>
             </div>
 
+            <!-- Claimed Status -->
+            <div>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" id="editIsClaimed" ${listing?.is_claimed ? 'checked' : ''}>
+                    <span class="text-sm font-medium">Business is claimed</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1">If claimed, no confirmation key will be generated</p>
+            </div>
+
             <!-- Location -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Location</h3>
@@ -1009,136 +969,198 @@ This source code is proprietary and no part may not be used, reproduced, or dist
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
 or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// ADMIN PORTAL - PART 6
-// Edit Form Continuation (Hours, Social, Reviews, Owner, Media)
-// ============================================
+// admin.js Part 6 - Edit Form Continuation (Hours, Social, Reviews, Owner, Media)
 
 function fillEditFormContinuation(listing, owner) {
     const formContent = document.getElementById('editFormContent');
     formContent.innerHTML += `
             <!-- Hours -->
             <div>
-                <h3 class="text-lg font-bold mb-4">Hours of Operation</h3>
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Hours of Operation</h3>
                 <div class="grid grid-cols-1 gap-3">
                     ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => `
                         <div class="flex gap-2">
                             <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
-                            <input type="text" id="editHours${day}" value="${listing?.hours && listing.hours[day.toLowerCase()] ? listing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
+                            <input type="text" id="editHours${day}" value="${listing?.hours && listing.hours[day.toLowerCase()] ? listing.hours[day.toLowerCase()] : ''}" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" placeholder="9:00 AM - 5:00 PM or Closed">
                         </div>
                     `).join('')}
                 </div>
             </div>
 
+            <!--
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            This source code is proprietary and no part may not be used, reproduced, or distributed 
+            without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+            or distribution of this code will result in legal action to the fullest extent permitted by law.
+            -->
+
             <!-- Social Media -->
             <div>
-                <h3 class="text-lg font-bold mb-4">Social Media Links</h3>
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Social Media Links</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Facebook</label>
-                        <input type="text" id="editFacebook" value="${listing?.social_media?.facebook || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Facebook</label>
+                        <input type="text" id="editFacebook" value="${listing?.social_media?.facebook || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Instagram</label>
-                        <input type="text" id="editInstagram" value="${listing?.social_media?.instagram || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Instagram</label>
+                        <input type="text" id="editInstagram" value="${listing?.social_media?.instagram || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Twitter/X</label>
-                        <input type="text" id="editTwitter" value="${listing?.social_media?.twitter || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Twitter/X</label>
+                        <input type="text" id="editTwitter" value="${listing?.social_media?.twitter || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">YouTube</label>
-                        <input type="text" id="editYoutube" value="${listing?.social_media?.youtube || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="channel">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">YouTube</label>
+                        <input type="text" id="editYoutube" value="${listing?.social_media?.youtube || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="channel">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">TikTok</label>
-                        <input type="text" id="editTiktok" value="${listing?.social_media?.tiktok || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="username">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">TikTok</label>
+                        <input type="text" id="editTiktok" value="${listing?.social_media?.tiktok || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">LinkedIn</label>
-                        <input type="url" id="editLinkedin" value="${listing?.social_media?.linkedin || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full URL">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn</label>
+                        <input type="url" id="editLinkedin" value="${listing?.social_media?.linkedin || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 1</label>
+                        <input type="url" id="editSocialOther1" value="${listing?.social_media?.other1 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 2</label>
+                        <input type="url" id="editSocialOther2" value="${listing?.social_media?.other2 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 3</label>
+                        <input type="url" id="editSocialOther3" value="${listing?.social_media?.other3 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
                     </div>
                 </div>
             </div>
+
+            <!--
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            This source code is proprietary and no part may not be used, reproduced, or distributed 
+            without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+            or distribution of this code will result in legal action to the fullest extent permitted by law.
+            -->
 
             <!-- Reviews -->
             <div>
-                <h3 class="text-lg font-bold mb-4">Review Sites</h3>
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Review Sites</h3>
+                <p class="text-sm text-gray-600 mb-4">Add review links if not present (locked fields require Support)</p>
                 <div class="grid grid-cols-1 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Google Reviews</label>
-                        <input type="url" id="editGoogleReviews" value="${listing?.reviews?.google || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Google Reviews URL">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Google Reviews</label>
+                        <input type="url" id="editGoogleReviews" value="${listing?.reviews?.google || ''}" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
+                            ${listing?.reviews?.google ? 'disabled' : ''} 
+                            placeholder="Full Google Reviews URL">
+                        ${listing?.reviews?.google ? '<p class="info-notice">Contact Support to change</p>' : ''}
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Yelp</label>
-                        <input type="url" id="editYelp" value="${listing?.reviews?.yelp || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full Yelp URL">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Yelp</label>
+                        <input type="url" id="editYelp" value="${listing?.reviews?.yelp || ''}" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
+                            ${listing?.reviews?.yelp ? 'disabled' : ''} 
+                            placeholder="Full Yelp URL">
+                        ${listing?.reviews?.yelp ? '<p class="info-notice">Contact Support to change</p>' : ''}
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">TripAdvisor</label>
-                        <input type="url" id="editTripadvisor" value="${listing?.reviews?.tripadvisor || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Full TripAdvisor URL">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">TripAdvisor</label>
+                        <input type="url" id="editTripadvisor" value="${listing?.reviews?.tripadvisor || ''}" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
+                            ${listing?.reviews?.tripadvisor ? 'disabled' : ''} 
+                            placeholder="Full TripAdvisor URL">
+                        ${listing?.reviews?.tripadvisor ? '<p class="info-notice">Contact Support to change</p>' : ''}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Other Review Site 1</label>
+                        <input type="url" id="editReviewOther1" value="${listing?.reviews?.other1 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Other Review Site 2</label>
+                        <input type="url" id="editReviewOther2" value="${listing?.reviews?.other2 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Other Review Site 3</label>
+                        <input type="url" id="editReviewOther3" value="${listing?.reviews?.other3 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
                     </div>
                 </div>
             </div>
+
+            <!--
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            This source code is proprietary and no part may not be used, reproduced, or distributed 
+            without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+            or distribution of this code will result in legal action to the fullest extent permitted by law.
+            -->
 
             <!-- Owner Info -->
             <div>
-                <h3 class="text-lg font-bold mb-4">Owner Information</h3>
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Owner Information</h3>
                 ${owner?.owner_user_id ? '<p class="text-sm text-green-600 mb-4">✓ This listing is claimed</p>' : '<p class="text-sm text-gray-600 mb-4">This listing is not claimed</p>'}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Owner Name</label>
-                        <input type="text" id="editOwnerName" value="${owner?.full_name || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Owner Name</label>
+                        <input type="text" id="editOwnerName" value="${owner?.full_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Title</label>
-                        <input type="text" id="editOwnerTitle" value="${owner?.title || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                        <input type="text" id="editOwnerTitle" value="${owner?.title || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">From Greece</label>
-                        <input type="text" id="editOwnerGreece" value="${owner?.from_greece || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g. Athens">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">From Greece</label>
+                        <input type="text" id="editOwnerGreece" value="${owner?.from_greece || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Athens">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Owner Email</label>
-                        <input type="email" id="editOwnerEmail" value="${owner?.owner_email || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email</label>
+                        <input type="email" id="editOwnerEmail" value="${owner?.owner_email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Owner Phone</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Owner Phone</label>
                         <div id="editOwnerPhoneContainer"></div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Confirmation Key</label>
-                        <input type="text" id="editConfirmationKey" value="${owner?.confirmation_key || ''}" class="w-full px-4 py-2 border rounded-lg" ${owner?.owner_user_id ? 'disabled title="Cannot change - listing is claimed"' : ''} placeholder="${owner?.owner_user_id ? 'Listing is claimed' : 'Auto-generated if empty'}">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Confirmation Key</label>
+                        <input type="text" id="editConfirmationKey" value="${owner?.confirmation_key || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" ${owner?.owner_user_id ? 'disabled title="Cannot change - listing is claimed"' : ''} placeholder="${owner?.owner_user_id ? 'Listing is claimed' : 'Auto-generated if empty'}">
                     </div>
                 </div>
             </div>
 
+            <!--
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            This source code is proprietary and no part may not be used, reproduced, or distributed 
+            without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+            or distribution of this code will result in legal action to the fullest extent permitted by law.
+            -->
+
             <!-- Media -->
             <div>
-                <h3 class="text-lg font-bold mb-4">Media</h3>
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Media</h3>
                 <div class="grid grid-cols-1 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Logo URL</label>
-                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
+                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
-                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Photos (one per line)</label>
+                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Video URL (YouTube/Vimeo embed)</label>
-                        <input type="url" id="editVideo" value="${listing?.video || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="https://www.youtube.com/embed/...">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Video URL (YouTube/Vimeo embed)</label>
+                        <input type="url" id="editVideo" value="${listing?.video || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://www.youtube.com/embed/...">
                     </div>
                 </div>
             </div>
         </div>
     `;
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    This source code is proprietary and no part may not be used, reproduced, or distributed 
+    without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+    or distribution of this code will result in legal action to the fullest extent permitted by law.
+    */
     
     const ownerPhoneContainer = document.getElementById('editOwnerPhoneContainer');
     if (ownerPhoneContainer) {
@@ -1150,144 +1172,11 @@ function fillEditFormContinuation(listing, owner) {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-window.checkSlugAvailability = async function() {
-    const slug = document.getElementById('editSlug').value.trim();
-    const statusEl = document.getElementById('slugStatus');
-    
-    if (!slug) {
-        statusEl.textContent = 'Enter a slug to check';
-        statusEl.className = 'text-xs text-gray-500 mt-1';
-        return;
-    }
-    
-    try {
-        const { data, error } = await adminSupabase
-            .from('listings')
-            .select('id')
-            .eq('slug', slug)
-            .maybeSingle();
-        
-        if (error) throw error;
-        
-        if (data && data.id !== editingListing?.id) {
-            statusEl.textContent = '❌ Slug already in use';
-            statusEl.className = 'text-xs text-red-600 mt-1';
-        } else {
-            statusEl.textContent = '✅ Slug available';
-            statusEl.className = 'text-xs text-green-600 mt-1';
-        }
-    } catch (error) {
-        statusEl.textContent = 'Error checking slug';
-        statusEl.className = 'text-xs text-red-600 mt-1';
-    }
-};
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function updateCharCounters() {
-    const tagline = document.getElementById('editTagline')?.value || '';
-    const desc = document.getElementById('editDescription')?.value || '';
-    
-    const taglineCount = document.getElementById('taglineCount');
-    const descCount = document.getElementById('descCount');
-    
-    if (taglineCount) taglineCount.textContent = tagline.length;
-    if (descCount) descCount.textContent = desc.length;
-}
-
-window.updateSubcategoriesForCategory = function() {
-    const category = document.getElementById('editCategory')?.value;
-    const container = document.getElementById('subcategoriesContainer');
-    const checkboxDiv = document.getElementById('subcategoryCheckboxes');
-    
-    if (!category || !SUBCATEGORIES[category] || SUBCATEGORIES[category].length === 0) {
-        container.classList.add('hidden');
-        return;
-    }
-    
-    container.classList.remove('hidden');
-    checkboxDiv.innerHTML = '';
-    
-    SUBCATEGORIES[category].forEach(sub => {
-        const isSelected = selectedSubcategories.includes(sub);
-        const isPrimary = sub === primarySubcategory;
-        
-        const div = document.createElement('div');
-        div.className = 'flex items-center gap-2 p-2 border rounded';
-        div.innerHTML = `
-            <input type="checkbox" id="subcat-${sub.replace(/\s+/g, '-')}" 
-                ${isSelected ? 'checked' : ''} 
-                onchange="toggleSubcategory('${sub.replace(/'/g, "\\'")}')">
-            <label for="subcat-${sub.replace(/\s+/g, '-')}" class="flex-1 text-sm">${sub}</label>
-            <input type="radio" name="primarySub" 
-                ${isPrimary ? 'checked' : ''} 
-                ${!isSelected ? 'disabled' : ''}
-                onchange="setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')"
-                title="Primary">
-        `;
-        checkboxDiv.appendChild(div);
-    });
-};
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-window.toggleSubcategory = function(subcategory) {
-    const index = selectedSubcategories.indexOf(subcategory);
-    
-    if (index > -1) {
-        selectedSubcategories.splice(index, 1);
-        if (primarySubcategory === subcategory) {
-            primarySubcategory = selectedSubcategories.length > 0 ? selectedSubcategories[0] : null;
-        }
-    } else {
-        selectedSubcategories.push(subcategory);
-        if (!primarySubcategory) {
-            primarySubcategory = subcategory;
-        }
-    }
-    
-    updateSubcategoriesForCategory();
-};
-
-window.setPrimarySubcategory = function(subcategory) {
-    primarySubcategory = subcategory;
-    updateSubcategoriesForCategory();
-};
-
-window.toggleChainFields = function() {
-    const isChain = document.getElementById('editIsChain')?.checked;
-    const container = document.getElementById('chainFieldsContainer');
-    
-    if (isChain) {
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
-    }
-};
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
 or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// ADMIN PORTAL - PART 7
-// Geocoding & Save Listing Functions
-// ============================================
+// admin.js Part 7 - Geocoding & Save Listing Functions
 
 async function geocodeAddress(address, city, state, zipCode) {
     try {
@@ -1320,6 +1209,9 @@ async function geocodeAddress(address, city, state, zipCode) {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
 async function saveListing() {
@@ -1375,6 +1267,9 @@ async function saveListing() {
         
         /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        This source code is proprietary and no part may not be used, reproduced, or distributed 
+        without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+        or distribution of this code will result in legal action to the fullest extent permitted by law.
         */
         
         // AUTO-GEOCODING
@@ -1430,17 +1325,26 @@ async function saveListing() {
                 twitter: document.getElementById('editTwitter').value.trim() || null,
                 youtube: document.getElementById('editYoutube').value.trim() || null,
                 tiktok: document.getElementById('editTiktok').value.trim() || null,
-                linkedin: document.getElementById('editLinkedin').value.trim() || null
+                linkedin: document.getElementById('editLinkedin').value.trim() || null,
+                other1: document.getElementById('editSocialOther1').value.trim() || null,
+                other2: document.getElementById('editSocialOther2').value.trim() || null,
+                other3: document.getElementById('editSocialOther3').value.trim() || null
             },
             reviews: {
                 google: document.getElementById('editGoogleReviews').value.trim() || null,
                 yelp: document.getElementById('editYelp').value.trim() || null,
-                tripadvisor: document.getElementById('editTripadvisor').value.trim() || null
+                tripadvisor: document.getElementById('editTripadvisor').value.trim() || null,
+                other1: document.getElementById('editReviewOther1').value.trim() || null,
+                other2: document.getElementById('editReviewOther2').value.trim() || null,
+                other3: document.getElementById('editReviewOther3').value.trim() || null
             }
         };
         
         /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        This source code is proprietary and no part may not be used, reproduced, or distributed 
+        without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+        or distribution of this code will result in legal action to the fullest extent permitted by law.
         */
         
         let savedListing;
@@ -1477,6 +1381,9 @@ async function saveListing() {
         
         /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        This source code is proprietary and no part may not be used, reproduced, or distributed 
+        without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+        or distribution of this code will result in legal action to the fullest extent permitted by law.
         */
         
         // UPDATE SITEMAP
@@ -1494,6 +1401,9 @@ async function saveListing() {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
 async function saveOwnerInfo(listingId) {
@@ -1553,6 +1463,9 @@ async function saveOwnerInfo(listingId) {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
 window.saveListing = saveListing;
@@ -1563,17 +1476,7 @@ This source code is proprietary and no part may not be used, reproduced, or dist
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
 or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// ADMIN PORTAL - PART 8
-// Delete Listing & Magic Link Functions
-// ============================================
+// admin.js Part 8 - Delete Listing & Magic Link Functions
 
 window.sendMagicLink = async function(listingId) {
     try {
@@ -1619,6 +1522,9 @@ window.sendMagicLink = async function(listingId) {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
 window.deleteListing = async function(listingId) {
@@ -1657,6 +1563,9 @@ window.deleteListing = async function(listingId) {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
 window.editListing = editListing;
@@ -1670,17 +1579,7 @@ This source code is proprietary and no part may not be used, reproduced, or dist
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
 or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// ADMIN PORTAL - PART 9
-// Page Generation Helper Functions
-// ============================================
+// admin.js Part 9 - Page Generation Helper Functions
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -1691,6 +1590,9 @@ function escapeHtml(text) {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
 function generateHoursSchema(listing) {
@@ -1729,6 +1631,9 @@ function generateHoursSchema(listing) {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
 function generateSocialMediaSection(listing) {
@@ -1767,6 +1672,17 @@ function generateSocialMediaSection(listing) {
         socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin">${socialSVGs.linkedin}</a>`;
     }
     
+    // Handle "other" social media links
+    if (socialMedia.other1) {
+        socialIcons += `<a href="${socialMedia.other1}" target="_blank" rel="noopener noreferrer" class="social-icon social-other"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.486 22 2 17.514 2 12S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10zm1-11h4v2h-4v4h-2v-4H7v-2h4V7h2v4z"/></svg></a>`;
+    }
+    if (socialMedia.other2) {
+        socialIcons += `<a href="${socialMedia.other2}" target="_blank" rel="noopener noreferrer" class="social-icon social-other"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.486 22 2 17.514 2 12S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10zm1-11h4v2h-4v4h-2v-4H7v-2h4V7h2v4z"/></svg></a>`;
+    }
+    if (socialMedia.other3) {
+        socialIcons += `<a href="${socialMedia.other3}" target="_blank" rel="noopener noreferrer" class="social-icon social-other"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.486 22 2 17.514 2 12S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10zm1-11h4v2h-4v4h-2v-4H7v-2h4V7h2v4z"/></svg></a>`;
+    }
+    
     if (!socialIcons) return '';
     
     return `
@@ -1781,6 +1697,9 @@ function generateSocialMediaSection(listing) {
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
 function generateReviewSection(listing) {
@@ -1805,6 +1724,17 @@ function generateReviewSection(listing) {
     }
     if (reviews.tripadvisor) {
         reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor">${tripadvisorSVG}</a>`;
+    }
+    
+    // Handle "other" review links
+    if (reviews.other1) {
+        reviewLinks += `<a href="${reviews.other1}" target="_blank" rel="noopener noreferrer" class="social-icon social-other"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></a>`;
+    }
+    if (reviews.other2) {
+        reviewLinks += `<a href="${reviews.other2}" target="_blank" rel="noopener noreferrer" class="social-icon social-other"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></a>`;
+    }
+    if (reviews.other3) {
+        reviewLinks += `<a href="${reviews.other3}" target="_blank" rel="noopener noreferrer" class="social-icon social-other"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></a>`;
     }
     
     if (!reviewLinks) return '';
@@ -1834,863 +1764,8 @@ or distribution of this code will result in legal action to the fullest extent p
 
 // ============================================
 // ADMIN PORTAL - PART 10
-// Template Replacements Generation - Part 1
+// CSV Upload Functions (Complete)
 // ============================================
-
-function generateTemplateReplacements(listing) {
-    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listing/${categorySlug}/${listing.slug}`;
-    
-    const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
-    const inCity = listing.city ? ` in ${listing.city}` : '';
-    
-    const photos = listing.photos || [];
-    const totalPhotos = photos.length || 1;
-    
-    // Generate photo slides
-    let photosSlides = '';
-    if (photos.length > 0) {
-        photosSlides = photos.map((photo, index) => 
-            `<div class="carousel-slide" style="background: url('${photo}') center/cover;"></div>`
-        ).join('');
-    } else if (listing.logo) {
-        photosSlides = `<div class="carousel-slide" style="background: url('${listing.logo}') center/cover;"></div>`;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    // Generate carousel controls
-    let carouselControls = '';
-    if (photos.length > 1) {
-        const dots = photos.map((_, index) => 
-            `<span class="carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>`
-        ).join('');
-        carouselControls = `
-            <button class="carousel-nav carousel-prev" onclick="prevSlide()">❮</button>
-            <button class="carousel-nav carousel-next" onclick="nextSlide()">❯</button>
-            <div class="carousel-dots">${dots}</div>
-        `;
-    }
-    
-    // Generate subcategory tags
-    let subcategoriesTags = '';
-    if (listing.subcategories && listing.subcategories.length > 0) {
-        subcategoriesTags = listing.subcategories.map(sub => 
-            `<span class="subcategory-tag">${escapeHtml(sub)}</span>`
-        ).join('');
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    // Generate status badges
-    let statusBadges = '';
-    if (listing.tier === 'PREMIUM') {
-        statusBadges += '<span class="badge badge-featured">Featured</span>';
-        statusBadges += '<span class="badge badge-verified">Verified</span>';
-    } else if (listing.tier === 'FEATURED') {
-        statusBadges += '<span class="badge badge-featured">Featured</span>';
-    } else if (listing.verified || listing.tier === 'VERIFIED') {
-        statusBadges += '<span class="badge badge-verified">Verified</span>';
-    }
-    
-    if (listing.is_chain) {
-        statusBadges += '<span class="badge" style="background:#9333ea;color:white;">Chain</span>';
-    }
-    
-    statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
-    
-    const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '';
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    // Address section
-    let addressSection = '';
-    if (listing.address || listing.city || listing.state) {
-        const addressParts = [];
-        if (listing.address) addressParts.push(escapeHtml(listing.address));
-        if (listing.city && listing.state) {
-            addressParts.push(`${escapeHtml(listing.city)}, ${escapeHtml(listing.state)}${listing.zip_code ? ' ' + escapeHtml(listing.zip_code) : ''}`);
-        }
-        
-        addressSection = `
-            <div class="flex items-start gap-2">
-                <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                <span>${addressParts.join(', ')}</span>
-            </div>
-        `;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    let phoneSection = '';
-    if (listing.phone) {
-        phoneSection = `
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                </svg>
-                <span>${listing.phone}</span>
-            </div>
-        `;
-    }
-    
-    let emailSection = '';
-    if (listing.email) {
-        emailSection = `
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
-                <span>${escapeHtml(listing.email)}</span>
-            </div>
-        `;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    let websiteSection = '';
-    if (listing.website) {
-        const displayUrl = listing.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        websiteSection = `
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
-                </svg>
-                <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
-            </div>
-        `;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    let hoursSection = '';
-    if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
-        const hoursRows = dayKeys.map((key, index) => {
-            const hours = listing.hours[key] || 'Closed';
-            return `<div class="flex justify-between text-sm"><span class="font-medium">${days[index]}:</span><span>${escapeHtml(hours)}</span></div>`;
-        }).join('');
-        
-        hoursSection = `
-            <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
-                <div class="space-y-1">${hoursRows}</div>
-                <div id="openStatusText" class="mt-2 text-sm"></div>
-                <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
-            </div>
-        `;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    let phoneButton = '';
-    if (listing.phone) {
-        phoneButton = `
-            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                </svg>
-                Call
-            </a>
-        `;
-    }
-    
-    let emailButton = '';
-    if (listing.email) {
-        emailButton = `
-            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
-                Email
-            </a>
-        `;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    let websiteButton = '';
-    if (listing.website) {
-        websiteButton = `
-            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
-                </svg>
-                Website
-            </a>
-        `;
-    }
-    
-    let directionsButton = '';
-    if (listing.address || listing.city) {
-        const destination = listing.address 
-            ? `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim()
-            : `${listing.business_name}, ${listing.city}, ${listing.state}`;
-        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
-        
-        directionsButton = `
-            <a href="${mapsUrl}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                </svg>
-                Directions
-            </a>
-        `;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    return {
-        'BUSINESS_NAME': escapeHtml(listing.business_name),
-        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
-        'CITY_STATE': cityState,
-        'IN_CITY': inCity,
-        'TAGLINE': escapeHtml(listing.tagline || ''),
-        'DESCRIPTION': escapeHtml(listing.description || ''),
-        'CATEGORY': escapeHtml(listing.category),
-        'LISTING_URL': listingUrl,
-        'LISTING_ID': listing.id,
-        'LOGO': listing.logo || '',
-        'ADDRESS': escapeHtml(listing.address || ''),
-        'CITY': escapeHtml(listing.city || ''),
-        'STATE': escapeHtml(listing.state || ''),
-        'ZIP_CODE': escapeHtml(listing.zip_code || ''),
-        'COUNTRY': escapeHtml(listing.country || 'USA'),
-        'PHONE': listing.phone || '',
-        'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
-        'TOTAL_PHOTOS': totalPhotos,
-        'PHOTOS_SLIDES': photosSlides,
-        'CAROUSEL_CONTROLS': carouselControls,
-        'SUBCATEGORIES_TAGS': subcategoriesTags,
-        'STATUS_BADGES': statusBadges,
-        'TAGLINE_DISPLAY': taglineDisplay,
-        'ADDRESS_SECTION': addressSection,
-        'PHONE_SECTION': phoneSection,
-        'EMAIL_SECTION': emailSection,
-        'WEBSITE_SECTION': websiteSection,
-        'HOURS_SECTION': hoursSection,
-        'PHONE_BUTTON': phoneButton,
-        'EMAIL_BUTTON': emailButton,
-        'WEBSITE_BUTTON': websiteButton,
-        'DIRECTIONS_BUTTON': directionsButton
-    };
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// ADMIN PORTAL - PART 11
-// Template Replacements Generation - Part 2 & Related Listings
-// ============================================
-
-function generateTemplateReplacementsPart2(listing) {
-    let ownerInfoSection = '';
-    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    if (owner && (owner.full_name || owner.title)) {
-        let ownerDetails = '';
-        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
-        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
-        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
-        if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
-        if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${owner.owner_phone}</a></p>`;
-        
-        ownerInfoSection = `
-            <div class="owner-info-section">
-                <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                ${ownerDetails}
-            </div>
-        `;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    const socialMediaSection = generateSocialMediaSection(listing);
-    const reviewSection = generateReviewSection(listing);
-    
-    let mapSection = '';
-    if (listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
-        mapSection = `
-            <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
-                <div id="listingMap"></div>
-            </div>
-        `;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    // Generate Related Listings section for chain businesses
-    let relatedListingsSection = '';
-    if (listing.is_chain && listing.chain_id) {
-        relatedListingsSection = `
-            <div class="mt-8">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Related Listings</h2>
-                <div id="relatedListingsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <p class="text-gray-600 col-span-full">Loading related locations...</p>
-                </div>
-            </div>
-            <script>
-            /*
-            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-            */
-            
-            // Load related chain listings
-            (async function() {
-                try {
-                    const chainId = '${listing.chain_id}';
-                    const currentListingId = '${listing.id}';
-                    
-                    const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?chain_id=eq.' + chainId + '&visible=eq.true&select=*', {
-                        headers: {
-                            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg'
-                        }
-                    });
-                    
-                    if (!response.ok) throw new Error('Failed to load related listings');
-                    
-                    const data = await response.json();
-                    const relatedListings = data.filter(l => l.id !== currentListingId);
-                    
-                    const container = document.getElementById('relatedListingsContainer');
-                    
-                    if (relatedListings.length === 0) {
-                        container.innerHTML = '<p class="text-gray-600 col-span-full">No other locations found.</p>';
-                        return;
-                    }
-                    
-                    container.innerHTML = relatedListings.map(l => {
-                        const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                        const listingUrl = '/listing/' + categorySlug + '/' + l.slug;
-                        const location = (l.city && l.state) ? l.city + ', ' + l.state : (l.city || l.state || 'Location TBD');
-                        
-                        return \`
-                            <a href="\${listingUrl}" class="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-                                <div class="flex items-start gap-3">
-                                    \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">\` : ''}
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="font-bold text-gray-900 mb-1">\${l.business_name}</h3>
-                                        <p class="text-sm text-gray-600 mb-1">📍 \${location}</p>
-                                        \${l.phone ? \`<p class="text-sm text-gray-600">📞 \${l.phone}</p>\` : ''}
-                                    </div>
-                                </div>
-                            </a>
-                        \`;
-                    }).join('');
-                    
-                } catch (error) {
-                    console.error('Error loading related listings:', error);
-                    document.getElementById('relatedListingsContainer').innerHTML = 
-                        '<p class="text-gray-600 col-span-full">Failed to load related locations.</p>';
-                }
-            })();
-            
-            /*
-            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-            */
-            </script>
-        `;
-    }
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    let claimButton = '';
-    const isClaimed = owner && owner.owner_user_id;
-    if (!isClaimed && listing.show_claim_button !== false) {
-        const cityState = listing.city && listing.state ? `${listing.city}, ${listing.state}` : '';
-        const country = listing.country && listing.country !== 'USA' ? `, ${listing.country}` : '';
-        const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
-        const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
-        
-        claimButton = `
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
-            </div>
-        `;
-    }
-    
-    const hoursSchema = generateHoursSchema(listing);
-    const coordinates = listing.coordinates ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
-    const fullAddress = [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ');
-    const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    return {
-        'OWNER_INFO_SECTION': ownerInfoSection,
-        'SOCIAL_MEDIA_SECTION': socialMediaSection,
-        'REVIEW_SECTION': reviewSection,
-        'MAP_SECTION': mapSection,
-        'RELATED_LISTINGS_SECTION': relatedListingsSection,
-        'CLAIM_BUTTON': claimButton,
-        'HOURS_SCHEMA': hoursSchema,
-        'COORDINATES': coordinates,
-        'FULL_ADDRESS': fullAddress,
-        'HOURS_JSON': hoursJson
-    };
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// ADMIN PORTAL - PART 12
-// Generate Listing Page & Analytics Tracking
-// ============================================
-
-window.generateListingPage = async function(listingId) {
-    try {
-        const { data: listing, error } = await adminSupabase
-            .from('listings')
-            .select(`
-                *,
-                owner:business_owners(*)
-            `)
-            .eq('id', listingId)
-            .single();
-        
-        if (error) throw error;
-        if (!listing) {
-            console.error('Listing not found');
-            return;
-        }
-        
-        console.log('📄 Generating page for:', listing.business_name);
-        
-        // Apply default images if needed
-        const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
-        
-        if (!listing.logo && defaultImage) {
-            listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
-            
-            // Update in database
-            await adminSupabase
-                .from('listings')
-                .update({ logo: listing.logo })
-                .eq('id', listingId);
-        }
-        
-        if (!listing.photos || listing.photos.length === 0) {
-            listing.photos = [`${defaultImage}?w=800&q=80`];
-            
-            // Update in database
-            await adminSupabase
-                .from('listings')
-                .update({ photos: listing.photos })
-                .eq('id', listingId);
-        }
-        
-        /*
-        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        */
-        
-        // Create analytics entry if it doesn't exist
-        const { data: analyticsEntry } = await adminSupabase
-            .from('analytics')
-            .select('*')
-            .eq('listing_id', listingId)
-            .maybeSingle();
-        
-        if (!analyticsEntry) {
-            console.log('Creating analytics entry for listing:', listingId);
-            await adminSupabase
-                .from('analytics')
-                .insert({
-                    listing_id: listingId,
-                    views: 0,
-                    call_clicks: 0,
-                    website_clicks: 0,
-                    direction_clicks: 0,
-                    share_clicks: 0,
-                    video_plays: 0,
-                    last_viewed: new Date().toISOString()
-                });
-        }
-        
-        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
-        if (!templateResponse.ok) {
-            throw new Error('Failed to fetch template');
-        }
-        
-        let template = await templateResponse.text();
-        
-        const replacements1 = generateTemplateReplacements(listing);
-        const replacements2 = generateTemplateReplacementsPart2(listing);
-        const replacements = { ...replacements1, ...replacements2 };
-        
-        Object.keys(replacements).forEach(key => {
-            const regex = new RegExp(`{{${key}}}`, 'g');
-            template = template.replace(regex, replacements[key]);
-        });
-        
-        /*
-        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        */
-        
-        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const filePath = `listing/${categorySlug}/${listing.slug}.html`;
-        
-        await saveToGitHub(filePath, template, listing.business_name);
-        
-        await updateSitemap();
-        
-        console.log('✅ Page generated successfully');
-        
-    } catch (error) {
-        console.error('Error generating page:', error);
-        alert('❌ Failed to generate listing page: ' + error.message);
-    }
-};
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-async function updateSitemap() {
-    try {
-        const { data: listings, error } = await adminSupabase
-            .from('listings')
-            .select('*')
-            .eq('visible', true);
-        
-        if (error) throw error;
-        
-        const database = { listings: listings || [] };
-        
-        const now = new Date().toISOString().split('T')[0];
-        const baseUrl = 'https://listings.thegreekdirectory.org';
-        
-        let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${baseUrl}/</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-`;
-        
-        /*
-        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        */
-        
-        // Collect unique places (cities)
-        const places = new Set();
-        const usStates = new Set();
-        
-        // Define major city mappings for each state
-        const majorCityMappings = {
-            'IL': {
-                'Chicago': 'chicago',
-                'Chicagoland': 'chicagoland', // For suburbs
-                'Springfield': 'springfield',
-                'Rockford': 'rockford',
-                'Peoria': 'peoria',
-                'Champaign': 'champaign',
-                'Urbana': 'champaign' // Combined with Champaign
-            }
-        };
-        
-        // Chicago suburbs that should map to "chicagoland"
-        const chicagolandCities = [
-            'oak forest', 'deerfield', 'downers grove', 'oakbrook terrace', 
-            'niles', 'glenview', 'evanston', 'skokie', 'northbrook',
-            'schaumburg', 'naperville', 'aurora', 'joliet', 'elgin',
-            'cicero', 'arlington heights', 'palatine', 'bolingbrook',
-            'des plaines', 'orland park', 'tinley park', 'oak lawn',
-            'berwyn', 'mount prospect', 'wheaton', 'hoffman estates',
-            'oak park', 'buffalo grove', 'bartlett', 'streamwood',
-            'carol stream', 'lombard', 'elmhurst', 'park ridge'
-        ];
-        
-        database.listings.forEach(listing => {
-            if (listing.visible !== false && listing.city && listing.state && (listing.country || 'USA') === 'USA') {
-                const city = listing.city.toLowerCase();
-                const state = listing.state;
-                
-                let citySlug;
-                
-                // Check if it's Illinois and a Chicago suburb
-                if (state === 'IL' && chicagolandCities.includes(city)) {
-                    citySlug = 'chicagoland';
-                } else if (majorCityMappings[state] && majorCityMappings[state][listing.city]) {
-                    // Use major city mapping if available
-                    citySlug = majorCityMappings[state][listing.city];
-                } else {
-                    // For non-major cities, just use state
-                    citySlug = null;
-                }
-                
-                const stateSlug = state.toLowerCase();
-                usStates.add(stateSlug);
-                
-                if (citySlug) {
-                    places.add(`${stateSlug}/${citySlug}`);
-                }
-            }
-        });
-        
-        /*
-        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        */
-        
-        // Add state pages
-        usStates.forEach(state => {
-            xml += `  <url>
-    <loc>${baseUrl}/places/usa/${state}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-`;
-        });
-        
-        // Add place pages
-        places.forEach(place => {
-            xml += `  <url>
-    <loc>${baseUrl}/places/usa/${place}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
-        });
-        
-        // Collect unique categories
-        const categories = new Set();
-        database.listings.forEach(listing => {
-            if (listing.visible !== false && listing.category) {
-                categories.add(listing.category);
-            }
-        });
-        
-        // Add category pages
-        categories.forEach(category => {
-            const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            xml += `  <url>
-    <loc>${baseUrl}/category/${categorySlug}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-`;
-        });
-        
-        /*
-        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        */
-        
-        // Add individual listings
-        database.listings.forEach(listing => {
-            if (listing.visible !== false) {
-                const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                const listingSlug = listing.slug;
-                const lastMod = listing.updated_at ? 
-                    listing.updated_at.split('T')[0] : now;
-                
-                xml += `  <url>
-    <loc>${baseUrl}/listing/${categorySlug}/${listingSlug}</loc>
-    <lastmod>${lastMod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-`;
-            }
-        });
-        
-        xml += `</urlset>`;
-        
-        await saveToGitHub('sitemap.xml', xml, 'Sitemap');
-        
-        console.log('✅ Sitemap updated successfully');
-        
-    } catch (error) {
-        console.error('Error updating sitemap:', error);
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-async function saveToGitHub(filePath, content, businessName) {
-    try {
-        let currentSha = null;
-        try {
-            const fileInfoResponse = await fetch(
-                `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
-                {
-                    headers: {
-                        'Authorization': `token ${adminGithubToken}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                }
-            );
-            
-            if (fileInfoResponse.ok) {
-                const fileInfo = await fileInfoResponse.json();
-                currentSha = fileInfo.sha;
-            }
-        } catch (error) {
-            console.log('File does not exist, will create new');
-        }
-        
-        const base64Content = btoa(unescape(encodeURIComponent(content)));
-        
-        const uploadBody = {
-            message: `${currentSha ? 'Update' : 'Create'} listing page for ${businessName}`,
-            content: base64Content,
-            committer: {
-                name: 'TGD Admin',
-                email: 'admin@thegreekdirectory.org'
-            }
-        };
-        
-        if (currentSha) {
-            uploadBody.sha = currentSha;
-        }
-        
-        /*
-        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        */
-        
-        const uploadResponse = await fetch(
-            `https://api.github.com/repos/thegreekdirectory/listings/contents/${filePath}`,
-            {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${adminGithubToken}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(uploadBody)
-            }
-        );
-        
-        if (!uploadResponse.ok) {
-            const errorData = await uploadResponse.json();
-            throw new Error(`GitHub upload failed: ${errorData.message}`);
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('Error saving to GitHub:', error);
-        throw error;
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// ADMIN PORTAL - PART 13
-// Generate All Pages & CSV Upload
-// ============================================
-
-window.generateAllListingPages = async function() {
-    if (!confirm('This will generate pages for ALL visible listings. This may take several minutes. Continue?')) {
-        return;
-    }
-    
-    const visibleListings = allListings.filter(l => l.visible);
-    
-    console.log(`🔨 Generating ${visibleListings.length} listing pages...`);
-    
-    let successful = 0;
-    let failed = 0;
-    const failedListings = [];
-    
-    for (const listing of visibleListings) {
-        try {
-            await generateListingPage(listing.id);
-            successful++;
-            console.log(`✅ Generated: ${listing.business_name}`);
-            
-            // Rate limit: wait 1 second between GitHub API calls
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-            console.error(`❌ Failed: ${listing.business_name}`, error);
-            failed++;
-            failedListings.push(listing.business_name);
-        }
-    }
-    
-    console.log('📊 Generation Summary:');
-    console.log(`   ✅ Successful: ${successful}`);
-    console.log(`   ❌ Failed: ${failed}`);
-    if (failedListings.length > 0) {
-        console.log('   Failed listings:', failedListings.join(', '));
-    }
-    
-    alert(`Generation complete!\n\nSuccessful: ${successful}\nFailed: ${failed}${failedListings.length > 0 ? '\n\nFailed listings:\n' + failedListings.join('\n') : ''}`);
-};
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 window.handleCSVUpload = async function(event) {
     const file = event.target.files[0];
@@ -2806,6 +1881,7 @@ async function uploadListingsFromCSV(listings) {
                 verified: (csvListing.tier || csvListing.Tier || 'FREE') !== 'FREE',
                 visible: csvListing.visible === 'false' ? false : true,
                 is_chain: csvListing.is_chain === 'true',
+                is_claimed: csvListing.is_claimed === 'true',
                 chain_name: csvListing.chain_name || csvListing.ChainName || null,
                 chain_id: csvListing.chain_id || csvListing.ChainID || null,
                 address: csvListing.address || csvListing.Address || null,
@@ -2858,10 +1934,12 @@ async function uploadListingsFromCSV(listings) {
                 from_greece: csvListing.from_greece || csvListing.FromGreece || csvListing['From Greece'] || null,
                 owner_email: csvListing.owner_email || csvListing.OwnerEmail || csvListing['Owner Email'] || null,
                 owner_phone: csvListing.owner_phone || csvListing.OwnerPhone || csvListing['Owner Phone'] || null,
-                confirmation_key: csvListing.confirmation_key || null
+                confirmation_key: csvListing.confirmation_key || null,
+                email_visible: false,
+                phone_visible: false
             };
             
-            if (!ownerData.confirmation_key) {
+            if (!listingData.is_claimed && !ownerData.confirmation_key) {
                 const words = [
                     'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
                     'iota', 'kappa', 'lambda', 'sigma', 'omega', 'phoenix', 'apollo'
@@ -2870,6 +1948,10 @@ async function uploadListingsFromCSV(listings) {
                 const word2 = words[Math.floor(Math.random() * words.length)];
                 const word3 = words[Math.floor(Math.random() * words.length)];
                 ownerData.confirmation_key = `${word1}-${word2}-${word3}`;
+            }
+            
+            if (listingData.is_claimed) {
+                ownerData.confirmation_key = null;
             }
             
             const { error: ownerError } = await adminSupabase
@@ -2901,6 +1983,10 @@ async function uploadListingsFromCSV(listings) {
     alert(`CSV Upload complete!\n\nSuccessful: ${successful}\nFailed: ${failed}${failedListings.length > 0 ? '\n\nFailed listings:\n' + failedListings.join('\n') : ''}`);
 }
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 function parseHours(csvListing) {
     const hours = {};
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -2922,21 +2008,33 @@ function parseSocialMedia(csvListing) {
         twitter: csvListing.twitter || csvListing.Twitter || null,
         youtube: csvListing.youtube || csvListing.YouTube || null,
         tiktok: csvListing.tiktok || csvListing.TikTok || null,
-        linkedin: csvListing.linkedin || csvListing.LinkedIn || null
-    };
-}
-
-function parseReviews(csvListing) {
-    return {
-        google: csvListing.google_reviews || csvListing.GoogleReviews || null,
-        yelp: csvListing.yelp || csvListing.Yelp || null,
-        tripadvisor: csvListing.tripadvisor || csvListing.TripAdvisor || null
+        linkedin: csvListing.linkedin || csvListing.LinkedIn || null,
+        other1_name: csvListing.other_social_1_name || csvListing.OtherSocial1Name || null,
+        other1: csvListing.other_social_1 || csvListing.OtherSocial1 || null,
+        other2_name: csvListing.other_social_2_name || csvListing.OtherSocial2Name || null,
+        other2: csvListing.other_social_2 || csvListing.OtherSocial2 || null,
+        other3_name: csvListing.other_social_3_name || csvListing.OtherSocial3Name || null,
+        other3: csvListing.other_social_3 || csvListing.OtherSocial3 || null
     };
 }
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
+
+function parseReviews(csvListing) {
+    return {
+        google: csvListing.google_reviews || csvListing.GoogleReviews || null,
+        yelp: csvListing.yelp || csvListing.Yelp || null,
+        tripadvisor: csvListing.tripadvisor || csvListing.TripAdvisor || null,
+        other1_name: csvListing.other_review_1_name || csvListing.OtherReview1Name || null,
+        other1: csvListing.other_review_1 || csvListing.OtherReview1 || null,
+        other2_name: csvListing.other_review_2_name || csvListing.OtherReview2Name || null,
+        other2: csvListing.other_review_2 || csvListing.OtherReview2 || null,
+        other3_name: csvListing.other_review_3_name || csvListing.OtherReview3Name || null,
+        other3: csvListing.other_review_3 || csvListing.OtherReview3 || null
+    };
+}
 
 // Bind to button click
 document.addEventListener('DOMContentLoaded', () => {
@@ -2945,6 +2043,572 @@ document.addEventListener('DOMContentLoaded', () => {
         generateAllBtn.addEventListener('click', generateAllListingPages);
     }
 });
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 11 (FINAL)
+// Additional Utility Functions & Event Handlers
+// ============================================
+
+// Initialize event listeners on page load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Admin portal event listeners initialized');
+    
+    // Close analytics modal on outside click
+    document.addEventListener('click', (e) => {
+        const analyticsModal = document.getElementById('analyticsModal');
+        if (analyticsModal && e.target === analyticsModal) {
+            closeAnalyticsModal();
+        }
+    });
+    
+    // Close edit modal on outside click
+    document.addEventListener('click', (e) => {
+        const editModal = document.getElementById('editModal');
+        if (editModal && e.target === editModal) {
+            if (confirm('Discard changes?')) {
+                editModal.classList.add('hidden');
+            }
+        }
+    });
+    
+    // Handle escape key to close modals
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const analyticsModal = document.getElementById('analyticsModal');
+            const editModal = document.getElementById('editModal');
+            
+            if (analyticsModal && !analyticsModal.classList.contains('hidden')) {
+                closeAnalyticsModal();
+            } else if (editModal && !editModal.classList.contains('hidden')) {
+                if (confirm('Discard changes?')) {
+                    editModal.classList.add('hidden');
+                }
+            }
+        }
+    });
+});
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// Format date for display
+function formatDate(dateString) {
+    if (!dateString) return 'Never';
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    
+    // Less than 1 minute
+    if (diff < 60000) {
+        return 'Just now';
+    }
+    
+    // Less than 1 hour
+    if (diff < 3600000) {
+        const minutes = Math.floor(diff / 60000);
+        return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    }
+    
+    // Less than 24 hours
+    if (diff < 86400000) {
+        const hours = Math.floor(diff / 3600000);
+        return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    }
+    
+    // Less than 7 days
+    if (diff < 604800000) {
+        const days = Math.floor(diff / 86400000);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+    
+    // Format as date
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// Export listings to CSV
+window.exportListingsToCSV = function() {
+    if (!allListings || allListings.length === 0) {
+        alert('No listings to export');
+        return;
+    }
+    
+    const headers = [
+        'ID', 'Business Name', 'Slug', 'Tagline', 'Description',
+        'Category', 'Subcategories', 'Primary Subcategory',
+        'Tier', 'Verified', 'Visible', 'Is Chain', 'Is Claimed',
+        'Chain Name', 'Chain ID',
+        'Address', 'City', 'State', 'Zip Code', 'Country',
+        'Coordinates', 'Phone', 'Email', 'Website',
+        'Logo', 'Photos', 'Video',
+        'Hours Monday', 'Hours Tuesday', 'Hours Wednesday', 'Hours Thursday',
+        'Hours Friday', 'Hours Saturday', 'Hours Sunday',
+        'Facebook', 'Instagram', 'Twitter', 'YouTube', 'TikTok', 'LinkedIn',
+        'Other Social 1 Name', 'Other Social 1', 'Other Social 2 Name', 'Other Social 2',
+        'Other Social 3 Name', 'Other Social 3',
+        'Google Reviews', 'Yelp', 'TripAdvisor',
+        'Other Review 1 Name', 'Other Review 1', 'Other Review 2 Name', 'Other Review 2',
+        'Other Review 3 Name', 'Other Review 3',
+        'Owner Name', 'Owner Title', 'Owner Email', 'Owner Phone',
+        'From Greece', 'Confirmation Key',
+        'Created At', 'Updated At'
+    ];
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
+    let csv = headers.join(',') + '\n';
+    
+    allListings.forEach(listing => {
+        const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : {};
+        
+        const row = [
+            listing.id,
+            `"${(listing.business_name || '').replace(/"/g, '""')}"`,
+            listing.slug || '',
+            `"${(listing.tagline || '').replace(/"/g, '""')}"`,
+            `"${(listing.description || '').replace(/"/g, '""')}"`,
+            listing.category || '',
+            `"${(listing.subcategories || []).join('|')}"`,
+            listing.primary_subcategory || '',
+            listing.tier || 'FREE',
+            listing.verified ? 'true' : 'false',
+            listing.visible ? 'true' : 'false',
+            listing.is_chain ? 'true' : 'false',
+            listing.is_claimed ? 'true' : 'false',
+            listing.chain_name || '',
+            listing.chain_id || '',
+            listing.address || '',
+            listing.city || '',
+            listing.state || '',
+            listing.zip_code || '',
+            listing.country || 'USA',
+            listing.coordinates ? `"${listing.coordinates.lat},${listing.coordinates.lng}"` : '',
+            listing.phone || '',
+            listing.email || '',
+            listing.website || '',
+            listing.logo || '',
+            `"${(listing.photos || []).join('|')}"`,
+            listing.video || '',
+            (listing.hours?.monday || '').replace(/"/g, '""'),
+            (listing.hours?.tuesday || '').replace(/"/g, '""'),
+            (listing.hours?.wednesday || '').replace(/"/g, '""'),
+            (listing.hours?.thursday || '').replace(/"/g, '""'),
+            (listing.hours?.friday || '').replace(/"/g, '""'),
+            (listing.hours?.saturday || '').replace(/"/g, '""'),
+            (listing.hours?.sunday || '').replace(/"/g, '""'),
+            listing.social_media?.facebook || '',
+            listing.social_media?.instagram || '',
+            listing.social_media?.twitter || '',
+            listing.social_media?.youtube || '',
+            listing.social_media?.tiktok || '',
+            listing.social_media?.linkedin || '',
+            listing.social_media?.other1_name || '',
+            listing.social_media?.other1 || '',
+            listing.social_media?.other2_name || '',
+            listing.social_media?.other2 || '',
+            listing.social_media?.other3_name || '',
+            listing.social_media?.other3 || '',
+            listing.reviews?.google || '',
+            listing.reviews?.yelp || '',
+            listing.reviews?.tripadvisor || '',
+            listing.reviews?.other1_name || '',
+            listing.reviews?.other1 || '',
+            listing.reviews?.other2_name || '',
+            listing.reviews?.other2 || '',
+            listing.reviews?.other3_name || '',
+            listing.reviews?.other3 || '',
+            owner.full_name || '',
+            owner.title || '',
+            owner.owner_email || '',
+            owner.owner_phone || '',
+            owner.from_greece || '',
+            owner.confirmation_key || '',
+            listing.created_at || '',
+            listing.updated_at || ''
+        ];
+        
+        csv += row.join(',') + '\n';
+    });
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
+    // Create download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `listings-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log(`✅ Exported ${allListings.length} listings to CSV`);
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// Bulk update listings
+window.bulkUpdateListings = async function() {
+    const selectedIds = Array.from(document.querySelectorAll('.listing-checkbox:checked'))
+        .map(cb => cb.dataset.listingId);
+    
+    if (selectedIds.length === 0) {
+        alert('No listings selected');
+        return;
+    }
+    
+    const action = prompt(`Update ${selectedIds.length} listings:\n\n1. Change tier\n2. Toggle visibility\n3. Toggle verified\n\nEnter number (1-3):`);
+    
+    if (!action) return;
+    
+    try {
+        let updates = {};
+        
+        switch (action) {
+            case '1':
+                const tier = prompt('Enter tier (FREE, VERIFIED, FEATURED, PREMIUM):')?.toUpperCase();
+                if (!['FREE', 'VERIFIED', 'FEATURED', 'PREMIUM'].includes(tier)) {
+                    alert('Invalid tier');
+                    return;
+                }
+                updates.tier = tier;
+                updates.verified = tier !== 'FREE';
+                break;
+                
+            case '2':
+                const visible = confirm('Make visible? (Cancel = hide)');
+                updates.visible = visible;
+                break;
+                
+            case '3':
+                const verified = confirm('Make verified? (Cancel = unverify)');
+                updates.verified = verified;
+                break;
+                
+            default:
+                alert('Invalid action');
+                return;
+        }
+        
+        if (!confirm(`Apply changes to ${selectedIds.length} listings?`)) {
+            return;
+        }
+        
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        let successful = 0;
+        let failed = 0;
+        
+        for (const id of selectedIds) {
+            try {
+                const { error } = await adminSupabase
+                    .from('listings')
+                    .update(updates)
+                    .eq('id', id);
+                
+                if (error) throw error;
+                successful++;
+            } catch (error) {
+                console.error('Error updating listing', id, error);
+                failed++;
+            }
+        }
+        
+        alert(`Bulk update complete!\n\nSuccessful: ${successful}\nFailed: ${failed}`);
+        await loadListings();
+        
+    } catch (error) {
+        console.error('Bulk update error:', error);
+        alert('Failed to update listings: ' + error.message);
+    }
+};
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// Add export button to admin dashboard
+function addExportButton() {
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn && !document.getElementById('exportBtn')) {
+        const exportBtn = document.createElement('button');
+        exportBtn.id = 'exportBtn';
+        exportBtn.className = 'px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700';
+        exportBtn.textContent = '📥 Export CSV';
+        exportBtn.onclick = exportListingsToCSV;
+        
+        refreshBtn.parentNode.insertBefore(exportBtn, refreshBtn.nextSibling);
+    }
+}
+
+// Add export button when dashboard loads
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.addedNodes.length) {
+            const dashboardPage = document.getElementById('dashboardPage');
+            if (dashboardPage && !dashboardPage.classList.contains('hidden')) {
+                addExportButton();
+            }
+        }
+    });
+});
+
+if (document.body) {
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// Console helper functions
+window.adminHelpers = {
+    // Quick stats
+    stats: function() {
+        if (!allListings || allListings.length === 0) {
+            console.log('No listings loaded');
+            return;
+        }
+        
+        const total = allListings.length;
+        const visible = allListings.filter(l => l.visible).length;
+        const verified = allListings.filter(l => l.verified).length;
+        const claimed = allListings.filter(l => l.is_claimed).length;
+        
+        const tiers = {
+            FREE: allListings.filter(l => l.tier === 'FREE').length,
+            VERIFIED: allListings.filter(l => l.tier === 'VERIFIED').length,
+            FEATURED: allListings.filter(l => l.tier === 'FEATURED').length,
+            PREMIUM: allListings.filter(l => l.tier === 'PREMIUM').length
+        };
+        
+        console.log('📊 Listings Statistics:');
+        console.log(`Total: ${total}`);
+        console.log(`Visible: ${visible} (${Math.round(visible/total*100)}%)`);
+        console.log(`Verified: ${verified} (${Math.round(verified/total*100)}%)`);
+        console.log(`Claimed: ${claimed} (${Math.round(claimed/total*100)}%)`);
+        console.log('\nTier Distribution:');
+        console.log(`FREE: ${tiers.FREE}`);
+        console.log(`VERIFIED: ${tiers.VERIFIED}`);
+        console.log(`FEATURED: ${tiers.FEATURED}`);
+        console.log(`PREMIUM: ${tiers.PREMIUM}`);
+    },
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
+    // Find listings by criteria
+    find: function(criteria) {
+        if (!allListings || allListings.length === 0) {
+            console.log('No listings loaded');
+            return [];
+        }
+        
+        const results = allListings.filter(listing => {
+            for (const key in criteria) {
+                if (typeof criteria[key] === 'string') {
+                    if (!listing[key] || !listing[key].toLowerCase().includes(criteria[key].toLowerCase())) {
+                        return false;
+                    }
+                } else {
+                    if (listing[key] !== criteria[key]) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        });
+        
+        console.log(`Found ${results.length} listing(s)`);
+        return results;
+    },
+    
+    // Export helpers
+    export: exportListingsToCSV
+};
+
+console.log('💡 Admin helpers available: window.adminHelpers.stats(), .find(), .export()');
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// ADMIN PORTAL - PART 12 (CONTINUATION)
+// Template Replacements - Social & Review Sections
+// ============================================
+
+function generateSocialMediaSection(listing) {
+    const socialMedia = listing.social_media || {};
+    const hasSocial = Object.values(socialMedia).some(v => v);
+    
+    if (!hasSocial) return '';
+    
+    let socialIcons = '';
+    
+    const socialSVGs = {
+        facebook: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+        instagram: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>',
+        twitter: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+        youtube: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+        tiktok: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>',
+        linkedin: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>'
+    };
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
+    if (socialMedia.facebook) {
+        socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook" title="Facebook">${socialSVGs.facebook}</a>`;
+    }
+    if (socialMedia.instagram) {
+        socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram" title="Instagram">${socialSVGs.instagram}</a>`;
+    }
+    if (socialMedia.twitter) {
+        socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon social-twitter" title="X (Twitter)">${socialSVGs.twitter}</a>`;
+    }
+    if (socialMedia.youtube) {
+        socialIcons += `<a href="https://youtube.com/@${socialMedia.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube" title="YouTube">${socialSVGs.youtube}</a>`;
+    }
+    if (socialMedia.tiktok) {
+        socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok" title="TikTok">${socialSVGs.tiktok}</a>`;
+    }
+    if (socialMedia.linkedin) {
+        socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin" title="LinkedIn">${socialSVGs.linkedin}</a>`;
+    }
+    
+    // Other social links
+    if (socialMedia.other1 && socialMedia.other1_name) {
+        socialIcons += `<a href="${socialMedia.other1}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(socialMedia.other1_name)}">🔗</a>`;
+    }
+    if (socialMedia.other2 && socialMedia.other2_name) {
+        socialIcons += `<a href="${socialMedia.other2}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(socialMedia.other2_name)}">🔗</a>`;
+    }
+    if (socialMedia.other3 && socialMedia.other3_name) {
+        socialIcons += `<a href="${socialMedia.other3}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(socialMedia.other3_name)}">🔗</a>`;
+    }
+    
+    if (!socialIcons) return '';
+    
+    return `
+        <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
+            <div class="flex flex-wrap gap-2">
+                ${socialIcons}
+            </div>
+        </div>
+    `;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+function generateReviewSection(listing) {
+    const reviews = listing.reviews || {};
+    const hasReviews = Object.values(reviews).some(v => v);
+    
+    if (!hasReviews) return '';
+    
+    let reviewLinks = '';
+    
+    const googleSVG = '<svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>';
+    
+    const yelpSVG = '<svg width="22" height="22" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><path d="M219.307 134.643l-49.387 15.446c-4.376 1.376-9.042-.554-10.764-4.693l-11.803-28.428c-1.722-4.14.227-8.87 4.351-10.554l49.386-20.184c4.124-1.684 8.827.294 10.505 4.433l11.065 27.289c1.677 4.138-.229 8.87-3.353 16.691zm-83.265-26.303l16.548-47.606c1.468-4.226 6.015-6.538 10.166-5.161l28.022 9.264c4.15 1.377 6.54 5.838 5.337 9.958l-18.074 61.853c-1.204 4.12-5.542 6.555-9.693 5.441l-27.872-7.485c-4.151-1.113-6.382-5.382-4.434-9.455l.000-16.809zm-43.085 100.493c-4.272 1.161-8.778-1.149-10.064-5.152l-8.67-26.968c-1.287-4.003.821-8.317 4.708-9.634l58.474-19.823c3.887-1.317 8.123 1.029 9.454 5.24l8.937 28.302c1.331 4.21-.766 8.708-4.685 10.041l-58.154 18.994z" fill="#D32323"/></svg>';
+    
+    const tripadvisorSVG = '<svg width="22" height="22" viewBox="0 0 256 191" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M128.023 95.364c.18-.003 21.732-.043 41.012 10.96 10.505 5.996 18.636 14.103 24.156 24.095 3.808 6.895 6.255 14.181 7.28 21.691.96 7.02.559 13.946-1.193 20.593-3.504 13.289-11.443 24.806-23.631 34.29a84.124 84.124 0 0 1-15.377 9.274c-11.309 5.282-23.201 7.819-35.39 7.555-12.066-.26-23.573-3.333-34.24-9.142a83.773 83.773 0 0 1-14.84-9.588c-11.893-9.397-19.793-20.743-23.5-33.746-1.85-6.495-2.387-13.163-1.6-19.924a84.124 84.124 0 0 1 7.28-21.691c5.52-9.992 13.65-18.099 24.156-24.095 19.278-11.003 40.83-10.963 41.012-10.96l4.875-.313z" fill="#34E0A1"/></svg>';
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
+    
+    if (reviews.google) {
+        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews">${googleSVG}</a>`;
+    }
+    if (reviews.yelp) {
+        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp">${yelpSVG}</a>`;
+    }
+    if (reviews.tripadvisor) {
+        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor">${tripadvisorSVG}</a>`;
+    }
+    
+    // Other review links
+    if (reviews.other1 && reviews.other1_name) {
+        reviewLinks += `<a href="${reviews.other1}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(reviews.other1_name)}">⭐</a>`;
+    }
+    if (reviews.other2 && reviews.other2_name) {
+        reviewLinks += `<a href="${reviews.other2}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(reviews.other2_name)}">⭐</a>`;
+    }
+    if (reviews.other3 && reviews.other3_name) {
+        reviewLinks += `<a href="${reviews.other3}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(reviews.other3_name)}">⭐</a>`;
+    }
+    
+    if (!reviewLinks) return '';
+    
+    return `
+        <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
+            <div class="flex flex-wrap gap-2">
+                ${reviewLinks}
+            </div>
+        </div>
+    `;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// Generate other links section (for custom links that aren't social or reviews)
+function generateOtherLinksSection(listing) {
+    // This function can be extended in the future if needed
+    // Currently just returns empty string as other links are handled in social/reviews
+    return '';
+}
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
