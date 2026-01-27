@@ -1,3 +1,11 @@
+// generate-sitemap.js
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
 // This script generates sitemap.xml
 // Run with: node generate-sitemap.js
 
@@ -9,6 +17,10 @@ const listings = database.listings;
 
 const baseUrl = 'https://listings.thegreekdirectory.org';
 const now = new Date().toISOString().split('T')[0];
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 // Start XML
 let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -39,6 +51,10 @@ listings.forEach(listing => {
     }
 });
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 // Add state pages
 usStates.forEach(state => {
     xml += `  <url>
@@ -68,6 +84,10 @@ listings.forEach(listing => {
         categories.add(listing.category);
     }
 });
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
 
 // Add category pages
 categories.forEach(category => {
@@ -101,6 +121,10 @@ listings.forEach(listing => {
 
 xml += `</urlset>`;
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 fs.writeFileSync('sitemap.xml', xml);
 console.log('✅ sitemap.xml generated successfully!');
 console.log(`   - Homepage: 1`);
@@ -109,3 +133,10 @@ console.log(`   - Places: ${places.size}`);
 console.log(`   - Categories: ${categories.size}`);
 console.log(`   - Listings: ${listings.filter(l => l.visible !== false).length}`);
 console.log(`   - Total URLs: ${1 + usStates.size + places.size + categories.size + listings.filter(l => l.visible !== false).length}`);
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
