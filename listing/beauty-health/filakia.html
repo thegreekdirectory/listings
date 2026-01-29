@@ -9,7 +9,10 @@ or distribution of this code can result in legal action to the fullest extent pe
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     
     <title>Filakia in Oakbrook Terrace, IL | The Greek Directory</title>
 
@@ -19,11 +22,46 @@ or distribution of this code can result in legal action to the fullest extent pe
     <meta property="og:type" content="business.business">
     <meta property="og:url" content="https://listings.thegreekdirectory.org/listing/beauty-health/filakia">
     <meta property="og:image" content="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/beauty-health/filakia/logo/logo/logo.png">
+    <style>
+    .pwa-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .pwa-splash.fade-out {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .pwa-splash-logo {
+        width: 120px;
+        height: auto;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .pwa-splash {
+            background: #000000;
+        }
+    }
+    /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+</style>
+
+    <link rel="stylesheet" href="/css/pwa.css">
     <link rel="canonical" href="https://listings.thegreekdirectory.org/listing/beauty-health/filakia">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -240,7 +278,6 @@ Filakia is derived from the Greek root philia meaning "friendship" or "affection
         </div>
     
                     
-                    {{OTHER_LINKS_SECTION}}
                     <div class="share-section">
                         <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                         <div class="flex flex-wrap gap-2">
@@ -290,6 +327,54 @@ Filakia is derived from the Greek root philia meaning "friendship" or "affection
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/partials-loader.js"></script>
+    <script src="/js/pwa/storage.js"></script>
+    <script src="/js/pwa/app.js"></script>
+    <script src="/js/pwa/dock.js"></script>
+    <script src="/js/pwa/starred.js"></script>
+
+    <script>
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    // Store current listing data for starring
+    window.currentListingData = {
+        id: '3',
+        business_name: 'Filakia',
+        tagline: 'Clean and non-toxic products that nourish, heal and hydrate your lips and skin.',
+        description: 'At Filakia, we focus on small-batch, handmade beauty products. Everything is thoughtfully developed with clean ingredients that support your natural glow without compromise, toxins, or unnecessary ingredients. 
+
+I was inspired to start Filakia because my son suffered from severe eczema when he was a baby. For a while, I thought we finally had it under control, but a few years later it came back even worse than before. This time, not only did the eczema return, but he also suddenly developed multiple allergies. I realized it wasn't just about what I put into his body-it was equally important to pay attention to what I put onto his skin. That realization fueled my determination to find safer, more nourishing options and ultimately sparked the passion behind my business. 
+
+Our mission is simple - to create everyday essentials that make you feel good inside and out. From our ultra-hydrating lip balms to our delicately crafted whipped tallow balm, each homemade product is made with intention, purity, and care.
+
+Filakia is derived from the Greek root philia meaning "friendship" or "affectionate regard". Filakia also means little kisses!
+
+ We appreciate you visiting us and hope you love our products!',
+        category: 'Beauty &amp; Health',
+        city: 'Oakbrook Terrace',
+        state: 'IL',
+        address: '',
+        phone: '',
+        email: '{{EMAIL}}',
+        website: '{{WEBSITE}}',
+        logo: 'https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/beauty-health/filakia/logo/logo/logo.png',
+        photos: [{{PHOTOS_ARRAY}}],
+        slug: '{{SLUG}}'
+    };
+    
+    // Update star button state on load
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            const isStarred = await window.PWAStorage.isStarred('3');
+            const starButton = document.querySelector('.star-button');
+            if (starButton && isStarred) {
+                starButton.classList.add('starred');
+            }
+        }
+    });
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    </script>
     <script>
         /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
