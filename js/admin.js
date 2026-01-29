@@ -1377,12 +1377,29 @@ async function saveListing() {
         const phoneContainer = document.getElementById('editPhoneContainer');
         const phone = getPhoneValue(phoneContainer);
         
-        let slug = document.getElementById('editSlug').value.trim();
-        if (!slug) {
-            slug = businessName.toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-        }
+// In saveListing function, replace the slug generation with:
+
+let slug = document.getElementById('editSlug').value.trim();
+if (!slug) {
+    // Transliterate Greek to Latin
+    const greekToLatin = {
+        'α': 'a', 'β': 'b', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'ζ': 'z', 'η': 'h', 'θ': 'th',
+        'ι': 'i', 'κ': 'k', 'λ': 'l', 'μ': 'm', 'ν': 'n', 'ξ': 'x', 'ο': 'o', 'π': 'p',
+        'ρ': 'r', 'σ': 's', 'ς': 's', 'τ': 't', 'υ': 'y', 'φ': 'f', 'χ': 'ch', 'ψ': 'ps', 'ω': 'o',
+        'Α': 'a', 'Β': 'b', 'Γ': 'g', 'Δ': 'd', 'Ε': 'e', 'Ζ': 'z', 'Η': 'h', 'Θ': 'th',
+        'Ι': 'i', 'Κ': 'k', 'Λ': 'l', 'Μ': 'm', 'Ν': 'n', 'Ξ': 'x', 'Ο': 'o', 'Π': 'p',
+        'Ρ': 'r', 'Σ': 's', 'Τ': 't', 'Υ': 'y', 'Φ': 'f', 'Χ': 'ch', 'Ψ': 'ps', 'Ω': 'o'
+    };
+    
+    let transliterated = businessName;
+    for (const [greek, latin] of Object.entries(greekToLatin)) {
+        transliterated = transliterated.replace(new RegExp(greek, 'g'), latin);
+    }
+    
+    slug = transliterated.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+}
         
         const address = document.getElementById('editAddress').value.trim() || null;
         const city = document.getElementById('editCity').value.trim() || null;
