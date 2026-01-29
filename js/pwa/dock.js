@@ -1,9 +1,9 @@
-// js/pwa/dock.js (COMPLETE REPLACEMENT)
+// js/pwa/dock.js (COMPLETE REPLACEMENT WITH OVERFLOW HANDLING)
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
 // ============================================
-// PWA DOCK
-// Bottom navigation dock with icons
+// PWA DOCK WITH OVERFLOW MENU
+// Bottom navigation dock with dynamic overflow handling
 // ============================================
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -13,6 +13,7 @@ class PWADock {
         this.currentPath = window.location.pathname;
         this.longPressTimer = null;
         this.longPressTriggered = false;
+        this.maxVisibleApps = this.calculateMaxApps();
         
         // All available apps
         this.availableApps = [
@@ -28,6 +29,27 @@ class PWADock {
         
         // Load saved dock configuration or use default
         this.loadDockConfig();
+        
+        // Listen for resize events
+        window.addEventListener('resize', () => {
+            this.maxVisibleApps = this.calculateMaxApps();
+            this.refreshDock();
+        });
+    }
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    calculateMaxApps() {
+        const screenWidth = window.innerWidth;
+        
+        // Account for safe areas
+        const safeWidth = screenWidth - 32; // 16px padding on each side
+        
+        // Each app needs about 70px, more button needs 60px
+        if (safeWidth < 320) return 3; // Very small screens
+        if (safeWidth < 375) return 4; // iPhone SE
+        if (safeWidth < 414) return 5; // Standard phones
+        return 6; // Larger phones
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -67,22 +89,52 @@ class PWADock {
         return this.availableApps;
     }
     
+    getVisibleApps() {
+        const apps = this.getDockApps();
+        
+        // If apps fit, show all
+        if (apps.length <= this.maxVisibleApps) {
+            return { visible: apps, overflow: [] };
+        }
+        
+        // Calculate how many to show (leave room for more button)
+        const visibleCount = this.maxVisibleApps - 1;
+        
+        // Always show home if it exists
+        const homeIndex = apps.findIndex(app => app.id === 'home');
+        let visible = homeIndex >= 0 ? [apps[homeIndex]] : [];
+        
+        // Add other apps up to the limit
+        const remaining = apps.filter(app => app.id !== 'home');
+        visible = visible.concat(remaining.slice(0, visibleCount - visible.length));
+        
+        // Everything else goes to overflow
+        const overflow = remaining.slice(visibleCount - (homeIndex >= 0 ? 1 : 0));
+        
+        // Settings must be in overflow if there is overflow
+        const settingsIndex = visible.findIndex(app => app.id === 'settings');
+        if (overflow.length > 0 && settingsIndex >= 0) {
+            const settings = visible.splice(settingsIndex, 1)[0];
+            overflow.unshift(settings);
+        }
+        
+        return { visible, overflow };
+    }
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
     moveDockApp(appId, direction) {
         const index = this.dockApps.indexOf(appId);
         if (index === -1) return;
         
         const app = this.availableApps.find(a => a.id === appId);
-        if (app && app.required) return; // Can't move required apps beyond their boundaries
+        if (app && app.required) return;
         
         if (direction === 'up' && index > 0) {
-            // Don't move past home if it's required
             if (index === 1 && this.availableApps.find(a => a.id === this.dockApps[0])?.required) return;
-            
             [this.dockApps[index], this.dockApps[index - 1]] = [this.dockApps[index - 1], this.dockApps[index]];
         } else if (direction === 'down' && index < this.dockApps.length - 1) {
-            // Don't move past settings if it's required
             if (index === this.dockApps.length - 2 && this.availableApps.find(a => a.id === this.dockApps[this.dockApps.length - 1])?.required) return;
-            
             [this.dockApps[index], this.dockApps[index + 1]] = [this.dockApps[index + 1], this.dockApps[index]];
         }
         
@@ -94,8 +146,6 @@ class PWADock {
     
     addDockApp(appId) {
         if (this.dockApps.includes(appId)) return;
-        
-        // Add before the last item (settings)
         this.dockApps.splice(this.dockApps.length - 1, 0, appId);
         this.saveDockConfig();
         this.refreshDock();
@@ -104,7 +154,6 @@ class PWADock {
     removeDockApp(appId) {
         const app = this.availableApps.find(a => a.id === appId);
         if (app && app.required) return;
-        
         this.dockApps = this.dockApps.filter(id => id !== appId);
         this.saveDockConfig();
         this.refreshDock();
@@ -114,7 +163,6 @@ class PWADock {
     
     init() {
         if (!window.PWAApp || !window.PWAApp.isStandalone) return;
-        
         this.createDock();
         this.setupLongPress();
     }
@@ -123,6 +171,10 @@ class PWADock {
         const existingDock = document.querySelector('.pwa-dock');
         if (existingDock) {
             existingDock.remove();
+        }
+        const existingMenu = document.querySelector('.pwa-dock-more-menu');
+        if (existingMenu) {
+            existingMenu.remove();
         }
         this.createDock();
         this.setupLongPress();
@@ -134,31 +186,97 @@ class PWADock {
         const dock = document.createElement('nav');
         dock.className = 'pwa-dock';
         
-        const dockApps = this.getDockApps();
-        dock.innerHTML = dockApps.map(app => `
-            <a href="${app.path}" class="pwa-dock-item ${this.isActive(app.path) ? 'active' : ''}" data-page="${app.id}">
-                <div class="pwa-dock-icon">${app.icon}</div>
-                <div class="pwa-dock-label">${app.label}</div>
-            </a>
-        `).join('');
+        const { visible, overflow } = this.getVisibleApps();
+        
+        // Add visible apps
+        visible.forEach(app => {
+            const item = this.createDockItem(app);
+            dock.appendChild(item);
+        });
+        
+        // Add more button if there's overflow
+        if (overflow.length > 0) {
+            const moreButton = this.createMoreButton(overflow);
+            dock.appendChild(moreButton);
+        }
         
         document.body.appendChild(dock);
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
+    createDockItem(app) {
+        const item = document.createElement('a');
+        item.href = app.path;
+        item.className = `pwa-dock-item ${this.isActive(app.path) ? 'active' : ''}`;
+        item.dataset.page = app.id;
+        
+        const hasUpdate = app.id === 'settings' && localStorage.getItem('tgd_update_available') === 'true';
+        
+        item.innerHTML = `
+            <div class="pwa-dock-icon">
+                ${app.icon}
+                ${hasUpdate ? '<span class="update-badge"></span>' : ''}
+            </div>
+            <div class="pwa-dock-label">${app.label}</div>
+        `;
+        
+        return item;
+    }
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    createMoreButton(overflowApps) {
+        const container = document.createElement('div');
+        container.className = 'pwa-dock-more';
+        
+        const button = document.createElement('button');
+        button.className = 'pwa-dock-item';
+        button.innerHTML = `
+            <div class="pwa-dock-icon">☰</div>
+            <div class="pwa-dock-label">More</div>
+        `;
+        
+        const menu = document.createElement('div');
+        menu.className = 'pwa-dock-more-menu';
+        menu.innerHTML = overflowApps.map(app => {
+            const hasUpdate = app.id === 'settings' && localStorage.getItem('tgd_update_available') === 'true';
+            return `
+                <a href="${app.path}" class="pwa-dock-more-item ${this.isActive(app.path) ? 'active' : ''}">
+                    <div class="pwa-dock-more-icon">
+                        ${app.icon}
+                        ${hasUpdate ? '<span class="update-badge" style="position: absolute; top: -4px; right: -4px;"></span>' : ''}
+                    </div>
+                    <div class="pwa-dock-more-label">${app.label}</div>
+                </a>
+            `;
+        }).join('');
+        
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            menu.classList.toggle('active');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        });
+        
+        container.appendChild(button);
+        document.body.appendChild(menu);
+        
+        return container;
+    }
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
     isActive(path) {
         const currentPath = window.location.pathname;
-        
-        // Exact match
         if (currentPath === path) return true;
-        
-        // Root path matches
         if (path === '/index.html' && (currentPath === '/' || currentPath === '/index.html')) return true;
-        
-        // Partial match for listings and individual listing pages
         if (path === '/listings.html' && currentPath.includes('/listing')) return true;
-        
         return false;
     }
     
@@ -171,11 +289,8 @@ class PWADock {
             const page = item.dataset.page;
             const isCurrentPage = item.classList.contains('active');
             
-            // Touch events for long press
             item.addEventListener('touchstart', (e) => {
                 this.longPressTriggered = false;
-                
-                // Only allow long press on current page
                 if (isCurrentPage) {
                     this.longPressTimer = setTimeout(() => {
                         this.longPressTriggered = true;
@@ -186,8 +301,6 @@ class PWADock {
             
             item.addEventListener('touchend', (e) => {
                 clearTimeout(this.longPressTimer);
-                
-                // Prevent navigation if long press was triggered
                 if (this.longPressTriggered) {
                     e.preventDefault();
                 }
@@ -197,7 +310,6 @@ class PWADock {
                 clearTimeout(this.longPressTimer);
             });
             
-            // Prevent context menu
             item.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
             });
@@ -208,20 +320,15 @@ class PWADock {
     
     handleLongPress(page) {
         console.log('Long press on current tab:', page);
-        
-        // Haptic feedback if available
         if (navigator.vibrate) {
             navigator.vibrate(50);
         }
-        
-        // Reload page
         window.location.reload();
     }
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
-// Initialize dock
 const pwaDock = new PWADock();
 
 if (document.readyState === 'loading') {
