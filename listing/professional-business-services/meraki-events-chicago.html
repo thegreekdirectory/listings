@@ -9,7 +9,10 @@ or distribution of this code can result in legal action to the fullest extent pe
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     
     <title>Meraki Events Chicago in Niles, IL | The Greek Directory</title>
 
@@ -19,11 +22,46 @@ or distribution of this code can result in legal action to the fullest extent pe
     <meta property="og:type" content="business.business">
     <meta property="og:url" content="https://listings.thegreekdirectory.org/listing/professional-business-services/meraki-events-chicago">
     <meta property="og:image" content="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/professional-business-services/meraki-events-chicago/logo/logo/logo.jpeg">
+    <style>
+    .pwa-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .pwa-splash.fade-out {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .pwa-splash-logo {
+        width: 120px;
+        height: auto;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .pwa-splash {
+            background: #000000;
+        }
+    }
+    /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+</style>
+
+    <link rel="stylesheet" href="/css/pwa.css">
     <link rel="canonical" href="https://listings.thegreekdirectory.org/listing/professional-business-services/meraki-events-chicago">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -261,7 +299,6 @@ We provide for each of our clients a courteous and professional environment from
                 <div>
                     
                     
-                    {{OTHER_LINKS_SECTION}}
                     <div class="share-section">
                         <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                         <div class="flex flex-wrap gap-2">
@@ -311,6 +348,47 @@ We provide for each of our clients a courteous and professional environment from
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/partials-loader.js"></script>
+    <script src="/js/pwa/storage.js"></script>
+    <script src="/js/pwa/app.js"></script>
+    <script src="/js/pwa/dock.js"></script>
+    <script src="/js/pwa/starred.js"></script>
+
+    <script>
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    // Store current listing data for starring
+    window.currentListingData = {
+        id: '5',
+        business_name: 'Meraki Events Chicago',
+        tagline: 'Wedding planning service in Niles, IL.',
+        description: 'At Meraki Event Designs &amp; Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.
+We provide for each of our clients a courteous and professional environment from set up to service breakdown. Meraki Event Designs &amp; Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs &amp; Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.',
+        category: 'Professional &amp; Business Services',
+        city: 'Niles',
+        state: 'IL',
+        address: '9073 Courtland Dr',
+        phone: '(847) 779-3056',
+        email: '{{EMAIL}}',
+        website: '{{WEBSITE}}',
+        logo: 'https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/professional-business-services/meraki-events-chicago/logo/logo/logo.jpeg',
+        photos: [{{PHOTOS_ARRAY}}],
+        slug: '{{SLUG}}'
+    };
+    
+    // Update star button state on load
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            const isStarred = await window.PWAStorage.isStarred('5');
+            const starButton = document.querySelector('.star-button');
+            if (starButton && isStarred) {
+                starButton.classList.add('starred');
+            }
+        }
+    });
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    </script>
     <script>
         /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
