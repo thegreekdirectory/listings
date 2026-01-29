@@ -330,4 +330,31 @@ body.pwa-mode {
     }
 }
 
+      /* css/pwa.css (ADD to existing file) */
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Star Button Styles */
+.star-button {
+    background: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #d1d5db;
+}
+
+.star-button:hover {
+    transform: scale(1.1);
+}
+
+.star-button.starred {
+    color: #fbbf24;
+}
+
+.star-button svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. */
