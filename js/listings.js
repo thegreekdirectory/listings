@@ -65,7 +65,20 @@ function formatPhoneDisplay(phone) {
     return phone;
 }
 
-function loadStarredListings() {
+async function loadStarredListings() {
+    if (window.PWAStorage) {
+        try {
+            await window.PWAStorage.init();
+            const starred = await window.PWAStorage.getAllStarred();
+            starredListings = starred.map(l => l.id);
+            updateStarredCount();
+            return;
+        } catch (error) {
+            console.error('Error loading from PWA storage:', error);
+        }
+    }
+    
+    // Fallback to cookies
     const stored = getCookie('starredListings');
     if (stored) {
         try { 
@@ -86,28 +99,45 @@ function saveStarredListings() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-function toggleStar(listingId, event) {
+async function toggleStar(listingId, event) {
     if (event) { 
         event.preventDefault(); 
         event.stopPropagation(); 
     }
-    const index = starredListings.indexOf(listingId);
-    if (index > -1) {
-        starredListings.splice(index, 1);
-    } else {
-        starredListings.push(listingId);
-    }
-    saveStarredListings();
     
-    // Update the specific star button
-    const starButtons = document.querySelectorAll(`[onclick*="toggleStar('${listingId}'"]`);
-    starButtons.forEach(btn => {
-        if (starredListings.includes(listingId)) {
-            btn.classList.add('starred');
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    // Find the listing data
+    const listing = allListings.find(l => l.id === listingId);
+    
+    if (!listing) {
+        console.error('Listing not found:', listingId);
+        return;
+    }
+    
+    // Use PWA storage if available
+    if (window.StarredManager && window.PWAStorage) {
+        await window.StarredManager.toggleStar(listingId, listing);
+    } else {
+        // Fallback to cookie-based storage
+        const index = starredListings.indexOf(listingId);
+        if (index > -1) {
+            starredListings.splice(index, 1);
         } else {
-            btn.classList.remove('starred');
+            starredListings.push(listingId);
         }
-    });
+        saveStarredListings();
+        
+        // Update the specific star button
+        const starButtons = document.querySelectorAll(`[onclick*="toggleStar('${listingId}'"]`);
+        starButtons.forEach(btn => {
+            if (starredListings.includes(listingId)) {
+                btn.classList.add('starred');
+            } else {
+                btn.classList.remove('starred');
+            }
+        });
+    }
 }
 
 function updateStarredCount() {
