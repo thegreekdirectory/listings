@@ -1,0 +1,252 @@
+<!-- map.html -->
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>Map - The Greek Directory</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/icon-192.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/listings.css">
+    <link rel="stylesheet" href="css/pwa.css">
+    
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
+    <style>
+        /* Inline splash screen styles for immediate render */
+        .pwa-splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .pwa-splash.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .pwa-splash-logo {
+            width: 120px;
+            height: auto;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .pwa-splash {
+                background: #000000;
+            }
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        body.pwa-mode #map {
+            height: calc(100vh - env(safe-area-inset-top, 0px) - 60px - env(safe-area-inset-bottom, 0px));
+            border-radius: 0;
+        }
+        
+        .map-marker-popup {
+            max-width: 300px;
+        }
+        
+        .map-marker-popup h3 {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            font-size: 1.125rem;
+        }
+        
+        .map-marker-popup p {
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        .map-marker-popup a {
+            color: #045093;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+    </style>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body class="bg-gray-50">
+    <!-- Header (hidden in PWA mode) -->
+    <div data-partial="header"></div>
+    
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Map View</h1>
+            <p class="text-gray-600">Explore Greek-owned businesses across America</p>
+        </div>
+        
+        <!-- Map Container -->
+        <div id="map"></div>
+        
+        <!-- Loading Indicator -->
+        <div id="mapLoading" class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="mt-4 text-gray-600">Loading map...</p>
+        </div>
+    </div>
+    
+    <!-- Footer (hidden in PWA mode) -->
+    <div data-partial="footer"></div>
+    
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="js/pwa/storage.js"></script>
+    <script src="js/pwa/app.js"></script>
+    <script src="js/pwa/dock.js"></script>
+    <script src="js/pwa/starred.js"></script>
+    <script src="js/partials-loader.js"></script>
+    
+    <script>
+        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        
+        const SUPABASE_URL = 'https://yxtdrgjeepblvetwbdaz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dGRyZ2plZXBibHZldHdiZGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNjYwODMsImV4cCI6MjA1MjY0MjA4M30.nqq9AY5_Nm3oJ02-eB-5rW64NLYzTppPq6xCaMgPBzw';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let map;
+        let markers = [];
+        
+        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        
+        async function initMap() {
+            // Initialize map centered on USA
+            map = L.map('map').setView([39.8283, -98.5795], 4);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            // Hide loading indicator
+            document.getElementById('mapLoading').style.display = 'none';
+            document.getElementById('map').style.display = 'block';
+            
+            // Load listings
+            await loadMapListings();
+        }
+        
+        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        
+        async function loadMapListings() {
+            try {
+                const { data: listings, error } = await supabase
+                    .from('listings')
+                    .select('*')
+                    .eq('status', 'active')
+                    .not('address', 'is', null);
+                
+                if (error) throw error;
+                
+                // Geocode and add markers for each listing
+                for (const listing of listings) {
+                    if (listing.address && listing.city && listing.state) {
+                        await addMarker(listing);
+                    }
+                }
+                
+                // Adjust map bounds to show all markers
+                if (markers.length > 0) {
+                    const group = L.featureGroup(markers);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                }
+                
+            } catch (error) {
+                console.error('Error loading map listings:', error);
+            }
+        }
+        
+        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        
+        async function addMarker(listing) {
+            // Geocode address
+            const address = `${listing.address}, ${listing.city}, ${listing.state}`;
+            const coords = await geocodeAddress(address);
+            
+            if (coords) {
+                const categorySlug = (listing.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const url = `/listing/${categorySlug}/${listing.slug}`;
+                
+                const marker = L.marker(coords).addTo(map);
+                
+                const popupContent = `
+                    <div class="map-marker-popup">
+                        <h3>${listing.business_name}</h3>
+                        ${listing.category ? `<p><strong>Category:</strong> ${listing.category}</p>` : ''}
+                        ${listing.tagline ? `<p>${listing.tagline}</p>` : ''}
+                        <p>📍 ${listing.city}, ${listing.state}</p>
+                        <a href="${url}">View Details →</a>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+            }
+        }
+        
+        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        
+        async function geocodeAddress(address) {
+            try {
+                // Using Nominatim (OpenStreetMap) geocoding service
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                }
+                return null;
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                return null;
+            }
+        }
+        
+        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        
+        // Initialize map when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+        });
+        
+        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    </script>
+</body>
+</html>
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
