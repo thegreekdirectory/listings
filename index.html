@@ -8,10 +8,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Greek Directory - Discover Greek-Owned Businesses Across America</title>
     <meta name="description" content="The Greek Directory is the premier online directory of Greek-owned businesses across the United States. Find restaurants, services, shops, and more.">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
+
+    <style>
+    .pwa-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .pwa-splash.fade-out {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .pwa-splash-logo {
+        width: 120px;
+        height: auto;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .pwa-splash {
+            background: #000000;
+        }
+    }
+    /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+</style>
+
+<!-- Add PWA CSS -->
+<link rel="stylesheet" href="css/pwa.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -101,6 +142,10 @@
 
     <script src="js/partials-loader.js"></script>
     <script src="js/index.js"></script>
+    <script src="js/pwa/storage.js"></script>
+    <script src="js/pwa/app.js"></script>
+    <script src="js/pwa/dock.js"></script>
+    <script src="js/pwa/starred.js"></script>
 </body>
 </html>
 
