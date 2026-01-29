@@ -455,8 +455,8 @@ window.toggleVisibility = async function(id) {
 window.loadListings = loadListings;
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. For more information, visit https://thegreekdirectory.org/legal.
-// js/admin.js - PART 4
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. For more information, visit https://thegreekdirectory.org/legal.
+// js/admin.js - PART 4 (FIXED)
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 // ============================================
 // ADMIN PORTAL - PART 4
@@ -464,10 +464,20 @@ window.loadListings = loadListings;
 // ============================================
 
 window.viewAnalytics = async function(listingId) {
+    console.log('📊 viewAnalytics called for listing:', listingId);
+    
     const listing = allListings.find(l => l.id === listingId);
-    if (!listing) return;
+    if (!listing) {
+        console.error('Listing not found:', listingId);
+        alert('Listing not found');
+        return;
+    }
+    
+    console.log('Found listing:', listing.business_name);
     
     try {
+        console.log('Fetching analytics data...');
+        
         // Fetch analytics data from Supabase
         const { data: analyticsData, error } = await adminSupabase
             .from('listing_analytics')
@@ -475,7 +485,12 @@ window.viewAnalytics = async function(listingId) {
             .eq('listing_id', listingId)
             .order('timestamp', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+            console.error('Analytics fetch error:', error);
+            throw error;
+        }
+        
+        console.log('Analytics data fetched:', analyticsData?.length || 0, 'events');
         
         // Aggregate analytics
         const analytics = {
@@ -517,6 +532,8 @@ window.viewAnalytics = async function(listingId) {
             });
         }
         
+        console.log('Aggregated analytics:', analytics);
+        
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
         // Create analytics modal HTML
@@ -537,14 +554,17 @@ window.viewAnalytics = async function(listingId) {
             </div>
         `;
         
+        console.log('Removing existing modal...');
         // Remove existing modal if present
         const existingModal = document.getElementById('analyticsModal');
         if (existingModal) {
             existingModal.remove();
         }
         
+        console.log('Adding modal to page...');
         // Add modal to page
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        console.log('✅ Analytics modal displayed');
         
     } catch (error) {
         console.error('Error loading analytics:', error);
@@ -607,16 +627,16 @@ function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatfo
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         `;
         
+        const platformNames = {
+            'facebook': '📘 Facebook',
+            'twitter': '🐦 Twitter/X',
+            'linkedin': '💼 LinkedIn',
+            'sms': '💬 SMS',
+            'email': '📧 Email',
+            'native': '📱 Native Share'
+        };
+        
         Object.entries(sharePlatforms).forEach(([platform, count]) => {
-            const platformNames = {
-                'facebook': '📘 Facebook',
-                'twitter': '🐦 Twitter/X',
-                'linkedin': '💼 LinkedIn',
-                'sms': '💬 SMS',
-                'email': '📧 Email',
-                'native': '📱 Native Share'
-            };
-            
             content += `
                 <div class="bg-white border border-gray-200 p-3 rounded-lg">
                     <div class="text-2xl font-bold text-gray-900">${count}</div>
@@ -687,7 +707,8 @@ function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatfo
         content += `
             <div class="p-8 text-center bg-gray-50 rounded-lg">
                 <div class="text-gray-400 text-4xl mb-2">📊</div>
-                <div class="text-gray-600">No detailed analytics available yet</div>
+                <div class="text-gray-600">No analytics data available yet</div>
+                <div class="text-sm text-gray-500 mt-2">Visit the listing page to generate some activity</div>
             </div>
         `;
     }
@@ -704,31 +725,7 @@ window.closeAnalyticsModal = function() {
     }
 };
 
-// =========================================================================================================================
-// Add this RIGHT AFTER Part 4 (Analytics Modal section)
-
-// Test function
-window.testAnalytics = function() {
-    console.log('Test function works!');
-    console.log('viewAnalytics function exists?', typeof window.viewAnalytics);
-};
-
-// Make absolutely sure viewAnalytics is global
-window.viewAnalytics = async function(listingId) {
-    console.log('📊 viewAnalytics called for listing:', listingId);
-    
-    const listing = allListings.find(l => l.id === listingId);
-    if (!listing) {
-        console.error('Listing not found:', listingId);
-        return;
-    }
-    
-    console.log('Found listing:', listing.business_name);
-    
-    // Rest of the viewAnalytics function from Part 4...
-};
-
-// ===================================================================================
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. For more information, visit https://thegreekdirectory.org/legal.
 // js/admin.js - PART 5
