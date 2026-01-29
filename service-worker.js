@@ -10,6 +10,7 @@ const CORE_ASSETS = [
   '/',
   '/index.html',
   '/listings.html',
+  '/map.html',
   '/starred.html',
   '/settings.html',
   '/offline.html',
