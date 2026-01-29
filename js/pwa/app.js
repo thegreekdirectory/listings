@@ -1,9 +1,9 @@
-// js/pwa/app.js (COMPLETE REPLACEMENT)
+// js/pwa/app.js (THEME FIX)
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
 // ============================================
-// PWA APP MANAGER
-// Main PWA functionality and initialization
+// PWA APP MANAGER - THEME FIX
+// Fixed theme switching to use body classes instead of data-theme attribute
 // ============================================
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -178,21 +178,26 @@ class PWAApp {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
+    // FIXED: Use body classes instead of data-theme attribute
     applyTheme() {
         const theme = localStorage.getItem('tgd_theme') || 'system';
-        const root = document.documentElement;
+        
+        // Remove existing theme classes
+        document.body.classList.remove('theme-light', 'theme-dark');
         
         if (theme === 'system') {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            root.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            document.body.classList.add(prefersDark ? 'theme-dark' : 'theme-light');
         } else {
-            root.setAttribute('data-theme', theme);
+            document.body.classList.add(`theme-${theme}`);
         }
         
         // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (theme === 'system') {
-                root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+            const currentTheme = localStorage.getItem('tgd_theme') || 'system';
+            if (currentTheme === 'system') {
+                document.body.classList.remove('theme-light', 'theme-dark');
+                document.body.classList.add(e.matches ? 'theme-dark' : 'theme-light');
             }
         });
     }
@@ -274,6 +279,68 @@ class PWAApp {
         
         setTimeout(() => {
             window.location.href = '/index.html';
+        }, 1000);
+    }
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    // NEW: Hard refresh method that preserves starred listings and settings
+    async hardRefresh() {
+        // Preserve starred listings and settings
+        const starredBackup = [];
+        const themeBackup = localStorage.getItem('tgd_theme');
+        const languageBackup = localStorage.getItem('tgd_language');
+        const dockBackup = localStorage.getItem('tgd_dock_apps');
+        
+        // Get starred listings from IndexedDB
+        if (window.PWAStorage) {
+            try {
+                await window.PWAStorage.init();
+                const starred = await window.PWAStorage.getAllStarred();
+                starredBackup.push(...starred);
+            } catch (error) {
+                console.error('Error backing up starred listings:', error);
+            }
+        }
+        
+        // Unregister service worker
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+                await registration.unregister();
+            }
+        }
+        
+        // Clear all caches
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+        
+        // Clear localStorage (except backups)
+        localStorage.clear();
+        
+        // Restore settings
+        if (themeBackup) localStorage.setItem('tgd_theme', themeBackup);
+        if (languageBackup) localStorage.setItem('tgd_language', languageBackup);
+        if (dockBackup) localStorage.setItem('tgd_dock_apps', dockBackup);
+        
+        // Restore starred listings to IndexedDB
+        if (window.PWAStorage && starredBackup.length > 0) {
+            try {
+                await window.PWAStorage.init();
+                for (const listing of starredBackup) {
+                    await window.PWAStorage.addStarred(listing);
+                }
+            } catch (error) {
+                console.error('Error restoring starred listings:', error);
+            }
+        }
+        
+        this.showToast('Cache cleared! Reloading...');
+        
+        setTimeout(() => {
+            window.location.reload(true);
         }, 1000);
     }
     
