@@ -1,12 +1,53 @@
-/* css/pwa.css */
+/* css/pwa.css (COMPLETE REPLACEMENT) */
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. */
 
 /* ============================================
    PWA STYLES
-   Dock, Splash Screen, and App-Specific Styles
    ============================================ */
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Prevent link preview on long press for all links except dock */
+a:not(.pwa-dock-item) {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+button:not(.pwa-dock-item *) {
+    -webkit-touch-callout: none;
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Safe Area Support */
+:root {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* PWA Mode Body Adjustments */
+body.pwa-mode {
+    padding-top: var(--safe-area-top);
+    padding-bottom: calc(60px + var(--safe-area-bottom));
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+}
+
+body.pwa-mode [data-partial="header"],
+body.pwa-mode [data-partial="footer"] {
+    display: none !important;
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Content wrapper for safe areas */
+.pwa-safe-content {
+    padding-top: var(--safe-area-top);
+    min-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - 60px);
+}
 
 /* Splash Screen */
 .pwa-splash {
@@ -21,6 +62,7 @@
     justify-content: center;
     z-index: 9999;
     transition: opacity 0.5s ease, visibility 0.5s ease;
+    padding-top: var(--safe-area-top);
 }
 
 .pwa-splash.fade-out {
@@ -33,57 +75,28 @@
     height: auto;
 }
 
-@media (prefers-color-scheme: dark) {
-    .pwa-splash {
-        background: #000000;
-    }
-}
-
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Hide header and footer in PWA mode */
-body.pwa-mode header,
-body.pwa-mode footer,
-body.pwa-mode [data-partial="header"],
-body.pwa-mode [data-partial="footer"] {
-    display: none !important;
-}
-
-/* Adjust page padding for dock */
-body.pwa-mode {
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-/* PWA Dock */
+/* Dock Styles */
 .pwa-dock {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: calc(60px + env(safe-area-inset-bottom, 0px));
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
-    align-items: flex-start;
     justify-content: space-around;
-    padding-top: 8px;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    align-items: center;
+    height: calc(60px + var(--safe-area-bottom));
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
     z-index: 1000;
-    user-select: none;
-    -webkit-user-select: none;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
-
-@supports not (backdrop-filter: blur(20px)) {
-    .pwa-dock {
-        background: rgba(255, 255, 255, 0.98);
-    }
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
 .pwa-dock-item {
     flex: 1;
@@ -91,59 +104,263 @@ body.pwa-mode {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    padding: 8px 4px;
     text-decoration: none;
     color: #6b7280;
     transition: all 0.2s;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 8px;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.pwa-dock-item:active {
-    transform: scale(0.95);
-}
-
-.pwa-dock-icon {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    transition: all 0.2s;
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-.pwa-dock-label {
-    font-size: 10px;
-    font-weight: 500;
-    transition: all 0.2s;
+    position: relative;
+    min-width: 0;
+    max-width: 80px;
 }
 
 .pwa-dock-item.active {
     color: #045093;
+    font-weight: 600;
 }
 
-.pwa-dock-item.active .pwa-dock-icon {
-    transform: translateY(-2px);
+.pwa-dock-icon {
+    font-size: 24px;
+    margin-bottom: 2px;
+    position: relative;
+}
+
+.pwa-dock-label {
+    font-size: 10px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Dark mode dock */
+/* Update Badge */
+.update-badge {
+    position: absolute;
+    top: 0;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* Dock More Menu */
+.pwa-dock-more {
+    position: relative;
+}
+
+.pwa-dock-more-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    padding: 8px 0;
+    margin-bottom: 8px;
+    min-width: 120px;
+    display: none;
+    z-index: 1001;
+}
+
+.pwa-dock-more-menu.active {
+    display: block;
+}
+
+.pwa-dock-more-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: #374151;
+    transition: background 0.2s;
+}
+
+.pwa-dock-more-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.pwa-dock-more-item.active {
+    color: #045093;
+    font-weight: 600;
+}
+
+.pwa-dock-more-icon {
+    font-size: 20px;
+}
+
+.pwa-dock-more-label {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Toast Notifications */
+.pwa-toast {
+    position: fixed;
+    bottom: calc(80px + var(--safe-area-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    z-index: 9998;
+    opacity: 0;
+    transition: opacity 0.3s;
+    max-width: calc(100% - 32px);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.pwa-toast.show {
+    opacity: 1;
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Install Prompt */
+.pwa-install-prompt {
+    position: fixed;
+    bottom: calc(80px + var(--safe-area-bottom));
+    left: 16px;
+    right: 16px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 9997;
+    display: none;
+}
+
+.pwa-install-prompt.show {
+    display: block;
+}
+
+.pwa-install-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.pwa-install-button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pwa-install-button.primary {
+    background: #045093;
+    color: white;
+}
+
+.pwa-install-button.secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Star Button Styles */
+.star-button {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #d1d5db;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    -webkit-touch-callout: default;
+    -webkit-user-select: none;
+}
+
+.star-button:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 1);
+}
+
+.star-button.starred {
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.1);
+}
+
+.star-button svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Update Banner in Settings */
+.update-banner {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.update-banner h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.update-banner p {
+    font-size: 14px;
+    margin-bottom: 16px;
+    opacity: 0.9;
+}
+
+.update-banner button {
+    background: white;
+    color: #2563eb;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.update-banner button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
-    .pwa-dock {
-        background: rgba(26, 26, 26, 0.95);
-        border-top-color: rgba(255, 255, 255, 0.1);
+    .pwa-splash {
+        background: #000000;
     }
     
-    @supports not (backdrop-filter: blur(20px)) {
-        .pwa-dock {
-            background: rgba(26, 26, 26, 0.98);
-        }
+    .pwa-dock {
+        background: rgba(30, 30, 30, 0.95);
+        border-top-color: rgba(255, 255, 255, 0.1);
     }
     
     .pwa-dock-item {
@@ -153,208 +370,39 @@ body.pwa-mode {
     .pwa-dock-item.active {
         color: #60a5fa;
     }
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-/* Toast notifications */
-.pwa-toast {
-    position: fixed;
-    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: rgba(0, 0, 0, 0.85);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 24px;
-    font-size: 14px;
-    font-weight: 500;
-    z-index: 9998;
-    opacity: 0;
-    transition: all 0.3s ease;
-    pointer-events: none;
-    white-space: nowrap;
-}
-
-.pwa-toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-/* Loading spinner */
-.pwa-loading {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 9997;
-}
-
-.pwa-loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(5, 81, 147, 0.2);
-    border-top-color: #045093;
-    border-radius: 50%;
-    animation: pwa-spin 0.8s linear infinite;
-}
-
-@keyframes pwa-spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-/* Safe area adjustments for notched devices */
-@supports (padding: max(0px)) {
-    .pwa-dock {
-        padding-left: max(0px, env(safe-area-inset-left));
-        padding-right: max(0px, env(safe-area-inset-right));
-    }
-}
-
-/* Install prompt (for browsers that support it) */
-.pwa-install-prompt {
-    position: fixed;
-    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-    left: 16px;
-    right: 16px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    padding: 16px;
-    z-index: 999;
-    display: none;
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-.pwa-install-prompt.show {
-    display: block;
-}
-
-.pwa-install-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.pwa-install-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.pwa-install-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.pwa-install-text h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1a1a1a;
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-.pwa-install-text p {
-    margin: 4px 0 0;
-    font-size: 14px;
-    color: #666;
-}
-
-.pwa-install-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.pwa-install-btn {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.pwa-install-btn-primary {
-    background: #045093;
-    color: white;
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-.pwa-install-btn-primary:hover {
-    background: #033d75;
-}
-
-.pwa-install-btn-secondary {
-    background: #f3f4f6;
-    color: #6b7280;
-}
-
-.pwa-install-btn-secondary:hover {
-    background: #e5e7eb;
-}
-
-@media (prefers-color-scheme: dark) {
-    .pwa-install-prompt {
-        background: #2a2a2a;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    
+    .pwa-dock-more-menu {
+        background: rgba(30, 30, 30, 0.95);
     }
     
-    .pwa-install-text h3 {
+    .pwa-dock-more-item {
         color: #e5e7eb;
     }
     
-    .pwa-install-text p {
-        color: #9ca3af;
+    .pwa-dock-more-item.active {
+        color: #60a5fa;
     }
     
-    .pwa-install-btn-secondary {
-        background: #3a3a3a;
-        color: #9ca3af;
+    .star-button {
+        background: rgba(30, 30, 30, 0.9);
     }
     
-    .pwa-install-btn-secondary:hover {
-        background: #404040;
+    .star-button:hover {
+        background: rgba(30, 30, 30, 1);
     }
-}
-
-      /* css/pwa.css (ADD to existing file) */
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-/* Star Button Styles */
-.star-button {
-    background: white;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: #d1d5db;
-}
-
-.star-button:hover {
-    transform: scale(1.1);
-}
-
-.star-button.starred {
-    color: #fbbf24;
-}
-
-.star-button svg {
-    width: 24px;
-    height: 24px;
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Responsive Dock */
+@media (max-width: 360px) {
+    .pwa-dock-label {
+        font-size: 9px;
+    }
+    
+    .pwa-dock-icon {
+        font-size: 22px;
+    }
+}
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. */
