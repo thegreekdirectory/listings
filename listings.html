@@ -4,15 +4,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <meta charset="UTF-8">    
     <title>The Greek Directory - Local Greek-Owned Businesses, Churches & Cultural Centers</title>
     
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="white">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Greek Directory">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="manifest" href="/manifest.json">
+
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+        <meta name="apple-mobile-web-app-title" content="Greek Directory">
     <link rel="apple-touch-startup-image" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg" type="image/x-icon">
     
@@ -31,6 +34,43 @@
     
     <link rel="stylesheet" href="css/listings.css">
     <link rel="stylesheet" href="css/index.css">
+<!-- Add inline splash screen CSS in <head> -->
+<style>
+    .pwa-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .pwa-splash.fade-out {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .pwa-splash-logo {
+        width: 120px;
+        height: auto;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .pwa-splash {
+            background: #000000;
+        }
+    }
+    /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+</style>
+
+<!-- Add PWA CSS -->
+<link rel="stylesheet" href="css/pwa.css">
+
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 </head>
@@ -319,6 +359,37 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="js/partials-loader.js"></script>
     <script src="js/listings.js"></script>
+    <script src="js/pwa/storage.js"></script>
+<script src="js/pwa/app.js"></script>
+<script src="js/pwa/dock.js"></script>
+<script src="js/pwa/starred.js"></script>
+
+<script>
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    // Store listing data for starring functionality
+    window.currentListingData = null;
+    
+    // Update star buttons on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            
+            // Check all listings and update star button states
+            const starButtons = document.querySelectorAll('.star-button');
+            for (const button of starButtons) {
+                const listingId = button.getAttribute('onclick').match(/'([^']+)'/)[1];
+                const isStarred = await window.PWAStorage.isStarred(listingId);
+                if (isStarred) {
+                    button.classList.add('starred');
+                }
+            }
+        }
+    });
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+</script>
+
 </body>
 </html>
 
