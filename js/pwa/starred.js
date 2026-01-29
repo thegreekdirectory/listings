@@ -192,4 +192,30 @@ window.handleStarClick = async function(listingId, event) {
     }
 };
 
+// js/pwa/storage.js (ADD DEBUGGING AND FIX)
+// Add after getAllStarred method:
+
+async getAllStarred() {
+    try {
+        await this.init();
+        const transaction = this.db.transaction(['starredListings'], 'readonly');
+        const store = transaction.objectStore('starredListings');
+        const request = store.getAll();
+        
+        return new Promise((resolve, reject) => {
+            request.onsuccess = () => {
+                console.log('Retrieved starred listings:', request.result);
+                resolve(request.result || []);
+            };
+            request.onerror = () => {
+                console.error('Get all starred failed:', request.error);
+                reject(request.error);
+            };
+        });
+    } catch (error) {
+        console.error('getAllStarred failed:', error);
+        return [];
+    }
+}
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
