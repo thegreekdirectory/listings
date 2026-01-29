@@ -9,7 +9,10 @@ or distribution of this code can result in legal action to the fullest extent pe
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     
     <title>Hellenic American Academy in Deerfield, IL | The Greek Directory</title>
 
@@ -19,11 +22,46 @@ or distribution of this code can result in legal action to the fullest extent pe
     <meta property="og:type" content="business.business">
     <meta property="og:url" content="https://listings.thegreekdirectory.org/listing/education-community/hellenic-american-academy">
     <meta property="og:image" content="https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/logo/logo/logo.png">
+    <style>
+    .pwa-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .pwa-splash.fade-out {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .pwa-splash-logo {
+        width: 120px;
+        height: auto;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .pwa-splash {
+            background: #000000;
+        }
+    }
+    /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+</style>
+
+    <link rel="stylesheet" href="/css/pwa.css">
     <link rel="canonical" href="https://listings.thegreekdirectory.org/listing/education-community/hellenic-american-academy">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -281,11 +319,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
             <div class="flex flex-wrap gap-2">
-                <a href="https://www.google.com/search?sca_esv=a7b494c8dfb9f393&sxsrf=AE3TifN-8ti95cDOoxaIQ3kfc7Y0wYleXA:1767604514111&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8syw1cwovHj5Xyj1Cj8d-SfoufsCekGlzEcyDIh1Etk22C_DhCnQ7SVTx15tIVSmPepCEudFiD_qYUPDCGbmSDgkQ42Li9cJv5spewFeWIJHDyo02XA%3D%3D&q=Hellenic+American+Academy+Reviews" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews"><svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg></a><a href="https://www.yelp.com/biz/hellenic-american-academy-deerfield" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 1000 1000"><path fill="#D32323" d="M417.4 685.6l13.5 82.1c1.4 8.3 6.6 15.1 14 18.3 7.5 3.2 16 3.3 23.5 0.4l187.3-69.7c6.6-2.3 11.5-7.6 13.5-14.2 2-6.6 1.1-13.7-2.5-19.6l-32-53.3c-4.5-7.5-12.6-12-21.3-11.7l-66.8 1.9c-11 0.3-21.6 5.2-28.2 13.1-6.6 8-9.5 18.8-7.8 29.7l11.4 57.7-114.7 42.7 11-83.8-45.9 2.4zm198.8-122.8l51.8 85.4c4.5 7.4 12.5 11.9 21.2 11.9 1.3 0 2.6-0.1 4-0.3 9.8-2 17.6-9.2 20.5-18.9l71.6-242.5c1.9-6.7 1.3-13.8-1.6-20-2.9-6.2-8-11-14.3-13.4l-61.8-23.3c-8.6-3.2-18.4-2.1-26.1 3-7.7 5.1-12.4 13.5-12.4 22.4l-2.5 83.7c-0.2 11.9-5.8 23-14.9 29.7-9.1 6.7-20.8 8.7-31.4 5.3l-60.2-19.4 34.6 114.3 21.5-17.9zm-198.6-237.2c0.1-9.8 5-18.9 13.1-24.3 8.1-5.4 18.4-6.5 27.6-3l232.8 88.2c6.7 2.5 12 7.8 14.4 14.5s2.3 14.1-0.4 20.7l-26.7 65.1c-3.6 8.8-11.9 14.6-21.5 15.1-9.6 0.5-18.6-4.4-23.3-12.7l-46.1-78.4c-6.4-10.9-17.2-18.2-29-19.5-11.8-1.3-23.7 3.3-31.9 12.4l-46.6 51.8-67.7-129.9 5.3 0zm-29.5 259.9l66.2-1.9c9.7-0.3 18.9 4.3 24.2 12 5.3 7.7 6.4 17.6 2.9 26.5l-88.4 225.4c-2.5 6.3-7.5 11.3-13.9 13.8-6.4 2.5-13.5 2.3-19.8-0.5l-61.8-27.5c-8.6-3.8-14.2-11.9-14.7-21.2-0.5-9.3 4-18 11.7-22.7l76.1-46.7c10.6-6.5 18.1-17.1 20.1-28.4 2-11.3-0.8-23-7.5-31.3l-38.3-46.8 43.2-50.7z"/></svg></a>
+                <a href="https://www.google.com/search?sca_esv=a7b494c8dfb9f393&sxsrf=AE3TifN-8ti95cDOoxaIQ3kfc7Y0wYleXA:1767604514111&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8syw1cwovHj5Xyj1Cj8d-SfoufsCekGlzEcyDIh1Etk22C_DhCnQ7SVTx15tIVSmPepCEudFiD_qYUPDCGbmSDgkQ42Li9cJv5spewFeWIJHDyo02XA%3D%3D&q=Hellenic+American+Academy+Reviews" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews"><svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg></a><a href="https://www.yelp.com/biz/hellenic-american-academy-deerfield" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/ylogo.svg"/></svg></a>
             </div>
         </div>
     
-                    {{OTHER_LINKS_SECTION}}
                     <div class="share-section">
                         <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                         <div class="flex flex-wrap gap-2">
@@ -335,6 +372,46 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/partials-loader.js"></script>
+    <script src="/js/pwa/storage.js"></script>
+    <script src="/js/pwa/app.js"></script>
+    <script src="/js/pwa/dock.js"></script>
+    <script src="/js/pwa/starred.js"></script>
+
+    <script>
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    // Store current listing data for starring
+    window.currentListingData = {
+        id: '1',
+        business_name: 'Hellenic American Academy',
+        tagline: 'Private dual-language day school &amp; examination center for Ellinomatheia.',
+        description: 'Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy's problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.',
+        category: 'Education &amp; Community',
+        city: 'Deerfield',
+        state: 'IL',
+        address: '445 Pine St',
+        phone: '(847) 317-1063',
+        email: '{{EMAIL}}',
+        website: '{{WEBSITE}}',
+        logo: 'https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/logo/logo/logo.png',
+        photos: [{{PHOTOS_ARRAY}}],
+        slug: '{{SLUG}}'
+    };
+    
+    // Update star button state on load
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            const isStarred = await window.PWAStorage.isStarred('1');
+            const starButton = document.querySelector('.star-button');
+            if (starButton && isStarred) {
+                starButton.classList.add('starred');
+            }
+        }
+    });
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    </script>
     <script>
         /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
