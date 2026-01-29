@@ -704,6 +704,32 @@ window.closeAnalyticsModal = function() {
     }
 };
 
+// =========================================================================================================================
+// Add this RIGHT AFTER Part 4 (Analytics Modal section)
+
+// Test function
+window.testAnalytics = function() {
+    console.log('Test function works!');
+    console.log('viewAnalytics function exists?', typeof window.viewAnalytics);
+};
+
+// Make absolutely sure viewAnalytics is global
+window.viewAnalytics = async function(listingId) {
+    console.log('📊 viewAnalytics called for listing:', listingId);
+    
+    const listing = allListings.find(l => l.id === listingId);
+    if (!listing) {
+        console.error('Listing not found:', listingId);
+        return;
+    }
+    
+    console.log('Found listing:', listing.business_name);
+    
+    // Rest of the viewAnalytics function from Part 4...
+};
+
+// ===================================================================================
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. For more information, visit https://thegreekdirectory.org/legal.
 // js/admin.js - PART 5
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. For more information, visit https://thegreekdirectory.org/legal.
