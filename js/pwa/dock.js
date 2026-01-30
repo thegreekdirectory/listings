@@ -1,9 +1,9 @@
-// js/pwa/dock.js (COMPLETE WITH CATEGORIES AND AUTO-HIDE)
+// js/pwa/dock.js (COMPLETE FIX - NO BOUNCE, PWA-ONLY)
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
 // ============================================
-// PWA DOCK WITH CATEGORIES AND AUTO-HIDE
-// Bottom navigation dock with dynamic overflow handling and auto-hide
+// PWA DOCK - FIXED: NO BOUNCE, PWA-ONLY
+// Bottom navigation dock - cemented by default, smooth auto-hide
 // ============================================
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -15,8 +15,9 @@ class PWADock {
         this.longPressTriggered = false;
         this.maxVisibleApps = this.calculateMaxApps();
         this.autoHide = localStorage.getItem('tgd_dock_autohide') === 'true';
-        this.lastScrollY = window.scrollY;
+        this.lastScrollY = 0;
         this.scrollTimer = null;
+        this.ticking = false;
         
         // All available apps
         this.availableApps = [
@@ -169,50 +170,78 @@ class PWADock {
         this.autoHide = enabled;
         localStorage.setItem('tgd_dock_autohide', enabled ? 'true' : 'false');
         
+        const dock = document.querySelector('.pwa-dock');
+        if (!dock) return;
+        
         if (enabled) {
             this.setupAutoHide();
         } else {
             this.removeAutoHide();
+            // Ensure dock is visible and stays put
+            dock.classList.remove('hidden');
+            dock.style.transform = 'translateY(0)';
         }
     }
     
     setupAutoHide() {
         if (!this.autoHide) return;
         
-        window.addEventListener('scroll', this.handleScroll);
+        this.lastScrollY = window.scrollY;
+        window.addEventListener('scroll', this.handleScroll, { passive: true });
     }
     
     removeAutoHide() {
         window.removeEventListener('scroll', this.handleScroll);
         
-        // Show dock
+        // Clear any pending timer
+        if (this.scrollTimer) {
+            clearTimeout(this.scrollTimer);
+            this.scrollTimer = null;
+        }
+        
+        // Show dock and reset position
         const dock = document.querySelector('.pwa-dock');
         if (dock) {
             dock.classList.remove('hidden');
+            dock.style.transform = 'translateY(0)';
         }
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     handleScroll = () => {
+        // Only proceed if auto-hide is enabled
         if (!this.autoHide) return;
         
+        // Use requestAnimationFrame to throttle scroll events
+        if (!this.ticking) {
+            window.requestAnimationFrame(() => {
+                this.updateDockPosition();
+                this.ticking = false;
+            });
+            this.ticking = true;
+        }
+    }
+    
+    updateDockPosition() {
         const currentScrollY = window.scrollY;
         const dock = document.querySelector('.pwa-dock');
         
-        if (!dock) return;
+        if (!dock || !this.autoHide) return;
         
         // Clear existing timer
         if (this.scrollTimer) {
             clearTimeout(this.scrollTimer);
         }
         
-        // Scrolling down - hide dock
-        if (currentScrollY > this.lastScrollY && currentScrollY > 100) {
+        const scrollDelta = currentScrollY - this.lastScrollY;
+        
+        // Scrolling down significantly - hide dock
+        if (scrollDelta > 5 && currentScrollY > 100) {
             dock.classList.add('hidden');
         }
         // Scrolling up - show dock
-        else if (currentScrollY < this.lastScrollY) {
+        else if (scrollDelta < -5) {
             dock.classList.remove('hidden');
         }
         
@@ -229,7 +258,12 @@ class PWADock {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     init() {
-        if (!window.PWAApp || !window.PWAApp.isStandalone) return;
+        // ONLY initialize if in PWA standalone mode
+        if (!window.PWAApp || !window.PWAApp.isStandalone) {
+            console.log('Dock: Not in PWA mode, skipping initialization');
+            return;
+        }
+        
         this.createDock();
         this.setupLongPress();
         
@@ -239,6 +273,11 @@ class PWADock {
     }
     
     refreshDock() {
+        // ONLY refresh if in PWA standalone mode
+        if (!window.PWAApp || !window.PWAApp.isStandalone) {
+            return;
+        }
+        
         const existingDock = document.querySelector('.pwa-dock');
         if (existingDock) {
             existingDock.remove();
@@ -352,7 +391,6 @@ class PWADock {
         if (currentPath === path) return true;
         if (path === '/index.html' && (currentPath === '/' || currentPath === '/index.html')) return true;
         if (path === '/listings.html' && currentPath.includes('/listing')) return true;
-        if (path === '/categories.html' && currentPath === '/categories.html') return true;
         return false;
     }
     
