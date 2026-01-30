@@ -11,6 +11,8 @@
     
     <title>Categories - The Greek Directory</title>
     
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
@@ -57,41 +59,70 @@
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
-        /* Category styles */
+        /* Category card styles */
         .category-card {
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            overflow: hidden;
+            overflow: visible;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        body.theme-dark .category-card {
+            background: #2a2a2a;
         }
         
         .category-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
         }
         
         .category-card.expanded {
             background: linear-gradient(135deg, #045093 0%, #0668ba 100%);
             color: white;
+            box-shadow: 0 8px 24px rgba(4, 80, 147, 0.3);
         }
         
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
         .category-icon {
-            font-size: 3rem;
+            font-size: 2.5rem;
             transition: transform 0.3s;
+            margin-bottom: 8px;
         }
         
         .category-card:hover .category-icon {
             transform: scale(1.1);
         }
         
+        .category-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        
+        .category-count {
+            font-size: 11px;
+            opacity: 0.7;
+            text-align: center;
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
         .subcategories-container {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease;
+            margin-top: 12px;
         }
         
         .subcategories-container.expanded {
-            max-height: 500px;
+            max-height: 600px;
+            overflow-y: auto;
         }
         
         .subcategory-tag {
@@ -101,11 +132,13 @@
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s;
             border: 2px solid transparent;
         }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
         .category-card.expanded .subcategory-tag {
             background: rgba(255, 255, 255, 0.15);
@@ -124,18 +157,18 @@
             border-color: #D4AF37;
         }
         
-        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-        
         .mode-toggle {
             display: inline-flex;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 8px;
             padding: 4px;
-            margin-top: 8px;
+            margin: 8px 0;
         }
         
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
         .mode-option {
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 6px;
             font-size: 12px;
             cursor: pointer;
@@ -143,6 +176,7 @@
             border: none;
             background: transparent;
             color: white;
+            font-weight: 500;
         }
         
         .mode-option.active {
@@ -153,19 +187,96 @@
         .browse-button {
             margin-top: 12px;
             width: 100%;
-            padding: 10px 16px;
+            padding: 12px 16px;
             background: #D4AF37;
             color: white;
             border: none;
             border-radius: 8px;
             font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
             transition: all 0.2s;
         }
         
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
         .browse-button:hover {
             background: #c49b2a;
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .search-container {
+            margin-bottom: 24px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f9fafb;
+            padding: 16px 0;
+        }
+        
+        body.theme-dark .search-container {
+            background: #1a1a1a;
+        }
+        
+        body.pwa-mode .search-container {
+            top: calc(var(--status-bar-height) + 8px);
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        
+        body.theme-dark .search-input {
+            background: #2a2a2a;
+            border-color: #404040;
+            color: #e5e7eb;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #045093;
+            box-shadow: 0 0 0 3px rgba(4, 80, 147, 0.1);
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+        
+        body.theme-dark .no-results {
+            color: #9ca3af;
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding-bottom: 100px;
+        }
+        
+        @media (min-width: 640px) {
+            .categories-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .categories-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
+            }
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
@@ -177,14 +288,30 @@
     
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
     
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="mb-8 text-center">
-            <h1 class="text-4xl font-bold text-gray-900 mb-3">Browse by Category</h1>
-            <p class="text-lg text-gray-600">Discover Greek-owned businesses in every category</p>
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="mb-6 text-center">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Browse Categories</h1>
+            <p class="text-gray-600 text-sm">Discover Greek-owned businesses by category</p>
         </div>
         
-        <div id="categoriesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="search-container">
+            <input 
+                type="text" 
+                id="categorySearch" 
+                class="search-input" 
+                placeholder="Search categories and subcategories..."
+                autocomplete="off"
+            >
+        </div>
+        
+        <div id="categoriesGrid" class="categories-grid">
             <!-- Populated by JavaScript -->
+        </div>
+        
+        <div id="noResults" class="no-results" style="display: none;">
+            <div class="text-4xl mb-3">🔍</div>
+            <p class="text-lg font-semibold mb-1">No matches found</p>
+            <p class="text-sm">Try a different search term</p>
         </div>
     </div>
     
@@ -263,37 +390,80 @@
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
         const categoryStates = {};
+        let allCategories = Object.keys(CATEGORIES);
         
         function initCategories() {
-            const grid = document.getElementById('categoriesGrid');
-            
-            grid.innerHTML = Object.entries(CATEGORIES).map(([name, data]) => {
+            allCategories.forEach(name => {
                 categoryStates[name] = {
                     expanded: false,
                     selectedSubcategories: [],
                     mode: 'any'
                 };
+            });
+            
+            renderCategories();
+            setupSearch();
+        }
+        
+        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        
+        function renderCategories(filterTerm = '') {
+            const grid = document.getElementById('categoriesGrid');
+            const noResults = document.getElementById('noResults');
+            
+            const searchLower = filterTerm.toLowerCase();
+            let matchedCategories = [];
+            
+            if (searchLower) {
+                // Search in category names and subcategories
+                matchedCategories = allCategories.filter(name => {
+                    const categoryMatch = name.toLowerCase().includes(searchLower);
+                    const subcategoryMatch = CATEGORIES[name].subcategories.some(sub => 
+                        sub.toLowerCase().includes(searchLower)
+                    );
+                    return categoryMatch || subcategoryMatch;
+                });
+            } else {
+                matchedCategories = allCategories;
+            }
+            
+            // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            
+            if (matchedCategories.length === 0) {
+                grid.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            } else {
+                grid.style.display = 'grid';
+                noResults.style.display = 'none';
+            }
+            
+            grid.innerHTML = matchedCategories.map(name => {
+                const data = CATEGORIES[name];
+                const state = categoryStates[name];
+                const cardId = `card-${name.replace(/[^a-z0-9]/gi, '-')}`;
+                const subsId = `subs-${name.replace(/[^a-z0-9]/gi, '-')}`;
                 
                 return `
-                    <div class="category-card bg-white rounded-lg p-6 shadow-sm" id="card-${name.replace(/[^a-z0-9]/gi, '-')}">
+                    <div class="category-card ${state.expanded ? 'expanded' : ''}" id="${cardId}">
                         <div class="text-center" onclick="toggleCategory('${name.replace(/'/g, "\\'")}')">
-                            <div class="category-icon mb-3">${data.icon}</div>
-                            <h3 class="text-lg font-bold mb-2">${name}</h3>
-                            <p class="text-sm text-gray-600">${data.subcategories.length} subcategories</p>
+                            <div class="category-icon">${data.icon}</div>
+                            <div class="category-name">${name}</div>
+                            <div class="category-count">${data.subcategories.length} subcategories</div>
                         </div>
                         
-                        <div class="subcategories-container" id="subs-${name.replace(/[^a-z0-9]/gi, '-')}">
-                            <div class="mt-4 pt-4 border-t">
-                                <div class="text-center mb-3">
-                                    <p class="text-sm font-semibold mb-2">Select subcategories:</p>
+                        <div class="subcategories-container ${state.expanded ? 'expanded' : ''}" id="${subsId}">
+                            <div class="mt-3 pt-3 border-t border-white border-opacity-30">
+                                <div class="text-center mb-2">
+                                    <p class="text-xs font-semibold mb-2 opacity-90">Select subcategories:</p>
                                     <div class="mode-toggle">
-                                        <button class="mode-option active" data-mode="any" onclick="setMode('${name.replace(/'/g, "\\'")}', 'any', event)">Any</button>
-                                        <button class="mode-option" data-mode="all" onclick="setMode('${name.replace(/'/g, "\\'")}', 'all', event)">All</button>
+                                        <button class="mode-option ${state.mode === 'any' ? 'active' : ''}" data-mode="any" onclick="setMode('${name.replace(/'/g, "\\'")}', 'any', event)">Any</button>
+                                        <button class="mode-option ${state.mode === 'all' ? 'active' : ''}" data-mode="all" onclick="setMode('${name.replace(/'/g, "\\'")}', 'all', event)">All</button>
                                     </div>
                                 </div>
                                 <div class="flex flex-wrap justify-center">
                                     ${data.subcategories.map(sub => `
-                                        <div class="subcategory-tag" onclick="toggleSubcategory('${name.replace(/'/g, "\\'")}', '${sub.replace(/'/g, "\\'")}', event)">
+                                        <div class="subcategory-tag ${state.selectedSubcategories.includes(sub) ? 'selected' : ''}" onclick="toggleSubcategory('${name.replace(/'/g, "\\'")}', '${sub.replace(/'/g, "\\'")}', event)">
                                             ${sub}
                                         </div>
                                     `).join('')}
@@ -309,6 +479,18 @@
         }
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        
+        function setupSearch() {
+            const searchInput = document.getElementById('categorySearch');
+            let debounceTimer;
+            
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    renderCategories(e.target.value);
+                }, 200);
+            });
+        }
         
         function toggleCategory(categoryName) {
             const state = categoryStates[categoryName];
