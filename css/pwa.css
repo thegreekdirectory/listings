@@ -1,44 +1,60 @@
-/* css/pwa.css (COMPLETE WITH THEME CLASSES) */
+/* css/pwa.css (COMPLETE FIX - ALL PWA ISSUES) */
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. */
 
 /* ============================================
-   PWA STYLES WITH THEME SUPPORT
+   PWA STYLES - COMPLETE FIX
+   Fixed: iOS status bar, safe areas, link previews, update badge
    ============================================ */
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
 /* Prevent link preview on long press for all links except dock */
-a:not(.pwa-dock-item) {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
+a:not(.pwa-dock-item):not(.pwa-dock-more-item) {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
 }
 
-button:not(.pwa-dock-item *) {
+button:not(.pwa-dock-item *):not(.pwa-dock-more-item *) {
     -webkit-touch-callout: none;
+}
+
+img, video {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    pointer-events: none;
+    -webkit-user-drag: none;
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Safe Area Support */
+/* Safe Area Support - FIXED FOR iOS */
 :root {
     --safe-area-top: env(safe-area-inset-top, 0px);
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
+    --status-bar-height: max(env(safe-area-inset-top, 0px), 20px);
 }
 
-/* PWA Mode Body Adjustments */
+/* PWA Mode Body Adjustments - FIXED */
 body.pwa-mode {
-    padding-top: var(--safe-area-top);
-    padding-bottom: calc(60px + var(--safe-area-bottom));
-    padding-left: var(--safe-area-left);
-    padding-right: var(--safe-area-right);
+    padding-top: var(--status-bar-height) !important;
+    padding-bottom: calc(60px + var(--safe-area-bottom)) !important;
+    padding-left: var(--safe-area-left) !important;
+    padding-right: var(--safe-area-right) !important;
+    min-height: 100vh;
 }
 
 body.pwa-mode [data-partial="header"],
 body.pwa-mode [data-partial="footer"] {
     display: none !important;
+}
+
+/* Ensure content doesn't go under status bar */
+body.pwa-mode > *:first-child:not(.pwa-splash):not(.pwa-dock):not(.pwa-toast) {
+    margin-top: 0 !important;
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
@@ -147,8 +163,8 @@ body.theme-dark .hover\:bg-gray-200:hover {
 
 /* Content wrapper for safe areas */
 .pwa-safe-content {
-    padding-top: var(--safe-area-top);
-    min-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - 60px);
+    padding-top: 0;
+    min-height: calc(100vh - var(--status-bar-height) - var(--safe-area-bottom) - 60px);
 }
 
 /* Splash Screen */
@@ -164,7 +180,7 @@ body.theme-dark .hover\:bg-gray-200:hover {
     justify-content: center;
     z-index: 9999;
     transition: opacity 0.5s ease, visibility 0.5s ease;
-    padding-top: var(--safe-area-top);
+    padding-top: var(--status-bar-height);
 }
 
 .pwa-splash.fade-out {
@@ -183,7 +199,7 @@ body.theme-dark .pwa-splash {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Dock Styles */
+/* Dock Styles - FIXED with overflow support */
 .pwa-dock {
     position: fixed;
     bottom: 0;
@@ -198,8 +214,8 @@ body.theme-dark .pwa-splash {
     align-items: center;
     height: calc(60px + var(--safe-area-bottom));
     padding-bottom: var(--safe-area-bottom);
-    padding-left: var(--safe-area-left);
-    padding-right: var(--safe-area-right);
+    padding-left: max(var(--safe-area-left), 8px);
+    padding-right: max(var(--safe-area-right), 8px);
     z-index: 1000;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
@@ -256,25 +272,37 @@ body.theme-dark .pwa-dock-item.active {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Update Badge */
+/* Update Badge - FIXED positioning */
 .update-badge {
     position: absolute;
-    top: 0;
-    right: 8px;
+    top: -2px;
+    right: -2px;
     width: 8px;
     height: 8px;
     background: #ef4444;
     border-radius: 50%;
     border: 2px solid white;
+    z-index: 10;
 }
 
 body.theme-dark .update-badge {
-    border-color: #2a2a2a;
+    border-color: #1e1e1e;
 }
 
-/* Dock More Menu */
+/* For dock items */
+.pwa-dock-item .update-badge,
+.pwa-dock-more-item .update-badge {
+    top: 0;
+    right: 4px;
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Dock More Menu - FIXED overflow handling */
 .pwa-dock-more {
     position: relative;
+    flex: 1;
+    max-width: 80px;
 }
 
 .pwa-dock-more-menu {
@@ -288,7 +316,8 @@ body.theme-dark .update-badge {
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
     padding: 8px 0;
     margin-bottom: 8px;
-    min-width: 120px;
+    min-width: 160px;
+    max-width: 200px;
     display: none;
     z-index: 1001;
 }
@@ -299,7 +328,21 @@ body.theme-dark .pwa-dock-more-menu {
 
 .pwa-dock-more-menu.active {
     display: block;
+    animation: slideUp 0.2s ease;
 }
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
 .pwa-dock-more-item {
     display: flex;
@@ -334,11 +377,14 @@ body.theme-dark .pwa-dock-more-item.active {
 
 .pwa-dock-more-icon {
     font-size: 20px;
+    position: relative;
 }
 
 .pwa-dock-more-label {
     font-size: 14px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
@@ -466,6 +512,7 @@ body.theme-dark .star-button:hover {
     width: 24px;
     height: 24px;
     fill: currentColor;
+    pointer-events: none;
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
@@ -511,7 +558,7 @@ body.theme-dark .star-button:hover {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Responsive Dock */
+/* Responsive Dock - FIXED for different screen sizes */
 @media (max-width: 360px) {
     .pwa-dock-label {
         font-size: 9px;
@@ -520,6 +567,87 @@ body.theme-dark .star-button:hover {
     .pwa-dock-icon {
         font-size: 22px;
     }
+    
+    .pwa-dock-item {
+        max-width: 70px;
+    }
+}
+
+@media (min-width: 361px) and (max-width: 414px) {
+    .pwa-dock-item {
+        max-width: 75px;
+    }
+}
+
+@media (min-width: 415px) {
+    .pwa-dock-item {
+        max-width: 90px;
+    }
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+    /* iOS Safari */
+    body.pwa-mode {
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .pwa-dock {
+        -webkit-user-select: none;
+    }
+    
+    /* Ensure no overflow on iOS */
+    body.pwa-mode {
+        overflow-x: hidden;
+    }
+    
+    /* Prevent bounce effect */
+    body.pwa-mode {
+        position: fixed;
+        width: 100%;
+        height: 100vh;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Additional safe area handling for notched devices */
+@media screen and (min-width: 375px) and (max-width: 812px) and (-webkit-device-pixel-ratio: 3) {
+    /* iPhone X/XS/11 Pro */
+    :root {
+        --status-bar-height: max(env(safe-area-inset-top, 0px), 44px);
+    }
+}
+
+@media screen and (min-width: 414px) and (max-width: 896px) and (-webkit-device-pixel-ratio: 2) {
+    /* iPhone XR/11 */
+    :root {
+        --status-bar-height: max(env(safe-area-inset-top, 0px), 44px);
+    }
+}
+
+@media screen and (min-width: 414px) and (max-width: 896px) and (-webkit-device-pixel-ratio: 3) {
+    /* iPhone XS Max/11 Pro Max */
+    :root {
+        --status-bar-height: max(env(safe-area-inset-top, 0px), 44px);
+    }
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* Dark mode specific adjustments */
+body.theme-dark .pwa-toast {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1a1a1a;
+}
+
+body.theme-dark .map-loading {
+    background: #2a2a2a;
+    color: #e5e7eb;
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. */
