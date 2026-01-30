@@ -1,9 +1,9 @@
-// js/pwa/dock.js (COMPLETE WITH CATEGORIES APP)
+// js/pwa/dock.js (COMPLETE WITH CATEGORIES AND AUTO-HIDE)
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
 // ============================================
-// PWA DOCK WITH CATEGORIES APP
-// Bottom navigation dock with Categories support and auto-hide option
+// PWA DOCK WITH CATEGORIES AND AUTO-HIDE
+// Bottom navigation dock with dynamic overflow handling and auto-hide
 // ============================================
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -15,24 +15,20 @@ class PWADock {
         this.longPressTriggered = false;
         this.maxVisibleApps = this.calculateMaxApps();
         this.autoHide = localStorage.getItem('tgd_dock_autohide') === 'true';
-        this.isHidden = false;
         this.lastScrollY = window.scrollY;
-        
-        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        this.scrollTimer = null;
         
         // All available apps
         this.availableApps = [
             { id: 'home', label: 'Home', icon: '🏠', path: '/index.html', required: true },
-            { id: 'categories', label: 'Categories', icon: '📂', path: '/categories.html', required: false },
+            { id: 'categories', label: 'Categories', icon: '📋', path: '/categories.html', required: false },
             { id: 'search', label: 'Search', icon: '🔍', path: '/listings.html', required: false },
             { id: 'map', label: 'Map', icon: '🗺️', path: '/map.html', required: false },
             { id: 'starred', label: 'Starred', icon: '⭐', path: '/starred.html', required: false },
             { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings.html', required: true }
         ];
         
-        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        
-        // Default dock order
+        // Default dock order with Categories
         this.defaultDockOrder = ['home', 'categories', 'search', 'starred', 'settings'];
         
         // Load saved dock configuration or use default
@@ -43,13 +39,6 @@ class PWADock {
             this.maxVisibleApps = this.calculateMaxApps();
             this.refreshDock();
         });
-        
-        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        
-        // Setup scroll listener for auto-hide
-        if (this.autoHide) {
-            this.setupScrollListener();
-        }
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -90,11 +79,11 @@ class PWADock {
         }
     }
     
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
     saveDockConfig() {
         localStorage.setItem('tgd_dock_apps', JSON.stringify(this.dockApps));
     }
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     getDockApps() {
         return this.dockApps.map(id => this.availableApps.find(app => app.id === id)).filter(Boolean);
@@ -103,8 +92,6 @@ class PWADock {
     getAvailableApps() {
         return this.availableApps;
     }
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     getVisibleApps() {
         const apps = this.getDockApps();
@@ -127,8 +114,6 @@ class PWADock {
         
         // Everything else goes to overflow
         const overflow = remaining.slice(visibleCount - (homeIndex >= 0 ? 1 : 0));
-        
-        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
         // Settings must be in overflow if there is overflow
         const settingsIndex = visible.findIndex(app => app.id === 'settings');
@@ -182,63 +167,63 @@ class PWADock {
     
     setAutoHide(enabled) {
         this.autoHide = enabled;
-        localStorage.setItem('tgd_dock_autohide', enabled.toString());
+        localStorage.setItem('tgd_dock_autohide', enabled ? 'true' : 'false');
         
         if (enabled) {
-            this.setupScrollListener();
+            this.setupAutoHide();
         } else {
-            this.removeScrollListener();
-            this.showDock();
+            this.removeAutoHide();
+        }
+    }
+    
+    setupAutoHide() {
+        if (!this.autoHide) return;
+        
+        window.addEventListener('scroll', this.handleScroll);
+    }
+    
+    removeAutoHide() {
+        window.removeEventListener('scroll', this.handleScroll);
+        
+        // Show dock
+        const dock = document.querySelector('.pwa-dock');
+        if (dock) {
+            dock.classList.remove('hidden');
         }
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    setupScrollListener() {
-        this.scrollListener = () => {
-            const currentScrollY = window.scrollY;
-            
-            if (currentScrollY > this.lastScrollY && currentScrollY > 100) {
-                // Scrolling down - hide dock
-                this.hideDock();
-            } else if (currentScrollY < this.lastScrollY) {
-                // Scrolling up - show dock
-                this.showDock();
+    handleScroll = () => {
+        if (!this.autoHide) return;
+        
+        const currentScrollY = window.scrollY;
+        const dock = document.querySelector('.pwa-dock');
+        
+        if (!dock) return;
+        
+        // Clear existing timer
+        if (this.scrollTimer) {
+            clearTimeout(this.scrollTimer);
+        }
+        
+        // Scrolling down - hide dock
+        if (currentScrollY > this.lastScrollY && currentScrollY > 100) {
+            dock.classList.add('hidden');
+        }
+        // Scrolling up - show dock
+        else if (currentScrollY < this.lastScrollY) {
+            dock.classList.remove('hidden');
+        }
+        
+        this.lastScrollY = currentScrollY;
+        
+        // Show dock after scroll stops for 1 second
+        this.scrollTimer = setTimeout(() => {
+            if (dock) {
+                dock.classList.remove('hidden');
             }
-            
-            this.lastScrollY = currentScrollY;
-        };
-        
-        window.addEventListener('scroll', this.scrollListener, { passive: true });
-    }
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
-    removeScrollListener() {
-        if (this.scrollListener) {
-            window.removeEventListener('scroll', this.scrollListener);
-            this.scrollListener = null;
-        }
-    }
-    
-    hideDock() {
-        if (this.isHidden) return;
-        
-        const dock = document.querySelector('.pwa-dock');
-        if (dock) {
-            dock.style.transform = 'translateY(100%)';
-            this.isHidden = true;
-        }
-    }
-    
-    showDock() {
-        if (!this.isHidden) return;
-        
-        const dock = document.querySelector('.pwa-dock');
-        if (dock) {
-            dock.style.transform = 'translateY(0)';
-            this.isHidden = false;
-        }
+        }, 1000);
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -247,6 +232,10 @@ class PWADock {
         if (!window.PWAApp || !window.PWAApp.isStandalone) return;
         this.createDock();
         this.setupLongPress();
+        
+        if (this.autoHide) {
+            this.setupAutoHide();
+        }
     }
     
     refreshDock() {
@@ -260,6 +249,10 @@ class PWADock {
         }
         this.createDock();
         this.setupLongPress();
+        
+        if (this.autoHide) {
+            this.setupAutoHide();
+        }
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -334,8 +327,6 @@ class PWADock {
             `;
         }).join('');
         
-        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        
         button.addEventListener('click', (e) => {
             e.preventDefault();
             menu.classList.toggle('active');
@@ -361,6 +352,7 @@ class PWADock {
         if (currentPath === path) return true;
         if (path === '/index.html' && (currentPath === '/' || currentPath === '/index.html')) return true;
         if (path === '/listings.html' && currentPath.includes('/listing')) return true;
+        if (path === '/categories.html' && currentPath === '/categories.html') return true;
         return false;
     }
     
