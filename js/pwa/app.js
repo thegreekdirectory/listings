@@ -1,9 +1,9 @@
-// js/pwa/app.js (THEME FIX)
+// js/pwa/app.js (COMPLETE FIX - ALL PWA ISSUES)
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
 // ============================================
-// PWA APP MANAGER - THEME FIX
-// Fixed theme switching to use body classes instead of data-theme attribute
+// PWA APP MANAGER - COMPLETE FIX
+// Fixed: Link previews, iOS status bar, theme switching, update notifications
 // ============================================
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -12,7 +12,7 @@ class PWAApp {
     constructor() {
         this.isStandalone = false;
         this.deferredPrompt = null;
-        this.currentVersion = '1.0.1';
+        this.currentVersion = '1.0.2'; // Incremented version
         this.checkForUpdates();
     }
     
@@ -26,18 +26,18 @@ class PWAApp {
             this.registerServiceWorker();
             this.checkRestrictedPages();
             this.showSplashScreen();
+            this.preventAllLinkPreviews();
+            this.ensureStatusBarVisible();
         }
         
         this.setupExternalLinks();
         this.applyTheme();
         this.setupInstallPrompt();
-        this.preventLinkPreviews();
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     checkStandalone() {
-        // Check multiple methods for cross-platform compatibility
         const mediaQuery = window.matchMedia('(display-mode: standalone)');
         const iosStandalone = window.navigator.standalone === true;
         const androidReferrer = document.referrer.includes('android-app://');
@@ -51,7 +51,6 @@ class PWAApp {
         if (this.isStandalone) {
             document.body.classList.add('pwa-mode');
             
-            // Add safe content wrapper
             const main = document.querySelector('main') || document.body;
             if (!main.classList.contains('pwa-safe-content')) {
                 main.classList.add('pwa-safe-content');
@@ -61,22 +60,83 @@ class PWAApp {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    preventLinkPreviews() {
-        // Prevent long-press link preview on all links except dock
-        document.addEventListener('touchstart', (e) => {
-            const target = e.target.closest('a');
-            if (target && !target.classList.contains('pwa-dock-item')) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-        
-        // Prevent context menu on links
+    // NEW: Prevent ALL link previews except dock
+    preventAllLinkPreviews() {
+        // Prevent context menu (long press menu) on all links except dock
         document.addEventListener('contextmenu', (e) => {
-            const target = e.target.closest('a');
-            if (target && !target.classList.contains('pwa-dock-item')) {
+            const isDockLink = e.target.closest('.pwa-dock-item, .pwa-dock-more-item');
+            if (!isDockLink) {
                 e.preventDefault();
+                return false;
             }
-        });
+        }, true);
+        
+        // Prevent iOS link preview on touchstart
+        document.addEventListener('touchstart', (e) => {
+            const target = e.target.closest('a, button');
+            if (target && !target.closest('.pwa-dock-item, .pwa-dock-more-item')) {
+                // Add CSS to prevent callout
+                target.style.webkitTouchCallout = 'none';
+                target.style.webkitUserSelect = 'none';
+            }
+        }, { passive: true });
+        
+        // Prevent long press on images and other elements
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') {
+                e.target.style.webkitTouchCallout = 'none';
+                e.target.style.webkitUserSelect = 'none';
+            }
+        }, { passive: true });
+        
+        // Add global CSS rules
+        const style = document.createElement('style');
+        style.textContent = `
+            /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+            body.pwa-mode a:not(.pwa-dock-item):not(.pwa-dock-more-item),
+            body.pwa-mode img,
+            body.pwa-mode video {
+                -webkit-touch-callout: none !important;
+                -webkit-user-select: none !important;
+                user-select: none !important;
+            }
+            
+            body.pwa-mode .pwa-dock-item,
+            body.pwa-mode .pwa-dock-more-item {
+                -webkit-touch-callout: default !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    // NEW: Ensure iOS status bar is always visible
+    ensureStatusBarVisible() {
+        // Force status bar to stay visible on iOS
+        const meta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        if (meta) {
+            meta.setAttribute('content', 'default'); // Changed from black-translucent to default
+        }
+        
+        // Ensure safe area is respected
+        const rootStyle = document.createElement('style');
+        rootStyle.textContent = `
+            /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+            :root {
+                --status-bar-height: env(safe-area-inset-top, 0px);
+            }
+            
+            body.pwa-mode {
+                padding-top: max(env(safe-area-inset-top, 0px), 20px) !important;
+            }
+            
+            .pwa-safe-content {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
+            }
+        `;
+        document.head.appendChild(rootStyle);
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -87,7 +147,6 @@ class PWAApp {
                 const registration = await navigator.serviceWorker.register('/service-worker.js');
                 console.log('Service Worker registered:', registration);
                 
-                // Check for updates
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
                     newWorker.addEventListener('statechange', () => {
@@ -115,6 +174,22 @@ class PWAApp {
     notifyUpdate() {
         localStorage.setItem('tgd_update_available', 'true');
         this.showToast('New update available! Check Settings to update.');
+        
+        // Update dock badge
+        this.updateDockBadge();
+    }
+    
+    // NEW: Update dock badge for settings icon
+    updateDockBadge() {
+        const settingsIcons = document.querySelectorAll('[data-page="settings"] .pwa-dock-icon, [href="/settings.html"] .pwa-dock-icon, [href="/settings.html"] .pwa-dock-more-icon');
+        settingsIcons.forEach(icon => {
+            if (!icon.querySelector('.update-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'update-badge';
+                icon.style.position = 'relative';
+                icon.appendChild(badge);
+            }
+        });
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -148,7 +223,7 @@ class PWAApp {
     
     checkRestrictedPages() {
         const path = window.location.pathname;
-        const restrictedPages = ['/starred.html', '/settings.html'];
+        const restrictedPages = ['/starred.html', '/settings.html', '/map.html'];
         
         if (restrictedPages.includes(path) && !this.isStandalone) {
             window.location.href = '/404.html';
@@ -165,11 +240,9 @@ class PWAApp {
                 e.preventDefault();
                 const url = link.href;
                 
-                // Try to open in system browser
                 if (window.open(url, '_blank', 'noopener,noreferrer')) {
                     console.log('Opened external link:', url);
                 } else {
-                    // Fallback for iOS
                     window.location.href = url;
                 }
             }
@@ -178,11 +251,10 @@ class PWAApp {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    // FIXED: Use body classes instead of data-theme attribute
+    // FIXED: Theme switching using body classes
     applyTheme() {
         const theme = localStorage.getItem('tgd_theme') || 'system';
         
-        // Remove existing theme classes
         document.body.classList.remove('theme-light', 'theme-dark');
         
         if (theme === 'system') {
@@ -192,7 +264,6 @@ class PWAApp {
             document.body.classList.add(`theme-${theme}`);
         }
         
-        // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
             const currentTheme = localStorage.getItem('tgd_theme') || 'system';
             if (currentTheme === 'system') {
@@ -249,19 +320,16 @@ class PWAApp {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     async resetApp() {
-        // Clear localStorage
         localStorage.removeItem('tgd_theme');
         localStorage.removeItem('tgd_language');
         localStorage.removeItem('tgd_splash_seen');
         localStorage.removeItem('tgd_dock_apps');
         localStorage.removeItem('tgd_update_available');
         
-        // Clear IndexedDB
         if (window.PWAStorage) {
             await window.PWAStorage.clearAll();
         }
         
-        // Unregister service worker
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
             for (const registration of registrations) {
@@ -269,7 +337,6 @@ class PWAApp {
             }
         }
         
-        // Clear caches
         if ('caches' in window) {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(name => caches.delete(name)));
@@ -284,15 +351,12 @@ class PWAApp {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    // NEW: Hard refresh method that preserves starred listings and settings
     async hardRefresh() {
-        // Preserve starred listings and settings
         const starredBackup = [];
         const themeBackup = localStorage.getItem('tgd_theme');
         const languageBackup = localStorage.getItem('tgd_language');
         const dockBackup = localStorage.getItem('tgd_dock_apps');
         
-        // Get starred listings from IndexedDB
         if (window.PWAStorage) {
             try {
                 await window.PWAStorage.init();
@@ -303,7 +367,6 @@ class PWAApp {
             }
         }
         
-        // Unregister service worker
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
             for (const registration of registrations) {
@@ -311,21 +374,17 @@ class PWAApp {
             }
         }
         
-        // Clear all caches
         if ('caches' in window) {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
         
-        // Clear localStorage (except backups)
         localStorage.clear();
         
-        // Restore settings
         if (themeBackup) localStorage.setItem('tgd_theme', themeBackup);
         if (languageBackup) localStorage.setItem('tgd_language', languageBackup);
         if (dockBackup) localStorage.setItem('tgd_dock_apps', dockBackup);
         
-        // Restore starred listings to IndexedDB
         if (window.PWAStorage && starredBackup.length > 0) {
             try {
                 await window.PWAStorage.init();
