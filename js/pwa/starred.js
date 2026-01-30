@@ -1,9 +1,9 @@
-// js/pwa/starred.js (COMPLETE FIX)
+// js/pwa/starred.js (COMPLETE REPLACEMENT)
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
 // ============================================
-// PWA STARRED LISTINGS MANAGER - COMPLETE FIX
-// Fixed: Starred functionality for all devices
+// PWA STARRED LISTINGS MANAGER
+// Manages starred listings functionality
 // ============================================
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -20,14 +20,8 @@ class StarredManager {
         if (this.initialized) return;
         
         try {
-            if (!this.storage) {
-                console.error('PWAStorage not available');
-                return;
-            }
-            
             await this.storage.init();
             this.initialized = true;
-            console.log('StarredManager initialized');
             await this.updateStarredCount();
         } catch (error) {
             console.error('Failed to initialize StarredManager:', error);
@@ -40,10 +34,6 @@ class StarredManager {
         try {
             await this.init();
             
-            if (!this.initialized) {
-                throw new Error('StarredManager not initialized');
-            }
-            
             const isStarred = await this.storage.isStarred(listingId);
             
             if (isStarred) {
@@ -53,10 +43,6 @@ class StarredManager {
                     window.PWAApp.showToast('Removed from starred');
                 }
             } else {
-                if (!listingData || !listingData.id) {
-                    throw new Error('Invalid listing data');
-                }
-                
                 await this.storage.addStarred(listingData);
                 this.updateStarButtons(listingId, true);
                 if (window.PWAApp) {
@@ -79,22 +65,13 @@ class StarredManager {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     updateStarButtons(listingId, isStarred) {
-        const selectors = [
-            `[data-listing-id="${listingId}"]`,
-            `[onclick*="'${listingId}'"]`,
-            `[onclick*='"${listingId}"']`,
-            `.star-button[data-id="${listingId}"]`
-        ];
-        
-        selectors.forEach(selector => {
-            const buttons = document.querySelectorAll(selector);
-            buttons.forEach(btn => {
-                if (isStarred) {
-                    btn.classList.add('starred');
-                } else {
-                    btn.classList.remove('starred');
-                }
-            });
+        const buttons = document.querySelectorAll(`[data-listing-id="${listingId}"], [onclick*="'${listingId}'"]`);
+        buttons.forEach(btn => {
+            if (isStarred) {
+                btn.classList.add('starred');
+            } else {
+                btn.classList.remove('starred');
+            }
         });
     }
     
@@ -102,18 +79,11 @@ class StarredManager {
     
     async updateStarredCount() {
         try {
-            if (!this.initialized) return;
-            
             const count = await this.storage.getStarredCount();
-            
-            const badges = document.querySelectorAll('#starredCount, .starred-count-badge');
+            const badges = document.querySelectorAll('.starred-count-badge');
             badges.forEach(badge => {
                 badge.textContent = count;
-                if (count > 0) {
-                    badge.style.display = 'inline';
-                } else {
-                    badge.style.display = 'none';
-                }
+                badge.style.display = count > 0 ? 'inline' : 'none';
             });
         } catch (error) {
             console.error('Update starred count failed:', error);
@@ -124,24 +94,15 @@ class StarredManager {
     
     async renderStarredListings(containerId) {
         const container = document.getElementById(containerId);
-        if (!container) {
-            console.error('Container not found:', containerId);
-            return;
-        }
+        if (!container) return;
         
         try {
             await this.init();
-            
-            if (!this.initialized) {
-                throw new Error('Not initialized');
-            }
-            
             const starred = await this.storage.getAllStarred();
-            console.log('Starred listings:', starred);
             
             if (starred.length === 0) {
                 container.innerHTML = `
-                    <div class="col-span-full text-center py-12">
+                    <div class="text-center py-12">
                         <div class="text-6xl mb-4">⭐</div>
                         <h2 class="text-2xl font-bold text-gray-900 mb-2">No starred listings yet</h2>
                         <p class="text-gray-600 mb-6">Star your favorite businesses to access them quickly</p>
@@ -154,28 +115,15 @@ class StarredManager {
             }
             
             container.innerHTML = starred.map(listing => this.createListingCard(listing)).join('');
-            
-            await this.updateStarButtonStates(starred);
         } catch (error) {
             console.error('Failed to render starred listings:', error);
             container.innerHTML = `
-                <div class="col-span-full text-center py-12">
+                <div class="text-center py-12">
                     <div class="text-6xl mb-4">❌</div>
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Error loading starred listings</h2>
-                    <p class="text-gray-600 mb-6">${error.message}</p>
-                    <button onclick="location.reload()" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        Retry
-                    </button>
+                    <p class="text-gray-600">Please try again later</p>
                 </div>
             `;
-        }
-    }
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
-    async updateStarButtonStates(listings) {
-        for (const listing of listings) {
-            this.updateStarButtons(listing.id, true);
         }
     }
     
@@ -220,6 +168,7 @@ window.StarredManager = starredManager;
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
+// Global function for star button clicks
 window.handleStarClick = async function(listingId, event) {
     if (event) {
         event.preventDefault();
@@ -227,53 +176,46 @@ window.handleStarClick = async function(listingId, event) {
     }
     
     try {
+        // Get listing data from the current page or from storage
         let listingData = window.currentListingData || {};
         
         if (!listingData.id) {
+            // Try to get from storage if already starred
             await window.PWAStorage.init();
             const starred = await window.PWAStorage.getAllStarred();
-            listingData = starred.find(l => l.id === listingId);
-            
-            if (!listingData) {
-                console.error('Listing data not found for:', listingId);
-                if (window.PWAApp) {
-                    window.PWAApp.showToast('Unable to star this listing');
-                }
-                return;
-            }
+            listingData = starred.find(l => l.id === listingId) || { id: listingId };
         }
         
         await starredManager.toggleStar(listingId, listingData);
     } catch (error) {
         console.error('Star click handler failed:', error);
-        if (window.PWAApp) {
-            window.PWAApp.showToast('Error updating starred status');
-        }
     }
 };
 
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+// js/pwa/storage.js (ADD DEBUGGING AND FIX)
+// Add after getAllStarred method:
 
-document.addEventListener('DOMContentLoaded', async () => {
+async getAllStarred() {
     try {
-        await starredManager.init();
-        await starredManager.updateStarredCount();
+        await this.init();
+        const transaction = this.db.transaction(['starredListings'], 'readonly');
+        const store = transaction.objectStore('starredListings');
+        const request = store.getAll();
         
-        const starButtons = document.querySelectorAll('.star-button');
-        for (const button of starButtons) {
-            const listingId = button.getAttribute('data-listing-id') || 
-                             button.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-            
-            if (listingId) {
-                const isStarred = await window.PWAStorage.isStarred(listingId);
-                if (isStarred) {
-                    button.classList.add('starred');
-                }
-            }
-        }
+        return new Promise((resolve, reject) => {
+            request.onsuccess = () => {
+                console.log('Retrieved starred listings:', request.result);
+                resolve(request.result || []);
+            };
+            request.onerror = () => {
+                console.error('Get all starred failed:', request.error);
+                reject(request.error);
+            };
+        });
     } catch (error) {
-        console.error('Failed to initialize starred buttons:', error);
+        console.error('getAllStarred failed:', error);
+        return [];
     }
-});
+}
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
