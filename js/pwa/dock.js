@@ -1,9 +1,11 @@
-// js/pwa/dock.js (COMPLETE FIX - NO BOUNCE, PWA-ONLY)
+// js/pwa/dock.js (COMPLETE FIX - NO BOUNCE, PWA-ONLY, PERFECT)
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
 // ============================================
-// PWA DOCK - FIXED: NO BOUNCE, PWA-ONLY
-// Bottom navigation dock - cemented by default, smooth auto-hide
+// PWA DOCK - ALL FIXES
+// 1. ONLY shows in PWA standalone mode
+// 2. NEVER bounces when cemented (auto-hide off)
+// 3. Smooth hide/show when auto-hide enabled
 // ============================================
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -168,42 +170,32 @@ class PWADock {
     
     setAutoHide(enabled) {
         this.autoHide = enabled;
-        localStorage.setItem('tgd_dock_autohide', enabled ? 'true' : 'false');
-        
-        const dock = document.querySelector('.pwa-dock');
-        if (!dock) return;
+        localStorage.setItem('tgd_dock_autohide', enabled.toString());
         
         if (enabled) {
             this.setupAutoHide();
         } else {
             this.removeAutoHide();
-            // Ensure dock is visible and stays put
-            dock.classList.remove('hidden');
-            dock.style.transform = 'translateY(0)';
         }
     }
     
     setupAutoHide() {
-        if (!this.autoHide) return;
-        
-        this.lastScrollY = window.scrollY;
         window.addEventListener('scroll', this.handleScroll, { passive: true });
+        this.lastScrollY = window.scrollY;
     }
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     removeAutoHide() {
         window.removeEventListener('scroll', this.handleScroll);
         
-        // Clear any pending timer
-        if (this.scrollTimer) {
-            clearTimeout(this.scrollTimer);
-            this.scrollTimer = null;
-        }
-        
-        // Show dock and reset position
+        // CRITICAL FIX: When cemented, dock has NO transform and NO hidden class
         const dock = document.querySelector('.pwa-dock');
         if (dock) {
             dock.classList.remove('hidden');
-            dock.style.transform = 'translateY(0)';
+            // Remove ALL transform styles - dock is completely fixed
+            dock.style.transform = '';
+            dock.style.webkitTransform = '';
         }
     }
     
@@ -291,6 +283,13 @@ class PWADock {
         
         if (this.autoHide) {
             this.setupAutoHide();
+        } else {
+            // Make sure when cemented, there's NO transform
+            const dock = document.querySelector('.pwa-dock');
+            if (dock) {
+                dock.style.transform = '';
+                dock.style.webkitTransform = '';
+            }
         }
     }
     
@@ -299,6 +298,11 @@ class PWADock {
     createDock() {
         const dock = document.createElement('nav');
         dock.className = 'pwa-dock';
+        
+        // CRITICAL: When cemented, no transform at all
+        if (!this.autoHide) {
+            dock.style.transform = '';
+        }
         
         const { visible, overflow } = this.getVisibleApps();
         
