@@ -1,10 +1,12 @@
-// js/pwa/settings.js (COMPLETE REPLACEMENT WITH HARD REFRESH + SOCIAL MEDIA)
+// js/pwa/settings.js (COMPLETE FIX - THEME BUTTONS + UPDATE NOTIFICATION)
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
 // ============================================
-// PWA SETTINGS MANAGER - COMPLETE
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+// PWA SETTINGS MANAGER - COMPLETE FIX
+// Fixed: Theme switching, update notifications at top
 // ============================================
+
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 class SettingsManager {
     constructor() {
@@ -33,12 +35,15 @@ class SettingsManager {
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Settings</h1>
                 
                 ${updateAvailable ? `
+                <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
                 <div class="update-banner">
                     <h2>🎉 New Update Available!</h2>
-                    <p>Version ${this.app?.currentVersion || '1.0.1'} is ready to install. Update now to get the latest features and improvements.</p>
+                    <p>Version ${this.app?.currentVersion || '1.0.2'} is ready to install. Update now to get the latest features and improvements.</p>
                     <button onclick="settingsManager.installUpdate()">Update Now</button>
                 </div>
                 ` : ''}
+                
+                <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
                 
                 <!-- Dock Customization Section -->
                 <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
@@ -47,39 +52,45 @@ class SettingsManager {
                     <div id="dockCustomization" class="space-y-3"></div>
                 </div>
                 
+                <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+                
                 <!-- Appearance Section -->
                 <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Appearance</h2>
                     <div class="space-y-3">
-                        <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentTheme === 'system' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
+                        <label class="theme-option flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentTheme === 'system' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
                             <span class="text-gray-700 font-medium">System Default</span>
                             <input type="radio" name="theme" value="system" ${currentTheme === 'system' ? 'checked' : ''} class="w-5 h-5 text-blue-600">
                         </label>
-                        <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentTheme === 'light' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
+                        <label class="theme-option flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentTheme === 'light' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
                             <span class="text-gray-700 font-medium">Light Mode</span>
                             <input type="radio" name="theme" value="light" ${currentTheme === 'light' ? 'checked' : ''} class="w-5 h-5 text-blue-600">
                         </label>
-                        <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentTheme === 'dark' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
+                        <label class="theme-option flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentTheme === 'dark' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
                             <span class="text-gray-700 font-medium">Dark Mode</span>
                             <input type="radio" name="theme" value="dark" ${currentTheme === 'dark' ? 'checked' : ''} class="w-5 h-5 text-blue-600">
                         </label>
                     </div>
                 </div>
                 
+                <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+                
                 <!-- Language Section -->
                 <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Language</h2>
                     <div class="space-y-3">
-                        <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentLanguage === 'en' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
+                        <label class="language-option flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentLanguage === 'en' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
                             <span class="text-gray-700 font-medium">English (US)</span>
                             <input type="radio" name="language" value="en" ${currentLanguage === 'en' ? 'checked' : ''} class="w-5 h-5 text-blue-600">
                         </label>
-                        <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentLanguage === 'el' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
+                        <label class="language-option flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentLanguage === 'el' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
                             <span class="text-gray-700 font-medium">Ελληνικά (Greek)</span>
                             <input type="radio" name="language" value="el" ${currentLanguage === 'el' ? 'checked' : ''} class="w-5 h-5 text-blue-600">
                         </label>
                     </div>
                 </div>
+                
+                <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
                 
                 <!-- Social Media Section -->
                 <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
@@ -100,6 +111,8 @@ class SettingsManager {
                         </a>
                     </div>
                 </div>
+                
+                <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
                 
                 <!-- Links Section -->
                 <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
@@ -124,6 +137,8 @@ class SettingsManager {
                     </div>
                 </div>
                 
+                <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+                
                 <!-- Actions Section -->
                 <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Actions</h2>
@@ -138,10 +153,12 @@ class SettingsManager {
                     </button>
                 </div>
                 
+                <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+                
                 <!-- App Info -->
                 <div class="text-center text-sm text-gray-500 mb-24">
                     <p>The Greek Directory</p>
-                    <p>Version ${this.app?.currentVersion || '1.0.1'}</p>
+                    <p>Version ${this.app?.currentVersion || '1.0.2'}</p>
                     <p class="mt-2">© 2025 The Greek Directory</p>
                 </div>
             </div>
@@ -229,21 +246,26 @@ class SettingsManager {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     setupEventListeners() {
-        // Theme selection
+        // FIXED: Theme selection with proper visual feedback
         document.querySelectorAll('input[name="theme"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const theme = e.target.value;
                 localStorage.setItem('tgd_theme', theme);
-                this.applyTheme(theme);
                 
-                document.querySelectorAll('input[name="theme"]').forEach(r => {
-                    const label = r.closest('label');
-                    if (r.checked) {
+                // Update visual state of all theme options
+                document.querySelectorAll('.theme-option').forEach(label => {
+                    const input = label.querySelector('input[name="theme"]');
+                    if (input.checked) {
                         label.classList.add('border-blue-500', 'bg-blue-50');
+                        label.classList.remove('border-transparent');
                     } else {
                         label.classList.remove('border-blue-500', 'bg-blue-50');
+                        label.classList.add('border-transparent');
                     }
                 });
+                
+                // Apply theme immediately
+                this.applyTheme(theme);
                 
                 if (window.PWAApp) {
                     window.PWAApp.showToast('Theme updated');
@@ -259,12 +281,14 @@ class SettingsManager {
                 const language = e.target.value;
                 localStorage.setItem('tgd_language', language);
                 
-                document.querySelectorAll('input[name="language"]').forEach(r => {
-                    const label = r.closest('label');
-                    if (r.checked) {
+                document.querySelectorAll('.language-option').forEach(label => {
+                    const input = label.querySelector('input[name="language"]');
+                    if (input.checked) {
                         label.classList.add('border-blue-500', 'bg-blue-50');
+                        label.classList.remove('border-transparent');
                     } else {
                         label.classList.remove('border-blue-500', 'bg-blue-50');
+                        label.classList.add('border-transparent');
                     }
                 });
                 
@@ -326,8 +350,13 @@ class SettingsManager {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     applyTheme(theme) {
-        if (window.PWAApp && window.PWAApp.applyTheme) {
-            window.PWAApp.applyTheme();
+        document.body.classList.remove('theme-light', 'theme-dark');
+        
+        if (theme === 'system') {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.classList.add(prefersDark ? 'theme-dark' : 'theme-light');
+        } else {
+            document.body.classList.add(`theme-${theme}`);
         }
     }
     
