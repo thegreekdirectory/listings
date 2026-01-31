@@ -1,94 +1,74 @@
-// js/pwa/starred.js (COMPLETE REPLACEMENT)
+// js/pwa/starred.js - COMPLETE FIX
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
-// ============================================
-// PWA STARRED LISTINGS MANAGER
-// Manages starred listings functionality
-// ============================================
+/* ============================================
+   STARRED LISTINGS MANAGER - COMPLETE
+   Handles all starring functionality across the app
+   ============================================ */
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
-class StarredManager {
-    constructor() {
-        this.storage = window.PWAStorage;
-        this.initialized = false;
-    }
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
-    async init() {
-        if (this.initialized) return;
-        
-        try {
-            await this.storage.init();
-            this.initialized = true;
-            await this.updateStarredCount();
-        } catch (error) {
-            console.error('Failed to initialize StarredManager:', error);
-        }
-    }
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
+window.StarredManager = {
     async toggleStar(listingId, listingData) {
         try {
-            await this.init();
-            
-            const isStarred = await this.storage.isStarred(listingId);
+            await window.PWAStorage.init();
+            const isStarred = await window.PWAStorage.isStarred(listingId);
             
             if (isStarred) {
-                await this.storage.removeStarred(listingId);
+                // Unstar
+                await window.PWAStorage.removeStar(listingId);
                 this.updateStarButtons(listingId, false);
-                if (window.PWAApp) {
-                    window.PWAApp.showToast('Removed from starred');
-                }
+                this.showToast('Removed from starred');
             } else {
-                await this.storage.addStarred(listingData);
+                // Star
+                await window.PWAStorage.addStar(listingId, listingData);
                 this.updateStarButtons(listingId, true);
-                if (window.PWAApp) {
-                    window.PWAApp.showToast('Added to starred');
-                }
+                this.showToast('Added to starred');
             }
             
+            // Update starred count
             await this.updateStarredCount();
             
             return !isStarred;
         } catch (error) {
-            console.error('Toggle star failed:', error);
-            if (window.PWAApp) {
-                window.PWAApp.showToast('Failed to update starred status');
-            }
+            console.error('Error toggling star:', error);
+            this.showToast('Error updating starred status');
             return false;
         }
-    }
+    },
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     updateStarButtons(listingId, isStarred) {
-        const buttons = document.querySelectorAll(`[data-listing-id="${listingId}"], [onclick*="'${listingId}'"]`);
-        buttons.forEach(btn => {
+        // Update all star buttons for this listing ID
+        const starButtons = document.querySelectorAll(`[data-listing-id="${listingId}"]`);
+        starButtons.forEach(btn => {
             if (isStarred) {
                 btn.classList.add('starred');
             } else {
                 btn.classList.remove('starred');
             }
         });
-    }
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    },
     
     async updateStarredCount() {
         try {
-            const count = await this.storage.getStarredCount();
-            const badges = document.querySelectorAll('.starred-count-badge');
-            badges.forEach(badge => {
-                badge.textContent = count;
-                badge.style.display = count > 0 ? 'inline' : 'none';
+            await window.PWAStorage.init();
+            const starred = await window.PWAStorage.getAllStarred();
+            const count = starred.length;
+            
+            // Update count in header/dock
+            const countElements = document.querySelectorAll('#starredCount, .starred-count');
+            countElements.forEach(el => {
+                el.textContent = count;
             });
+            
+            return count;
         } catch (error) {
-            console.error('Update starred count failed:', error);
+            console.error('Error updating starred count:', error);
+            return 0;
         }
-    }
+    },
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
@@ -97,16 +77,16 @@ class StarredManager {
         if (!container) return;
         
         try {
-            await this.init();
-            const starred = await this.storage.getAllStarred();
+            await window.PWAStorage.init();
+            const starred = await window.PWAStorage.getAllStarred();
             
             if (starred.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-12">
                         <div class="text-6xl mb-4">⭐</div>
-                        <h2 class="text-2xl font-bold text-gray-900 mb-2">No starred listings yet</h2>
-                        <p class="text-gray-600 mb-6">Star your favorite businesses to access them quickly</p>
-                        <a href="/listings.html" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">No starred listings yet</h3>
+                        <p class="text-gray-600 mb-6">Star your favorite businesses to see them here</p>
+                        <a href="/listings.html" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                             Browse Listings
                         </a>
                     </div>
@@ -114,108 +94,148 @@ class StarredManager {
                 return;
             }
             
-            container.innerHTML = starred.map(listing => this.createListingCard(listing)).join('');
+            // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            
+            container.innerHTML = starred.map(listing => {
+                const categorySlug = listing.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'general';
+                const listingUrl = `/listing/${categorySlug}/${listing.slug}`;
+                const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
+                const logoImage = listing.logo || '';
+                
+                return `
+                    <a href="${listingUrl}" class="listing-card bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block">
+                        <div class="h-48 bg-gray-200 relative listing-image-container">
+                            ${firstPhoto ? `<img src="${firstPhoto}" alt="${listing.business_name}" class="listing-image w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">No image</div>'}
+                            <button class="star-button starred" data-listing-id="${listing.id}" onclick="window.StarredManager.handleStarClick('${listing.id}', event)">
+                                <svg class="star-icon" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex gap-3 mb-3">
+                                ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name} logo" class="listing-logo w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
+                                <div class="flex-1 min-w-0">
+                                    <span class="listing-category text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${listing.category || 'General'}</span>
+                                    <h3 class="listing-name text-lg font-bold text-gray-900 line-clamp-1">${listing.business_name}</h3>
+                                </div>
+                            </div>
+                            <p class="listing-tagline text-sm text-gray-600 mb-3 line-clamp-2">${listing.tagline || listing.description || ''}</p>
+                            <p class="listing-location text-sm text-gray-600">📍 ${listing.city ? `${listing.city}, ${listing.state}` : (listing.address || 'Location not specified')}</p>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+            
         } catch (error) {
-            console.error('Failed to render starred listings:', error);
+            console.error('Error rendering starred listings:', error);
             container.innerHTML = `
                 <div class="text-center py-12">
-                    <div class="text-6xl mb-4">❌</div>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Error loading starred listings</h2>
-                    <p class="text-gray-600">Please try again later</p>
+                    <p class="text-red-600">Error loading starred listings</p>
                 </div>
             `;
         }
-    }
+    },
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    createListingCard(listing) {
-        const categorySlug = (listing.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const url = `/listing/${categorySlug}/${listing.slug}`;
-        const mainImage = (listing.photos && listing.photos.length > 0) ? listing.photos[0] : listing.logo;
-        
-        return `
-            <a href="${url}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block">
-                <div class="h-48 bg-gray-200 relative">
-                    ${mainImage ? `<img src="${mainImage}" alt="${listing.business_name}" class="w-full h-full object-cover" loading="lazy">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xl">No image</div>'}
-                    <button class="star-button starred absolute top-3 right-3 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center" onclick="handleStarClick('${listing.id}', event)" data-listing-id="${listing.id}">
-                        <svg class="star-icon w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="p-4">
-                    <div class="flex gap-3 mb-3">
-                        ${listing.logo ? `<img src="${listing.logo}" alt="${listing.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0" loading="lazy">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0"></div>'}
-                        <div class="flex-1 min-w-0">
-                            <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#045093;">${listing.category || 'Uncategorized'}</span>
-                            <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${listing.business_name}</h3>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">${listing.tagline || listing.description || ''}</p>
-                    ${listing.city && listing.state ? `<p class="text-sm text-gray-600">📍 ${listing.city}, ${listing.state}</p>` : ''}
-                </div>
-            </a>
-        `;
-    }
-}
-
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-
-const starredManager = new StarredManager();
-
-window.StarredManager = starredManager;
-
-// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-
-// Global function for star button clicks
-window.handleStarClick = async function(listingId, event) {
-    if (event) {
+    async handleStarClick(listingId, event) {
         event.preventDefault();
         event.stopPropagation();
-    }
-    
-    try {
-        // Get listing data from the current page or from storage
-        let listingData = window.currentListingData || {};
         
-        if (!listingData.id) {
-            // Try to get from storage if already starred
-            await window.PWAStorage.init();
-            const starred = await window.PWAStorage.getAllStarred();
-            listingData = starred.find(l => l.id === listingId) || { id: listingId };
+        // Get listing data from current page if available
+        let listingData = null;
+        if (window.currentListingData && window.currentListingData.id === listingId) {
+            listingData = window.currentListingData;
+        } else if (window.allListings) {
+            listingData = window.allListings.find(l => l.id === listingId);
         }
         
-        await starredManager.toggleStar(listingId, listingData);
-    } catch (error) {
-        console.error('Star click handler failed:', error);
+        if (!listingData) {
+            // Try to get from Supabase
+            try {
+                const { data, error } = await window.supabase.createClient(
+                    'https://luetekzqrrgdxtopzvqw.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg'
+                )
+                    .from('listings')
+                    .select('*')
+                    .eq('id', listingId)
+                    .single();
+                
+                if (!error && data) {
+                    listingData = data;
+                }
+            } catch (e) {
+                console.error('Error fetching listing:', e);
+            }
+        }
+        
+        await this.toggleStar(listingId, listingData);
+        
+        // If on starred page, refresh the list
+        if (window.location.pathname.includes('starred')) {
+            this.renderStarredListings('starredListingsContainer');
+        }
+    },
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    showToast(message) {
+        // Check if toast exists
+        let toast = document.querySelector('.pwa-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'pwa-toast';
+            document.body.appendChild(toast);
+        }
+        
+        toast.textContent = message;
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    },
+    
+    async initializeStarButtons() {
+        try {
+            await window.PWAStorage.init();
+            
+            // Find all star buttons and set their state
+            const starButtons = document.querySelectorAll('.star-button[data-listing-id]');
+            for (const button of starButtons) {
+                const listingId = button.getAttribute('data-listing-id');
+                const isStarred = await window.PWAStorage.isStarred(listingId);
+                if (isStarred) {
+                    button.classList.add('starred');
+                }
+            }
+            
+            // Update starred count
+            await this.updateStarredCount();
+        } catch (error) {
+            console.error('Error initializing star buttons:', error);
+        }
     }
 };
 
-// js/pwa/storage.js (ADD DEBUGGING AND FIX)
-// Add after getAllStarred method:
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
-async getAllStarred() {
-    try {
-        await this.init();
-        const transaction = this.db.transaction(['starredListings'], 'readonly');
-        const store = transaction.objectStore('starredListings');
-        const request = store.getAll();
-        
-        return new Promise((resolve, reject) => {
-            request.onsuccess = () => {
-                console.log('Retrieved starred listings:', request.result);
-                resolve(request.result || []);
-            };
-            request.onerror = () => {
-                console.error('Get all starred failed:', request.error);
-                reject(request.error);
-            };
+// Initialize on page load
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            window.StarredManager.initializeStarButtons();
         });
-    } catch (error) {
-        console.error('getAllStarred failed:', error);
-        return [];
+    } else {
+        window.StarredManager.initializeStarButtons();
     }
 }
+
+// Make handleStarClick globally available
+window.handleStarClick = function(listingId, event) {
+    window.StarredManager.handleStarClick(listingId, event);
+};
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
