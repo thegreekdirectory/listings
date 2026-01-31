@@ -81,29 +81,6 @@
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
     <div class="max-w-7xl mx-auto px-4 py-4">
-        <a href="/" class="logo-link flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2">
-            <span>←</span>
-            <span>Back to The Greek Directory</span>
-        </a>
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-                <img src="https://static.thegreekdirectory.org/img/logo/blue.svg" alt="The Greek Directory" class="h-12 w-auto">
-                <div>
-                    <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
-                    <p class="text-xs text-gray-600" id="locationSubtitle">Loading...</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <button id="starredBtn" class="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <svg class="star-icon" style="width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    <span class="text-sm font-medium"><span class="hidden sm:inline">View </span>Starred</span>
-                    <span id="starredCount" class="text-xs bg-gray-200 px-2 py-0.5 rounded-full">0</span>
-                </button>
-            </div>
-        </div>
-
         <div class="relative mb-4">
             <input type="text" id="searchInput" placeholder="Search businesses, categories, or locations..." 
                 class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" 
@@ -174,10 +151,6 @@
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="closingSoonFilter" class="w-4 h-4">
                         <span class="text-sm font-medium text-gray-700">Closing Soon (60 min)</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="hoursUnknownFilter" class="w-4 h-4">
-                        <span class="text-sm font-medium text-gray-700">Hours Unknown</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="onlineOnlyFilter" class="w-4 h-4">
@@ -285,10 +258,6 @@
                                 <span class="text-sm font-medium text-gray-700">Closing Soon</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" id="hoursUnknownFilter2" class="w-4 h-4">
-                                <span class="text-sm font-medium text-gray-700">Hours Unknown</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="onlineOnlyFilter2" class="w-4 h-4">
                                 <span class="text-sm font-medium text-gray-700">Online Only</span>
                             </label>
@@ -375,14 +344,9 @@
         if (window.PWAStorage) {
             await window.PWAStorage.init();
             
-            // Check all listings and update star button states
-            const starButtons = document.querySelectorAll('.star-button');
-            for (const button of starButtons) {
-                const listingId = button.getAttribute('onclick').match(/'([^']+)'/)[1];
-                const isStarred = await window.PWAStorage.isStarred(listingId);
-                if (isStarred) {
-                    button.classList.add('starred');
-                }
+            // Update starred count in header
+            if (window.StarredManager) {
+                await window.StarredManager.updateStarredCount();
             }
         }
     });
