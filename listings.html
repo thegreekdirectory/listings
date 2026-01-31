@@ -15,7 +15,7 @@
 
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-        <meta name="apple-mobile-web-app-title" content="Greek Directory">
+    <meta name="apple-mobile-web-app-title" content="Greek Directory">
     <link rel="apple-touch-startup-image" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg" type="image/x-icon">
     
@@ -34,7 +34,10 @@
     
     <link rel="stylesheet" href="css/listings.css">
     <link rel="stylesheet" href="css/index.css">
-<!-- Add inline splash screen CSS in <head> -->
+    <link rel="stylesheet" href="css/pwa.css">
+
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
 <style>
     .pwa-splash {
         position: fixed;
@@ -67,12 +70,6 @@
     }
     /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 </style>
-
-<!-- Add PWA CSS -->
-<link rel="stylesheet" href="css/pwa.css">
-
-
-    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -80,7 +77,6 @@
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-    <div class="max-w-7xl mx-auto px-4 py-4">
         <div class="relative mb-4">
             <input type="text" id="searchInput" placeholder="Search businesses, categories, or locations..." 
                 class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" 
@@ -107,6 +103,7 @@
             </div>
         </div>
 
+        <!-- MOBILE FILTER PANEL -->
         <div id="filterPanel" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="font-semibold text-gray-900">Filters</h3>
@@ -213,6 +210,7 @@
 
     <div class="max-w-7xl mx-auto px-4 py-4">
         <div class="desktop-layout" id="desktopLayout">
+            <!-- DESKTOP FILTER SIDEBAR -->
             <div class="desktop-filters hidden" id="desktopFiltersContainer">
                 <div id="desktopFilterPanel" class="desktop-sidebar">
                     <div class="flex items-center justify-between mb-3">
@@ -329,9 +327,10 @@
     <script src="js/partials-loader.js"></script>
     <script src="js/listings.js"></script>
     <script src="js/pwa/storage.js"></script>
-<script src="js/pwa/app.js"></script>
-<script src="js/pwa/dock.js"></script>
-<script src="js/pwa/starred.js"></script>
+    <script src="js/pwa/app.js"></script>
+    <script src="js/pwa/dock.js"></script>
+
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
 <script>
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -341,12 +340,15 @@
     
     // Update star buttons on page load
     document.addEventListener('DOMContentLoaded', async () => {
-        if (window.PWAStorage) {
-            await window.PWAStorage.init();
-            
-            // Update starred count in header
-            if (window.StarredManager) {
-                await window.StarredManager.updateStarredCount();
+        // Check all listings and update star button states
+        const starButtons = document.querySelectorAll('.star-button');
+        for (const button of starButtons) {
+            const listingId = button.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+            if (listingId && window.isListingStarred) {
+                const isStarred = window.isListingStarred(listingId);
+                if (isStarred) {
+                    button.classList.add('starred');
+                }
             }
         }
     });
