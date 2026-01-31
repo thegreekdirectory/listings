@@ -225,13 +225,25 @@ window.StarredManager = {
         try {
             await window.PWAStorage.init();
             
-            // Find all star buttons and set their state
-            const starButtons = document.querySelectorAll('.star-button[data-listing-id]');
+            // Find all star buttons — some have data-listing-id, others use onclick pattern
+            const starButtons = document.querySelectorAll('.star-button');
             for (const button of starButtons) {
-                const listingId = button.getAttribute('data-listing-id');
+                let listingId = button.getAttribute('data-listing-id');
+                
+                // Fallback: extract ID from onclick="toggleStar('ID', event)"
+                if (!listingId) {
+                    const onclick = button.getAttribute('onclick') || '';
+                    const match = onclick.match(/toggleStar\(\s*['"]([^'"]+)['"]/);
+                    if (match) listingId = match[1];
+                }
+                
+                if (!listingId) continue;
+                
                 const isStarred = await window.PWAStorage.isStarred(listingId);
                 if (isStarred) {
                     button.classList.add('starred');
+                } else {
+                    button.classList.remove('starred');
                 }
             }
             
