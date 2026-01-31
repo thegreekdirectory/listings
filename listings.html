@@ -68,6 +68,29 @@
             background: #000000;
         }
     }
+
+    /* Desktop filters overlay: positions the sidebar panel as a fixed overlay on top of content */
+    .desktop-filters-overlay {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        z-index: 200;
+        background: white;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+    }
+
+    /* Semi-transparent backdrop behind the overlay */
+    #desktopFiltersBackdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.3);
+        z-index: 199;
+    }
+
     /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 </style>
 </head>
@@ -208,6 +231,9 @@
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
+    <!-- Backdrop for desktop filters overlay (click to close) -->
+    <div id="desktopFiltersBackdrop" class="hidden"></div>
+
     <div class="max-w-7xl mx-auto px-4 py-4">
         <div class="desktop-layout" id="desktopLayout">
             <!-- DESKTOP FILTER SIDEBAR -->
@@ -290,7 +316,14 @@
 
             <div class="desktop-content">
                 <div id="normalViewControls" class="flex items-center justify-between mb-4">
-                    <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
+                    <div class="flex items-center gap-2">
+                        <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
+                        <!-- Desktop Filters toggle button: visible when sidebar is collapsed or map is open -->
+                        <button id="desktopFilterToggleBtn" class="hidden lg:flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                            <span>🔍</span>
+                            <span class="text-sm font-medium">Filters</span>
+                        </button>
+                    </div>
                     <div class="flex items-center gap-2">
                         <button id="mapBtnDesktop" class="hidden lg:flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
                             <span>🗺️</span>
@@ -327,6 +360,7 @@
     <script src="js/partials-loader.js"></script>
     <script src="js/listings.js"></script>
     <script src="js/pwa/storage.js"></script>
+    <script src="js/pwa/starred.js"></script>
     <script src="js/pwa/app.js"></script>
     <script src="js/pwa/dock.js"></script>
 
