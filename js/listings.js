@@ -319,44 +319,46 @@ function checkFilterPosition() {
         if (mapBtn) mapBtn.classList.remove('hidden');
         
         if (filterPosition === 'left' && !mapOpen) {
+            // Sidebar visible — hide the toggle button
             if (desktopLayout) desktopLayout.classList.add('with-left-filters');
             if (desktopFilters) {
                 desktopFilters.classList.remove('hidden');
                 desktopFilters.classList.remove('desktop-filters-overlay');
             }
-            if (desktopFilterToggleBtn) desktopFilterToggleBtn.classList.add('hidden');
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
             if (currentView === 'grid' && listingsContainer) {
                 listingsContainer.classList.remove('listings-3-col');
                 listingsContainer.classList.add('listings-2-col');
             }
         } else if (filterPosition === 'left' && mapOpen) {
-            // Map is open — sidebar filters hide, show the toggle button so user can open overlay
+            // Map is open — sidebar hides, show toggle so user can open overlay
             if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
             if (desktopFilters) {
                 desktopFilters.classList.add('hidden');
                 desktopFilters.classList.remove('desktop-filters-overlay');
             }
             desktopFiltersOverlay = false;
-            if (desktopFilterToggleBtn) desktopFilterToggleBtn.classList.remove('hidden');
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'flex';
             if (currentView === 'grid' && listingsContainer) {
                 listingsContainer.classList.remove('listings-2-col');
                 listingsContainer.classList.add('listings-3-col');
             }
         } else {
-            // filterPosition === 'top' (filters collapsed)
+            // filterPosition === 'top' (filters collapsed) — show toggle button
             if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
             if (desktopFilters) {
                 desktopFilters.classList.add('hidden');
                 desktopFilters.classList.remove('desktop-filters-overlay');
             }
             desktopFiltersOverlay = false;
-            if (desktopFilterToggleBtn) desktopFilterToggleBtn.classList.remove('hidden');
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'flex';
             if (currentView === 'grid' && listingsContainer) {
                 listingsContainer.classList.remove('listings-2-col');
                 listingsContainer.classList.add('listings-3-col');
             }
         }
     } else {
+        // Mobile
         if (toggleBtn) toggleBtn.style.display = 'none';
         if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
         if (desktopFilters) {
@@ -364,7 +366,7 @@ function checkFilterPosition() {
             desktopFilters.classList.remove('desktop-filters-overlay');
         }
         desktopFiltersOverlay = false;
-        if (desktopFilterToggleBtn) desktopFilterToggleBtn.classList.add('hidden');
+        if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
         if (mapBtn) mapBtn.classList.add('hidden');
         if (currentView === 'grid' && listingsContainer) {
             listingsContainer.classList.remove('listings-2-col', 'listings-3-col');
@@ -479,6 +481,12 @@ function loadFiltersFromURL() {
         if (onlineFilter) onlineFilter.checked = true;
         if (onlineFilter2) onlineFilter2.checked = true;
     }
+
+    // Re-render category & subcategory buttons so they reflect the URL state.
+    // createCategoryButtons() already ran once during init (with selectedCategory still 'All'),
+    // so we must call it again now that selectedCategory may have been updated from the URL.
+    createCategoryButtons();
+    updateSubcategoryDisplay();
 }
 
 /*
@@ -905,9 +913,11 @@ function buildBadges(listing) {
     return badges;
 }
 
-// Returns true if the listing should show the verified checkmark icon next to its name
+// Returns true if the listing should show the claimed-checkmark icon next to its name.
+// The checkmark replaces the old "Claimed" badge — it means the business owns/has claimed this listing.
+// It is independent of the tier badge hierarchy (Featured / Verified badges).
 function showsVerifiedCheckmark(listing) {
-    return listing.verified || listing.tier === 'VERIFIED' || listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+    return listing.show_claim_button === false;
 }
 
 /*
@@ -1044,6 +1054,11 @@ function renderListings() {
         } else {
             loadMoreBtn.classList.add('hidden');
         }
+    }
+
+    // Re-apply star states from IndexedDB now that new DOM elements exist
+    if (window.StarredManager) {
+        window.StarredManager.initializeStarButtons();
     }
 }
 
@@ -2269,8 +2284,13 @@ function toggleSplitView() {
         splitContainer.className = 'split-view-container';
         splitContainer.innerHTML = `
             <div class="split-view-listings">
-                <div class="mb-4 flex items-center justify-between">
-                    <p class="text-sm text-gray-600">${filteredListings.length} ${filteredListings.length === 1 ? 'listing' : 'listings'} found</p>
+                <div class="mb-3 flex items-center justify-between px-2">
+                    <div class="flex items-center gap-2">
+                        <p class="text-sm text-gray-600">${filteredListings.length} ${filteredListings.length === 1 ? 'listing' : 'listings'} found</p>
+                        <button id="splitFiltersBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            <span>🔍</span> Filters
+                        </button>
+                    </div>
                     <select id="splitSortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
                         <option value="default">Default</option>
                         <option value="az">A-Z</option>
@@ -2298,6 +2318,9 @@ function toggleSplitView() {
                 </div>
             </div>
         `;
+        // Close filterPanel if it was open from before entering split view
+        if (filtersOpen) { filtersOpen = false; document.getElementById('filterPanel').classList.add('hidden'); }
+
         document.getElementById('splitSortSelect').value = document.getElementById('sortSelect').value;
         document.getElementById('splitSortSelect').addEventListener('change', (e) => {
             document.getElementById('sortSelect').value = e.target.value;
@@ -2305,6 +2328,13 @@ function toggleSplitView() {
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
         });
+
+        // Filters button in split view opens the top filterPanel
+        const splitFiltersBtn = document.getElementById('splitFiltersBtn');
+        if (splitFiltersBtn) {
+            splitFiltersBtn.addEventListener('click', toggleFilters);
+        }
+
         renderSplitViewListings();
         initSplitMap();
     } else {
@@ -2367,6 +2397,11 @@ function renderSplitViewListings() {
             </a>
         `;
     }).join('');
+
+    // Re-apply star states from IndexedDB now that split-view cards are in the DOM
+    if (window.StarredManager) {
+        window.StarredManager.initializeStarButtons();
+    }
 }
 
 /*
