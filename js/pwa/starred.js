@@ -15,19 +15,29 @@ window.StarredManager = {
             const isStarred = await window.PWAStorage.isStarred(listingId);
             
             if (isStarred) {
-                // Unstar
-                await window.PWAStorage.removeStar(listingId);
+                // Unstar — use removeStarred (matches storage.js method name)
+                await window.PWAStorage.removeStarred(listingId);
                 this.updateStarButtons(listingId, false);
                 this.showToast('Removed from starred');
             } else {
-                // Star
-                await window.PWAStorage.addStar(listingId, listingData);
+                // Star — use addStarred (matches storage.js method name)
+                await window.PWAStorage.addStarred(listingData);
                 this.updateStarButtons(listingId, true);
                 this.showToast('Added to starred');
             }
             
             // Update starred count
             await this.updateStarredCount();
+            
+            // Also update the cookie-based list so listings.js starredListings array stays in sync
+            if (window.starredListings) {
+                const idx = window.starredListings.indexOf(listingId);
+                if (isStarred && idx > -1) {
+                    window.starredListings.splice(idx, 1);
+                } else if (!isStarred && idx === -1) {
+                    window.starredListings.push(listingId);
+                }
+            }
             
             return !isStarred;
         } catch (error) {
@@ -40,13 +50,26 @@ window.StarredManager = {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     updateStarButtons(listingId, isStarred) {
-        // Update all star buttons for this listing ID
+        // Update star buttons matched by data-listing-id attribute
         const starButtons = document.querySelectorAll(`[data-listing-id="${listingId}"]`);
         starButtons.forEach(btn => {
             if (isStarred) {
                 btn.classList.add('starred');
             } else {
                 btn.classList.remove('starred');
+            }
+        });
+
+        // Also update star buttons matched by onclick pattern (used in listings.js rendered cards)
+        const allStarButtons = document.querySelectorAll('.star-button');
+        allStarButtons.forEach(btn => {
+            const onclick = btn.getAttribute('onclick') || '';
+            if (onclick.includes(listingId)) {
+                if (isStarred) {
+                    btn.classList.add('starred');
+                } else {
+                    btn.classList.remove('starred');
+                }
             }
         });
     },
@@ -58,7 +81,7 @@ window.StarredManager = {
             const count = starred.length;
             
             // Update count in header/dock
-            const countElements = document.querySelectorAll('#starredCount, .starred-count');
+            const countElements = document.querySelectorAll('#starredCount, .starred-count, #headerStarredCount');
             countElements.forEach(el => {
                 el.textContent = count;
             });
