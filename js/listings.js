@@ -6,8 +6,8 @@ or distribution of this code will result in legal action to the fullest extent p
 */
 
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 1 (FIXED)
-// Configuration & State Management
+// LISTINGS PAGE JAVASCRIPT - COMPLETE FIXED
+// PART 1: Configuration, State, Starring
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
@@ -37,25 +37,27 @@ const US_STATES = {
     'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
 };
 
+// STATE VARIABLES
 let listingsSupabase = null;
 let SUBCATEGORIES = {};
 let allListings = [], filteredListings = [], currentView = 'grid', selectedCategory = 'All';
 let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '';
 let selectedRadius = 0, openNowOnly = false, closedNowOnly = false, openingSoonOnly = false;
-let closingSoonOnly = false, hoursUnknownOnly = false, onlineOnly = false, userLocation = null;
+let closingSoonOnly = false, onlineOnly = false, userLocation = null;
 let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
 let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
 let userLocationMarker = null, mapReady = false, allListingsGeocoded = false;
 let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
 let filterPosition = 'left';
 let searchDebounceTimer = null;
-let displayedListingsCount = 25;
+let displayedListingsCount = 1000; // FIXED: Show all listings immediately
 let estimatedUserLocation = null;
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+// UTILITY FUNCTIONS
 function formatPhoneDisplay(phone) {
     if (!phone) return '';
     const digits = phone.replace(/\D/g, '');
@@ -65,33 +67,30 @@ function formatPhoneDisplay(phone) {
     return phone;
 }
 
-async function loadStarredListings() {
-    if (window.PWAStorage) {
-        try {
-            await window.PWAStorage.init();
-            const starred = await window.PWAStorage.getAllStarred();
-            starredListings = starred.map(l => l.id);
-            updateStarredCount();
-            return;
-        } catch (error) {
-            console.error('Error loading from PWA storage:', error);
+// STARRING SYSTEM - USING LOCALSTORAGE
+function loadStarredListings() {
+    try {
+        const stored = localStorage.getItem('starredListings');
+        if (stored) {
+            starredListings = JSON.parse(stored);
+            console.log('Loaded starred listings from localStorage:', starredListings.length);
+        } else {
+            starredListings = [];
         }
-    }
-    
-    // Fallback to cookies
-    const stored = getCookie('starredListings');
-    if (stored) {
-        try { 
-            starredListings = JSON.parse(stored); 
-        } catch (e) { 
-            starredListings = []; 
-        }
+    } catch (e) {
+        console.error('Error loading starred listings:', e);
+        starredListings = [];
     }
     updateStarredCount();
 }
 
 function saveStarredListings() {
-    setCookie('starredListings', JSON.stringify(starredListings), 365);
+    try {
+        localStorage.setItem('starredListings', JSON.stringify(starredListings));
+        console.log('Saved starred listings to localStorage:', starredListings.length);
+    } catch (e) {
+        console.error('Error saving starred listings:', e);
+    }
     updateStarredCount();
 }
 
@@ -99,43 +98,40 @@ function saveStarredListings() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-async function toggleStar(listingId, event) {
+function toggleStar(listingId, event) {
     if (event) { 
         event.preventDefault(); 
         event.stopPropagation(); 
     }
     
-    const listing = allListings.find(l => l.id === listingId);
-    
-    if (!listing) {
-        console.error('Listing not found:', listingId);
-        return;
-    }
-    
-    // Use PWA storage if available
-    if (window.StarredManager && window.PWAStorage) {
-        await window.StarredManager.toggleStar(listingId, listing);
+    const index = starredListings.indexOf(listingId);
+    if (index > -1) {
+        // Remove from starred
+        starredListings.splice(index, 1);
+        console.log('Unstarred listing:', listingId);
     } else {
-        // Fallback to cookie-based storage
-        const index = starredListings.indexOf(listingId);
-        if (index > -1) {
-            starredListings.splice(index, 1);
-        } else {
-            starredListings.push(listingId);
-        }
-        saveStarredListings();
-        
-        // Update the specific star button
-        const starButtons = document.querySelectorAll(`[onclick*="toggleStar('${listingId}'"]`);
-        starButtons.forEach(btn => {
-            if (starredListings.includes(listingId)) {
-                btn.classList.add('starred');
-            } else {
-                btn.classList.remove('starred');
-            }
-        });
+        // Add to starred
+        starredListings.push(listingId);
+        console.log('Starred listing:', listingId);
     }
+    
+    saveStarredListings();
+    
+    // Update all star buttons for this listing
+    const starButtons = document.querySelectorAll(`[onclick*="toggleStar('${listingId}'"]`);
+    starButtons.forEach(btn => {
+        if (starredListings.includes(listingId)) {
+            btn.classList.add('starred');
+        } else {
+            btn.classList.remove('starred');
+        }
+    });
 }
+
+// Helper function to check if listing is starred
+window.isListingStarred = function(listingId) {
+    return starredListings.includes(listingId);
+};
 
 function updateStarredCount() {
     const countEl = document.getElementById('starredCount');
@@ -166,7 +162,7 @@ function toggleStarredView() {
             starredBtn.style.color = '#78350f';
         }
     } else {
-        displayedListingsCount = 25;
+        displayedListingsCount = 1000;
         applyFilters();
         if (starredBtn) {
             starredBtn.style.backgroundColor = '';
@@ -175,22 +171,6 @@ function toggleStarredView() {
     }
     renderListings();
     updateResultsCount();
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function setCookie(name, value, days) {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
-}
-
-function getCookie(name) {
-    return document.cookie.split('; ').reduce((r, v) => {
-        const parts = v.split('=');
-        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
-    }, '');
 }
 
 function isIOSWebApp() {
@@ -255,11 +235,15 @@ function extractSubcategoriesFromListings(listings) {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+// INITIALIZATION
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Initializing Listings Page...');
+    
     if (isIOSWebApp()) {
         const refreshBtn = document.getElementById('refreshBtn');
         if (refreshBtn) refreshBtn.style.display = 'flex';
     }
+    
     loadStarredListings();
     loadListings();
     setupEventListeners();
@@ -286,257 +270,14 @@ or distribution of this code will result in legal action to the fullest extent p
 */
 
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 2 (FIXED)
-// Filter Position & URL Management with Query String Auto-Selection
-// ============================================
-
-function checkFilterPosition() {
-    const screenWidth = window.innerWidth;
-    const toggleBtn = document.getElementById('toggleFilterPosition');
-    const desktopLayout = document.getElementById('desktopLayout');
-    const desktopFilters = document.getElementById('desktopFiltersContainer');
-    const mapBtn = document.getElementById('mapBtnDesktop');
-    const listingsContainer = document.getElementById('listingsContainer');
-    
-    if (screenWidth >= 1024) {
-        if (toggleBtn) toggleBtn.style.display = 'block';
-        if (mapBtn) mapBtn.classList.remove('hidden');
-        
-        if (filterPosition === 'left') {
-            if (desktopLayout) desktopLayout.classList.add('with-left-filters');
-            if (desktopFilters) desktopFilters.classList.remove('hidden');
-            if (currentView === 'grid' && listingsContainer) {
-                listingsContainer.classList.remove('listings-3-col');
-                listingsContainer.classList.add('listings-2-col');
-            }
-        } else {
-            if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
-            if (desktopFilters) desktopFilters.classList.add('hidden');
-            if (currentView === 'grid' && listingsContainer) {
-                listingsContainer.classList.remove('listings-2-col');
-                listingsContainer.classList.add('listings-3-col');
-            }
-        }
-    } else {
-        if (toggleBtn) toggleBtn.style.display = 'none';
-        if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
-        if (desktopFilters) desktopFilters.classList.add('hidden');
-        if (mapBtn) mapBtn.classList.add('hidden');
-        if (currentView === 'grid' && listingsContainer) {
-            listingsContainer.classList.remove('listings-2-col', 'listings-3-col');
-        }
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function loadFiltersFromURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchQuery = urlParams.get('q');
-    if (searchQuery) {
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) searchInput.value = searchQuery;
-    }
-    
-    const category = urlParams.get('category');
-    if (category && CATEGORIES.includes(category)) {
-        selectedCategory = category;
-        // Auto-select the category button when page loads
-        setTimeout(() => {
-            createCategoryButtons();
-            updateSubcategoryDisplay();
-        }, 100);
-    }
-    
-    const subcategories = urlParams.get('subcategories');
-    if (subcategories) {
-        selectedSubcategories = subcategories.split(',');
-        // Update subcategory display after categories are loaded
-        setTimeout(() => {
-            updateSubcategoryDisplay();
-        }, 150);
-    }
-    
-    const subMode = urlParams.get('submode');
-    if (subMode === 'all' || subMode === 'any') {
-        subcategoryMode = subMode;
-        setSubcategoryMode(subMode, true);
-    }
-    
-    const country = urlParams.get('country');
-    if (country) {
-        selectedCountry = country;
-        const countryFilter = document.getElementById('countryFilter');
-        const countryFilter2 = document.getElementById('countryFilter2');
-        if (countryFilter) countryFilter.value = country;
-        if (countryFilter2) countryFilter2.value = country;
-        
-        if (country === 'USA') {
-            const stateContainer = document.getElementById('stateFilterContainer');
-            const stateContainer2 = document.getElementById('stateFilterContainer2');
-            if (stateContainer) stateContainer.classList.remove('hidden');
-            if (stateContainer2) stateContainer2.classList.remove('hidden');
-            populateStateFilter('USA');
-        }
-    }
-    
-    const state = urlParams.get('state');
-    if (state) {
-        selectedState = state;
-        const stateFilter = document.getElementById('stateFilter');
-        const stateFilter2 = document.getElementById('stateFilter2');
-        if (stateFilter) stateFilter.value = state;
-        if (stateFilter2) stateFilter2.value = state;
-    }
-    
-    const radius = urlParams.get('radius');
-    if (radius) {
-        selectedRadius = parseInt(radius);
-        const radiusFilter = document.getElementById('radiusFilter');
-        const radiusFilter2 = document.getElementById('radiusFilter2');
-        if (radiusFilter) radiusFilter.value = radius;
-        if (radiusFilter2) radiusFilter2.value = radius;
-        updateRadiusValue();
-    }
-    
-    if (urlParams.get('open') === 'true') {
-        openNowOnly = true;
-        const openFilter = document.getElementById('openNowFilter');
-        const openFilter2 = document.getElementById('openNowFilter2');
-        if (openFilter) openFilter.checked = true;
-        if (openFilter2) openFilter2.checked = true;
-    }
-    
-    if (urlParams.get('closed') === 'true') {
-        closedNowOnly = true;
-        const closedFilter = document.getElementById('closedNowFilter');
-        const closedFilter2 = document.getElementById('closedNowFilter2');
-        if (closedFilter) closedFilter.checked = true;
-        if (closedFilter2) closedFilter2.checked = true;
-    }
-    
-    if (urlParams.get('opening') === 'true') {
-        openingSoonOnly = true;
-        const openingSoonFilter = document.getElementById('openingSoonFilter');
-        const openingSoonFilter2 = document.getElementById('openingSoonFilter2');
-        if (openingSoonFilter) openingSoonFilter.checked = true;
-        if (openingSoonFilter2) openingSoonFilter2.checked = true;
-    }
-    
-    if (urlParams.get('closing') === 'true') {
-        closingSoonOnly = true;
-        const closingSoonFilter = document.getElementById('closingSoonFilter');
-        const closingSoonFilter2 = document.getElementById('closingSoonFilter2');
-        if (closingSoonFilter) closingSoonFilter.checked = true;
-        if (closingSoonFilter2) closingSoonFilter2.checked = true;
-    }
-    
-    if (urlParams.get('online') === 'true') {
-        onlineOnly = true;
-        const onlineFilter = document.getElementById('onlineOnlyFilter');
-        const onlineFilter2 = document.getElementById('onlineOnlyFilter2');
-        if (onlineFilter) onlineFilter.checked = true;
-        if (onlineFilter2) onlineFilter2.checked = true;
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function updateURL() {
-    const url = new URL(window.location);
-    const searchTerm = document.getElementById('searchInput').value;
-    url.search = '';
-    if (selectedCategory && selectedCategory !== 'All') url.searchParams.set('category', selectedCategory);
-    if (selectedSubcategories.length > 0) {
-        url.searchParams.set('subcategories', selectedSubcategories.join(','));
-        url.searchParams.set('submode', subcategoryMode);
-    }
-    if (selectedCountry) url.searchParams.set('country', selectedCountry);
-    if (selectedState) url.searchParams.set('state', selectedState);
-    if (selectedRadius > 0) url.searchParams.set('radius', selectedRadius);
-    if (openNowOnly) url.searchParams.set('open', 'true');
-    if (closedNowOnly) url.searchParams.set('closed', 'true');
-    if (openingSoonOnly) url.searchParams.set('opening', 'true');
-    if (closingSoonOnly) url.searchParams.set('closing', 'true');
-    if (onlineOnly) url.searchParams.set('online', 'true');
-    if (searchTerm) url.searchParams.set('q', searchTerm);
-    window.history.replaceState({}, '', url);
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function requestLocationOnLoad() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            position => {
-                userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-                console.log('Location acquired:', userLocation);
-                if (!viewingStarredOnly) applyFilters();
-                if (map && mapOpen) addUserLocationMarker();
-            },
-            (error) => console.log('Location permission denied or unavailable:', error.message),
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-    }
-}
-
-function addUserLocationMarker() {
-    if (!map || !userLocation) return;
-    if (userLocationMarker) map.removeLayer(userLocationMarker);
-    const userIcon = L.divIcon({
-        html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
-        className: '', iconSize: [22, 22], iconAnchor: [11, 11]
-    });
-    userLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
-        icon: userIcon, zIndexOffset: 1000
-    }).addTo(map);
-    userLocationMarker.bindPopup('<strong>Your Location</strong>');
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-window.setSubcategoryMode = function(mode, skipUpdate) {
-    subcategoryMode = mode;
-    document.querySelectorAll('.toggle-option').forEach(opt => {
-        if (opt.dataset.mode === mode) opt.classList.add('active');
-        else opt.classList.remove('active');
-    });
-    if (!skipUpdate) {
-        updateURL();
-        if (!viewingStarredOnly) applyFilters();
-    }
-};
-
-window.toggleStar = toggleStar;
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 3 (FIXED)
-// Load Listings & Filtering Logic with Proper Tag Hierarchy
+// LISTINGS PAGE JAVASCRIPT - COMPLETE FIXED
+// PART 2: Load Listings & Filtering with WORKING SORTING
 // ============================================
 
 async function loadListings() {
     try {
+        console.log('📥 Loading listings from Supabase...');
+        
         listingsSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         const { data, error } = await listingsSupabase
@@ -551,15 +292,16 @@ async function loadListings() {
         filteredListings = [...allListings];
         
         SUBCATEGORIES = extractSubcategoriesFromListings(allListings);
-        console.log('Loaded subcategories:', SUBCATEGORIES);
+        console.log('✅ Loaded', allListings.length, 'listings');
+        console.log('📁 Extracted subcategories:', SUBCATEGORIES);
         
         populateCountryFilter();
         updateLocationSubtitle();
-        applyFilters();
+        applyFilters(); // FIXED: Apply filters immediately to show all listings
         updateResultsCount();
         geocodeAllListings();
     } catch (error) {
-        console.error('Error loading listings:', error);
+        console.error('❌ Error loading listings:', error);
         const listingsContainer = document.getElementById('listingsContainer');
         if (listingsContainer) {
             listingsContainer.innerHTML = '<p class="text-center text-gray-600 py-12">Error loading listings. Please try again.</p>';
@@ -574,8 +316,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 function applyFilters() {
     const searchInput = document.getElementById('searchInput');
     const searchTerm = normalizeString(searchInput ? searchInput.value : '');
-    const sortSelect = document.getElementById('sortSelect');
-    const sortOption = sortSelect ? sortSelect.value : 'default';
     
     filteredListings = allListings.filter(listing => {
         const fullAddress = getFullAddress(listing);
@@ -638,6 +378,7 @@ function applyFilters() {
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
     
+    // Calculate distances for ALL listings
     const effectiveUserLocation = userLocation || estimatedUserLocation;
     if (effectiveUserLocation) {
         filteredListings.forEach(listing => {
@@ -660,7 +401,12 @@ function applyFilters() {
         });
     }
     
-    // SORTING LOGIC WITH RANDOM OPTION
+    // FIXED: WORKING SORTING - Get sort option from select element
+    const sortSelect = document.getElementById('sortSelect');
+    const sortOption = sortSelect ? sortSelect.value : 'default';
+    
+    console.log('🔄 Applying sort:', sortOption);
+    
     filteredListings.sort((a, b) => {
         if (sortOption === 'random') {
             return Math.random() - 0.5;
@@ -697,7 +443,7 @@ function applyFilters() {
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
     
-    displayedListingsCount = 25;
+    displayedListingsCount = 1000; // FIXED: Show all listings
     renderListings();
     updateResultsCount();
     if (map) updateMapMarkers();
@@ -829,8 +575,8 @@ or distribution of this code will result in legal action to the fullest extent p
 */
 
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 4 (FIXED)
-// Rendering Functions with Proper Tag Hierarchy
+// LISTINGS PAGE JAVASCRIPT - COMPLETE FIXED
+// PART 3: Rendering with PROPER TAG HIERARCHY
 // ============================================
 
 function renderListings() {
@@ -847,6 +593,10 @@ function renderListings() {
         if (loadMoreBtn) loadMoreBtn.classList.add('hidden');
         return;
     }
+
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
 
     if (currentView === 'grid') {
         const screenWidth = window.innerWidth;
@@ -866,8 +616,6 @@ function renderListings() {
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-            
-            // FIXED TAG HIERARCHY: Featured > Verified > Claimed (mutually exclusive)
             const badges = [];
             
             // Status badges (can coexist with tier badges)
@@ -877,21 +625,35 @@ function renderListings() {
             if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
             if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
             
-            // Tier badges (MUTUALLY EXCLUSIVE - highest tier wins)
+            // TIER BADGES - MUTUALLY EXCLUSIVE HIERARCHY: Featured > Verified > Nothing
+            // Premium = Featured + Verified
             if (l.tier === 'PREMIUM') {
                 badges.push('<span class="badge badge-featured">Featured</span>');
+                badges.push('<span class="badge badge-verified">Verified</span>');
             } else if (l.tier === 'FEATURED') {
                 badges.push('<span class="badge badge-featured">Featured</span>');
             } else if (l.tier === 'VERIFIED' || l.verified) {
                 badges.push('<span class="badge badge-verified">Verified</span>');
             }
-            // NO "Claimed" badge for Free tier - checkmark only for paid claimed listings
+            // FREE tier gets no tier badge
+            
+            /*
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            */
+            
+            // CLAIMED CHECKMARK - Only for PAID TIERS that are claimed
+            let claimedCheckmark = '';
+            if ((l.tier === 'VERIFIED' || l.tier === 'FEATURED' || l.tier === 'PREMIUM') && l.is_claimed) {
+                claimedCheckmark = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; margin-left: 4px; vertical-align: middle;">
+                        <circle cx="12" cy="12" r="10" fill="#10b981"/>
+                        <path d="M7 12l3 3 7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                `;
+            }
             
             const isStarred = starredListings.includes(l.id);
             const logoImage = l.logo || '';
-            
-            // Claimed checkmark (ONLY for paid tiers that are claimed)
-            const showClaimedCheckmark = !l.show_claim_button && (l.tier === 'VERIFIED' || l.tier === 'FEATURED' || l.tier === 'PREMIUM');
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
@@ -909,10 +671,7 @@ function renderListings() {
                             ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                             <div class="flex-1 min-w-0">
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${l.category}</span>
-                                <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-2">
-                                    ${l.business_name}
-                                    ${showClaimedCheckmark ? '<span class="claimed-checkmark" title="Claimed"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' : ''}
-                                </h3>
+                                <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${l.business_name}${claimedCheckmark}</h3>
                             </div>
                         </div>
                         <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
@@ -928,35 +687,48 @@ function renderListings() {
             `;
         }).join('');
     } else {
+        // LIST VIEW
         container.className = 'space-y-4';
         container.innerHTML = displayedListings.map(l => {
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-            
-            // FIXED TAG HIERARCHY: Featured > Verified > Claimed (mutually exclusive)
             const badges = [];
             
+            // Status badges
             const openStatus = isOpenNow(l.hours);
             if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
             else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
             if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
             if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
             
-            // Tier badges (MUTUALLY EXCLUSIVE)
+            // TIER BADGES - MUTUALLY EXCLUSIVE
             if (l.tier === 'PREMIUM') {
                 badges.push('<span class="badge badge-featured">Featured</span>');
+                badges.push('<span class="badge badge-verified">Verified</span>');
             } else if (l.tier === 'FEATURED') {
                 badges.push('<span class="badge badge-featured">Featured</span>');
             } else if (l.tier === 'VERIFIED' || l.verified) {
                 badges.push('<span class="badge badge-verified">Verified</span>');
             }
             
+            /*
+            Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+            */
+            
+            // CLAIMED CHECKMARK
+            let claimedCheckmark = '';
+            if ((l.tier === 'VERIFIED' || l.tier === 'FEATURED' || l.tier === 'PREMIUM') && l.is_claimed) {
+                claimedCheckmark = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; margin-left: 4px; vertical-align: middle;">
+                        <circle cx="12" cy="12" r="10" fill="#10b981"/>
+                        <path d="M7 12l3 3 7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                `;
+            }
+            
             const isStarred = starredListings.includes(l.id);
             const logoImage = l.logo || '';
-            
-            // Claimed checkmark (ONLY for paid tiers that are claimed)
-            const showClaimedCheckmark = !l.show_claim_button && (l.tier === 'VERIFIED' || l.tier === 'FEATURED' || l.tier === 'PREMIUM');
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block relative">
@@ -971,10 +743,7 @@ function renderListings() {
                             <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
                             ${badges.join('')}
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-2">
-                            ${l.business_name}
-                            ${showClaimedCheckmark ? '<span class="claimed-checkmark" title="Claimed"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' : ''}
-                        </h3>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1 truncate">${l.business_name}${claimedCheckmark}</h3>
                         <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                         <div class="flex flex-col gap-1 text-sm text-gray-600">
                             <div class="flex items-center gap-1">
@@ -988,6 +757,10 @@ function renderListings() {
             `;
         }).join('');
     }
+    
+    /*
+    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    */
     
     if (loadMoreBtn) {
         if (hasMore) {
@@ -1098,8 +871,8 @@ or distribution of this code will result in legal action to the fullest extent p
 */
 
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 5 (FIXED)
-// Event Listeners & UI Interactions with Fixed Filter/Map Behavior
+// LISTINGS PAGE JAVASCRIPT - COMPLETE FIXED
+// PART 4: Event Listeners & UI Interactions
 // ============================================
 
 function setupEventListeners() {
@@ -1108,7 +881,7 @@ function setupEventListeners() {
         searchInput.addEventListener('input', () => {
             updateURL();
             if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
+                displayedListingsCount = 1000;
                 applyFilters();
             }
         });
@@ -1181,7 +954,7 @@ function setupEventListeners() {
                 updateRadiusValue();
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 1000;
                     applyFilters();
                 }
             });
@@ -1199,7 +972,7 @@ function setupEventListeners() {
                 if (openFilter2) openFilter2.checked = openNowOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 1000;
                     applyFilters();
                 }
             });
@@ -1217,7 +990,7 @@ function setupEventListeners() {
                 if (closedFilter2) closedFilter2.checked = closedNowOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 1000;
                     applyFilters();
                 }
             });
@@ -1235,7 +1008,7 @@ function setupEventListeners() {
                 if (openingSoonFilter2) openingSoonFilter2.checked = openingSoonOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 1000;
                     applyFilters();
                 }
             });
@@ -1253,7 +1026,7 @@ function setupEventListeners() {
                 if (closingSoonFilter2) closingSoonFilter2.checked = closingSoonOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 1000;
                     applyFilters();
                 }
             });
@@ -1271,7 +1044,7 @@ function setupEventListeners() {
                 if (onlineFilter2) onlineFilter2.checked = onlineOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 1000;
                     applyFilters();
                 }
             });
@@ -1282,12 +1055,17 @@ function setupEventListeners() {
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
     
+    // FIXED: SORT SELECT HANDLER
     const sortSelect = document.getElementById('sortSelect');
     if (sortSelect) {
         sortSelect.addEventListener('change', () => {
-            displayedListingsCount = 25;
-            if (!viewingStarredOnly) applyFilters();
-            else renderListings();
+            console.log('🔄 Sort changed to:', sortSelect.value);
+            displayedListingsCount = 1000;
+            if (!viewingStarredOnly) {
+                applyFilters(); // This will re-sort based on new selection
+            } else {
+                renderListings();
+            }
         });
     }
     
@@ -1316,7 +1094,7 @@ function setupEventListeners() {
                 }
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 1000;
                     applyFilters();
                 }
             });
@@ -1334,7 +1112,7 @@ function setupEventListeners() {
                 if (stateFilter2) stateFilter2.value = selectedState;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 1000;
                     applyFilters();
                 }
             });
@@ -1441,7 +1219,6 @@ function syncFilters() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-// FIXED: Filters close when map opens
 function toggleFilters() {
     const panel = document.getElementById('filterPanel');
     if (!panel) return;
@@ -1449,14 +1226,12 @@ function toggleFilters() {
     filtersOpen = !filtersOpen;
     if (filtersOpen) {
         panel.classList.remove('hidden');
-        // Close map when filters open
         if (mapOpen) toggleMap();
     } else {
         panel.classList.add('hidden');
     }
 }
 
-// FIXED: Map opens and shows filter overlay
 function toggleMap() {
     const container = document.getElementById('mapContainer');
     if (!container) return;
@@ -1464,7 +1239,6 @@ function toggleMap() {
     mapOpen = !mapOpen;
     if (mapOpen) {
         container.classList.remove('hidden');
-        // Close filters when map opens
         if (filtersOpen) toggleFilters();
         if (splitViewActive) toggleSplitView();
         if (map) {
@@ -1509,6 +1283,52 @@ function hideMapLoading() {
     if (loading) loading.style.display = 'none';
 }
 
+function requestLocationOnLoad() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+                console.log('Location acquired:', userLocation);
+                if (!viewingStarredOnly) applyFilters();
+                if (map && mapOpen) addUserLocationMarker();
+            },
+            (error) => console.log('Location permission denied or unavailable:', error.message),
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+}
+
+function addUserLocationMarker() {
+    if (!map || !userLocation) return;
+    if (userLocationMarker) map.removeLayer(userLocationMarker);
+    const userIcon = L.divIcon({
+        html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
+        className: '', iconSize: [22, 22], iconAnchor: [11, 11]
+    });
+    userLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
+        icon: userIcon, zIndexOffset: 1000
+    }).addTo(map);
+    userLocationMarker.bindPopup('<strong>Your Location</strong>');
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+window.setSubcategoryMode = function(mode, skipUpdate) {
+    subcategoryMode = mode;
+    document.querySelectorAll('.toggle-option').forEach(opt => {
+        if (opt.dataset.mode === mode) opt.classList.add('active');
+        else opt.classList.remove('active');
+    });
+    if (!skipUpdate) {
+        updateURL();
+        if (!viewingStarredOnly) applyFilters();
+    }
+};
+
+window.toggleStar = toggleStar;
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -1523,8 +1343,8 @@ or distribution of this code will result in legal action to the fullest extent p
 */
 
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 6 (FIXED)
-// Category & Filter Management with Fixed Location Search
+// LISTINGS PAGE JAVASCRIPT - COMPLETE FIXED
+// PART 5: Category & Filter Management
 // ============================================
 
 function createCategoryButtons(filteredCategories) {
@@ -1569,7 +1389,7 @@ function filterByCategory(category) {
     createCategoryButtons();
     updateSubcategoryDisplay();
     updateURL();
-    displayedListingsCount = 25;
+    displayedListingsCount = 1000;
     if (!viewingStarredOnly) applyFilters();
 }
 
@@ -1639,7 +1459,7 @@ function toggleSubcategory(subcategory) {
     
     updateSubcategoryDisplay();
     updateURL();
-    displayedListingsCount = 25;
+    displayedListingsCount = 1000;
     if (!viewingStarredOnly) applyFilters();
 }
 
@@ -1656,7 +1476,7 @@ function filterCategoriesAndSubcategories(searchTerm) {
         updateSubcategoryDisplay();
         createCategoryButtons();
         if (!viewingStarredOnly) {
-            displayedListingsCount = 25;
+            displayedListingsCount = 1000;
             applyFilters();
         }
         return;
@@ -1690,7 +1510,7 @@ function filterCategoriesAndSubcategories(searchTerm) {
     
     updateURL();
     if (!viewingStarredOnly) {
-        displayedListingsCount = 25;
+        displayedListingsCount = 1000;
         applyFilters();
     }
 }
@@ -1709,6 +1529,7 @@ function clearAllFilters() {
     closedNowOnly = false;
     openingSoonOnly = false;
     closingSoonOnly = false;
+    hoursUnknownOnly = false;
     onlineOnly = false;
     
     const searchInput = document.getElementById('searchInput');
@@ -1764,6 +1585,11 @@ function clearAllFilters() {
         if (elem) elem.checked = false;
     });
     
+    ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.checked = false;
+    });
+    
     ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
         const elem = document.getElementById(id);
         if (elem) elem.checked = false;
@@ -1777,7 +1603,7 @@ function clearAllFilters() {
     updateRadiusValue();
     updateURL();
     createCategoryButtons();
-    displayedListingsCount = 25;
+    displayedListingsCount = 1000;
     if (!viewingStarredOnly) applyFilters();
 }
 
@@ -1785,7 +1611,6 @@ function clearAllFilters() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-// FIXED: Location search now works properly
 function setupLocationSearch() {
     ['locationSearch', 'locationSearch2'].forEach(id => {
         const input = document.getElementById(id);
@@ -1797,7 +1622,6 @@ function setupLocationSearch() {
         input.addEventListener('input', () => {
             const query = input.value.toLowerCase().trim();
             
-            // Sync both inputs
             if (id === 'locationSearch') {
                 const locationSearch2 = document.getElementById('locationSearch2');
                 if (locationSearch2) locationSearch2.value = input.value;
@@ -1814,63 +1638,29 @@ function setupLocationSearch() {
             const matches = [];
             const seen = new Set();
 
-            // Search cities
             allListings.forEach(listing => {
                 const city = listing.city?.toLowerCase();
                 const state = listing.state?.toLowerCase();
                 const zip = listing.zip_code?.toLowerCase();
                 const country = (listing.country || 'USA').toLowerCase();
 
-                if (city && city.includes(query) && !seen.has(`city-${city}-${listing.state}`)) {
-                    matches.push({ 
-                        type: 'city', 
-                        value: listing.city, 
-                        state: listing.state, 
-                        display: `${listing.city}, ${listing.state}`,
-                        priority: city.startsWith(query) ? 1 : 2
-                    });
-                    seen.add(`city-${city}-${listing.state}`);
+                if (city && city.includes(query) && !seen.has(`city-${city}`)) {
+                    matches.push({ type: 'city', value: listing.city, state: listing.state, display: `${listing.city}, ${listing.state}` });
+                    seen.add(`city-${city}`);
                 }
-                
                 if (state && state.includes(query) && !seen.has(`state-${state}`)) {
-                    const stateName = US_STATES[listing.state] || listing.state;
-                    if (stateName.toLowerCase().includes(query) || state.includes(query)) {
-                        matches.push({ 
-                            type: 'state', 
-                            value: listing.state, 
-                            display: `${stateName} (${listing.state})`,
-                            priority: state === query ? 1 : (stateName.toLowerCase().startsWith(query) ? 2 : 3)
-                        });
-                        seen.add(`state-${state}`);
-                    }
+                    matches.push({ type: 'state', value: listing.state, display: US_STATES[listing.state] || listing.state });
+                    seen.add(`state-${state}`);
                 }
-                
                 if (zip && zip.includes(query) && !seen.has(`zip-${zip}`)) {
-                    matches.push({ 
-                        type: 'zip', 
-                        value: listing.zip_code, 
-                        city: listing.city, 
-                        state: listing.state, 
-                        display: `${listing.zip_code} (${listing.city}, ${listing.state})`,
-                        priority: zip.startsWith(query) ? 1 : 3
-                    });
+                    matches.push({ type: 'zip', value: listing.zip_code, city: listing.city, state: listing.state, display: `${listing.zip_code} (${listing.city}, ${listing.state})` });
                     seen.add(`zip-${zip}`);
                 }
-                
                 if (country.includes(query) && !seen.has(`country-${country}`)) {
-                    const countryDisplay = listing.country === 'USA' ? 'United States' : listing.country;
-                    matches.push({ 
-                        type: 'country', 
-                        value: listing.country || 'USA', 
-                        display: countryDisplay,
-                        priority: country === query ? 1 : 4
-                    });
+                    matches.push({ type: 'country', value: listing.country || 'USA', display: listing.country === 'USA' ? 'United States' : listing.country });
                     seen.add(`country-${country}`);
                 }
             });
-
-            // Sort by priority and limit to 10 results
-            matches.sort((a, b) => a.priority - b.priority || a.display.localeCompare(b.display));
 
             if (matches.length > 0) {
                 resultsDiv.innerHTML = matches.slice(0, 10).map(m => 
@@ -1887,97 +1677,92 @@ function setupLocationSearch() {
                             const state = elem.dataset.state;
                             selectedCountry = 'USA';
                             selectedState = state;
+                            const countryFilter = document.getElementById('countryFilter');
+                            const countryFilter2 = document.getElementById('countryFilter2');
+                            if (countryFilter) countryFilter.value = 'USA';
+                            if (countryFilter2) countryFilter2.value = 'USA';
                             
-                            ['countryFilter', 'countryFilter2'].forEach(id => {
-                                const filter = document.getElementById(id);
-                                if (filter) filter.value = 'USA';
-                            });
-                            
-                            ['stateFilterContainer', 'stateFilterContainer2'].forEach(id => {
-                                const container = document.getElementById(id);
-                                if (container) container.classList.remove('hidden');
-                            });
+                            const stateContainer = document.getElementById('stateFilterContainer');
+                            const stateContainer2 = document.getElementById('stateFilterContainer2');
+                            if (stateContainer) stateContainer.classList.remove('hidden');
+                            if (stateContainer2) stateContainer2.classList.remove('hidden');
                             
                             populateStateFilter('USA');
                             
-                            ['stateFilter', 'stateFilter2'].forEach(id => {
-                                const filter = document.getElementById(id);
-                                if (filter) filter.value = state;
-                            });
+                            const stateFilter = document.getElementById('stateFilter');
+                            const stateFilter2 = document.getElementById('stateFilter2');
+                            if (stateFilter) stateFilter.value = state;
+                            if (stateFilter2) stateFilter2.value = state;
                         } else if (type === 'state') {
                             selectedCountry = 'USA';
                             selectedState = value;
+                            const countryFilter = document.getElementById('countryFilter');
+                            const countryFilter2 = document.getElementById('countryFilter2');
+                            if (countryFilter) countryFilter.value = 'USA';
+                            if (countryFilter2) countryFilter2.value = 'USA';
                             
-                            ['countryFilter', 'countryFilter2'].forEach(id => {
-                                const filter = document.getElementById(id);
-                                if (filter) filter.value = 'USA';
-                            });
-                            
-                            ['stateFilterContainer', 'stateFilterContainer2'].forEach(id => {
-                                const container = document.getElementById(id);
-                                if (container) container.classList.remove('hidden');
-                            });
+                            const stateContainer = document.getElementById('stateFilterContainer');
+                            const stateContainer2 = document.getElementById('stateFilterContainer2');
+                            if (stateContainer) stateContainer.classList.remove('hidden');
+                            if (stateContainer2) stateContainer2.classList.remove('hidden');
                             
                             populateStateFilter('USA');
                             
-                            ['stateFilter', 'stateFilter2'].forEach(id => {
-                                const filter = document.getElementById(id);
-                                if (filter) filter.value = value;
-                            });
+                            const stateFilter = document.getElementById('stateFilter');
+                            const stateFilter2 = document.getElementById('stateFilter2');
+                            if (stateFilter) stateFilter.value = value;
+                            if (stateFilter2) stateFilter2.value = value;
                         } else if (type === 'zip') {
                             const state = elem.dataset.state;
                             selectedCountry = 'USA';
                             selectedState = state;
+                            const countryFilter = document.getElementById('countryFilter');
+                            const countryFilter2 = document.getElementById('countryFilter2');
+                            if (countryFilter) countryFilter.value = 'USA';
+                            if (countryFilter2) countryFilter2.value = 'USA';
                             
-                            ['countryFilter', 'countryFilter2'].forEach(id => {
-                                const filter = document.getElementById(id);
-                                if (filter) filter.value = 'USA';
-                            });
-                            
-                            ['stateFilterContainer', 'stateFilterContainer2'].forEach(id => {
-                                const container = document.getElementById(id);
-                                if (container) container.classList.remove('hidden');
-                            });
+                            const stateContainer = document.getElementById('stateFilterContainer');
+                            const stateContainer2 = document.getElementById('stateFilterContainer2');
+                            if (stateContainer) stateContainer.classList.remove('hidden');
+                            if (stateContainer2) stateContainer2.classList.remove('hidden');
                             
                             populateStateFilter('USA');
                             
-                            ['stateFilter', 'stateFilter2'].forEach(id => {
-                                const filter = document.getElementById(id);
-                                if (filter) filter.value = state;
-                            });
+                            const stateFilter = document.getElementById('stateFilter');
+                            const stateFilter2 = document.getElementById('stateFilter2');
+                            if (stateFilter) stateFilter.value = state;
+                            if (stateFilter2) stateFilter2.value = state;
                         } else if (type === 'country') {
                             selectedCountry = value;
                             selectedState = '';
-                            
-                            ['countryFilter', 'countryFilter2'].forEach(id => {
-                                const filter = document.getElementById(id);
-                                if (filter) filter.value = value;
-                            });
+                            const countryFilter = document.getElementById('countryFilter');
+                            const countryFilter2 = document.getElementById('countryFilter2');
+                            if (countryFilter) countryFilter.value = value;
+                            if (countryFilter2) countryFilter2.value = value;
                             
                             if (value === 'USA') {
-                                ['stateFilterContainer', 'stateFilterContainer2'].forEach(id => {
-                                    const container = document.getElementById(id);
-                                    if (container) container.classList.remove('hidden');
-                                });
+                                const stateContainer = document.getElementById('stateFilterContainer');
+                                const stateContainer2 = document.getElementById('stateFilterContainer2');
+                                if (stateContainer) stateContainer.classList.remove('hidden');
+                                if (stateContainer2) stateContainer2.classList.remove('hidden');
                                 populateStateFilter('USA');
                             } else {
-                                ['stateFilterContainer', 'stateFilterContainer2'].forEach(id => {
-                                    const container = document.getElementById(id);
-                                    if (container) container.classList.add('hidden');
-                                });
+                                const stateContainer = document.getElementById('stateFilterContainer');
+                                const stateContainer2 = document.getElementById('stateFilterContainer2');
+                                if (stateContainer) stateContainer.classList.add('hidden');
+                                if (stateContainer2) stateContainer2.classList.add('hidden');
                             }
                         }
 
-                        // Clear search and apply filters
-                        ['locationSearch', 'locationSearch2'].forEach(id => {
-                            const search = document.getElementById(id);
-                            if (search) search.value = '';
-                        });
+                        input.value = '';
+                        const locationSearch = document.getElementById('locationSearch');
+                        const locationSearch2 = document.getElementById('locationSearch2');
+                        if (locationSearch) locationSearch.value = '';
+                        if (locationSearch2) locationSearch2.value = '';
                         resultsDiv.style.display = 'none';
-                        
                         updateURL();
                         if (!viewingStarredOnly) {
-                            displayedListingsCount = 25;
+                            displayedListingsCount = 1000;
                             applyFilters();
                         }
                     });
@@ -1993,6 +1778,411 @@ function setupLocationSearch() {
             }, 200);
         });
     });
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+// ============================================
+// LISTINGS PAGE JAVASCRIPT - COMPLETE FIXED
+// PART 6: Map Functions & Split View - FINAL
+// ============================================
+
+function initMap() {
+    if (map) return;
+    showMapLoading();
+    map = L.map('map', { 
+        center: defaultMapCenter, 
+        zoom: defaultMapZoom, 
+        zoomControl: true,
+        scrollWheelZoom: false
+    });
+    
+    map.on('click', function() {
+        map.scrollWheelZoom.enable();
+    });
+    map.on('mouseout', function() {
+        map.scrollWheelZoom.disable();
+    });
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: null, maxZoom: 19
+    }).addTo(map);
+    
+    markerClusterGroup = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        disableClusteringAtZoom: 18,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            let size = 'small';
+            if (count >= 10) size = 'medium';
+            if (count >= 50) size = 'large';
+            return L.divIcon({
+                html: `<div class="marker-cluster marker-cluster-${size}">${count}</div>`,
+                className: '',
+                iconSize: size === 'small' ? [40, 40] : size === 'medium' ? [50, 50] : [60, 60]
+            });
+        }
+    });
+    map.addLayer(markerClusterGroup);
+    if (userLocation) addUserLocationMarker();
+    
+    map.on('movestart', () => {
+        if (locationButtonActive && !mapMoved) {
+            mapMoved = true;
+            locationButtonActive = false;
+            const locateBtn = document.getElementById('locateBtn');
+            if (locateBtn) locateBtn.classList.remove('active');
+        }
+    });
+    
+    setTimeout(() => {
+        map.invalidateSize();
+        mapReady = true;
+        updateMapMarkers();
+        if (allListingsGeocoded) hideMapLoading();
+    }, 500);
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+async function geocodeAllListings() {
+    let geocodedCount = 0;
+    for (let listing of allListings) {
+        if (!listing.coordinates && listing.address && !isBasedIn(listing)) {
+            await geocodeListing(listing);
+            geocodedCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    allListingsGeocoded = true;
+    if (map && mapReady) {
+        hideMapLoading();
+        updateMapMarkers();
+    }
+}
+
+async function geocodeListing(listing) {
+    const fullAddress = getFullAddress(listing);
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`);
+        const data = await response.json();
+        if (data && data.length > 0) {
+            listing.coordinates = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        }
+    } catch (e) {
+        console.error('Geocoding failed for', listing.business_name, e);
+    }
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+function updateMapMarkers() {
+    if (!map || !markerClusterGroup || !mapReady) return;
+    markerClusterGroup.clearLayers();
+    const bounds = [];
+    filteredListings.forEach(listing => {
+        if (listing.coordinates && !isBasedIn(listing)) {
+            const openStatus = isOpenNow(listing.hours);
+            const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
+            const logoImage = listing.logo || '';
+            
+            const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
+            const iconHtml = logoImage ? 
+                `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
+                `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
+            const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
+            const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
+            const badges = [];
+            
+            if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+            else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+            if (isOpeningSoon(listing.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+            if (isClosingSoon(listing.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+            if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+            
+            if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
+            if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+            if (!listing.show_claim_button && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
+            
+            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const heroImage = firstPhoto || '';
+            const popupContent = `
+                <div class="map-popup">
+                    ${heroImage ? `<img src="${heroImage}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
+                    <div class="map-popup-content">
+                        ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
+                        <div class="map-popup-info">
+                            <div class="map-popup-badges">${badges.join('')}</div>
+                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.business_name}</a>
+                            <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
+                            <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + formatPhoneDisplay(listing.phone) : ''}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
+            marker.on('popupopen', () => {
+                const closeBtn = document.querySelector('.leaflet-popup-close-button');
+                if (closeBtn) closeBtn.textContent = '×';
+            });
+            markerClusterGroup.addLayer(marker);
+            bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
+        }
+    });
+    if (bounds.length > 0) map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+function toggleSplitView() {
+    splitViewActive = !splitViewActive;
+    if (splitViewActive) {
+        const normalViewControls = document.getElementById('normalViewControls');
+        const normalViewListings = document.getElementById('normalViewListings');
+        const mapContainer = document.getElementById('mapContainer');
+        const splitContainer = document.getElementById('splitViewContainer');
+        
+        if (normalViewControls) normalViewControls.classList.add('hidden');
+        if (normalViewListings) normalViewListings.classList.add('hidden');
+        if (mapContainer) mapContainer.classList.add('hidden');
+        
+        if (splitContainer) {
+            splitContainer.classList.remove('hidden');
+            splitContainer.className = 'split-view-container';
+            splitContainer.innerHTML = `
+                <div class="split-view-listings">
+                    <div class="mb-4 flex items-center justify-between">
+                        <p class="text-sm text-gray-600">${filteredListings.length} ${filteredListings.length === 1 ? 'listing' : 'listings'} found</p>
+                        <select id="splitSortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                            <option value="default">Default</option>
+                            <option value="az">A-Z</option>
+                            <option value="closest">Closest to Me</option>
+                            <option value="random">Random</option>
+                        </select>
+                    </div>
+                    <div id="splitListingsContainer"></div>
+                </div>
+                <div class="split-view-map"><div id="splitMap"></div></div>
+            `;
+        }
+        
+        const sortSelect = document.getElementById('sortSelect');
+        const splitSortSelect = document.getElementById('splitSortSelect');
+        if (sortSelect && splitSortSelect) {
+            splitSortSelect.value = sortSelect.value;
+            splitSortSelect.addEventListener('change', (e) => {
+                sortSelect.value = e.target.value;
+                displayedListingsCount = 1000;
+                if (!viewingStarredOnly) applyFilters();
+                else renderListings();
+            });
+        }
+        
+        renderSplitViewListings();
+        initSplitMap();
+    } else {
+        const splitContainer = document.getElementById('splitViewContainer');
+        const normalViewControls = document.getElementById('normalViewControls');
+        const normalViewListings = document.getElementById('normalViewListings');
+        const mapContainer = document.getElementById('mapContainer');
+        
+        if (splitContainer) {
+            splitContainer.classList.add('hidden');
+            splitContainer.innerHTML = '';
+        }
+        if (normalViewControls) normalViewControls.classList.remove('hidden');
+        if (normalViewListings) normalViewListings.classList.remove('hidden');
+        if (mapContainer) mapContainer.classList.remove('hidden');
+        
+        setTimeout(() => {
+            if (map) {
+                map.invalidateSize();
+                updateMapMarkers();
+            }
+        }, 100);
+    }
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+function renderSplitViewListings() {
+    const container = document.getElementById('splitListingsContainer');
+    if (!container) return;
+    
+    if (filteredListings.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
+        return;
+    }
+    
+    container.className = 'space-y-3';
+    container.innerHTML = filteredListings.map(l => {
+        const fullAddress = getFullAddress(l);
+        const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const listingUrl = `/listing/${categorySlug}/${l.slug}`;
+        const badges = [];
+        
+        const openStatus = isOpenNow(l.hours);
+        if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+        else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+        if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+        if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+        if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+        
+        if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
+        if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+        if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
+        
+        const isStarred = starredListings.includes(l.id);
+        const logoImage = l.logo || '';
+        
+        return `
+            <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
+                <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 8px; right: 8px; width: 32px; height: 32px;">
+                    <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </button>
+                ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
+                <div class="flex-1 min-w-0 overflow-hidden pr-8">
+                    <div class="flex gap-1 mb-1 flex-wrap">
+                        ${badges.join('')}
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900 mb-1 truncate">${l.business_name}</h3>
+                    <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
+                    <div class="text-xs text-gray-600">
+                        <div class="flex items-center gap-1 truncate">
+                            <span>📍</span>
+                            <span class="truncate">${fullAddress}</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        `;
+    }).join('');
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+function initSplitMap() {
+    const splitMapDiv = document.getElementById('splitMap');
+    if (!splitMapDiv) return;
+    const splitMap = L.map('splitMap', { 
+        center: defaultMapCenter, 
+        zoom: defaultMapZoom, 
+        zoomControl: true,
+        scrollWheelZoom: false
+    });
+    
+    splitMap.on('click', function() {
+        splitMap.scrollWheelZoom.enable();
+    });
+    splitMap.on('mouseout', function() {
+        splitMap.scrollWheelZoom.disable();
+    });
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: null, maxZoom: 19
+    }).addTo(splitMap);
+    const splitMarkerClusterGroup = L.markerClusterGroup({
+        maxClusterRadius: 50, disableClusteringAtZoom: 18, spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false, zoomToBoundsOnClick: true,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            let size = count >= 50 ? 'large' : count >= 10 ? 'medium' : 'small';
+            return L.divIcon({
+                html: `<div class="marker-cluster marker-cluster-${size}">${count}</div>`,
+                className: '', iconSize: size === 'small' ? [40, 40] : size === 'medium' ? [50, 50] : [60, 60]
+            });
+        }
+    });
+    splitMap.addLayer(splitMarkerClusterGroup);
+    
+    if (userLocation) {
+        const userIcon = L.divIcon({
+            html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
+            className: '', iconSize: [22, 22], iconAnchor: [11, 11]
+        });
+        L.marker([userLocation.lat, userLocation.lng], {
+            icon: userIcon, zIndexOffset: 1000
+        }).addTo(splitMap).bindPopup('<strong>Your Location</strong>');
+    }
+    const bounds = [];
+    filteredListings.forEach(listing => {
+        if (listing.coordinates && !isBasedIn(listing)) {
+            const openStatus = isOpenNow(listing.hours);
+            const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+            const logoImage = listing.logo || '';
+            
+            const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
+            const iconHtml = logoImage ?
+                `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
+                `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
+            const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
+            const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
+            const badges = [];
+            
+            if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
+            else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+            if (isOpeningSoon(listing.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+            if (isClosingSoon(listing.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+            if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
+            
+            if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
+            if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+            if (!listing.show_claim_button && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
+            
+            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
+            const popupContent = `
+                <div class="map-popup">
+                    ${firstPhoto ? `<img src="${firstPhoto}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
+                    <div class="map-popup-content">
+                        ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
+                        <div class="map-popup-info">
+                            <div class="map-popup-badges">${badges.join('')}</div>
+                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.business_name}</a>
+                            <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
+                            <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + formatPhoneDisplay(listing.phone) : ''}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
+            marker.on('popupopen', () => {
+                const closeBtn = document.querySelector('.leaflet-popup-close-button');
+                if (closeBtn) closeBtn.textContent = '×';
+            });
+            splitMarkerClusterGroup.addLayer(marker);
+            bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
+        }
+    });
+    if (bounds.length > 0) splitMap.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
+    setTimeout(() => splitMap.invalidateSize(), 250);
 }
 
 /*
