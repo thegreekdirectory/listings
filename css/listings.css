@@ -2,7 +2,7 @@
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law.
+or distribution of this code will result in legal action to the fullest extent permitted by law.
 */
 
 /* ============================================
@@ -143,11 +143,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     color: white;
 }
 
-.badge-hours-unknown {
-    background: #6b7280;
-    color: white;
-}
-
 .badge-featured {
     background: #fbbf24;
     color: #78350f;
@@ -158,9 +153,24 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     color: white;
 }
 
-.badge-claimed {
+/* Claimed checkmark - NOT a badge */
+.claimed-checkmark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
     background: #10b981;
-    color: white;
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.claimed-checkmark svg {
+    width: 12px;
+    height: 12px;
+    fill: white;
 }
 
 /*
