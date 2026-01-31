@@ -51,10 +51,15 @@ let filterPosition = 'left';
 let searchDebounceTimer = null;
 let displayedListingsCount = 25;
 let estimatedUserLocation = null;
+// Track whether desktop filters are in overlay mode (when map is open)
+let desktopFiltersOverlay = false;
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
+
+// SVG for the verified checkmark icon (white checkmark in blue circle)
+const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 function formatPhoneDisplay(phone) {
     if (!phone) return '';
@@ -128,13 +133,16 @@ async function toggleStar(listingId, event) {
         }
         saveStarredListings();
         
-        // Update the specific star button
-        const starButtons = document.querySelectorAll(`[onclick*="toggleStar('${listingId}'"]`);
+        // Update all star buttons for this listing
+        const starButtons = document.querySelectorAll('.star-button');
         starButtons.forEach(btn => {
-            if (starredListings.includes(listingId)) {
-                btn.classList.add('starred');
-            } else {
-                btn.classList.remove('starred');
+            const onclick = btn.getAttribute('onclick') || '';
+            if (onclick.includes(listingId)) {
+                if (starredListings.includes(listingId)) {
+                    btn.classList.add('starred');
+                } else {
+                    btn.classList.remove('starred');
+                }
             }
         });
     }
@@ -144,6 +152,10 @@ function updateStarredCount() {
     const countEl = document.getElementById('starredCount');
     if (countEl) {
         countEl.textContent = starredListings.length;
+    }
+    const headerCountEl = document.getElementById('headerStarredCount');
+    if (headerCountEl) {
+        headerCountEl.textContent = starredListings.length;
     }
 }
 
@@ -300,21 +312,45 @@ function checkFilterPosition() {
     const desktopFilters = document.getElementById('desktopFiltersContainer');
     const mapBtn = document.getElementById('mapBtnDesktop');
     const listingsContainer = document.getElementById('listingsContainer');
+    const desktopFilterToggleBtn = document.getElementById('desktopFilterToggleBtn');
     
     if (screenWidth >= 1024) {
         if (toggleBtn) toggleBtn.style.display = 'block';
         if (mapBtn) mapBtn.classList.remove('hidden');
         
-        if (filterPosition === 'left') {
+        if (filterPosition === 'left' && !mapOpen) {
             if (desktopLayout) desktopLayout.classList.add('with-left-filters');
-            if (desktopFilters) desktopFilters.classList.remove('hidden');
+            if (desktopFilters) {
+                desktopFilters.classList.remove('hidden');
+                desktopFilters.classList.remove('desktop-filters-overlay');
+            }
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.classList.add('hidden');
             if (currentView === 'grid' && listingsContainer) {
                 listingsContainer.classList.remove('listings-3-col');
                 listingsContainer.classList.add('listings-2-col');
             }
-        } else {
+        } else if (filterPosition === 'left' && mapOpen) {
+            // Map is open — sidebar filters hide, show the toggle button so user can open overlay
             if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
-            if (desktopFilters) desktopFilters.classList.add('hidden');
+            if (desktopFilters) {
+                desktopFilters.classList.add('hidden');
+                desktopFilters.classList.remove('desktop-filters-overlay');
+            }
+            desktopFiltersOverlay = false;
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.classList.remove('hidden');
+            if (currentView === 'grid' && listingsContainer) {
+                listingsContainer.classList.remove('listings-2-col');
+                listingsContainer.classList.add('listings-3-col');
+            }
+        } else {
+            // filterPosition === 'top' (filters collapsed)
+            if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
+            if (desktopFilters) {
+                desktopFilters.classList.add('hidden');
+                desktopFilters.classList.remove('desktop-filters-overlay');
+            }
+            desktopFiltersOverlay = false;
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.classList.remove('hidden');
             if (currentView === 'grid' && listingsContainer) {
                 listingsContainer.classList.remove('listings-2-col');
                 listingsContainer.classList.add('listings-3-col');
@@ -323,7 +359,12 @@ function checkFilterPosition() {
     } else {
         if (toggleBtn) toggleBtn.style.display = 'none';
         if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
-        if (desktopFilters) desktopFilters.classList.add('hidden');
+        if (desktopFilters) {
+            desktopFilters.classList.add('hidden');
+            desktopFilters.classList.remove('desktop-filters-overlay');
+        }
+        desktopFiltersOverlay = false;
+        if (desktopFilterToggleBtn) desktopFilterToggleBtn.classList.add('hidden');
         if (mapBtn) mapBtn.classList.add('hidden');
         if (currentView === 'grid' && listingsContainer) {
             listingsContainer.classList.remove('listings-2-col', 'listings-3-col');
@@ -828,6 +869,47 @@ function getFullAddress(listing) {
     return listing.address || '';
 }
 
+// ============================================
+// BADGE & CHECKMARK HELPER
+// Centralised logic: tag hierarchy + verified checkmark
+// - Featured listings: "Featured" badge only (no Verified, no Claimed)
+// - Verified listings (non-Featured): "Verified" badge only (no Claimed)
+// - No "Claimed" badge anywhere; no "Hours Unknown" badge anywhere
+// - Verified listings get a checkmark icon rendered separately next to the name
+// ============================================
+
+function buildBadges(listing) {
+    const badges = [];
+    const openStatus = isOpenNow(listing.hours);
+
+    if (openStatus === true)  badges.push('<span class="badge badge-open">Open</span>');
+    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
+
+    if (isOpeningSoon(listing.hours))  badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+    if (isClosingSoon(listing.hours))  badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+
+    // Tier / verification hierarchy:
+    // FEATURED or PREMIUM → show "Featured" badge only
+    // VERIFIED tier OR verified flag (but not featured) → show "Verified" badge only
+    // FREE tier with show_claim_button === false → nothing (no Claimed badge)
+    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
+
+    if (isFeatured) {
+        badges.push('<span class="badge badge-featured">Featured</span>');
+    } else if (isVerified) {
+        badges.push('<span class="badge badge-verified">Verified</span>');
+    }
+    // No "Claimed" badge, no "Hours Unknown" badge
+
+    return badges;
+}
+
+// Returns true if the listing should show the verified checkmark icon next to its name
+function showsVerifiedCheckmark(listing) {
+    return listing.verified || listing.tier === 'VERIFIED' || listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+}
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -866,7 +948,7 @@ function renderListings() {
         let gridClass = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
         
         if (screenWidth >= 1024) {
-            if (filterPosition === 'left') {
+            if (filterPosition === 'left' && !mapOpen) {
                 gridClass = 'grid grid-cols-1 md:grid-cols-2 gap-6 listings-2-col';
             } else {
                 gridClass = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 listings-3-col';
@@ -879,21 +961,10 @@ function renderListings() {
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-            const badges = [];
-            
-            const openStatus = isOpenNow(l.hours);
-            if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-            else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-            if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-            if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-            if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-            
-            if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-            if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-            if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-            
+            const badges = buildBadges(l);
             const isStarred = starredListings.includes(l.id);
             const logoImage = l.logo || '';
+            const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
@@ -911,7 +982,7 @@ function renderListings() {
                             ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                             <div class="flex-1 min-w-0">
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${l.category}</span>
-                                <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${l.business_name}</h3>
+                                <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
                             </div>
                         </div>
                         <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
@@ -932,21 +1003,10 @@ function renderListings() {
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-            const badges = [];
-            
-            const openStatus = isOpenNow(l.hours);
-            if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-            else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-            if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-            if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-            if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-            
-            if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-            if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-            if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-            
+            const badges = buildBadges(l);
             const isStarred = starredListings.includes(l.id);
             const logoImage = l.logo || '';
+            const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block relative">
@@ -961,7 +1021,7 @@ function renderListings() {
                             <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
                             ${badges.join('')}
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-1 truncate">${l.business_name}</h3>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
                         <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                         <div class="flex flex-col gap-1 text-sm text-gray-600">
                             <div class="flex items-center gap-1">
@@ -1148,8 +1208,22 @@ function setupEventListeners() {
             } else {
                 filterPosition = 'left';
             }
+            // Close overlay if it was open
+            closeDesktopFiltersOverlay();
             checkFilterPosition();
         });
+    }
+
+    // Desktop filter toggle button (appears when filters are collapsed or map is open)
+    const desktopFilterToggleBtn = document.getElementById('desktopFilterToggleBtn');
+    if (desktopFilterToggleBtn) {
+        desktopFilterToggleBtn.addEventListener('click', toggleDesktopFiltersOverlay);
+    }
+
+    // Close overlay when clicking the backdrop
+    const desktopFiltersBackdrop = document.getElementById('desktopFiltersBackdrop');
+    if (desktopFiltersBackdrop) {
+        desktopFiltersBackdrop.addEventListener('click', closeDesktopFiltersOverlay);
     }
 
     /*
@@ -1398,6 +1472,37 @@ function setupEventListeners() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+// Desktop filters overlay management (used when map is open or filters are collapsed)
+function toggleDesktopFiltersOverlay() {
+    if (desktopFiltersOverlay) {
+        closeDesktopFiltersOverlay();
+    } else {
+        openDesktopFiltersOverlay();
+    }
+}
+
+function openDesktopFiltersOverlay() {
+    desktopFiltersOverlay = true;
+    const desktopFilters = document.getElementById('desktopFiltersContainer');
+    const backdrop = document.getElementById('desktopFiltersBackdrop');
+    if (desktopFilters) {
+        desktopFilters.classList.remove('hidden');
+        desktopFilters.classList.add('desktop-filters-overlay');
+    }
+    if (backdrop) backdrop.classList.remove('hidden');
+}
+
+function closeDesktopFiltersOverlay() {
+    desktopFiltersOverlay = false;
+    const desktopFilters = document.getElementById('desktopFiltersContainer');
+    const backdrop = document.getElementById('desktopFiltersBackdrop');
+    if (desktopFilters) {
+        desktopFilters.classList.add('hidden');
+        desktopFilters.classList.remove('desktop-filters-overlay');
+    }
+    if (backdrop) backdrop.classList.add('hidden');
+}
+
 function syncFilters() {
     const filterPairs = [
         'categorySearch', 'openNowFilter', 'closedNowFilter', 'openingSoonFilter',
@@ -1468,6 +1573,9 @@ function toggleMap() {
         container.classList.remove('hidden');
         if (filtersOpen) toggleFilters();
         if (splitViewActive) toggleSplitView();
+        // Close desktop sidebar filters; user can reopen as overlay via toggle button
+        closeDesktopFiltersOverlay();
+        checkFilterPosition();
         if (map) {
             setTimeout(() => {
                 map.invalidateSize();
@@ -1478,6 +1586,8 @@ function toggleMap() {
         }
     } else {
         container.classList.add('hidden');
+        // Restore normal filter position state
+        checkFilterPosition();
     }
 }
 
@@ -1793,9 +1903,16 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 function setupLocationSearch() {
-    ['locationSearch', 'locationSearch2'].forEach(id => {
-        const input = document.getElementById(id);
-        const resultsId = id + 'Results';
+    // FIX: use the correct results div IDs that match the HTML.
+    // HTML has: id="locationSearchResults" and id="locationSearchResults2"
+    // We map each input to its correct results div explicitly.
+    const locationInputs = [
+        { inputId: 'locationSearch',  resultsId: 'locationSearchResults' },
+        { inputId: 'locationSearch2', resultsId: 'locationSearchResults2' }
+    ];
+
+    locationInputs.forEach(({ inputId, resultsId }) => {
+        const input = document.getElementById(inputId);
         const resultsDiv = document.getElementById(resultsId);
         
         if (!input || !resultsDiv) return;
@@ -1803,13 +1920,10 @@ function setupLocationSearch() {
         input.addEventListener('input', () => {
             const query = input.value.toLowerCase().trim();
             
-            if (id === 'locationSearch') {
-                const locationSearch2 = document.getElementById('locationSearch2');
-                if (locationSearch2) locationSearch2.value = input.value;
-            } else {
-                const locationSearch = document.getElementById('locationSearch');
-                if (locationSearch) locationSearch.value = input.value;
-            }
+            // Sync the other input
+            const otherId = inputId === 'locationSearch' ? 'locationSearch2' : 'locationSearch';
+            const otherInput = document.getElementById(otherId);
+            if (otherInput) otherInput.value = input.value;
 
             if (query.length < 2) {
                 resultsDiv.style.display = 'none';
@@ -1825,9 +1939,9 @@ function setupLocationSearch() {
                 const zip = listing.zip_code?.toLowerCase();
                 const country = (listing.country || 'USA').toLowerCase();
 
-                if (city && city.includes(query) && !seen.has(`city-${city}`)) {
+                if (city && city.includes(query) && !seen.has(`city-${city}-${listing.state}`)) {
                     matches.push({ type: 'city', value: listing.city, state: listing.state, display: `${listing.city}, ${listing.state}` });
-                    seen.add(`city-${city}`);
+                    seen.add(`city-${city}-${listing.state}`);
                 }
                 if (state && state.includes(query) && !seen.has(`state-${state}`)) {
                     matches.push({ type: 'state', value: listing.state, display: US_STATES[listing.state] || listing.state });
@@ -1935,12 +2049,16 @@ function setupLocationSearch() {
                             }
                         }
 
-                        input.value = '';
-                        const locationSearch = document.getElementById('locationSearch');
-                        const locationSearch2 = document.getElementById('locationSearch2');
-                        if (locationSearch) locationSearch.value = '';
-                        if (locationSearch2) locationSearch2.value = '';
-                        resultsDiv.style.display = 'none';
+                        // Clear both inputs and hide both results divs
+                        ['locationSearch', 'locationSearch2'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.value = '';
+                        });
+                        ['locationSearchResults', 'locationSearchResults2'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.style.display = 'none';
+                        });
+
                         updateURL();
                         if (!viewingStarredOnly) {
                             displayedListingsCount = 25;
@@ -2081,7 +2199,6 @@ function updateMapMarkers() {
     const bounds = [];
     filteredListings.forEach(listing => {
         if (listing.coordinates && !isBasedIn(listing)) {
-            const openStatus = isOpenNow(listing.hours);
             const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
             const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
             const logoImage = listing.logo || '';
@@ -2092,17 +2209,8 @@ function updateMapMarkers() {
                 `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
             const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
             const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
-            const badges = [];
-            
-            if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-            else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-            if (isOpeningSoon(listing.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-            if (isClosingSoon(listing.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-            if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-            
-            if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
-            if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-            if (!listing.show_claim_button && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
+            const badges = buildBadges(listing);
+            const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
             
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const heroImage = firstPhoto || '';
@@ -2113,7 +2221,7 @@ function updateMapMarkers() {
                         ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
                         <div class="map-popup-info">
                             <div class="map-popup-badges">${badges.join('')}</div>
-                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.business_name}</a>
+                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
                             <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
                             <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + formatPhoneDisplay(listing.phone) : ''}</div>
                         </div>
@@ -2130,139 +2238,6 @@ function updateMapMarkers() {
         }
     });
     if (bounds.length > 0) map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function toggleSplitView() {
-    splitViewActive = !splitViewActive;
-    if (splitViewActive) {
-        const normalViewControls = document.getElementById('normalViewControls');
-        const normalViewListings = document.getElementById('normalViewListings');
-        const mapContainer = document.getElementById('mapContainer');
-        const splitContainer = document.getElementById('splitViewContainer');
-        
-        if (normalViewControls) normalViewControls.classList.add('hidden');
-        if (normalViewListings) normalViewListings.classList.add('hidden');
-        if (mapContainer) mapContainer.classList.add('hidden');
-        
-        if (splitContainer) {
-            splitContainer.classList.remove('hidden');
-            splitContainer.className = 'split-view-container';
-            splitContainer.innerHTML = `
-                <div class="split-view-listings">
-                    <div class="mb-4 flex items-center justify-between">
-                        <p class="text-sm text-gray-600">${filteredListings.length} ${filteredListings.length === 1 ? 'listing' : 'listings'} found</p>
-                        <select id="splitSortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                            <option value="default">Default</option>
-                            <option value="az">A-Z</option>
-                            <option value="closest">Closest to Me</option>
-                            <option value="random">Random</option>
-                        </select>
-                    </div>
-                    <div id="splitListingsContainer"></div>
-                </div>
-                <div class="split-view-map"><div id="splitMap"></div></div>
-            `;
-        }
-        
-        const sortSelect = document.getElementById('sortSelect');
-        const splitSortSelect = document.getElementById('splitSortSelect');
-        if (sortSelect && splitSortSelect) {
-            splitSortSelect.value = sortSelect.value;
-            splitSortSelect.addEventListener('change', (e) => {
-                sortSelect.value = e.target.value;
-                displayedListingsCount = 25;
-                if (!viewingStarredOnly) applyFilters();
-                else renderListings();
-            });
-        }
-        
-        renderSplitViewListings();
-        initSplitMap();
-    } else {
-        const splitContainer = document.getElementById('splitViewContainer');
-        const normalViewControls = document.getElementById('normalViewControls');
-        const normalViewListings = document.getElementById('normalViewListings');
-        const mapContainer = document.getElementById('mapContainer');
-        
-        if (splitContainer) {
-            splitContainer.classList.add('hidden');
-            splitContainer.innerHTML = '';
-        }
-        if (normalViewControls) normalViewControls.classList.remove('hidden');
-        if (normalViewListings) normalViewListings.classList.remove('hidden');
-        if (mapContainer) mapContainer.classList.remove('hidden');
-        
-        setTimeout(() => {
-            if (map) {
-                map.invalidateSize();
-                updateMapMarkers();
-            }
-        }, 100);
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function renderSplitViewListings() {
-    const container = document.getElementById('splitListingsContainer');
-    if (!container) return;
-    
-    if (filteredListings.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
-        return;
-    }
-    
-    container.className = 'space-y-3';
-    container.innerHTML = filteredListings.map(l => {
-        const fullAddress = getFullAddress(l);
-        const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-        const badges = [];
-        
-        const openStatus = isOpenNow(l.hours);
-        if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-        else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-        if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-        if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-        if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-        
-        if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-        if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-        if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-        
-        const isStarred = starredListings.includes(l.id);
-        const logoImage = l.logo || '';
-        
-        return `
-            <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
-                <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 8px; right: 8px; width: 32px; height: 32px;">
-                    <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                </button>
-                ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
-                <div class="flex-1 min-w-0 overflow-hidden pr-8">
-                    <div class="flex gap-1 mb-1 flex-wrap">
-                        ${badges.join('')}
-                    </div>
-                    <h3 class="text-base font-bold text-gray-900 mb-1 truncate">${l.business_name}</h3>
-                    <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
-                    <div class="text-xs text-gray-600">
-                        <div class="flex items-center gap-1 truncate">
-                            <span>📍</span>
-                            <span class="truncate">${fullAddress}</span>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        `;
-    }).join('');
 }
 
 /*
@@ -2363,21 +2338,10 @@ function renderSplitViewListings() {
         const fullAddress = getFullAddress(l);
         const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-        const badges = [];
-        
-        const openStatus = isOpenNow(l.hours);
-        if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-        else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-        if (isOpeningSoon(l.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-        if (isClosingSoon(l.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-        if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-        
-        if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-        if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-        if (!l.show_claim_button && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
-        
+        const badges = buildBadges(l);
         const isStarred = starredListings.includes(l.id);
         const logoImage = l.logo || '';
+        const checkmarkHtml = showsVerifiedCheckmark(l) ? '<svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
         
         return `
             <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
@@ -2391,7 +2355,7 @@ function renderSplitViewListings() {
                     <div class="flex gap-1 mb-1 flex-wrap">
                         ${badges.join('')}
                     </div>
-                    <h3 class="text-base font-bold text-gray-900 mb-1 truncate">${l.business_name}</h3>
+                    <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1">${l.business_name} ${checkmarkHtml}</h3>
                     <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
                     <div class="text-xs text-gray-600">
                         <div class="flex items-center gap-1 truncate">
@@ -2459,7 +2423,6 @@ function initSplitMap() {
     const bounds = [];
     filteredListings.forEach(listing => {
         if (listing.coordinates && !isBasedIn(listing)) {
-            const openStatus = isOpenNow(listing.hours);
             const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
             const logoImage = listing.logo || '';
             
@@ -2469,17 +2432,8 @@ function initSplitMap() {
                 `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
             const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
             const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
-            const badges = [];
-            
-            if (openStatus === true) badges.push('<span class="badge badge-open">Open</span>');
-            else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-            if (isOpeningSoon(listing.hours)) badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-            if (isClosingSoon(listing.hours)) badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-            if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
-            
-            if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
-            if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
-            if (!listing.show_claim_button && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
+            const badges = buildBadges(listing);
+            const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
             
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
@@ -2490,7 +2444,7 @@ function initSplitMap() {
                         ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
                         <div class="map-popup-info">
                             <div class="map-popup-badges">${badges.join('')}</div>
-                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.business_name}</a>
+                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
                             <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
                             <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + formatPhoneDisplay(listing.phone) : ''}</div>
                         </div>
