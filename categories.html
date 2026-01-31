@@ -127,15 +127,16 @@
         
         .subcategory-tag {
             display: inline-block;
-            padding: 6px 12px;
+            padding: 8px 14px;
             margin: 4px;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.2s;
             border: 2px solid transparent;
+            font-weight: 500;
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
@@ -149,12 +150,20 @@
         .subcategory-tag:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: scale(1.05);
+            border-color: rgba(255, 255, 255, 0.5);
         }
         
         .subcategory-tag.selected {
-            background: #D4AF37;
-            color: white;
-            border-color: #D4AF37;
+            background: #D4AF37 !important;
+            color: #1a1a1a !important;
+            border-color: #D4AF37 !important;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+        }
+        
+        .subcategory-tag.selected::before {
+            content: '✓ ';
+            font-weight: 700;
         }
         
         .mode-toggle {
@@ -189,10 +198,10 @@
             width: 100%;
             padding: 12px 16px;
             background: #D4AF37;
-            color: white;
+            color: #1a1a1a;
             border: none;
             border-radius: 8px;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.2s;
