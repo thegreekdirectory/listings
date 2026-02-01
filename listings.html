@@ -145,7 +145,7 @@
     /* ── filterPanel top-bar style (used mobile + split-view overlay) ── */
     #filterPanel {
         position: relative;
-        z-index: 50;
+        z-index: 30;
         background: #fff;
         border-bottom: 1px solid #e5e7eb;
         box-shadow: 0 3px 10px rgba(0,0,0,0.08);
@@ -154,6 +154,18 @@
     }
 
     /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+    /* ── Global mobile touch fix ── */
+    /* All <a> and <button> must respond to single taps on iOS/Android.
+       touch-action:manipulation disables double-tap-to-zoom on the element,
+       which is the #1 cause of swallowed taps on mobile Safari.
+       The -webkit-tap-highlight-color removal prevents the grey flash. */
+    @media (hover: none) and (pointer: coarse) {
+        a, button {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+    }
 
     /* Touch-action fixes: ensure all interactive buttons respond to taps on touchscreen */
     .map-control-btn,
@@ -260,8 +272,8 @@
                     </label>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"><span>Radius</span>: <span class="radius-value" id="radiusValue">50 miles</span></label>
-                    <input type="range" id="radiusFilter" min="0" max="100" value="50" step="1" class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><span>Radius</span>: <span class="radius-value" id="radiusValue">Any distance</span></label>
+                    <input type="range" id="radiusFilter" min="0" max="100" value="0" step="1" class="w-full">
                 </div>
                 <div class="location-search-container">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Location Search</label>
@@ -287,7 +299,7 @@
     
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
     
-    <div id="mapContainer" class="hidden border-b relative" style="max-height: calc(100vh - 60px); overflow: hidden;">
+    <div id="mapContainer" class="hidden border-b relative" style="max-height: calc(100vh - 60px); overflow: hidden; position:relative; z-index:30;">
         <div class="map-loading" id="mapLoading">
             <div class="spinner"></div>
             <p class="text-sm text-gray-600 mt-2 text-center">Loading map...</p>
@@ -371,8 +383,8 @@
                             </label>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2"><span>Radius</span>: <span class="radius-value" id="radiusValue2">50 miles</span></label>
-                            <input type="range" id="radiusFilter2" min="0" max="100" value="50" step="1" class="w-full">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><span>Radius</span>: <span class="radius-value" id="radiusValue2">Any distance</span></label>
+                            <input type="range" id="radiusFilter2" min="0" max="100" value="0" step="1" class="w-full">
                         </div>
                         <div class="location-search-container">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Location Search</label>
