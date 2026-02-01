@@ -70,29 +70,20 @@ function formatPhoneDisplay(phone) {
     return phone;
 }
 
-async function loadStarredListings() {
-    if (window.PWAStorage) {
-        try {
-            await window.PWAStorage.init();
-            const starred = await window.PWAStorage.getAllStarred();
-            starredListings = starred.map(l => l.id);
-            updateStarredCount();
-            return;
-        } catch (error) {
-            console.error('Error loading from PWA storage:', error);
-        }
-    }
-    
-    // Fallback to cookies
+function loadStarredListings() {
     const stored = getCookie('starredListings');
     if (stored) {
-        try { 
-            starredListings = JSON.parse(stored); 
-        } catch (e) { 
-            starredListings = []; 
+        try {
+            starredListings = JSON.parse(stored);
+        } catch (e) {
+            starredListings = [];
         }
     }
     updateStarredCount();
+    // If URL has ?starred=1, activate starred-only view after listings load
+    if (new URLSearchParams(window.location.search).get('starred') === '1') {
+        viewingStarredOnly = true;
+    }
 }
 
 function saveStarredListings() {
@@ -104,47 +95,37 @@ function saveStarredListings() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-async function toggleStar(listingId, event) {
-    if (event) { 
-        event.preventDefault(); 
-        event.stopPropagation(); 
+function toggleStar(listingId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
     }
-    
+
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
-    // Find the listing data
-    const listing = allListings.find(l => l.id === listingId);
-    
-    if (!listing) {
-        console.error('Listing not found:', listingId);
-        return;
-    }
-    
-    // Use PWA storage if available
-    if (window.StarredManager && window.PWAStorage) {
-        await window.StarredManager.toggleStar(listingId, listing);
+
+    const index = starredListings.indexOf(listingId);
+    if (index > -1) {
+        starredListings.splice(index, 1);
     } else {
-        // Fallback to cookie-based storage
-        const index = starredListings.indexOf(listingId);
-        if (index > -1) {
-            starredListings.splice(index, 1);
+        starredListings.push(listingId);
+    }
+    saveStarredListings();
+
+    // Update every star button for this listing (matched by data-listing-id)
+    document.querySelectorAll('.star-button[data-listing-id="' + listingId + '"]').forEach(btn => {
+        if (starredListings.includes(listingId)) {
+            btn.classList.add('starred');
         } else {
-            starredListings.push(listingId);
+            btn.classList.remove('starred');
         }
-        saveStarredListings();
-        
-        // Update all star buttons for this listing
-        const starButtons = document.querySelectorAll('.star-button');
-        starButtons.forEach(btn => {
-            const onclick = btn.getAttribute('onclick') || '';
-            if (onclick.includes(listingId)) {
-                if (starredListings.includes(listingId)) {
-                    btn.classList.add('starred');
-                } else {
-                    btn.classList.remove('starred');
-                }
-            }
-        });
+    });
+
+    // If viewing starred-only, re-filter (listing may have just been unstarred)
+    if (viewingStarredOnly) {
+        filteredListings = allListings.filter(l => starredListings.includes(l.id));
+        displayedListingsCount = filteredListings.length;
+        renderListings();
+        updateResultsCount();
     }
 }
 
@@ -330,15 +311,28 @@ function checkFilterPosition() {
                 listingsContainer.classList.remove('listings-3-col');
                 listingsContainer.classList.add('listings-2-col');
             }
-        } else if (filterPosition === 'left' && mapOpen) {
-            // Map is open — sidebar hides, show toggle so user can open overlay
+        } else if (filterPosition === 'left' && mapOpen && !splitViewActive) {
+            // Full-mode map: sidebar stays next to the listings column (below the map).
+            if (desktopLayout) desktopLayout.classList.add('with-left-filters');
+            if (desktopFilters) {
+                desktopFilters.classList.remove('hidden');
+                desktopFilters.classList.remove('desktop-filters-overlay');
+            }
+            desktopFiltersOverlay = false;
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
+            if (currentView === 'grid' && listingsContainer) {
+                listingsContainer.classList.remove('listings-3-col');
+                listingsContainer.classList.add('listings-2-col');
+            }
+        } else if (filterPosition === 'left' && mapOpen && splitViewActive) {
+            // Split-view mode: hide the sidebar entirely (split view has its own layout)
             if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
             if (desktopFilters) {
                 desktopFilters.classList.add('hidden');
                 desktopFilters.classList.remove('desktop-filters-overlay');
             }
             desktopFiltersOverlay = false;
-            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'flex';
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
             if (currentView === 'grid' && listingsContainer) {
                 listingsContainer.classList.remove('listings-2-col');
                 listingsContainer.classList.add('listings-3-col');
@@ -604,7 +598,18 @@ async function loadListings() {
         populateCountryFilter();
         updateLocationSubtitle();
         applyFilters();
+        // If ?starred=1 was set (flag set by loadStarredListings before listings arrived),
+        // now filter down to starred only and update the count display.
+        if (viewingStarredOnly) {
+            if (starredListings.length === 0) {
+                viewingStarredOnly = false;
+            } else {
+                filteredListings = allListings.filter(l => starredListings.includes(l.id));
+                displayedListingsCount = filteredListings.length;
+            }
+        }
         updateResultsCount();
+        renderListings();
         geocodeAllListings();
     } catch (error) {
         console.error('Error loading listings:', error);
@@ -889,12 +894,23 @@ function getFullAddress(listing) {
 function buildBadges(listing) {
     const badges = [];
     const openStatus = isOpenNow(listing.hours);
+    const openingSoon = isOpeningSoon(listing.hours);
+    const closingSoon = isClosingSoon(listing.hours);
 
-    if (openStatus === true)  badges.push('<span class="badge badge-open">Open</span>');
-    else if (openStatus === false) badges.push('<span class="badge badge-closed">Closed</span>');
-
-    if (isOpeningSoon(listing.hours))  badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-    if (isClosingSoon(listing.hours))  badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+    // Only ONE hours-status badge: the most specific state wins.
+    // Closed + Opening Soon → "Opening Soon" only.
+    // Open + Closing Soon   → "Closing Soon" only.
+    // Open  (not closing)   → "Open".
+    // Closed (not opening)  → "Closed".
+    if (openingSoon) {
+        badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+    } else if (closingSoon) {
+        badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+    } else if (openStatus === true) {
+        badges.push('<span class="badge badge-open">Open</span>');
+    } else if (openStatus === false) {
+        badges.push('<span class="badge badge-closed">Closed</span>');
+    }
 
     // Tier / verification hierarchy:
     // FEATURED or PREMIUM → show "Featured" badge only
@@ -998,10 +1014,10 @@ function renderListings() {
                         <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
                         <div class="text-sm text-gray-600 space-y-1">
                             <div class="flex items-center gap-2">
-                                <span>📍</span>
+                                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span class="truncate">${fullAddress}</span>
                             </div>
-                            ${l.phone ? `<div class="flex items-center gap-2"><span>📞</span><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                            ${l.phone ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
                         </div>
                     </div>
                 </a>
@@ -1035,10 +1051,10 @@ function renderListings() {
                         <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                         <div class="flex flex-col gap-1 text-sm text-gray-600">
                             <div class="flex items-center gap-1">
-                                <span>📍</span>
+                                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span class="truncate">${fullAddress}</span>
                             </div>
-                            ${l.phone ? `<div class="flex items-center gap-1"><span>📞</span><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                            ${l.phone ? `<div class="flex items-center gap-1"><svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
                         </div>
                     </div>
                 </a>
@@ -1054,11 +1070,6 @@ function renderListings() {
         } else {
             loadMoreBtn.classList.add('hidden');
         }
-    }
-
-    // Re-apply star states from IndexedDB now that new DOM elements exist
-    if (window.StarredManager) {
-        window.StarredManager.initializeStarButtons();
     }
 
     // Delegated click handler for star buttons.
@@ -1083,7 +1094,10 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 function updateResultsCount() {
     const count = filteredListings.length;
     const resultsCount = document.getElementById('resultsCount');
-    if (!viewingStarredOnly && resultsCount) {
+    if (!resultsCount) return;
+    if (viewingStarredOnly) {
+        resultsCount.textContent = `${count} starred ${count === 1 ? 'listing' : 'listings'}`;
+    } else {
         resultsCount.textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
     }
 }
@@ -2261,7 +2275,7 @@ function updateMapMarkers() {
                             <div class="map-popup-badges">${badges.join('')}</div>
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
                             <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
-                            <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + formatPhoneDisplay(listing.phone) : ''}</div>
+                            <div class="map-popup-details"><svg style="width:14px;height:14px;vertical-align:middle;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> ${getFullAddress(listing)}<br>${listing.phone ? '<svg style="width:14px;height:14px;vertical-align:middle;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> ' + formatPhoneDisplay(listing.phone) : ''}</div>
                         </div>
                     </div>
                 </div>
@@ -2311,7 +2325,7 @@ function toggleSplitView() {
                     <div class="flex items-center gap-2">
                         <p class="text-sm text-gray-600">${filteredListings.length} ${filteredListings.length === 1 ? 'listing' : 'listings'} found</p>
                         <button id="splitFiltersBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            <span>🔍</span> Filters
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Filters
                         </button>
                     </div>
                     <select id="splitSortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
@@ -2327,7 +2341,7 @@ function toggleSplitView() {
                 <div id="splitMap"></div>
                 <div class="map-controls">
                     <button class="map-control-btn" id="splitViewToggleBtn" onclick="toggleSplitView()" title="Exit split view">
-                        <span>⊞</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                         <span class="desktop-only">Exit Split View</span>
                     </button>
                     <button class="map-control-btn" id="splitLocateBtn" title="Find my location">
@@ -2335,12 +2349,14 @@ function toggleSplitView() {
                         <span class="desktop-only">Current Location</span>
                     </button>
                     <button class="map-control-btn" id="splitResetMapBtn" title="Reset map view">
-                        <span>🔄</span>
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         <span class="desktop-only">Reload</span>
                     </button>
                 </div>
             </div>
         `;
+        // Hide desktop sidebar in split view; checkFilterPosition will enforce via splitViewActive branch
+        checkFilterPosition();
         // Close filterPanel if it was open from before entering split view
         if (filtersOpen) { filtersOpen = false; document.getElementById('filterPanel').classList.add('hidden'); }
 
@@ -2366,6 +2382,7 @@ function toggleSplitView() {
         document.getElementById('normalViewControls').classList.remove('hidden');
         document.getElementById('normalViewListings').classList.remove('hidden');
         document.getElementById('mapContainer').classList.remove('hidden');
+        checkFilterPosition();
         setTimeout(() => {
             if (map) {
                 map.invalidateSize();
@@ -2412,7 +2429,7 @@ function renderSplitViewListings() {
                     <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
                     <div class="text-xs text-gray-600">
                         <div class="flex items-center gap-1 truncate">
-                            <span>📍</span>
+                            <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <span class="truncate">${fullAddress}</span>
                         </div>
                     </div>
@@ -2420,11 +2437,6 @@ function renderSplitViewListings() {
             </a>
         `;
     }).join('');
-
-    // Re-apply star states from IndexedDB now that split-view cards are in the DOM
-    if (window.StarredManager) {
-        window.StarredManager.initializeStarButtons();
-    }
 
     // Delegated click handler for star buttons in split view (same pattern as renderListings)
     container.addEventListener('click', function starClickDelegate(e) {
@@ -2514,7 +2526,7 @@ function initSplitMap() {
                             <div class="map-popup-badges">${badges.join('')}</div>
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
                             <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
-                            <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + formatPhoneDisplay(listing.phone) : ''}</div>
+                            <div class="map-popup-details"><svg style="width:14px;height:14px;vertical-align:middle;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> ${getFullAddress(listing)}<br>${listing.phone ? '<svg style="width:14px;height:14px;vertical-align:middle;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> ' + formatPhoneDisplay(listing.phone) : ''}</div>
                         </div>
                     </div>
                 </div>
