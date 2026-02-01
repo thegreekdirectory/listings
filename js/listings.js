@@ -40,8 +40,8 @@ const US_STATES = {
 let listingsSupabase = null;
 let SUBCATEGORIES = {};
 let allListings = [], filteredListings = [], currentView = 'grid', selectedCategory = 'All';
-let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '';
-let selectedRadius = 50, openNowOnly = false, closedNowOnly = false, openingSoonOnly = false;
+let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '', selectedCity = '', selectedZip = '';
+let selectedRadius = 0, openNowOnly = false, closedNowOnly = false, openingSoonOnly = false;
 let closingSoonOnly = false, hoursUnknownOnly = false, onlineOnly = false, userLocation = null;
 let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
 let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
@@ -421,6 +421,16 @@ function loadFiltersFromURL() {
         if (stateFilter) stateFilter.value = state;
         if (stateFilter2) stateFilter2.value = state;
     }
+
+    const city = urlParams.get('city');
+    if (city) {
+        selectedCity = city;
+    }
+
+    const zip = urlParams.get('zip');
+    if (zip) {
+        selectedZip = zip;
+    }
     
     const radius = urlParams.get('radius');
     if (radius) {
@@ -502,6 +512,8 @@ function updateURL() {
     }
     if (selectedCountry) url.searchParams.set('country', selectedCountry);
     if (selectedState) url.searchParams.set('state', selectedState);
+    if (selectedCity) url.searchParams.set('city', selectedCity);
+    if (selectedZip) url.searchParams.set('zip', selectedZip);
     if (selectedRadius > 0) url.searchParams.set('radius', selectedRadius);
     if (openNowOnly) url.searchParams.set('open', 'true');
     if (closedNowOnly) url.searchParams.set('closed', 'true');
@@ -662,6 +674,8 @@ function applyFilters() {
         
         const matchesCountry = !selectedCountry || (listing.country || 'USA') === selectedCountry;
         const matchesState = !selectedState || listing.state === selectedState;
+        const matchesCity = !selectedCity || (listing.city && listing.city.toLowerCase() === selectedCity.toLowerCase());
+        const matchesZip = !selectedZip || (listing.zip_code && listing.zip_code === selectedZip);
         
         let matchesRadius = true;
         const effectiveUserLocation = userLocation || estimatedUserLocation;
@@ -688,7 +702,7 @@ function applyFilters() {
         const matchesOnlineOnly = !onlineOnly || isBasedIn(listing);
         
         return matchesSearch && matchesCategory && matchesSubcategory && matchesCountry && 
-               matchesState && matchesRadius && matchesOpenNow && matchesClosedNow &&
+               matchesState && matchesCity && matchesZip && matchesRadius && matchesOpenNow && matchesClosedNow &&
                matchesOpeningSoon && matchesClosingSoon && matchesHoursUnknown && matchesOnlineOnly;
     });
     
@@ -1013,7 +1027,7 @@ function renderListings() {
                         <div class="flex gap-3 mb-3">
                             ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                             <div class="flex-1 min-w-0">
-                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${l.category}</span>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
                                 <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
                             </div>
                         </div>
@@ -1050,7 +1064,7 @@ function renderListings() {
                     ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">` : '<div class="w-24 h-24 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                     <div class="flex-1 min-w-0 overflow-hidden pr-12">
                         <div class="flex gap-2 mb-2 flex-wrap">
-                            <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
                             ${badges.join('')}
                         </div>
                         <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
@@ -1491,7 +1505,7 @@ function setupEventListeners() {
                 locateBtn.classList.add('active');
                 // Color the locate icon blue
                 const locateIcon = document.getElementById('locateBtnIcon');
-                if (locateIcon) locateIcon.setAttribute('fill', '#045093');
+                if (locateIcon) locateIcon.setAttribute('fill', '#4285F4');
                 if (map) {
                     map.setView([userLocation.lat, userLocation.lng], 13);
                     addUserLocationMarker();
@@ -1876,7 +1890,9 @@ function clearAllFilters() {
     selectedSubcategories = [];
     selectedCountry = '';
     selectedState = '';
-    selectedRadius = 50;
+    selectedCity = '';
+    selectedZip = '';
+    selectedRadius = 0;
     openNowOnly = false;
     closedNowOnly = false;
     openingSoonOnly = false;
@@ -1914,7 +1930,7 @@ function clearAllFilters() {
     
     ['radiusFilter', 'radiusFilter2'].forEach(id => {
         const elem = document.getElementById(id);
-        if (elem) elem.value = '50';
+        if (elem) elem.value = '0';
     });
     
     ['openNowFilter', 'openNowFilter2'].forEach(id => {
@@ -2033,6 +2049,8 @@ function setupLocationSearch() {
                             const state = elem.dataset.state;
                             selectedCountry = 'USA';
                             selectedState = state;
+                            selectedCity = value;
+                            selectedZip = '';
                             const countryFilter = document.getElementById('countryFilter');
                             const countryFilter2 = document.getElementById('countryFilter2');
                             if (countryFilter) countryFilter.value = 'USA';
@@ -2052,6 +2070,8 @@ function setupLocationSearch() {
                         } else if (type === 'state') {
                             selectedCountry = 'USA';
                             selectedState = value;
+                            selectedCity = '';
+                            selectedZip = '';
                             const countryFilter = document.getElementById('countryFilter');
                             const countryFilter2 = document.getElementById('countryFilter2');
                             if (countryFilter) countryFilter.value = 'USA';
@@ -2072,6 +2092,8 @@ function setupLocationSearch() {
                             const state = elem.dataset.state;
                             selectedCountry = 'USA';
                             selectedState = state;
+                            selectedZip = value;
+                            selectedCity = elem.dataset.city || '';
                             const countryFilter = document.getElementById('countryFilter');
                             const countryFilter2 = document.getElementById('countryFilter2');
                             if (countryFilter) countryFilter.value = 'USA';
@@ -2091,6 +2113,8 @@ function setupLocationSearch() {
                         } else if (type === 'country') {
                             selectedCountry = value;
                             selectedState = '';
+                            selectedCity = '';
+                            selectedZip = '';
                             const countryFilter = document.getElementById('countryFilter');
                             const countryFilter2 = document.getElementById('countryFilter2');
                             if (countryFilter) countryFilter.value = value;
@@ -2211,6 +2235,11 @@ function initMap() {
             if (locateIcon) locateIcon.setAttribute('fill', '#000000');
         }
     });
+
+    // Refresh map pins on zoom so the 50mi / >100mi map-radius rule updates
+    map.on('zoomend', () => {
+        if (mapOpen) updateMapMarkers();
+    });
     
     setTimeout(() => {
         map.invalidateSize();
@@ -2257,12 +2286,54 @@ async function geocodeListing(listing) {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+// Returns the approximate radius in miles of the map's visible area
+// (half the diagonal of the bounding box in miles).
+function mapVisibleRadiusMiles(leafletMap) {
+    if (!leafletMap) return Infinity;
+    try {
+        var bounds = leafletMap.getBounds();
+        var sw = bounds.getSouthWest();
+        var ne = bounds.getNorthEast();
+        // Diagonal distance in miles
+        var diag = calculateDistance(sw.lat, sw.lng, ne.lat, ne.lng);
+        return diag / 2;
+    } catch(e) { return Infinity; }
+}
+
 function updateMapMarkers() {
     if (!map || !markerClusterGroup || !mapReady) return;
     markerClusterGroup.clearLayers();
+
+    // ── Map-only radius logic ──
+    // When the map is open and the user has NOT set a radius via the slider (selectedRadius === 0),
+    // the map enforces its own pin visibility:
+    //   • Default: only pins within 50 mi of the user (or map centre) are shown.
+    //   • If the user zooms out so the visible area exceeds 100 mi radius → show ALL pins.
+    // If the user HAS set a slider radius, that already filtered filteredListings; show everything.
+    var useMapRadius = (mapOpen && selectedRadius === 0);
+    var mapRadiusLimit = 50; // miles
+    var effectiveLocation = userLocation || estimatedUserLocation;
+
+    if (useMapRadius) {
+        var visibleRadius = mapVisibleRadiusMiles(map);
+        if (visibleRadius > 100) {
+            useMapRadius = false; // zoomed out past 100 mi → show all
+        }
+    }
+
     const bounds = [];
     filteredListings.forEach(listing => {
         if (listing.coordinates && !isBasedIn(listing)) {
+
+            // Map-radius gate: skip pins outside 50 mi when active
+            if (useMapRadius && effectiveLocation) {
+                var dist = calculateDistance(
+                    effectiveLocation.lat, effectiveLocation.lng,
+                    listing.coordinates.lat, listing.coordinates.lng
+                );
+                if (dist > mapRadiusLimit) return; // skip this pin
+            }
+
             const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
             const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
             const logoImage = listing.logo || '';
@@ -2278,6 +2349,7 @@ function updateMapMarkers() {
             
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const heroImage = firstPhoto || '';
+            const primarySubcat = (listing.subcategories && listing.subcategories.length > 0) ? listing.subcategories[0] : listing.category;
             const popupContent = `
                 <div class="map-popup">
                     ${heroImage ? `<img src="${heroImage}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
@@ -2286,8 +2358,10 @@ function updateMapMarkers() {
                         <div class="map-popup-info">
                             <div class="map-popup-badges">${badges.join('')}</div>
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
-                            <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
-                            <div class="map-popup-details"><svg style="width:14px;height:14px;vertical-align:middle;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> ${getFullAddress(listing)}<br>${listing.phone ? '<svg style="width:14px;height:14px;vertical-align:middle;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> ' + formatPhoneDisplay(listing.phone) : ''}</div>
+                            <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
+                            <div class="map-popup-details">
+                                <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2514,9 +2588,31 @@ function initSplitMap() {
             icon: userIcon, zIndexOffset: 1000
         }).addTo(splitMap).bindPopup('<strong>Your Location</strong>');
     }
+    // ── Split-map radius logic (mirrors main map) ──
+    var useMapRadius = (selectedRadius === 0);
+    var mapRadiusLimit = 50;
+    var effectiveLocation = userLocation || estimatedUserLocation;
+    if (useMapRadius) {
+        // splitMap may not have valid bounds yet on first render; use a safe fallback
+        try {
+            var visibleRadius = mapVisibleRadiusMiles(splitMap);
+            if (visibleRadius > 100) useMapRadius = false;
+        } catch(e) { /* first render, keep default 50mi */ }
+    }
+
     const bounds = [];
     filteredListings.forEach(listing => {
         if (listing.coordinates && !isBasedIn(listing)) {
+
+            // Map-radius gate
+            if (useMapRadius && effectiveLocation) {
+                var dist = calculateDistance(
+                    effectiveLocation.lat, effectiveLocation.lng,
+                    listing.coordinates.lat, listing.coordinates.lng
+                );
+                if (dist > mapRadiusLimit) return;
+            }
+
             const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
             const logoImage = listing.logo || '';
             
@@ -2539,8 +2635,10 @@ function initSplitMap() {
                         <div class="map-popup-info">
                             <div class="map-popup-badges">${badges.join('')}</div>
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
-                            <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
-                            <div class="map-popup-details"><svg style="width:14px;height:14px;vertical-align:middle;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> ${getFullAddress(listing)}<br>${listing.phone ? '<svg style="width:14px;height:14px;vertical-align:middle;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> ' + formatPhoneDisplay(listing.phone) : ''}</div>
+                            <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
+                            <div class="map-popup-details">
+                                <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2556,6 +2654,59 @@ function initSplitMap() {
     });
     if (bounds.length > 0) splitMap.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
     setTimeout(() => splitMap.invalidateSize(), 250);
+
+    // Refresh split-map pins on zoom
+    splitMap.on('zoomend', () => {
+        // Re-run marker logic by clearing and re-adding
+        splitMarkerClusterGroup.clearLayers();
+        var useMapRadius2 = (selectedRadius === 0);
+        var effectiveLocation2 = userLocation || estimatedUserLocation;
+        if (useMapRadius2) {
+            try {
+                var vr = mapVisibleRadiusMiles(splitMap);
+                if (vr > 100) useMapRadius2 = false;
+            } catch(e) {}
+        }
+        filteredListings.forEach(listing => {
+            if (listing.coordinates && !isBasedIn(listing)) {
+                if (useMapRadius2 && effectiveLocation2) {
+                    var d = calculateDistance(effectiveLocation2.lat, effectiveLocation2.lng, listing.coordinates.lat, listing.coordinates.lng);
+                    if (d > 50) return;
+                }
+                const logoImage2 = listing.logo || '';
+                const isFeatured2 = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+                const iconClass2 = isFeatured2 ? 'custom-marker featured' : 'custom-marker';
+                const iconHtml2 = logoImage2 ?
+                    `<div class="${iconClass2}"><img src="${logoImage2}" alt="${listing.business_name}"></div>` :
+                    `<div class="${iconClass2}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
+                const customIcon2 = L.divIcon({ html: iconHtml2, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
+                const marker2 = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon2, riseOnHover: true });
+                // Reuse same popup logic
+                const badges2 = buildBadges(listing);
+                const checkmarkHtml2 = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
+                const categorySlug2 = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const firstPhoto2 = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
+                const popupContent2 = `
+                    <div class="map-popup">
+                        ${firstPhoto2 ? `<img src="${firstPhoto2}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
+                        <div class="map-popup-content">
+                            ${logoImage2 ? `<img src="${logoImage2}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
+                            <div class="map-popup-info">
+                                <div class="map-popup-badges">${badges2.join('')}</div>
+                                <a href="/listing/${categorySlug2}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml2}</a>
+                                <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
+                                <div class="map-popup-details">
+                                    <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                marker2.bindPopup(popupContent2, { maxWidth: 320, className: 'custom-popup' });
+                splitMarkerClusterGroup.addLayer(marker2);
+            }
+        });
+    });
     
     /*
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -2569,7 +2720,7 @@ function initSplitMap() {
                 splitMap.setView([userLocation.lat, userLocation.lng], 13);
                 // Color the locate icon blue
                 const splitLocateIcon = document.getElementById('splitLocateBtnIcon');
-                if (splitLocateIcon) splitLocateIcon.setAttribute('fill', '#045093');
+                if (splitLocateIcon) splitLocateIcon.setAttribute('fill', '#4285F4');
                 // Reset on any map move
                 const resetOnce = () => {
                     if (splitLocateIcon) splitLocateIcon.setAttribute('fill', '#000000');
