@@ -47,7 +47,7 @@ let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
 let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
 let userLocationMarker = null, mapReady = false, allListingsGeocoded = false;
 let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
-let filterPosition = 'left';
+let filterPosition = 'top';
 let searchDebounceTimer = null;
 let displayedListingsCount = 25;
 let estimatedUserLocation = null;
@@ -1092,19 +1092,6 @@ function renderListings() {
         }
     }
 
-    // Delegated click handler for star buttons.
-    // Inline onclick="toggleStar('id', event)" is unreliable: 'event' is not
-    // guaranteed to be the current MouseEvent in all browsers when used in an
-    // inline attribute, and the button-inside-<a> pattern can race with navigation.
-    // This single listener on the container catches every star click cleanly.
-    container.addEventListener('click', function starClickDelegate(e) {
-        const starBtn = e.target.closest('.star-button');
-        if (!starBtn) return;                          // not a star click
-        e.preventDefault();                            // block the parent <a> navigation
-        e.stopPropagation();                           // stop bubble entirely
-        const id = starBtn.getAttribute('data-listing-id');
-        if (id) toggleStar(id, e);
-    });
 }
 
 /*
@@ -1539,6 +1526,18 @@ function setupEventListeners() {
     });
 
     setupLocationSearch();
+
+    // ── One-time document-level delegated star handler ──
+    // Catches .star-button clicks anywhere (main grid, list, split view) without
+    // stacking a new listener every time renderListings() runs.
+    document.addEventListener('click', function(e) {
+        const starBtn = e.target.closest('.star-button');
+        if (!starBtn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const id = starBtn.getAttribute('data-listing-id');
+        if (id) toggleStar(id, e);
+    });
     
     window.addEventListener('resize', checkFilterPosition);
 }
@@ -2189,7 +2188,9 @@ function initMap() {
         center: defaultMapCenter, 
         zoom: defaultMapZoom, 
         zoomControl: true,
-        scrollWheelZoom: false
+        scrollWheelZoom: false,
+        touchZoom: true,
+        doubleClickZoom: true
     });
     
     map.on('click', function() {
@@ -2375,7 +2376,11 @@ function updateMapMarkers() {
             bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
         }
     });
-    if (bounds.length > 0) map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
+    // Only auto-fit bounds on the very first render; after that preserve user's zoom/pan
+    if (bounds.length > 0 && !map._hasAutoFitted) {
+        map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
+        map._hasAutoFitted = true;
+    }
 }
 
 /*
@@ -2525,16 +2530,6 @@ function renderSplitViewListings() {
             </a>
         `;
     }).join('');
-
-    // Delegated click handler for star buttons in split view (same pattern as renderListings)
-    container.addEventListener('click', function starClickDelegate(e) {
-        const starBtn = e.target.closest('.star-button');
-        if (!starBtn) return;
-        e.preventDefault();
-        e.stopPropagation();
-        const id = starBtn.getAttribute('data-listing-id');
-        if (id) toggleStar(id, e);
-    });
 }
 
 /*
@@ -2548,7 +2543,9 @@ function initSplitMap() {
         center: defaultMapCenter, 
         zoom: defaultMapZoom, 
         zoomControl: true,
-        scrollWheelZoom: false
+        scrollWheelZoom: false,
+        touchZoom: true,
+        doubleClickZoom: true
     });
     
     splitMap.on('click', function() {
