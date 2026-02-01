@@ -978,7 +978,7 @@ function renderListings() {
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
-                    <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)">
+                    <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}">
                         <svg class="star-icon" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
@@ -1020,7 +1020,7 @@ function renderListings() {
             
             return `
                 <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block relative">
-                    <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 12px; right: 12px;">
+                    <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 12px; right: 12px;">
                         <svg class="star-icon" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
@@ -1060,6 +1060,20 @@ function renderListings() {
     if (window.StarredManager) {
         window.StarredManager.initializeStarButtons();
     }
+
+    // Delegated click handler for star buttons.
+    // Inline onclick="toggleStar('id', event)" is unreliable: 'event' is not
+    // guaranteed to be the current MouseEvent in all browsers when used in an
+    // inline attribute, and the button-inside-<a> pattern can race with navigation.
+    // This single listener on the container catches every star click cleanly.
+    container.addEventListener('click', function starClickDelegate(e) {
+        const starBtn = e.target.closest('.star-button');
+        if (!starBtn) return;                          // not a star click
+        e.preventDefault();                            // block the parent <a> navigation
+        e.stopPropagation();                           // stop bubble entirely
+        const id = starBtn.getAttribute('data-listing-id');
+        if (id) toggleStar(id, e);
+    });
 }
 
 /*
@@ -1232,7 +1246,16 @@ function setupEventListeners() {
     // Desktop filter toggle button (appears when filters are collapsed or map is open)
     const desktopFilterToggleBtn = document.getElementById('desktopFilterToggleBtn');
     if (desktopFilterToggleBtn) {
-        desktopFilterToggleBtn.addEventListener('click', toggleDesktopFiltersOverlay);
+        desktopFilterToggleBtn.addEventListener('click', () => {
+            if (mapOpen) {
+                // Map is open — sidebar can't coexist, so use the overlay
+                toggleDesktopFiltersOverlay();
+            } else {
+                // Map is closed — just restore the normal sidebar
+                filterPosition = 'left';
+                checkFilterPosition();
+            }
+        });
     }
 
     // Close overlay when clicking the backdrop
@@ -2375,7 +2398,7 @@ function renderSplitViewListings() {
         
         return `
             <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
-                <button class="star-button ${isStarred ? 'starred' : ''}" onclick="toggleStar('${l.id}', event)" style="top: 8px; right: 8px; width: 32px; height: 32px;">
+                <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 8px; right: 8px; width: 32px; height: 32px;">
                     <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
@@ -2402,6 +2425,16 @@ function renderSplitViewListings() {
     if (window.StarredManager) {
         window.StarredManager.initializeStarButtons();
     }
+
+    // Delegated click handler for star buttons in split view (same pattern as renderListings)
+    container.addEventListener('click', function starClickDelegate(e) {
+        const starBtn = e.target.closest('.star-button');
+        if (!starBtn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const id = starBtn.getAttribute('data-listing-id');
+        if (id) toggleStar(id, e);
+    });
 }
 
 /*
