@@ -41,7 +41,7 @@ let listingsSupabase = null;
 let SUBCATEGORIES = {};
 let allListings = [], filteredListings = [], currentView = 'grid', selectedCategory = 'All';
 let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '';
-let selectedRadius = 0, openNowOnly = false, closedNowOnly = false, openingSoonOnly = false;
+let selectedRadius = 50, openNowOnly = false, closedNowOnly = false, openingSoonOnly = false;
 let closingSoonOnly = false, hoursUnknownOnly = false, onlineOnly = false, userLocation = null;
 let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
 let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
@@ -179,14 +179,18 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function setCookie(name, value, days) {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
 }
 
 function getCookie(name) {
-    return document.cookie.split('; ').reduce((r, v) => {
-        const parts = v.split('=');
-        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
-    }, '');
+    const nameEQ = name + '=';
+    const cookies = document.cookie.split('; ');
+    for (let i = 0; i < cookies.length; i++) {
+        if (cookies[i].indexOf(nameEQ) === 0) {
+            return decodeURIComponent(cookies[i].substring(nameEQ.length));
+        }
+    }
+    return '';
 }
 
 function isIOSWebApp() {
@@ -929,11 +933,13 @@ function buildBadges(listing) {
     return badges;
 }
 
-// Returns true if the listing should show the claimed-checkmark icon next to its name.
-// The checkmark replaces the old "Claimed" badge — it means the business owns/has claimed this listing.
-// It is independent of the tier badge hierarchy (Featured / Verified badges).
+// Returns true if the listing should show the verified-checkmark icon next to its name.
+// Shown for: Featured/Premium tier, Verified tier, or any listing where the business
+// has claimed it (show_claim_button === false).
 function showsVerifiedCheckmark(listing) {
-    return listing.show_claim_button === false;
+    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
+    return isFeatured || isVerified || listing.show_claim_button === false;
 }
 
 /*
@@ -1483,6 +1489,9 @@ function setupEventListeners() {
                 locationButtonActive = true;
                 mapMoved = false;
                 locateBtn.classList.add('active');
+                // Color the locate icon blue
+                const locateIcon = document.getElementById('locateBtnIcon');
+                if (locateIcon) locateIcon.setAttribute('fill', '#045093');
                 if (map) {
                     map.setView([userLocation.lat, userLocation.lng], 13);
                     addUserLocationMarker();
@@ -1867,7 +1876,7 @@ function clearAllFilters() {
     selectedSubcategories = [];
     selectedCountry = '';
     selectedState = '';
-    selectedRadius = 0;
+    selectedRadius = 50;
     openNowOnly = false;
     closedNowOnly = false;
     openingSoonOnly = false;
@@ -1905,7 +1914,7 @@ function clearAllFilters() {
     
     ['radiusFilter', 'radiusFilter2'].forEach(id => {
         const elem = document.getElementById(id);
-        if (elem) elem.value = '0';
+        if (elem) elem.value = '50';
     });
     
     ['openNowFilter', 'openNowFilter2'].forEach(id => {
@@ -2197,6 +2206,9 @@ function initMap() {
             locationButtonActive = false;
             const locateBtn = document.getElementById('locateBtn');
             if (locateBtn) locateBtn.classList.remove('active');
+            // Reset locate icon back to black
+            const locateIcon = document.getElementById('locateBtnIcon');
+            if (locateIcon) locateIcon.setAttribute('fill', '#000000');
         }
     });
     
@@ -2341,11 +2353,13 @@ function toggleSplitView() {
                 <div id="splitMap"></div>
                 <div class="map-controls">
                     <button class="map-control-btn" id="splitViewToggleBtn" onclick="toggleSplitView()" title="Exit split view">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="#000000"><rect x="15" y="4" width="2" height="24"/><path d="M10,7V25H4V7h6m0-2H4A2,2,0,0,0,2,7V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/><path d="M28,7V25H22V7h6m0-2H22a2,2,0,0,0-2,2V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/></svg>
                         <span class="desktop-only">Exit Split View</span>
                     </button>
                     <button class="map-control-btn" id="splitLocateBtn" title="Find my location">
-                        <img src="https://help.apple.com/assets/68FABD5B6EF504342600E3E5/68FABD675A41CCC23909151C/en_US/7e877be3da64a66caf9a6dfb5fddad8f.png" alt="Location">
+                        <svg id="splitLocateBtnIcon" width="16" height="16" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+                            <polygon points="0,9.28 9.894,9.99 10.78,20 20,0"/>
+                        </svg>
                         <span class="desktop-only">Current Location</span>
                     </button>
                     <button class="map-control-btn" id="splitResetMapBtn" title="Reset map view">
@@ -2548,11 +2562,23 @@ function initSplitMap() {
     */
     
     // Add event listeners for split map controls
-    document.getElementById('splitLocateBtn')?.addEventListener('click', () => {
-        if (userLocation) {
-            splitMap.setView([userLocation.lat, userLocation.lng], 13);
-        }
-    });
+    const splitLocateBtn = document.getElementById('splitLocateBtn');
+    if (splitLocateBtn) {
+        splitLocateBtn.addEventListener('click', () => {
+            if (userLocation) {
+                splitMap.setView([userLocation.lat, userLocation.lng], 13);
+                // Color the locate icon blue
+                const splitLocateIcon = document.getElementById('splitLocateBtnIcon');
+                if (splitLocateIcon) splitLocateIcon.setAttribute('fill', '#045093');
+                // Reset on any map move
+                const resetOnce = () => {
+                    if (splitLocateIcon) splitLocateIcon.setAttribute('fill', '#000000');
+                    splitMap.off('movestart', resetOnce);
+                };
+                splitMap.on('movestart', resetOnce);
+            }
+        });
+    }
     
     document.getElementById('splitResetMapBtn')?.addEventListener('click', () => {
         splitMap.setView(defaultMapCenter, defaultMapZoom);
