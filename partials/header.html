@@ -1,152 +1,123 @@
-<!--
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law.
--->
+<!-- partials/header.html -->
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-<style>
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-header {
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.logo-link {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.logo-link:hover {
-    opacity: 0.8;
-}
-
-.logo {
-    height: 48px;
-    width: auto;
-}
-
-.header-nav {
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-}
-
-.header-nav a {
-    text-decoration: none;
-    color: #1a1a1a;
-    font-weight: 500;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.header-nav a:hover {
-    color: #055193;
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-.starred-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    background: #fbbf24;
-    color: #78350f;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-@media (max-width: 768px) {
-    .header-nav {
-        gap: 1rem;
-        font-size: 0.875rem;
-    }
-    
-    .logo {
-        height: 40px;
-    }
-    
-    .header-nav .desktop-only {
-        display: none;
-    }
-}
-
-@media (prefers-color-scheme: dark) {
-    header {
-        background: #2a2a2a;
-        border-bottom-color: #3a3a3a;
-    }
-    
-    .header-nav a {
-        color: #e5e7eb;
-    }
-    
-    .header-nav a:hover {
-        color: #60a5fa;
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law.
-*/
-</style>
-
-<header>
-    <div class="header-content">
-        <a href="/" class="logo-link">
-            <picture>
-                <source srcset="https://static.thegreekdirectory.org/img/logo/white.svg" media="(prefers-color-scheme: dark)">
-                <img src="https://static.thegreekdirectory.org/img/logo/blue.svg" alt="The Greek Directory" class="logo">
-            </picture>
-        </a>
-        <nav class="header-nav">
-            <a href="/listings.html"><span class="desktop-only">Browse </span>Directory</a>
-            <a href="/starred.html">
-                <svg style="width: 18px; height: 18px; fill: currentColor;" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-                <span class="desktop-only">Starred</span>
-                <span id="headerStarredCount" class="starred-badge">0</span>
+<header id="listingsHeader" class="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex items-center justify-between h-14">
+            <!-- Logo -->
+            <a href="/" class="flex items-center gap-2 flex-shrink-0">
+                <img src="https://static.thegreekdirectory.org/img/logo/blue.svg" alt="The Greek Directory" class="h-8 w-auto">
+                <span class="text-sm font-semibold text-gray-900 hidden sm:inline">The Greek Directory</span>
             </a>
-            <a href="/about.html"><span class="desktop-only">About</span><span class="mobile-only">ℹ️</span></a>
-            <a href="/contact.html"><span class="desktop-only">Contact</span><span class="mobile-only">✉️</span></a>
-            <a href="/business.html"><span class="desktop-only">For </span>Businesses</a>
-        </nav>
+
+            <!-- Full nav (shown when everything fits) -->
+            <nav id="headerFullNav" class="hidden items-center gap-1">
+                <a href="/" id="navHome" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">Home</a>
+                <a href="/listings.html" id="navListings" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">Listings</a>
+                <a href="/about.html" id="navAbout" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">About</a>
+                <a href="/listings.html?starred=1" id="headerStarBtn" class="px-2 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" title="View Starred">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </a>
+            </nav>
+
+            <!-- Hamburger mode: star icon stays in header, hamburger opens dropdown -->
+            <div id="headerHamburgerRow" class="hidden items-center gap-2">
+                <a href="/listings.html?starred=1" class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" title="View Starred">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </a>
+                <button id="hamburgerBtn" class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" aria-label="Menu">
+                    <svg id="hamburgerIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <svg id="hamburgerCloseIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hamburger dropdown panel -->
+    <div id="hamburgerDropdown" class="hidden border-t border-gray-100 bg-white">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
+            <a href="/" id="dropHome" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">Home</a>
+            <a href="/listings.html" id="dropListings" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">Listings</a>
+            <a href="/about.html" id="dropAbout" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">About</a>
+        </div>
     </div>
 </header>
 
-<!--
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law.
--->
+<script>
+(function initHeader() {
+    // ── Active-tab highlighting ──
+    var path = window.location.pathname;
+
+    function isActive(href) {
+        if (href === '/') return path === '/';
+        var hrefPath = href.split('?')[0].split('#')[0];
+        return path === hrefPath || path.startsWith(hrefPath.replace(/\.html$/, '/'));
+    }
+
+    function applyActive(el, href) {
+        if (!el) return;
+        if (isActive(href)) {
+            el.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-100');
+            el.classList.add('font-semibold', 'text-white');
+            el.style.backgroundColor = '#055193';
+        }
+    }
+
+    applyActive(document.getElementById('navHome'),     '/');
+    applyActive(document.getElementById('navListings'), '/listings.html');
+    applyActive(document.getElementById('navAbout'),    '/about.html');
+    applyActive(document.getElementById('dropHome'),     '/');
+    applyActive(document.getElementById('dropListings'), '/listings.html');
+    applyActive(document.getElementById('dropAbout'),    '/about.html');
+
+    // ── Responsive hamburger ──
+    var fullNav      = document.getElementById('headerFullNav');
+    var hamburgerRow = document.getElementById('headerHamburgerRow');
+    var hamburgerBtn = document.getElementById('hamburgerBtn');
+    var hamburgerIcon      = document.getElementById('hamburgerIcon');
+    var hamburgerCloseIcon = document.getElementById('hamburgerCloseIcon');
+    var dropdown     = document.getElementById('hamburgerDropdown');
+    var dropdownOpen = false;
+
+    function measure() {
+        fullNav.style.display = 'flex';
+        hamburgerRow.style.display = 'none';
+
+        var headerBar  = fullNav.closest('.flex.items-center.justify-between');
+        var availWidth = headerBar.clientWidth;
+        var logoEl     = headerBar.querySelector('a');
+        var logoWidth  = logoEl.offsetWidth;
+        var available  = availWidth - logoWidth - 32;
+        var navNeeded  = fullNav.scrollWidth;
+
+        if (navNeeded <= available) {
+            fullNav.style.display = 'flex';
+            hamburgerRow.style.display = 'none';
+        } else {
+            fullNav.style.display  = 'none';
+            hamburgerRow.style.display = 'flex';
+        }
+    }
+
+    function toggleDropdown() {
+        dropdownOpen = !dropdownOpen;
+        dropdown.classList.toggle('hidden', !dropdownOpen);
+        hamburgerIcon.classList.toggle('hidden', dropdownOpen);
+        hamburgerCloseIcon.classList.toggle('hidden', !dropdownOpen);
+    }
+
+    hamburgerBtn.addEventListener('click', toggleDropdown);
+
+    document.addEventListener('click', function(e) {
+        if (dropdownOpen && !hamburgerBtn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdownOpen = false;
+            dropdown.classList.add('hidden');
+            hamburgerIcon.classList.remove('hidden');
+            hamburgerCloseIcon.classList.add('hidden');
+        }
+    });
+
+    measure();
+    window.addEventListener('resize', measure);
+})();
+</script>
