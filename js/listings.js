@@ -2737,5 +2737,5 @@ function initSplitMap() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law.
+or distribution of this code can result in legal action to the fullest extent permitted by law. 
 */
