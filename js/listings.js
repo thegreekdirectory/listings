@@ -1034,10 +1034,10 @@ function renderListings() {
                         <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
                         <div class="text-sm text-gray-600 space-y-1">
                             <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span class="truncate">${fullAddress}</span>
                             </div>
-                            ${l.phone ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                            ${l.phone ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
                         </div>
                     </div>
                 </a>
@@ -1071,10 +1071,10 @@ function renderListings() {
                         <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                         <div class="flex flex-col gap-1 text-sm text-gray-600">
                             <div class="flex items-center gap-1">
-                                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span class="truncate">${fullAddress}</span>
                             </div>
-                            ${l.phone ? `<div class="flex items-center gap-1"><svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                            ${l.phone ? `<div class="flex items-center gap-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
                         </div>
                     </div>
                 </a>
@@ -1490,9 +1490,11 @@ function setupEventListeners() {
                 locationButtonActive = true;
                 mapMoved = false;
                 locateBtn.classList.add('active');
-                // Color the locate icon blue
+                // Change button background to #045093, text to white, icon to white
+                locateBtn.style.backgroundColor = '#045093';
+                locateBtn.style.color = 'white';
                 const locateIcon = document.getElementById('locateBtnIcon');
-                if (locateIcon) locateIcon.setAttribute('fill', '#4285F4');
+                if (locateIcon) locateIcon.setAttribute('fill', 'white');
                 if (map) {
                     map.setView([userLocation.lat, userLocation.lng], 13);
                     addUserLocationMarker();
@@ -1533,11 +1535,17 @@ function setupEventListeners() {
     document.addEventListener('click', function(e) {
         const starBtn = e.target.closest('.star-button');
         if (!starBtn) return;
+        
+        // Prevent default behavior and stop propagation
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
+        
         const id = starBtn.getAttribute('data-listing-id');
-        if (id) toggleStar(id, e);
-    });
+        if (id) {
+            toggleStar(id, e);
+        }
+    }, true); // Use capture phase to ensure we get the event first
     
     window.addEventListener('resize', checkFilterPosition);
 }
@@ -1559,11 +1567,27 @@ function openDesktopFiltersOverlay() {
     desktopFiltersOverlay = true;
     const desktopFilters = document.getElementById('desktopFiltersContainer');
     const backdrop = document.getElementById('desktopFiltersBackdrop');
+    
     if (desktopFilters) {
         desktopFilters.classList.remove('hidden');
-        desktopFilters.classList.add('desktop-filters-overlay');
+        // When map is open, show filters inline next to listings instead of as floating overlay
+        if (mapOpen) {
+            desktopFilters.classList.remove('desktop-filters-overlay');
+            desktopFilters.style.position = 'relative';
+            desktopFilters.style.width = '';
+            desktopFilters.style.height = '';
+            desktopFilters.style.maxHeight = '';
+            desktopFilters.style.left = '';
+            desktopFilters.style.top = '';
+            desktopFilters.style.zIndex = '';
+            desktopFilters.style.boxShadow = '';
+            // Don't show backdrop when showing inline
+        } else {
+            // Normal overlay mode when map is closed
+            desktopFilters.classList.add('desktop-filters-overlay');
+            if (backdrop) backdrop.classList.remove('hidden');
+        }
     }
-    if (backdrop) backdrop.classList.remove('hidden');
 }
 
 function closeDesktopFiltersOverlay() {
@@ -1719,12 +1743,16 @@ function createCategoryButtons(filteredCategories) {
         const container = document.getElementById(containerId);
         if (!container) return;
         
+        // Use more compact styling for top view (categoryFilters) on desktop
+        const isTopView = containerId === 'categoryFilters';
+        const compactClass = isTopView ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm';
+        
         container.innerHTML = '';
         
         const allButton = document.createElement('button');
         allButton.className = selectedCategory === 'All' ? 
-            'px-3 py-2 rounded-lg text-sm font-medium text-white' : 
-            'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300';
+            `${compactClass} rounded-lg font-medium text-white` : 
+            `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300`;
         if (selectedCategory === 'All') allButton.style.backgroundColor = '#055193';
         allButton.textContent = 'All';
         allButton.onclick = () => filterByCategory('All');
@@ -1733,8 +1761,8 @@ function createCategoryButtons(filteredCategories) {
         categoriesToShow.forEach(cat => {
             const button = document.createElement('button');
             button.className = selectedCategory === cat ? 
-                'px-3 py-2 rounded-lg text-sm font-medium text-white' : 
-                'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
+                `${compactClass} rounded-lg font-medium text-white` : 
+                `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300 text-left`;
             if (selectedCategory === cat) button.style.backgroundColor = '#055193';
             button.textContent = cat;
             button.onclick = () => filterByCategory(cat);
@@ -2230,10 +2258,14 @@ function initMap() {
             mapMoved = true;
             locationButtonActive = false;
             const locateBtn = document.getElementById('locateBtn');
-            if (locateBtn) locateBtn.classList.remove('active');
-            // Reset locate icon back to black
+            if (locateBtn) {
+                locateBtn.classList.remove('active');
+                // Reset button background, text, and icon to default
+                locateBtn.style.backgroundColor = '';
+                locateBtn.style.color = '';
+            }
             const locateIcon = document.getElementById('locateBtnIcon');
-            if (locateIcon) locateIcon.setAttribute('fill', '#000000');
+            if (locateIcon) locateIcon.setAttribute('fill', '#045093');
         }
     });
 
@@ -2361,7 +2393,7 @@ function updateMapMarkers() {
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
                             <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
                             <div class="map-popup-details">
-                                <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
+                                <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -2410,6 +2442,8 @@ function toggleSplitView() {
         const splitContainer = document.getElementById('splitViewContainer');
         splitContainer.classList.remove('hidden');
         splitContainer.className = 'split-view-container';
+        splitContainer.style.position = 'relative';
+        splitContainer.style.zIndex = '10';
         splitContainer.innerHTML = `
             <div class="split-view-listings">
                 <div class="mb-3 flex items-center justify-between px-2">
@@ -2428,15 +2462,15 @@ function toggleSplitView() {
                 </div>
                 <div id="splitListingsContainer"></div>
             </div>
-            <div class="split-view-map">
+            <div class="split-view-map" style="position: relative; z-index: 10;">
                 <div id="splitMap"></div>
                 <div class="map-controls">
                     <button class="map-control-btn" id="splitViewToggleBtn" onclick="toggleSplitView()" title="Exit split view">
-                        <svg width="16" height="16" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="#000000"><rect x="15" y="4" width="2" height="24"/><path d="M10,7V25H4V7h6m0-2H4A2,2,0,0,0,2,7V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/><path d="M28,7V25H22V7h6m0-2H22a2,2,0,0,0-2,2V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="#045093"><rect x="15" y="4" width="2" height="24"/><path d="M10,7V25H4V7h6m0-2H4A2,2,0,0,0,2,7V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/><path d="M28,7V25H22V7h6m0-2H22a2,2,0,0,0-2,2V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/></svg>
                         <span class="desktop-only">Exit Split View</span>
                     </button>
                     <button class="map-control-btn" id="splitLocateBtn" title="Find my location">
-                        <svg id="splitLocateBtnIcon" width="16" height="16" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+                        <svg id="splitLocateBtnIcon" width="16" height="16" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="#045093">
                             <polygon points="0,9.28 9.894,9.99 10.78,20 20,0"/>
                         </svg>
                         <span class="desktop-only">Current Location</span>
@@ -2522,7 +2556,7 @@ function renderSplitViewListings() {
                     <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
                     <div class="text-xs text-gray-600">
                         <div class="flex items-center gap-1 truncate">
-                            <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <span class="truncate">${fullAddress}</span>
                         </div>
                     </div>
@@ -2634,7 +2668,7 @@ function initSplitMap() {
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
                             <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
                             <div class="map-popup-details">
-                                <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
+                                <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -2693,7 +2727,7 @@ function initSplitMap() {
                                 <a href="/listing/${categorySlug2}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml2}</a>
                                 <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
                                 <div class="map-popup-details">
-                                    <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
+                                    <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -2715,12 +2749,16 @@ function initSplitMap() {
         splitLocateBtn.addEventListener('click', () => {
             if (userLocation) {
                 splitMap.setView([userLocation.lat, userLocation.lng], 13);
-                // Color the locate icon blue
+                // Change button background to #045093, text to white, icon to white
+                splitLocateBtn.style.backgroundColor = '#045093';
+                splitLocateBtn.style.color = 'white';
                 const splitLocateIcon = document.getElementById('splitLocateBtnIcon');
-                if (splitLocateIcon) splitLocateIcon.setAttribute('fill', '#4285F4');
+                if (splitLocateIcon) splitLocateIcon.setAttribute('fill', 'white');
                 // Reset on any map move
                 const resetOnce = () => {
-                    if (splitLocateIcon) splitLocateIcon.setAttribute('fill', '#000000');
+                    splitLocateBtn.style.backgroundColor = '';
+                    splitLocateBtn.style.color = '';
+                    if (splitLocateIcon) splitLocateIcon.setAttribute('fill', '#045093');
                     splitMap.off('movestart', resetOnce);
                 };
                 splitMap.on('movestart', resetOnce);
@@ -2737,5 +2775,5 @@ function initSplitMap() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
 without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law. 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
