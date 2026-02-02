@@ -75,6 +75,108 @@ header {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+/* ============================================
+   SVG ICON COLORS — all target icons #045093
+   ============================================ */
+
+/* Search magnifying glass — span wrapper beside #searchInput */
+.relative.mb-4 .pointer-events-none svg {
+    color: #045093 !important;
+    stroke: #045093 !important;
+}
+
+/* Filter / search buttons (mobile filter btn, desktop toggle, split-view filters btn) */
+#filterBtn svg,
+#desktopFilterToggleBtn svg,
+#splitFiltersBtn svg {
+    color: #045093 !important;
+    stroke: #045093 !important;
+}
+
+/* Map button — mobile & desktop */
+#mapBtn svg,
+#mapBtnDesktop svg {
+    color: #045093 !important;
+    stroke: #045093 !important;
+}
+
+/* Grid-view icon — rendered with fill="#000000" on <path> */
+#gridViewBtn svg path,
+#gridViewBtn2 svg path {
+    fill: #045093 !important;
+}
+
+/* List-view icon — rendered with stroke="currentColor" */
+#listViewBtn svg,
+#listViewBtn2 svg {
+    color: #045093 !important;
+    stroke: #045093 !important;
+}
+
+/* Split-view icon — rendered with fill="#000000" */
+#splitViewBtn svg,
+.map-controls #splitViewToggleBtn svg {
+    fill: #045093 !important;
+}
+
+/* Reload / reset-map icon — rendered with stroke="currentColor" */
+#resetMapBtn svg,
+#splitResetMapBtn svg {
+    color: #045093 !important;
+    stroke: #045093 !important;
+}
+
+/* Current-location icon — DEFAULT state uses fill="#000000" */
+#locateBtnIcon,
+#splitLocateBtnIcon {
+    fill: #045093 !important;
+}
+
+/* Address (map-pin) & phone icons inside listing cards (grid + list).
+   These SVGs are injected via innerHTML with class="w-4 h-4 text-gray-500".
+   The cards are <a> tags with classes bg-white rounded-lg shadow. */
+.bg-white.rounded-lg.shadow svg.w-4.h-4 {
+    color: #045093 !important;
+    stroke: #045093 !important;
+}
+
+/* Address & phone icons inside map popups */
+.map-popup-details svg {
+    stroke: #045093 !important;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+/* ============================================
+   CURRENT LOCATION BUTTON — ACTIVE STATE
+   Applied via .locate-active class when map is centred on user.
+   Background #045093, text white, icon white.
+   ============================================ */
+.map-control-btn.locate-active {
+    background: #045093 !important;
+    border-color: #045093 !important;
+    color: white !important;
+}
+.map-control-btn.locate-active svg {
+    fill: white !important;
+    stroke: white !important;
+    color: white !important;
+}
+
+/* ============================================
+   SEARCH INPUT — typed text colour #045093
+   Placeholder remains the browser default grey.
+   ============================================ */
+#searchInput {
+    color: #045093;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
 /* Map Styles */
 #map {
     width: 100%;
@@ -508,6 +610,8 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     cursor: pointer;
     transition: all 0.2s;
     z-index: 10;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .star-button:hover {
@@ -526,6 +630,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     stroke: #78350f;
     stroke-width: 2;
     stroke-linejoin: round;
+    pointer-events: none;
 }
 
 .star-button.starred .star-icon {
@@ -536,10 +641,14 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-/* Split View */
+/* ============================================
+   SPLIT VIEW — z-index below header (z-40 = 40)
+   ============================================ */
 .split-view-container {
     display: flex;
     height: calc(100vh - 200px);
+    position: relative;
+    z-index: 30;
 }
 
 .split-view-listings {
@@ -630,6 +739,76 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     .listings-3-col {
         grid-template-columns: repeat(3, 1fr) !important;
     }
+
+    /* ============================================
+       COMPACT TOP-BAR FILTERS
+       Applied via .desktop-topbar-compact on #filterPanel
+       when filterPosition === 'top' on desktop.
+       Makes category buttons into tight single-line pills.
+       Does NOT affect sidebar filters (those never get this class).
+       ============================================ */
+    #filterPanel.desktop-topbar-compact {
+        max-height: calc(100vh - 120px);
+    }
+
+    /* Category button grid → horizontal flex wrap of pills */
+    #filterPanel.desktop-topbar-compact #categoryFilters,
+    #filterPanel.desktop-topbar-compact #categoryFilters2 {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 6px !important;
+    }
+
+    /* Each category pill: compact, single-line forced */
+    #filterPanel.desktop-topbar-compact #categoryFilters button,
+    #filterPanel.desktop-topbar-compact #categoryFilters2 button {
+        padding: 4px 10px !important;
+        font-size: 11px !important;
+        border-radius: 20px !important;
+        white-space: nowrap;
+        line-height: 1.4;
+    }
+
+    /* Subcategory tags: slightly smaller in compact mode */
+    #filterPanel.desktop-topbar-compact .subcategory-tag {
+        padding: 3px 8px;
+        font-size: 11px;
+        margin: 2px;
+    }
+
+    /* Text inputs & selects: tighter padding */
+    #filterPanel.desktop-topbar-compact input[type="text"],
+    #filterPanel.desktop-topbar-compact select {
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+    }
+
+    /* Checkbox row: flex-wrap instead of vertical stack */
+    #filterPanel.desktop-topbar-compact .space-y-2 {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 8px 16px !important;
+    }
+
+    #filterPanel.desktop-topbar-compact .space-y-2 label {
+        margin: 0;
+    }
+
+    /* Section labels: tighter */
+    #filterPanel.desktop-topbar-compact label.block {
+        font-size: 12px !important;
+        margin-bottom: 4px !important;
+    }
+
+    /* Top-level section spacing: tighter */
+    #filterPanel.desktop-topbar-compact .space-y-4 {
+        gap: 10px !important;
+    }
+
+    /* Range slider: slightly thinner */
+    #filterPanel.desktop-topbar-compact input[type="range"] {
+        height: 6px;
+    }
 }
 
 /*
@@ -719,6 +898,22 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     background: #6b7280;
     cursor: not-allowed;
     transform: none;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+/* ============================================
+   GLOBAL TOUCH-ACTION FIX
+   Disables double-tap-to-zoom on every <a> and <button>.
+   Double-tap-to-zoom is the #1 reason single taps are
+   swallowed on mobile Safari; manipulation removes it
+   while keeping pinch-zoom and scrolling intact.
+   ============================================ */
+a, button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /*
