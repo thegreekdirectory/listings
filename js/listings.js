@@ -1013,34 +1013,36 @@ function renderListings() {
             const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
-                <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
                     <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}">
                         <svg class="star-icon" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                     </button>
-                    <div class="h-48 bg-gray-200 relative">
-                        ${firstPhoto ? `<img src="${firstPhoto}" alt="${l.business_name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">No image</div>'}
-                        ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2 flex-wrap">${badges.join('')}</div>` : ''}
-                    </div>
-                    <div class="p-4">
-                        <div class="flex gap-3 mb-3">
-                            ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
-                            <div class="flex-1 min-w-0">
-                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
-                                <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
+                    <a href="${listingUrl}" class="block">
+                        <div class="h-48 bg-gray-200 relative">
+                            ${firstPhoto ? `<img src="${firstPhoto}" alt="${l.business_name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">No image</div>'}
+                            ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2 flex-wrap">${badges.join('')}</div>` : ''}
+                        </div>
+                        <div class="p-4">
+                            <div class="flex gap-3 mb-3">
+                                ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
+                                <div class="flex-1 min-w-0">
+                                    <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
+                                    <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <span class="truncate">${fullAddress}</span>
+                                </div>
+                                ${l.phone ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
-                        <div class="text-sm text-gray-600 space-y-1">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <span class="truncate">${fullAddress}</span>
-                            </div>
-                            ${l.phone ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
-                        </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             `;
         }).join('');
     } else {
@@ -1055,29 +1057,31 @@ function renderListings() {
             const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
-                <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 block relative">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 relative">
                     <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 12px; right: 12px;">
                         <svg class="star-icon" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                     </button>
-                    ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">` : '<div class="w-24 h-24 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
-                    <div class="flex-1 min-w-0 overflow-hidden pr-12">
-                        <div class="flex gap-2 mb-2 flex-wrap">
-                            <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
-                            ${badges.join('')}
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
-                        <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
-                        <div class="flex flex-col gap-1 text-sm text-gray-600">
-                            <div class="flex items-center gap-1">
-                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <span class="truncate">${fullAddress}</span>
+                    <a href="${listingUrl}" class="flex gap-4 flex-1 min-w-0">
+                        ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">` : '<div class="w-24 h-24 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
+                        <div class="flex-1 min-w-0 overflow-hidden pr-12">
+                            <div class="flex gap-2 mb-2 flex-wrap">
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
+                                ${badges.join('')}
                             </div>
-                            ${l.phone ? `<div class="flex items-center gap-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
+                            <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
+                            <div class="flex flex-col gap-1 text-sm text-gray-600">
+                                <div class="flex items-center gap-1">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <span class="truncate">${fullAddress}</span>
+                                </div>
+                                ${l.phone ? `<div class="flex items-center gap-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                            </div>
                         </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             `;
         }).join('');
     }
@@ -2541,27 +2545,29 @@ function renderSplitViewListings() {
         const checkmarkHtml = showsVerifiedCheckmark(l) ? '<svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
         
         return `
-            <a href="${listingUrl}" class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 block relative" style="margin-right: 8px;">
+            <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 relative" style="margin-right: 8px;">
                 <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 8px; right: 8px; width: 32px; height: 32px;">
                     <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </button>
-                ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
-                <div class="flex-1 min-w-0 overflow-hidden pr-8">
-                    <div class="flex gap-1 mb-1 flex-wrap">
-                        ${badges.join('')}
-                    </div>
-                    <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1">${l.business_name} ${checkmarkHtml}</h3>
-                    <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
-                    <div class="text-xs text-gray-600">
-                        <div class="flex items-center gap-1 truncate">
-                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span class="truncate">${fullAddress}</span>
+                <a href="${listingUrl}" class="flex gap-3 flex-1 min-w-0">
+                    ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
+                    <div class="flex-1 min-w-0 overflow-hidden pr-8">
+                        <div class="flex gap-1 mb-1 flex-wrap">
+                            ${badges.join('')}
+                        </div>
+                        <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1">${l.business_name} ${checkmarkHtml}</h3>
+                        <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
+                        <div class="text-xs text-gray-600">
+                            <div class="flex items-center gap-1 truncate">
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span class="truncate">${fullAddress}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
         `;
     }).join('');
 }
