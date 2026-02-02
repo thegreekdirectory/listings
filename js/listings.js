@@ -107,6 +107,9 @@ function toggleStar(listingId, event) {
 
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
+    // Ensure listingId is a string for consistent comparison
+    listingId = String(listingId);
+    
     const index = starredListings.indexOf(listingId);
     console.log('Current starredListings:', starredListings);
     console.log('Index of', listingId, ':', index);
@@ -138,7 +141,7 @@ function toggleStar(listingId, event) {
     // If viewing starred-only, re-filter (listing may have just been unstarred)
     if (viewingStarredOnly) {
         console.log('Viewing starred only, re-filtering...');
-        filteredListings = allListings.filter(l => starredListings.includes(l.id));
+        filteredListings = allListings.filter(l => starredListings.includes(String(l.id)));
         displayedListingsCount = filteredListings.length;
         renderListings();
         updateResultsCount();
@@ -170,7 +173,8 @@ function toggleStarredView() {
             viewingStarredOnly = false;
             return;
         }
-        filteredListings = allListings.filter(l => starredListings.includes(l.id));
+        // Convert listing IDs to strings for comparison
+        filteredListings = allListings.filter(l => starredListings.includes(String(l.id)));
         displayedListingsCount = filteredListings.length;
         document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
         if (starredBtn) {
@@ -636,8 +640,10 @@ async function loadListings() {
             if (starredListings.length === 0) {
                 viewingStarredOnly = false;
             } else {
-                filteredListings = allListings.filter(l => starredListings.includes(l.id));
+                // Convert listing IDs to strings for comparison
+                filteredListings = allListings.filter(l => starredListings.includes(String(l.id)));
                 displayedListingsCount = filteredListings.length;
+                console.log('Filtered to starred listings:', filteredListings.length, 'of', starredListings.length, 'starred IDs');
             }
         }
         updateResultsCount();
@@ -1024,7 +1030,7 @@ function renderListings() {
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const listingUrl = `/listing/${categorySlug}/${l.slug}`;
             const badges = buildBadges(l);
-            const isStarred = starredListings.includes(l.id);
+            const isStarred = starredListings.includes(String(l.id));
             const logoImage = l.logo || '';
             const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
@@ -1068,7 +1074,7 @@ function renderListings() {
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const listingUrl = `/listing/${categorySlug}/${l.slug}`;
             const badges = buildBadges(l);
-            const isStarred = starredListings.includes(l.id);
+            const isStarred = starredListings.includes(String(l.id));
             const logoImage = l.logo || '';
             const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
@@ -2565,7 +2571,7 @@ function renderSplitViewListings() {
         const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const listingUrl = `/listing/${categorySlug}/${l.slug}`;
         const badges = buildBadges(l);
-        const isStarred = starredListings.includes(l.id);
+        const isStarred = starredListings.includes(String(l.id));
         const logoImage = l.logo || '';
         const checkmarkHtml = showsVerifiedCheckmark(l) ? '<svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
         
