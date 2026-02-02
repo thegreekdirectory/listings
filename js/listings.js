@@ -87,8 +87,10 @@ function loadStarredListings() {
 }
 
 function saveStarredListings() {
+    console.log('Saving starred listings to cookie:', starredListings);
     setCookie('starredListings', JSON.stringify(starredListings), 365);
     updateStarredCount();
+    console.log('Cookie saved and count updated');
 }
 
 /*
@@ -96,6 +98,8 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 function toggleStar(listingId, event) {
+    console.log('toggleStar function called with ID:', listingId);
+    
     if (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -104,24 +108,36 @@ function toggleStar(listingId, event) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
     const index = starredListings.indexOf(listingId);
+    console.log('Current starredListings:', starredListings);
+    console.log('Index of', listingId, ':', index);
+    
     if (index > -1) {
         starredListings.splice(index, 1);
+        console.log('Removed from starred. New list:', starredListings);
     } else {
         starredListings.push(listingId);
+        console.log('Added to starred. New list:', starredListings);
     }
     saveStarredListings();
+    console.log('saveStarredListings() called');
 
     // Update every star button for this listing (matched by data-listing-id)
-    document.querySelectorAll('.star-button[data-listing-id="' + listingId + '"]').forEach(btn => {
+    const buttons = document.querySelectorAll('.star-button[data-listing-id="' + listingId + '"]');
+    console.log('Found', buttons.length, 'star buttons with ID', listingId);
+    
+    buttons.forEach(btn => {
         if (starredListings.includes(listingId)) {
             btn.classList.add('starred');
+            console.log('Added starred class to button');
         } else {
             btn.classList.remove('starred');
+            console.log('Removed starred class from button');
         }
     });
 
     // If viewing starred-only, re-filter (listing may have just been unstarred)
     if (viewingStarredOnly) {
+        console.log('Viewing starred only, re-filtering...');
         filteredListings = allListings.filter(l => starredListings.includes(l.id));
         displayedListingsCount = filteredListings.length;
         renderListings();
@@ -1540,16 +1556,25 @@ function setupEventListeners() {
         const starBtn = e.target.closest('.star-button');
         if (!starBtn) return;
         
+        console.log('Star button clicked!', starBtn);
+        
         // Prevent default behavior and stop propagation
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
         
         const id = starBtn.getAttribute('data-listing-id');
+        console.log('Listing ID:', id);
+        
         if (id) {
             toggleStar(id, e);
+            console.log('toggleStar called for ID:', id);
+        } else {
+            console.error('No listing ID found on star button');
         }
     }, true); // Use capture phase to ensure we get the event first
+    
+    console.log('Star button event listener registered');
     
     window.addEventListener('resize', checkFilterPosition);
 }
