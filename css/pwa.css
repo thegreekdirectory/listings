@@ -1,8 +1,11 @@
-/* css/pwa.css (COMPLETE FIX - ALL ISSUES RESOLVED) */
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. */
+/* css/pwa.css
+Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. */
 
 /* ============================================
-   PWA STYLES - ALL FIXES
+   PWA STYLES — SCOPED ENTIRELY TO body.pwa-mode
+   Every rule in this file is nested under body.pwa-mode
+   so that NOTHING applies outside the PWA shell.
+   
    1. Scrolling works perfectly
    2. NO zoom (pinch/double-tap disabled)
    3. Dock ONLY shows in PWA mode
@@ -12,60 +15,11 @@
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* CRITICAL: Disable ALL zoom while allowing scroll */
-html {
-    -ms-text-size-adjust: 100%;
-    -webkit-text-size-adjust: 100%;
-}
-
-body {
-    -webkit-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-}
-
-/* Prevent zoom gestures but allow scrolling */
-* {
-    -ms-content-zooming: none;
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-/* Disable double-tap zoom on interactive elements */
-a, button, input, textarea, select, label {
-    touch-action: manipulation;
-    -ms-touch-action: manipulation;
-}
-
-/* Allow normal scrolling on content containers */
-.max-w-7xl, .max-w-4xl, .max-w-2xl, main, article, section {
-    touch-action: pan-y;
-    -ms-touch-action: pan-y;
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-/* Prevent link preview on long press */
-a:not(.pwa-dock-item):not(.pwa-dock-more-item) {
-    -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    user-select: none !important;
-}
-
-button:not(.pwa-dock-item *):not(.pwa-dock-more-item *) {
-    -webkit-touch-callout: none;
-}
-
-img, video {
-    -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    user-select: none !important;
-    pointer-events: none;
-    -webkit-user-drag: none;
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-/* Safe Area Support */
+/* ============================================
+   Safe-area CSS custom properties
+   These are harmless globals (no visual effect outside PWA)
+   but are also referenced inside body.pwa-mode rules below.
+   ============================================ */
 :root {
     --safe-area-top: env(safe-area-inset-top, 0px);
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
@@ -74,7 +28,11 @@ img, video {
     --status-bar-height: max(env(safe-area-inset-top, 0px), 20px);
 }
 
-/* PWA Mode Body - SCROLLING WORKS */
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* ============================================
+   PWA BODY — scrolling, safe areas, padding
+   ============================================ */
 body.pwa-mode {
     padding-top: var(--status-bar-height) !important;
     padding-bottom: calc(60px + var(--safe-area-bottom)) !important;
@@ -86,10 +44,16 @@ body.pwa-mode {
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    -webkit-tap-highlight-color: transparent;
+
+    /* Disable text-size-adjust so iOS doesn't auto-zoom on inputs */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
+/* Hide standard header/footer partials in PWA (dock replaces them) */
 body.pwa-mode [data-partial="header"],
 body.pwa-mode [data-partial="footer"] {
     display: none !important;
@@ -101,7 +65,58 @@ body.pwa-mode > *:first-child:not(.pwa-splash):not(.pwa-dock):not(.pwa-toast) {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* THEME SUPPORT - Light Mode (Default) */
+/* ============================================
+   TOUCH BEHAVIOUR — scoped to PWA only
+   • Interactive elements: manipulation (no double-tap zoom)
+   • Content containers: pan-y (normal vertical scroll)
+   • Links & buttons: no long-press callout, but DO allow
+     clicks, drags, and scroll initiation.
+     NOTE: user-select is intentionally NOT set to "none"
+     on <a> elements — that was blocking click/drag.
+   ============================================ */
+body.pwa-mode a,
+body.pwa-mode button,
+body.pwa-mode input,
+body.pwa-mode textarea,
+body.pwa-mode select,
+body.pwa-mode label {
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+}
+
+body.pwa-mode .max-w-7xl,
+body.pwa-mode .max-w-4xl,
+body.pwa-mode .max-w-2xl,
+body.pwa-mode main,
+body.pwa-mode article,
+body.pwa-mode section {
+    touch-action: pan-y;
+    -ms-touch-action: pan-y;
+}
+
+/* Long-press callout prevention (context-menu / link-preview) */
+body.pwa-mode a:not(.pwa-dock-item):not(.pwa-dock-more-item) {
+    -webkit-touch-callout: none;
+}
+
+body.pwa-mode button:not(.pwa-dock-item *):not(.pwa-dock-more-item *) {
+    -webkit-touch-callout: none;
+}
+
+/* Image/video: no callout, no drag. pointer-events:none already set in listings.css for img. */
+body.pwa-mode img,
+body.pwa-mode video {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* ============================================
+   THEME SUPPORT — Light Mode (default)
+   ============================================ */
 body.theme-light {
     background: #ffffff;
     color: #1a1a1a;
@@ -133,7 +148,9 @@ body.theme-light .text-gray-600 {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* THEME SUPPORT - Dark Mode */
+/* ============================================
+   THEME SUPPORT — Dark Mode
+   ============================================ */
 body.theme-dark {
     background: #1a1a1a;
     color: #e5e7eb;
@@ -211,7 +228,9 @@ body.theme-dark .hover\:bg-gray-200:hover {
     min-height: calc(100vh - var(--status-bar-height) - var(--safe-area-bottom) - 60px);
 }
 
-/* Splash Screen */
+/* ============================================
+   SPLASH SCREEN
+   ============================================ */
 .pwa-splash {
     position: fixed;
     top: 0;
@@ -243,7 +262,9 @@ body.theme-dark .pwa-splash {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* DOCK - ONLY VISIBLE IN PWA MODE, NEVER BOUNCES */
+/* ============================================
+   DOCK — ONLY VISIBLE IN PWA MODE
+   ============================================ */
 .pwa-dock {
     display: none !important;
 }
@@ -276,7 +297,7 @@ body.theme-dark .pwa-dock {
     border-top-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Dock hidden state - ONLY when auto-hide enabled */
+/* Dock hidden state — ONLY when auto-hide enabled */
 .pwa-dock.hidden {
     transform: translateY(100%);
 }
@@ -446,7 +467,9 @@ body.theme-dark .pwa-dock-more-item.active {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Toast Notifications */
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
 .pwa-toast {
     position: fixed;
     bottom: calc(80px + var(--safe-area-bottom));
@@ -472,8 +495,10 @@ body.theme-dark .pwa-dock-more-item.active {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Star Button Styles */
-.star-button {
+/* ============================================
+   STAR BUTTON — PWA variant
+   ============================================ */
+body.pwa-mode .star-button {
     background: rgba(255, 255, 255, 0.9);
     border: none;
     border-radius: 50%;
@@ -489,28 +514,28 @@ body.theme-dark .pwa-dock-more-item.active {
     -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     -webkit-touch-callout: default;
-    -webkit-user-select: none;
+    touch-action: manipulation;
 }
 
-body.theme-dark .star-button {
+body.theme-dark.pwa-mode .star-button {
     background: rgba(30, 30, 30, 0.9);
 }
 
-.star-button:hover {
+body.pwa-mode .star-button:hover {
     transform: scale(1.1);
     background: rgba(255, 255, 255, 1);
 }
 
-body.theme-dark .star-button:hover {
+body.theme-dark.pwa-mode .star-button:hover {
     background: rgba(30, 30, 30, 1);
 }
 
-.star-button.starred {
+body.pwa-mode .star-button.starred {
     color: #fbbf24;
     background: rgba(251, 191, 36, 0.1);
 }
 
-.star-button svg {
+body.pwa-mode .star-button svg {
     width: 24px;
     height: 24px;
     fill: currentColor;
@@ -519,7 +544,9 @@ body.theme-dark .star-button:hover {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Update Banner in Settings */
+/* ============================================
+   UPDATE BANNER (Settings page)
+   ============================================ */
 .update-banner {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
@@ -560,7 +587,9 @@ body.theme-dark .star-button:hover {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Responsive Dock */
+/* ============================================
+   RESPONSIVE DOCK SIZING
+   ============================================ */
 @media (max-width: 360px) {
     .pwa-dock-label {
         font-size: 9px;
@@ -589,31 +618,33 @@ body.theme-dark .star-button:hover {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* iOS-specific fixes */
+/* iOS-specific fixes — scoped to PWA */
 @supports (-webkit-touch-callout: none) {
     body.pwa-mode {
         -webkit-tap-highlight-color: transparent;
     }
     
-    .pwa-dock {
+    body.pwa-mode .pwa-dock {
         -webkit-user-select: none;
     }
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/* Map Loading Optimization */
-#map {
+/* ============================================
+   MAP LOADING & PERFORMANCE — scoped to PWA
+   ============================================ */
+body.pwa-mode #map {
     will-change: transform;
     contain: layout style paint;
 }
 
-.leaflet-tile {
+body.pwa-mode .leaflet-tile {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
 }
 
-.map-loading {
+body.pwa-mode .map-loading {
     position: absolute;
     top: 50%;
     left: 50%;
