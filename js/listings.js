@@ -193,17 +193,25 @@ function applySortToListings(listings, sortValue) {
 }
 
 function toggleStarredView() {
+    console.log('[DEBUG] toggleStarredView called. Current viewingStarredOnly:', viewingStarredOnly);
+    console.log('[DEBUG] Current starredListings:', starredListings);
+    
     viewingStarredOnly = !viewingStarredOnly;
     const starredBtn = document.getElementById('starredBtn');
     const headerStarBtn = document.getElementById('headerStarBtn');
     const hideStarredBtn = document.getElementById('hideStarredBtn');
     
+    console.log('[DEBUG] After toggle, viewingStarredOnly:', viewingStarredOnly);
+    
     if (viewingStarredOnly) {
         if (starredListings.length === 0) {
+            console.log('[DEBUG] No starred listings found');
             alert('You haven\'t starred any listings yet!');
             viewingStarredOnly = false;
             return;
         }
+        
+        console.log('[DEBUG] Filtering', allListings.length, 'listings to', starredListings.length, 'starred');
         
         // Show hide starred button
         if (hideStarredBtn) hideStarredBtn.classList.remove('hidden');
@@ -390,11 +398,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize session ID for default sort randomness
-    if (!sessionStorage.getItem('sessionId')) {
-        sessionStorage.setItem('sessionId', Math.random().toString(36).substring(7));
-    }
-    
     if (isIOSWebApp()) {
         const refreshBtn = document.getElementById('refreshBtn');
         if (refreshBtn) refreshBtn.style.display = 'flex';
@@ -885,17 +888,12 @@ function applyFilters() {
     }
     
     // SORTING LOGIC WITH SMART DEFAULT
-    // Initialize session-based random seed if not exists (changes daily)
+    // Initialize random seed based on page load (changes every visit)
     if (!window._sortRandomSeed) {
-        const today = new Date().toDateString();
-        const seedStr = today + (sessionStorage.getItem('sessionId') || Math.random().toString());
-        window._sortRandomSeed = seedStr.split('').reduce((a, b) => {
-            a = ((a << 5) - a) + b.charCodeAt(0);
-            return a & a;
-        }, 0);
+        window._sortRandomSeed = Math.random() * 1000000;
     }
     
-    // Seeded random function for consistent randomness within session
+    // Seeded random function for consistent randomness within page load
     function seededRandom(seed, id) {
         const x = Math.sin(seed + id) * 10000;
         return x - Math.floor(x);
@@ -922,8 +920,8 @@ function applyFilters() {
             aScore += tierPriority[aTier];
             bScore += tierPriority[bTier];
             
-            // 2. Location relevance (40% of total score)
-            if (effectiveUserLocation) {
+            // 2. Location relevance (40% of total score) - ONLY if location data available
+            if (effectiveUserLocation && a.coordinates && b.coordinates) {
                 // Same city: +40 points
                 if (a._inUserCity) aScore += 40;
                 if (b._inUserCity) bScore += 40;
@@ -949,9 +947,10 @@ function applyFilters() {
                     else if (bDistance <= 50) bScore += 5;
                 }
             }
+            // If either listing lacks coordinates, don't penalize it - location score stays at 0 for both
             
             // 3. Controlled randomness (20% of total score)
-            // Uses session-based seed so order is consistent within session but varies between users
+            // Changes on every page load/reload for variety
             const aRandom = seededRandom(window._sortRandomSeed, parseInt(a.id) || 0);
             const bRandom = seededRandom(window._sortRandomSeed, parseInt(b.id) || 0);
             aScore += aRandom * 40; // Max 40 points from randomness
@@ -1236,7 +1235,7 @@ function renderListings() {
                                 ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                                 <div class="flex-1 min-w-0">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
-                                    <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-0">${l.business_name}${checkmarkHtml}</h3>
+                                    <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1">${l.business_name} ${checkmarkHtml}</h3>
                                 </div>
                             </div>
                             <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
@@ -1277,7 +1276,7 @@ function renderListings() {
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
                                 ${badges.join('')}
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-0">${l.business_name}${checkmarkHtml}</h3>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1">${l.business_name} ${checkmarkHtml}</h3>
                             <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                             <div class="flex flex-col gap-1 text-sm text-gray-600">
                                 <div class="flex items-center gap-1">
@@ -1787,13 +1786,14 @@ function openDesktopFiltersOverlay() {
     desktopFiltersOverlay = true;
     const desktopFilters = document.getElementById('desktopFiltersContainer');
     const backdrop = document.getElementById('desktopFiltersBackdrop');
+    const desktopLayout = document.getElementById('desktopLayout');
     
     if (desktopFilters) {
         desktopFilters.classList.remove('hidden');
-        // When map is open, show filters inline next to listings instead of as floating overlay
+        // When map is open, show filters inline next to listings
         if (mapOpen) {
             desktopFilters.classList.remove('desktop-filters-overlay');
-            desktopFilters.style.position = 'relative';
+            desktopFilters.style.position = '';
             desktopFilters.style.width = '';
             desktopFilters.style.height = '';
             desktopFilters.style.maxHeight = '';
@@ -1801,6 +1801,11 @@ function openDesktopFiltersOverlay() {
             desktopFilters.style.top = '';
             desktopFilters.style.zIndex = '';
             desktopFilters.style.boxShadow = '';
+            // Make desktop layout flex to show filters and listings side-by-side
+            if (desktopLayout) {
+                desktopLayout.style.display = 'flex';
+                desktopLayout.style.gap = '1rem';
+            }
             // Don't show backdrop when showing inline
         } else {
             // Normal overlay mode when map is closed
@@ -1814,11 +1819,17 @@ function closeDesktopFiltersOverlay() {
     desktopFiltersOverlay = false;
     const desktopFilters = document.getElementById('desktopFiltersContainer');
     const backdrop = document.getElementById('desktopFiltersBackdrop');
+    const desktopLayout = document.getElementById('desktopLayout');
+    
     if (desktopFilters) {
         desktopFilters.classList.add('hidden');
         desktopFilters.classList.remove('desktop-filters-overlay');
     }
     if (backdrop) backdrop.classList.add('hidden');
+    // Reset desktop layout
+    if (desktopLayout && mapOpen) {
+        desktopLayout.style.display = '';
+    }
 }
 
 function syncFilters() {
@@ -2457,33 +2468,45 @@ function initMap() {
     const mapContainer = document.getElementById('map');
     const scrollOverlay = document.getElementById('mapScrollOverlay');
     let overlayTimeout;
+    let scrollAttempts = 0;
+    const hasSeenScrollWarning = localStorage.getItem('mapScrollWarningSeen');
     
     if (mapContainer && scrollOverlay) {
         mapContainer.addEventListener('wheel', (e) => {
             // Only show overlay if not holding CTRL/CMD
             if (!e.ctrlKey && !e.metaKey) {
-                scrollOverlay.classList.remove('hidden');
-                clearTimeout(overlayTimeout);
-                overlayTimeout = setTimeout(() => {
-                    scrollOverlay.classList.add('hidden');
-                }, 2000);
+                scrollAttempts++;
+                // Show warning if first time user OR user has scrolled 5+ times without CTRL
+                if (!hasSeenScrollWarning || scrollAttempts >= 5) {
+                    scrollOverlay.classList.remove('hidden');
+                    clearTimeout(overlayTimeout);
+                    overlayTimeout = setTimeout(() => {
+                        scrollOverlay.classList.add('hidden');
+                        scrollAttempts = 0;
+                    }, 2000);
+                }
+            } else {
+                // User is using CTRL/CMD, reset counter
+                scrollAttempts = 0;
             }
         }, { passive: true });
         
-        // Dismiss overlay on any click on map
-        scrollOverlay.addEventListener('click', () => {
+        // Dismiss overlay and mark as seen on any interaction with map
+        const dismissWarning = () => {
             scrollOverlay.classList.add('hidden');
+            localStorage.setItem('mapScrollWarningSeen', 'true');
             clearTimeout(overlayTimeout);
-        });
+            scrollAttempts = 0;
+        };
+        
+        scrollOverlay.addEventListener('click', dismissWarning);
+        map.on('click', dismissWarning);
+        map.on('drag', dismissWarning);
+        map.on('zoomstart', dismissWarning);
     }
     
     map.on('click', function() {
         map.scrollWheelZoom.enable();
-        // Also dismiss scroll overlay on map click
-        if (scrollOverlay) {
-            scrollOverlay.classList.add('hidden');
-            clearTimeout(overlayTimeout);
-        }
     });
     map.on('mouseout', function() {
         map.scrollWheelZoom.disable();
@@ -2651,7 +2674,7 @@ function updateMapMarkers() {
                     ${heroImage ? `<img src="${heroImage}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
                     <div class="map-popup-content">
                         ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
-                        <div class="map-popup-info">
+                        <div class="map-popup-info" style="padding-bottom: 40px;">
                             <div class="map-popup-badges">${badges.join('')}</div>
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
                             <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
@@ -2820,7 +2843,7 @@ function renderSplitViewListings() {
                         <div class="flex gap-1 mb-1 flex-wrap">
                             ${badges.join('')}
                         </div>
-                        <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-0">${l.business_name}${checkmarkHtml}</h3>
+                        <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1">${l.business_name} ${checkmarkHtml}</h3>
                         <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
                         <div class="text-xs text-gray-600">
                             <div class="flex items-center gap-1 truncate">
@@ -2932,7 +2955,7 @@ function initSplitMap() {
                     ${firstPhoto ? `<img src="${firstPhoto}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
                     <div class="map-popup-content">
                         ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
-                        <div class="map-popup-info">
+                        <div class="map-popup-info" style="padding-bottom: 40px;">
                             <div class="map-popup-badges">${badges.join('')}</div>
                             <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
                             <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
@@ -2993,7 +3016,7 @@ function initSplitMap() {
                         ${firstPhoto2 ? `<img src="${firstPhoto2}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
                         <div class="map-popup-content">
                             ${logoImage2 ? `<img src="${logoImage2}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
-                            <div class="map-popup-info">
+                            <div class="map-popup-info" style="padding-bottom: 40px;">
                                 <div class="map-popup-badges">${badges2.join('')}</div>
                                 <a href="/listing/${categorySlug2}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml2}</a>
                                 <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
