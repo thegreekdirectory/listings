@@ -197,7 +197,6 @@ function toggleStarredView() {
     console.log('[DEBUG] Current starredListings:', starredListings);
     
     viewingStarredOnly = !viewingStarredOnly;
-    const starredBtn = document.getElementById('starredBtn');
     const headerStarBtn = document.getElementById('headerStarBtn');
     const hideStarredBtn = document.getElementById('hideStarredBtn');
     
@@ -287,10 +286,6 @@ function toggleStarredView() {
         
         document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
         
-        if (starredBtn) {
-            starredBtn.style.backgroundColor = '#fbbf24';
-            starredBtn.style.color = '#78350f';
-        }
         if (headerStarBtn) {
             headerStarBtn.style.backgroundColor = '#fbbf24';
             headerStarBtn.style.color = '#78350f';
@@ -302,10 +297,6 @@ function toggleStarredView() {
         displayedListingsCount = 25;
         applyFilters();
         
-        if (starredBtn) {
-            starredBtn.style.backgroundColor = '';
-            starredBtn.style.color = '';
-        }
         if (headerStarBtn) {
             headerStarBtn.style.backgroundColor = '';
             headerStarBtn.style.color = '';
@@ -1445,8 +1436,9 @@ function setupEventListeners() {
     const listViewBtn2 = document.getElementById('listViewBtn2');
     if (listViewBtn2) listViewBtn2.addEventListener('click', () => setView('list'));
     
-    const starredBtn = document.getElementById('starredBtn');
-    if (starredBtn) starredBtn.addEventListener('click', toggleStarredView);
+    // Note: starredBtn removed from UI - starred view toggled via header star button
+    // const starredBtn = document.getElementById('starredBtn');
+    // if (starredBtn) starredBtn.addEventListener('click', toggleStarredView);
     
     const splitViewBtn = document.getElementById('splitViewBtn');
     if (splitViewBtn) splitViewBtn.addEventListener('click', toggleSplitView);
@@ -2513,7 +2505,12 @@ function initMap() {
     });
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: null, maxZoom: 19
+        attribution: null, 
+        maxZoom: 19,
+        // Performance optimizations
+        updateWhenIdle: true,  // Only load tiles when map stops moving
+        updateWhenZooming: false,  // Don't update during zoom animation
+        keepBuffer: 2  // Keep 2 tile rows/columns in memory for smoother panning
     }).addTo(map);
     
     markerClusterGroup = L.markerClusterGroup({
@@ -2522,6 +2519,12 @@ function initMap() {
         spiderfyOnMaxZoom: true,
         showCoverageOnHover: false,
         zoomToBoundsOnClick: true,
+        // Performance optimizations
+        animate: true,
+        animateAddingMarkers: false,  // Don't animate when adding many markers at once
+        chunkedLoading: true,  // Load markers in chunks for better responsiveness
+        chunkInterval: 200,  // Process marker chunks every 200ms
+        chunkDelay: 50,  // 50ms delay between chunks
         iconCreateFunction: function(cluster) {
             const count = cluster.getChildCount();
             let size = 'small';
