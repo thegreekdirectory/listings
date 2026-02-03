@@ -51,6 +51,7 @@ let filterPosition = 'top';
 let searchDebounceTimer = null;
 let displayedListingsCount = 25;
 let estimatedUserLocation = null;
+let selectedSplitListingId = null;  // For split view selected listing
 // Track whether desktop filters are in overlay mode (when map is open)
 let desktopFiltersOverlay = false;
 
@@ -194,7 +195,10 @@ function applySortToListings(listings, sortValue) {
 
 function toggleStarredView() {
     console.log('[DEBUG] toggleStarredView called. Current viewingStarredOnly:', viewingStarredOnly);
-    console.log('[DEBUG] Current starredListings:', starredListings);
+    
+    // CRITICAL FIX: Reload starred listings from cookie FIRST
+    loadStarredListings();
+    console.log('[DEBUG] Reloaded starredListings from cookie:', starredListings);
     
     viewingStarredOnly = !viewingStarredOnly;
     const headerStarBtn = document.getElementById('headerStarBtn');
@@ -1226,7 +1230,7 @@ function renderListings() {
                                 ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                                 <div class="flex-1 min-w-0">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
-                                    <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1">${l.business_name} ${checkmarkHtml}</h3>
+                                    <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
                                 </div>
                             </div>
                             <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
@@ -1267,7 +1271,7 @@ function renderListings() {
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
                                 ${badges.join('')}
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1">${l.business_name} ${checkmarkHtml}</h3>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
                             <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                             <div class="flex flex-col gap-1 text-sm text-gray-600">
                                 <div class="flex items-center gap-1">
@@ -1294,34 +1298,6 @@ function renderListings() {
     }
 
 }
-
-function selectSplitListing(id, lat, lng) {
-    selectedSplitListingId = String(id);
-    
-    // Re-render to show View button
-    if (splitViewActive) {
-        renderSplitViewListings(filteredListings);
-    }
-    
-    // Center map and open popup
-    if (window.splitMap && lat && lng) {
-        window.splitMap.setView([lat, lng], 16);
-        
-        // Find and open the marker's popup
-        setTimeout(() => {
-            if (window.splitMarkerClusterGroup) {
-                window.splitMarkerClusterGroup.eachLayer(marker => {
-                    if (marker.options && marker.options.listingId === id) {
-                        marker.openPopup();
-                    }
-                });
-            }
-        }, 300);
-    }
-}
-
-// Make function globally available
-window.selectSplitListing = selectSplitListing;
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -2470,11 +2446,6 @@ function initMap() {
     if (map) return;
     showMapLoading();
     
-    // Detect OS for CTRL/CMD key display
-    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-    const scrollKeyEl = document.getElementById('mapScrollKey');
-    if (scrollKeyEl) scrollKeyEl.textContent = isMac ? 'CMD' : 'CTRL';
-    
     map = L.map('map', { 
         center: defaultMapCenter, 
         zoom: defaultMapZoom, 
@@ -2483,47 +2454,6 @@ function initMap() {
         touchZoom: true,
         doubleClickZoom: true
     });
-    
-    // Scroll-to-zoom warning overlay
-    const mapContainer = document.getElementById('map');
-    const scrollOverlay = document.getElementById('mapScrollOverlay');
-    let overlayTimeout;
-    let scrollAttempts = 0;
-    const hasSeenScrollWarning = localStorage.getItem('mapScrollWarningSeen');
-    
-    if (mapContainer && scrollOverlay) {
-        mapContainer.addEventListener('wheel', (e) => {
-            // Only show overlay if not holding CTRL/CMD
-            if (!e.ctrlKey && !e.metaKey) {
-                scrollAttempts++;
-                // Show warning if first time user OR user has scrolled 5+ times without CTRL
-                if (!hasSeenScrollWarning || scrollAttempts >= 5) {
-                    scrollOverlay.classList.remove('hidden');
-                    clearTimeout(overlayTimeout);
-                    overlayTimeout = setTimeout(() => {
-                        scrollOverlay.classList.add('hidden');
-                        scrollAttempts = 0;
-                    }, 2000);
-                }
-            } else {
-                // User is using CTRL/CMD, reset counter
-                scrollAttempts = 0;
-            }
-        }, { passive: true });
-        
-        // Dismiss overlay and mark as seen on any interaction with map
-        const dismissWarning = () => {
-            scrollOverlay.classList.add('hidden');
-            localStorage.setItem('mapScrollWarningSeen', 'true');
-            clearTimeout(overlayTimeout);
-            scrollAttempts = 0;
-        };
-        
-        scrollOverlay.addEventListener('click', dismissWarning);
-        map.on('click', dismissWarning);
-        map.on('drag', dismissWarning);
-        map.on('zoomstart', dismissWarning);
-    }
     
     map.on('click', function() {
         map.scrollWheelZoom.enable();
@@ -2874,7 +2804,7 @@ function renderSplitViewListings() {
                         <div class="flex gap-1 mb-1 flex-wrap">
                             ${badges.join('')}
                         </div>
-                        <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1">${l.business_name} ${checkmarkHtml}</h3>
+                        <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
                         <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
                         <div class="text-xs text-gray-600">
                             <div class="flex items-center gap-1 truncate">
