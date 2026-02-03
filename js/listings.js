@@ -1295,6 +1295,34 @@ function renderListings() {
 
 }
 
+function selectSplitListing(id, lat, lng) {
+    selectedSplitListingId = String(id);
+    
+    // Re-render to show View button
+    if (splitViewActive) {
+        renderSplitViewListings(filteredListings);
+    }
+    
+    // Center map and open popup
+    if (window.splitMap && lat && lng) {
+        window.splitMap.setView([lat, lng], 16);
+        
+        // Find and open the marker's popup
+        setTimeout(() => {
+            if (window.splitMarkerClusterGroup) {
+                window.splitMarkerClusterGroup.eachLayer(marker => {
+                    if (marker.options && marker.options.listingId === id) {
+                        marker.openPopup();
+                    }
+                });
+            }
+        }, 300);
+    }
+}
+
+// Make function globally available
+window.selectSplitListing = selectSplitListing;
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
