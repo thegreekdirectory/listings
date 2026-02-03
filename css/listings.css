@@ -911,10 +911,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
    swallowed on mobile Safari; manipulation removes it
    while keeping pinch-zoom and scrolling intact.
    ============================================ */
-a, button {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-}
+
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -1046,7 +1043,38 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
     }
 }
+/* Split view filters layout */
+.split-view-filters-container {
+    display: flex;
+    gap: 24px;
+    padding: 16px;
+}
 
+.split-view-filters-left {
+    flex: 0 0 250px;
+}
+
+.split-view-filters-right {
+    flex: 1;
+    min-width: 0;
+}
+
+.split-view-filters-left button {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    white-space: nowrap;
+}
+
+.split-view-filters-left .toggle-group button {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+}
+
+/* Selected listing styling */
+.split-listing-item.selected-listing {
+    border-left: 4px solid #045093 !important;
+    background-color: #eff6ff !important;
+}
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
