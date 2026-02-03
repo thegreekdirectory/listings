@@ -168,12 +168,7 @@
        touch-action:manipulation disables double-tap-to-zoom on the element,
        which is the #1 cause of swallowed taps on mobile Safari.
        The -webkit-tap-highlight-color removal prevents the grey flash. */
-    @media (hover: none) and (pointer: coarse) {
-        a, button {
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-    }
+
 
     /* Touch-action fixes: ensure all interactive buttons respond to taps on touchscreen */
     .map-control-btn,
@@ -314,15 +309,7 @@
     
     <div id="mapContainer" class="hidden border-b relative" style="max-height: calc(100vh - 60px); overflow: hidden; position:relative; z-index:30;">
         <!-- Scroll-to-zoom overlay -->
-        <div id="mapScrollOverlay" class="hidden" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;pointer-events:none;">
-            <div style="background:white;padding:24px 32px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:400px;text-align:center;">
-                <svg style="width:48px;height:48px;margin:0 auto 16px;color:#045093;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-                <p style="font-size:16px;font-weight:600;color:#1f2937;margin-bottom:8px;">Use <kbd style="background:#f3f4f6;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:14px;" id="mapScrollKey">CTRL</kbd> + Scroll to Zoom</p>
-                <p style="font-size:14px;color:#6b7280;">Click the map to dismiss this message</p>
-            </div>
-        </div>
+
         <div class="map-loading" id="mapLoading">
             <div class="spinner"></div>
             <p class="text-sm text-gray-600 mt-2 text-center">Loading map...</p>
