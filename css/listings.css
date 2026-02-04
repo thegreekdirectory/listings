@@ -6,7 +6,7 @@ or distribution of this code will result in legal action to the fullest extent p
 */
 
 /* ============================================
-   LISTINGS PAGE - COMPLETE CSS
+   LISTINGS PAGE - COMPLETE FIXED CSS
    ============================================ */
 
 :root {
@@ -31,9 +31,23 @@ body {
     background: white;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+/* ============================================
+   CRITICAL TOUCHSCREEN FIXES
+   Ensures all interactive elements respond to taps
+   ============================================ */
+
+a, button, input, select, textarea,
+.star-button, .map-control-btn,
+#filterBtn, #mapBtn, #refreshBtn, #mapBtnDesktop,
+#gridViewBtn, #gridViewBtn2, #listViewBtn, #listViewBtn2,
+#loadMoreBtn, #splitFiltersBtn, #splitViewBtn,
+.subcategory-tag, .location-search-result,
+.leaflet-popup-close-button, .toggle-option,
+.bg-white.rounded-lg.shadow,
+.bg-white.rounded-lg.shadow a {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
 
 /* Header Styles */
 header {
@@ -71,21 +85,43 @@ header {
     overflow: hidden;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
 /* ============================================
-   SVG ICON COLORS — all target icons #045093
+   PROPER WORD WRAPPING WITH HYPHENS
    ============================================ */
 
-/* Search magnifying glass — span wrapper beside #searchInput */
+.map-popup-title,
+.map-popup-tagline,
+h3,
+.split-listing-item h3 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+}
+
+/* Checkmark stays inline with name */
+.map-popup-title {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.map-popup-title svg {
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+/* ============================================
+   SVG ICON COLORS
+   ============================================ */
+
 .relative.mb-4 .pointer-events-none svg {
     color: #045093 !important;
     stroke: #045093 !important;
 }
 
-/* Filter / search buttons (mobile filter btn, desktop toggle, split-view filters btn) */
 #filterBtn svg,
 #desktopFilterToggleBtn svg,
 #splitFiltersBtn svg {
@@ -93,72 +129,57 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     stroke: #045093 !important;
 }
 
-/* Map button — mobile & desktop */
 #mapBtn svg,
 #mapBtnDesktop svg {
     color: #045093 !important;
     stroke: #045093 !important;
 }
 
-/* Grid-view icon — rendered with fill="#000000" on <path> */
 #gridViewBtn svg path,
 #gridViewBtn2 svg path {
     fill: #045093 !important;
 }
 
-/* List-view icon — rendered with stroke="currentColor" */
 #listViewBtn svg,
 #listViewBtn2 svg {
     color: #045093 !important;
     stroke: #045093 !important;
 }
 
-/* Split-view icon — rendered with fill="#000000" */
 #splitViewBtn svg,
 .map-controls #splitViewToggleBtn svg {
     fill: #045093 !important;
 }
 
-/* Reload / reset-map icon — rendered with stroke="currentColor" */
 #resetMapBtn svg,
 #splitResetMapBtn svg {
     color: #045093 !important;
     stroke: #045093 !important;
 }
 
-/* Current-location icon — DEFAULT state uses fill="#000000" */
 #locateBtnIcon,
 #splitLocateBtnIcon {
     fill: #045093 !important;
 }
 
-/* Address (map-pin) & phone icons inside listing cards (grid + list).
-   These SVGs are injected via innerHTML with class="w-4 h-4 text-gray-500".
-   The cards are <a> tags with classes bg-white rounded-lg shadow. */
 .bg-white.rounded-lg.shadow svg.w-4.h-4 {
     color: #045093 !important;
     stroke: #045093 !important;
 }
 
-/* Address & phone icons inside map popups */
 .map-popup-details svg {
     stroke: #045093 !important;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
 /* ============================================
    CURRENT LOCATION BUTTON — ACTIVE STATE
-   Applied via .locate-active class when map is centred on user.
-   Background #045093, text white, icon white.
    ============================================ */
 .map-control-btn.locate-active {
     background: #045093 !important;
     border-color: #045093 !important;
     color: white !important;
 }
+
 .map-control-btn.locate-active svg {
     fill: white !important;
     stroke: white !important;
@@ -166,16 +187,11 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 }
 
 /* ============================================
-   SEARCH INPUT — typed text colour #045093
-   Placeholder remains the browser default grey.
+   SEARCH INPUT
    ============================================ */
 #searchInput {
     color: #045093;
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 /* Map Styles */
 #map {
@@ -211,10 +227,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 /* Badge Styles */
 .badge {
@@ -255,7 +267,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     color: white;
 }
 
-/* Claimed checkmark - NOT a badge */
 .claimed-checkmark {
     display: inline-flex;
     align-items: center;
@@ -274,10 +285,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     height: 12px;
     fill: white;
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 /* Image Protection */
 img {
@@ -301,10 +308,6 @@ img {
     position: relative;
     z-index: 50;
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 /* Custom Marker Styles */
 .custom-marker {
@@ -340,10 +343,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     user-select: none;
     -webkit-user-drag: none;
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 /* Marker Cluster Styles */
 .marker-cluster {
@@ -381,10 +380,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     height: 60px;
     font-size: 18px;
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 /* Map Controls */
 .map-controls {
@@ -428,10 +423,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     color: white;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
 /* Radius Value */
 .radius-value {
     font-size: 14px;
@@ -467,10 +458,6 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
     border: none;
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 /* Map Popup */
 .map-popup {
@@ -515,10 +502,10 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     color: var(--primary-blue);
     margin-bottom: 4px;
     text-decoration: none;
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
 }
 
 .map-popup-title:hover {
@@ -529,9 +516,9 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     font-size: 13px;
     color: #666;
     margin-bottom: 8px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
 }
 
 .map-popup-details {
@@ -539,10 +526,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     color: #444;
     line-height: 1.6;
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 /* Leaflet Popup Close Button */
 .leaflet-popup-close-button {
@@ -590,59 +573,68 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     color: white;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-/* Star Button */
+/* ============================================
+   STAR BUTTON - ENHANCED DESIGN
+   ============================================ */
 .star-button {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid #fbbf24;
-    border-radius: 50%;
+    top: 10px;
+    right: 10px;
     width: 36px;
     height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0,0,0,0.04);
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
     z-index: 10;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
 .star-button:hover {
-    background: #fbbf24;
-    transform: scale(1.1);
+    transform: scale(1.15);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.30), 0 0 0 1px rgba(0,0,0,0.06);
+    background: rgba(255, 255, 255, 1);
 }
 
-.star-button.starred {
-    background: #fbbf24;
+.star-button:active {
+    transform: scale(0.92);
 }
 
 .star-icon {
-    width: 20px;
-    height: 20px;
-    fill: none;
-    stroke: #78350f;
-    stroke-width: 2;
-    stroke-linejoin: round;
+    width: 17px;
+    height: 17px;
+    fill: #d1d5db;
+    stroke: #9ca3af;
+    stroke-width: 1.8;
+    transition: fill 0.15s ease, stroke 0.15s ease;
     pointer-events: none;
 }
 
-.star-button.starred .star-icon {
-    fill: #78350f;
+.star-button.starred {
+    background: rgba(255, 253, 235, 0.97);
+    border-color: rgba(234, 179, 8, 0.5);
+    box-shadow: 0 2px 10px rgba(202, 138, 4, 0.30), 0 0 0 1px rgba(234,179,8,0.15);
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+.star-button.starred .star-icon {
+    fill: #facc15;
+    stroke: #ca8a04;
+}
+
+.star-button.starred:hover {
+    box-shadow: 0 4px 16px rgba(202, 138, 4, 0.40), 0 0 0 1px rgba(234,179,8,0.2);
+}
 
 /* ============================================
-   SPLIT VIEW — z-index below header (z-40 = 40)
+   SPLIT VIEW
    ============================================ */
 .split-view-container {
     display: flex;
@@ -667,6 +659,17 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 .split-view-map #splitMap {
     height: 100%;
     max-height: none;
+}
+
+/* Selected listing in split view */
+.split-listing-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.split-listing-item.selected-listing {
+    border-left: 4px solid #045093 !important;
+    background-color: #eff6ff !important;
 }
 
 /* Toggle Group */
@@ -698,10 +701,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     background: var(--primary-blue);
     color: white;
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 /* Desktop Layout */
 @media (min-width: 1024px) {
@@ -740,18 +739,10 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         grid-template-columns: repeat(3, 1fr) !important;
     }
 
-    /* ============================================
-       COMPACT TOP-BAR FILTERS
-       Applied via .desktop-topbar-compact on #filterPanel
-       when filterPosition === 'top' on desktop.
-       Makes category buttons into tight single-line pills.
-       Does NOT affect sidebar filters (those never get this class).
-       ============================================ */
     #filterPanel.desktop-topbar-compact {
         max-height: calc(100vh - 120px);
     }
 
-    /* Category button grid → horizontal flex wrap of pills */
     #filterPanel.desktop-topbar-compact #categoryFilters,
     #filterPanel.desktop-topbar-compact #categoryFilters2 {
         display: flex !important;
@@ -759,7 +750,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         gap: 6px !important;
     }
 
-    /* Each category pill: compact, single-line forced */
     #filterPanel.desktop-topbar-compact #categoryFilters button,
     #filterPanel.desktop-topbar-compact #categoryFilters2 button {
         padding: 4px 10px !important;
@@ -769,21 +759,18 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         line-height: 1.4;
     }
 
-    /* Subcategory tags: slightly smaller in compact mode */
     #filterPanel.desktop-topbar-compact .subcategory-tag {
         padding: 3px 8px;
         font-size: 11px;
         margin: 2px;
     }
 
-    /* Text inputs & selects: tighter padding */
     #filterPanel.desktop-topbar-compact input[type="text"],
     #filterPanel.desktop-topbar-compact select {
         padding: 6px 10px !important;
         font-size: 12px !important;
     }
 
-    /* Checkbox row: flex-wrap instead of vertical stack */
     #filterPanel.desktop-topbar-compact .space-y-2 {
         display: flex !important;
         flex-wrap: wrap;
@@ -794,26 +781,40 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         margin: 0;
     }
 
-    /* Section labels: tighter */
     #filterPanel.desktop-topbar-compact label.block {
         font-size: 12px !important;
         margin-bottom: 4px !important;
     }
 
-    /* Top-level section spacing: tighter */
     #filterPanel.desktop-topbar-compact .space-y-4 {
         gap: 10px !important;
     }
 
-    /* Range slider: slightly thinner */
     #filterPanel.desktop-topbar-compact input[type="range"] {
         height: 6px;
     }
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+/* Desktop filters overlay */
+.desktop-filters-overlay {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+    z-index: 200;
+    background: white;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+}
+
+#desktopFiltersBackdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 199;
+}
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
@@ -867,10 +868,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     color: white;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
 /* Load More Button */
 .load-more-btn {
     display: block;
@@ -900,24 +897,36 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     transform: none;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+/* Split view filters layout */
+.split-view-filters-container {
+    display: flex;
+    gap: 24px;
+    padding: 16px;
+}
+
+.split-view-filters-left {
+    flex: 0 0 250px;
+}
+
+.split-view-filters-right {
+    flex: 1;
+    min-width: 0;
+}
+
+.split-view-filters-left button {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    white-space: nowrap;
+}
+
+.split-view-filters-left .toggle-group button {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+}
 
 /* ============================================
-   GLOBAL TOUCH-ACTION FIX
-   Disables double-tap-to-zoom on every <a> and <button>.
-   Double-tap-to-zoom is the #1 reason single taps are
-   swallowed on mobile Safari; manipulation removes it
-   while keeping pinch-zoom and scrolling intact.
+   DARK MODE SUPPORT - ENHANCED
    ============================================ */
-
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-/* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     body {
         background: #1a1a1a;
@@ -976,9 +985,11 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     }
     
     input,
-    select {
+    select,
+    textarea {
         background: #2a2a2a !important;
         color: #e5e5e5 !important;
+        border-color: #404040 !important;
     }
     
     .hover\:bg-gray-50:hover {
@@ -994,7 +1005,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     }
     
     .map-popup-title {
-        color: #4a9fff;
+        color: #4a9fff !important;
     }
     
     .map-popup-tagline,
@@ -1030,8 +1041,15 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         color: white;
     }
     
+    /* Star button dark mode */
     .star-button {
-        background: rgba(42, 42, 42, 0.9);
+        background: rgba(42, 42, 42, 0.92) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    .star-button.starred {
+        background: rgba(234, 179, 8, 0.2) !important;
+        border-color: rgba(234, 179, 8, 0.5) !important;
     }
     
     .split-view-listings {
@@ -1039,42 +1057,20 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         border-bottom-color: #404040;
     }
     
+    #desktopFiltersContainer {
+        background: #2a2a2a !important;
+        border-color: #404040 !important;
+    }
+    
+    .desktop-filters-overlay {
+        background: #2a2a2a !important;
+    }
+    
     .leaflet-tile {
         filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
     }
 }
-/* Split view filters layout */
-.split-view-filters-container {
-    display: flex;
-    gap: 24px;
-    padding: 16px;
-}
 
-.split-view-filters-left {
-    flex: 0 0 250px;
-}
-
-.split-view-filters-right {
-    flex: 1;
-    min-width: 0;
-}
-
-.split-view-filters-left button {
-    font-size: 11px !important;
-    padding: 6px 10px !important;
-    white-space: nowrap;
-}
-
-.split-view-filters-left .toggle-group button {
-    font-size: 10px !important;
-    padding: 4px 8px !important;
-}
-
-/* Selected listing styling */
-.split-listing-item.selected-listing {
-    border-left: 4px solid #045093 !important;
-    background-color: #eff6ff !important;
-}
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
