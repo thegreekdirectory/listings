@@ -6,23 +6,28 @@ or distribution of this code will result in legal action to the fullest extent p
 */
 
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 1
-// Configuration & State Management
+// LISTINGS.JS - PART 1: CONFIGURATION & GLOBALS
 // ============================================
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 
 const CATEGORIES = [
-    'Automotive & Transportation', 'Beauty & Health', 'Church & Religious Organization',
-    'Cultural/Fraternal Organization', 'Education & Community', 'Entertainment, Arts & Recreation',
-    'Food & Hospitality', 'Grocery & Imports', 'Home & Construction', 'Industrial & Manufacturing',
-    'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
+    'Automotive & Transportation',
+    'Beauty & Health',
+    'Church & Religious Organization',
+    'Cultural/Fraternal Organization',
+    'Education & Community',
+    'Entertainment, Arts & Recreation',
+    'Food & Hospitality',
+    'Grocery & Imports',
+    'Home & Construction',
+    'Industrial & Manufacturing',
+    'Pets & Veterinary',
+    'Professional & Business Services',
+    'Real Estate & Development',
+    'Retail & Shopping'
 ];
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 const US_STATES = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
@@ -37,30 +42,55 @@ const US_STATES = {
     'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
 };
 
+// Global State Variables
 let listingsSupabase = null;
 let SUBCATEGORIES = {};
-let allListings = [], filteredListings = [], currentView = 'grid', selectedCategory = 'All';
-let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '', selectedCity = '', selectedZip = '';
-let selectedRadius = 0, openNowOnly = false, closedNowOnly = false, openingSoonOnly = false;
-let closingSoonOnly = false, hoursUnknownOnly = false, onlineOnly = false, userLocation = null;
-let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
-let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
-let userLocationMarker = null, mapReady = false, allListingsGeocoded = false;
-let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
+let allListings = [];
+let filteredListings = [];
+let currentView = 'grid';
+let selectedCategory = 'All';
+let selectedSubcategories = [];
+let subcategoryMode = 'any';
+let selectedCountry = '';
+let selectedState = '';
+let selectedCity = '';
+let selectedZip = '';
+let selectedRadius = 0;
+let openNowOnly = false;
+let closedNowOnly = false;
+let openingSoonOnly = false;
+let closingSoonOnly = false;
+let hoursUnknownOnly = false;
+let onlineOnly = false;
+let userLocation = null;
+let map = null;
+let mapOpen = false;
+let splitViewActive = false;
+let filtersOpen = false;
+let markerClusterGroup = null;
+let defaultMapCenter = [41.8781, -87.6298];
+let defaultMapZoom = 10;
+let userLocationMarker = null;
+let mapReady = false;
+let allListingsGeocoded = false;
+let starredListings = [];
+let viewingStarredOnly = false;
+let mapMoved = false;
+let locationButtonActive = false;
 let filterPosition = 'top';
 let searchDebounceTimer = null;
 let displayedListingsCount = 25;
 let estimatedUserLocation = null;
-let selectedSplitListingId = null;  // For split view selected listing
-// Track whether desktop filters are in overlay mode (when map is open)
+let selectedSplitListingId = null;
 let desktopFiltersOverlay = false;
+let splitMap = null;
+let splitMarkerClusterGroup = null;
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-// SVG for the verified checkmark icon (white checkmark in blue circle)
 const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
 
 function formatPhoneDisplay(phone) {
     if (!phone) return '';
@@ -70,249 +100,6 @@ function formatPhoneDisplay(phone) {
     }
     return phone;
 }
-
-function loadStarredListings() {
-    try {
-        const stored = getCookie('starredListings');
-        if (stored) {
-            try {
-                starredListings = JSON.parse(stored);
-            } catch (e) {
-                console.error('[L502] Failed to parse starred listings cookie:', e);
-                starredListings = [];
-            }
-        }
-        updateStarredCount();
-        // If URL has ?starred=1, activate starred-only view after listings load
-        if (new URLSearchParams(window.location.search).get('starred') === '1') {
-            viewingStarredOnly = true;
-        }
-    } catch (e) {
-        console.error('[L502] Failed to load starred listings:', e);
-        starredListings = [];
-    }
-}
-
-function saveStarredListings() {
-    try {
-        console.log('Saving starred listings to cookie:', starredListings);
-        setCookie('starredListings', JSON.stringify(starredListings), 365);
-        updateStarredCount();
-        console.log('Cookie saved and count updated');
-    } catch (e) {
-        console.error('[L501] Failed to save starred listings:', e);
-        alert('Unable to save starred listings. Please check that cookies are enabled in your browser.');
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function toggleStar(listingId, event) {
-    console.log('toggleStar function called with ID:', listingId);
-    
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-
-    // Ensure listingId is a string for consistent comparison
-    listingId = String(listingId);
-    
-    const index = starredListings.indexOf(listingId);
-    console.log('Current starredListings:', starredListings);
-    console.log('Index of', listingId, ':', index);
-    
-    if (index > -1) {
-        starredListings.splice(index, 1);
-        console.log('Removed from starred. New list:', starredListings);
-    } else {
-        starredListings.push(listingId);
-        console.log('Added to starred. New list:', starredListings);
-    }
-    saveStarredListings();
-    console.log('saveStarredListings() called');
-
-    // Update every star button for this listing (matched by data-listing-id)
-    const buttons = document.querySelectorAll('.star-button[data-listing-id="' + listingId + '"]');
-    console.log('Found', buttons.length, 'star buttons with ID', listingId);
-    
-    buttons.forEach(btn => {
-        if (starredListings.includes(listingId)) {
-            btn.classList.add('starred');
-            console.log('Added starred class to button');
-        } else {
-            btn.classList.remove('starred');
-            console.log('Removed starred class from button');
-        }
-    });
-
-    // If viewing starred-only, re-filter (listing may have just been unstarred)
-    if (viewingStarredOnly) {
-        console.log('Viewing starred only, re-filtering...');
-        filteredListings = allListings.filter(l => starredListings.includes(String(l.id)));
-        displayedListingsCount = filteredListings.length;
-        renderListings();
-        updateResultsCount();
-    }
-}
-
-function updateStarredCount() {
-    const countEl = document.getElementById('starredCount');
-    if (countEl) {
-        countEl.textContent = starredListings.length;
-    }
-    const headerCountEl = document.getElementById('headerStarredCount');
-    if (headerCountEl) {
-        headerCountEl.textContent = starredListings.length;
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function applySortToListings(listings, sortValue) {
-    if (sortValue === 'az') {
-        listings.sort((a, b) => a.business_name.localeCompare(b.business_name));
-    } else if (sortValue === 'closest' && userLocation) {
-        listings.sort((a, b) => {
-            const distA = (a.lat && a.lng) ? getDistance(userLocation.lat, userLocation.lng, a.lat, a.lng) : Infinity;
-            const distB = (b.lat && b.lng) ? getDistance(userLocation.lat, userLocation.lng, b.lat, b.lng) : Infinity;
-            return distA - distB;
-        });
-    } else if (sortValue === 'random') {
-        for (let i = listings.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [listings[i], listings[j]] = [listings[j], listings[i]];
-        }
-    }
-    // 'default' = no sorting change
-}
-
-function toggleStarredView() {
-    console.log('[DEBUG] toggleStarredView called. Current viewingStarredOnly:', viewingStarredOnly);
-    
-    // CRITICAL FIX: Reload starred listings from cookie FIRST
-    loadStarredListings();
-    console.log('[DEBUG] Reloaded starredListings from cookie:', starredListings);
-    
-    viewingStarredOnly = !viewingStarredOnly;
-    const headerStarBtn = document.getElementById('headerStarBtn');
-    const hideStarredBtn = document.getElementById('hideStarredBtn');
-    
-    console.log('[DEBUG] After toggle, viewingStarredOnly:', viewingStarredOnly);
-    
-    if (viewingStarredOnly) {
-        if (starredListings.length === 0) {
-            console.log('[DEBUG] No starred listings found');
-            alert('You haven\'t starred any listings yet!');
-            viewingStarredOnly = false;
-            return;
-        }
-        
-        console.log('[DEBUG] Filtering', allListings.length, 'listings to', starredListings.length, 'starred');
-        
-        // Show hide starred button
-        if (hideStarredBtn) hideStarredBtn.classList.remove('hidden');
-        
-        // Apply filters, search, and sort to starred listings
-        let starredLis = allListings.filter(l => starredListings.includes(String(l.id)));
-        
-        // Apply category filter
-        if (selectedCategory && selectedCategory !== 'All') {
-            starredLis = starredLis.filter(l => l.category === selectedCategory);
-        }
-        
-        // Apply subcategory filter
-        if (selectedSubcategories.length > 0) {
-            starredLis = starredLis.filter(l => 
-                l.subcategories && l.subcategories.some(sub => selectedSubcategories.includes(sub))
-            );
-        }
-        
-        // Apply search filter
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput && searchInput.value.trim()) {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-            starredLis = starredLis.filter(l => 
-                l.business_name.toLowerCase().includes(searchTerm) ||
-                (l.description && l.description.toLowerCase().includes(searchTerm)) ||
-                (l.tagline && l.tagline.toLowerCase().includes(searchTerm)) ||
-                l.category.toLowerCase().includes(searchTerm) ||
-                (l.subcategories && l.subcategories.some(sub => sub.toLowerCase().includes(searchTerm)))
-            );
-        }
-        
-        // Apply hours filters
-        if (openNowOnly) starredLis = starredLis.filter(l => isOpenNow(l));
-        if (closedNowOnly) starredLis = starredLis.filter(l => !isOpenNow(l));
-        if (openingSoonOnly) starredLis = starredLis.filter(l => isOpeningSoon(l));
-        if (closingSoonOnly) starredLis = starredLis.filter(l => isClosingSoon(l));
-        if (hoursUnknownOnly) starredLis = starredLis.filter(l => !l.hours || !l.hours.length);
-        if (onlineOnlyFilter) starredLis = starredLis.filter(l => l.online_only);
-        
-        // Apply location filters
-        if (selectedCountry && selectedCountry !== 'All') {
-            starredLis = starredLis.filter(l => l.country === selectedCountry);
-        }
-        if (selectedState && selectedState !== 'All') {
-            starredLis = starredLis.filter(l => l.state === selectedState);
-        }
-        if (selectedCity) {
-            starredLis = starredLis.filter(l => l.city && l.city.toLowerCase() === selectedCity.toLowerCase());
-        }
-        if (selectedZip) {
-            starredLis = starredLis.filter(l => l.zip === selectedZip);
-        }
-        
-        // Apply radius filter if user location available
-        if (userLocation && selectedRadius > 0 && selectedRadius < 999) {
-            starredLis = starredLis.filter(l => {
-                if (!l.lat || !l.lng) return false;
-                const dist = getDistance(userLocation.lat, userLocation.lng, l.lat, l.lng);
-                return dist <= selectedRadius;
-            });
-        }
-        
-        // Apply current sort
-        const sortSelect = document.getElementById('sortSelect');
-        if (sortSelect) {
-            const sortValue = sortSelect.value;
-            applySortToListings(starredLis, sortValue);
-        }
-        
-        filteredListings = starredLis;
-        displayedListingsCount = filteredListings.length;
-        
-        document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
-        
-        if (headerStarBtn) {
-            headerStarBtn.style.backgroundColor = '#fbbf24';
-            headerStarBtn.style.color = '#78350f';
-        }
-    } else {
-        // Hide the hide starred button
-        if (hideStarredBtn) hideStarredBtn.classList.add('hidden');
-        
-        displayedListingsCount = 25;
-        applyFilters();
-        
-        if (headerStarBtn) {
-            headerStarBtn.style.backgroundColor = '';
-            headerStarBtn.style.color = '';
-        }
-    }
-    renderListings();
-    updateResultsCount();
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 function setCookie(name, value, days) {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
@@ -334,9 +121,57 @@ function isIOSWebApp() {
     return ('standalone' in window.navigator) && window.navigator.standalone;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+function normalizeString(str) {
+    return str.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 3959;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+function isBasedIn(listing) {
+    return listing.city && listing.state && !listing.address;
+}
+
+function getFullAddress(listing) {
+    if (listing.city && listing.state) {
+        if (listing.address) {
+            return `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim();
+        } else {
+            return `${listing.city}, ${listing.state}`.trim();
+        }
+    }
+    return listing.address || '';
+}
+
+function extractSubcategoriesFromListings(listings) {
+    const subcatsByCategory = {};
+    
+    listings.forEach(listing => {
+        if (listing.category && listing.subcategories && Array.isArray(listing.subcategories)) {
+            if (!subcatsByCategory[listing.category]) {
+                subcatsByCategory[listing.category] = new Set();
+            }
+            listing.subcategories.forEach(sub => {
+                subcatsByCategory[listing.category].add(sub);
+            });
+        }
+    });
+    
+    const result = {};
+    Object.keys(subcatsByCategory).forEach(category => {
+        result[category] = Array.from(subcatsByCategory[category]).sort();
+    });
+    
+    return result;
+}
 
 async function estimateLocationByIP() {
     try {
@@ -361,157 +196,440 @@ async function estimateLocationByIP() {
     }
     return null;
 }
+// ============================================
+// LISTINGS.JS - PART 2: STARRED LISTINGS SYSTEM
+// ============================================
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function extractSubcategoriesFromListings(listings) {
-    const subcatsByCategory = {};
-    
-    listings.forEach(listing => {
-        if (listing.category && listing.subcategories && Array.isArray(listing.subcategories)) {
-            if (!subcatsByCategory[listing.category]) {
-                subcatsByCategory[listing.category] = new Set();
+function loadStarredListings() {
+    try {
+        const stored = getCookie('starredListings');
+        if (stored) {
+            try {
+                starredListings = JSON.parse(stored);
+            } catch (e) {
+                console.error('Failed to parse starred listings cookie:', e);
+                starredListings = [];
             }
-            listing.subcategories.forEach(sub => {
-                subcatsByCategory[listing.category].add(sub);
+        }
+        updateStarredCount();
+        if (new URLSearchParams(window.location.search).get('starred') === '1') {
+            viewingStarredOnly = true;
+        }
+    } catch (e) {
+        console.error('Failed to load starred listings:', e);
+        starredListings = [];
+    }
+}
+
+function saveStarredListings() {
+    try {
+        setCookie('starredListings', JSON.stringify(starredListings), 365);
+        updateStarredCount();
+    } catch (e) {
+        console.error('Failed to save starred listings:', e);
+        alert('Unable to save starred listings. Please check that cookies are enabled in your browser.');
+    }
+}
+
+function toggleStar(listingId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    listingId = String(listingId);
+    
+    const index = starredListings.indexOf(listingId);
+    
+    if (index > -1) {
+        starredListings.splice(index, 1);
+    } else {
+        starredListings.push(listingId);
+    }
+    saveStarredListings();
+
+    const buttons = document.querySelectorAll('.star-button[data-listing-id="' + listingId + '"]');
+    
+    buttons.forEach(btn => {
+        if (starredListings.includes(listingId)) {
+            btn.classList.add('starred');
+        } else {
+            btn.classList.remove('starred');
+        }
+    });
+
+    if (viewingStarredOnly) {
+        filteredListings = allListings.filter(l => starredListings.includes(String(l.id)));
+        displayedListingsCount = filteredListings.length;
+        renderListings();
+        updateResultsCount();
+    }
+}
+
+function updateStarredCount() {
+    const countEl = document.getElementById('starredCount');
+    if (countEl) {
+        countEl.textContent = starredListings.length;
+    }
+    const headerCountEl = document.getElementById('headerStarredCount');
+    if (headerCountEl) {
+        headerCountEl.textContent = starredListings.length;
+    }
+}
+
+function toggleStarredView() {
+    loadStarredListings();
+    
+    viewingStarredOnly = !viewingStarredOnly;
+    const headerStarBtn = document.getElementById('headerStarBtn');
+    const hideStarredBtn = document.getElementById('hideStarredBtn');
+    
+    if (viewingStarredOnly) {
+        if (starredListings.length === 0) {
+            alert('You haven\'t starred any listings yet!');
+            viewingStarredOnly = false;
+            return;
+        }
+        
+        if (hideStarredBtn) hideStarredBtn.classList.remove('hidden');
+        
+        let starredLis = allListings.filter(l => starredListings.includes(String(l.id)));
+        
+        if (selectedCategory && selectedCategory !== 'All') {
+            starredLis = starredLis.filter(l => l.category === selectedCategory);
+        }
+        
+        if (selectedSubcategories.length > 0) {
+            starredLis = starredLis.filter(l => 
+                l.subcategories && l.subcategories.some(sub => selectedSubcategories.includes(sub))
+            );
+        }
+        
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput && searchInput.value.trim()) {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            starredLis = starredLis.filter(l => 
+                l.business_name.toLowerCase().includes(searchTerm) ||
+                (l.description && l.description.toLowerCase().includes(searchTerm)) ||
+                (l.tagline && l.tagline.toLowerCase().includes(searchTerm)) ||
+                l.category.toLowerCase().includes(searchTerm) ||
+                (l.subcategories && l.subcategories.some(sub => sub.toLowerCase().includes(searchTerm)))
+            );
+        }
+        
+        if (openNowOnly) starredLis = starredLis.filter(l => isOpenNow(l.hours));
+        if (closedNowOnly) starredLis = starredLis.filter(l => !isOpenNow(l.hours));
+        if (openingSoonOnly) starredLis = starredLis.filter(l => isOpeningSoon(l.hours));
+        if (closingSoonOnly) starredLis = starredLis.filter(l => isClosingSoon(l.hours));
+        if (hoursUnknownOnly) starredLis = starredLis.filter(l => !l.hours || Object.keys(l.hours).length === 0);
+        if (onlineOnly) starredLis = starredLis.filter(l => l.online_only);
+        
+        if (selectedCountry && selectedCountry !== 'All') {
+            starredLis = starredLis.filter(l => l.country === selectedCountry);
+        }
+        if (selectedState && selectedState !== 'All') {
+            starredLis = starredLis.filter(l => l.state === selectedState);
+        }
+        if (selectedCity) {
+            starredLis = starredLis.filter(l => l.city && l.city.toLowerCase() === selectedCity.toLowerCase());
+        }
+        if (selectedZip) {
+            starredLis = starredLis.filter(l => l.zip_code === selectedZip);
+        }
+        
+        if (userLocation && selectedRadius > 0 && selectedRadius < 999) {
+            starredLis = starredLis.filter(l => {
+                if (!l.coordinates || !l.coordinates.lat || !l.coordinates.lng) return false;
+                const dist = calculateDistance(userLocation.lat, userLocation.lng, l.coordinates.lat, l.coordinates.lng);
+                return dist <= selectedRadius;
             });
         }
-    });
-    
-    const result = {};
-    Object.keys(subcatsByCategory).forEach(category => {
-        result[category] = Array.from(subcatsByCategory[category]).sort();
-    });
-    
-    return result;
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (isIOSWebApp()) {
-        const refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) refreshBtn.style.display = 'flex';
-    }
-    loadStarredListings();
-    loadListings();
-    setupEventListeners();
-    createCategoryButtons();
-    requestLocationOnLoad();
-    estimateLocationByIP();
-    loadFiltersFromURL();
-    initMap();
-    syncFilters();
-    checkFilterPosition();
-});
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 2
-// Filter Position & URL Management
-// ============================================
-
-function checkFilterPosition() {
-    const screenWidth = window.innerWidth;
-    const toggleBtn = document.getElementById('toggleFilterPosition');
-    const desktopLayout = document.getElementById('desktopLayout');
-    const desktopFilters = document.getElementById('desktopFiltersContainer');
-    const mapBtn = document.getElementById('mapBtnDesktop');
-    const listingsContainer = document.getElementById('listingsContainer');
-    const desktopFilterToggleBtn = document.getElementById('desktopFilterToggleBtn');
-    
-    if (screenWidth >= 1024) {
-        if (toggleBtn) toggleBtn.style.display = 'block';
-        if (mapBtn) mapBtn.classList.remove('hidden');
         
-        if (filterPosition === 'left' && !mapOpen) {
-            // Sidebar visible — hide the toggle button
-            if (desktopLayout) desktopLayout.classList.add('with-left-filters');
-            if (desktopFilters) {
-                desktopFilters.classList.remove('hidden');
-                desktopFilters.classList.remove('desktop-filters-overlay');
-            }
-            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
-            if (currentView === 'grid' && listingsContainer) {
-                listingsContainer.classList.remove('listings-3-col');
-                listingsContainer.classList.add('listings-2-col');
-            }
-        } else if (filterPosition === 'left' && mapOpen && !splitViewActive) {
-            // Full-mode map: sidebar stays next to the listings column (below the map).
-            if (desktopLayout) desktopLayout.classList.add('with-left-filters');
-            if (desktopFilters) {
-                desktopFilters.classList.remove('hidden');
-                desktopFilters.classList.remove('desktop-filters-overlay');
-            }
-            desktopFiltersOverlay = false;
-            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
-            if (currentView === 'grid' && listingsContainer) {
-                listingsContainer.classList.remove('listings-3-col');
-                listingsContainer.classList.add('listings-2-col');
-            }
-        } else if (filterPosition === 'left' && mapOpen && splitViewActive) {
-            // Split-view mode: hide the sidebar entirely (split view has its own layout)
-            if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
-            if (desktopFilters) {
-                desktopFilters.classList.add('hidden');
-                desktopFilters.classList.remove('desktop-filters-overlay');
-            }
-            desktopFiltersOverlay = false;
-            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
-            if (currentView === 'grid' && listingsContainer) {
-                listingsContainer.classList.remove('listings-2-col');
-                listingsContainer.classList.add('listings-3-col');
-            }
-        } else {
-            // filterPosition === 'top' (filters collapsed) — show toggle button
-            if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
-            if (desktopFilters) {
-                desktopFilters.classList.add('hidden');
-                desktopFilters.classList.remove('desktop-filters-overlay');
-            }
-            desktopFiltersOverlay = false;
-            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'flex';
-            if (currentView === 'grid' && listingsContainer) {
-                listingsContainer.classList.remove('listings-2-col');
-                listingsContainer.classList.add('listings-3-col');
-            }
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) {
+            const sortValue = sortSelect.value;
+            applySortToListings(starredLis, sortValue);
+        }
+        
+        filteredListings = starredLis;
+        displayedListingsCount = filteredListings.length;
+        
+        document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
+        
+        if (headerStarBtn) {
+            headerStarBtn.style.backgroundColor = '#fbbf24';
+            headerStarBtn.style.color = '#78350f';
         }
     } else {
-        // Mobile
-        if (toggleBtn) toggleBtn.style.display = 'none';
-        if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
-        if (desktopFilters) {
-            desktopFilters.classList.add('hidden');
-            desktopFilters.classList.remove('desktop-filters-overlay');
+        if (hideStarredBtn) hideStarredBtn.classList.add('hidden');
+        
+        displayedListingsCount = 25;
+        applyFilters();
+        
+        if (headerStarBtn) {
+            headerStarBtn.style.backgroundColor = '';
+            headerStarBtn.style.color = '';
         }
-        desktopFiltersOverlay = false;
-        if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
-        if (mapBtn) mapBtn.classList.add('hidden');
-        if (currentView === 'grid' && listingsContainer) {
-            listingsContainer.classList.remove('listings-2-col', 'listings-3-col');
+    }
+    renderListings();
+    updateResultsCount();
+}
+
+function applySortToListings(listings, sortValue) {
+    if (sortValue === 'az') {
+        listings.sort((a, b) => a.business_name.localeCompare(b.business_name));
+    } else if (sortValue === 'closest' && userLocation) {
+        listings.sort((a, b) => {
+            const distA = (a.coordinates && a.coordinates.lat && a.coordinates.lng) ? 
+                calculateDistance(userLocation.lat, userLocation.lng, a.coordinates.lat, a.coordinates.lng) : Infinity;
+            const distB = (b.coordinates && b.coordinates.lat && b.coordinates.lng) ? 
+                calculateDistance(userLocation.lat, userLocation.lng, b.coordinates.lat, b.coordinates.lng) : Infinity;
+            return distA - distB;
+        });
+    } else if (sortValue === 'random') {
+        for (let i = listings.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [listings[i], listings[j]] = [listings[j], listings[i]];
         }
     }
 }
+// ============================================
+// LISTINGS.JS - PART 3: HOURS & STATUS FUNCTIONS
+// ============================================
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+function isOpenNow(hours) {
+    if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
+    const hasAnyHours = Object.values(hours).some(h => h && h.trim() !== '');
+    if (!hasAnyHours) return null;
+    const now = new Date();
+    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const today = days[centralTime.getDay()];
+    const todayHours = hours[today];
+    if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
+    const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) return null;
+    const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
+    let start = parseInt(startHour);
+    let end = parseInt(endHour);
+    if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
+    if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
+    if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
+    if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
+    const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+    const startMinutes = start * 60 + parseInt(startMin);
+    const endMinutes = end * 60 + parseInt(endMin);
+    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+}
+
+function isOpeningSoon(hours) {
+    if (!hours || typeof hours !== 'object') return false;
+    const now = new Date();
+    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const today = days[centralTime.getDay()];
+    const todayHours = hours[today];
+    if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
+    const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) return false;
+    const [, startHour, startMin, startPeriod] = match;
+    let start = parseInt(startHour);
+    if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
+    if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
+    const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+    const startMinutes = start * 60 + parseInt(startMin);
+    const diff = startMinutes - currentMinutes;
+    return diff > 0 && diff <= 60;
+}
+
+function isClosingSoon(hours) {
+    if (!hours || typeof hours !== 'object') return false;
+    const now = new Date();
+    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const today = days[centralTime.getDay()];
+    const todayHours = hours[today];
+    if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
+    const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) return false;
+    const [, , , , endHour, endMin, endPeriod] = match;
+    let end = parseInt(endHour);
+    if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
+    if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
+    const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+    const endMinutes = end * 60 + parseInt(endMin);
+    const diff = endMinutes - currentMinutes;
+    return diff > 0 && diff <= 60;
+}
+
+function hasUnknownHours(listing) {
+    if (!listing.address || isBasedIn(listing)) return false;
+    if (!listing.hours || typeof listing.hours !== 'object') return true;
+    const hasAnyHours = Object.values(listing.hours).some(h => h && h.trim() !== '');
+    if (!hasAnyHours) return true;
+    const now = new Date();
+    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const today = days[centralTime.getDay()];
+    const todayHours = listing.hours[today];
+    return !todayHours || todayHours.trim() === '';
+}
+
+// ============================================
+// BADGE & CHECKMARK HELPERS
+// ============================================
+
+function buildBadges(listing) {
+    const badges = [];
+    const openStatus = isOpenNow(listing.hours);
+    const openingSoon = isOpeningSoon(listing.hours);
+    const closingSoon = isClosingSoon(listing.hours);
+
+    if (openingSoon) {
+        badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+    } else if (closingSoon) {
+        badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+    } else if (openStatus === true) {
+        badges.push('<span class="badge badge-open">Open</span>');
+    } else if (openStatus === false) {
+        badges.push('<span class="badge badge-closed">Closed</span>');
+    }
+
+    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
+
+    if (isFeatured) {
+        badges.push('<span class="badge badge-featured">Featured</span>');
+    } else if (isVerified) {
+        badges.push('<span class="badge badge-verified">Verified</span>');
+    }
+
+    return badges;
+}
+
+function showsVerifiedCheckmark(listing) {
+    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
+    return isFeatured || isVerified || listing.show_claim_button === false;
+}
+
+// FIXED: Generate Call Button with proper spacing (right: 116px)
+function generateCallButton(listing) {
+    if (!listing.phone) return '';
+    
+    return `
+        <a href="tel:${listing.phone}" 
+           onclick="event.stopPropagation();"
+           style="position:absolute;bottom:8px;right:116px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#10b981;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;z-index:10;touch-action:manipulation;-webkit-tap-highlight-color:transparent;" 
+           onmouseover="this.style.background='#059669'" 
+           onmouseout="this.style.background='#10b981'">
+            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+            </svg>
+            Call
+        </a>
+    `;
+}
+// ============================================
+// LISTINGS.JS - PART 4: LOCATION & GEOCODING
+// ============================================
+
+function requestLocationOnLoad() {
+    if (!navigator.geolocation) {
+        console.error('Geolocation not supported by this browser');
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+            console.log('Location acquired:', userLocation);
+            if (!viewingStarredOnly) applyFilters();
+            if (map && mapOpen) addUserLocationMarker();
+        },
+        (error) => {
+            if (error.code === 1) {
+                console.log('Geolocation permission denied');
+            } else if (error.code === 3) {
+                console.log('Geolocation timeout');
+            } else {
+                console.log('Location error:', error.message);
+            }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+function addUserLocationMarker() {
+    if (!map || !userLocation) return;
+    if (userLocationMarker) map.removeLayer(userLocationMarker);
+    const userIcon = L.divIcon({
+        html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
+        className: '', iconSize: [22, 22], iconAnchor: [11, 11]
+    });
+    userLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
+        icon: userIcon, zIndexOffset: 1000
+    }).addTo(map);
+    userLocationMarker.bindPopup('<strong>Your Location</strong>');
+}
+
+async function geocodeAllListings() {
+    if (allListingsGeocoded) return;
+    
+    console.log('Starting geocoding for', allListings.length, 'listings');
+    
+    for (const listing of allListings) {
+        if (listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
+            continue;
+        }
+        
+        const fullAddress = getFullAddress(listing);
+        if (!fullAddress) continue;
+        
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`
+            );
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                listing.coordinates = {
+                    lat: parseFloat(data[0].lat),
+                    lng: parseFloat(data[0].lon)
+                };
+                console.log('Geocoded:', listing.business_name, '→', listing.coordinates);
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+            console.error('Geocoding error for', listing.business_name, ':', error);
+        }
+    }
+    
+    allListingsGeocoded = true;
+    console.log('Geocoding complete');
+    
+    if (map) updateMapMarkers();
+}
+
+function updateLocationSubtitle() {
+    const subtitle = document.getElementById('locationSubtitle');
+    if (!subtitle) return;
+    
+    const effectiveLocation = userLocation || estimatedUserLocation;
+    
+    if (effectiveLocation) {
+        const city = effectiveLocation.city || 'Unknown City';
+        const state = effectiveLocation.state || '';
+        const estimated = effectiveLocation.estimated ? ' (estimated)' : '';
+        subtitle.textContent = `Showing listings near ${city}, ${state}${estimated}`;
+    } else {
+        subtitle.textContent = 'Showing all listings';
+    }
+}
+// ============================================
+// LISTINGS.JS - PART 5: FILTERING & URL MANAGEMENT
+// ============================================
 
 function loadFiltersFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -560,14 +678,10 @@ function loadFiltersFromURL() {
     }
 
     const city = urlParams.get('city');
-    if (city) {
-        selectedCity = city;
-    }
+    if (city) selectedCity = city;
 
     const zip = urlParams.get('zip');
-    if (zip) {
-        selectedZip = zip;
-    }
+    if (zip) selectedZip = zip;
     
     const radius = urlParams.get('radius');
     if (radius) {
@@ -627,16 +741,9 @@ function loadFiltersFromURL() {
         if (onlineFilter2) onlineFilter2.checked = true;
     }
 
-    // Re-render category & subcategory buttons so they reflect the URL state.
-    // createCategoryButtons() already ran once during init (with selectedCategory still 'All'),
-    // so we must call it again now that selectedCategory may have been updated from the URL.
     createCategoryButtons();
     updateSubcategoryDisplay();
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 function updateURL() {
     const url = new URL(window.location);
@@ -662,83 +769,84 @@ function updateURL() {
     window.history.replaceState({}, '', url);
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function requestLocationOnLoad() {
-    if (!navigator.geolocation) {
-        console.error('[L202] Geolocation not supported by this browser');
-        return;
-    }
+function checkFilterPosition() {
+    const screenWidth = window.innerWidth;
+    const toggleBtn = document.getElementById('toggleFilterPosition');
+    const desktopLayout = document.getElementById('desktopLayout');
+    const desktopFilters = document.getElementById('desktopFiltersContainer');
+    const mapBtn = document.getElementById('mapBtnDesktop');
+    const listingsContainer = document.getElementById('listingsContainer');
+    const desktopFilterToggleBtn = document.getElementById('desktopFilterToggleBtn');
     
-    navigator.geolocation.getCurrentPosition(
-        position => {
-            userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-            console.log('Location acquired:', userLocation);
-            if (!viewingStarredOnly) applyFilters();
-            if (map && mapOpen) addUserLocationMarker();
-        },
-        (error) => {
-            if (error.code === 1) {
-                console.log('[L201] Geolocation permission denied');
-            } else if (error.code === 3) {
-                console.log('[L203] Geolocation timeout');
-            } else {
-                console.log('Location error:', error.message);
+    if (screenWidth >= 1024) {
+        if (toggleBtn) toggleBtn.style.display = 'block';
+        if (mapBtn) mapBtn.classList.remove('hidden');
+        
+        if (filterPosition === 'left' && !mapOpen) {
+            if (desktopLayout) desktopLayout.classList.add('with-left-filters');
+            if (desktopFilters) {
+                desktopFilters.classList.remove('hidden');
+                desktopFilters.classList.remove('desktop-filters-overlay');
             }
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-}
-
-function addUserLocationMarker() {
-    if (!map || !userLocation) return;
-    if (userLocationMarker) map.removeLayer(userLocationMarker);
-    const userIcon = L.divIcon({
-        html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
-        className: '', iconSize: [22, 22], iconAnchor: [11, 11]
-    });
-    userLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
-        icon: userIcon, zIndexOffset: 1000
-    }).addTo(map);
-    userLocationMarker.bindPopup('<strong>Your Location</strong>');
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-window.setSubcategoryMode = function(mode, skipUpdate) {
-    subcategoryMode = mode;
-    document.querySelectorAll('.toggle-option').forEach(opt => {
-        if (opt.dataset.mode === mode) opt.classList.add('active');
-        else opt.classList.remove('active');
-    });
-    if (!skipUpdate) {
-        updateURL();
-        if (!viewingStarredOnly) applyFilters();
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
+            if (currentView === 'grid' && listingsContainer) {
+                listingsContainer.classList.remove('listings-3-col');
+                listingsContainer.classList.add('listings-2-col');
+            }
+        } else if (filterPosition === 'left' && mapOpen && !splitViewActive) {
+            if (desktopLayout) desktopLayout.classList.add('with-left-filters');
+            if (desktopFilters) {
+                desktopFilters.classList.remove('hidden');
+                desktopFilters.classList.remove('desktop-filters-overlay');
+            }
+            desktopFiltersOverlay = false;
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
+            if (currentView === 'grid' && listingsContainer) {
+                listingsContainer.classList.remove('listings-3-col');
+                listingsContainer.classList.add('listings-2-col');
+            }
+        } else if (filterPosition === 'left' && mapOpen && splitViewActive) {
+            if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
+            if (desktopFilters) {
+                desktopFilters.classList.add('hidden');
+                desktopFilters.classList.remove('desktop-filters-overlay');
+            }
+            desktopFiltersOverlay = false;
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
+            if (currentView === 'grid' && listingsContainer) {
+                listingsContainer.classList.remove('listings-2-col');
+                listingsContainer.classList.add('listings-3-col');
+            }
+        } else {
+            if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
+            if (desktopFilters) {
+                desktopFilters.classList.add('hidden');
+                desktopFilters.classList.remove('desktop-filters-overlay');
+            }
+            desktopFiltersOverlay = false;
+            if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'flex';
+            if (currentView === 'grid' && listingsContainer) {
+                listingsContainer.classList.remove('listings-2-col');
+                listingsContainer.classList.add('listings-3-col');
+            }
+        }
+    } else {
+        if (toggleBtn) toggleBtn.style.display = 'none';
+        if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
+        if (desktopFilters) {
+            desktopFilters.classList.add('hidden');
+            desktopFilters.classList.remove('desktop-filters-overlay');
+        }
+        desktopFiltersOverlay = false;
+        if (desktopFilterToggleBtn) desktopFilterToggleBtn.style.display = 'none';
+        if (mapBtn) mapBtn.classList.add('hidden');
+        if (currentView === 'grid' && listingsContainer) {
+            listingsContainer.classList.remove('listings-2-col', 'listings-3-col');
+        }
     }
-};
-
-window.toggleStar = toggleStar;
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
+}
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 3
-// Load Listings & Filtering Logic
+// LISTINGS.JS - PART 6: LOAD LISTINGS & APPLY FILTERS
 // ============================================
 
 async function loadListings() {
@@ -762,33 +870,28 @@ async function loadListings() {
         populateCountryFilter();
         updateLocationSubtitle();
         applyFilters();
-        // If ?starred=1 was set (flag set by loadStarredListings before listings arrived),
-        // now filter down to starred only and update the count display.
+        
         if (viewingStarredOnly) {
             if (starredListings.length === 0) {
                 viewingStarredOnly = false;
             } else {
-                // Convert listing IDs to strings for comparison
                 filteredListings = allListings.filter(l => starredListings.includes(String(l.id)));
                 displayedListingsCount = filteredListings.length;
                 console.log('Filtered to starred listings:', filteredListings.length, 'of', starredListings.length, 'starred IDs');
             }
         }
+        
         updateResultsCount();
         renderListings();
         geocodeAllListings();
     } catch (error) {
-        console.error('[L101] Error loading listings:', error);
+        console.error('Error loading listings:', error);
         const listingsContainer = document.getElementById('listingsContainer');
         if (listingsContainer) {
             listingsContainer.innerHTML = '<div class="text-center py-12"><p class="text-red-600 font-semibold mb-2">Error Code: L101</p><p class="text-gray-600">Failed to load listings. Please try refreshing the page.</p></div>';
         }
     }
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 function applyFilters() {
     const searchInput = document.getElementById('searchInput');
@@ -800,7 +903,7 @@ function applyFilters() {
         const fullAddress = getFullAddress(listing);
         const normalizedName = normalizeString(listing.business_name);
         const normalizedTagline = normalizeString(listing.tagline || '');
-        const normalizedDescription = normalizeString(listing.description);
+        const normalizedDescription = normalizeString(listing.description || '');
         const normalizedAddress = normalizeString(fullAddress);
         
         const matchesSearch = !searchTerm || 
@@ -856,10 +959,6 @@ function applyFilters() {
                matchesOpeningSoon && matchesClosingSoon && matchesHoursUnknown && matchesOnlineOnly;
     });
     
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
     const effectiveUserLocation = userLocation || estimatedUserLocation;
     if (effectiveUserLocation) {
         filteredListings.forEach(listing => {
@@ -882,13 +981,10 @@ function applyFilters() {
         });
     }
     
-    // SORTING LOGIC WITH SMART DEFAULT
-    // Initialize random seed based on page load (changes every visit)
     if (!window._sortRandomSeed) {
         window._sortRandomSeed = Math.random() * 1000000;
     }
     
-    // Seeded random function for consistent randomness within page load
     function seededRandom(seed, id) {
         const x = Math.sin(seed + id) * 10000;
         return x - Math.floor(x);
@@ -898,38 +994,28 @@ function applyFilters() {
         if (sortOption === 'random') {
             return Math.random() - 0.5;
         } else if (sortOption === 'default') {
-            // SMART DEFAULT SORTING ALGORITHM
-            // Combines: paid tier + distance + randomness for fairness
-            
             const aTier = a.tier || 'FREE';
             const bTier = b.tier || 'FREE';
             const tierPriority = { PREMIUM: 100, FEATURED: 50, VERIFIED: 20, FREE: 0 };
             
             const effectiveUserLocation = userLocation || estimatedUserLocation;
             
-            // Calculate scoring components
             let aScore = 0;
             let bScore = 0;
             
-            // 1. Paid tier weight (40% of total score)
             aScore += tierPriority[aTier];
             bScore += tierPriority[bTier];
             
-            // 2. Location relevance (40% of total score) - ONLY if location data available
             if (effectiveUserLocation && a.coordinates && b.coordinates) {
-                // Same city: +40 points
                 if (a._inUserCity) aScore += 40;
                 if (b._inUserCity) bScore += 40;
                 
-                // Same state (but not city): +20 points
                 if (a._inUserState && !a._inUserCity) aScore += 20;
                 if (b._inUserState && !b._inUserCity) bScore += 20;
                 
-                // Distance bonus (closer = more points, max 30 points)
                 const aDistance = a._distance || 999;
                 const bDistance = b._distance || 999;
                 if (aDistance < 999) {
-                    // Within 5 miles: +30, 10 miles: +20, 25 miles: +10, 50 miles: +5
                     if (aDistance <= 5) aScore += 30;
                     else if (aDistance <= 10) aScore += 20;
                     else if (aDistance <= 25) aScore += 10;
@@ -942,21 +1028,16 @@ function applyFilters() {
                     else if (bDistance <= 50) bScore += 5;
                 }
             }
-            // If either listing lacks coordinates, don't penalize it - location score stays at 0 for both
             
-            // 3. Controlled randomness (20% of total score)
-            // Changes on every page load/reload for variety
             const aRandom = seededRandom(window._sortRandomSeed, parseInt(a.id) || 0);
             const bRandom = seededRandom(window._sortRandomSeed, parseInt(b.id) || 0);
-            aScore += aRandom * 40; // Max 40 points from randomness
+            aScore += aRandom * 40;
             bScore += bRandom * 40;
             
-            // Compare total scores
             if (Math.abs(aScore - bScore) > 0.1) {
-                return bScore - aScore; // Higher score = earlier in list
+                return bScore - aScore;
             }
             
-            // Tie-breaker: alphabetical
             return a.business_name.localeCompare(b.business_name);
         } else if (sortOption === 'az') {
             return a.business_name.localeCompare(b.business_name);
@@ -965,10 +1046,6 @@ function applyFilters() {
         }
         return 0;
     });
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
     
     displayedListingsCount = 25;
     renderListings();
@@ -980,266 +1057,101 @@ function loadMoreListings() {
     displayedListingsCount += 25;
     renderListings();
 }
-
-function normalizeString(str) {
-    return str.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function isOpenNow(hours) {
-    if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
-    const hasAnyHours = Object.values(hours).some(h => h && h.trim() !== '');
-    if (!hasAnyHours) return null;
-    const now = new Date();
-    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const today = days[centralTime.getDay()];
-    const todayHours = hours[today];
-    if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
-    const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!match) return null;
-    const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
-    let start = parseInt(startHour);
-    let end = parseInt(endHour);
-    if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
-    if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
-    if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
-    if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
-    const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
-    const startMinutes = start * 60 + parseInt(startMin);
-    const endMinutes = end * 60 + parseInt(endMin);
-    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function isOpeningSoon(hours) {
-    if (!hours || typeof hours !== 'object') return false;
-    const now = new Date();
-    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const today = days[centralTime.getDay()];
-    const todayHours = hours[today];
-    if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
-    const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!match) return false;
-    const [, startHour, startMin, startPeriod] = match;
-    let start = parseInt(startHour);
-    if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
-    if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
-    const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
-    const startMinutes = start * 60 + parseInt(startMin);
-    const diff = startMinutes - currentMinutes;
-    return diff > 0 && diff <= 60;
-}
-
-function isClosingSoon(hours) {
-    if (!hours || typeof hours !== 'object') return false;
-    const now = new Date();
-    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const today = days[centralTime.getDay()];
-    const todayHours = hours[today];
-    if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
-    const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!match) return false;
-    const [, , , , endHour, endMin, endPeriod] = match;
-    let end = parseInt(endHour);
-    if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
-    if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
-    const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
-    const endMinutes = end * 60 + parseInt(endMin);
-    const diff = endMinutes - currentMinutes;
-    return diff > 0 && diff <= 60;
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function hasUnknownHours(listing) {
-    if (!listing.address || isBasedIn(listing)) return false;
-    if (!listing.hours || typeof listing.hours !== 'object') return true;
-    const hasAnyHours = Object.values(listing.hours).some(h => h && h.trim() !== '');
-    if (!hasAnyHours) return true;
-    const now = new Date();
-    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const today = days[centralTime.getDay()];
-    const todayHours = listing.hours[today];
-    return !todayHours || todayHours.trim() === '';
-}
-
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 3959;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-}
-
-function isBasedIn(listing) {
-    return listing.city && listing.state && !listing.address;
-}
-
-function getFullAddress(listing) {
-    if (listing.city && listing.state) {
-        if (listing.address) {
-            return `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim();
-        } else {
-            return `${listing.city}, ${listing.state}`.trim();
-        }
-    }
-    return listing.address || '';
-}
-
 // ============================================
-// BADGE & CHECKMARK HELPER
-// Centralised logic: tag hierarchy + verified checkmark
-// - Featured listings: "Featured" badge only (no Verified, no Claimed)
-// - Verified listings (non-Featured): "Verified" badge only (no Claimed)
-// - No "Claimed" badge anywhere; no "Hours Unknown" badge anywhere
-// - Verified listings get a checkmark icon rendered separately next to the name
-// ============================================
-
-function buildBadges(listing) {
-    const badges = [];
-    const openStatus = isOpenNow(listing.hours);
-    const openingSoon = isOpeningSoon(listing.hours);
-    const closingSoon = isClosingSoon(listing.hours);
-
-    // Only ONE hours-status badge: the most specific state wins.
-    // Closed + Opening Soon → "Opening Soon" only.
-    // Open + Closing Soon   → "Closing Soon" only.
-    // Open  (not closing)   → "Open".
-    // Closed (not opening)  → "Closed".
-    if (openingSoon) {
-        badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
-    } else if (closingSoon) {
-        badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
-    } else if (openStatus === true) {
-        badges.push('<span class="badge badge-open">Open</span>');
-    } else if (openStatus === false) {
-        badges.push('<span class="badge badge-closed">Closed</span>');
-    }
-
-    // Tier / verification hierarchy:
-    // FEATURED or PREMIUM → show "Featured" badge only
-    // VERIFIED tier OR verified flag (but not featured) → show "Verified" badge only
-    // FREE tier with show_claim_button === false → nothing (no Claimed badge)
-    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
-
-    if (isFeatured) {
-        badges.push('<span class="badge badge-featured">Featured</span>');
-    } else if (isVerified) {
-        badges.push('<span class="badge badge-verified">Verified</span>');
-    }
-    // No "Claimed" badge, no "Hours Unknown" badge
-
-    return badges;
-}
-
-// Returns true if the listing should show the verified-checkmark icon next to its name.
-// Shown for: Featured/Premium tier, Verified tier, or any listing where the business
-// has claimed it (show_claim_button === false).
-function showsVerifiedCheckmark(listing) {
-    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
-    return isFeatured || isVerified || listing.show_claim_button === false;
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 4
-// Rendering Functions
+// LISTINGS.JS - PART 7: RENDERING FUNCTIONS
 // ============================================
 
 function renderListings() {
     const container = document.getElementById('listingsContainer');
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    
     if (!container) return;
+
+    if (splitViewActive) {
+        renderSplitViewListings();
+        return;
+    }
+
+    const listingsToShow = filteredListings.slice(0, displayedListingsCount);
     
-    const displayedListings = filteredListings.slice(0, displayedListingsCount);
-    const hasMore = displayedListingsCount < filteredListings.length;
-    
-    if (filteredListings.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
-        if (loadMoreBtn) loadMoreBtn.classList.add('hidden');
+    if (listingsToShow.length === 0) {
+        container.innerHTML = '<div class="text-center py-12"><p class="text-gray-600 text-lg">No listings found matching your criteria.</p></div>';
         return;
     }
 
     if (currentView === 'grid') {
-        const screenWidth = window.innerWidth;
-        let gridClass = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+        container.className = 'grid gap-6 listings-3-col';
+        checkFilterPosition();
         
-        if (screenWidth >= 1024) {
-            if (filterPosition === 'left' && !mapOpen) {
-                gridClass = 'grid grid-cols-1 md:grid-cols-2 gap-6 listings-2-col';
-            } else {
-                gridClass = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 listings-3-col';
-            }
-        }
-        
-        container.className = gridClass;
-        container.innerHTML = displayedListings.map(l => {
-            const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : (l.logo || '');
-            const fullAddress = getFullAddress(l);
-            const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-            const badges = buildBadges(l);
-            const isStarred = starredListings.includes(String(l.id));
-            const logoImage = l.logo || '';
-            const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
+        container.innerHTML = listingsToShow.map(listing => {
+            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const listingUrl = `/listing/${categorySlug}/${listing.slug}`;
+            const fullAddress = getFullAddress(listing);
+            const badges = buildBadges(listing);
+            const isStarred = starredListings.includes(String(listing.id));
+            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : '';
+            const logoImage = listing.logo || '';
+            const checkmarkHtml = showsVerifiedCheckmark(listing) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
-                    <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}">
-                        <svg class="star-icon" viewBox="0 0 24 24">
+                <div class="listing-card bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden relative">
+                    <button class="star-button ${isStarred ? 'starred' : ''}" 
+                            onclick="toggleStar('${listing.id}', event)" 
+                            data-listing-id="${listing.id}"
+                            style="position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                        <svg class="star-icon" style="width: 20px; height: 20px; transition: all 0.2s;" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                     </button>
+                    
                     <a href="${listingUrl}" class="block">
-                        <div class="h-48 bg-gray-200 relative">
-                            ${firstPhoto ? `<img src="${firstPhoto}" alt="${l.business_name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">No image</div>'}
-                            ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2 flex-wrap">${badges.join('')}</div>` : ''}
-                        </div>
-                        <div class="p-4">
-                            <div class="flex gap-3 mb-3">
-                                ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
-                                <div class="flex-1 min-w-0">
-                                    <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
-                                    <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
-                                </div>
-                            </div>
-                            <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
-                            <div class="text-sm text-gray-600 space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                    <span class="truncate">${fullAddress}</span>
-                                </div>
-                                ${l.phone ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                        ${firstPhoto ? 
+                            `<img src="${firstPhoto}" alt="${listing.business_name}" class="w-full h-48 object-cover">` :
+                            `<div class="w-full h-48 bg-gradient-to-br from-blue-800 to-blue-600 flex items-center justify-center">
+                                <svg class="w-16 h-16 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>`
+                        }
+                        
+                        <div class="p-5">
+                            ${logoImage ? 
+                                `<div class="flex items-start gap-3 mb-3">
+                                    <img src="${logoImage}" alt="${listing.business_name} logo" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 bg-white">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex gap-2 mb-2 flex-wrap">${badges.join('')}</div>
+                                        <h3 class="text-xl font-bold text-gray-900 mb-1 flex items-center gap-2" style="word-wrap: break-word; hyphens: auto;">
+                                            ${listing.business_name} ${checkmarkHtml}
+                                        </h3>
+                                    </div>
+                                </div>` :
+                                `<div>
+                                    <div class="flex gap-2 mb-2 flex-wrap">${badges.join('')}</div>
+                                    <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2" style="word-wrap: break-word; hyphens: auto;">
+                                        ${listing.business_name} ${checkmarkHtml}
+                                    </h3>
+                                </div>`
+                            }
+                            
+                            ${listing.tagline ? `<p class="text-gray-700 text-sm mb-3 line-clamp-2" style="word-wrap: break-word; hyphens: auto;">${listing.tagline}</p>` : ''}
+                            
+                            <div class="text-sm text-gray-600 space-y-2">
+                                ${fullAddress ? `
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        <span class="line-clamp-2">${fullAddress}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${listing.phone ? `
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                        </svg>
+                                        <span>${formatPhoneDisplay(listing.phone)}</span>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     </a>
@@ -1248,37 +1160,78 @@ function renderListings() {
         }).join('');
     } else {
         container.className = 'space-y-4';
-        container.innerHTML = displayedListings.map(l => {
-            const fullAddress = getFullAddress(l);
-            const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const listingUrl = `/listing/${categorySlug}/${l.slug}`;
-            const badges = buildBadges(l);
-            const isStarred = starredListings.includes(String(l.id));
-            const logoImage = l.logo || '';
-            const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
+        
+        container.innerHTML = listingsToShow.map(listing => {
+            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const listingUrl = `/listing/${categorySlug}/${listing.slug}`;
+            const fullAddress = getFullAddress(listing);
+            const badges = buildBadges(listing);
+            const isStarred = starredListings.includes(String(listing.id));
+            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : '';
+            const logoImage = listing.logo || '';
+            const checkmarkHtml = showsVerifiedCheckmark(listing) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 relative">
-                    <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 12px; right: 12px;">
-                        <svg class="star-icon" viewBox="0 0 24 24">
+                <div class="listing-card bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden relative flex">
+                    <button class="star-button ${isStarred ? 'starred' : ''}" 
+                            onclick="toggleStar('${listing.id}', event)" 
+                            data-listing-id="${listing.id}"
+                            style="position: absolute; top: 12px; right: 12px; z-index: 10; width: 36px; height: 36px; background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                        <svg class="star-icon" style="width: 20px; height: 20px; transition: all 0.2s;" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                     </button>
-                    <a href="${listingUrl}" class="flex gap-4 flex-1 min-w-0">
-                        ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">` : '<div class="w-24 h-24 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
-                        <div class="flex-1 min-w-0 overflow-hidden pr-12">
-                            <div class="flex gap-2 mb-2 flex-wrap">
-                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
-                                ${badges.join('')}
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
-                            <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
-                            <div class="flex flex-col gap-1 text-sm text-gray-600">
-                                <div class="flex items-center gap-1">
-                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                    <span class="truncate">${fullAddress}</span>
-                                </div>
-                                ${l.phone ? `<div class="flex items-center gap-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                    
+                    <a href="${listingUrl}" class="flex w-full">
+                        ${firstPhoto ? 
+                            `<img src="${firstPhoto}" alt="${listing.business_name}" class="w-64 h-full object-cover flex-shrink-0">` :
+                            `<div class="w-64 h-48 bg-gradient-to-br from-blue-800 to-blue-600 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-16 h-16 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>`
+                        }
+                        
+                        <div class="p-5 flex-1 pr-16">
+                            ${logoImage ? 
+                                `<div class="flex items-start gap-3 mb-3">
+                                    <img src="${logoImage}" alt="${listing.business_name} logo" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 bg-white">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex gap-2 mb-2 flex-wrap">${badges.join('')}</div>
+                                        <h3 class="text-xl font-bold text-gray-900 mb-1 flex items-center gap-2" style="word-wrap: break-word; hyphens: auto;">
+                                            ${listing.business_name} ${checkmarkHtml}
+                                        </h3>
+                                    </div>
+                                </div>` :
+                                `<div>
+                                    <div class="flex gap-2 mb-2 flex-wrap">${badges.join('')}</div>
+                                    <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2" style="word-wrap: break-word; hyphens: auto;">
+                                        ${listing.business_name} ${checkmarkHtml}
+                                    </h3>
+                                </div>`
+                            }
+                            
+                            ${listing.tagline ? `<p class="text-gray-700 text-sm mb-3 line-clamp-2" style="word-wrap: break-word; hyphens: auto;">${listing.tagline}</p>` : ''}
+                            
+                            <div class="text-sm text-gray-600 space-y-2">
+                                ${fullAddress ? `
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        <span class="line-clamp-2">${fullAddress}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${listing.phone ? `
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                        </svg>
+                                        <span>${formatPhoneDisplay(listing.phone)}</span>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     </a>
@@ -1286,1272 +1239,57 @@ function renderListings() {
             `;
         }).join('');
     }
-    
+
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
     if (loadMoreBtn) {
-        if (hasMore) {
+        if (displayedListingsCount < filteredListings.length) {
             loadMoreBtn.classList.remove('hidden');
-            loadMoreBtn.textContent = `Load More Listings (${filteredListings.length - displayedListingsCount} remaining)`;
-            loadMoreBtn.onclick = loadMoreListings;
         } else {
             loadMoreBtn.classList.add('hidden');
         }
     }
-
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 function updateResultsCount() {
-    const count = filteredListings.length;
-    const resultsCount = document.getElementById('resultsCount');
-    if (!resultsCount) return;
-    if (viewingStarredOnly) {
-        resultsCount.textContent = `${count} starred ${count === 1 ? 'listing' : 'listings'}`;
-    } else {
-        resultsCount.textContent = `${count} ${count === 1 ? 'listing' : 'listings'} found${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`;
-    }
-}
-
-function updateRadiusValue() {
-    ['radiusValue', 'radiusValue2'].forEach(id => {
-        const valueSpan = document.getElementById(id);
-        if (valueSpan) {
-            if (selectedRadius === 0) {
-                valueSpan.textContent = 'Any distance';
-            } else {
-                valueSpan.textContent = `${selectedRadius} ${selectedRadius === 1 ? 'mile' : 'miles'}`;
-            }
-        }
-    });
-}
-
-function updateLocationSubtitle() {
-    const urlPath = window.location.pathname;
-    const pathParts = urlPath.split('/').filter(p => p);
-    let subtitle = 'All Listings';
-    if (pathParts.length >= 2 && pathParts[0] === 'listings') {
-        const country = pathParts[1].toUpperCase();
-        if (country === 'USA' && pathParts.length >= 3) {
-            const state = pathParts[2].toUpperCase();
-            subtitle = `${US_STATES[state] || state}, United States Listings`;
-        } else if (country === 'USA') {
-            subtitle = 'United States Listings';
+    const countEl = document.getElementById('resultsCount');
+    if (countEl) {
+        if (viewingStarredOnly) {
+            countEl.textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
         } else {
-            subtitle = `${country} Listings`;
+            countEl.textContent = `${filteredListings.length} ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
         }
     }
-    const locationSubtitle = document.getElementById('locationSubtitle');
-    if (locationSubtitle) {
-        locationSubtitle.textContent = subtitle;
-    }
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function populateCountryFilter() {
-    const countries = [...new Set(allListings.map(l => l.country || 'USA'))].sort();
-    ['countryFilter', 'countryFilter2'].forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-            select.innerHTML = '<option value="">All Countries</option>';
-            countries.forEach(country => {
-                const option = document.createElement('option');
-                option.value = country;
-                option.textContent = country === 'USA' ? 'United States' : country;
-                select.appendChild(option);
-            });
-        }
-    });
-}
-
-function populateStateFilter(country) {
-    if (country === 'USA') {
-        const states = [...new Set(allListings.filter(l => (l.country || 'USA') === 'USA').map(l => l.state))].sort();
-        ['stateFilter', 'stateFilter2'].forEach(id => {
-            const select = document.getElementById(id);
-            if (select) {
-                select.innerHTML = '<option value="">All States</option>';
-                states.forEach(state => {
-                    const option = document.createElement('option');
-                    option.value = state;
-                    option.textContent = `${US_STATES[state] || state} (${state})`;
-                    select.appendChild(option);
-                });
-            }
-        });
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
 // ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 5
-// Event Listeners & UI Interactions
-// ============================================
-
-function setupEventListeners() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
-        });
-    }
-    
-    const filterBtn = document.getElementById('filterBtn');
-    if (filterBtn) filterBtn.addEventListener('click', toggleFilters);
-    
-    const closeFilterBtn = document.getElementById('closeFilterBtn');
-    if (closeFilterBtn) closeFilterBtn.addEventListener('click', toggleFilters);
-    
-    const mapBtn = document.getElementById('mapBtn');
-    if (mapBtn) mapBtn.addEventListener('click', toggleMap);
-    
-    const mapBtnDesktop = document.getElementById('mapBtnDesktop');
-    if (mapBtnDesktop) mapBtnDesktop.addEventListener('click', toggleMap);
-    
-    const gridViewBtn = document.getElementById('gridViewBtn');
-    if (gridViewBtn) gridViewBtn.addEventListener('click', () => setView('grid'));
-    
-    const listViewBtn = document.getElementById('listViewBtn');
-    if (listViewBtn) listViewBtn.addEventListener('click', () => setView('list'));
-    
-    const gridViewBtn2 = document.getElementById('gridViewBtn2');
-    if (gridViewBtn2) gridViewBtn2.addEventListener('click', () => setView('grid'));
-    
-    const listViewBtn2 = document.getElementById('listViewBtn2');
-    if (listViewBtn2) listViewBtn2.addEventListener('click', () => setView('list'));
-    
-    // Note: starredBtn removed from UI - starred view toggled via header star button
-    // const starredBtn = document.getElementById('starredBtn');
-    // if (starredBtn) starredBtn.addEventListener('click', toggleStarredView);
-    
-    const splitViewBtn = document.getElementById('splitViewBtn');
-    if (splitViewBtn) splitViewBtn.addEventListener('click', toggleSplitView);
-    
-    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-    if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearAllFilters);
-    
-    const clearFiltersBtn2 = document.getElementById('clearFiltersBtn2');
-    if (clearFiltersBtn2) clearFiltersBtn2.addEventListener('click', clearAllFilters);
-    
-    const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) refreshBtn.addEventListener('click', () => window.location.reload());
-    
-    const toggleFilterPosition = document.getElementById('toggleFilterPosition');
-    if (toggleFilterPosition) {
-        toggleFilterPosition.addEventListener('click', () => {
-            if (filterPosition === 'left') {
-                filterPosition = 'top';
-            } else {
-                filterPosition = 'left';
-            }
-            // Close overlay if it was open
-            closeDesktopFiltersOverlay();
-            checkFilterPosition();
-        });
-    }
-
-    // Desktop filter toggle button (appears when filters are collapsed or map is open)
-    const desktopFilterToggleBtn = document.getElementById('desktopFilterToggleBtn');
-    if (desktopFilterToggleBtn) {
-        desktopFilterToggleBtn.addEventListener('click', () => {
-            if (mapOpen) {
-                // Map is open — sidebar can't coexist, so use the overlay
-                toggleDesktopFiltersOverlay();
-            } else {
-                // Map is closed — just restore the normal sidebar
-                filterPosition = 'left';
-                checkFilterPosition();
-            }
-        });
-    }
-
-    // Close overlay when clicking the backdrop
-    const desktopFiltersBackdrop = document.getElementById('desktopFiltersBackdrop');
-    if (desktopFiltersBackdrop) {
-        desktopFiltersBackdrop.addEventListener('click', closeDesktopFiltersOverlay);
-    }
-
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-
-    ['radiusFilter', 'radiusFilter2'].forEach(id => {
-        const slider = document.getElementById(id);
-        if (slider) {
-            slider.addEventListener('input', (e) => {
-                selectedRadius = parseInt(e.target.value);
-                const radiusFilter = document.getElementById('radiusFilter');
-                const radiusFilter2 = document.getElementById('radiusFilter2');
-                if (radiusFilter) radiusFilter.value = selectedRadius;
-                if (radiusFilter2) radiusFilter2.value = selectedRadius;
-                updateRadiusValue();
-                updateURL();
-                if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
-                    applyFilters();
-                }
-            });
-        }
-    });
-    
-    ['openNowFilter', 'openNowFilter2'].forEach(id => {
-        const checkbox = document.getElementById(id);
-        if (checkbox) {
-            checkbox.addEventListener('change', (e) => {
-                openNowOnly = e.target.checked;
-                const openFilter = document.getElementById('openNowFilter');
-                const openFilter2 = document.getElementById('openNowFilter2');
-                if (openFilter) openFilter.checked = openNowOnly;
-                if (openFilter2) openFilter2.checked = openNowOnly;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
-                    applyFilters();
-                }
-            });
-        }
-    });
-
-    ['closedNowFilter', 'closedNowFilter2'].forEach(id => {
-        const checkbox = document.getElementById(id);
-        if (checkbox) {
-            checkbox.addEventListener('change', (e) => {
-                closedNowOnly = e.target.checked;
-                const closedFilter = document.getElementById('closedNowFilter');
-                const closedFilter2 = document.getElementById('closedNowFilter2');
-                if (closedFilter) closedFilter.checked = closedNowOnly;
-                if (closedFilter2) closedFilter2.checked = closedNowOnly;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
-                    applyFilters();
-                }
-            });
-        }
-    });
-
-    ['openingSoonFilter', 'openingSoonFilter2'].forEach(id => {
-        const checkbox = document.getElementById(id);
-        if (checkbox) {
-            checkbox.addEventListener('change', (e) => {
-                openingSoonOnly = e.target.checked;
-                const openingSoonFilter = document.getElementById('openingSoonFilter');
-                const openingSoonFilter2 = document.getElementById('openingSoonFilter2');
-                if (openingSoonFilter) openingSoonFilter.checked = openingSoonOnly;
-                if (openingSoonFilter2) openingSoonFilter2.checked = openingSoonOnly;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
-                    applyFilters();
-                }
-            });
-        }
-    });
-
-    ['closingSoonFilter', 'closingSoonFilter2'].forEach(id => {
-        const checkbox = document.getElementById(id);
-        if (checkbox) {
-            checkbox.addEventListener('change', (e) => {
-                closingSoonOnly = e.target.checked;
-                const closingSoonFilter = document.getElementById('closingSoonFilter');
-                const closingSoonFilter2 = document.getElementById('closingSoonFilter2');
-                if (closingSoonFilter) closingSoonFilter.checked = closingSoonOnly;
-                if (closingSoonFilter2) closingSoonFilter2.checked = closingSoonOnly;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
-                    applyFilters();
-                }
-            });
-        }
-    });
-
-    ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => {
-        const checkbox = document.getElementById(id);
-        if (checkbox) {
-            checkbox.addEventListener('change', (e) => {
-                hoursUnknownOnly = e.target.checked;
-                const hoursUnknownFilter = document.getElementById('hoursUnknownFilter');
-                const hoursUnknownFilter2 = document.getElementById('hoursUnknownFilter2');
-                if (hoursUnknownFilter) hoursUnknownFilter.checked = hoursUnknownOnly;
-                if (hoursUnknownFilter2) hoursUnknownFilter2.checked = hoursUnknownOnly;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
-                    applyFilters();
-                }
-            });
-        }
-    });
-    
-    ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
-        const checkbox = document.getElementById(id);
-        if (checkbox) {
-            checkbox.addEventListener('change', (e) => {
-                onlineOnly = e.target.checked;
-                const onlineFilter = document.getElementById('onlineOnlyFilter');
-                const onlineFilter2 = document.getElementById('onlineOnlyFilter2');
-                if (onlineFilter) onlineFilter.checked = onlineOnly;
-                if (onlineFilter2) onlineFilter2.checked = onlineOnly;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
-                    applyFilters();
-                }
-            });
-        }
-    });
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    const sortSelect = document.getElementById('sortSelect');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', () => {
-            displayedListingsCount = 25;
-            if (!viewingStarredOnly) applyFilters();
-            else renderListings();
-        });
-    }
-    
-    ['countryFilter', 'countryFilter2'].forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-            select.addEventListener('change', (e) => {
-                selectedCountry = e.target.value;
-                const countryFilter = document.getElementById('countryFilter');
-                const countryFilter2 = document.getElementById('countryFilter2');
-                if (countryFilter) countryFilter.value = selectedCountry;
-                if (countryFilter2) countryFilter2.value = selectedCountry;
-                
-                if (selectedCountry === 'USA') {
-                    const stateContainer = document.getElementById('stateFilterContainer');
-                    const stateContainer2 = document.getElementById('stateFilterContainer2');
-                    if (stateContainer) stateContainer.classList.remove('hidden');
-                    if (stateContainer2) stateContainer2.classList.remove('hidden');
-                    populateStateFilter('USA');
-                } else {
-                    const stateContainer = document.getElementById('stateFilterContainer');
-                    const stateContainer2 = document.getElementById('stateFilterContainer2');
-                    if (stateContainer) stateContainer.classList.add('hidden');
-                    if (stateContainer2) stateContainer2.classList.add('hidden');
-                    selectedState = '';
-                }
-                updateURL();
-                if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
-                    applyFilters();
-                }
-            });
-        }
-    });
-    
-    ['stateFilter', 'stateFilter2'].forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-            select.addEventListener('change', (e) => {
-                selectedState = e.target.value;
-                const stateFilter = document.getElementById('stateFilter');
-                const stateFilter2 = document.getElementById('stateFilter2');
-                if (stateFilter) stateFilter.value = selectedState;
-                if (stateFilter2) stateFilter2.value = selectedState;
-                updateURL();
-                if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
-                    applyFilters();
-                }
-            });
-        }
-    });
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    const locateBtn = document.getElementById('locateBtn');
-    if (locateBtn) {
-        locateBtn.addEventListener('click', () => {
-            if (userLocation) {
-                locationButtonActive = true;
-                mapMoved = false;
-                locateBtn.classList.add('active');
-                // Change button background to #045093, text to white, icon to white
-                locateBtn.style.backgroundColor = '#045093';
-                locateBtn.style.color = 'white';
-                const locateIcon = document.getElementById('locateBtnIcon');
-                if (locateIcon) locateIcon.setAttribute('fill', 'white');
-                if (map) {
-                    map.setView([userLocation.lat, userLocation.lng], 13);
-                    addUserLocationMarker();
-                }
-            } else {
-                requestLocationOnLoad();
-            }
-        });
-    }
-    
-    const resetMapBtn = document.getElementById('resetMapBtn');
-    if (resetMapBtn) {
-        resetMapBtn.addEventListener('click', () => {
-            if (map) {
-                map.setView(defaultMapCenter, defaultMapZoom);
-                if (mapReady && allListingsGeocoded) updateMapMarkers();
-            }
-        });
-    }
-    
-    ['categorySearch', 'categorySearch2'].forEach(id => {
-        const input = document.getElementById(id);
-        if (input) {
-            input.addEventListener('input', (e) => {
-                if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-                searchDebounceTimer = setTimeout(() => {
-                    filterCategoriesAndSubcategories(e.target.value);
-                }, 300);
-            });
-        }
-    });
-
-    setupLocationSearch();
-
-    // ── One-time document-level delegated star handler ──
-    // Catches .star-button clicks anywhere (main grid, list, split view) without
-    // stacking a new listener every time renderListings() runs.
-    document.addEventListener('click', function(e) {
-        const starBtn = e.target.closest('.star-button');
-        if (!starBtn) return;
-        
-        console.log('Star button clicked!', starBtn);
-        
-        // Prevent default behavior and stop propagation
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        
-        const id = starBtn.getAttribute('data-listing-id');
-        console.log('Listing ID:', id);
-        
-        if (id) {
-            toggleStar(id, e);
-            console.log('toggleStar called for ID:', id);
-        } else {
-            console.error('No listing ID found on star button');
-        }
-    }, true); // Use capture phase to ensure we get the event first
-    
-    console.log('Star button event listener registered');
-    
-    window.addEventListener('resize', checkFilterPosition);
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-// Desktop filters overlay management (used when map is open or filters are collapsed)
-function toggleDesktopFiltersOverlay() {
-    if (desktopFiltersOverlay) {
-        closeDesktopFiltersOverlay();
-    } else {
-        openDesktopFiltersOverlay();
-    }
-}
-
-function openDesktopFiltersOverlay() {
-    desktopFiltersOverlay = true;
-    const desktopFilters = document.getElementById('desktopFiltersContainer');
-    const backdrop = document.getElementById('desktopFiltersBackdrop');
-    const desktopLayout = document.getElementById('desktopLayout');
-    
-    if (desktopFilters) {
-        desktopFilters.classList.remove('hidden');
-        // When map is open, show filters inline next to listings
-        if (mapOpen) {
-            desktopFilters.classList.remove('desktop-filters-overlay');
-            desktopFilters.style.position = '';
-            desktopFilters.style.width = '';
-            desktopFilters.style.height = '';
-            desktopFilters.style.maxHeight = '';
-            desktopFilters.style.left = '';
-            desktopFilters.style.top = '';
-            desktopFilters.style.zIndex = '';
-            desktopFilters.style.boxShadow = '';
-            // Make desktop layout flex to show filters and listings side-by-side
-            if (desktopLayout) {
-                desktopLayout.style.display = 'flex';
-                desktopLayout.style.gap = '1rem';
-            }
-            // Don't show backdrop when showing inline
-        } else {
-            // Normal overlay mode when map is closed
-            desktopFilters.classList.add('desktop-filters-overlay');
-            if (backdrop) backdrop.classList.remove('hidden');
-        }
-    }
-}
-
-function closeDesktopFiltersOverlay() {
-    desktopFiltersOverlay = false;
-    const desktopFilters = document.getElementById('desktopFiltersContainer');
-    const backdrop = document.getElementById('desktopFiltersBackdrop');
-    const desktopLayout = document.getElementById('desktopLayout');
-    
-    if (desktopFilters) {
-        desktopFilters.classList.add('hidden');
-        desktopFilters.classList.remove('desktop-filters-overlay');
-    }
-    if (backdrop) backdrop.classList.add('hidden');
-    // Reset desktop layout
-    if (desktopLayout && mapOpen) {
-        desktopLayout.style.display = '';
-    }
-}
-
-function syncFilters() {
-    const filterPairs = [
-        'categorySearch', 'openNowFilter', 'closedNowFilter', 'openingSoonFilter',
-        'closingSoonFilter', 'hoursUnknownFilter', 'onlineOnlyFilter', 'radiusFilter',
-        'countryFilter', 'stateFilter', 'locationSearch'
-    ];
-
-    filterPairs.forEach(base => {
-        const elem1 = document.getElementById(base);
-        const elem2 = document.getElementById(base + '2');
-        if (!elem1 || !elem2) return;
-        
-        elem1.addEventListener('input', () => { 
-            if (base.includes('Filter') && elem1.type === 'checkbox') {
-                elem2.checked = elem1.checked;
-            } else {
-                elem2.value = elem1.value;
-            }
-        });
-        elem1.addEventListener('change', () => {
-            if (base.includes('Filter') && elem1.type === 'checkbox') {
-                elem2.checked = elem1.checked;
-            } else {
-                elem2.value = elem1.value;
-            }
-        });
-        
-        elem2.addEventListener('input', () => {
-            if (base.includes('Filter') && elem2.type === 'checkbox') {
-                elem1.checked = elem2.checked;
-            } else {
-                elem1.value = elem2.value;
-            }
-        });
-        elem2.addEventListener('change', () => {
-            if (base.includes('Filter') && elem2.type === 'checkbox') {
-                elem1.checked = elem2.checked;
-            } else {
-                elem1.value = elem2.value;
-            }
-        });
-    });
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function toggleFilters() {
-    const panel = document.getElementById('filterPanel');
-    if (!panel) return;
-    
-    filtersOpen = !filtersOpen;
-    if (filtersOpen) {
-        panel.classList.remove('hidden');
-        if (mapOpen) toggleMap();
-    } else {
-        panel.classList.add('hidden');
-    }
-}
-
-function toggleMap() {
-    const container = document.getElementById('mapContainer');
-    if (!container) return;
-    
-    mapOpen = !mapOpen;
-    if (mapOpen) {
-        container.classList.remove('hidden');
-        if (filtersOpen) toggleFilters();
-        if (splitViewActive) toggleSplitView();
-        // Close desktop sidebar filters; user can reopen as overlay via toggle button
-        closeDesktopFiltersOverlay();
-        checkFilterPosition();
-        if (map) {
-            setTimeout(() => {
-                map.invalidateSize();
-                updateMapMarkers();
-                if (userLocation) addUserLocationMarker();
-                if (allListingsGeocoded) hideMapLoading();
-            }, 100);
-        }
-    } else {
-        container.classList.add('hidden');
-        // Restore normal filter position state
-        checkFilterPosition();
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function setView(view) {
-    currentView = view;
-    const gridViewBtn = document.getElementById('gridViewBtn');
-    const listViewBtn = document.getElementById('listViewBtn');
-    const gridViewBtn2 = document.getElementById('gridViewBtn2');
-    const listViewBtn2 = document.getElementById('listViewBtn2');
-    
-    if (gridViewBtn) gridViewBtn.className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    if (listViewBtn) listViewBtn.className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    if (gridViewBtn2) gridViewBtn2.className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    if (listViewBtn2) listViewBtn2.className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    
-    renderListings();
-}
-
-function showMapLoading() {
-    const loading = document.getElementById('mapLoading');
-    if (loading) loading.style.display = 'block';
-}
-
-function hideMapLoading() {
-    const loading = document.getElementById('mapLoading');
-    if (loading) loading.style.display = 'none';
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 6
-// Category & Filter Management
-// ============================================
-
-function createCategoryButtons(filteredCategories) {
-    const categoriesToShow = filteredCategories && filteredCategories.length > 0 ? filteredCategories : CATEGORIES;
-    
-    ['categoryFilters', 'categoryFilters2'].forEach(containerId => {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        
-        // Use more compact styling for top view (categoryFilters) on desktop
-        const isTopView = containerId === 'categoryFilters';
-        const compactClass = isTopView ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm';
-        
-        container.innerHTML = '';
-        
-        const allButton = document.createElement('button');
-        allButton.className = selectedCategory === 'All' ? 
-            `${compactClass} rounded-lg font-medium text-white` : 
-            `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300`;
-        if (selectedCategory === 'All') allButton.style.backgroundColor = '#055193';
-        allButton.textContent = 'All';
-        allButton.onclick = () => filterByCategory('All');
-        container.appendChild(allButton);
-        
-        categoriesToShow.forEach(cat => {
-            const button = document.createElement('button');
-            button.className = selectedCategory === cat ? 
-                `${compactClass} rounded-lg font-medium text-white` : 
-                `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300 text-left`;
-            if (selectedCategory === cat) button.style.backgroundColor = '#055193';
-            button.textContent = cat;
-            button.onclick = () => filterByCategory(cat);
-            container.appendChild(button);
-        });
-    });
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function filterByCategory(category) {
-    selectedCategory = category || 'All';
-    selectedSubcategories = [];
-    
-    createCategoryButtons();
-    updateSubcategoryDisplay();
-    updateURL();
-    displayedListingsCount = 25;
-    if (!viewingStarredOnly) applyFilters();
-}
-
-function updateSubcategoryDisplay(matchingSubcategories) {
-    if (selectedCategory && selectedCategory !== 'All' && SUBCATEGORIES[selectedCategory]) {
-        ['subcategoryContainer', 'subcategoryContainer2'].forEach((containerId, idx) => {
-            const filtersId = idx === 0 ? 'subcategoryFilters' : 'subcategoryFilters2';
-            const container = document.getElementById(containerId);
-            const filtersDiv = document.getElementById(filtersId);
-            
-            if (container) container.classList.remove('hidden');
-            if (filtersDiv) {
-                filtersDiv.innerHTML = '';
-                SUBCATEGORIES[selectedCategory].forEach(sub => {
-                    const tag = document.createElement('div');
-                    tag.className = 'subcategory-tag';
-                    tag.textContent = sub;
-                    if (selectedSubcategories.includes(sub)) {
-                        tag.classList.add('selected');
-                    }
-                    tag.onclick = () => toggleSubcategory(sub);
-                    filtersDiv.appendChild(tag);
-                });
-            }
-        });
-    } else if (matchingSubcategories && matchingSubcategories.length > 0) {
-        ['subcategoryContainer', 'subcategoryContainer2'].forEach((containerId, idx) => {
-            const filtersId = idx === 0 ? 'subcategoryFilters' : 'subcategoryFilters2';
-            const container = document.getElementById(containerId);
-            const filtersDiv = document.getElementById(filtersId);
-            
-            if (container) container.classList.remove('hidden');
-            if (filtersDiv) {
-                filtersDiv.innerHTML = '';
-                
-                matchingSubcategories.forEach(item => {
-                    const tag = document.createElement('div');
-                    tag.className = 'subcategory-tag';
-                    tag.textContent = `${item.subcategory} (${item.category})`;
-                    if (selectedSubcategories.includes(item.subcategory)) {
-                        tag.classList.add('selected');
-                    }
-                    tag.onclick = () => toggleSubcategory(item.subcategory);
-                    filtersDiv.appendChild(tag);
-                });
-            }
-        });
-    } else {
-        ['subcategoryContainer', 'subcategoryContainer2'].forEach(id => {
-            const container = document.getElementById(id);
-            if (container) container.classList.add('hidden');
-        });
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function toggleSubcategory(subcategory) {
-    const index = selectedSubcategories.indexOf(subcategory);
-    if (index > -1) {
-        selectedSubcategories.splice(index, 1);
-    } else {
-        selectedSubcategories.push(subcategory);
-    }
-    
-    updateSubcategoryDisplay();
-    updateURL();
-    displayedListingsCount = 25;
-    if (!viewingStarredOnly) applyFilters();
-}
-
-function filterCategoriesAndSubcategories(searchTerm) {
-    searchTerm = searchTerm.toLowerCase();
-    
-    const elem1 = document.getElementById('categorySearch');
-    const elem2 = document.getElementById('categorySearch2');
-    if (elem1) elem1.value = searchTerm;
-    if (elem2) elem2.value = searchTerm;
-
-    if (!searchTerm) {
-        selectedSubcategories = [];
-        updateSubcategoryDisplay();
-        createCategoryButtons();
-        if (!viewingStarredOnly) {
-            displayedListingsCount = 25;
-            applyFilters();
-        }
-        return;
-    }
-    
-    const matchingSubcategories = [];
-    const matchingCategories = new Set();
-    
-    Object.entries(SUBCATEGORIES).forEach(([category, subs]) => {
-        subs.forEach(sub => {
-            if (sub.toLowerCase().includes(searchTerm)) {
-                matchingSubcategories.push({ category, subcategory: sub });
-                matchingCategories.add(category);
-            }
-        });
-    });
-
-    CATEGORIES.forEach(cat => {
-        if (cat.toLowerCase().includes(searchTerm)) {
-            matchingCategories.add(cat);
-        }
-    });
-
-    createCategoryButtons(Array.from(matchingCategories));
-
-    if (matchingSubcategories.length > 0) {
-        updateSubcategoryDisplay(matchingSubcategories);
-    } else {
-        updateSubcategoryDisplay();
-    }
-    
-    updateURL();
-    if (!viewingStarredOnly) {
-        displayedListingsCount = 25;
-        applyFilters();
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function clearAllFilters() {
-    selectedCategory = 'All';
-    selectedSubcategories = [];
-    selectedCountry = '';
-    selectedState = '';
-    selectedCity = '';
-    selectedZip = '';
-    selectedRadius = 0;
-    openNowOnly = false;
-    closedNowOnly = false;
-    openingSoonOnly = false;
-    closingSoonOnly = false;
-    hoursUnknownOnly = false;
-    onlineOnly = false;
-    
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) searchInput.value = '';
-    
-    ['categorySearch', 'categorySearch2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.value = '';
-    });
-    
-    ['locationSearch', 'locationSearch2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.value = '';
-    });
-    
-    ['countryFilter', 'countryFilter2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.value = '';
-    });
-    
-    ['stateFilter', 'stateFilter2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.value = '';
-    });
-    
-    const stateContainer = document.getElementById('stateFilterContainer');
-    const stateContainer2 = document.getElementById('stateFilterContainer2');
-    if (stateContainer) stateContainer.classList.add('hidden');
-    if (stateContainer2) stateContainer2.classList.add('hidden');
-    
-    ['radiusFilter', 'radiusFilter2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.value = '0';
-    });
-    
-    ['openNowFilter', 'openNowFilter2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.checked = false;
-    });
-    
-    ['closedNowFilter', 'closedNowFilter2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.checked = false;
-    });
-    
-    ['openingSoonFilter', 'openingSoonFilter2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.checked = false;
-    });
-    
-    ['closingSoonFilter', 'closingSoonFilter2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.checked = false;
-    });
-    
-    ['hoursUnknownFilter', 'hoursUnknownFilter2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.checked = false;
-    });
-    
-    ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.checked = false;
-    });
-    
-    ['subcategoryContainer', 'subcategoryContainer2'].forEach(id => {
-        const elem = document.getElementById(id);
-        if (elem) elem.classList.add('hidden');
-    });
-    
-    updateRadiusValue();
-    updateURL();
-    createCategoryButtons();
-    displayedListingsCount = 25;
-    if (viewingStarredOnly) {
-        // Re-filter to starred listings after clearing filters
-        toggleStarredView();
-        toggleStarredView(); // Toggle twice to refresh with cleared filters
-    } else {
-        applyFilters();
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function setupLocationSearch() {
-    // FIX: use the correct results div IDs that match the HTML.
-    // HTML has: id="locationSearchResults" and id="locationSearchResults2"
-    // We map each input to its correct results div explicitly.
-    const locationInputs = [
-        { inputId: 'locationSearch',  resultsId: 'locationSearchResults' },
-        { inputId: 'locationSearch2', resultsId: 'locationSearchResults2' }
-    ];
-
-    locationInputs.forEach(({ inputId, resultsId }) => {
-        const input = document.getElementById(inputId);
-        const resultsDiv = document.getElementById(resultsId);
-        
-        if (!input || !resultsDiv) return;
-
-        input.addEventListener('input', () => {
-            const query = input.value.toLowerCase().trim();
-            
-            // Sync the other input
-            const otherId = inputId === 'locationSearch' ? 'locationSearch2' : 'locationSearch';
-            const otherInput = document.getElementById(otherId);
-            if (otherInput) otherInput.value = input.value;
-
-            if (query.length < 2) {
-                resultsDiv.style.display = 'none';
-                return;
-            }
-
-            const matches = [];
-            const seen = new Set();
-
-            allListings.forEach(listing => {
-                const city = listing.city?.toLowerCase();
-                const state = listing.state?.toLowerCase();
-                const zip = listing.zip_code?.toLowerCase();
-                const country = (listing.country || 'USA').toLowerCase();
-
-                if (city && city.includes(query) && !seen.has(`city-${city}-${listing.state}`)) {
-                    matches.push({ type: 'city', value: listing.city, state: listing.state, display: `${listing.city}, ${listing.state}` });
-                    seen.add(`city-${city}-${listing.state}`);
-                }
-                if (state && state.includes(query) && !seen.has(`state-${state}`)) {
-                    matches.push({ type: 'state', value: listing.state, display: US_STATES[listing.state] || listing.state });
-                    seen.add(`state-${state}`);
-                }
-                if (zip && zip.includes(query) && !seen.has(`zip-${zip}`)) {
-                    matches.push({ type: 'zip', value: listing.zip_code, city: listing.city, state: listing.state, display: `${listing.zip_code} (${listing.city}, ${listing.state})` });
-                    seen.add(`zip-${zip}`);
-                }
-                if (country.includes(query) && !seen.has(`country-${country}`)) {
-                    matches.push({ type: 'country', value: listing.country || 'USA', display: listing.country === 'USA' ? 'United States' : listing.country });
-                    seen.add(`country-${country}`);
-                }
-            });
-
-            if (matches.length > 0) {
-                resultsDiv.innerHTML = matches.slice(0, 10).map(m => 
-                    `<div class="location-search-result" data-type="${m.type}" data-value="${m.value}" data-state="${m.state || ''}" data-city="${m.city || ''}">${m.display}</div>`
-                ).join('');
-                resultsDiv.style.display = 'block';
-
-                resultsDiv.querySelectorAll('.location-search-result').forEach(elem => {
-                    elem.addEventListener('click', () => {
-                        const type = elem.dataset.type;
-                        const value = elem.dataset.value;
-
-                        if (type === 'city') {
-                            const state = elem.dataset.state;
-                            selectedCountry = 'USA';
-                            selectedState = state;
-                            selectedCity = value;
-                            selectedZip = '';
-                            const countryFilter = document.getElementById('countryFilter');
-                            const countryFilter2 = document.getElementById('countryFilter2');
-                            if (countryFilter) countryFilter.value = 'USA';
-                            if (countryFilter2) countryFilter2.value = 'USA';
-                            
-                            const stateContainer = document.getElementById('stateFilterContainer');
-                            const stateContainer2 = document.getElementById('stateFilterContainer2');
-                            if (stateContainer) stateContainer.classList.remove('hidden');
-                            if (stateContainer2) stateContainer2.classList.remove('hidden');
-                            
-                            populateStateFilter('USA');
-                            
-                            const stateFilter = document.getElementById('stateFilter');
-                            const stateFilter2 = document.getElementById('stateFilter2');
-                            if (stateFilter) stateFilter.value = state;
-                            if (stateFilter2) stateFilter2.value = state;
-                        } else if (type === 'state') {
-                            selectedCountry = 'USA';
-                            selectedState = value;
-                            selectedCity = '';
-                            selectedZip = '';
-                            const countryFilter = document.getElementById('countryFilter');
-                            const countryFilter2 = document.getElementById('countryFilter2');
-                            if (countryFilter) countryFilter.value = 'USA';
-                            if (countryFilter2) countryFilter2.value = 'USA';
-                            
-                            const stateContainer = document.getElementById('stateFilterContainer');
-                            const stateContainer2 = document.getElementById('stateFilterContainer2');
-                            if (stateContainer) stateContainer.classList.remove('hidden');
-                            if (stateContainer2) stateContainer2.classList.remove('hidden');
-                            
-                            populateStateFilter('USA');
-                            
-                            const stateFilter = document.getElementById('stateFilter');
-                            const stateFilter2 = document.getElementById('stateFilter2');
-                            if (stateFilter) stateFilter.value = value;
-                            if (stateFilter2) stateFilter2.value = value;
-                        } else if (type === 'zip') {
-                            const state = elem.dataset.state;
-                            selectedCountry = 'USA';
-                            selectedState = state;
-                            selectedZip = value;
-                            selectedCity = elem.dataset.city || '';
-                            const countryFilter = document.getElementById('countryFilter');
-                            const countryFilter2 = document.getElementById('countryFilter2');
-                            if (countryFilter) countryFilter.value = 'USA';
-                            if (countryFilter2) countryFilter2.value = 'USA';
-                            
-                            const stateContainer = document.getElementById('stateFilterContainer');
-                            const stateContainer2 = document.getElementById('stateFilterContainer2');
-                            if (stateContainer) stateContainer.classList.remove('hidden');
-                            if (stateContainer2) stateContainer2.classList.remove('hidden');
-                            
-                            populateStateFilter('USA');
-                            
-                            const stateFilter = document.getElementById('stateFilter');
-                            const stateFilter2 = document.getElementById('stateFilter2');
-                            if (stateFilter) stateFilter.value = state;
-                            if (stateFilter2) stateFilter2.value = state;
-                        } else if (type === 'country') {
-                            selectedCountry = value;
-                            selectedState = '';
-                            selectedCity = '';
-                            selectedZip = '';
-                            const countryFilter = document.getElementById('countryFilter');
-                            const countryFilter2 = document.getElementById('countryFilter2');
-                            if (countryFilter) countryFilter.value = value;
-                            if (countryFilter2) countryFilter2.value = value;
-                            
-                            if (value === 'USA') {
-                                const stateContainer = document.getElementById('stateFilterContainer');
-                                const stateContainer2 = document.getElementById('stateFilterContainer2');
-                                if (stateContainer) stateContainer.classList.remove('hidden');
-                                if (stateContainer2) stateContainer2.classList.remove('hidden');
-                                populateStateFilter('USA');
-                            } else {
-                                const stateContainer = document.getElementById('stateFilterContainer');
-                                const stateContainer2 = document.getElementById('stateFilterContainer2');
-                                if (stateContainer) stateContainer.classList.add('hidden');
-                                if (stateContainer2) stateContainer2.classList.add('hidden');
-                            }
-                        }
-
-                        // Clear both inputs and hide both results divs
-                        ['locationSearch', 'locationSearch2'].forEach(id => {
-                            const el = document.getElementById(id);
-                            if (el) el.value = '';
-                        });
-                        ['locationSearchResults', 'locationSearchResults2'].forEach(id => {
-                            const el = document.getElementById(id);
-                            if (el) el.style.display = 'none';
-                        });
-
-                        updateURL();
-                        if (!viewingStarredOnly) {
-                            displayedListingsCount = 25;
-                            applyFilters();
-                        }
-                    });
-                });
-            } else {
-                resultsDiv.style.display = 'none';
-            }
-        });
-
-        input.addEventListener('blur', () => {
-            setTimeout(() => {
-                resultsDiv.style.display = 'none';
-            }, 200);
-        });
-    });
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 7
-// Map Functions & Geocoding
-// ============================================
-
-// ============================================
-// COMPLETE MAP SECTION - ONE PASTE REPLACEMENT
-// DELETE FROM LINE 2600 TO LINE 3200 (entire map section)
-// PASTE THIS ENTIRE FILE
-// ============================================
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-// ============================================
-// HELPER FUNCTION - Call Button Generator
-// ============================================
-
-function generateCallButton(listing) {
-    if (!listing.phone) return '';
-    
-    return `
-        <a href="tel:${listing.phone}" 
-           onclick="event.stopPropagation();"
-           style="position:absolute;bottom:8px;right:100px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#10b981;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;z-index:10;" 
-           onmouseover="this.style.background='#059669'" 
-           onmouseout="this.style.background='#10b981'">
-            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-            </svg>
-            Call
-        </a>
-    `;
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-// ============================================
-// MAP INITIALIZATION
+// LISTINGS.JS - PART 8: MAP INITIALIZATION & CONTROLS
 // ============================================
 
 function initMap() {
-    if (map) return;
-    showMapLoading();
+    if (mapReady) return;
     
-    map = L.map('map', { 
-        center: defaultMapCenter, 
-        zoom: defaultMapZoom, 
-        zoomControl: true,
-        scrollWheelZoom: false,
-        touchZoom: true,
-        doubleClickZoom: true
-    });
-    
-    map.on('click', function() {
-        map.scrollWheelZoom.enable();
-    });
-    map.on('mouseout', function() {
-        map.scrollWheelZoom.disable();
+    map = L.map('map', {
+        center: defaultMapCenter,
+        zoom: defaultMapZoom,
+        zoomControl: false
     });
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: null, 
-        maxZoom: 19,
-        updateWhenIdle: true,
-        updateWhenZooming: false,
-        keepBuffer: 2
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
     }).addTo(map);
+    
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     
     markerClusterGroup = L.markerClusterGroup({
         maxClusterRadius: 50,
-        disableClusteringAtZoom: 18,
         spiderfyOnMaxZoom: true,
         showCoverageOnHover: false,
-        zoomToBoundsOnClick: true,
-        animate: true,
-        animateAddingMarkers: false,
-        chunkedLoading: true,
-        chunkInterval: 200,
-        chunkDelay: 50,
-        iconCreateFunction: function(cluster) {
-            const count = cluster.getChildCount();
-            let size = 'small';
-            if (count >= 10) size = 'medium';
-            if (count >= 50) size = 'large';
-            return L.divIcon({
-                html: `<div class="marker-cluster marker-cluster-${size}">${count}</div>`,
-                className: '',
-                iconSize: size === 'small' ? [40, 40] : size === 'medium' ? [50, 50] : [60, 60]
-            });
-        }
+        zoomToBoundsOnClick: false
     });
+    
     map.addLayer(markerClusterGroup);
     
-    if (userLocation) addUserLocationMarker();
-    
-    map.on('movestart', () => {
-        if (locationButtonActive && !mapMoved) {
-            mapMoved = true;
-            locationButtonActive = false;
-            const locateBtn = document.getElementById('locateBtn');
-            if (locateBtn) {
-                locateBtn.classList.remove('active');
-                locateBtn.style.backgroundColor = '';
-                locateBtn.style.color = '';
-            }
-            const locateIcon = document.getElementById('locateBtnIcon');
-            if (locateIcon) locateIcon.setAttribute('fill', '#045093');
-        }
-    });
-
-    map.on('zoomend', () => {
-        if (mapOpen) updateMapMarkers();
-    });
-    
-    // Cluster click handler
+    // CRITICAL FIX: Map cluster click handler with radius filter and tier sorting
     markerClusterGroup.on('clusterclick', function(event) {
         const cluster = event.layer;
         const childMarkers = cluster.getAllChildMarkers();
@@ -2561,13 +1299,33 @@ function initMap() {
             return;
         }
         
-        const listings = childMarkers.map(m => {
+        // FIXED: Filter by 0.1 mile radius
+        const clusterCenter = cluster.getLatLng();
+        const nearbyMarkers = childMarkers.filter(m => {
+            const markerPos = m.getLatLng();
+            const dist = calculateDistance(
+                clusterCenter.lat, clusterCenter.lng,
+                markerPos.lat, markerPos.lng
+            );
+            return dist <= 0.1;
+        });
+        
+        const listings = nearbyMarkers.map(m => {
             const listingId = m.options.listingId;
             return filteredListings.find(l => String(l.id) === String(listingId));
         }).filter(Boolean);
         
         if (listings.length === 0) return;
         
+        // FIXED: Sort by tier
+        const tierPriority = { PREMIUM: 4, FEATURED: 3, VERIFIED: 2, FREE: 1 };
+        listings.sort((a, b) => {
+            const aTier = a.tier || 'FREE';
+            const bTier = b.tier || 'FREE';
+            return tierPriority[bTier] - tierPriority[aTier];
+        });
+        
+        // Create popup with all fixes
         const clusterPopupContent = listings.map(listing => {
             const fullAddr = getFullAddress(listing);
             const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
@@ -2576,14 +1334,13 @@ function initMap() {
             const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : '';
             const logoImage = listing.logo || '';
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+            const checkmarkHtml = showsVerifiedCheckmark(listing) ? 
+                '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
             
             return `
                 <div class="map-popup" style="width: 280px; margin-bottom: ${listings.length > 1 ? '16px' : '0'}; border-bottom: ${listings.length > 1 ? '1px solid #e5e7eb; padding-bottom: 16px' : '0'};">
                     ${firstPhoto ? `
-                        <img src="${firstPhoto}" 
-                             alt="${listing.business_name}" 
-                             style="width:100%;height:140px;object-fit:cover;border-radius:12px 12px 0 0;">
+                        <img src="${firstPhoto}" alt="${listing.business_name}" style="width:100%;height:140px;object-fit:cover;border-radius:12px 12px 0 0;">
                     ` : `
                         <div style="width:100%;height:140px;background:linear-gradient(135deg, #045093 0%, #0369a1 100%);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;">
                             <svg style="width:48px;height:48px;color:rgba(255,255,255,0.5);" fill="currentColor" viewBox="0 0 20 20">
@@ -2594,9 +1351,9 @@ function initMap() {
                     
                     <div class="map-popup-content" style="padding: 12px; padding-bottom: 50px; position: relative;">
                         ${logoImage ? `
-                            <img src="${logoImage}" 
-                                 alt="${listing.business_name} logo" 
-                                 style="width:48px;height:48px;border-radius:8px;object-fit:cover;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                            <div style="width:48px;height:48px;background:white;border-radius:8px;padding:4px;display:flex;align-items:center;justify-content:center;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                                <img src="${logoImage}" alt="${listing.business_name} logo" style="width:100%;height:100%;object-fit:contain;border-radius:4px;">
+                            </div>
                         ` : ''}
                         
                         <div class="map-popup-info">
@@ -2604,14 +1361,13 @@ function initMap() {
                                 ${badges.join('')}
                             </div>
                             
-                            <a href="/listing/${categorySlug}/${listing.slug}" 
-                               class="map-popup-title" 
-                               style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;">
+                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" 
+                               style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;flex-wrap:wrap;word-wrap:break-word;hyphens:auto;">
                                 ${listing.business_name}${checkmarkHtml}
                             </a>
                             
                             ${listing.tagline ? `
-                                <div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;">
+                                <div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;word-wrap:break-word;hyphens:auto;">
                                     ${listing.tagline}
                                 </div>
                             ` : ''}
@@ -2622,9 +1378,8 @@ function initMap() {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     </svg>
-                                    <span style="line-height:1.4;">${fullAddr}</span>
+                                    <span style="line-height:1.4;word-wrap:break-word;hyphens:auto;">${fullAddr}</span>
                                 </div>
-                                
                                 ${listing.phone ? `
                                     <div style="display:flex;align-items:center;gap:6px;">
                                         <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2637,13 +1392,9 @@ function initMap() {
                             
                             ${callButton}
                             
-                            <a href="${googleMapsUrl}" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               onclick="event.stopPropagation();"
-                               style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;" 
-                               onmouseover="this.style.background='#033d7a'" 
-                               onmouseout="this.style.background='#045093'">
+                            <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();"
+                               style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;" 
+                               onmouseover="this.style.background='#033d7a'" onmouseout="this.style.background='#045093'">
                                 <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                                 </svg>
@@ -2665,322 +1416,145 @@ function initMap() {
         .openOn(map);
     });
     
-    setTimeout(() => {
-        map.invalidateSize();
-        mapReady = true;
-        updateMapMarkers();
-        if (allListingsGeocoded) hideMapLoading();
-    }, 500);
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-// ============================================
-// GEOCODING
-// ============================================
-
-async function geocodeAllListings() {
-    let geocodedCount = 0;
-    for (let listing of allListings) {
-        if (!listing.coordinates && listing.address && !isBasedIn(listing)) {
-            await geocodeListing(listing);
-            geocodedCount++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
+    map.on('moveend', function() {
+        if (mapMoved) {
+            locationButtonActive = false;
+            const locationBtn = document.getElementById('centerLocationBtn');
+            if (locationBtn) {
+                locationBtn.classList.remove('active');
+            }
         }
-    }
-    allListingsGeocoded = true;
-    if (map && mapReady) {
-        hideMapLoading();
-        updateMapMarkers();
-    }
-}
-
-async function geocodeListing(listing) {
-    const fullAddress = getFullAddress(listing);
-    try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`);
-        const data = await response.json();
-        if (data && data.length > 0) {
-            listing.coordinates = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-        }
-    } catch (e) {
-        console.error('Geocoding failed for', listing.business_name, e);
-    }
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-function mapVisibleRadiusMiles(leafletMap) {
-    if (!leafletMap) return Infinity;
-    try {
-        var bounds = leafletMap.getBounds();
-        var sw = bounds.getSouthWest();
-        var ne = bounds.getNorthEast();
-        var diag = calculateDistance(sw.lat, sw.lng, ne.lat, ne.lng);
-        return diag / 2;
-    } catch(e) { return Infinity; }
+        mapMoved = true;
+    });
+    
+    mapReady = true;
+    updateMapMarkers();
 }
 
 function updateMapMarkers() {
-    if (!map || !markerClusterGroup || !mapReady) return;
+    if (!map || !markerClusterGroup) return;
+    
     markerClusterGroup.clearLayers();
-
-    var useMapRadius = (mapOpen && selectedRadius === 0);
-    var mapRadiusLimit = 50;
-    var effectiveLocation = userLocation || estimatedUserLocation;
-
-    if (useMapRadius) {
-        var visibleRadius = mapVisibleRadiusMiles(map);
-        if (visibleRadius > 100) {
-            useMapRadius = false;
-        }
-    }
-
-    const bounds = [];
+    
     filteredListings.forEach(listing => {
-        if (listing.coordinates && !isBasedIn(listing)) {
-
-            if (useMapRadius && effectiveLocation) {
-                var dist = calculateDistance(
-                    effectiveLocation.lat, effectiveLocation.lng,
-                    listing.coordinates.lat, listing.coordinates.lng
-                );
-                if (dist > mapRadiusLimit) return;
-            }
-
-            const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
-            const logoImage = listing.logo || '';
-            
-            const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
-            const iconHtml = logoImage ? 
-                `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
-                `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
-            const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
-            const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { 
-                icon: customIcon, 
-                riseOnHover: true,
-                listingId: listing.id
-            });
-            
-            const badges = buildBadges(listing);
-            const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
-            
-            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const heroImage = firstPhoto || '';
-            const fullAddr = getFullAddress(listing);
-            const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
-            const callButton = generateCallButton(listing);
-            
-            const popupContent = `
-                <div class="map-popup" style="width: 280px;">
-                    ${heroImage ? `
-                        <img src="${heroImage}" 
-                             alt="${listing.business_name}" 
-                             style="width:100%;height:140px;object-fit:cover;border-radius:12px 12px 0 0;">
-                    ` : `
-                        <div style="width:100%;height:140px;background:linear-gradient(135deg, #045093 0%, #0369a1 100%);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;">
-                            <svg style="width:48px;height:48px;color:rgba(255,255,255,0.5);" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
-                            </svg>
+        if (!listing.coordinates || !listing.coordinates.lat || !listing.coordinates.lng) return;
+        
+        const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], {
+            listingId: listing.id
+        });
+        
+        const fullAddr = getFullAddress(listing);
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
+        const callButton = generateCallButton(listing);
+        const badges = buildBadges(listing);
+        const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : '';
+        const logoImage = listing.logo || '';
+        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const checkmarkHtml = showsVerifiedCheckmark(listing) ? 
+            '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+        
+        const popupContent = `
+            <div class="map-popup" style="width: 280px;">
+                ${firstPhoto ? `
+                    <img src="${firstPhoto}" alt="${listing.business_name}" style="width:100%;height:140px;object-fit:cover;border-radius:12px 12px 0 0;">
+                ` : `
+                    <div style="width:100%;height:140px;background:linear-gradient(135deg, #045093 0%, #0369a1 100%);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;">
+                        <svg style="width:48px;height:48px;color:rgba(255,255,255,0.5);" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                `}
+                
+                <div class="map-popup-content" style="padding: 12px; padding-bottom: 50px; position: relative;">
+                    ${logoImage ? `
+                        <div style="width:48px;height:48px;background:white;border-radius:8px;padding:4px;display:flex;align-items:center;justify-content:center;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                            <img src="${logoImage}" alt="${listing.business_name} logo" style="width:100%;height:100%;object-fit:contain;border-radius:4px;">
                         </div>
-                    `}
+                    ` : ''}
                     
-                    <div class="map-popup-content" style="padding: 12px; padding-bottom: 50px; position: relative;">
-                        ${logoImage ? `
-                            <img src="${logoImage}" 
-                                 alt="${listing.business_name} logo" 
-                                 style="width:48px;height:48px;border-radius:8px;object-fit:cover;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                    <div class="map-popup-info">
+                        <div class="map-popup-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+                            ${badges.join('')}
+                        </div>
+                        
+                        <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" 
+                           style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;flex-wrap:wrap;word-wrap:break-word;hyphens:auto;">
+                            ${listing.business_name}${checkmarkHtml}
+                        </a>
+                        
+                        ${listing.tagline ? `
+                            <div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;word-wrap:break-word;hyphens:auto;">
+                                ${listing.tagline}
+                            </div>
                         ` : ''}
                         
-                        <div class="map-popup-info">
-                            <div class="map-popup-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
-                                ${badges.join('')}
+                        <div class="map-popup-details" style="font-size:12px;color:#6b7280;margin-bottom:4px;">
+                            <div style="display:flex;align-items:start;gap:6px;margin-bottom:4px;">
+                                <svg style="width:14px;height:14px;margin-top:2px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <span style="line-height:1.4;word-wrap:break-word;hyphens:auto;">${fullAddr}</span>
                             </div>
-                            
-                            <a href="/listing/${categorySlug}/${listing.slug}" 
-                               class="map-popup-title" 
-                               style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;">
-                                ${listing.business_name}${checkmarkHtml}
-                            </a>
-                            
-                            ${listing.tagline ? `
-                                <div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;">
-                                    ${listing.tagline}
+                            ${listing.phone ? `
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                    </svg>
+                                    <span>${formatPhoneDisplay(listing.phone)}</span>
                                 </div>
                             ` : ''}
-                            
-                            <div class="map-popup-details" style="font-size:12px;color:#6b7280;margin-bottom:4px;">
-                                <div style="display:flex;align-items:start;gap:6px;margin-bottom:4px;">
-                                    <svg style="width:14px;height:14px;margin-top:2px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                    <span style="line-height:1.4;">${fullAddr}</span>
-                                </div>
-                                
-                                ${listing.phone ? `
-                                    <div style="display:flex;align-items:center;gap:6px;">
-                                        <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                        </svg>
-                                        <span>${formatPhoneDisplay(listing.phone)}</span>
-                                    </div>
-                                ` : ''}
-                            </div>
-                            
-                            ${callButton}
-                            
-                            <a href="${googleMapsUrl}" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               onclick="event.stopPropagation();"
-                               style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;" 
-                               onmouseover="this.style.background='#033d7a'" 
-                               onmouseout="this.style.background='#045093'">
-                                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                                </svg>
-                                Directions
-                            </a>
                         </div>
+                        
+                        ${callButton}
+                        
+                        <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();"
+                           style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;" 
+                           onmouseover="this.style.background='#033d7a'" onmouseout="this.style.background='#045093'">
+                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                            </svg>
+                            Directions
+                        </a>
                     </div>
-                </div>
-            `;
-            
-            marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
-            marker.on('popupopen', () => {
-                const closeBtn = document.querySelector('.leaflet-popup-close-button');
-                if (closeBtn) closeBtn.textContent = '×';
-            });
-            markerClusterGroup.addLayer(marker);
-            bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
-        }
-    });
-    
-    if (bounds.length > 0 && !map._hasAutoFitted) {
-        map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
-        map._hasAutoFitted = true;
-    }
-}
-
-/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law.
-*/
-
-// ============================================
-// LISTINGS PAGE JAVASCRIPT - PART 8
-// Split View Functions
-// ============================================
-
-function toggleSplitView() {
-    splitViewActive = !splitViewActive;
-    if (splitViewActive) {
-        document.getElementById('normalViewControls').classList.add('hidden');
-        document.getElementById('normalViewListings').classList.add('hidden');
-        document.getElementById('mapContainer').classList.add('hidden');
-        const splitContainer = document.getElementById('splitViewContainer');
-        splitContainer.classList.remove('hidden');
-        splitContainer.className = 'split-view-container';
-        splitContainer.style.position = 'relative';
-        splitContainer.style.zIndex = '10';
-        splitContainer.innerHTML = `
-            <div class="split-view-listings">
-                <div class="mb-3 flex items-center justify-between px-2">
-                    <div class="flex items-center gap-2">
-                        <p class="text-sm text-gray-600">${filteredListings.length} ${filteredListings.length === 1 ? 'listing' : 'listings'} found</p>
-                        <button id="splitFiltersBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Filters
-                        </button>
-                    </div>
-                    <select id="splitSortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                        <option value="default">Default</option>
-                        <option value="az">A-Z</option>
-                        <option value="closest">Closest to Me</option>
-                        <option value="random">Random</option>
-                    </select>
-                </div>
-                <div id="splitListingsContainer"></div>
-            </div>
-            <div class="split-view-map" style="position: relative; z-index: 10;">
-                <div id="splitMap"></div>
-                <div class="map-controls">
-                    <button class="map-control-btn" id="splitViewToggleBtn" onclick="toggleSplitView()" title="Exit split view">
-                        <svg width="16" height="16" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="#045093"><rect x="15" y="4" width="2" height="24"/><path d="M10,7V25H4V7h6m0-2H4A2,2,0,0,0,2,7V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/><path d="M28,7V25H22V7h6m0-2H22a2,2,0,0,0-2,2V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/></svg>
-                        <span class="desktop-only">Exit Split View</span>
-                    </button>
-                    <button class="map-control-btn" id="splitLocateBtn" title="Find my location">
-                        <svg id="splitLocateBtnIcon" width="16" height="16" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="#045093">
-                            <polygon points="0,9.28 9.894,9.99 10.78,20 20,0"/>
-                        </svg>
-                        <span class="desktop-only">Current Location</span>
-                    </button>
-                    <button class="map-control-btn" id="splitResetMapBtn" title="Reset map view">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        <span class="desktop-only">Reload</span>
-                    </button>
                 </div>
             </div>
         `;
-        // Hide desktop sidebar in split view; checkFilterPosition will enforce via splitViewActive branch
-        checkFilterPosition();
-        // Close filterPanel if it was open from before entering split view
-        if (filtersOpen) { filtersOpen = false; document.getElementById('filterPanel').classList.add('hidden'); }
-
-        document.getElementById('splitSortSelect').value = document.getElementById('sortSelect').value;
-        document.getElementById('splitSortSelect').addEventListener('change', (e) => {
-            document.getElementById('sortSelect').value = e.target.value;
-            displayedListingsCount = 25;
-            if (!viewingStarredOnly) applyFilters();
-            else renderListings();
-        });
-
-        // Filters button in split view opens the top filterPanel
-        const splitFiltersBtn = document.getElementById('splitFiltersBtn');
-        if (splitFiltersBtn) {
-            splitFiltersBtn.addEventListener('click', toggleFilters);
-        }
-
-        renderSplitViewListings();
-        initSplitMap();
-    } else {
-        document.getElementById('splitViewContainer').classList.add('hidden');
-        document.getElementById('splitViewContainer').innerHTML = '';
-        document.getElementById('normalViewControls').classList.remove('hidden');
-        document.getElementById('normalViewListings').classList.remove('hidden');
-        document.getElementById('mapContainer').classList.remove('hidden');
-        checkFilterPosition();
-        setTimeout(() => {
-            if (map) {
-                map.invalidateSize();
-                updateMapMarkers();
-            }
-        }, 100);
-    }
+        
+        marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
+        markerClusterGroup.addLayer(marker);
+    });
 }
+// ============================================
+// LISTINGS.JS - PART 9: SPLIT VIEW & SELECTION SYSTEM
+// ============================================
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+// FIXED: Global function for split view selection
+window.selectSplitListing = function(listingId, lat, lng) {
+    selectedSplitListingId = String(listingId);
+    
+    if (splitMap) {
+        splitMap.setView([lat, lng], 15);
+        
+        splitMarkerClusterGroup.eachLayer(marker => {
+            if (String(marker.options.listingId) === String(listingId)) {
+                marker.openPopup();
+            }
+        });
+    }
+    
+    renderSplitViewListings();
+};
 
 function renderSplitViewListings() {
     const container = document.getElementById('splitListingsContainer');
     if (!container) return;
+    
     if (filteredListings.length === 0) {
         container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
         return;
     }
+    
     container.className = 'space-y-3';
     container.innerHTML = filteredListings.map(l => {
         const fullAddress = getFullAddress(l);
@@ -2989,250 +1563,2035 @@ function renderSplitViewListings() {
         const badges = buildBadges(l);
         const isStarred = starredListings.includes(String(l.id));
         const logoImage = l.logo || '';
-        const checkmarkHtml = showsVerifiedCheckmark(l) ? '<svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+        const checkmarkHtml = showsVerifiedCheckmark(l) ? 
+            '<svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+        const isSelected = selectedSplitListingId === String(l.id);
+        
+        // FIXED: Visit button only appears for selected listing
+        const visitButton = isSelected && l.coordinates ? `
+            <a href="${listingUrl}" class="px-4 py-2 rounded-lg text-sm font-medium text-white"
+               style="background:#045093;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+                Visit
+            </a>
+        ` : '';
+        
+        const clickHandler = l.coordinates ? 
+            `onclick="selectSplitListing('${l.id}', ${l.coordinates.lat}, ${l.coordinates.lng})" style="cursor:pointer;"` : 
+            '';
         
         return `
-            <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 relative" style="margin-right: 8px;">
-                <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 8px; right: 8px; width: 32px; height: 32px;">
-                    <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+            <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 relative split-listing-item ${isSelected ? 'selected-listing' : ''}" style="margin-right: 8px;" data-listing-id="${l.id}">
+                <button class="star-button ${isStarred ? 'starred' : ''}" 
+                        data-listing-id="${l.id}" 
+                        onclick="toggleStar('${l.id}', event)"
+                        style="top: 8px; right: 8px; width: 32px; height: 32px; position: absolute; background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10;">
+                    <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </button>
-                <a href="${listingUrl}" class="flex gap-3 flex-1 min-w-0">
-                    ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
+                
+                <div class="flex gap-3 flex-1 min-w-0" ${clickHandler}>
+                    ${logoImage ? 
+                        `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : 
+                        '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'
+                    }
+                    
                     <div class="flex-1 min-w-0 overflow-hidden pr-8">
                         <div class="flex gap-1 mb-1 flex-wrap">
                             ${badges.join('')}
                         </div>
-                        <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
-                        <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
+                        <h3 class="text-base font-bold text-gray-900 mb-1 flex items-center gap-1.5" style="word-wrap:break-word;hyphens:auto;">
+                            ${l.business_name} ${checkmarkHtml}
+                        </h3>
+                        <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description || ''}</p>
                         <div class="text-xs text-gray-600">
                             <div class="flex items-center gap-1 truncate">
-                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
                                 <span class="truncate">${fullAddress}</span>
                             </div>
                         </div>
                     </div>
-                </a>
+                </div>
+                ${visitButton}
             </div>
         `;
     }).join('');
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
 function initSplitMap() {
-    const splitMapDiv = document.getElementById('splitMap');
-    if (!splitMapDiv) return;
-    const splitMap = L.map('splitMap', { 
-        center: defaultMapCenter, 
-        zoom: defaultMapZoom, 
-        zoomControl: true,
-        scrollWheelZoom: false,
-        touchZoom: true,
-        doubleClickZoom: true
-    });
+    if (!document.getElementById('splitMap')) return;
     
-    splitMap.on('click', function() {
-        splitMap.scrollWheelZoom.enable();
-    });
-    splitMap.on('mouseout', function() {
-        splitMap.scrollWheelZoom.disable();
+    splitMap = L.map('splitMap', {
+        center: defaultMapCenter,
+        zoom: defaultMapZoom,
+        zoomControl: false
     });
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: null, maxZoom: 19
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
     }).addTo(splitMap);
-    const splitMarkerClusterGroup = L.markerClusterGroup({
-        maxClusterRadius: 50, disableClusteringAtZoom: 18, spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false, zoomToBoundsOnClick: true,
-        iconCreateFunction: function(cluster) {
-            const count = cluster.getChildCount();
-            let size = count >= 50 ? 'large' : count >= 10 ? 'medium' : 'small';
-            return L.divIcon({
-                html: `<div class="marker-cluster marker-cluster-${size}">${count}</div>`,
-                className: '', iconSize: size === 'small' ? [40, 40] : size === 'medium' ? [50, 50] : [60, 60]
-            });
-        }
+    
+    L.control.zoom({ position: 'bottomright' }).addTo(splitMap);
+    
+    splitMarkerClusterGroup = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true
     });
+    
     splitMap.addLayer(splitMarkerClusterGroup);
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
-    if (userLocation) {
-        const userIcon = L.divIcon({
-            html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
-            className: '', iconSize: [22, 22], iconAnchor: [11, 11]
-        });
-        L.marker([userLocation.lat, userLocation.lng], {
-            icon: userIcon, zIndexOffset: 1000
-        }).addTo(splitMap).bindPopup('<strong>Your Location</strong>');
-    }
-    // ── Split-map radius logic (mirrors main map) ──
-    var useMapRadius = (selectedRadius === 0);
-    var mapRadiusLimit = 50;
-    var effectiveLocation = userLocation || estimatedUserLocation;
-    if (useMapRadius) {
-        // splitMap may not have valid bounds yet on first render; use a safe fallback
-        try {
-            var visibleRadius = mapVisibleRadiusMiles(splitMap);
-            if (visibleRadius > 100) useMapRadius = false;
-        } catch(e) { /* first render, keep default 50mi */ }
-    }
+    updateSplitMapMarkers();
+}
 
-    const bounds = [];
+function updateSplitMapMarkers() {
+    if (!splitMap || !splitMarkerClusterGroup) return;
+    
+    splitMarkerClusterGroup.clearLayers();
+    
     filteredListings.forEach(listing => {
-        if (listing.coordinates && !isBasedIn(listing)) {
-
-            // Map-radius gate
-            if (useMapRadius && effectiveLocation) {
-                var dist = calculateDistance(
-                    effectiveLocation.lat, effectiveLocation.lng,
-                    listing.coordinates.lat, listing.coordinates.lng
-                );
-                if (dist > mapRadiusLimit) return;
-            }
-
-            const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-            const logoImage = listing.logo || '';
-            
-            const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
-            const iconHtml = logoImage ?
-                `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
-                `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
-            const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
-            const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
-            const badges = buildBadges(listing);
-            const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
-            
-            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
-            const popupContent = `
-                <div class="map-popup">
-                    ${firstPhoto ? `<img src="${firstPhoto}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
-                    <div class="map-popup-content">
-                        ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
-                        <div class="map-popup-info" style="padding-bottom: 40px;">
-                            <div class="map-popup-badges">${badges.join('')}</div>
-                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
-                            <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
-                            <div class="map-popup-details">
-                                <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
-            marker.on('popupopen', () => {
-                const closeBtn = document.querySelector('.leaflet-popup-close-button');
-                if (closeBtn) closeBtn.textContent = '×';
-            });
-            splitMarkerClusterGroup.addLayer(marker);
-            bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
-        }
-    });
-    if (bounds.length > 0) splitMap.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
-    setTimeout(() => splitMap.invalidateSize(), 250);
-
-    // Refresh split-map pins on zoom
-    splitMap.on('zoomend', () => {
-        // Re-run marker logic by clearing and re-adding
-        splitMarkerClusterGroup.clearLayers();
-        var useMapRadius2 = (selectedRadius === 0);
-        var effectiveLocation2 = userLocation || estimatedUserLocation;
-        if (useMapRadius2) {
-            try {
-                var vr = mapVisibleRadiusMiles(splitMap);
-                if (vr > 100) useMapRadius2 = false;
-            } catch(e) {}
-        }
-        filteredListings.forEach(listing => {
-            if (listing.coordinates && !isBasedIn(listing)) {
-                if (useMapRadius2 && effectiveLocation2) {
-                    var d = calculateDistance(effectiveLocation2.lat, effectiveLocation2.lng, listing.coordinates.lat, listing.coordinates.lng);
-                    if (d > 50) return;
-                }
-                const logoImage2 = listing.logo || '';
-                const isFeatured2 = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-                const iconClass2 = isFeatured2 ? 'custom-marker featured' : 'custom-marker';
-                const iconHtml2 = logoImage2 ?
-                    `<div class="${iconClass2}"><img src="${logoImage2}" alt="${listing.business_name}"></div>` :
-                    `<div class="${iconClass2}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
-                const customIcon2 = L.divIcon({ html: iconHtml2, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
-                const marker2 = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon2, riseOnHover: true });
-                // Reuse same popup logic
-                const badges2 = buildBadges(listing);
-                const checkmarkHtml2 = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
-                const categorySlug2 = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                const firstPhoto2 = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
-                const fullAddr2 = getFullAddress(listing);
-                const googleMapsUrl2 = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr2)}`;
-                const popupContent2 = `
-                    <div class="map-popup">
-                        ${firstPhoto2 ? `<img src="${firstPhoto2}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
-                        <div class="map-popup-content">
-                            ${logoImage2 ? `<img src="${logoImage2}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
-                            <div class="map-popup-info" style="padding-bottom: 40px;">
-                                <div class="map-popup-badges">${badges2.join('')}</div>
-                                <a href="/listing/${categorySlug2}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml2}</a>
-                                <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
-                                <div class="map-popup-details">
-                                    <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${fullAddr2}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
-                                </div>
-                                <a href="${googleMapsUrl2}" target="_blank" rel="noopener" style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;" onmouseover="this.style.background='#033d7a'" onmouseout="this.style.background='#045093'">
-                                    <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                                    Directions
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                marker2.bindPopup(popupContent2, { maxWidth: 320, className: 'custom-popup' });
-                splitMarkerClusterGroup.addLayer(marker2);
-            }
+        if (!listing.coordinates || !listing.coordinates.lat || !listing.coordinates.lng) return;
+        
+        const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], {
+            listingId: listing.id
         });
+        
+        const fullAddr = getFullAddress(listing);
+        const popupContent = `
+            <div style="text-align: center;">
+                <strong>${listing.business_name}</strong><br>
+                <span style="font-size: 12px; color: #666;">${fullAddr}</span>
+            </div>
+        `;
+        
+        marker.bindPopup(popupContent);
+        
+        marker.on('click', function() {
+            selectSplitListing(listing.id, listing.coordinates.lat, listing.coordinates.lng);
+        });
+        
+        splitMarkerClusterGroup.addLayer(marker);
     });
+}
+// ============================================
+// LISTINGS.JS - PART 10: UI CONTROL FUNCTIONS
+// ============================================
+
+function createCategoryButtons() {
+    const container = document.getElementById('categoriesContainer');
+    const container2 = document.getElementById('categoriesContainer2');
     
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
+    if (!container && !container2) return;
     
-    // Add event listeners for split map controls
-    const splitLocateBtn = document.getElementById('splitLocateBtn');
-    if (splitLocateBtn) {
-        splitLocateBtn.addEventListener('click', () => {
-            if (userLocation) {
-                splitMap.setView([userLocation.lat, userLocation.lng], 13);
-                // Change button background to #045093, text to white, icon to white
-                splitLocateBtn.style.backgroundColor = '#045093';
-                splitLocateBtn.style.color = 'white';
-                const splitLocateIcon = document.getElementById('splitLocateBtnIcon');
-                if (splitLocateIcon) splitLocateIcon.setAttribute('fill', 'white');
-                // Reset on any map move
-                const resetOnce = () => {
-                    splitLocateBtn.style.backgroundColor = '';
-                    splitLocateBtn.style.color = '';
-                    if (splitLocateIcon) splitLocateIcon.setAttribute('fill', '#045093');
-                    splitMap.off('movestart', resetOnce);
-                };
-                splitMap.on('movestart', resetOnce);
+    const allButton = `
+        <button onclick="selectCategory('All')" 
+                class="category-btn ${selectedCategory === 'All' ? 'active' : ''}" 
+                data-category="All">
+            All Categories
+        </button>
+    `;
+    
+    const categoryButtons = CATEGORIES.map(cat => `
+        <button onclick="selectCategory('${cat}')" 
+                class="category-btn ${selectedCategory === cat ? 'active' : ''}" 
+                data-category="${cat}">
+            ${cat}
+        </button>
+    `).join('');
+    
+    const html = allButton + categoryButtons;
+    if (container) container.innerHTML = html;
+    if (container2) container2.innerHTML = html;
+}
+
+window.selectCategory = function(category) {
+    selectedCategory = category;
+    selectedSubcategories = [];
+    createCategoryButtons();
+    updateSubcategoryDisplay();
+    updateURL();
+    if (!viewingStarredOnly) applyFilters();
+};
+
+function updateSubcategoryDisplay() {
+    const container = document.getElementById('subcategoryContainer');
+    const container2 = document.getElementById('subcategoryContainer2');
+    
+    if (!container && !container2) return;
+    
+    const categorySubcats = SUBCATEGORIES[selectedCategory] || [];
+    
+    if (categorySubcats.length === 0 || selectedCategory === 'All') {
+        if (container) container.classList.add('hidden');
+        if (container2) container2.classList.add('hidden');
+        return;
+    }
+    
+    if (container) container.classList.remove('hidden');
+    if (container2) container2.classList.remove('hidden');
+    
+    const subcatButtons = categorySubcats.map(sub => {
+        const isSelected = selectedSubcategories.includes(sub);
+        return `
+            <button onclick="toggleSubcategory('${sub.replace(/'/g, "\\'")}
+')" 
+                    class="subcategory-tag ${isSelected ? 'selected' : ''}" 
+                    data-subcategory="${sub}">
+                ${sub}
+            </button>
+        `;
+    }).join('');
+    
+    if (container) {
+        const tagsContainer = container.querySelector('.subcategory-tags');
+        if (tagsContainer) tagsContainer.innerHTML = subcatButtons;
+    }
+    if (container2) {
+        const tagsContainer = container2.querySelector('.subcategory-tags');
+        if (tagsContainer) tagsContainer.innerHTML = subcatButtons;
+    }
+}
+
+window.toggleSubcategory = function(subcategory) {
+    const index = selectedSubcategories.indexOf(subcategory);
+    if (index > -1) {
+        selectedSubcategories.splice(index, 1);
+    } else {
+        selectedSubcategories.push(subcategory);
+    }
+    updateSubcategoryDisplay();
+    updateURL();
+    if (!viewingStarredOnly) applyFilters();
+};
+
+function populateCountryFilter() {
+    const countries = [...new Set(allListings.map(l => l.country || 'USA'))].sort();
+    
+    const countryFilter = document.getElementById('countryFilter');
+    const countryFilter2 = document.getElementById('countryFilter2');
+    
+    const optionsHtml = '<option value="">All Countries</option>' + 
+        countries.map(c => `<option value="${c}">${c}</option>`).join('');
+    
+    if (countryFilter) countryFilter.innerHTML = optionsHtml;
+    if (countryFilter2) countryFilter2.innerHTML = optionsHtml;
+}
+
+function populateStateFilter(country) {
+    const stateFilter = document.getElementById('stateFilter');
+    const stateFilter2 = document.getElementById('stateFilter2');
+    
+    if (country === 'USA') {
+        const statesInData = [...new Set(allListings.filter(l => (l.country || 'USA') === 'USA' && l.state).map(l => l.state))];
+        const optionsHtml = '<option value="">All States</option>' + 
+            Object.keys(US_STATES)
+                .filter(code => statesInData.includes(code))
+                .sort((a, b) => US_STATES[a].localeCompare(US_STATES[b]))
+                .map(code => `<option value="${code}">${US_STATES[code]}</option>`)
+                .join('');
+        
+        if (stateFilter) stateFilter.innerHTML = optionsHtml;
+        if (stateFilter2) stateFilter2.innerHTML = optionsHtml;
+    }
+}
+
+function updateRadiusValue() {
+    const radiusFilter = document.getElementById('radiusFilter');
+    const radiusFilter2 = document.getElementById('radiusFilter2');
+    const radiusValue = document.getElementById('radiusValue');
+    const radiusValue2 = document.getElementById('radiusValue2');
+    
+    const value = radiusFilter ? radiusFilter.value : (radiusFilter2 ? radiusFilter2.value : 0);
+    const displayValue = value == 0 ? 'Any' : value >= 999 ? 'Any' : `${value} mi`;
+    
+    if (radiusValue) radiusValue.textContent = displayValue;
+    if (radiusValue2) radiusValue2.textContent = displayValue;
+}
+
+function syncFilters() {
+    const searchInput = document.getElementById('searchInput');
+    const searchInput2 = document.getElementById('searchInput2');
+    
+    if (searchInput && searchInput2) {
+        searchInput.addEventListener('input', () => searchInput2.value = searchInput.value);
+        searchInput2.addEventListener('input', () => searchInput.value = searchInput2.value);
+    }
+    
+    const sortSelect = document.getElementById('sortSelect');
+    const sortSelect2 = document.getElementById('sortSelect2');
+    
+    if (sortSelect && sortSelect2) {
+        sortSelect.addEventListener('change', () => {
+            sortSelect2.value = sortSelect.value;
+            if (!viewingStarredOnly) applyFilters();
+        });
+        sortSelect2.addEventListener('change', () => {
+            sortSelect.value = sortSelect2.value;
+            if (!viewingStarredOnly) applyFilters();
+        });
+    }
+}
+
+function toggleFilterPosition() {
+    filterPosition = filterPosition === 'top' ? 'left' : 'top';
+    checkFilterPosition();
+}
+
+function toggleDesktopFilters() {
+    const desktopFilters = document.getElementById('desktopFiltersContainer');
+    if (!desktopFilters) return;
+    
+    desktopFiltersOverlay = !desktopFiltersOverlay;
+    
+    if (desktopFiltersOverlay) {
+        desktopFilters.classList.remove('hidden');
+        desktopFilters.classList.add('desktop-filters-overlay');
+    } else {
+        desktopFilters.classList.add('hidden');
+        desktopFilters.classList.remove('desktop-filters-overlay');
+    }
+}
+// ============================================
+// LISTINGS.JS - PART 11: EVENT LISTENERS & HANDLERS
+// ============================================
+
+function setupEventListeners() {
+    // Search input
+    const searchInput = document.getElementById('searchInput');
+    const searchInput2 = document.getElementById('searchInput2');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                updateURL();
+                if (!viewingStarredOnly) applyFilters();
+            }, 300);
+        });
+    }
+    
+    if (searchInput2) {
+        searchInput2.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                updateURL();
+                if (!viewingStarredOnly) applyFilters();
+            }, 300);
+        });
+    }
+    
+    // Sort select
+    const sortSelect = document.getElementById('sortSelect');
+    const sortSelect2 = document.getElementById('sortSelect2');
+    
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            if (!viewingStarredOnly) applyFilters();
+        });
+    }
+    
+    if (sortSelect2) {
+        sortSelect2.addEventListener('change', () => {
+            if (!viewingStarredOnly) applyFilters();
+        });
+    }
+    
+    // View toggle buttons
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    const gridViewBtn2 = document.getElementById('gridViewBtn2');
+    const listViewBtn2 = document.getElementById('listViewBtn2');
+    
+    if (gridViewBtn) {
+        gridViewBtn.addEventListener('click', () => {
+            currentView = 'grid';
+            if (gridViewBtn) gridViewBtn.classList.add('active');
+            if (listViewBtn) listViewBtn.classList.remove('active');
+            if (gridViewBtn2) gridViewBtn2.classList.add('active');
+            if (listViewBtn2) listViewBtn2.classList.remove('active');
+            renderListings();
+        });
+    }
+    
+    if (listViewBtn) {
+        listViewBtn.addEventListener('click', () => {
+            currentView = 'list';
+            if (listViewBtn) listViewBtn.classList.add('active');
+            if (gridViewBtn) gridViewBtn.classList.remove('active');
+            if (listViewBtn2) listViewBtn2.classList.add('active');
+            if (gridViewBtn2) gridViewBtn2.classList.remove('active');
+            renderListings();
+        });
+    }
+    
+    if (gridViewBtn2) {
+        gridViewBtn2.addEventListener('click', () => {
+            currentView = 'grid';
+            if (gridViewBtn) gridViewBtn.classList.add('active');
+            if (listViewBtn) listViewBtn.classList.remove('active');
+            if (gridViewBtn2) gridViewBtn2.classList.add('active');
+            if (listViewBtn2) listViewBtn2.classList.remove('active');
+            renderListings();
+        });
+    }
+    
+    if (listViewBtn2) {
+        listViewBtn2.addEventListener('click', () => {
+            currentView = 'list';
+            if (listViewBtn) listViewBtn.classList.add('active');
+            if (gridViewBtn) gridViewBtn.classList.remove('active');
+            if (listViewBtn2) listViewBtn2.classList.add('active');
+            if (gridViewBtn2) gridViewBtn2.classList.remove('active');
+            renderListings();
+        });
+    }
+    
+    // Map button
+    const mapBtn = document.getElementById('mapBtn');
+    const mapBtnDesktop = document.getElementById('mapBtnDesktop');
+    
+    if (mapBtn) {
+        mapBtn.addEventListener('click', () => {
+            mapOpen = !mapOpen;
+            const mapContainer = document.getElementById('mapContainer');
+            const listingsSection = document.getElementById('listingsSection');
+            
+            if (mapOpen) {
+                if (mapContainer) mapContainer.classList.remove('hidden');
+                if (listingsSection) listingsSection.classList.add('hidden');
+                mapBtn.textContent = 'Show Listings';
+                if (!mapReady) initMap();
+                else if (map) map.invalidateSize();
+                if (userLocation) addUserLocationMarker();
+            } else {
+                if (mapContainer) mapContainer.classList.add('hidden');
+                if (listingsSection) listingsSection.classList.remove('hidden');
+                mapBtn.textContent = 'Show Map';
+            }
+            checkFilterPosition();
+        });
+    }
+    
+    if (mapBtnDesktop) {
+        mapBtnDesktop.addEventListener('click', () => {
+            mapOpen = !mapOpen;
+            const mapContainer = document.getElementById('mapContainer');
+            
+            if (mapOpen) {
+                if (mapContainer) mapContainer.classList.remove('hidden');
+                mapBtnDesktop.textContent = 'Hide Map';
+                if (!mapReady) initMap();
+                else if (map) map.invalidateSize();
+                if (userLocation) addUserLocationMarker();
+            } else {
+                if (mapContainer) mapContainer.classList.add('hidden');
+                mapBtnDesktop.textContent = 'Show Map';
+            }
+            checkFilterPosition();
+        });
+    }
+    
+    // Split view button
+    const splitViewBtn = document.getElementById('splitViewBtn');
+    
+    if (splitViewBtn) {
+        splitViewBtn.addEventListener('click', () => {
+            splitViewActive = !splitViewActive;
+            const splitViewContainer = document.getElementById('splitViewContainer');
+            const listingsContainer = document.getElementById('listingsContainer');
+            const mapContainer = document.getElementById('mapContainer');
+            
+            if (splitViewActive) {
+                if (splitViewContainer) splitViewContainer.classList.remove('hidden');
+                if (listingsContainer) listingsContainer.classList.add('hidden');
+                if (mapContainer) mapContainer.classList.add('hidden');
+                splitViewBtn.textContent = 'Exit Split View';
+                
+                setTimeout(() => {
+                    initSplitMap();
+                    renderSplitViewListings();
+                }, 100);
+            } else {
+                if (splitViewContainer) splitViewContainer.classList.add('hidden');
+                if (listingsContainer) listingsContainer.classList.remove('hidden');
+                splitViewBtn.textContent = 'Split View';
+                selectedSplitListingId = null;
+            }
+            checkFilterPosition();
+        });
+    }
+    
+    // Filter button
+    const filterBtn = document.getElementById('filterBtn');
+    
+    if (filterBtn) {
+        filterBtn.addEventListener('click', () => {
+            filtersOpen = !filtersOpen;
+            const filtersPanel = document.getElementById('filtersPanel');
+            if (filtersPanel) {
+                if (filtersOpen) {
+                    filtersPanel.classList.remove('hidden');
+                } else {
+                    filtersPanel.classList.add('hidden');
+                }
             }
         });
     }
     
-    document.getElementById('splitResetMapBtn')?.addEventListener('click', () => {
-        splitMap.setView(defaultMapCenter, defaultMapZoom);
+    // Country filter
+    const countryFilter = document.getElementById('countryFilter');
+    const countryFilter2 = document.getElementById('countryFilter2');
+    
+    if (countryFilter) {
+        countryFilter.addEventListener('change', (e) => {
+            selectedCountry = e.target.value;
+            const stateContainer = document.getElementById('stateFilterContainer');
+            
+            if (e.target.value === 'USA') {
+                if (stateContainer) stateContainer.classList.remove('hidden');
+                populateStateFilter('USA');
+            } else {
+                if (stateContainer) stateContainer.classList.add('hidden');
+                selectedState = '';
+            }
+            
+            if (countryFilter2) countryFilter2.value = e.target.value;
+            updateURL();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    }
+    
+    if (countryFilter2) {
+        countryFilter2.addEventListener('change', (e) => {
+            selectedCountry = e.target.value;
+            const stateContainer2 = document.getElementById('stateFilterContainer2');
+            
+            if (e.target.value === 'USA') {
+                if (stateContainer2) stateContainer2.classList.remove('hidden');
+                populateStateFilter('USA');
+            } else {
+                if (stateContainer2) stateContainer2.classList.add('hidden');
+                selectedState = '';
+            }
+            
+            if (countryFilter) countryFilter.value = e.target.value;
+            updateURL();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    }
+    
+    // State filter
+    const stateFilter = document.getElementById('stateFilter');
+    const stateFilter2 = document.getElementById('stateFilter2');
+    
+    if (stateFilter) {
+        stateFilter.addEventListener('change', (e) => {
+            selectedState = e.target.value;
+            if (stateFilter2) stateFilter2.value = e.target.value;
+            updateURL();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    }
+    
+    if (stateFilter2) {
+        stateFilter2.addEventListener('change', (e) => {
+            selectedState = e.target.value;
+            if (stateFilter) stateFilter.value = e.target.value;
+            updateURL();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    }
+    
+    // Radius filter
+    const radiusFilter = document.getElementById('radiusFilter');
+    const radiusFilter2 = document.getElementById('radiusFilter2');
+    
+    if (radiusFilter) {
+        radiusFilter.addEventListener('input', (e) => {
+            selectedRadius = parseInt(e.target.value);
+            if (radiusFilter2) radiusFilter2.value = e.target.value;
+            updateRadiusValue();
+            updateURL();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    }
+    
+    if (radiusFilter2) {
+        radiusFilter2.addEventListener('input', (e) => {
+            selectedRadius = parseInt(e.target.value);
+            if (radiusFilter) radiusFilter.value = e.target.value;
+            updateRadiusValue();
+            updateURL();
+            if (!viewingStarredOnly) applyFilters();
+        });
+    }
+    
+    // Status filters
+    const statusFilters = [
+        'openNowFilter', 'closedNowFilter', 'openingSoonFilter', 
+        'closingSoonFilter', 'hoursUnknownFilter', 'onlineOnlyFilter'
+    ];
+    
+    statusFilters.forEach(filterId => {
+        const filter1 = document.getElementById(filterId);
+        const filter2 = document.getElementById(filterId + '2');
+        
+        if (filter1) {
+            filter1.addEventListener('change', (e) => {
+                const varName = filterId.replace('Filter', 'Only').replace('Only', 'Only');
+                
+                if (filterId === 'openNowFilter') openNowOnly = e.target.checked;
+                else if (filterId === 'closedNowFilter') closedNowOnly = e.target.checked;
+                else if (filterId === 'openingSoonFilter') openingSoonOnly = e.target.checked;
+                else if (filterId === 'closingSoonFilter') closingSoonOnly = e.target.checked;
+                else if (filterId === 'hoursUnknownFilter') hoursUnknownOnly = e.target.checked;
+                else if (filterId === 'onlineOnlyFilter') onlineOnly = e.target.checked;
+                
+                if (filter2) filter2.checked = e.target.checked;
+                updateURL();
+                if (!viewingStarredOnly) applyFilters();
+            });
+        }
+        
+        if (filter2) {
+            filter2.addEventListener('change', (e) => {
+                if (filterId === 'openNowFilter') openNowOnly = e.target.checked;
+                else if (filterId === 'closedNowFilter') closedNowOnly = e.target.checked;
+                else if (filterId === 'openingSoonFilter') openingSoonOnly = e.target.checked;
+                else if (filterId === 'closingSoonFilter') closingSoonOnly = e.target.checked;
+                else if (filterId === 'hoursUnknownFilter') hoursUnknownOnly = e.target.checked;
+                else if (filterId === 'onlineOnlyFilter') onlineOnly = e.target.checked;
+                
+                if (filter1) filter1.checked = e.target.checked;
+                updateURL();
+                if (!viewingStarredOnly) applyFilters();
+            });
+        }
+    });
+    
+    // Load more button
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMoreListings);
+    }
+    
+    // Toggle filter position button
+    const toggleFilterPositionBtn = document.getElementById('toggleFilterPosition');
+    if (toggleFilterPositionBtn) {
+        toggleFilterPositionBtn.addEventListener('click', toggleFilterPosition);
+    }
+    
+    // Desktop filter toggle button
+    const desktopFilterToggleBtn = document.getElementById('desktopFilterToggleBtn');
+    if (desktopFilterToggleBtn) {
+        desktopFilterToggleBtn.addEventListener('click', toggleDesktopFilters);
+    }
+    
+    // Window resize
+    window.addEventListener('resize', () => {
+        checkFilterPosition();
+        if (map && mapOpen) {
+            map.invalidateSize();
+        }
+        if (splitMap && splitViewActive) {
+            splitMap.invalidateSize();
+        }
+    });
+}
+// ============================================
+// LISTINGS.JS - PART 12: INITIALIZATION & GLOBAL SETUP
+// ============================================
+
+// Set global functions
+window.setSubcategoryMode = function(mode, skipUpdate) {
+    subcategoryMode = mode;
+    document.querySelectorAll('.toggle-option').forEach(opt => {
+        if (opt.dataset.mode === mode) opt.classList.add('active');
+        else opt.classList.remove('active');
+    });
+    if (!skipUpdate) {
+        updateURL();
+        if (!viewingStarredOnly) applyFilters();
+    }
+};
+
+window.toggleStar = toggleStar;
+window.toggleStarredView = toggleStarredView;
+window.selectCategory = window.selectCategory || function() {};
+window.toggleSubcategory = window.toggleSubcategory || function() {};
+window.selectSplitListing = window.selectSplitListing || function() {};
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Listings page initializing...');
+    
+    // Check if iOS web app
+    if (isIOSWebApp()) {
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) refreshBtn.style.display = 'flex';
+    }
+    
+    // Load starred listings from cookie
+    loadStarredListings();
+    
+    // Load all listings from Supabase
+    loadListings();
+    
+    // Setup event listeners
+    setupEventListeners();
+    
+    // Create category buttons
+    createCategoryButtons();
+    
+    // Request user location
+    requestLocationOnLoad();
+    
+    // Estimate location by IP as fallback
+    estimateLocationByIP();
+    
+    // Load filters from URL
+    loadFiltersFromURL();
+    
+    // Initialize map (but keep it hidden initially)
+    initMap();
+    
+    // Sync filter inputs
+    syncFilters();
+    
+    // Check filter position
+    checkFilterPosition();
+    
+    console.log('Listings page initialization complete');
+});
+
+// Export for debugging
+if (typeof window !== 'undefined') {
+    window.listingsDebug = {
+        allListings: () => allListings,
+        filteredListings: () => filteredListings,
+        starredListings: () => starredListings,
+        selectedCategory: () => selectedCategory,
+        selectedSubcategories: () => selectedSubcategories,
+        userLocation: () => userLocation,
+        estimatedUserLocation: () => estimatedUserLocation,
+        reloadListings: loadListings,
+        reapplyFilters: applyFilters,
+        forceRender: renderListings
+    };
+}
+
+console.log('Listings.js loaded successfully - All 12 parts integrated');
+// ============================================
+// LISTINGS.JS - PART 13: CATEGORY & SUBCATEGORY MANAGEMENT
+// ============================================
+
+function handleCategoryClick(category) {
+    selectedCategory = category;
+    selectedSubcategories = [];
+    createCategoryButtons();
+    updateSubcategoryDisplay();
+    updateURL();
+    if (!viewingStarredOnly) applyFilters();
+}
+
+function handleSubcategoryToggle(subcategory) {
+    const index = selectedSubcategories.indexOf(subcategory);
+    if (index > -1) {
+        selectedSubcategories.splice(index, 1);
+    } else {
+        selectedSubcategories.push(subcategory);
+    }
+    updateSubcategoryDisplay();
+    updateURL();
+    if (!viewingStarredOnly) applyFilters();
+}
+
+function clearAllFilters() {
+    selectedCategory = 'All';
+    selectedSubcategories = [];
+    selectedCountry = '';
+    selectedState = '';
+    selectedCity = '';
+    selectedZip = '';
+    selectedRadius = 0;
+    openNowOnly = false;
+    closedNowOnly = false;
+    openingSoonOnly = false;
+    closingSoonOnly = false;
+    hoursUnknownOnly = false;
+    onlineOnly = false;
+    
+    const searchInput = document.getElementById('searchInput');
+    const searchInput2 = document.getElementById('searchInput2');
+    if (searchInput) searchInput.value = '';
+    if (searchInput2) searchInput2.value = '';
+    
+    const countryFilter = document.getElementById('countryFilter');
+    const countryFilter2 = document.getElementById('countryFilter2');
+    if (countryFilter) countryFilter.value = '';
+    if (countryFilter2) countryFilter2.value = '';
+    
+    const stateFilter = document.getElementById('stateFilter');
+    const stateFilter2 = document.getElementById('stateFilter2');
+    if (stateFilter) stateFilter.value = '';
+    if (stateFilter2) stateFilter2.value = '';
+    
+    const stateContainer = document.getElementById('stateFilterContainer');
+    const stateContainer2 = document.getElementById('stateFilterContainer2');
+    if (stateContainer) stateContainer.classList.add('hidden');
+    if (stateContainer2) stateContainer2.classList.add('hidden');
+    
+    const radiusFilter = document.getElementById('radiusFilter');
+    const radiusFilter2 = document.getElementById('radiusFilter2');
+    if (radiusFilter) radiusFilter.value = 0;
+    if (radiusFilter2) radiusFilter2.value = 0;
+    updateRadiusValue();
+    
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    createCategoryButtons();
+    updateSubcategoryDisplay();
+    updateURL();
+    if (!viewingStarredOnly) applyFilters();
+}
+
+function getCategoryIcon(category) {
+    const icons = {
+        'Automotive & Transportation': '🚗',
+        'Beauty & Health': '💆',
+        'Church & Religious Organization': '⛪',
+        'Cultural/Fraternal Organization': '🤝',
+        'Education & Community': '📚',
+        'Entertainment, Arts & Recreation': '🎭',
+        'Food & Hospitality': '🍽️',
+        'Grocery & Imports': '🛒',
+        'Home & Construction': '🏠',
+        'Industrial & Manufacturing': '🏭',
+        'Pets & Veterinary': '🐾',
+        'Professional & Business Services': '💼',
+        'Real Estate & Development': '🏘️',
+        'Retail & Shopping': '🛍️'
+    };
+    return icons[category] || '📁';
+}
+// ============================================
+// LISTINGS.JS - PART 14: MAP CONTROLS & INTERACTIONS
+// ============================================
+
+function centerMapOnUser() {
+    if (!map || !userLocation) {
+        alert('Location not available. Please enable location services.');
+        return;
+    }
+    
+    map.setView([userLocation.lat, userLocation.lng], 12);
+    mapMoved = false;
+    locationButtonActive = true;
+    
+    const locationBtn = document.getElementById('centerLocationBtn');
+    if (locationBtn) {
+        locationBtn.classList.add('active');
+    }
+    
+    addUserLocationMarker();
+}
+
+function fitMapToBounds() {
+    if (!map || !markerClusterGroup) return;
+    
+    const markers = [];
+    markerClusterGroup.eachLayer(layer => {
+        markers.push(layer.getLatLng());
+    });
+    
+    if (markers.length === 0) return;
+    
+    if (markers.length === 1) {
+        map.setView(markers[0], 12);
+    } else {
+        const bounds = L.latLngBounds(markers);
+        map.fitBounds(bounds, { padding: [50, 50] });
+    }
+    
+    mapMoved = false;
+}
+
+function toggleMapFullscreen() {
+    const mapContainer = document.getElementById('mapContainer');
+    if (!mapContainer) return;
+    
+    if (!document.fullscreenElement) {
+        mapContainer.requestFullscreen().then(() => {
+            if (map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 200);
+            }
+        }).catch(err => {
+            console.error('Fullscreen error:', err);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+function createCustomMapIcon(listing) {
+    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+    const isVerified = listing.verified || listing.tier === 'VERIFIED';
+    
+    let color = '#3b82f6'; // Default blue
+    if (isFeatured) color = '#f59e0b'; // Amber for featured
+    else if (isVerified) color = '#10b981'; // Green for verified
+    
+    const iconHtml = `
+        <div style="
+            width: 32px;
+            height: 32px;
+            background: ${color};
+            border: 3px solid white;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        ">
+            <div style="transform: rotate(45deg); color: white; font-size: 16px; font-weight: bold;">
+                ${getCategoryIcon(listing.category)}
+            </div>
+        </div>
+    `;
+    
+    return L.divIcon({
+        html: iconHtml,
+        className: 'custom-marker-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
     });
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law.
-*/
+function handleMapClick(e) {
+    console.log('Map clicked at:', e.latlng);
+}
+
+function handleMarkerClick(listing) {
+    console.log('Marker clicked:', listing.business_name);
+}
+
+function updateMapView() {
+    if (!map) return;
+    
+    const mapContainer = document.getElementById('mapContainer');
+    if (mapContainer && !mapContainer.classList.contains('hidden')) {
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 100);
+    }
+}
+
+function closeAllPopups() {
+    if (map) {
+        map.closePopup();
+    }
+    if (splitMap) {
+        splitMap.closePopup();
+    }
+}
+
+function refreshMapMarkers() {
+    if (map) {
+        updateMapMarkers();
+    }
+    if (splitMap && splitViewActive) {
+        updateSplitMapMarkers();
+    }
+}
+// ============================================
+// LISTINGS.JS - PART 15: SEARCH & AUTOCOMPLETE
+// ============================================
+
+let searchSuggestions = [];
+let currentSearchIndex = -1;
+
+function initSearchAutocomplete() {
+    const searchInput = document.getElementById('searchInput');
+    const searchInput2 = document.getElementById('searchInput2');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', handleSearchInput);
+        searchInput.addEventListener('keydown', handleSearchKeydown);
+        searchInput.addEventListener('focus', showSearchSuggestions);
+        searchInput.addEventListener('blur', hideSearchSuggestions);
+    }
+    
+    if (searchInput2) {
+        searchInput2.addEventListener('input', handleSearchInput);
+        searchInput2.addEventListener('keydown', handleSearchKeydown);
+        searchInput2.addEventListener('focus', showSearchSuggestions);
+        searchInput2.addEventListener('blur', hideSearchSuggestions);
+    }
+}
+
+function handleSearchInput(e) {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 2) {
+        hideSearchSuggestions();
+        return;
+    }
+    
+    searchSuggestions = [];
+    
+    // Search in business names
+    const nameMatches = allListings
+        .filter(l => l.business_name.toLowerCase().includes(query))
+        .slice(0, 5)
+        .map(l => ({
+            type: 'business',
+            text: l.business_name,
+            listing: l
+        }));
+    searchSuggestions.push(...nameMatches);
+    
+    // Search in categories
+    const categoryMatches = CATEGORIES
+        .filter(c => c.toLowerCase().includes(query))
+        .slice(0, 3)
+        .map(c => ({
+            type: 'category',
+            text: c
+        }));
+    searchSuggestions.push(...categoryMatches);
+    
+    // Search in cities
+    const cities = [...new Set(allListings.map(l => l.city).filter(Boolean))];
+    const cityMatches = cities
+        .filter(c => c.toLowerCase().includes(query))
+        .slice(0, 3)
+        .map(c => ({
+            type: 'city',
+            text: c
+        }));
+    searchSuggestions.push(...cityMatches);
+    
+    showSearchSuggestions();
+}
+
+function handleSearchKeydown(e) {
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    if (!suggestionsContainer || searchSuggestions.length === 0) return;
+    
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        currentSearchIndex = Math.min(currentSearchIndex + 1, searchSuggestions.length - 1);
+        highlightSuggestion(currentSearchIndex);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        currentSearchIndex = Math.max(currentSearchIndex - 1, -1);
+        highlightSuggestion(currentSearchIndex);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentSearchIndex >= 0) {
+            selectSuggestion(searchSuggestions[currentSearchIndex]);
+        }
+    } else if (e.key === 'Escape') {
+        hideSearchSuggestions();
+    }
+}
+
+function showSearchSuggestions() {
+    if (searchSuggestions.length === 0) return;
+    
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    
+    let suggestionsContainer = document.getElementById('searchSuggestions');
+    if (!suggestionsContainer) {
+        suggestionsContainer = document.createElement('div');
+        suggestionsContainer.id = 'searchSuggestions';
+        suggestionsContainer.className = 'search-suggestions';
+        searchInput.parentElement.appendChild(suggestionsContainer);
+    }
+    
+    suggestionsContainer.innerHTML = searchSuggestions.map((suggestion, index) => {
+        const iconMap = {
+            'business': '🏢',
+            'category': '📁',
+            'city': '📍'
+        };
+        
+        return `
+            <div class="search-suggestion-item ${index === currentSearchIndex ? 'highlighted' : ''}" 
+                 data-index="${index}"
+                 onmousedown="selectSuggestionByIndex(${index})">
+                <span class="suggestion-icon">${iconMap[suggestion.type]}</span>
+                <span class="suggestion-text">${suggestion.text}</span>
+                <span class="suggestion-type">${suggestion.type}</span>
+            </div>
+        `;
+    }).join('');
+    
+    suggestionsContainer.classList.add('visible');
+}
+
+function hideSearchSuggestions() {
+    setTimeout(() => {
+        const suggestionsContainer = document.getElementById('searchSuggestions');
+        if (suggestionsContainer) {
+            suggestionsContainer.classList.remove('visible');
+        }
+        currentSearchIndex = -1;
+    }, 200);
+}
+
+function highlightSuggestion(index) {
+    const items = document.querySelectorAll('.search-suggestion-item');
+    items.forEach((item, i) => {
+        if (i === index) {
+            item.classList.add('highlighted');
+        } else {
+            item.classList.remove('highlighted');
+        }
+    });
+}
+
+window.selectSuggestionByIndex = function(index) {
+    selectSuggestion(searchSuggestions[index]);
+};
+
+function selectSuggestion(suggestion) {
+    const searchInput = document.getElementById('searchInput');
+    const searchInput2 = document.getElementById('searchInput2');
+    
+    if (suggestion.type === 'business') {
+        if (searchInput) searchInput.value = suggestion.text;
+        if (searchInput2) searchInput2.value = suggestion.text;
+    } else if (suggestion.type === 'category') {
+        selectedCategory = suggestion.text;
+        if (searchInput) searchInput.value = '';
+        if (searchInput2) searchInput2.value = '';
+        createCategoryButtons();
+        updateSubcategoryDisplay();
+    } else if (suggestion.type === 'city') {
+        selectedCity = suggestion.text;
+        if (searchInput) searchInput.value = '';
+        if (searchInput2) searchInput2.value = '';
+    }
+    
+    hideSearchSuggestions();
+    updateURL();
+    if (!viewingStarredOnly) applyFilters();
+}
+
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchInput2 = document.getElementById('searchInput2');
+    
+    if (searchInput) searchInput.value = '';
+    if (searchInput2) searchInput2.value = '';
+    
+    hideSearchSuggestions();
+    updateURL();
+    if (!viewingStarredOnly) applyFilters();
+}
+// ============================================
+// LISTINGS.JS - PART 16: ANALYTICS & TRACKING
+// ============================================
+
+function trackListingView(listingId, listingName) {
+    console.log('Listing viewed:', listingId, listingName);
+    
+    // Track in localStorage for basic analytics
+    try {
+        const views = JSON.parse(localStorage.getItem('listingViews') || '{}');
+        views[listingId] = (views[listingId] || 0) + 1;
+        localStorage.setItem('listingViews', JSON.stringify(views));
+    } catch (e) {
+        console.error('Failed to track listing view:', e);
+    }
+}
+
+function trackSearch(searchTerm) {
+    console.log('Search performed:', searchTerm);
+    
+    try {
+        const searches = JSON.parse(localStorage.getItem('searches') || '[]');
+        searches.push({
+            term: searchTerm,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Keep only last 100 searches
+        if (searches.length > 100) {
+            searches.shift();
+        }
+        
+        localStorage.setItem('searches', JSON.stringify(searches));
+    } catch (e) {
+        console.error('Failed to track search:', e);
+    }
+}
+
+function trackCategoryView(category) {
+    console.log('Category viewed:', category);
+    
+    try {
+        const views = JSON.parse(localStorage.getItem('categoryViews') || '{}');
+        views[category] = (views[category] || 0) + 1;
+        localStorage.setItem('categoryViews', JSON.stringify(views));
+    } catch (e) {
+        console.error('Failed to track category view:', e);
+    }
+}
+
+function trackFilterUsage(filterType, filterValue) {
+    console.log('Filter used:', filterType, filterValue);
+    
+    try {
+        const usage = JSON.parse(localStorage.getItem('filterUsage') || '{}');
+        const key = `${filterType}:${filterValue}`;
+        usage[key] = (usage[key] || 0) + 1;
+        localStorage.setItem('filterUsage', JSON.stringify(usage));
+    } catch (e) {
+        console.error('Failed to track filter usage:', e);
+    }
+}
+
+function getPopularListings() {
+    try {
+        const views = JSON.parse(localStorage.getItem('listingViews') || '{}');
+        return Object.entries(views)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([id, count]) => ({ id, count }));
+    } catch (e) {
+        console.error('Failed to get popular listings:', e);
+        return [];
+    }
+}
+
+function getRecentSearches() {
+    try {
+        const searches = JSON.parse(localStorage.getItem('searches') || '[]');
+        return searches
+            .slice(-10)
+            .reverse()
+            .map(s => s.term);
+    } catch (e) {
+        console.error('Failed to get recent searches:', e);
+        return [];
+    }
+}
+
+function clearAnalytics() {
+    try {
+        localStorage.removeItem('listingViews');
+        localStorage.removeItem('searches');
+        localStorage.removeItem('categoryViews');
+        localStorage.removeItem('filterUsage');
+        console.log('Analytics data cleared');
+    } catch (e) {
+        console.error('Failed to clear analytics:', e);
+    }
+}
+// ============================================
+// LISTINGS.JS - PART 17: SHARING & EXPORT
+// ============================================
+
+function shareListings() {
+    const url = window.location.href;
+    const text = `Check out these ${filteredListings.length} Greek businesses on The Greek Directory`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'The Greek Directory',
+            text: text,
+            url: url
+        }).then(() => {
+            console.log('Shared successfully');
+        }).catch(err => {
+            console.error('Share failed:', err);
+            copyShareLink();
+        });
+    } else {
+        copyShareLink();
+    }
+}
+
+function copyShareLink() {
+    const url = window.location.href;
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('Link copied to clipboard!');
+        }).catch(err => {
+            console.error('Copy failed:', err);
+            fallbackCopyLink(url);
+        });
+    } else {
+        fallbackCopyLink(url);
+    }
+}
+
+function fallbackCopyLink(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showToast('Link copied to clipboard!');
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        showToast('Failed to copy link');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function exportListingsCSV() {
+    const headers = ['Business Name', 'Category', 'Address', 'City', 'State', 'Zip', 'Phone', 'Website'];
+    const rows = filteredListings.map(l => [
+        l.business_name,
+        l.category,
+        l.address || '',
+        l.city || '',
+        l.state || '',
+        l.zip_code || '',
+        l.phone || '',
+        l.website || ''
+    ]);
+    
+    let csv = headers.join(',') + '\n';
+    rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `greek-directory-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    showToast('Listings exported successfully!');
+}
+
+function exportStarredListingsCSV() {
+    const starredData = allListings.filter(l => starredListings.includes(String(l.id)));
+    
+    if (starredData.length === 0) {
+        showToast('No starred listings to export');
+        return;
+    }
+    
+    const headers = ['Business Name', 'Category', 'Address', 'City', 'State', 'Zip', 'Phone', 'Website'];
+    const rows = starredData.map(l => [
+        l.business_name,
+        l.category,
+        l.address || '',
+        l.city || '',
+        l.state || '',
+        l.zip_code || '',
+        l.phone || '',
+        l.website || ''
+    ]);
+    
+    let csv = headers.join(',') + '\n';
+    rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `greek-directory-starred-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    showToast(`${starredData.length} starred listings exported!`);
+}
+
+function printListings() {
+    window.print();
+}
+
+function showToast(message, duration = 3000) {
+    let toast = document.getElementById('toast');
+    
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        `;
+        document.body.appendChild(toast);
+    }
+    
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+    }, duration);
+}
+// ============================================
+// LISTINGS.JS - PART 18: HELPER FUNCTIONS & UTILITIES
+// ============================================
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+function sanitizeHTML(str) {
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+function formatTime(timeString) {
+    if (!timeString) return '';
+    return timeString.replace(/(\d{1,2}):(\d{2})\s*(AM|PM)/gi, (match, hour, min, period) => {
+        return `${hour}:${min} ${period.toUpperCase()}`;
+    });
+}
+
+function pluralize(count, singular, plural) {
+    return count === 1 ? singular : (plural || singular + 's');
+}
+
+function truncateText(text, maxLength) {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + '...';
+}
+
+function generateSlug(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function parseQueryString(queryString) {
+    const params = {};
+    const searchParams = new URLSearchParams(queryString);
+    for (const [key, value] of searchParams) {
+        params[key] = value;
+    }
+    return params;
+}
+
+function buildQueryString(params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+            searchParams.set(key, value);
+        }
+    });
+    return searchParams.toString();
+}
+
+function getDistanceString(distanceInMiles) {
+    if (!distanceInMiles || distanceInMiles === Infinity) return '';
+    
+    if (distanceInMiles < 0.1) {
+        return 'Less than 0.1 mi away';
+    } else if (distanceInMiles < 1) {
+        return `${distanceInMiles.toFixed(1)} mi away`;
+    } else if (distanceInMiles < 10) {
+        return `${distanceInMiles.toFixed(1)} mi away`;
+    } else {
+        return `${Math.round(distanceInMiles)} mi away`;
+    }
+}
+
+function getDayOfWeek(date) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getDay()];
+}
+
+function getCurrentDayKey() {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const now = new Date();
+    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+    return days[centralTime.getDay()];
+}
+
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+function isValidPhone(phone) {
+    const digits = phone.replace(/\D/g, '');
+    return digits.length === 10 || digits.length === 11;
+}
+
+function isValidUrl(url) {
+    try {
+        new URL(url);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        return navigator.clipboard.writeText(text);
+    } else {
+        return Promise.reject('Clipboard API not available');
+    }
+}
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+function groupBy(array, key) {
+    return array.reduce((result, item) => {
+        const group = item[key];
+        if (!result[group]) {
+            result[group] = [];
+        }
+        result[group].push(item);
+        return result;
+    }, {});
+}
+
+function unique(array) {
+    return [...new Set(array)];
+}
+
+function chunk(array, size) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size) {
+        chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function retry(fn, retries = 3, delay = 1000) {
+    return fn().catch(err => {
+        if (retries === 0) throw err;
+        return sleep(delay).then(() => retry(fn, retries - 1, delay));
+    });
+}
+
+function formatCurrency(amount, currency = 'USD') {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency
+    }).format(amount);
+}
+
+function formatNumber(number) {
+    return new Intl.NumberFormat('en-US').format(number);
+}
+
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    
+    let interval = Math.floor(seconds / 31536000);
+    if (interval > 1) return interval + ' years ago';
+    
+    interval = Math.floor(seconds / 2592000);
+    if (interval > 1) return interval + ' months ago';
+    
+    interval = Math.floor(seconds / 86400);
+    if (interval > 1) return interval + ' days ago';
+    
+    interval = Math.floor(seconds / 3600);
+    if (interval > 1) return interval + ' hours ago';
+    
+    interval = Math.floor(seconds / 60);
+    if (interval > 1) return interval + ' minutes ago';
+    
+    return 'just now';
+}
+
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function isTouchDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
+function getViewportSize() {
+    return {
+        width: Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0),
+        height: Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+    };
+}
+
+function scrollToTop(smooth = true) {
+    window.scrollTo({
+        top: 0,
+        behavior: smooth ? 'smooth' : 'auto'
+    });
+}
+
+function scrollToElement(element, offset = 0) {
+    if (typeof element === 'string') {
+        element = document.querySelector(element);
+    }
+    if (!element) return;
+    
+    const top = element.getBoundingClientRect().top + window.pageYOffset - offset;
+    window.scrollTo({
+        top: top,
+        behavior: 'smooth'
+    });
+}
+// ============================================
+// LISTINGS.JS - PART 19: ERROR HANDLING & LOGGING
+// ============================================
+
+const ErrorCodes = {
+    L101: 'Failed to load listings from database',
+    L102: 'Geocoding service unavailable',
+    L103: 'Failed to get user location',
+    L201: 'Geolocation permission denied',
+    L202: 'Geolocation not supported',
+    L203: 'Geolocation timeout',
+    L301: 'Failed to save starred listings',
+    L302: 'Failed to load starred listings',
+    L401: 'Map initialization failed',
+    L402: 'Map marker update failed',
+    L501: 'Cookie storage unavailable',
+    L502: 'Local storage unavailable',
+    L601: 'Network request failed',
+    L602: 'Invalid API response'
+};
+
+function logError(code, message, error) {
+    const timestamp = new Date().toISOString();
+    const logEntry = {
+        code,
+        message,
+        error: error ? error.toString() : null,
+        stack: error ? error.stack : null,
+        timestamp,
+        url: window.location.href,
+        userAgent: navigator.userAgent
+    };
+    
+    console.error(`[${code}] ${message}`, logEntry);
+    
+    // Store in localStorage for debugging
+    try {
+        const errors = JSON.parse(localStorage.getItem('errorLog') || '[]');
+        errors.push(logEntry);
+        
+        // Keep only last 50 errors
+        if (errors.length > 50) {
+            errors.shift();
+        }
+        
+        localStorage.setItem('errorLog', JSON.stringify(errors));
+    } catch (e) {
+        console.error('Failed to log error:', e);
+    }
+}
+
+function getErrorLog() {
+    try {
+        return JSON.parse(localStorage.getItem('errorLog') || '[]');
+    } catch (e) {
+        console.error('Failed to get error log:', e);
+        return [];
+    }
+}
+
+function clearErrorLog() {
+    try {
+        localStorage.removeItem('errorLog');
+        console.log('Error log cleared');
+    } catch (e) {
+        console.error('Failed to clear error log:', e);
+    }
+}
+
+function handleCriticalError(error) {
+    console.error('Critical error:', error);
+    
+    const errorContainer = document.getElementById('errorContainer');
+    if (errorContainer) {
+        errorContainer.innerHTML = `
+            <div class="error-message">
+                <h3>Something went wrong</h3>
+                <p>${error.message || 'An unexpected error occurred'}</p>
+                <button onclick="window.location.reload()">Reload Page</button>
+            </div>
+        `;
+        errorContainer.style.display = 'block';
+    }
+}
+
+function showErrorToast(message) {
+    showToast(message, 5000);
+}
+
+function validateListing(listing) {
+    const errors = [];
+    
+    if (!listing.business_name) {
+        errors.push('Business name is required');
+    }
+    
+    if (!listing.category) {
+        errors.push('Category is required');
+    }
+    
+    if (listing.phone && !isValidPhone(listing.phone)) {
+        errors.push('Invalid phone number');
+    }
+    
+    if (listing.website && !isValidUrl(listing.website)) {
+        errors.push('Invalid website URL');
+    }
+    
+    if (listing.coordinates) {
+        if (typeof listing.coordinates.lat !== 'number' || 
+            typeof listing.coordinates.lng !== 'number') {
+            errors.push('Invalid coordinates');
+        }
+    }
+    
+    return {
+        valid: errors.length === 0,
+        errors
+    };
+}
+
+function handleNetworkError(error) {
+    console.error('Network error:', error);
+    
+    if (!navigator.onLine) {
+        showErrorToast('No internet connection. Please check your network.');
+        return;
+    }
+    
+    if (error.status === 429) {
+        showErrorToast('Too many requests. Please wait a moment and try again.');
+        return;
+    }
+    
+    if (error.status >= 500) {
+        showErrorToast('Server error. Please try again later.');
+        return;
+    }
+    
+    showErrorToast('Network request failed. Please try again.');
+}
+
+function setupErrorHandlers() {
+    window.addEventListener('error', (event) => {
+        logError('L999', 'Uncaught error', event.error);
+    });
+    
+    window.addEventListener('unhandledrejection', (event) => {
+        logError('L998', 'Unhandled promise rejection', event.reason);
+    });
+}
+
+function checkBrowserCompatibility() {
+    const issues = [];
+    
+    if (!window.fetch) {
+        issues.push('Fetch API not supported');
+    }
+    
+    if (!window.localStorage) {
+        issues.push('Local Storage not supported');
+    }
+    
+    if (!window.Map) {
+        issues.push('Map not supported');
+    }
+    
+    if (!navigator.geolocation) {
+        issues.push('Geolocation not supported');
+    }
+    
+    if (issues.length > 0) {
+        console.warn('Browser compatibility issues:', issues);
+        showToast('Your browser may not support all features');
+    }
+    
+    return issues.length === 0;
+}
+// ============================================
+// LISTINGS.JS - PART 20: PERFORMANCE OPTIMIZATION
+// ============================================
+
+let performanceMetrics = {
+    loadStart: performance.now(),
+    loadEnd: null,
+    renderStart: null,
+    renderEnd: null,
+    filterStart: null,
+    filterEnd: null
+};
+
+function measurePerformance(operation, fn) {
+    const start = performance.now();
+    const result = fn();
+    const end = performance.now();
+    
+    console.log(`${operation} took ${(end - start).toFixed(2)}ms`);
+    return result;
+}
+
+async function measureAsyncPerformance(operation, fn) {
+    const start = performance.now();
+    const result = await fn();
+    const end = performance.now();
+    
+    console.log(`${operation} took ${(end - start).toFixed(2)}ms`);
+    return result;
+}
+
+function logPerformanceMetrics() {
+    if (performanceMetrics.loadEnd) {
+        console.log('Performance Metrics:');
+        console.log(`  Total load time: ${(performanceMetrics.loadEnd - performanceMetrics.loadStart).toFixed(2)}ms`);
+        
+        if (performanceMetrics.renderEnd) {
+            console.log(`  Render time: ${(performanceMetrics.renderEnd - performanceMetrics.renderStart).toFixed(2)}ms`);
+        }
+        
+        if (performanceMetrics.filterEnd) {
+            console.log(`  Filter time: ${(performanceMetrics.filterEnd - performanceMetrics.filterStart).toFixed(2)}ms`);
+        }
+    }
+}
+
+function optimizeImages() {
+    const images = document.querySelectorAll('img[data-src]');
+    
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+    
+    images.forEach(img => imageObserver.observe(img));
+}
+
+function lazyLoadComponents() {
+    // Lazy load map only when needed
+    if (!mapReady && mapOpen) {
+        initMap();
+    }
+    
+    // Lazy load split view only when activated
+    if (!splitMap && splitViewActive) {
+        initSplitMap();
+    }
+}
+
+function cacheListings() {
+    try {
+        const cacheKey = 'cachedListings';
+        const cacheTimestamp = 'cachedListingsTimestamp';
+        const cacheExpiry = 30 * 60 * 1000; // 30 minutes
+        
+        const timestamp = localStorage.getItem(cacheTimestamp);
+        if (timestamp && Date.now() - parseInt(timestamp) < cacheExpiry) {
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                return JSON.parse(cached);
+            }
+        }
+        
+        return null;
+    } catch (e) {
+        console.error('Failed to get cached listings:', e);
+        return null;
+    }
+}
+
+function saveCachedListings(listings) {
+    try {
+        localStorage.setItem('cachedListings', JSON.stringify(listings));
+        localStorage.setItem('cachedListingsTimestamp', Date.now().toString());
+    } catch (e) {
+        console.error('Failed to cache listings:', e);
+    }
+}
+
+function clearCache() {
+    try {
+        localStorage.removeItem('cachedListings');
+        localStorage.removeItem('cachedListingsTimestamp');
+        console.log('Cache cleared');
+    } catch (e) {
+        console.error('Failed to clear cache:', e);
+    }
+}
+
+function preloadCriticalResources() {
+    // Preload fonts
+    const fonts = [
+        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
+    ];
+    
+    fonts.forEach(font => {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'style';
+        link.href = font;
+        document.head.appendChild(link);
+    });
+}
+
+function prefetchNextPage() {
+    if (displayedListingsCount >= filteredListings.length) return;
+    
+    const nextPageListings = filteredListings.slice(
+        displayedListingsCount,
+        displayedListingsCount + 25
+    );
+    
+    nextPageListings.forEach(listing => {
+        if (listing.photos && listing.photos[0]) {
+            const img = new Image();
+            img.src = listing.photos[0];
+        }
+    });
+}
+
+function reduceRepaints() {
+    // Batch DOM updates
+    requestAnimationFrame(() => {
+        // All DOM updates here
+    });
+}
+
+function virtualizeListings() {
+    // Implement virtual scrolling for large datasets
+    const viewportHeight = window.innerHeight;
+    const itemHeight = 300; // Approximate listing card height
+    const buffer = 5; // Number of items to render above/below viewport
+    
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - buffer);
+    const endIndex = Math.min(
+        filteredListings.length,
+        Math.ceil((scrollTop + viewportHeight) / itemHeight) + buffer
+    );
+    
+    return {
+        startIndex,
+        endIndex,
+        visibleListings: filteredListings.slice(startIndex, endIndex)
+    };
+}
+
+function monitorMemoryUsage() {
+    if (performance.memory) {
+        console.log('Memory Usage:');
+        console.log(`  Used: ${(performance.memory.usedJSHeapSize / 1048576).toFixed(2)} MB`);
+        console.log(`  Total: ${(performance.memory.totalJSHeapSize / 1048576).toFixed(2)} MB`);
+        console.log(`  Limit: ${(performance.memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`);
+    }
+}
+
+function optimizeMapPerformance() {
+    if (!map) return;
+    
+    // Reduce marker cluster radius for better performance
+    if (markerClusterGroup) {
+        markerClusterGroup.options.maxClusterRadius = 30;
+    }
+    
+    // Disable animations on mobile for better performance
+    if (isMobileDevice()) {
+        map.options.zoomAnimation = false;
+        map.options.markerZoomAnimation = false;
+    }
+}
+
+function enableServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('Service Worker registered:', registration);
+            })
+            .catch(error => {
+                console.error('Service Worker registration failed:', error);
+            });
+    }
+}
