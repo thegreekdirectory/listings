@@ -51,15 +51,13 @@ let filterPosition = 'top';
 let searchDebounceTimer = null;
 let displayedListingsCount = 25;
 let estimatedUserLocation = null;
-let selectedSplitListingId = null;  // For split view selected listing
-// Track whether desktop filters are in overlay mode (when map is open)
+let selectedSplitListingId = null;
 let desktopFiltersOverlay = false;
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-// SVG for the verified checkmark icon (white checkmark in blue circle)
 const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 function formatPhoneDisplay(phone) {
@@ -83,7 +81,6 @@ function loadStarredListings() {
             }
         }
         updateStarredCount();
-        // If URL has ?starred=1, activate starred-only view after listings load
         if (new URLSearchParams(window.location.search).get('starred') === '1') {
             viewingStarredOnly = true;
         }
@@ -117,9 +114,6 @@ function toggleStar(listingId, event) {
         event.stopPropagation();
     }
 
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-
-    // Ensure listingId is a string for consistent comparison
     listingId = String(listingId);
     
     const index = starredListings.indexOf(listingId);
@@ -136,7 +130,6 @@ function toggleStar(listingId, event) {
     saveStarredListings();
     console.log('saveStarredListings() called');
 
-    // Update every star button for this listing (matched by data-listing-id)
     const buttons = document.querySelectorAll('.star-button[data-listing-id="' + listingId + '"]');
     console.log('Found', buttons.length, 'star buttons with ID', listingId);
     
@@ -150,7 +143,6 @@ function toggleStar(listingId, event) {
         }
     });
 
-    // If viewing starred-only, re-filter (listing may have just been unstarred)
     if (viewingStarredOnly) {
         console.log('Viewing starred only, re-filtering...');
         filteredListings = allListings.filter(l => starredListings.includes(String(l.id)));
@@ -190,13 +182,11 @@ function applySortToListings(listings, sortValue) {
             [listings[i], listings[j]] = [listings[j], listings[i]];
         }
     }
-    // 'default' = no sorting change
 }
 
 function toggleStarredView() {
     console.log('[DEBUG] toggleStarredView called. Current viewingStarredOnly:', viewingStarredOnly);
     
-    // CRITICAL FIX: Reload starred listings from cookie FIRST
     loadStarredListings();
     console.log('[DEBUG] Reloaded starredListings from cookie:', starredListings);
     
@@ -216,25 +206,20 @@ function toggleStarredView() {
         
         console.log('[DEBUG] Filtering', allListings.length, 'listings to', starredListings.length, 'starred');
         
-        // Show hide starred button
         if (hideStarredBtn) hideStarredBtn.classList.remove('hidden');
         
-        // Apply filters, search, and sort to starred listings
         let starredLis = allListings.filter(l => starredListings.includes(String(l.id)));
         
-        // Apply category filter
         if (selectedCategory && selectedCategory !== 'All') {
             starredLis = starredLis.filter(l => l.category === selectedCategory);
         }
         
-        // Apply subcategory filter
         if (selectedSubcategories.length > 0) {
             starredLis = starredLis.filter(l => 
                 l.subcategories && l.subcategories.some(sub => selectedSubcategories.includes(sub))
             );
         }
         
-        // Apply search filter
         const searchInput = document.getElementById('searchInput');
         if (searchInput && searchInput.value.trim()) {
             const searchTerm = searchInput.value.trim().toLowerCase();
@@ -247,7 +232,6 @@ function toggleStarredView() {
             );
         }
         
-        // Apply hours filters
         if (openNowOnly) starredLis = starredLis.filter(l => isOpenNow(l));
         if (closedNowOnly) starredLis = starredLis.filter(l => !isOpenNow(l));
         if (openingSoonOnly) starredLis = starredLis.filter(l => isOpeningSoon(l));
@@ -255,7 +239,6 @@ function toggleStarredView() {
         if (hoursUnknownOnly) starredLis = starredLis.filter(l => !l.hours || !l.hours.length);
         if (onlineOnlyFilter) starredLis = starredLis.filter(l => l.online_only);
         
-        // Apply location filters
         if (selectedCountry && selectedCountry !== 'All') {
             starredLis = starredLis.filter(l => l.country === selectedCountry);
         }
@@ -269,7 +252,6 @@ function toggleStarredView() {
             starredLis = starredLis.filter(l => l.zip === selectedZip);
         }
         
-        // Apply radius filter if user location available
         if (userLocation && selectedRadius > 0 && selectedRadius < 999) {
             starredLis = starredLis.filter(l => {
                 if (!l.lat || !l.lng) return false;
@@ -278,7 +260,6 @@ function toggleStarredView() {
             });
         }
         
-        // Apply current sort
         const sortSelect = document.getElementById('sortSelect');
         if (sortSelect) {
             const sortValue = sortSelect.value;
@@ -295,7 +276,6 @@ function toggleStarredView() {
             headerStarBtn.style.color = '#78350f';
         }
     } else {
-        // Hide the hide starred button
         if (hideStarredBtn) hideStarredBtn.classList.add('hidden');
         
         displayedListingsCount = 25;
@@ -409,12 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkFilterPosition();
 });
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -441,7 +416,6 @@ function checkFilterPosition() {
         if (mapBtn) mapBtn.classList.remove('hidden');
         
         if (filterPosition === 'left' && !mapOpen) {
-            // Sidebar visible — hide the toggle button
             if (desktopLayout) desktopLayout.classList.add('with-left-filters');
             if (desktopFilters) {
                 desktopFilters.classList.remove('hidden');
@@ -453,7 +427,6 @@ function checkFilterPosition() {
                 listingsContainer.classList.add('listings-2-col');
             }
         } else if (filterPosition === 'left' && mapOpen && !splitViewActive) {
-            // Full-mode map: sidebar stays next to the listings column (below the map).
             if (desktopLayout) desktopLayout.classList.add('with-left-filters');
             if (desktopFilters) {
                 desktopFilters.classList.remove('hidden');
@@ -466,7 +439,6 @@ function checkFilterPosition() {
                 listingsContainer.classList.add('listings-2-col');
             }
         } else if (filterPosition === 'left' && mapOpen && splitViewActive) {
-            // Split-view mode: hide the sidebar entirely (split view has its own layout)
             if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
             if (desktopFilters) {
                 desktopFilters.classList.add('hidden');
@@ -479,7 +451,6 @@ function checkFilterPosition() {
                 listingsContainer.classList.add('listings-3-col');
             }
         } else {
-            // filterPosition === 'top' (filters collapsed) — show toggle button
             if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
             if (desktopFilters) {
                 desktopFilters.classList.add('hidden');
@@ -493,7 +464,6 @@ function checkFilterPosition() {
             }
         }
     } else {
-        // Mobile
         if (toggleBtn) toggleBtn.style.display = 'none';
         if (desktopLayout) desktopLayout.classList.remove('with-left-filters');
         if (desktopFilters) {
@@ -627,9 +597,6 @@ function loadFiltersFromURL() {
         if (onlineFilter2) onlineFilter2.checked = true;
     }
 
-    // Re-render category & subcategory buttons so they reflect the URL state.
-    // createCategoryButtons() already ran once during init (with selectedCategory still 'All'),
-    // so we must call it again now that selectedCategory may have been updated from the URL.
     createCategoryButtons();
     updateSubcategoryDisplay();
 }
@@ -723,12 +690,7 @@ window.setSubcategoryMode = function(mode, skipUpdate) {
 
 window.toggleStar = toggleStar;
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -762,13 +724,10 @@ async function loadListings() {
         populateCountryFilter();
         updateLocationSubtitle();
         applyFilters();
-        // If ?starred=1 was set (flag set by loadStarredListings before listings arrived),
-        // now filter down to starred only and update the count display.
         if (viewingStarredOnly) {
             if (starredListings.length === 0) {
                 viewingStarredOnly = false;
             } else {
-                // Convert listing IDs to strings for comparison
                 filteredListings = allListings.filter(l => starredListings.includes(String(l.id)));
                 displayedListingsCount = filteredListings.length;
                 console.log('Filtered to starred listings:', filteredListings.length, 'of', starredListings.length, 'starred IDs');
@@ -882,13 +841,10 @@ function applyFilters() {
         });
     }
     
-    // SORTING LOGIC WITH SMART DEFAULT
-    // Initialize random seed based on page load (changes every visit)
     if (!window._sortRandomSeed) {
         window._sortRandomSeed = Math.random() * 1000000;
     }
     
-    // Seeded random function for consistent randomness within page load
     function seededRandom(seed, id) {
         const x = Math.sin(seed + id) * 10000;
         return x - Math.floor(x);
@@ -898,38 +854,28 @@ function applyFilters() {
         if (sortOption === 'random') {
             return Math.random() - 0.5;
         } else if (sortOption === 'default') {
-            // SMART DEFAULT SORTING ALGORITHM
-            // Combines: paid tier + distance + randomness for fairness
-            
             const aTier = a.tier || 'FREE';
             const bTier = b.tier || 'FREE';
             const tierPriority = { PREMIUM: 100, FEATURED: 50, VERIFIED: 20, FREE: 0 };
             
             const effectiveUserLocation = userLocation || estimatedUserLocation;
             
-            // Calculate scoring components
             let aScore = 0;
             let bScore = 0;
             
-            // 1. Paid tier weight (40% of total score)
             aScore += tierPriority[aTier];
             bScore += tierPriority[bTier];
             
-            // 2. Location relevance (40% of total score) - ONLY if location data available
             if (effectiveUserLocation && a.coordinates && b.coordinates) {
-                // Same city: +40 points
                 if (a._inUserCity) aScore += 40;
                 if (b._inUserCity) bScore += 40;
                 
-                // Same state (but not city): +20 points
                 if (a._inUserState && !a._inUserCity) aScore += 20;
                 if (b._inUserState && !b._inUserCity) bScore += 20;
                 
-                // Distance bonus (closer = more points, max 30 points)
                 const aDistance = a._distance || 999;
                 const bDistance = b._distance || 999;
                 if (aDistance < 999) {
-                    // Within 5 miles: +30, 10 miles: +20, 25 miles: +10, 50 miles: +5
                     if (aDistance <= 5) aScore += 30;
                     else if (aDistance <= 10) aScore += 20;
                     else if (aDistance <= 25) aScore += 10;
@@ -942,21 +888,16 @@ function applyFilters() {
                     else if (bDistance <= 50) bScore += 5;
                 }
             }
-            // If either listing lacks coordinates, don't penalize it - location score stays at 0 for both
             
-            // 3. Controlled randomness (20% of total score)
-            // Changes on every page load/reload for variety
             const aRandom = seededRandom(window._sortRandomSeed, parseInt(a.id) || 0);
             const bRandom = seededRandom(window._sortRandomSeed, parseInt(b.id) || 0);
-            aScore += aRandom * 40; // Max 40 points from randomness
+            aScore += aRandom * 40;
             bScore += bRandom * 40;
             
-            // Compare total scores
             if (Math.abs(aScore - bScore) > 0.1) {
-                return bScore - aScore; // Higher score = earlier in list
+                return bScore - aScore;
             }
             
-            // Tie-breaker: alphabetical
             return a.business_name.localeCompare(b.business_name);
         } else if (sortOption === 'az') {
             return a.business_name.localeCompare(b.business_name);
@@ -1101,26 +1042,12 @@ function getFullAddress(listing) {
     return listing.address || '';
 }
 
-// ============================================
-// BADGE & CHECKMARK HELPER
-// Centralised logic: tag hierarchy + verified checkmark
-// - Featured listings: "Featured" badge only (no Verified, no Claimed)
-// - Verified listings (non-Featured): "Verified" badge only (no Claimed)
-// - No "Claimed" badge anywhere; no "Hours Unknown" badge anywhere
-// - Verified listings get a checkmark icon rendered separately next to the name
-// ============================================
-
 function buildBadges(listing) {
     const badges = [];
     const openStatus = isOpenNow(listing.hours);
     const openingSoon = isOpeningSoon(listing.hours);
     const closingSoon = isClosingSoon(listing.hours);
 
-    // Only ONE hours-status badge: the most specific state wins.
-    // Closed + Opening Soon → "Opening Soon" only.
-    // Open + Closing Soon   → "Closing Soon" only.
-    // Open  (not closing)   → "Open".
-    // Closed (not opening)  → "Closed".
     if (openingSoon) {
         badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
     } else if (closingSoon) {
@@ -1131,10 +1058,6 @@ function buildBadges(listing) {
         badges.push('<span class="badge badge-closed">Closed</span>');
     }
 
-    // Tier / verification hierarchy:
-    // FEATURED or PREMIUM → show "Featured" badge only
-    // VERIFIED tier OR verified flag (but not featured) → show "Verified" badge only
-    // FREE tier with show_claim_button === false → nothing (no Claimed badge)
     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
     const isVerified  = listing.verified || listing.tier === 'VERIFIED';
 
@@ -1143,26 +1066,17 @@ function buildBadges(listing) {
     } else if (isVerified) {
         badges.push('<span class="badge badge-verified">Verified</span>');
     }
-    // No "Claimed" badge, no "Hours Unknown" badge
 
     return badges;
 }
 
-// Returns true if the listing should show the verified-checkmark icon next to its name.
-// Shown for: Featured/Premium tier, Verified tier, or any listing where the business
-// has claimed it (show_claim_button === false).
 function showsVerifiedCheckmark(listing) {
     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
     const isVerified  = listing.verified || listing.tier === 'VERIFIED';
     return isFeatured || isVerified || listing.show_claim_button === false;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -1386,12 +1300,7 @@ function populateStateFilter(country) {
     }
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -1408,11 +1317,17 @@ function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            updateURL();
-            if (!viewingStarredOnly) {
-                displayedListingsCount = 25;
-                applyFilters();
-            }
+            // FIXED: Immediate URL update - no delay
+            updateURL(); // Updates ?q= instantly
+            
+            // Debounce the filtering for performance
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                if (!viewingStarredOnly) {
+                    displayedListingsCount = 25;
+                    applyFilters();
+                }
+            }, 100); // 100ms debounce for smooth typing
         });
     }
     
@@ -1440,10 +1355,6 @@ function setupEventListeners() {
     const listViewBtn2 = document.getElementById('listViewBtn2');
     if (listViewBtn2) listViewBtn2.addEventListener('click', () => setView('list'));
     
-    // Note: starredBtn removed from UI - starred view toggled via header star button
-    // const starredBtn = document.getElementById('starredBtn');
-    // if (starredBtn) starredBtn.addEventListener('click', toggleStarredView);
-    
     const splitViewBtn = document.getElementById('splitViewBtn');
     if (splitViewBtn) splitViewBtn.addEventListener('click', toggleSplitView);
     
@@ -1464,28 +1375,23 @@ function setupEventListeners() {
             } else {
                 filterPosition = 'left';
             }
-            // Close overlay if it was open
             closeDesktopFiltersOverlay();
             checkFilterPosition();
         });
     }
 
-    // Desktop filter toggle button (appears when filters are collapsed or map is open)
     const desktopFilterToggleBtn = document.getElementById('desktopFilterToggleBtn');
     if (desktopFilterToggleBtn) {
         desktopFilterToggleBtn.addEventListener('click', () => {
             if (mapOpen) {
-                // Map is open — sidebar can't coexist, so use the overlay
                 toggleDesktopFiltersOverlay();
             } else {
-                // Map is closed — just restore the normal sidebar
                 filterPosition = 'left';
                 checkFilterPosition();
             }
         });
     }
 
-    // Close overlay when clicking the backdrop
     const desktopFiltersBackdrop = document.getElementById('desktopFiltersBackdrop');
     if (desktopFiltersBackdrop) {
         desktopFiltersBackdrop.addEventListener('click', closeDesktopFiltersOverlay);
@@ -1696,7 +1602,6 @@ function setupEventListeners() {
                 locationButtonActive = true;
                 mapMoved = false;
                 locateBtn.classList.add('active');
-                // Change button background to #045093, text to white, icon to white
                 locateBtn.style.backgroundColor = '#045093';
                 locateBtn.style.color = 'white';
                 const locateIcon = document.getElementById('locateBtnIcon');
@@ -1735,16 +1640,12 @@ function setupEventListeners() {
 
     setupLocationSearch();
 
-    // ── One-time document-level delegated star handler ──
-    // Catches .star-button clicks anywhere (main grid, list, split view) without
-    // stacking a new listener every time renderListings() runs.
     document.addEventListener('click', function(e) {
         const starBtn = e.target.closest('.star-button');
         if (!starBtn) return;
         
         console.log('Star button clicked!', starBtn);
         
-        // Prevent default behavior and stop propagation
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -1758,7 +1659,7 @@ function setupEventListeners() {
         } else {
             console.error('No listing ID found on star button');
         }
-    }, true); // Use capture phase to ensure we get the event first
+    }, true);
     
     console.log('Star button event listener registered');
     
@@ -1769,7 +1670,6 @@ function setupEventListeners() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-// Desktop filters overlay management (used when map is open or filters are collapsed)
 function toggleDesktopFiltersOverlay() {
     if (desktopFiltersOverlay) {
         closeDesktopFiltersOverlay();
@@ -1786,7 +1686,6 @@ function openDesktopFiltersOverlay() {
     
     if (desktopFilters) {
         desktopFilters.classList.remove('hidden');
-        // When map is open, show filters inline next to listings
         if (mapOpen) {
             desktopFilters.classList.remove('desktop-filters-overlay');
             desktopFilters.style.position = '';
@@ -1797,14 +1696,11 @@ function openDesktopFiltersOverlay() {
             desktopFilters.style.top = '';
             desktopFilters.style.zIndex = '';
             desktopFilters.style.boxShadow = '';
-            // Make desktop layout flex to show filters and listings side-by-side
             if (desktopLayout) {
                 desktopLayout.style.display = 'flex';
                 desktopLayout.style.gap = '1rem';
             }
-            // Don't show backdrop when showing inline
         } else {
-            // Normal overlay mode when map is closed
             desktopFilters.classList.add('desktop-filters-overlay');
             if (backdrop) backdrop.classList.remove('hidden');
         }
@@ -1822,7 +1718,6 @@ function closeDesktopFiltersOverlay() {
         desktopFilters.classList.remove('desktop-filters-overlay');
     }
     if (backdrop) backdrop.classList.add('hidden');
-    // Reset desktop layout
     if (desktopLayout && mapOpen) {
         desktopLayout.style.display = '';
     }
@@ -1898,7 +1793,6 @@ function toggleMap() {
         container.classList.remove('hidden');
         if (filtersOpen) toggleFilters();
         if (splitViewActive) toggleSplitView();
-        // Close desktop sidebar filters; user can reopen as overlay via toggle button
         closeDesktopFiltersOverlay();
         checkFilterPosition();
         if (map) {
@@ -1911,7 +1805,6 @@ function toggleMap() {
         }
     } else {
         container.classList.add('hidden');
-        // Restore normal filter position state
         checkFilterPosition();
     }
 }
@@ -1927,10 +1820,19 @@ function setView(view) {
     const gridViewBtn2 = document.getElementById('gridViewBtn2');
     const listViewBtn2 = document.getElementById('listViewBtn2');
     
-    if (gridViewBtn) gridViewBtn.className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    if (listViewBtn) listViewBtn.className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    if (gridViewBtn2) gridViewBtn2.className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
-    if (listViewBtn2) listViewBtn2.className = view === 'list' ? 'p-2 rounded bg-white shadow-sm' : 'p-2 rounded';
+    // FIXED: Add 'active' class for CSS styling
+    if (gridViewBtn) {
+        gridViewBtn.className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm active' : 'p-2 rounded';
+    }
+    if (listViewBtn) {
+        listViewBtn.className = view === 'list' ? 'p-2 rounded bg-white shadow-sm active' : 'p-2 rounded';
+    }
+    if (gridViewBtn2) {
+        gridViewBtn2.className = view === 'grid' ? 'p-2 rounded bg-white shadow-sm active' : 'p-2 rounded';
+    }
+    if (listViewBtn2) {
+        listViewBtn2.className = view === 'list' ? 'p-2 rounded bg-white shadow-sm active' : 'p-2 rounded';
+    }
     
     renderListings();
 }
@@ -1945,12 +1847,7 @@ function hideMapLoading() {
     if (loading) loading.style.display = 'none';
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -1970,7 +1867,6 @@ function createCategoryButtons(filteredCategories) {
         const container = document.getElementById(containerId);
         if (!container) return;
         
-        // Use more compact styling for top view (categoryFilters) on desktop
         const isTopView = containerId === 'categoryFilters';
         const compactClass = isTopView ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm';
         
@@ -2227,9 +2123,8 @@ function clearAllFilters() {
     createCategoryButtons();
     displayedListingsCount = 25;
     if (viewingStarredOnly) {
-        // Re-filter to starred listings after clearing filters
         toggleStarredView();
-        toggleStarredView(); // Toggle twice to refresh with cleared filters
+        toggleStarredView();
     } else {
         applyFilters();
     }
@@ -2240,9 +2135,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 function setupLocationSearch() {
-    // FIX: use the correct results div IDs that match the HTML.
-    // HTML has: id="locationSearchResults" and id="locationSearchResults2"
-    // We map each input to its correct results div explicitly.
     const locationInputs = [
         { inputId: 'locationSearch',  resultsId: 'locationSearchResults' },
         { inputId: 'locationSearch2', resultsId: 'locationSearchResults2' }
@@ -2257,7 +2149,6 @@ function setupLocationSearch() {
         input.addEventListener('input', () => {
             const query = input.value.toLowerCase().trim();
             
-            // Sync the other input
             const otherId = inputId === 'locationSearch' ? 'locationSearch2' : 'locationSearch';
             const otherInput = document.getElementById(otherId);
             if (otherInput) otherInput.value = input.value;
@@ -2394,7 +2285,6 @@ function setupLocationSearch() {
                             }
                         }
 
-                        // Clear both inputs and hide both results divs
                         ['locationSearch', 'locationSearch2'].forEach(id => {
                             const el = document.getElementById(id);
                             if (el) el.value = '';
@@ -2424,12 +2314,7 @@ function setupLocationSearch() {
     });
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -2440,18 +2325,14 @@ or distribution of this code will result in legal action to the fullest extent p
 // ============================================
 // LISTINGS PAGE JAVASCRIPT - PART 7
 // Map Functions & Geocoding
-// ============================================
-
-// ============================================
-// COMPLETE MAP SECTION - ONE PASTE REPLACEMENT
-// DELETE FROM LINE 2600 TO LINE 3200 (entire map section)
-// PASTE THIS ENTIRE FILE
+// ALL PATCHES APPLIED
 // ============================================
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
 // ============================================
 // HELPER FUNCTION - Call Button Generator
+// ✅ PATCH #1 APPLIED: right:116px (was right:8px)
 // ============================================
 
 function generateCallButton(listing) {
@@ -2460,7 +2341,7 @@ function generateCallButton(listing) {
     return `
         <a href="tel:${listing.phone}" 
            onclick="event.stopPropagation();"
-           style="position:absolute;bottom:8px;right:100px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#10b981;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;z-index:10;" 
+           style="position:absolute;bottom:8px;right:116px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#10b981;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;z-index:10;" 
            onmouseover="this.style.background='#059669'" 
            onmouseout="this.style.background='#10b981'">
             <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2529,6 +2410,96 @@ function initMap() {
         }
     });
     map.addLayer(markerClusterGroup);
+
+    // ═══════════════════════════════════════════════════════════════
+    // ✅ PATCH #3 APPLIED: Cluster click handler with radius + tier sorting
+    // ═══════════════════════════════════════════════════════════════
+    markerClusterGroup.on('clusterclick', function(event) {
+        const cluster = event.layer;
+        const childMarkers = cluster.getAllChildMarkers();
+        
+        if (childMarkers.length > 10) {
+            map.setView(cluster.getLatLng(), map.getZoom() + 2);
+            return;
+        }
+        
+        // Filter by 0.1 mile radius from cluster center
+        const clusterCenter = cluster.getLatLng();
+        const nearbyMarkers = childMarkers.filter(m => {
+            const markerPos = m.getLatLng();
+            const dist = calculateDistance(
+                clusterCenter.lat, clusterCenter.lng,
+                markerPos.lat, markerPos.lng
+            );
+            return dist <= 0.1;
+        });
+        
+        const listings = nearbyMarkers.map(m => {
+            const listingId = m.options.listingId;
+            return filteredListings.find(l => String(l.id) === String(listingId));
+        }).filter(Boolean);
+        
+        if (listings.length === 0) return;
+        
+        // Sort by tier: PREMIUM > FEATURED > VERIFIED > FREE
+        const tierPriority = { PREMIUM: 4, FEATURED: 3, VERIFIED: 2, FREE: 1 };
+        listings.sort((a, b) => {
+            const aTier = a.tier || 'FREE';
+            const bTier = b.tier || 'FREE';
+            return tierPriority[bTier] - tierPriority[aTier];
+        });
+        
+        // Create popup content
+        const clusterPopupContent = listings.map(listing => {
+            const fullAddr = getFullAddress(listing);
+            const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
+            const callButton = generateCallButton(listing);
+            const badges = buildBadges(listing);
+            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : '';
+            const logoImage = listing.logo || '';
+            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const checkmarkHtml = showsVerifiedCheckmark(listing) ? 
+                '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+            
+            return `
+                <div class="map-popup" style="width: 280px; margin-bottom: ${listings.length > 1 ? '16px' : '0'}; border-bottom: ${listings.length > 1 ? '1px solid #e5e7eb; padding-bottom: 16px' : '0'};">
+                    ${firstPhoto ? `<img src="${firstPhoto}" alt="${listing.business_name}" style="width:100%;height:140px;object-fit:cover;border-radius:12px 12px 0 0;">` : 
+                    `<div style="width:100%;height:140px;background:linear-gradient(135deg, #045093 0%, #0369a1 100%);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;"><svg style="width:48px;height:48px;color:rgba(255,255,255,0.5);" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg></div>`}
+                    
+                    <div class="map-popup-content" style="padding: 12px; padding-bottom: 50px; position: relative;">
+                        ${logoImage ? `<div style="width:48px;height:48px;background:white;border-radius:8px;padding:4px;display:flex;align-items:center;justify-content:center;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);"><img src="${logoImage}" alt="${listing.business_name} logo" style="width:100%;height:100%;object-fit:contain;border-radius:4px;"></div>` : ''}
+                        
+                        <div class="map-popup-info">
+                            <div class="map-popup-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${badges.join('')}</div>
+                            
+                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;flex-wrap:wrap;word-wrap:break-word;hyphens:auto;">${listing.business_name}${checkmarkHtml}</a>
+                            
+                            ${listing.tagline ? `<div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;word-wrap:break-word;hyphens:auto;">${listing.tagline}</div>` : ''}
+                            
+                            <div class="map-popup-details" style="font-size:12px;color:#6b7280;margin-bottom:4px;">
+                                <div style="display:flex;align-items:start;gap:6px;margin-bottom:4px;"><svg style="width:14px;height:14px;margin-top:2px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="line-height:1.4;word-wrap:break-word;hyphens:auto;">${fullAddr}</span></div>
+                                ${listing.phone ? `<div style="display:flex;align-items:center;gap:6px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
+                            </div>
+                            
+                            ${callButton}
+                            
+                            <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;" onmouseover="this.style.background='#033d7a'" onmouseout="this.style.background='#045093'"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>Directions</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        const popup = L.popup({
+            maxWidth: 320,
+            maxHeight: 400,
+            className: 'custom-popup'
+        })
+        .setLatLng(cluster.getLatLng())
+        .setContent(`<div style="max-height: 400px; overflow-y: auto;">${clusterPopupContent}</div>`)
+        .openOn(map);
+    });
+    // ═══════════════════════════════════════════════════════════════
     
     if (userLocation) addUserLocationMarker();
     
@@ -2549,120 +2520,6 @@ function initMap() {
 
     map.on('zoomend', () => {
         if (mapOpen) updateMapMarkers();
-    });
-    
-    // Cluster click handler
-    markerClusterGroup.on('clusterclick', function(event) {
-        const cluster = event.layer;
-        const childMarkers = cluster.getAllChildMarkers();
-        
-        if (childMarkers.length > 10) {
-            map.setView(cluster.getLatLng(), map.getZoom() + 2);
-            return;
-        }
-        
-        const listings = childMarkers.map(m => {
-            const listingId = m.options.listingId;
-            return filteredListings.find(l => String(l.id) === String(listingId));
-        }).filter(Boolean);
-        
-        if (listings.length === 0) return;
-        
-        const clusterPopupContent = listings.map(listing => {
-            const fullAddr = getFullAddress(listing);
-            const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
-            const callButton = generateCallButton(listing);
-            const badges = buildBadges(listing);
-            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : '';
-            const logoImage = listing.logo || '';
-            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
-            
-            return `
-                <div class="map-popup" style="width: 280px; margin-bottom: ${listings.length > 1 ? '16px' : '0'}; border-bottom: ${listings.length > 1 ? '1px solid #e5e7eb; padding-bottom: 16px' : '0'};">
-                    ${firstPhoto ? `
-                        <img src="${firstPhoto}" 
-                             alt="${listing.business_name}" 
-                             style="width:100%;height:140px;object-fit:cover;border-radius:12px 12px 0 0;">
-                    ` : `
-                        <div style="width:100%;height:140px;background:linear-gradient(135deg, #045093 0%, #0369a1 100%);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;">
-                            <svg style="width:48px;height:48px;color:rgba(255,255,255,0.5);" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                    `}
-                    
-                    <div class="map-popup-content" style="padding: 12px; padding-bottom: 50px; position: relative;">
-                        ${logoImage ? `
-                            <img src="${logoImage}" 
-                                 alt="${listing.business_name} logo" 
-                                 style="width:48px;height:48px;border-radius:8px;object-fit:cover;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
-                        ` : ''}
-                        
-                        <div class="map-popup-info">
-                            <div class="map-popup-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
-                                ${badges.join('')}
-                            </div>
-                            
-                            <a href="/listing/${categorySlug}/${listing.slug}" 
-                               class="map-popup-title" 
-                               style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;">
-                                ${listing.business_name}${checkmarkHtml}
-                            </a>
-                            
-                            ${listing.tagline ? `
-                                <div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;">
-                                    ${listing.tagline}
-                                </div>
-                            ` : ''}
-                            
-                            <div class="map-popup-details" style="font-size:12px;color:#6b7280;margin-bottom:4px;">
-                                <div style="display:flex;align-items:start;gap:6px;margin-bottom:4px;">
-                                    <svg style="width:14px;height:14px;margin-top:2px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                    <span style="line-height:1.4;">${fullAddr}</span>
-                                </div>
-                                
-                                ${listing.phone ? `
-                                    <div style="display:flex;align-items:center;gap:6px;">
-                                        <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                        </svg>
-                                        <span>${formatPhoneDisplay(listing.phone)}</span>
-                                    </div>
-                                ` : ''}
-                            </div>
-                            
-                            ${callButton}
-                            
-                            <a href="${googleMapsUrl}" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               onclick="event.stopPropagation();"
-                               style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;" 
-                               onmouseover="this.style.background='#033d7a'" 
-                               onmouseout="this.style.background='#045093'">
-                                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                                </svg>
-                                Directions
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-        const popup = L.popup({
-            maxWidth: 320,
-            maxHeight: 400,
-            className: 'custom-popup'
-        })
-        .setLatLng(cluster.getLatLng())
-        .setContent(`<div style="max-height: 400px; overflow-y: auto;">${clusterPopupContent}</div>`)
-        .openOn(map);
     });
     
     setTimeout(() => {
@@ -2772,6 +2629,7 @@ function updateMapMarkers() {
             const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
             const callButton = generateCallButton(listing);
             
+            // ✅ PATCH #4 APPLIED: Logo white backgrounds
             const popupContent = `
                 <div class="map-popup" style="width: 280px;">
                     ${heroImage ? `
@@ -2787,11 +2645,7 @@ function updateMapMarkers() {
                     `}
                     
                     <div class="map-popup-content" style="padding: 12px; padding-bottom: 50px; position: relative;">
-                        ${logoImage ? `
-                            <img src="${logoImage}" 
-                                 alt="${listing.business_name} logo" 
-                                 style="width:48px;height:48px;border-radius:8px;object-fit:cover;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
-                        ` : ''}
+                        ${logoImage ? `<div style="width:48px;height:48px;background:white;border-radius:8px;padding:4px;display:flex;align-items:center;justify-content:center;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);"><img src="${logoImage}" alt="${listing.business_name} logo" style="width:100%;height:100%;object-fit:contain;border-radius:4px;"></div>` : ''}
                         
                         <div class="map-popup-info">
                             <div class="map-popup-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
@@ -2866,12 +2720,7 @@ function updateMapMarkers() {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
@@ -2933,9 +2782,7 @@ function toggleSplitView() {
                 </div>
             </div>
         `;
-        // Hide desktop sidebar in split view; checkFilterPosition will enforce via splitViewActive branch
         checkFilterPosition();
-        // Close filterPanel if it was open from before entering split view
         if (filtersOpen) { filtersOpen = false; document.getElementById('filterPanel').classList.add('hidden'); }
 
         document.getElementById('splitSortSelect').value = document.getElementById('sortSelect').value;
@@ -2946,7 +2793,6 @@ function toggleSplitView() {
             else renderListings();
         });
 
-        // Filters button in split view opens the top filterPanel
         const splitFiltersBtn = document.getElementById('splitFiltersBtn');
         if (splitFiltersBtn) {
             splitFiltersBtn.addEventListener('click', toggleFilters);
@@ -3072,23 +2918,20 @@ function initSplitMap() {
             icon: userIcon, zIndexOffset: 1000
         }).addTo(splitMap).bindPopup('<strong>Your Location</strong>');
     }
-    // ── Split-map radius logic (mirrors main map) ──
     var useMapRadius = (selectedRadius === 0);
     var mapRadiusLimit = 50;
     var effectiveLocation = userLocation || estimatedUserLocation;
     if (useMapRadius) {
-        // splitMap may not have valid bounds yet on first render; use a safe fallback
         try {
             var visibleRadius = mapVisibleRadiusMiles(splitMap);
             if (visibleRadius > 100) useMapRadius = false;
-        } catch(e) { /* first render, keep default 50mi */ }
+        } catch(e) { }
     }
 
     const bounds = [];
     filteredListings.forEach(listing => {
         if (listing.coordinates && !isBasedIn(listing)) {
 
-            // Map-radius gate
             if (useMapRadius && effectiveLocation) {
                 var dist = calculateDistance(
                     effectiveLocation.lat, effectiveLocation.lng,
@@ -3139,9 +2982,7 @@ function initSplitMap() {
     if (bounds.length > 0) splitMap.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
     setTimeout(() => splitMap.invalidateSize(), 250);
 
-    // Refresh split-map pins on zoom
     splitMap.on('zoomend', () => {
-        // Re-run marker logic by clearing and re-adding
         splitMarkerClusterGroup.clearLayers();
         var useMapRadius2 = (selectedRadius === 0);
         var effectiveLocation2 = userLocation || estimatedUserLocation;
@@ -3165,7 +3006,6 @@ function initSplitMap() {
                     `<div class="${iconClass2}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
                 const customIcon2 = L.divIcon({ html: iconHtml2, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
                 const marker2 = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon2, riseOnHover: true });
-                // Reuse same popup logic
                 const badges2 = buildBadges(listing);
                 const checkmarkHtml2 = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
                 const categorySlug2 = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -3202,18 +3042,15 @@ function initSplitMap() {
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
     
-    // Add event listeners for split map controls
     const splitLocateBtn = document.getElementById('splitLocateBtn');
     if (splitLocateBtn) {
         splitLocateBtn.addEventListener('click', () => {
             if (userLocation) {
                 splitMap.setView([userLocation.lat, userLocation.lng], 13);
-                // Change button background to #045093, text to white, icon to white
                 splitLocateBtn.style.backgroundColor = '#045093';
                 splitLocateBtn.style.color = 'white';
                 const splitLocateIcon = document.getElementById('splitLocateBtnIcon');
                 if (splitLocateIcon) splitLocateIcon.setAttribute('fill', 'white');
-                // Reset on any map move
                 const resetOnce = () => {
                     splitLocateBtn.style.backgroundColor = '';
                     splitLocateBtn.style.color = '';
@@ -3229,6 +3066,32 @@ function initSplitMap() {
         splitMap.setView(defaultMapCenter, defaultMapZoom);
     });
 }
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// ═══════════════════════════════════════════════════════════════
+// ✅ PATCH #5 APPLIED: SPLIT VIEW SELECTION FUNCTION
+// ═══════════════════════════════════════════════════════════════
+window.selectSplitListing = function(listingId, lat, lng) {
+    selectedSplitListingId = String(listingId);
+    
+    if (typeof splitMap !== 'undefined' && splitMap) {
+        splitMap.setView([lat, lng], 15);
+        
+        if (typeof splitMarkerClusterGroup !== 'undefined' && splitMarkerClusterGroup) {
+            splitMarkerClusterGroup.eachLayer(marker => {
+                if (String(marker.options.listingId) === String(listingId)) {
+                    marker.openPopup();
+                }
+            });
+        }
+    }
+    
+    renderSplitViewListings();
+};
+// ═══════════════════════════════════════════════════════════════
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
