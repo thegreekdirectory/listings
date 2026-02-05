@@ -32,8 +32,8 @@ body {
 }
 
 /* ============================================
-   CRITICAL TOUCHSCREEN FIXES - FIX #1
-   Ensures all interactive elements respond to taps
+   CRITICAL TOUCHSCREEN FIXES - COMPLETE
+   Ensures ALL interactive elements respond to taps
    ============================================ */
 
 a, button, input, select, textarea,
@@ -47,9 +47,16 @@ a, button, input, select, textarea,
 .bg-white.rounded-lg.shadow,
 .bg-white.rounded-lg.shadow a,
 .listing-card,
-.listing-card a {
+.listing-card a,
+#headerStarBtn,
+#hamburgerBtn,
+#navHome, #navListings, #navAbout,
+#dropHome, #dropListings, #dropAbout,
+header a, header button,
+.split-listing-visit-btn {
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer !important;
 }
 
 /* Header Styles */
@@ -89,7 +96,7 @@ header {
 }
 
 /* ============================================
-   PROPER WORD WRAPPING WITH HYPHENS - FIX #5
+   PROPER WORD WRAPPING WITH HYPHENS
    ============================================ */
 
 .map-popup-title,
@@ -104,7 +111,6 @@ h3,
     -ms-hyphens: auto;
 }
 
-/* Checkmark stays inline with name */
 .map-popup-title {
     display: inline-flex !important;
     align-items: center;
@@ -336,7 +342,10 @@ img {
     z-index: 50;
 }
 
-/* Custom Marker Styles */
+/* ============================================
+   CUSTOM MARKER STYLES WITH Z-INDEX PRIORITY
+   Higher tier = higher z-index
+   ============================================ */
 .custom-marker {
     width: 40px;
     height: 40px;
@@ -349,16 +358,33 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+}
+
+/* Z-index priority by tier */
+.custom-marker.tier-free {
+    z-index: 100 !important;
+}
+
+.custom-marker.tier-verified {
+    z-index: 200 !important;
+}
+
+.custom-marker.tier-featured {
+    z-index: 300 !important;
+    border-color: #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+}
+
+.custom-marker.tier-premium {
+    z-index: 400 !important;
+    border-color: #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
 }
 
 .custom-marker:hover {
     transform: scale(1.1);
     z-index: 1000 !important;
-}
-
-.custom-marker.featured {
-    border-color: #fbbf24;
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
 }
 
 .custom-marker img {
@@ -655,7 +681,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ============================================
-   SPLIT VIEW - FIX #6
+   SPLIT VIEW STYLES
    ============================================ */
 .split-view-container {
     display: flex;
@@ -682,15 +708,39 @@ input[type="range"]::-moz-range-thumb {
     max-height: none;
 }
 
-/* Selected listing in split view - FIX #6 */
+/* Split view listing item */
 .split-listing-item {
     cursor: pointer;
     transition: all 0.2s ease;
+    position: relative;
 }
 
 .split-listing-item.selected-listing {
     border-left: 4px solid #045093 !important;
     background-color: #eff6ff !important;
+}
+
+/* Visit button in split view */
+.split-listing-visit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    background: #045093;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s;
+    white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.split-listing-visit-btn:hover {
+    background: #033d7a;
 }
 
 /* Toggle Group */
@@ -946,7 +996,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ============================================
-   DARK MODE SUPPORT - ENHANCED - FIX #8
+   DARK MODE SUPPORT - COMPLETE FIX
    ============================================ */
 @media (prefers-color-scheme: dark) {
     body {
@@ -955,8 +1005,8 @@ input[type="range"]::-moz-range-thumb {
     }
     
     header {
-        background: #2a2a2a;
-        border-color: #3a3a3a;
+        background: #2a2a2a !important;
+        border-color: #3a3a3a !important;
     }
     
     .bg-white {
@@ -989,6 +1039,10 @@ input[type="range"]::-moz-range-thumb {
     
     .text-gray-500 {
         color: #888 !important;
+    }
+    
+    .text-gray-400 {
+        color: #777 !important;
     }
     
     .border-gray-300 {
@@ -1062,7 +1116,6 @@ input[type="range"]::-moz-range-thumb {
         color: white;
     }
     
-    /* Star button dark mode */
     .star-button {
         background: rgba(42, 42, 42, 0.92) !important;
         border-color: rgba(255, 255, 255, 0.2) !important;
@@ -1089,6 +1142,15 @@ input[type="range"]::-moz-range-thumb {
     
     .leaflet-tile {
         filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+    }
+    
+    .split-listing-visit-btn {
+        background: #045093;
+        color: white;
+    }
+    
+    .split-listing-visit-btn:hover {
+        background: #033d7a;
     }
 }
 
