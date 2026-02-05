@@ -32,7 +32,7 @@ body {
 }
 
 /* ============================================
-   CRITICAL TOUCHSCREEN FIXES
+   CRITICAL TOUCHSCREEN FIXES - FIX #1
    Ensures all interactive elements respond to taps
    ============================================ */
 
@@ -43,8 +43,11 @@ a, button, input, select, textarea,
 #loadMoreBtn, #splitFiltersBtn, #splitViewBtn,
 .subcategory-tag, .location-search-result,
 .leaflet-popup-close-button, .toggle-option,
+.category-btn,
 .bg-white.rounded-lg.shadow,
-.bg-white.rounded-lg.shadow a {
+.bg-white.rounded-lg.shadow a,
+.listing-card,
+.listing-card a {
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
 }
@@ -86,13 +89,14 @@ header {
 }
 
 /* ============================================
-   PROPER WORD WRAPPING WITH HYPHENS
+   PROPER WORD WRAPPING WITH HYPHENS - FIX #5
    ============================================ */
 
 .map-popup-title,
 .map-popup-tagline,
 h3,
-.split-listing-item h3 {
+.split-listing-item h3,
+.listing-card h3 {
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
@@ -114,7 +118,7 @@ h3,
 }
 
 /* ============================================
-   SVG ICON COLORS
+   SVG ICON COLORS - ALL #045093
    ============================================ */
 
 .relative.mb-4 .pointer-events-none svg {
@@ -174,16 +178,39 @@ h3,
 /* ============================================
    CURRENT LOCATION BUTTON — ACTIVE STATE
    ============================================ */
-.map-control-btn.locate-active {
+.map-control-btn.locate-active,
+.map-control-btn.active {
     background: #045093 !important;
     border-color: #045093 !important;
     color: white !important;
 }
 
-.map-control-btn.locate-active svg {
+.map-control-btn.locate-active svg,
+.map-control-btn.active svg {
     fill: white !important;
     stroke: white !important;
     color: white !important;
+}
+
+/* ============================================
+   VIEW TOGGLE BUTTONS - SHOW SELECTED STATE
+   ============================================ */
+
+#gridViewBtn.active,
+#gridViewBtn2.active,
+#listViewBtn.active,
+#listViewBtn2.active {
+    background: #045093 !important;
+}
+
+#gridViewBtn.active svg path,
+#gridViewBtn2.active svg path {
+    fill: white !important;
+}
+
+#listViewBtn.active svg,
+#listViewBtn2.active svg {
+    stroke: white !important;
 }
 
 /* ============================================
@@ -417,12 +444,6 @@ img {
     pointer-events: none;
 }
 
-.map-control-btn.active {
-    background: var(--primary-blue);
-    border-color: var(--primary-blue);
-    color: white;
-}
-
 /* Radius Value */
 .radius-value {
     font-size: 14px;
@@ -634,7 +655,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ============================================
-   SPLIT VIEW
+   SPLIT VIEW - FIX #6
    ============================================ */
 .split-view-container {
     display: flex;
@@ -661,7 +682,7 @@ input[type="range"]::-moz-range-thumb {
     max-height: none;
 }
 
-/* Selected listing in split view */
+/* Selected listing in split view - FIX #6 */
 .split-listing-item {
     cursor: pointer;
     transition: all 0.2s ease;
@@ -925,7 +946,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ============================================
-   DARK MODE SUPPORT - ENHANCED
+   DARK MODE SUPPORT - ENHANCED - FIX #8
    ============================================ */
 @media (prefers-color-scheme: dark) {
     body {
