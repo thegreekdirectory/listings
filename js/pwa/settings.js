@@ -27,6 +27,7 @@ class SettingsManager {
         const currentTheme = localStorage.getItem('tgd_theme') || 'system';
         const currentLanguage = localStorage.getItem('tgd_language') || 'en';
         const defaultMapApp = localStorage.getItem('tgd_default_map_app') || '';
+        const preferredLayout = localStorage.getItem('tgd_listings_layout') || 'grid';
         const dockAutoHide = localStorage.getItem('tgd_dock_autohide') === 'true';
         const updateAvailable = localStorage.getItem('tgd_update_available') === 'true';
         
@@ -87,6 +88,22 @@ class SettingsManager {
                         <input type="checkbox" id="dockAutoHideToggle" ${dockAutoHide ? 'checked' : ''} class="w-12 h-6 rounded-full appearance-none cursor-pointer relative border-2 border-gray-300 transition-colors checked:bg-blue-600 checked:border-blue-600" style="outline: none;">
                     </label>
                 </div>
+
+                <!-- Listings Layout Section -->
+                <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Listings Layout</h2>
+                    <p class="text-sm text-gray-600 mb-4">Choose your default layout on Listings (PWA only)</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${preferredLayout === 'grid' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
+                            <span class="text-gray-700 font-medium">Grid View</span>
+                            <input type="radio" name="listingLayout" value="grid" ${preferredLayout === 'grid' ? 'checked' : ''} class="w-5 h-5 text-blue-600">
+                        </label>
+                        <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${preferredLayout === 'list' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
+                            <span class="text-gray-700 font-medium">List View</span>
+                            <input type="radio" name="listingLayout" value="list" ${preferredLayout === 'list' ? 'checked' : ''} class="w-5 h-5 text-blue-600">
+                        </label>
+                    </div>
+                </div>
                 
                 <!-- Dock Customization Section -->
                 <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
@@ -133,7 +150,7 @@ class SettingsManager {
                 <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Follow Us</h2>
                     <p class="text-sm text-gray-600 mb-4">Stay updated with the latest Greek business listings and community news</p>
-                    <div class="flex gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <a href="https://facebook.com/thegreekdirectory" target="_blank" rel="noopener noreferrer" data-external class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-white font-semibold transition-transform hover:scale-105" style="background-color: #1877F2;">
                             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                             <span>Facebook</span>
@@ -299,6 +316,26 @@ class SettingsManager {
                         mapApp === 'google' ? 'Google Maps set as default' :
                         'Waze set as default'
                     );
+                }
+            });
+        });
+
+        document.querySelectorAll('input[name="listingLayout"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const layout = e.target.value;
+                localStorage.setItem('tgd_listings_layout', layout);
+
+                document.querySelectorAll('input[name="listingLayout"]').forEach(r => {
+                    const label = r.closest('label');
+                    if (r.checked) {
+                        label.classList.add('border-blue-500', 'bg-blue-50');
+                    } else {
+                        label.classList.remove('border-blue-500', 'bg-blue-50');
+                    }
+                });
+
+                if (window.PWAApp) {
+                    window.PWAApp.showToast(layout === 'list' ? 'List view set as default' : 'Grid view set as default');
                 }
             });
         });

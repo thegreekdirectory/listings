@@ -32,7 +32,7 @@ serve(async (req) => {
       type: 'magiclink',
       email: email,
       options: {
-        redirectTo: redirectTo || 'https://listings.thegreekdirectory.org/business.html'
+        redirectTo: redirectTo || 'https://thegreekdirectory.org/business.html'
       }
     })
 
@@ -91,7 +91,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectTo || 'https://listings.thegreekdirectory.org/business.html?reset=true'
+      redirectTo: redirectTo || 'https://thegreekdirectory.org/business.html?reset=true'
     })
 
     if (error) throw error
@@ -176,7 +176,7 @@ serve(async (req) => {
         
         // Replace template variables (simplified version)
         const categorySlug = data.category.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-        const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${data.slug}`
+        const listingUrl = `https://thegreekdirectory.org/listings/${categorySlug}/${data.slug}`
         
         template = template.replace(/{{BUSINESS_NAME}}/g, data.business_name)
         template = template.replace(/{{TAGLINE}}/g, data.tagline || '')

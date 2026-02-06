@@ -383,7 +383,7 @@ class PWADock {
         });
         
         container.appendChild(button);
-        document.body.appendChild(menu);
+        container.appendChild(menu);
         
         return container;
     }

@@ -423,7 +423,10 @@
             <div class="desktop-content">
                 <div id="normalViewControls" class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2">
-                        <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
+                        <div class="flex flex-col">
+                            <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
+                            <div id="typoSuggestion" class="text-sm text-gray-500 hidden"></div>
+                        </div>
                         <!-- Desktop Filters toggle button: visible when sidebar is collapsed or map is open -->
                         <button id="desktopFilterToggleBtn" class="hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm">
                             <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
