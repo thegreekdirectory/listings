@@ -2836,30 +2836,53 @@ function renderSplitViewListings() {
         const isStarred = starredListings.includes(String(l.id));
         const logoImage = l.logo || '';
         const checkmarkHtml = showsVerifiedCheckmark(l) ? '<svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+        const isSelected = String(selectedSplitListingId) === String(l.id);
+        const hasCoordinates = l.coordinates && l.coordinates.lat && l.coordinates.lng;
         
         return `
-            <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 flex gap-3 relative" style="margin-right: 8px;">
-                <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 8px; right: 8px; width: 32px; height: 32px;">
+            <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 relative split-listing-item ${isSelected ? 'selected-listing' : ''}" style="margin-right: 8px; display: flex; gap: 12px;">
+                <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 8px; right: 8px; width: 32px; height: 32px; touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">
                     <svg class="star-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </button>
-                <a href="${listingUrl}" class="flex gap-3 flex-1 min-w-0">
-                    ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
-                    <div class="flex-1 min-w-0 overflow-hidden pr-8">
-                        <div class="flex gap-1 mb-1 flex-wrap">
-                            ${badges.join('')}
-                        </div>
-                        <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
-                        <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
-                        <div class="text-xs text-gray-600">
-                            <div class="flex items-center gap-1 truncate">
-                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <span class="truncate">${fullAddress}</span>
+                
+                ${hasCoordinates ? `
+                    <div onclick="if(typeof selectSplitListing === 'function') selectSplitListing('${l.id}', ${l.coordinates.lat}, ${l.coordinates.lng});" style="cursor: pointer; flex: 1; display: flex; gap: 12px; min-width: 0; touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">
+                        ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
+                        <div class="flex-1 min-w-0 overflow-hidden ${isSelected ? 'pr-2' : 'pr-8'}">
+                            <div class="flex gap-1 mb-1 flex-wrap">
+                                ${badges.join('')}
+                            </div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
+                            <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
+                            <div class="text-xs text-gray-600">
+                                <div class="flex items-center gap-1 truncate">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <span class="truncate">${fullAddress}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </a>
+                    ${isSelected ? `<a href="${listingUrl}" class="split-listing-visit-btn" style="align-self: center; touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">Visit</a>` : ''}
+                ` : `
+                    <a href="${listingUrl}" class="flex gap-3 flex-1 min-w-0" style="touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">
+                        ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
+                        <div class="flex-1 min-w-0 overflow-hidden pr-8">
+                            <div class="flex gap-1 mb-1 flex-wrap">
+                                ${badges.join('')}
+                            </div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
+                            <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
+                            <div class="text-xs text-gray-600">
+                                <div class="flex items-center gap-1 truncate">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <span class="truncate">${fullAddress}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                `}
             </div>
         `;
     }).join('');
@@ -2872,7 +2895,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 function initSplitMap() {
     const splitMapDiv = document.getElementById('splitMap');
     if (!splitMapDiv) return;
-    const splitMap = L.map('splitMap', { 
+    window.splitMap = L.map('splitMap', { 
         center: defaultMapCenter, 
         zoom: defaultMapZoom, 
         zoomControl: true,
@@ -2891,7 +2914,7 @@ function initSplitMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: null, maxZoom: 19
     }).addTo(splitMap);
-    const splitMarkerClusterGroup = L.markerClusterGroup({
+    window.splitMarkerClusterGroup = L.markerClusterGroup({
         maxClusterRadius: 50, disableClusteringAtZoom: 18, spiderfyOnMaxZoom: true,
         showCoverageOnHover: false, zoomToBoundsOnClick: true,
         iconCreateFunction: function(cluster) {
@@ -2948,7 +2971,7 @@ function initSplitMap() {
                 `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
                 `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
             const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
-            const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true });
+            const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true, listingId: listing.id });
             const badges = buildBadges(listing);
             const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
             
@@ -3005,7 +3028,7 @@ function initSplitMap() {
                     `<div class="${iconClass2}"><img src="${logoImage2}" alt="${listing.business_name}"></div>` :
                     `<div class="${iconClass2}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
                 const customIcon2 = L.divIcon({ html: iconHtml2, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
-                const marker2 = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon2, riseOnHover: true });
+                const marker2 = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon2, riseOnHover: true, listingId: listing.id });
                 const badges2 = buildBadges(listing);
                 const checkmarkHtml2 = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
                 const categorySlug2 = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -3077,11 +3100,11 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 window.selectSplitListing = function(listingId, lat, lng) {
     selectedSplitListingId = String(listingId);
     
-    if (typeof splitMap !== 'undefined' && splitMap) {
-        splitMap.setView([lat, lng], 15);
+    if (window.splitMap) {
+        window.splitMap.setView([lat, lng], 15);
         
-        if (typeof splitMarkerClusterGroup !== 'undefined' && splitMarkerClusterGroup) {
-            splitMarkerClusterGroup.eachLayer(marker => {
+        if (window.splitMarkerClusterGroup) {
+            window.splitMarkerClusterGroup.eachLayer(marker => {
                 if (String(marker.options.listingId) === String(listingId)) {
                     marker.openPopup();
                 }
