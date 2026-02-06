@@ -326,6 +326,12 @@ img {
     -webkit-user-drag: none;
 }
 
+button,
+a {
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+}
+
 /* Filter Panel Styles */
 #filterPanel {
     max-height: calc(100vh - 200px);
@@ -713,6 +719,7 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
+    align-items: stretch;
 }
 
 .split-listing-item.selected-listing {
@@ -720,12 +727,33 @@ input[type="range"]::-moz-range-thumb {
     background-color: #eff6ff !important;
 }
 
+.split-listing-content {
+    cursor: pointer;
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    text-align: left;
+    align-items: flex-start;
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+    font: inherit;
+    color: inherit;
+}
+
+.split-listing-item.selected-listing .split-listing-content {
+    max-width: calc(100% - 96px);
+}
+
 /* Visit button in split view */
 .split-listing-visit-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 16px;
+    padding: 0 16px;
     background: #045093;
     color: white;
     border: none;
@@ -735,8 +763,10 @@ input[type="range"]::-moz-range-thumb {
     text-decoration: none;
     transition: background 0.2s;
     white-space: nowrap;
-    touch-action: manipulation;
+    touch-action: pan-y;
     -webkit-tap-highlight-color: transparent;
+    align-self: stretch;
+    min-width: 80px;
 }
 
 .split-listing-visit-btn:hover {

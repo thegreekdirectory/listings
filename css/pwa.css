@@ -212,6 +212,11 @@ body.theme-dark textarea {
     border-color: #404040 !important;
 }
 
+body.theme-dark .split-listing-item.selected-listing {
+    background-color: #2f3a4a !important;
+    border-left-color: #045093 !important;
+}
+
 body.theme-dark .hover\:bg-gray-50:hover {
     background: #3a3a3a !important;
 }

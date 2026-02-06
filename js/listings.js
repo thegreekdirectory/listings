@@ -45,7 +45,9 @@ let selectedRadius = 0, openNowOnly = false, closedNowOnly = false, openingSoonO
 let closingSoonOnly = false, hoursUnknownOnly = false, onlineOnly = false, userLocation = null;
 let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
 let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
-let userLocationMarker = null, mapReady = false, allListingsGeocoded = false;
+let userLocationMarker = null, splitUserLocationMarker = null, mapReady = false, allListingsGeocoded = false;
+let estimatedLocationCircle = null;
+let splitEstimatedLocationCircle = null;
 let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
 let filterPosition = 'top';
 let searchDebounceTimer = null;
@@ -334,6 +336,17 @@ async function estimateLocationByIP() {
             console.log('Estimated location by IP:', estimatedUserLocation);
             
             if (!viewingStarredOnly) applyFilters();
+            if (!userLocation) {
+                if (map) {
+                    estimatedLocationCircle = updateEstimatedLocationCircle(map, estimatedLocationCircle);
+                    map._hasCenteredOnUser = false;
+                    centerMapOnPreferredLocation(map, 11);
+                }
+                if (window.splitMap) {
+                    splitEstimatedLocationCircle = updateEstimatedLocationCircle(splitMap, splitEstimatedLocationCircle);
+                    centerMapOnPreferredLocation(splitMap, 11);
+                }
+            }
             return estimatedUserLocation;
         }
     } catch (e) {
@@ -644,7 +657,17 @@ function requestLocationOnLoad() {
             userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
             console.log('Location acquired:', userLocation);
             if (!viewingStarredOnly) applyFilters();
-            if (map && mapOpen) addUserLocationMarker();
+            if (map) {
+                estimatedLocationCircle = clearEstimatedLocationCircle(map, estimatedLocationCircle);
+                map._hasCenteredOnUser = false;
+                centerMapOnPreferredLocation(map, 13);
+                if (mapOpen) addUserLocationMarker();
+            }
+            if (window.splitMap) {
+                splitEstimatedLocationCircle = clearEstimatedLocationCircle(splitMap, splitEstimatedLocationCircle);
+                centerMapOnPreferredLocation(splitMap, 13);
+                if (userLocation) addSplitUserLocationMarker();
+            }
         },
         (error) => {
             if (error.code === 1) {
@@ -661,6 +684,7 @@ function requestLocationOnLoad() {
 
 function addUserLocationMarker() {
     if (!map || !userLocation) return;
+    estimatedLocationCircle = clearEstimatedLocationCircle(map, estimatedLocationCircle);
     if (userLocationMarker) map.removeLayer(userLocationMarker);
     const userIcon = L.divIcon({
         html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
@@ -670,6 +694,20 @@ function addUserLocationMarker() {
         icon: userIcon, zIndexOffset: 1000
     }).addTo(map);
     userLocationMarker.bindPopup('<strong>Your Location</strong>');
+}
+
+function addSplitUserLocationMarker() {
+    if (!window.splitMap || !userLocation) return;
+    splitEstimatedLocationCircle = clearEstimatedLocationCircle(splitMap, splitEstimatedLocationCircle);
+    if (splitUserLocationMarker) splitMap.removeLayer(splitUserLocationMarker);
+    const userIcon = L.divIcon({
+        html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
+        className: '', iconSize: [22, 22], iconAnchor: [11, 11]
+    });
+    splitUserLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
+        icon: userIcon, zIndexOffset: 1000
+    }).addTo(splitMap);
+    splitUserLocationMarker.bindPopup('<strong>Your Location</strong>');
 }
 
 /*
@@ -915,6 +953,10 @@ function applyFilters() {
     renderListings();
     updateResultsCount();
     if (map) updateMapMarkers();
+    if (splitViewActive) {
+        renderSplitViewListings();
+        updateSplitMapMarkers();
+    }
 }
 
 function loadMoreListings() {
@@ -1209,6 +1251,11 @@ function renderListings() {
         } else {
             loadMoreBtn.classList.add('hidden');
         }
+    }
+
+    if (splitViewActive) {
+        renderSplitViewListings();
+        updateSplitMapMarkers();
     }
 
 }
@@ -1798,8 +1845,13 @@ function toggleMap() {
         if (map) {
             setTimeout(() => {
                 map.invalidateSize();
+                map._hasCenteredOnUser = false;
                 updateMapMarkers();
-                if (userLocation) addUserLocationMarker();
+                if (userLocation) {
+                    addUserLocationMarker();
+                } else {
+                    estimatedLocationCircle = updateEstimatedLocationCircle(map, estimatedLocationCircle);
+                }
                 if (allListingsGeocoded) hideMapLoading();
             }, 100);
         }
@@ -2354,76 +2406,16 @@ function generateCallButton(listing) {
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-// ============================================
-// MAP INITIALIZATION
-// ============================================
-
-function initMap() {
-    if (map) return;
-    showMapLoading();
-    
-    map = L.map('map', { 
-        center: defaultMapCenter, 
-        zoom: defaultMapZoom, 
-        zoomControl: true,
-        scrollWheelZoom: false,
-        touchZoom: true,
-        doubleClickZoom: true
-    });
-    
-    map.on('click', function() {
-        map.scrollWheelZoom.enable();
-    });
-    map.on('mouseout', function() {
-        map.scrollWheelZoom.disable();
-    });
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: null, 
-        maxZoom: 19,
-        updateWhenIdle: true,
-        updateWhenZooming: false,
-        keepBuffer: 2
-    }).addTo(map);
-    
-    markerClusterGroup = L.markerClusterGroup({
-        maxClusterRadius: 50,
-        disableClusteringAtZoom: 18,
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false,
-        zoomToBoundsOnClick: true,
-        animate: true,
-        animateAddingMarkers: false,
-        chunkedLoading: true,
-        chunkInterval: 200,
-        chunkDelay: 50,
-        iconCreateFunction: function(cluster) {
-            const count = cluster.getChildCount();
-            let size = 'small';
-            if (count >= 10) size = 'medium';
-            if (count >= 50) size = 'large';
-            return L.divIcon({
-                html: `<div class="marker-cluster marker-cluster-${size}">${count}</div>`,
-                className: '',
-                iconSize: size === 'small' ? [40, 40] : size === 'medium' ? [50, 50] : [60, 60]
-            });
-        }
-    });
-    map.addLayer(markerClusterGroup);
-
-    // ═══════════════════════════════════════════════════════════════
-    // ✅ PATCH #3 APPLIED: Cluster click handler with radius + tier sorting
-    // ═══════════════════════════════════════════════════════════════
-    markerClusterGroup.on('clusterclick', function(event) {
+function attachClusterClickHandler(targetMap, clusterGroup) {
+    clusterGroup.on('clusterclick', function(event) {
         const cluster = event.layer;
         const childMarkers = cluster.getAllChildMarkers();
         
         if (childMarkers.length > 10) {
-            map.setView(cluster.getLatLng(), map.getZoom() + 2);
+            targetMap.setView(cluster.getLatLng(), targetMap.getZoom() + 2);
             return;
         }
         
-        // Filter by 0.1 mile radius from cluster center
         const clusterCenter = cluster.getLatLng();
         const nearbyMarkers = childMarkers.filter(m => {
             const markerPos = m.getLatLng();
@@ -2441,7 +2433,6 @@ function initMap() {
         
         if (listings.length === 0) return;
         
-        // Sort by tier: PREMIUM > FEATURED > VERIFIED > FREE
         const tierPriority = { PREMIUM: 4, FEATURED: 3, VERIFIED: 2, FREE: 1 };
         listings.sort((a, b) => {
             const aTier = a.tier || 'FREE';
@@ -2449,7 +2440,6 @@ function initMap() {
             return tierPriority[bTier] - tierPriority[aTier];
         });
         
-        // Create popup content
         const clusterPopupContent = listings.map(listing => {
             const fullAddr = getFullAddress(listing);
             const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
@@ -2497,11 +2487,75 @@ function initMap() {
         })
         .setLatLng(cluster.getLatLng())
         .setContent(`<div style="max-height: 400px; overflow-y: auto;">${clusterPopupContent}</div>`)
-        .openOn(map);
+        .openOn(targetMap);
     });
-    // ═══════════════════════════════════════════════════════════════
+}
+
+// ============================================
+// MAP INITIALIZATION
+// ============================================
+
+function initMap() {
+    if (map) return;
+    showMapLoading();
+    const preferred = getPreferredMapCenter();
+    map = L.map('map', { 
+        center: preferred ? [preferred.lat, preferred.lng] : defaultMapCenter, 
+        zoom: preferred ? 13 : defaultMapZoom, 
+        zoomControl: true,
+        scrollWheelZoom: false,
+        touchZoom: true,
+        doubleClickZoom: true
+    });
     
-    if (userLocation) addUserLocationMarker();
+    map.on('click', function() {
+        map.scrollWheelZoom.enable();
+    });
+    map.on('mouseout', function() {
+        map.scrollWheelZoom.disable();
+    });
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: null, 
+        maxZoom: 19,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
+        keepBuffer: 2,
+        reuseTiles: true
+    }).addTo(map);
+    
+    markerClusterGroup = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        disableClusteringAtZoom: 18,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        animate: true,
+        animateAddingMarkers: false,
+        chunkedLoading: true,
+        chunkInterval: 200,
+        chunkDelay: 50,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            let size = 'small';
+            if (count >= 10) size = 'medium';
+            if (count >= 50) size = 'large';
+            return L.divIcon({
+                html: `<div class="marker-cluster marker-cluster-${size}">${count}</div>`,
+                className: '',
+                iconSize: size === 'small' ? [40, 40] : size === 'medium' ? [50, 50] : [60, 60]
+            });
+        }
+    });
+    map.addLayer(markerClusterGroup);
+
+    attachClusterClickHandler(map, markerClusterGroup);
+    
+    if (userLocation) {
+        addUserLocationMarker();
+    } else {
+        estimatedLocationCircle = updateEstimatedLocationCircle(map, estimatedLocationCircle);
+    }
     
     map.on('movestart', () => {
         if (locationButtonActive && !mapMoved) {
@@ -2550,6 +2604,10 @@ async function geocodeAllListings() {
         hideMapLoading();
         updateMapMarkers();
     }
+    if (splitViewActive) {
+        renderSplitViewListings();
+        updateSplitMapMarkers();
+    }
 }
 
 async function geocodeListing(listing) {
@@ -2576,6 +2634,143 @@ function mapVisibleRadiusMiles(leafletMap) {
         var diag = calculateDistance(sw.lat, sw.lng, ne.lat, ne.lng);
         return diag / 2;
     } catch(e) { return Infinity; }
+}
+
+function getPreferredMapCenter() {
+    const location = userLocation || estimatedUserLocation;
+    if (location && typeof location.lat === 'number' && typeof location.lng === 'number') {
+        return { lat: location.lat, lng: location.lng, estimated: location.estimated };
+    }
+    return null;
+}
+
+function centerMapOnPreferredLocation(mapInstance, zoomLevel = 13) {
+    if (!mapInstance) return;
+    const preferred = getPreferredMapCenter();
+    if (preferred) {
+        mapInstance.setView([preferred.lat, preferred.lng], zoomLevel);
+    } else {
+        mapInstance.setView(defaultMapCenter, defaultMapZoom);
+    }
+}
+
+function updateEstimatedLocationCircle(mapInstance, existingCircle) {
+    if (!mapInstance || userLocation || !estimatedUserLocation) return existingCircle;
+    if (existingCircle) return existingCircle;
+    return L.circle([estimatedUserLocation.lat, estimatedUserLocation.lng], {
+        radius: 10000,
+        color: '#045093',
+        fillColor: '#045093',
+        fillOpacity: 0.15,
+        weight: 2
+    }).addTo(mapInstance);
+}
+
+function clearEstimatedLocationCircle(mapInstance, existingCircle) {
+    if (mapInstance && existingCircle) {
+        mapInstance.removeLayer(existingCircle);
+    }
+    return null;
+}
+
+function getTierMarkerStyles(listing) {
+    const tier = (listing.tier || '').toUpperCase();
+    switch (tier) {
+        case 'PREMIUM':
+            return { className: 'tier-premium', zIndex: 400 };
+        case 'FEATURED':
+            return { className: 'tier-featured', zIndex: 300 };
+        case 'VERIFIED':
+            return { className: 'tier-verified', zIndex: 200 };
+        default:
+            return { className: 'tier-free', zIndex: 100 };
+    }
+}
+
+function buildMapPopupContent(listing) {
+    const badges = buildBadges(listing);
+    const checkmarkHtml = showsVerifiedCheckmark(listing)
+        ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '';
+    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
+    const heroImage = firstPhoto || '';
+    const logoImage = listing.logo || '';
+    const fullAddr = getFullAddress(listing);
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
+    const callButton = generateCallButton(listing);
+
+    return `
+        <div class="map-popup" style="width: 280px;">
+            ${heroImage ? `
+                <img src="${heroImage}" 
+                     alt="${listing.business_name}" 
+                     style="width:100%;height:140px;object-fit:cover;border-radius:12px 12px 0 0;">
+            ` : `
+                <div style="width:100%;height:140px;background:linear-gradient(135deg, #045093 0%, #0369a1 100%);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:48px;height:48px;color:rgba(255,255,255,0.5);" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            `}
+            
+            <div class="map-popup-content" style="padding: 12px; padding-bottom: 50px; position: relative;">
+                ${logoImage ? `<div style="width:48px;height:48px;background:white;border-radius:8px;padding:4px;display:flex;align-items:center;justify-content:center;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);"><img src="${logoImage}" alt="${listing.business_name} logo" style="width:100%;height:100%;object-fit:contain;border-radius:4px;"></div>` : ''}
+                
+                <div class="map-popup-info">
+                    <div class="map-popup-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+                        ${badges.join('')}
+                    </div>
+                    
+                    <a href="/listing/${categorySlug}/${listing.slug}" 
+                       class="map-popup-title" 
+                       style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;">
+                        ${listing.business_name}${checkmarkHtml}
+                    </a>
+                    
+                    ${listing.tagline ? `
+                        <div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;">
+                            ${listing.tagline}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="map-popup-details" style="font-size:12px;color:#6b7280;margin-bottom:4px;">
+                        <div style="display:flex;align-items:start;gap:6px;margin-bottom:4px;">
+                            <svg style="width:14px;height:14px;margin-top:2px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span style="line-height:1.4;">${fullAddr}</span>
+                        </div>
+                        
+                        ${listing.phone ? `
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                                <span>${formatPhoneDisplay(listing.phone)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    ${callButton}
+                    
+                    <a href="${googleMapsUrl}" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       onclick="event.stopPropagation();"
+                       style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;" 
+                       onmouseover="this.style.background='#033d7a'" 
+                       onmouseout="this.style.background='#045093'">
+                        <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                        </svg>
+                        Directions
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 function updateMapMarkers() {
@@ -2605,11 +2800,9 @@ function updateMapMarkers() {
                 if (dist > mapRadiusLimit) return;
             }
 
-            const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
             const logoImage = listing.logo || '';
-            
-            const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
+            const tierMarker = getTierMarkerStyles(listing);
+            const iconClass = `custom-marker ${tierMarker.className}`;
             const iconHtml = logoImage ? 
                 `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
                 `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
@@ -2617,90 +2810,11 @@ function updateMapMarkers() {
             const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { 
                 icon: customIcon, 
                 riseOnHover: true,
-                listingId: listing.id
+                listingId: listing.id,
+                zIndexOffset: tierMarker.zIndex
             });
             
-            const badges = buildBadges(listing);
-            const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
-            
-            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const heroImage = firstPhoto || '';
-            const fullAddr = getFullAddress(listing);
-            const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
-            const callButton = generateCallButton(listing);
-            
-            // ✅ PATCH #4 APPLIED: Logo white backgrounds
-            const popupContent = `
-                <div class="map-popup" style="width: 280px;">
-                    ${heroImage ? `
-                        <img src="${heroImage}" 
-                             alt="${listing.business_name}" 
-                             style="width:100%;height:140px;object-fit:cover;border-radius:12px 12px 0 0;">
-                    ` : `
-                        <div style="width:100%;height:140px;background:linear-gradient(135deg, #045093 0%, #0369a1 100%);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;">
-                            <svg style="width:48px;height:48px;color:rgba(255,255,255,0.5);" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                    `}
-                    
-                    <div class="map-popup-content" style="padding: 12px; padding-bottom: 50px; position: relative;">
-                        ${logoImage ? `<div style="width:48px;height:48px;background:white;border-radius:8px;padding:4px;display:flex;align-items:center;justify-content:center;position:absolute;top:-24px;right:12px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.15);"><img src="${logoImage}" alt="${listing.business_name} logo" style="width:100%;height:100%;object-fit:contain;border-radius:4px;"></div>` : ''}
-                        
-                        <div class="map-popup-info">
-                            <div class="map-popup-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
-                                ${badges.join('')}
-                            </div>
-                            
-                            <a href="/listing/${categorySlug}/${listing.slug}" 
-                               class="map-popup-title" 
-                               style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;">
-                                ${listing.business_name}${checkmarkHtml}
-                            </a>
-                            
-                            ${listing.tagline ? `
-                                <div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;">
-                                    ${listing.tagline}
-                                </div>
-                            ` : ''}
-                            
-                            <div class="map-popup-details" style="font-size:12px;color:#6b7280;margin-bottom:4px;">
-                                <div style="display:flex;align-items:start;gap:6px;margin-bottom:4px;">
-                                    <svg style="width:14px;height:14px;margin-top:2px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                    <span style="line-height:1.4;">${fullAddr}</span>
-                                </div>
-                                
-                                ${listing.phone ? `
-                                    <div style="display:flex;align-items:center;gap:6px;">
-                                        <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                        </svg>
-                                        <span>${formatPhoneDisplay(listing.phone)}</span>
-                                    </div>
-                                ` : ''}
-                            </div>
-                            
-                            ${callButton}
-                            
-                            <a href="${googleMapsUrl}" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               onclick="event.stopPropagation();"
-                               style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;" 
-                               onmouseover="this.style.background='#033d7a'" 
-                               onmouseout="this.style.background='#045093'">
-                                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                                </svg>
-                                Directions
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
+            const popupContent = buildMapPopupContent(listing);
             
             marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
             marker.on('popupopen', () => {
@@ -2712,7 +2826,17 @@ function updateMapMarkers() {
         }
     });
     
-    if (bounds.length > 0 && !map._hasAutoFitted) {
+    if (!map._hasCenteredOnUser) {
+        const preferred = getPreferredMapCenter();
+        if (preferred) {
+            map.setView([preferred.lat, preferred.lng], 13);
+            map._hasCenteredOnUser = true;
+        }
+    }
+    if (!userLocation) {
+        estimatedLocationCircle = updateEstimatedLocationCircle(map, estimatedLocationCircle);
+    }
+    if (bounds.length > 0 && !map._hasAutoFitted && !getPreferredMapCenter()) {
         map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
         map._hasAutoFitted = true;
     }
@@ -2748,7 +2872,7 @@ function toggleSplitView() {
             <div class="split-view-listings">
                 <div class="mb-3 flex items-center justify-between px-2">
                     <div class="flex items-center gap-2">
-                        <p class="text-sm text-gray-600">${filteredListings.length} ${filteredListings.length === 1 ? 'listing' : 'listings'} found</p>
+                        <p class="text-sm text-gray-600" id="splitResultsCount"></p>
                         <button id="splitFiltersBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
                             <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Filters
                         </button>
@@ -2820,19 +2944,31 @@ function toggleSplitView() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+function getSplitViewListings() {
+    return filteredListings.filter(listing => listing.coordinates && !isBasedIn(listing));
+}
+
 function renderSplitViewListings() {
     const container = document.getElementById('splitListingsContainer');
     if (!container) return;
-    if (filteredListings.length === 0) {
+    const splitListings = getSplitViewListings();
+    if (splitListings.length === 0) {
         container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
+        const splitResultsCount = document.getElementById('splitResultsCount');
+        if (splitResultsCount) splitResultsCount.textContent = '0 listings found';
         return;
     }
     container.className = 'space-y-3';
-    container.innerHTML = filteredListings.map(l => {
+    const splitResultsCount = document.getElementById('splitResultsCount');
+    if (splitResultsCount) {
+        splitResultsCount.textContent = `${splitListings.length} ${splitListings.length === 1 ? 'listing' : 'listings'} found`;
+    }
+    container.innerHTML = splitListings.map(l => {
         const fullAddress = getFullAddress(l);
         const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const listingUrl = `/listing/${categorySlug}/${l.slug}`;
         const badges = buildBadges(l);
+        const categoryLabel = (l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category;
         const isStarred = starredListings.includes(String(l.id));
         const logoImage = l.logo || '';
         const checkmarkHtml = showsVerifiedCheckmark(l) ? '<svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
@@ -2848,10 +2984,11 @@ function renderSplitViewListings() {
                 </button>
                 
                 ${hasCoordinates ? `
-                    <div onclick="if(typeof selectSplitListing === 'function') selectSplitListing('${l.id}', ${l.coordinates.lat}, ${l.coordinates.lng});" style="cursor: pointer; flex: 1; display: flex; gap: 12px; min-width: 0; touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">
+                    <button type="button" class="split-listing-content" onclick="if(typeof selectSplitListing === 'function') selectSplitListing('${l.id}', ${l.coordinates.lat}, ${l.coordinates.lng});">
                         ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                         <div class="flex-1 min-w-0 overflow-hidden ${isSelected ? 'pr-2' : 'pr-8'}">
                             <div class="flex gap-1 mb-1 flex-wrap">
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style="background-color:#055193;">${categoryLabel}</span>
                                 ${badges.join('')}
                             </div>
                             <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
@@ -2863,8 +3000,8 @@ function renderSplitViewListings() {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    ${isSelected ? `<a href="${listingUrl}" class="split-listing-visit-btn" style="align-self: center; touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">Visit</a>` : ''}
+                    </button>
+                    ${isSelected ? `<a href="${listingUrl}" class="split-listing-visit-btn">Visit</a>` : ''}
                 ` : `
                     <a href="${listingUrl}" class="flex gap-3 flex-1 min-w-0" style="touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">
                         ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
@@ -2892,12 +3029,74 @@ function renderSplitViewListings() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+function updateSplitMapMarkers() {
+    if (!window.splitMap || !splitMarkerClusterGroup) return;
+    splitMarkerClusterGroup.clearLayers();
+
+    var useMapRadius = (selectedRadius === 0);
+    var mapRadiusLimit = 50;
+    var effectiveLocation = userLocation || estimatedUserLocation;
+    if (useMapRadius) {
+        try {
+            var visibleRadius = mapVisibleRadiusMiles(splitMap);
+            if (visibleRadius > 100) useMapRadius = false;
+        } catch (e) { }
+    }
+
+    const bounds = [];
+    const splitListings = getSplitViewListings();
+    splitListings.forEach(listing => {
+        if (useMapRadius && effectiveLocation) {
+            var dist = calculateDistance(
+                effectiveLocation.lat, effectiveLocation.lng,
+                listing.coordinates.lat, listing.coordinates.lng
+            );
+            if (dist > mapRadiusLimit) return;
+        }
+
+        const logoImage = listing.logo || '';
+        const tierMarker = getTierMarkerStyles(listing);
+        const iconClass = `custom-marker ${tierMarker.className}`;
+        const iconHtml = logoImage ?
+            `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
+            `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
+        const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
+        const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true, listingId: listing.id, zIndexOffset: tierMarker.zIndex });
+        const popupContent = buildMapPopupContent(listing);
+        marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
+        marker.on('popupopen', () => {
+            const closeBtn = document.querySelector('.leaflet-popup-close-button');
+            if (closeBtn) closeBtn.textContent = '×';
+        });
+        splitMarkerClusterGroup.addLayer(marker);
+        bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
+    });
+
+    if (!splitMap._hasCenteredOnUser) {
+        const preferred = getPreferredMapCenter();
+        if (preferred) {
+            splitMap.setView([preferred.lat, preferred.lng], 13);
+            splitMap._hasCenteredOnUser = true;
+        }
+    }
+    if (!userLocation) {
+        splitEstimatedLocationCircle = updateEstimatedLocationCircle(splitMap, splitEstimatedLocationCircle);
+    }
+    if (bounds.length > 0 && !splitMap._hasAutoFitted && !getPreferredMapCenter()) {
+        splitMap.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
+        splitMap._hasAutoFitted = true;
+    }
+
+    setTimeout(() => splitMap.invalidateSize(), 250);
+}
+
 function initSplitMap() {
     const splitMapDiv = document.getElementById('splitMap');
     if (!splitMapDiv) return;
+    const preferred = getPreferredMapCenter();
     window.splitMap = L.map('splitMap', { 
-        center: defaultMapCenter, 
-        zoom: defaultMapZoom, 
+        center: preferred ? [preferred.lat, preferred.lng] : defaultMapCenter, 
+        zoom: preferred ? 13 : defaultMapZoom, 
         zoomControl: true,
         scrollWheelZoom: false,
         touchZoom: true,
@@ -2912,11 +3111,24 @@ function initSplitMap() {
     });
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: null, maxZoom: 19
+        attribution: null,
+        maxZoom: 19,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
+        keepBuffer: 2,
+        reuseTiles: true
     }).addTo(splitMap);
     window.splitMarkerClusterGroup = L.markerClusterGroup({
-        maxClusterRadius: 50, disableClusteringAtZoom: 18, spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false, zoomToBoundsOnClick: true,
+        maxClusterRadius: 50,
+        disableClusteringAtZoom: 18,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        animate: true,
+        animateAddingMarkers: false,
+        chunkedLoading: true,
+        chunkInterval: 200,
+        chunkDelay: 50,
         iconCreateFunction: function(cluster) {
             const count = cluster.getChildCount();
             let size = count >= 50 ? 'large' : count >= 10 ? 'medium' : 'small';
@@ -2927,138 +3139,22 @@ function initSplitMap() {
         }
     });
     splitMap.addLayer(splitMarkerClusterGroup);
+    attachClusterClickHandler(splitMap, splitMarkerClusterGroup);
     
     /*
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
     
     if (userLocation) {
-        const userIcon = L.divIcon({
-            html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
-            className: '', iconSize: [22, 22], iconAnchor: [11, 11]
-        });
-        L.marker([userLocation.lat, userLocation.lng], {
-            icon: userIcon, zIndexOffset: 1000
-        }).addTo(splitMap).bindPopup('<strong>Your Location</strong>');
-    }
-    var useMapRadius = (selectedRadius === 0);
-    var mapRadiusLimit = 50;
-    var effectiveLocation = userLocation || estimatedUserLocation;
-    if (useMapRadius) {
-        try {
-            var visibleRadius = mapVisibleRadiusMiles(splitMap);
-            if (visibleRadius > 100) useMapRadius = false;
-        } catch(e) { }
+        addSplitUserLocationMarker();
+    } else {
+        splitEstimatedLocationCircle = updateEstimatedLocationCircle(splitMap, splitEstimatedLocationCircle);
     }
 
-    const bounds = [];
-    filteredListings.forEach(listing => {
-        if (listing.coordinates && !isBasedIn(listing)) {
-
-            if (useMapRadius && effectiveLocation) {
-                var dist = calculateDistance(
-                    effectiveLocation.lat, effectiveLocation.lng,
-                    listing.coordinates.lat, listing.coordinates.lng
-                );
-                if (dist > mapRadiusLimit) return;
-            }
-
-            const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-            const logoImage = listing.logo || '';
-            
-            const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
-            const iconHtml = logoImage ?
-                `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
-                `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
-            const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
-            const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true, listingId: listing.id });
-            const badges = buildBadges(listing);
-            const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
-            
-            const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
-            const popupContent = `
-                <div class="map-popup">
-                    ${firstPhoto ? `<img src="${firstPhoto}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
-                    <div class="map-popup-content">
-                        ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
-                        <div class="map-popup-info" style="padding-bottom: 40px;">
-                            <div class="map-popup-badges">${badges.join('')}</div>
-                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml}</a>
-                            <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
-                            <div class="map-popup-details">
-                                <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getFullAddress(listing)}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
-            marker.on('popupopen', () => {
-                const closeBtn = document.querySelector('.leaflet-popup-close-button');
-                if (closeBtn) closeBtn.textContent = '×';
-            });
-            splitMarkerClusterGroup.addLayer(marker);
-            bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
-        }
-    });
-    if (bounds.length > 0) splitMap.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 });
-    setTimeout(() => splitMap.invalidateSize(), 250);
+    updateSplitMapMarkers();
 
     splitMap.on('zoomend', () => {
-        splitMarkerClusterGroup.clearLayers();
-        var useMapRadius2 = (selectedRadius === 0);
-        var effectiveLocation2 = userLocation || estimatedUserLocation;
-        if (useMapRadius2) {
-            try {
-                var vr = mapVisibleRadiusMiles(splitMap);
-                if (vr > 100) useMapRadius2 = false;
-            } catch(e) {}
-        }
-        filteredListings.forEach(listing => {
-            if (listing.coordinates && !isBasedIn(listing)) {
-                if (useMapRadius2 && effectiveLocation2) {
-                    var d = calculateDistance(effectiveLocation2.lat, effectiveLocation2.lng, listing.coordinates.lat, listing.coordinates.lng);
-                    if (d > 50) return;
-                }
-                const logoImage2 = listing.logo || '';
-                const isFeatured2 = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-                const iconClass2 = isFeatured2 ? 'custom-marker featured' : 'custom-marker';
-                const iconHtml2 = logoImage2 ?
-                    `<div class="${iconClass2}"><img src="${logoImage2}" alt="${listing.business_name}"></div>` :
-                    `<div class="${iconClass2}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
-                const customIcon2 = L.divIcon({ html: iconHtml2, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
-                const marker2 = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon2, riseOnHover: true, listingId: listing.id });
-                const badges2 = buildBadges(listing);
-                const checkmarkHtml2 = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
-                const categorySlug2 = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                const firstPhoto2 = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
-                const fullAddr2 = getFullAddress(listing);
-                const googleMapsUrl2 = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr2)}`;
-                const popupContent2 = `
-                    <div class="map-popup">
-                        ${firstPhoto2 ? `<img src="${firstPhoto2}" alt="${listing.business_name}" class="map-popup-hero">` : '<div class="map-popup-hero" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;">No image</div>'}
-                        <div class="map-popup-content">
-                            ${logoImage2 ? `<img src="${logoImage2}" alt="${listing.business_name}" class="map-popup-logo">` : '<div class="map-popup-logo" style="background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">No logo</div>'}
-                            <div class="map-popup-info" style="padding-bottom: 40px;">
-                                <div class="map-popup-badges">${badges2.join('')}</div>
-                                <a href="/listing/${categorySlug2}/${listing.slug}" class="map-popup-title" style="display:inline-flex;align-items:center;gap:4px;">${listing.business_name}${checkmarkHtml2}</a>
-                                <div class="map-popup-tagline" style="word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;-ms-hyphens:auto;white-space:normal;">${listing.tagline || listing.description.substring(0, 80)}</div>
-                                <div class="map-popup-details">
-                                    <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${fullAddr2}</span></div>${listing.phone ? `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin-top:3px;"><svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>${formatPhoneDisplay(listing.phone)}</span></div>` : ''}
-                                </div>
-                                <a href="${googleMapsUrl2}" target="_blank" rel="noopener" style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;" onmouseover="this.style.background='#033d7a'" onmouseout="this.style.background='#045093'">
-                                    <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                                    Directions
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                marker2.bindPopup(popupContent2, { maxWidth: 320, className: 'custom-popup' });
-                splitMarkerClusterGroup.addLayer(marker2);
-            }
-        });
+        updateSplitMapMarkers();
     });
     
     /*
@@ -3106,7 +3202,9 @@ window.selectSplitListing = function(listingId, lat, lng) {
         if (window.splitMarkerClusterGroup) {
             window.splitMarkerClusterGroup.eachLayer(marker => {
                 if (String(marker.options.listingId) === String(listingId)) {
-                    marker.openPopup();
+                    window.splitMarkerClusterGroup.zoomToShowLayer(marker, () => {
+                        marker.openPopup();
+                    });
                 }
             });
         }

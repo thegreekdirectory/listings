@@ -62,14 +62,6 @@ class PWAApp {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     preventLinkPreviews() {
-        // Prevent long-press link preview on all links except dock
-        document.addEventListener('touchstart', (e) => {
-            const target = e.target.closest('a');
-            if (target && !target.classList.contains('pwa-dock-item')) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-        
         // Prevent context menu on links
         document.addEventListener('contextmenu', (e) => {
             const target = e.target.closest('a');
