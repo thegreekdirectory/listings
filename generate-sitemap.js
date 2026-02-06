@@ -15,7 +15,7 @@ const fs = require('fs');
 const database = JSON.parse(fs.readFileSync('listings-database.json', 'utf8'));
 const listings = database.listings;
 
-const baseUrl = 'https://listings.thegreekdirectory.org';
+const baseUrl = 'https://thegreekdirectory.org';
 const now = new Date().toISOString().split('T')[0];
 
 /*

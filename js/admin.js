@@ -155,6 +155,18 @@ function setupEventListeners() {
             document.getElementById('editModal').classList.add('hidden');
         }
     });
+    document.getElementById('closeAnalyticsModal')?.addEventListener('click', () => {
+        if (typeof closeAnalyticsModal === 'function') {
+            closeAnalyticsModal();
+        }
+    });
+    document.getElementById('analyticsModal')?.addEventListener('click', (event) => {
+        if (event.target && event.target.id === 'analyticsModal') {
+            if (typeof closeAnalyticsModal === 'function') {
+                closeAnalyticsModal();
+            }
+        }
+    });
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. For more information, visit https://thegreekdirectory.org/legal.
@@ -536,34 +548,20 @@ window.viewAnalytics = async function(listingId) {
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
-        // Create analytics modal HTML
-        const modalHTML = `
-            <div id="analyticsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                <div class="bg-white rounded-lg max-w-6xl w-full my-8">
-                    <div class="p-6 border-b flex items-center justify-between">
-                        <h2 class="text-2xl font-bold text-gray-900">Analytics: ${listing.business_name}</h2>
-                        <button onclick="closeAnalyticsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
-                    </div>
-                    <div class="p-6 max-h-[70vh] overflow-y-auto">
-                        ${generateAnalyticsContent(listing, analytics, analytics.detailedViews, analytics.sharePlatforms)}
-                    </div>
-                    <div class="p-6 border-t flex justify-end">
-                        <button onclick="closeAnalyticsModal()" class="px-6 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">Close</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        console.log('Removing existing modal...');
-        // Remove existing modal if present
-        const existingModal = document.getElementById('analyticsModal');
-        if (existingModal) {
-            existingModal.remove();
+        const modal = document.getElementById('analyticsModal');
+        const modalTitle = document.getElementById('analyticsModalTitle');
+        const modalContent = document.getElementById('analyticsContent');
+
+        if (modalTitle) {
+            modalTitle.textContent = `Analytics: ${listing.business_name}`;
         }
-        
-        console.log('Adding modal to page...');
-        // Add modal to page
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        if (modalContent) {
+            modalContent.innerHTML = generateAnalyticsContent(listing, analytics, analytics.detailedViews, analytics.sharePlatforms);
+        }
+
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
         console.log('✅ Analytics modal displayed');
         
     } catch (error) {
@@ -721,7 +719,7 @@ function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatfo
 window.closeAnalyticsModal = function() {
     const modal = document.getElementById('analyticsModal');
     if (modal) {
-        modal.remove();
+        modal.classList.add('hidden');
     }
 };
 
@@ -1896,7 +1894,7 @@ function generateReviewSection(listing) {
 
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listing/${categorySlug}/${listing.slug}`;
+    const listingUrl = `https://thegreekdirectory.org/listing/${categorySlug}/${listing.slug}`;
     
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
@@ -2394,7 +2392,7 @@ window.generateListingPage = async function(listingId) {
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
         const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const filePath = `listing/${categorySlug}/${listing.slug}.html`;
+        const filePath = `listing/${categorySlug}/${listing.slug}`;
         
         await saveToGitHub(filePath, template, listing.business_name);
         
@@ -2422,7 +2420,7 @@ async function updateSitemap() {
         const database = { listings: listings || [] };
         
         const now = new Date().toISOString().split('T')[0];
-        const baseUrl = 'https://listings.thegreekdirectory.org';
+        const baseUrl = 'https://thegreekdirectory.org';
         
         let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

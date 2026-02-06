@@ -1839,7 +1839,7 @@ or distribution of this code will result in legal action to the fullest extent p
 
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listing/${categorySlug}/${listing.slug}`;
+    const listingUrl = `https://thegreekdirectory.org/listing/${categorySlug}/${listing.slug}`;
     
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
@@ -2411,7 +2411,7 @@ async function updateSitemap() {
         const database = { listings: listings || [] };
         
         const now = new Date().toISOString().split('T')[0];
-        const baseUrl = 'https://listings.thegreekdirectory.org';
+        const baseUrl = 'https://thegreekdirectory.org';
         
         let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

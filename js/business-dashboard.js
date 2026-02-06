@@ -80,7 +80,7 @@ function renderDashboard() {
     tierBadge.className = `tier-badge tier-${tier}`;
     
     const categorySlug = currentListing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listing/${categorySlug}/${currentListing.slug}`;
+    const listingUrl = `https://thegreekdirectory.org/listing/${categorySlug}/${currentListing.slug}`;
     
     const viewBtn = document.getElementById('viewLiveBtn');
     if (viewBtn) {
@@ -147,7 +147,7 @@ function renderOverview() {
     };
     
     const categorySlug = currentListing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listing/${categorySlug}/${currentListing.slug}`;
+    const listingUrl = `https://thegreekdirectory.org/listing/${categorySlug}/${currentListing.slug}`;
     
     const content = document.getElementById('content-overview');
     content.innerHTML = `
