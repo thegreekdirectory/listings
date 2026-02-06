@@ -275,7 +275,7 @@ class TranslationSystem {
             }
         });
         
-        if (window.location.pathname.includes('/listings/')) {
+        if (window.location.pathname.includes('/listing/')) {
             this.translateListingPage();
         }
         

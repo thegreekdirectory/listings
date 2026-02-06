@@ -1417,7 +1417,7 @@
                     const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : l.logo;
                     const fullAddress = getFullAddress(l);
                     const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                    const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+                    const listingUrl = `/listing/${l.slug}`;
                     const badges = [];
                     
                     const openStatus = isOpenNow(l.hours);
@@ -1469,7 +1469,7 @@
                 container.innerHTML = displayedListings.map(l => {
                     const fullAddress = getFullAddress(l);
                     const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                    const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+                    const listingUrl = `/listing/${l.slug}`;
                     const badges = [];
                     
                     const openStatus = isOpenNow(l.hours);
@@ -2346,7 +2346,7 @@
             container.innerHTML = filteredListings.map(l => {
                 const fullAddress = getFullAddress(l);
                 const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+                const listingUrl = `/listing/${l.slug}`;
                 const badges = [];
                 
                 const openStatus = isOpenNow(l.hours);
@@ -2460,7 +2460,7 @@
                                 <img src="${listing.logo}" alt="${listing.businessName}" class="map-popup-logo">
                                 <div class="map-popup-info">
                                     <div class="map-popup-badges">${badges.join('')}</div>
-                                    <a href="/listings/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.businessName}</a>
+                                    <a href="/listing/${listing.slug}" class="map-popup-title">${listing.businessName}</a>
                                     <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
                                     <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + listing.phone : ''}</div>
                                 </div>
@@ -2513,7 +2513,7 @@
                                 <img src="${listing.logo}" alt="${listing.businessName}" class="map-popup-logo">
                                 <div class="map-popup-info">
                                     <div class="map-popup-badges">${badges.join('')}</div>
-                                    <a href="/listings/${categorySlug}/${listing.slug}" class="map-popup-title">${listing.businessName}</a>
+                                    <a href="/listing/${listing.slug}" class="map-popup-title">${listing.businessName}</a>
                                     <div class="map-popup-tagline">${listing.tagline || listing.description.substring(0, 60) + '...'}</div>
                                     <div class="map-popup-details">📍 ${getFullAddress(listing)}<br>${listing.phone ? '📞 ' + listing.phone : ''}</div>
                                 </div>

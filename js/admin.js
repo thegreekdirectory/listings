@@ -1894,7 +1894,7 @@ function generateReviewSection(listing) {
 
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://thegreekdirectory.org/listing/${listing.slug}`;
+    const listingUrl = `https://listings.thegreekdirectory.org/listing/${listing.slug}`;
     
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
