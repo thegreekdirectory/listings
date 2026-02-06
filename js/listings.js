@@ -2578,6 +2578,20 @@ function mapVisibleRadiusMiles(leafletMap) {
     } catch(e) { return Infinity; }
 }
 
+function getTierMarkerStyles(listing) {
+    const tier = (listing.tier || '').toUpperCase();
+    switch (tier) {
+        case 'PREMIUM':
+            return { className: 'tier-premium', zIndex: 400 };
+        case 'FEATURED':
+            return { className: 'tier-featured', zIndex: 300 };
+        case 'VERIFIED':
+            return { className: 'tier-verified', zIndex: 200 };
+        default:
+            return { className: 'tier-free', zIndex: 100 };
+    }
+}
+
 function updateMapMarkers() {
     if (!map || !markerClusterGroup || !mapReady) return;
     markerClusterGroup.clearLayers();
@@ -2605,11 +2619,10 @@ function updateMapMarkers() {
                 if (dist > mapRadiusLimit) return;
             }
 
-            const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
             const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
             const logoImage = listing.logo || '';
-            
-            const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
+            const tierMarker = getTierMarkerStyles(listing);
+            const iconClass = `custom-marker ${tierMarker.className}`;
             const iconHtml = logoImage ? 
                 `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
                 `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
@@ -2617,7 +2630,8 @@ function updateMapMarkers() {
             const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { 
                 icon: customIcon, 
                 riseOnHover: true,
-                listingId: listing.id
+                listingId: listing.id,
+                zIndexOffset: tierMarker.zIndex
             });
             
             const badges = buildBadges(listing);
@@ -2848,7 +2862,7 @@ function renderSplitViewListings() {
                 </button>
                 
                 ${hasCoordinates ? `
-                    <div onclick="if(typeof selectSplitListing === 'function') selectSplitListing('${l.id}', ${l.coordinates.lat}, ${l.coordinates.lng});" style="cursor: pointer; flex: 1; display: flex; gap: 12px; min-width: 0; touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">
+                    <button type="button" class="split-listing-content" onclick="if(typeof selectSplitListing === 'function') selectSplitListing('${l.id}', ${l.coordinates.lat}, ${l.coordinates.lng});">
                         ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                         <div class="flex-1 min-w-0 overflow-hidden ${isSelected ? 'pr-2' : 'pr-8'}">
                             <div class="flex gap-1 mb-1 flex-wrap">
@@ -2863,8 +2877,8 @@ function renderSplitViewListings() {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    ${isSelected ? `<a href="${listingUrl}" class="split-listing-visit-btn" style="align-self: center; touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">Visit</a>` : ''}
+                    </button>
+                    ${isSelected ? `<a href="${listingUrl}" class="split-listing-visit-btn">Visit</a>` : ''}
                 ` : `
                     <a href="${listingUrl}" class="flex gap-3 flex-1 min-w-0" style="touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">
                         ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
@@ -2963,15 +2977,14 @@ function initSplitMap() {
                 if (dist > mapRadiusLimit) return;
             }
 
-            const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
             const logoImage = listing.logo || '';
-            
-            const iconClass = isFeatured ? 'custom-marker featured' : 'custom-marker';
+            const tierMarker = getTierMarkerStyles(listing);
+            const iconClass = `custom-marker ${tierMarker.className}`;
             const iconHtml = logoImage ?
                 `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
                 `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
             const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
-            const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true, listingId: listing.id });
+            const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true, listingId: listing.id, zIndexOffset: tierMarker.zIndex });
             const badges = buildBadges(listing);
             const checkmarkHtml = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
             
@@ -3022,13 +3035,13 @@ function initSplitMap() {
                     if (d > 50) return;
                 }
                 const logoImage2 = listing.logo || '';
-                const isFeatured2 = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-                const iconClass2 = isFeatured2 ? 'custom-marker featured' : 'custom-marker';
+                const tierMarker2 = getTierMarkerStyles(listing);
+                const iconClass2 = `custom-marker ${tierMarker2.className}`;
                 const iconHtml2 = logoImage2 ?
                     `<div class="${iconClass2}"><img src="${logoImage2}" alt="${listing.business_name}"></div>` :
                     `<div class="${iconClass2}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
                 const customIcon2 = L.divIcon({ html: iconHtml2, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
-                const marker2 = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon2, riseOnHover: true, listingId: listing.id });
+                const marker2 = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon2, riseOnHover: true, listingId: listing.id, zIndexOffset: tierMarker2.zIndex });
                 const badges2 = buildBadges(listing);
                 const checkmarkHtml2 = showsVerifiedCheckmark(listing) ? '<span style="display:inline-flex;align-items:center;margin-left:4px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '';
                 const categorySlug2 = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
