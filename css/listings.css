@@ -326,6 +326,12 @@ img {
     -webkit-user-drag: none;
 }
 
+button,
+a {
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+}
+
 /* Filter Panel Styles */
 #filterPanel {
     max-height: calc(100vh - 200px);
@@ -732,7 +738,7 @@ input[type="range"]::-moz-range-thumb {
     padding: 0;
     text-align: left;
     align-items: flex-start;
-    touch-action: manipulation;
+    touch-action: pan-y;
     -webkit-tap-highlight-color: transparent;
     font: inherit;
     color: inherit;
@@ -757,7 +763,7 @@ input[type="range"]::-moz-range-thumb {
     text-decoration: none;
     transition: background 0.2s;
     white-space: nowrap;
-    touch-action: manipulation;
+    touch-action: pan-y;
     -webkit-tap-highlight-color: transparent;
     align-self: stretch;
     min-width: 80px;
