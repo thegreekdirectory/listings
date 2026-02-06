@@ -62,6 +62,18 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
+function isPwaMode() {
+    return (window.PWAApp && window.PWAApp.isStandalone) ||
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+}
+
+function getPreferredListingsLayout() {
+    if (!isPwaMode()) return 'grid';
+    const stored = localStorage.getItem('tgd_listings_layout');
+    return stored === 'list' ? 'list' : 'grid';
+}
+
 function formatPhoneDisplay(phone) {
     if (!phone) return '';
     const digits = phone.replace(/\D/g, '');
@@ -69,6 +81,27 @@ function formatPhoneDisplay(phone) {
         return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
     }
     return phone;
+}
+
+function getDirectionsUrl(listing) {
+    const fullAddr = getFullAddress(listing);
+    const encoded = encodeURIComponent(fullAddr);
+    const preferred = localStorage.getItem('tgd_default_map_app') || '';
+
+    if (isPwaMode() && preferred) {
+        if (preferred === 'apple') {
+            return `https://maps.apple.com/?daddr=${encoded}`;
+        }
+        if (preferred === 'waze') {
+            if (listing.coordinates) {
+                return `https://waze.com/ul?ll=${listing.coordinates.lat},${listing.coordinates.lng}&navigate=yes`;
+            }
+            return `https://waze.com/ul?q=${encoded}&navigate=yes`;
+        }
+        return `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
+    }
+
+    return `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
 }
 
 function loadStarredListings() {
@@ -151,6 +184,37 @@ function toggleStar(listingId, event) {
         displayedListingsCount = filteredListings.length;
         renderListings();
         updateResultsCount();
+    }
+
+    syncStarredListingToPWA(listingId, starredListings.includes(listingId));
+}
+
+async function syncStarredListingToPWA(listingId, shouldBeStarred) {
+    if (!window.PWAStorage || !isPwaMode()) return;
+
+    try {
+        await window.PWAStorage.init();
+        if (shouldBeStarred) {
+            const alreadyStarred = await window.PWAStorage.isStarred(listingId);
+            if (alreadyStarred) return;
+
+            let listingData = allListings.find(l => String(l.id) === String(listingId));
+            if (!listingData && listingsSupabase) {
+                const { data } = await listingsSupabase
+                    .from('listings')
+                    .select('*')
+                    .eq('id', listingId)
+                    .single();
+                listingData = data || null;
+            }
+            if (listingData) {
+                await window.PWAStorage.addStarred(listingData);
+            }
+        } else {
+            await window.PWAStorage.removeStarred(listingId);
+        }
+    } catch (error) {
+        console.error('Error syncing starred listing to PWA storage:', error);
     }
 }
 
@@ -391,8 +455,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (refreshBtn) refreshBtn.style.display = 'flex';
     }
     loadStarredListings();
+    currentView = getPreferredListingsLayout();
     loadListings();
     setupEventListeners();
+    setView(currentView, { skipRender: true });
     createCategoryButtons();
     requestLocationOnLoad();
     estimateLocationByIP();
@@ -755,9 +821,11 @@ async function loadListings() {
         
         allListings = data || [];
         filteredListings = [...allListings];
-        
+
         SUBCATEGORIES = extractSubcategoriesFromListings(allListings);
         console.log('Loaded subcategories:', SUBCATEGORIES);
+
+        await syncStarredListingsToPWA();
         
         populateCountryFilter();
         updateLocationSubtitle();
@@ -783,6 +851,28 @@ async function loadListings() {
     }
 }
 
+async function syncStarredListingsToPWA() {
+    if (!window.PWAStorage || !isPwaMode() || starredListings.length === 0) return;
+
+    try {
+        await window.PWAStorage.init();
+        const existing = await window.PWAStorage.getAllStarred();
+        const existingIds = new Set(existing.map(item => String(item.id)));
+        const missingIds = starredListings.filter(id => !existingIds.has(String(id)));
+
+        if (missingIds.length === 0) return;
+
+        missingIds.forEach(id => {
+            const listingData = allListings.find(l => String(l.id) === String(id));
+            if (listingData) {
+                window.PWAStorage.addStarred(listingData);
+            }
+        });
+    } catch (error) {
+        console.error('Error syncing starred listings to PWA storage:', error);
+    }
+}
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
@@ -790,6 +880,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 function applyFilters() {
     const searchInput = document.getElementById('searchInput');
     const searchTerm = normalizeString(searchInput ? searchInput.value : '');
+    const rawSearchTerm = searchInput ? searchInput.value.trim() : '';
     const sortSelect = document.getElementById('sortSelect');
     const sortOption = sortSelect ? sortSelect.value : 'default';
     
@@ -944,6 +1035,8 @@ function applyFilters() {
         }
         return 0;
     });
+
+    updateTypoSuggestion(rawSearchTerm, searchTerm);
     
     /*
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -966,6 +1059,76 @@ function loadMoreListings() {
 
 function normalizeString(str) {
     return str.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function updateTypoSuggestion(rawTerm, normalizedTerm) {
+    const suggestionEl = document.getElementById('typoSuggestion');
+    if (!suggestionEl) return;
+
+    if (!normalizedTerm || filteredListings.length > 0) {
+        suggestionEl.classList.add('hidden');
+        suggestionEl.innerHTML = '';
+        return;
+    }
+
+    const suggestion = getClosestListingSuggestion(normalizedTerm);
+    if (!suggestion) {
+        suggestionEl.classList.add('hidden');
+        suggestionEl.innerHTML = '';
+        return;
+    }
+
+    suggestionEl.innerHTML = `Did you mean <button type="button" class="text-blue-600 hover:text-blue-800 underline" data-suggestion="${suggestion}">${suggestion}</button>?`;
+    suggestionEl.classList.remove('hidden');
+
+    const button = suggestionEl.querySelector('button[data-suggestion]');
+    if (button) {
+        button.addEventListener('click', () => {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = suggestion;
+                applyFilters();
+            }
+        });
+    }
+}
+
+function getClosestListingSuggestion(searchTerm) {
+    let bestMatch = null;
+    let bestScore = Infinity;
+
+    allListings.forEach(listing => {
+        const name = normalizeString(listing.business_name || '');
+        if (!name) return;
+        const distance = levenshteinDistance(searchTerm, name);
+        if (distance < bestScore) {
+            bestScore = distance;
+            bestMatch = listing.business_name;
+        }
+    });
+
+    if (!bestMatch) return null;
+
+    const maxDistance = Math.max(2, Math.ceil(searchTerm.length * 0.4));
+    return bestScore <= maxDistance ? bestMatch : null;
+}
+
+function levenshteinDistance(a, b) {
+    const matrix = Array.from({ length: a.length + 1 }, () => []);
+    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,
+                matrix[i][j - 1] + 1,
+                matrix[i - 1][j - 1] + cost
+            );
+        }
+    }
+    return matrix[a.length][b.length];
 }
 
 /*
@@ -1163,7 +1326,7 @@ function renderListings() {
             const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : (l.logo || '');
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const listingUrl = `/listing/${categorySlug}/${l.slug}`;
+            const listingUrl = `/listing/${l.slug}`;
             const badges = buildBadges(l);
             const isStarred = starredListings.includes(String(l.id));
             const logoImage = l.logo || '';
@@ -1207,7 +1370,7 @@ function renderListings() {
         container.innerHTML = displayedListings.map(l => {
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const listingUrl = `/listing/${categorySlug}/${l.slug}`;
+            const listingUrl = `/listing/${l.slug}`;
             const badges = buildBadges(l);
             const isStarred = starredListings.includes(String(l.id));
             const logoImage = l.logo || '';
@@ -1865,7 +2028,8 @@ function toggleMap() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-function setView(view) {
+function setView(view, options = {}) {
+    const { skipRender = false } = options;
     currentView = view;
     const gridViewBtn = document.getElementById('gridViewBtn');
     const listViewBtn = document.getElementById('listViewBtn');
@@ -1886,7 +2050,13 @@ function setView(view) {
         listViewBtn2.className = view === 'list' ? 'p-2 rounded bg-white shadow-sm active' : 'p-2 rounded';
     }
     
-    renderListings();
+    if (isPwaMode()) {
+        localStorage.setItem('tgd_listings_layout', view);
+    }
+
+    if (!skipRender) {
+        renderListings();
+    }
 }
 
 function showMapLoading() {
@@ -2442,7 +2612,7 @@ function attachClusterClickHandler(targetMap, clusterGroup) {
         
         const clusterPopupContent = listings.map(listing => {
             const fullAddr = getFullAddress(listing);
-            const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
+            const directionsUrl = getDirectionsUrl(listing);
             const callButton = generateCallButton(listing);
             const badges = buildBadges(listing);
             const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : '';
@@ -2462,7 +2632,7 @@ function attachClusterClickHandler(targetMap, clusterGroup) {
                         <div class="map-popup-info">
                             <div class="map-popup-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${badges.join('')}</div>
                             
-                            <a href="/listing/${categorySlug}/${listing.slug}" class="map-popup-title" style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;flex-wrap:wrap;word-wrap:break-word;hyphens:auto;">${listing.business_name}${checkmarkHtml}</a>
+                            <a href="/listing/${listing.slug}" class="map-popup-title" style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;flex-wrap:wrap;word-wrap:break-word;hyphens:auto;">${listing.business_name}${checkmarkHtml}</a>
                             
                             ${listing.tagline ? `<div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;word-wrap:break-word;hyphens:auto;">${listing.tagline}</div>` : ''}
                             
@@ -2473,7 +2643,7 @@ function attachClusterClickHandler(targetMap, clusterGroup) {
                             
                             ${callButton}
                             
-                            <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;" onmouseover="this.style.background='#033d7a'" onmouseout="this.style.background='#045093'"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>Directions</a>
+                            <a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;" onmouseover="this.style.background='#033d7a'" onmouseout="this.style.background='#045093'"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>Directions</a>
                         </div>
                     </div>
                 </div>
@@ -2697,7 +2867,7 @@ function buildMapPopupContent(listing) {
     const heroImage = firstPhoto || '';
     const logoImage = listing.logo || '';
     const fullAddr = getFullAddress(listing);
-    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
+    const directionsUrl = getDirectionsUrl(listing);
     const callButton = generateCallButton(listing);
 
     return `
@@ -2722,7 +2892,7 @@ function buildMapPopupContent(listing) {
                         ${badges.join('')}
                     </div>
                     
-                    <a href="/listing/${categorySlug}/${listing.slug}" 
+                    <a href="/listing/${listing.slug}" 
                        class="map-popup-title" 
                        style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;">
                         ${listing.business_name}${checkmarkHtml}
@@ -2755,7 +2925,7 @@ function buildMapPopupContent(listing) {
                     
                     ${callButton}
                     
-                    <a href="${googleMapsUrl}" 
+                    <a href="${directionsUrl}" 
                        target="_blank" 
                        rel="noopener noreferrer"
                        onclick="event.stopPropagation();"
@@ -2966,7 +3136,7 @@ function renderSplitViewListings() {
     container.innerHTML = splitListings.map(l => {
         const fullAddress = getFullAddress(l);
         const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `/listing/${categorySlug}/${l.slug}`;
+        const listingUrl = `/listing/${l.slug}`;
         const badges = buildBadges(l);
         const categoryLabel = (l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category;
         const isStarred = starredListings.includes(String(l.id));

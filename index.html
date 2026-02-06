@@ -71,8 +71,22 @@
             <p class="hero-subtitle">Discover Greek-owned businesses across America</p>
             
             <div class="search-container">
+                <select id="mainCategorySelect" class="search-category">
+                    <option value="">All Categories</option>
+                </select>
                 <input type="search" id="mainSearch" class="search-input" placeholder="Search businesses, categories, or locations...">
                 <button onclick="performSearch()" class="search-button">Search</button>
+            </div>
+
+            <div id="subcategoryFilter" class="subcategory-filter hidden">
+                <div class="subcategory-header">
+                    <span class="subcategory-title">Subcategories</span>
+                    <div class="toggle-group">
+                        <button class="toggle-option active" data-mode="any" onclick="setSubcategoryMode('any')">Any</button>
+                        <button class="toggle-option" data-mode="all" onclick="setSubcategoryMode('all')">All</button>
+                    </div>
+                </div>
+                <div id="subcategoryButtons" class="subcategory-buttons"></div>
             </div>
             
             <div class="mt-6 flex flex-wrap gap-3 justify-center">

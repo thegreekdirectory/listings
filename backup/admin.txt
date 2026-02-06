@@ -1534,7 +1534,7 @@ async function generateListingPage(listing) {
         
         // Generate values
         const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `https://listings.thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
+        const listingUrl = `https://thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
         const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
         const inCity = listing.city ? ` in ${listing.city}` : '';
         const fullAddress = listing.address && listing.city && listing.state 

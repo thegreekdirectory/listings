@@ -38,6 +38,10 @@ const US_STATES = {
 
 let indexSupabase = null;
 let allListings = [];
+let selectedCategory = '';
+let selectedSubcategories = [];
+let subcategoryMode = 'any';
+let subcategoriesByCategory = {};
 
 function formatPhoneDisplay(phone) {
     if (!phone) return '';
@@ -56,8 +60,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     indexSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
     setupSearch();
+    populateCategorySelect();
     renderCategories();
     await loadListings();
+    renderSubcategoryFilter();
     renderFeaturedListings();
     renderRecentListings();
 });
@@ -77,9 +83,17 @@ function setupSearch() {
 function performSearch() {
     const searchInput = document.getElementById('mainSearch');
     const query = searchInput?.value.trim();
+    const params = new URLSearchParams();
     
-    if (query) {
-        window.location.href = `/listings?q=${encodeURIComponent(query)}`;
+    if (query) params.set('q', query);
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (selectedSubcategories.length > 0) {
+        params.set('subcategories', selectedSubcategories.join(','));
+        params.set('submode', subcategoryMode);
+    }
+
+    if (query || selectedCategory) {
+        window.location.href = `/listings?${params.toString()}`;
     }
 }
 
@@ -89,6 +103,67 @@ function searchByCategory(categoryName) {
     const encodedCategory = encodeURIComponent(categoryName);
     window.location.href = `/listings?category=${encodedCategory}`;
 }
+
+function populateCategorySelect() {
+    const select = document.getElementById('mainCategorySelect');
+    if (!select) return;
+
+    select.innerHTML = `
+        <option value="">All Categories</option>
+        ${CATEGORIES.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('')}
+    `;
+
+    select.addEventListener('change', (event) => {
+        selectedCategory = event.target.value;
+        selectedSubcategories = [];
+        renderSubcategoryFilter();
+    });
+}
+
+function renderSubcategoryFilter() {
+    const filter = document.getElementById('subcategoryFilter');
+    const buttonsContainer = document.getElementById('subcategoryButtons');
+    if (!filter || !buttonsContainer) return;
+
+    if (!selectedCategory) {
+        filter.classList.add('hidden');
+        buttonsContainer.innerHTML = '';
+        return;
+    }
+
+    const subcategories = subcategoriesByCategory[selectedCategory] || [];
+    if (subcategories.length === 0) {
+        filter.classList.add('hidden');
+        buttonsContainer.innerHTML = '';
+        return;
+    }
+
+    filter.classList.remove('hidden');
+    buttonsContainer.innerHTML = subcategories.map(sub => `
+        <button type="button" class="subcategory-button ${selectedSubcategories.includes(sub) ? 'active' : ''}" data-subcategory="${sub}">
+            ${sub}
+        </button>
+    `).join('');
+
+    buttonsContainer.querySelectorAll('.subcategory-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const sub = button.dataset.subcategory;
+            if (selectedSubcategories.includes(sub)) {
+                selectedSubcategories = selectedSubcategories.filter(item => item !== sub);
+            } else {
+                selectedSubcategories.push(sub);
+            }
+            button.classList.toggle('active');
+        });
+    });
+}
+
+window.setSubcategoryMode = function(mode) {
+    subcategoryMode = mode === 'all' ? 'all' : 'any';
+    document.querySelectorAll('.subcategory-filter .toggle-option').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === subcategoryMode);
+    });
+};
 
 window.handleHeroLocationSearch = function(query) {
     const resultsDiv = document.getElementById('heroLocationResults');
@@ -227,10 +302,29 @@ async function loadListings() {
         
         allListings = listings || [];
         console.log(`✅ Loaded ${allListings.length} listings`);
+        subcategoriesByCategory = extractSubcategoriesFromListings(allListings);
+        renderSubcategoryFilter();
         
     } catch (error) {
         console.error('❌ Error loading listings:', error);
     }
+}
+
+function extractSubcategoriesFromListings(listings) {
+    const byCategory = {};
+    listings.forEach(listing => {
+        if (listing.category && Array.isArray(listing.subcategories)) {
+            if (!byCategory[listing.category]) {
+                byCategory[listing.category] = new Set();
+            }
+            listing.subcategories.forEach(sub => byCategory[listing.category].add(sub));
+        }
+    });
+    const result = {};
+    Object.keys(byCategory).forEach(category => {
+        result[category] = Array.from(byCategory[category]).sort();
+    });
+    return result;
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -271,7 +365,7 @@ function renderRecentListings() {
 
 function renderListingCard(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const url = `/listing/${categorySlug}/${listing.slug}`;
+    const url = `/listing/${listing.slug}`;
     
     const photos = listing.photos || [];
     const mainImage = photos.length > 0 ? photos[0] : listing.logo;
