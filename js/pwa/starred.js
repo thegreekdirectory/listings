@@ -121,7 +121,7 @@ window.StarredManager = {
             
             container.innerHTML = starred.map(listing => {
                 const categorySlug = listing.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'general';
-                const listingUrl = `/listing/${listing.slug}`;
+                const listingUrl = `/listing/${listing.slug}.html`;
                 const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
                 const logoImage = listing.logo || '';
                 

@@ -110,7 +110,7 @@ listings.forEach(listing => {
             listing.metadata.updatedAt.split('T')[0] : now;
         
         xml += `  <url>
-    <loc>${baseUrl}/listing/${listingSlug}</loc>
+    <loc>${baseUrl}/listing/${listingSlug}.html</loc>
     <lastmod>${lastMod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
