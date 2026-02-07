@@ -2380,8 +2380,7 @@ window.generateListingPage = async function(listingId) {
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         */
         
-        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const filePath = `listing/${categorySlug}/${listing.slug}.html`;
+        const filePath = `listing/${listing.slug}`;
         
         await saveToGitHub(filePath, template, listing.business_name);
         
