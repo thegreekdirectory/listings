@@ -175,8 +175,7 @@ serve(async (req) => {
         let template = await templateResponse.text()
         
         // Replace template variables (simplified version)
-        const categorySlug = data.category.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-        const listingUrl = `https://thegreekdirectory.org/listings/${categorySlug}/${data.slug}`
+        const listingUrl = `https://thegreekdirectory.org/listing/${data.slug}`
         
         template = template.replace(/{{BUSINESS_NAME}}/g, data.business_name)
         template = template.replace(/{{TAGLINE}}/g, data.tagline || '')
@@ -184,7 +183,7 @@ serve(async (req) => {
         // ... (add more replacements as needed)
         
         // Save to GitHub
-        const filePath = `listings/${categorySlug}/${data.slug}.html`
+        const filePath = `listing/${data.slug}.html`
         
         // Get current file SHA
         const fileInfoResponse = await fetch(

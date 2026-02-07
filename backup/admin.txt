@@ -722,8 +722,7 @@ function renderTable() {
     ) : allListings;
     
     tbody.innerHTML = filtered.map(l => {
-        const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `/listings/${categorySlug}/${l.slug}`;
+        const listingUrl = `/listing/${l.slug}`;
         const tier = l.tier || 'FREE';
         const tierColors = {
             FREE: 'bg-gray-100 text-gray-700',
@@ -1533,8 +1532,7 @@ async function generateListingPage(listing) {
         let template = await templateResponse.text();
         
         // Generate values
-        const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `https://thegreekdirectory.org/listings/${categorySlug}/${listing.slug}`;
+        const listingUrl = `https://thegreekdirectory.org/listing/${listing.slug}`;
         const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
         const inCity = listing.city ? ` in ${listing.city}` : '';
         const fullAddress = listing.address && listing.city && listing.state 
@@ -1813,7 +1811,7 @@ async function generateListingPage(listing) {
         template = template.replace(/{{HOURS_SCHEMA}}/g, '[]');
         
         // Save the generated HTML file
-        const filePath = `listings/${categorySlug}/${listing.slug}.html`;
+        const filePath = `listing/${listing.slug}.html`;
         
         console.log('Saving listing page to:', filePath);
         
