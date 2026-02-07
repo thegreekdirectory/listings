@@ -113,7 +113,23 @@
             .subcategory-tag { background: #404040; color: #e5e5e5; }
             .owner-info-section { background: #2a2a2a; border-color: #404040; }
         }
-    </style>
+    
+        .carousel-view-btn { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #fff; font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 999px; z-index: 12; display: inline-flex; align-items: center; gap: 6px; }
+        .carousel-view-btn:hover { background: rgba(0,0,0,0.8); }
+        .image-gallery-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 24px; }
+        .image-gallery-modal.active { display: flex; }
+        .image-gallery-content { background: #fff; border-radius: 12px; max-width: 1100px; width: 100%; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+        .image-gallery-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
+        .image-gallery-grid { padding: 20px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); overflow-y: auto; }
+        .image-gallery-grid img { width: 100%; height: 220px; object-fit: contain; background: #f3f4f6; border-radius: 10px; }
+        .image-gallery-close { background: #111827; color: #fff; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; }
+        .badge-opening-soon { background: #fbbf24; color: #78350f; }
+        .badge-closing-soon { background: #f59e0b; color: white; }
+        .claimed-checkmark { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #10b981; border-radius: 999px; margin-left: 8px; vertical-align: middle; flex-shrink: 0; }
+        .claimed-checkmark svg { width: 12px; height: 12px; fill: white; }
+        .social-icon img { width: 22px; height: 22px; }
+
+</style>
 </head>
 <body class="bg-gray-50">
     <header class="bg-white shadow-sm sticky top-0 z-50">
@@ -330,6 +346,13 @@
                 });
             }
             
+            document.querySelectorAll('.custom-cta-button').forEach(el => {
+                el.addEventListener('click', () => {
+                    const label = el.dataset.ctaLabel || el.textContent.trim();
+                    trackClick('custom_cta', label);
+                });
+            });
+
             checkAdminRedirect();
         });
         
@@ -440,6 +463,95 @@
             window.prevSlide = prevSlide;
         }
 
+function extractCarouselImages() {
+            const slides = document.querySelectorAll('.carousel-slide');
+            return Array.from(slides).map(slide => {
+                const style = slide.getAttribute('style') || '';
+                const match = style.match(/url\(['"]?(.*?)['"]?\)/);
+                return match ? match[1] : null;
+            }).filter(Boolean);
+        }
+
+        function setupImageGallery() {
+            const carousel = document.getElementById('photoCarousel');
+            if (!carousel) return;
+            const images = extractCarouselImages();
+            if (images.length === 0) return;
+            
+            if (!carousel.querySelector('.carousel-view-btn')) {
+                const viewButton = document.createElement('button');
+                viewButton.type = 'button';
+                viewButton.className = 'carousel-view-btn';
+                viewButton.innerHTML = '<span>View all images</span>';
+                viewButton.addEventListener('click', () => openImageGallery(images));
+                carousel.appendChild(viewButton);
+            }
+        }
+
+        function openImageGallery(images) {
+            let modal = document.getElementById('imageGalleryModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'imageGalleryModal';
+                modal.className = 'image-gallery-modal';
+                modal.innerHTML = `
+                    <div class="image-gallery-content">
+                        <div class="image-gallery-header">
+                            <div class="text-lg font-bold text-gray-900">All Images</div>
+                            <button type="button" class="image-gallery-close">Close</button>
+                        </div>
+                        <div class="image-gallery-grid"></div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) closeImageGallery();
+                });
+                modal.querySelector('.image-gallery-close').addEventListener('click', closeImageGallery);
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') closeImageGallery();
+                });
+            }
+            
+            const grid = modal.querySelector('.image-gallery-grid');
+            grid.innerHTML = '';
+            images.forEach(src => {
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = 'Listing image';
+                grid.appendChild(img);
+            });
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageGallery() {
+            const modal = document.getElementById('imageGalleryModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+            document.body.style.overflow = '';
+        }
+
+        function applyClaimedBadgeEnhancements() {
+            const hasClaimedBadge = document.querySelector('.badge-claimed');
+            if (!hasClaimedBadge) return;
+            const title = document.querySelector('h2.text-3xl.font-bold');
+            if (title && !title.querySelector('.claimed-checkmark')) {
+                const checkmark = document.createElement('span');
+                checkmark.className = 'claimed-checkmark';
+                checkmark.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                title.appendChild(checkmark);
+            }
+            document.querySelectorAll('a[href*="subject=Claim"]').forEach(link => {
+                const wrapper = link.closest('div');
+                if (wrapper && wrapper.classList.contains('bg-yellow-50')) {
+                    wrapper.remove();
+                }
+            });
+        }
+
         function shareNative() {
             trackClick('share', 'native');
             if (navigator.share) {
@@ -548,6 +660,8 @@
         
         updateOpenClosedBadge();
         setInterval(updateOpenClosedBadge, 60000);
+        setupImageGallery();
+        applyClaimedBadgeEnhancements();
 </script>
 </body>
 </html>

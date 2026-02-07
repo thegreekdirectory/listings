@@ -88,6 +88,7 @@ let editingListing = null;
 let selectedSubcategories = [];
 let primarySubcategory = null;
 let userCountry = 'USA';
+let additionalInfoEntries = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing Admin Portal...');
@@ -844,7 +845,7 @@ function fillEditForm(listing) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Tier</label>
-                        <select id="editTier" class="w-full px-4 py-2 border rounded-lg">
+                        <select id="editTier" class="w-full px-4 py-2 border rounded-lg" onchange="updateCustomCtaFields()">
                             <option value="FREE" ${listing?.tier === 'FREE' ? 'selected' : ''}>FREE</option>
                             <option value="VERIFIED" ${listing?.tier === 'VERIFIED' ? 'selected' : ''}>VERIFIED</option>
                             <option value="FEATURED" ${listing?.tier === 'FEATURED' ? 'selected' : ''}>FEATURED</option>
@@ -1080,6 +1081,68 @@ function fillEditFormContinuation(listing, owner) {
                 </div>
             </div>
 
+            <!-- Additional Info -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Additional Information</h3>
+                <p class="text-sm text-gray-500 mb-3">Add custom info pairs (Info Name + Info Value).</p>
+                <div id="additionalInfoContainer" class="space-y-3"></div>
+                <button type="button" class="mt-3 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onclick="addAdditionalInfoField()">+ Add Info</button>
+            </div>
+
+            <!-- Custom CTA Buttons -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Custom CTA Buttons</h3>
+                <p class="text-sm text-gray-500 mb-3">Featured listings can add 1 button. Premium can add 2.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Button 1 Label (max 15)</label>
+                        <input type="text" id="editCta1Label" value="${listing?.custom_cta_buttons?.[0]?.label || ''}" maxlength="15" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Button 1 Link</label>
+                        <input type="url" id="editCta1Link" value="${listing?.custom_cta_buttons?.[0]?.link || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Button 1 Color</label>
+                        <input type="color" id="editCta1Color" value="${listing?.custom_cta_buttons?.[0]?.color || '#111827'}" class="w-full h-10 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Button 1 Icon</label>
+                        <select id="editCta1Icon" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="star" ${listing?.custom_cta_buttons?.[0]?.icon === 'star' ? 'selected' : ''}>Star</option>
+                            <option value="calendar" ${listing?.custom_cta_buttons?.[0]?.icon === 'calendar' ? 'selected' : ''}>Calendar</option>
+                            <option value="ticket" ${listing?.custom_cta_buttons?.[0]?.icon === 'ticket' ? 'selected' : ''}>Ticket</option>
+                            <option value="shopping" ${listing?.custom_cta_buttons?.[0]?.icon === 'shopping' ? 'selected' : ''}>Shopping</option>
+                            <option value="phone" ${listing?.custom_cta_buttons?.[0]?.icon === 'phone' ? 'selected' : ''}>Phone</option>
+                            <option value="chat" ${listing?.custom_cta_buttons?.[0]?.icon === 'chat' ? 'selected' : ''}>Chat</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Button 2 Label (max 15)</label>
+                        <input type="text" id="editCta2Label" value="${listing?.custom_cta_buttons?.[1]?.label || ''}" maxlength="15" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Button 2 Link</label>
+                        <input type="url" id="editCta2Link" value="${listing?.custom_cta_buttons?.[1]?.link || ''}" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Button 2 Color</label>
+                        <input type="color" id="editCta2Color" value="${listing?.custom_cta_buttons?.[1]?.color || '#111827'}" class="w-full h-10 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Button 2 Icon</label>
+                        <select id="editCta2Icon" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="star" ${listing?.custom_cta_buttons?.[1]?.icon === 'star' ? 'selected' : ''}>Star</option>
+                            <option value="calendar" ${listing?.custom_cta_buttons?.[1]?.icon === 'calendar' ? 'selected' : ''}>Calendar</option>
+                            <option value="ticket" ${listing?.custom_cta_buttons?.[1]?.icon === 'ticket' ? 'selected' : ''}>Ticket</option>
+                            <option value="shopping" ${listing?.custom_cta_buttons?.[1]?.icon === 'shopping' ? 'selected' : ''}>Shopping</option>
+                            <option value="phone" ${listing?.custom_cta_buttons?.[1]?.icon === 'phone' ? 'selected' : ''}>Phone</option>
+                            <option value="chat" ${listing?.custom_cta_buttons?.[1]?.icon === 'chat' ? 'selected' : ''}>Chat</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <!-- Owner Info -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Owner Information</h3>
@@ -1146,6 +1209,8 @@ function fillEditFormContinuation(listing, owner) {
         ownerPhoneContainer.innerHTML = createPhoneInput(owner?.owner_phone || '', userCountry);
     }
     
+    renderAdditionalInfoFields(listing);
+    updateCustomCtaFields();
     updateSubcategoriesForCategory();
 }
 
@@ -1194,6 +1259,77 @@ function updateCharCounters() {
     
     if (taglineCount) taglineCount.textContent = tagline.length;
     if (descCount) descCount.textContent = desc.length;
+}
+
+function renderAdditionalInfoFields(listing) {
+    const container = document.getElementById('additionalInfoContainer');
+    if (!container) return;
+    additionalInfoEntries = Array.isArray(listing?.additional_info) ? listing.additional_info.slice() : [];
+    if (additionalInfoEntries.length === 0) {
+        additionalInfoEntries.push({ name: '', value: '' });
+    }
+    container.innerHTML = '';
+    additionalInfoEntries.forEach((entry, index) => {
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-center';
+        row.innerHTML = `
+            <input type="text" class="w-full px-4 py-2 border rounded-lg" placeholder="Info Name" value="${escapeHtml(entry.name || '')}" data-info-name="${index}">
+            <input type="text" class="w-full px-4 py-2 border rounded-lg" placeholder="Info Value" value="${escapeHtml(entry.value || '')}" data-info-value="${index}">
+            <button type="button" class="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200" data-remove-info="${index}">Remove</button>
+        `;
+        container.appendChild(row);
+    });
+    
+    container.querySelectorAll('[data-remove-info]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = Number(btn.dataset.removeInfo);
+            additionalInfoEntries.splice(idx, 1);
+            renderAdditionalInfoFields({ additional_info: additionalInfoEntries });
+        });
+    });
+    
+    container.querySelectorAll('[data-info-name]').forEach(input => {
+        input.addEventListener('input', () => {
+            const idx = Number(input.dataset.infoName);
+            additionalInfoEntries[idx].name = input.value;
+        });
+    });
+    
+    container.querySelectorAll('[data-info-value]').forEach(input => {
+        input.addEventListener('input', () => {
+            const idx = Number(input.dataset.infoValue);
+            additionalInfoEntries[idx].value = input.value;
+        });
+    });
+}
+
+window.addAdditionalInfoField = function() {
+    additionalInfoEntries.push({ name: '', value: '' });
+    renderAdditionalInfoFields({ additional_info: additionalInfoEntries });
+};
+
+function updateCustomCtaFields() {
+    const tier = document.getElementById('editTier')?.value;
+    const allowed = tier === 'PREMIUM' ? 2 : (tier === 'FEATURED' ? 1 : 0);
+    const fields = [
+        'editCta1Label', 'editCta1Link', 'editCta1Color', 'editCta1Icon',
+        'editCta2Label', 'editCta2Link', 'editCta2Color', 'editCta2Icon'
+    ];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const isSecond = id.startsWith('editCta2');
+        const isFirst = id.startsWith('editCta1');
+        const enabled = (allowed >= 2 && isSecond) || (allowed >= 1 && isFirst);
+        el.disabled = !enabled;
+        if (!enabled) {
+            if (el.tagName === 'INPUT') {
+                el.value = id.includes('Color') ? '#111827' : '';
+            } else if (el.tagName === 'SELECT') {
+                el.value = 'star';
+            }
+        }
+    });
 }
 
 window.updateSubcategoriesForCategory = function() {
@@ -1442,6 +1578,42 @@ if (!slug) {
         }
         
         const isClaimed = document.getElementById('editIsClaimed').checked;
+        const tier = document.getElementById('editTier').value;
+        const allowedCtas = tier === 'PREMIUM' ? 2 : (tier === 'FEATURED' ? 1 : 0);
+        const customCtaButtons = [];
+        
+        if (allowedCtas >= 1) {
+            const label = document.getElementById('editCta1Label').value.trim().slice(0, 15);
+            const link = document.getElementById('editCta1Link').value.trim();
+            if (label && link) {
+                customCtaButtons.push({
+                    label,
+                    link,
+                    color: document.getElementById('editCta1Color').value || '#111827',
+                    icon: document.getElementById('editCta1Icon').value || 'star'
+                });
+            }
+        }
+        
+        if (allowedCtas >= 2) {
+            const label = document.getElementById('editCta2Label').value.trim().slice(0, 15);
+            const link = document.getElementById('editCta2Link').value.trim();
+            if (label && link) {
+                customCtaButtons.push({
+                    label,
+                    link,
+                    color: document.getElementById('editCta2Color').value || '#111827',
+                    icon: document.getElementById('editCta2Icon').value || 'star'
+                });
+            }
+        }
+        
+        const additionalInfo = additionalInfoEntries
+            .map(entry => ({
+                name: (entry.name || '').trim(),
+                value: (entry.value || '').trim()
+            }))
+            .filter(entry => entry.name && entry.value);
         
         const listingData = {
             business_name: businessName,
@@ -1451,7 +1623,7 @@ if (!slug) {
             category: document.getElementById('editCategory').value,
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
-            tier: document.getElementById('editTier').value,
+            tier: tier,
             verified: document.getElementById('editTier').value !== 'FREE',
             is_chain: isChain,
             is_claimed: isClaimed,
@@ -1470,6 +1642,8 @@ if (!slug) {
             photos: photos,
             video: document.getElementById('editVideo').value.trim() || null,
             visible: editingListing?.visible !== false,
+            custom_cta_buttons: customCtaButtons,
+            additional_info: additionalInfo,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
                 tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
@@ -1842,9 +2016,9 @@ function generateReviewSection(listing) {
     
     const googleSVG = '<svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>';
     
-    const yelpSVG = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/ylogo.svg"/></svg>';
+    const yelpSVG = '<img src="https://static.thegreekdirectory.org/img/ylogo.svg" alt="Yelp" width="22" height="22" loading="lazy">';
     
-    const tripadvisorSVG = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/talogo.svg"/></svg>';
+    const tripadvisorSVG = '<img src="https://static.thegreekdirectory.org/img/talogo.svg" alt="TripAdvisor" width="22" height="22" loading="lazy">';
     
     const starSVG = '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
     
@@ -1878,6 +2052,62 @@ function generateReviewSection(listing) {
             <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
             <div class="flex flex-wrap gap-2">
                 ${reviewLinks}
+            </div>
+        </div>
+    `;
+}
+
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
+const CUSTOM_CTA_ICONS = {
+    star: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+    calendar: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-12 8h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+    ticket: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3H8a2 2 0 00-2 2v3a1 1 0 010 2v3a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 010-2V5a2 2 0 00-2-2z"/></svg>',
+    shopping: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14l-1.5 10h-11L5 8zM9 8V6a3 3 0 016 0v2"/></svg>',
+    phone: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>',
+    chat: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h6m5 0a7 7 0 01-7 7H6l-4 3V7a7 7 0 017-7h5a7 7 0 017 7z"/></svg>'
+};
+
+function generateCustomCtaButtons(listing) {
+    const buttons = Array.isArray(listing.custom_cta_buttons) ? listing.custom_cta_buttons : [];
+    if (buttons.length === 0) return '';
+    const limit = listing.tier === 'PREMIUM' ? 2 : (listing.tier === 'FEATURED' ? 1 : 0);
+    if (limit === 0) return '';
+    
+    return buttons.slice(0, limit).map(button => {
+        if (!button || !button.label || !button.link) return '';
+        const safeLabel = escapeHtml(button.label).slice(0, 15);
+        const icon = CUSTOM_CTA_ICONS[button.icon] || CUSTOM_CTA_ICONS.star;
+        const color = button.color || '#111827';
+        
+        return `
+            <a href="${button.link}" target="_blank" rel="noopener noreferrer" class="custom-cta-button flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium" style="background-color:${color};" data-cta-label="${safeLabel}">
+                ${icon}
+                ${safeLabel}
+            </a>
+        `;
+    }).join('');
+}
+
+function generateAdditionalInfoSection(listing) {
+    const additionalInfo = Array.isArray(listing.additional_info) ? listing.additional_info : [];
+    const filtered = additionalInfo.filter(item => item && item.name && item.value);
+    if (filtered.length === 0) return '';
+    
+    const rows = filtered.map(item => `
+        <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+            </svg>
+            <span><strong>${escapeHtml(item.name)}:</strong> ${escapeHtml(item.value)}</span>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="pt-2">
+            <h3 class="text-sm font-semibold text-gray-900">Additional Information</h3>
+            <div class="space-y-2 mt-2">
+                ${rows}
             </div>
         </div>
     `;
@@ -2173,6 +2403,12 @@ function generateTemplateReplacementsPart2(listing) {
     
     const socialMediaSection = generateSocialMediaSection(listing);
     const reviewSection = generateReviewSection(listing);
+    const additionalInfoSection = generateAdditionalInfoSection(listing);
+    const customCtaButtons = generateCustomCtaButtons(listing);
+    const isClaimed = listing.is_claimed || (owner && owner.owner_user_id);
+    const claimedCheckmark = isClaimed
+        ? '<span class="claimed-checkmark"><svg viewBox="0 0 24 24" fill="none"><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+        : '';
     
     // Only show map if has street address with number
     let mapSection = '';
@@ -2258,7 +2494,6 @@ function generateTemplateReplacementsPart2(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     let claimButton = '';
-    const isClaimed = listing.is_claimed || (owner && owner.owner_user_id);
     if (!isClaimed && listing.show_claim_button !== false) {
         const cityState = listing.city && listing.state ? `${listing.city}, ${listing.state}` : '';
         const country = listing.country && listing.country !== 'USA' ? `, ${listing.country}` : '';
@@ -2286,6 +2521,9 @@ function generateTemplateReplacementsPart2(listing) {
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
         'REVIEW_SECTION': reviewSection,
+        'ADDITIONAL_INFO_SECTION': additionalInfoSection,
+        'CUSTOM_CTA_BUTTONS': customCtaButtons,
+        'CLAIMED_CHECKMARK': claimedCheckmark,
         'MAP_SECTION': mapSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
