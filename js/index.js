@@ -365,7 +365,7 @@ function renderRecentListings() {
 
 function renderListingCard(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const url = `/listing/${listing.slug}.html`;
+    const url = `/listing/${listing.slug}`;
     
     const photos = listing.photos || [];
     const mainImage = photos.length > 0 ? photos[0] : listing.logo;

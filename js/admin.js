@@ -374,7 +374,7 @@ function renderTable() {
     
     tbody.innerHTML = filtered.map(l => {
         const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `/listing/${l.slug}.html`;
+        const listingUrl = `/listing/${l.slug}`;
         const tier = l.tier || 'FREE';
         const tierColors = {
             FREE: 'bg-gray-100 text-gray-700',
@@ -1894,7 +1894,7 @@ function generateReviewSection(listing) {
 
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listing/${listing.slug}.html`;
+    const listingUrl = `https://listings.thegreekdirectory.org/listing/${listing.slug}`;
     
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
@@ -2226,7 +2226,7 @@ function generateTemplateReplacementsPart2(listing) {
                     }
                     
                     container.innerHTML = relatedListings.map(l => {
-                        const listingUrl = '/listing/' + l.slug + '.html';
+                        const listingUrl = '/listing/' + l.slug;
                         const location = (l.city && l.state) ? l.city + ', ' + l.state : (l.city || l.state || 'Location TBD');
                         
                         return \`
@@ -2543,7 +2543,7 @@ async function updateSitemap() {
                     listing.updated_at.split('T')[0] : now;
                 
                 xml += `  <url>
-    <loc>${baseUrl}/listing/${listingSlug}.html</loc>
+    <loc>${baseUrl}/listing/${listingSlug}</loc>
     <lastmod>${lastMod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

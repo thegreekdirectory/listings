@@ -1326,7 +1326,7 @@ function renderListings() {
             const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : (l.logo || '');
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const listingUrl = `/listing/${l.slug}.html`;
+            const listingUrl = `/listing/${l.slug}`;
             const badges = buildBadges(l);
             const isStarred = starredListings.includes(String(l.id));
             const logoImage = l.logo || '';
@@ -1370,7 +1370,7 @@ function renderListings() {
         container.innerHTML = displayedListings.map(l => {
             const fullAddress = getFullAddress(l);
             const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const listingUrl = `/listing/${l.slug}.html`;
+            const listingUrl = `/listing/${l.slug}`;
             const badges = buildBadges(l);
             const isStarred = starredListings.includes(String(l.id));
             const logoImage = l.logo || '';
@@ -2632,7 +2632,7 @@ function attachClusterClickHandler(targetMap, clusterGroup) {
                         <div class="map-popup-info">
                             <div class="map-popup-badges" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${badges.join('')}</div>
                             
-                            <a href="/listing/${listing.slug}.html" class="map-popup-title" style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;flex-wrap:wrap;word-wrap:break-word;hyphens:auto;">${listing.business_name}${checkmarkHtml}</a>
+                            <a href="/listing/${listing.slug}" class="map-popup-title" style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;flex-wrap:wrap;word-wrap:break-word;hyphens:auto;">${listing.business_name}${checkmarkHtml}</a>
                             
                             ${listing.tagline ? `<div class="map-popup-tagline" style="font-size:13px;color:#6b7280;margin-bottom:8px;line-height:1.4;word-wrap:break-word;hyphens:auto;">${listing.tagline}</div>` : ''}
                             
@@ -2892,7 +2892,7 @@ function buildMapPopupContent(listing) {
                         ${badges.join('')}
                     </div>
                     
-                    <a href="/listing/${listing.slug}.html" 
+                    <a href="/listing/${listing.slug}" 
                        class="map-popup-title" 
                        style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;">
                         ${listing.business_name}${checkmarkHtml}
@@ -3136,7 +3136,7 @@ function renderSplitViewListings() {
     container.innerHTML = splitListings.map(l => {
         const fullAddress = getFullAddress(l);
         const categorySlug = l.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const listingUrl = `/listing/${l.slug}.html`;
+        const listingUrl = `/listing/${l.slug}`;
         const badges = buildBadges(l);
         const categoryLabel = (l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category;
         const isStarred = starredListings.includes(String(l.id));

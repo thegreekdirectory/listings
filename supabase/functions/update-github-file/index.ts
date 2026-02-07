@@ -175,7 +175,7 @@ serve(async (req) => {
         let template = await templateResponse.text()
         
         // Replace template variables (simplified version)
-        const listingUrl = `https://thegreekdirectory.org/listing/${data.slug}.html`
+        const listingUrl = `https://thegreekdirectory.org/listing/${data.slug}`
         
         template = template.replace(/{{BUSINESS_NAME}}/g, data.business_name)
         template = template.replace(/{{TAGLINE}}/g, data.tagline || '')
