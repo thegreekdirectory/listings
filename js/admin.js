@@ -786,7 +786,9 @@ window.newListing = async function() {
             verified: false,
             visible: true,
             is_chain: false,
-            is_claimed: false
+            is_claimed: false,
+            additional_info: [],
+            cta_buttons: []
         };
         
         selectedSubcategories = [];
@@ -844,7 +846,7 @@ function fillEditForm(listing) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Tier</label>
-                        <select id="editTier" class="w-full px-4 py-2 border rounded-lg">
+                        <select id="editTier" class="w-full px-4 py-2 border rounded-lg" onchange="updateCtaAvailability()">
                             <option value="FREE" ${listing?.tier === 'FREE' ? 'selected' : ''}>FREE</option>
                             <option value="VERIFIED" ${listing?.tier === 'VERIFIED' ? 'selected' : ''}>VERIFIED</option>
                             <option value="FEATURED" ${listing?.tier === 'FEATURED' ? 'selected' : ''}>FEATURED</option>
@@ -954,6 +956,11 @@ function fillEditForm(listing) {
 
 function fillEditFormContinuation(listing, owner) {
     const formContent = document.getElementById('editFormContent');
+    const additionalInfo = Array.isArray(listing?.additional_info) ? listing.additional_info : [];
+    const ctaButtons = Array.isArray(listing?.cta_buttons) ? listing.cta_buttons : [];
+    const additionalInfoRows = additionalInfo.map((info, index) => renderAdditionalInfoRow(info, index)).join('');
+    const ctaFirst = ctaButtons[0] || {};
+    const ctaSecond = ctaButtons[1] || {};
     formContent.innerHTML += `
             <!-- Hours -->
             <div>
@@ -1080,6 +1087,26 @@ function fillEditFormContinuation(listing, owner) {
                 </div>
             </div>
 
+            <!-- Additional Info -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Additional Information</h3>
+                <p class="text-sm text-gray-500 mb-3">Add extra details with an info name and value.</p>
+                <div id="additionalInfoContainer" class="space-y-3">
+                    ${additionalInfoRows || ''}
+                </div>
+                <button type="button" onclick="addAdditionalInfoRow()" class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">Add Info</button>
+            </div>
+
+            <!-- Custom CTA Buttons -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Custom CTA Buttons</h3>
+                <p class="text-sm text-gray-500 mb-4">Featured listings can add 1 button. Premium listings can add 2.</p>
+                <div id="ctaButtonsContainer" class="grid grid-cols-1 gap-4">
+                    ${renderCtaFields(1, ctaFirst)}
+                    ${renderCtaFields(2, ctaSecond)}
+                </div>
+            </div>
+
             <!-- Owner Info -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Owner Information</h3>
@@ -1125,12 +1152,20 @@ function fillEditFormContinuation(listing, owner) {
                 <h3 class="text-lg font-bold mb-4">Media</h3>
                 <div class="grid grid-cols-1 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Logo URL</label>
-                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <label class="block text-sm font-medium mb-2">Logo</label>
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Logo URL (auto-filled after upload)">
+                            <input type="file" id="editLogoFile" accept="image/*" class="w-full md:w-64 px-3 py-2 border rounded-lg" onchange="handleLogoUpload(event)">
+                        </div>
+                        <p id="logoUploadStatus" class="text-xs text-gray-500 mt-1"></p>
+                        <div id="logoPreview" class="mt-2"></div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
                         <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                        <input type="file" id="editPhotosFiles" accept="image/*" multiple class="w-full mt-2 px-3 py-2 border rounded-lg" onchange="handlePhotosUpload(event)">
+                        <p id="photosUploadStatus" class="text-xs text-gray-500 mt-1"></p>
+                        <div id="photosPreview" class="mt-2 flex flex-wrap gap-2"></div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Video URL (YouTube/Vimeo embed)</label>
@@ -1147,9 +1182,200 @@ function fillEditFormContinuation(listing, owner) {
     }
     
     updateSubcategoriesForCategory();
+    updateCtaAvailability();
+    const additionalInfoContainer = document.getElementById('additionalInfoContainer');
+    if (additionalInfoContainer && additionalInfoContainer.children.length === 0) {
+        addAdditionalInfoRow();
+    }
+    initializeMediaUploads(listing);
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
+function setUploadStatus(elementId, message, isError = false) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.textContent = message;
+    element.className = `text-xs mt-1 ${isError ? 'text-red-600' : 'text-gray-500'}`;
+}
+
+async function uploadCloudflareImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/cloudflare-image-upload`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            apikey: SUPABASE_ANON_KEY
+        },
+        body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data?.success) {
+        throw new Error(data?.error || 'Image upload failed');
+    }
+
+    return data.url;
+}
+
+function renderLogoPreview(url) {
+    const container = document.getElementById('logoPreview');
+    if (!container) return;
+    if (url) {
+        container.innerHTML = `<img src="${url}" alt="Logo preview" class="h-16 w-16 rounded-lg object-cover border">`;
+    } else {
+        container.innerHTML = '';
+    }
+}
+
+function renderPhotosPreview(urls = []) {
+    const container = document.getElementById('photosPreview');
+    if (!container) return;
+    container.innerHTML = urls
+        .map((url, index) => `
+            <div class="relative">
+                <img src="${url}" alt="Photo ${index + 1}" class="h-20 w-20 rounded-lg object-cover border">
+            </div>
+        `)
+        .join('');
+}
+
+function initializeMediaUploads(listing) {
+    const logoUrl = document.getElementById('editLogo')?.value.trim() || '';
+    const photosText = document.getElementById('editPhotos')?.value || '';
+    const photos = photosText ? photosText.split('\n').map(url => url.trim()).filter(Boolean) : [];
+    renderLogoPreview(logoUrl || (listing?.logo || ''));
+    renderPhotosPreview(photos);
+}
+
+window.handleLogoUpload = async function(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadStatus('logoUploadStatus', 'Uploading logo...');
+    try {
+        const url = await uploadCloudflareImage(file);
+        const logoInput = document.getElementById('editLogo');
+        if (logoInput) {
+            logoInput.value = url;
+        }
+        renderLogoPreview(url);
+        setUploadStatus('logoUploadStatus', 'Logo uploaded.');
+    } catch (error) {
+        console.error('Logo upload failed:', error);
+        setUploadStatus('logoUploadStatus', error.message, true);
+    } finally {
+        event.target.value = '';
+    }
+};
+
+window.handlePhotosUpload = async function(event) {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    setUploadStatus('photosUploadStatus', `Uploading ${files.length} photo(s)...`);
+    try {
+        const uploadedUrls = [];
+        for (const file of files) {
+            const url = await uploadCloudflareImage(file);
+            uploadedUrls.push(url);
+        }
+        const photosInput = document.getElementById('editPhotos');
+        const existing = photosInput?.value ? photosInput.value.split('\n').map(url => url.trim()).filter(Boolean) : [];
+        const updated = [...existing, ...uploadedUrls];
+        if (photosInput) {
+            photosInput.value = updated.join('\n');
+        }
+        renderPhotosPreview(updated);
+        setUploadStatus('photosUploadStatus', 'Photos uploaded.');
+    } catch (error) {
+        console.error('Photo upload failed:', error);
+        setUploadStatus('photosUploadStatus', error.message, true);
+    } finally {
+        event.target.value = '';
+    }
+};
+
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
+const CTA_ICON_OPTIONS = [
+    { value: 'star', label: 'Star' },
+    { value: 'calendar', label: 'Calendar' },
+    { value: 'tag', label: 'Tag' },
+    { value: 'bolt', label: 'Bolt' },
+    { value: 'heart', label: 'Heart' }
+];
+
+function renderAdditionalInfoRow(info = {}, index = 0) {
+    return `
+        <div class="flex flex-col md:flex-row gap-2 items-start" data-info-row="${index}">
+            <input type="text" data-info-name value="${escapeHtml(info.name || '')}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="Info Name">
+            <input type="text" data-info-value value="${escapeHtml(info.value || '')}" class="flex-1 px-4 py-2 border rounded-lg" placeholder="Info Value">
+            <button type="button" onclick="removeAdditionalInfoRow(this)" class="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Remove</button>
+        </div>
+    `;
+}
+
+function addAdditionalInfoRow() {
+    const container = document.getElementById('additionalInfoContainer');
+    if (!container) return;
+    const index = container.children.length;
+    container.insertAdjacentHTML('beforeend', renderAdditionalInfoRow({}, index));
+}
+
+function removeAdditionalInfoRow(button) {
+    const row = button.closest('[data-info-row]');
+    if (row) {
+        row.remove();
+    }
+}
+
+function renderCtaFields(index, cta = {}) {
+    const iconOptions = CTA_ICON_OPTIONS.map(option => {
+        const selected = cta.icon === option.value ? 'selected' : '';
+        return `<option value="${option.value}" ${selected}>${option.label}</option>`;
+    }).join('');
+
+    return `
+        <div class="border border-gray-200 rounded-lg p-4" data-cta-row="${index}">
+            <h4 class="font-semibold text-gray-900 mb-3">CTA Button ${index}</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Button Label (max 15)</label>
+                    <input type="text" id="editCtaLabel${index}" value="${escapeHtml(cta.label || '')}" maxlength="15" class="w-full px-4 py-2 border rounded-lg" placeholder="Book Now">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Link</label>
+                    <input type="url" id="editCtaLink${index}" value="${escapeHtml(cta.link || '')}" class="w-full px-4 py-2 border rounded-lg" placeholder="https://">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Button Color</label>
+                    <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-20 h-10 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Icon</label>
+                    <select id="editCtaIcon${index}" class="w-full px-4 py-2 border rounded-lg">
+                        ${iconOptions}
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function updateCtaAvailability() {
+    const tier = document.getElementById('editTier')?.value;
+    const allowed = tier === 'PREMIUM' ? 2 : tier === 'FEATURED' ? 1 : 0;
+    document.querySelectorAll('[data-cta-row]').forEach(row => {
+        const index = parseInt(row.getAttribute('data-cta-row'), 10);
+        const enabled = index <= allowed;
+        row.classList.toggle('opacity-50', !enabled);
+        row.querySelectorAll('input, select').forEach(input => {
+            input.disabled = !enabled;
+        });
+    });
+}
 
 window.checkSlugAvailability = async function() {
     const slug = document.getElementById('editSlug').value.trim();
@@ -1442,6 +1668,25 @@ if (!slug) {
         }
         
         const isClaimed = document.getElementById('editIsClaimed').checked;
+        const tierValue = document.getElementById('editTier').value;
+        const allowedCtas = tierValue === 'PREMIUM' ? 2 : tierValue === 'FEATURED' ? 1 : 0;
+
+        const additionalInfo = Array.from(document.querySelectorAll('[data-info-row]')).map(row => {
+            const name = row.querySelector('[data-info-name]')?.value.trim() || '';
+            const value = row.querySelector('[data-info-value]')?.value.trim() || '';
+            return name && value ? { name, value } : null;
+        }).filter(Boolean);
+
+        const ctaButtons = [];
+        for (let i = 1; i <= allowedCtas; i += 1) {
+            const label = document.getElementById(`editCtaLabel${i}`)?.value.trim() || '';
+            const link = document.getElementById(`editCtaLink${i}`)?.value.trim() || '';
+            const color = document.getElementById(`editCtaColor${i}`)?.value || '#055193';
+            const icon = document.getElementById(`editCtaIcon${i}`)?.value || 'star';
+            if (label && link) {
+                ctaButtons.push({ label, link, color, icon });
+            }
+        }
         
         const listingData = {
             business_name: businessName,
@@ -1451,8 +1696,8 @@ if (!slug) {
             category: document.getElementById('editCategory').value,
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
-            tier: document.getElementById('editTier').value,
-            verified: document.getElementById('editTier').value !== 'FREE',
+            tier: tierValue,
+            verified: tierValue !== 'FREE',
             is_chain: isChain,
             is_claimed: isClaimed,
             chain_name: isChain ? chainName : null,
@@ -1470,6 +1715,8 @@ if (!slug) {
             photos: photos,
             video: document.getElementById('editVideo').value.trim() || null,
             visible: editingListing?.visible !== false,
+            additional_info: additionalInfo,
+            cta_buttons: ctaButtons,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
                 tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
@@ -1842,9 +2089,9 @@ function generateReviewSection(listing) {
     
     const googleSVG = '<svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>';
     
-    const yelpSVG = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/ylogo.svg"/></svg>';
+    const yelpSVG = '<img src="https://static.thegreekdirectory.org/img/ylogo.svg" width="22" height="22" alt="Yelp">';
     
-    const tripadvisorSVG = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/talogo.svg"/></svg>';
+    const tripadvisorSVG = '<img src="https://static.thegreekdirectory.org/img/talogo.svg" width="22" height="22" alt="TripAdvisor">';
     
     const starSVG = '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
     
@@ -1891,6 +2138,22 @@ function generateReviewSection(listing) {
 // ADMIN PORTAL - PART 10
 // Template Replacements Generation - Part 1
 // ============================================
+
+function getCtaIconSvg(iconName) {
+    switch (iconName) {
+        case 'calendar':
+            return '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v2H2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1zm15 8v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10h20zm-4 4h-4v4h4v-4z"/></svg>';
+        case 'tag':
+            return '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 10l8.59-8.59A2 2 0 0 1 12.99 1H20a2 2 0 0 1 2 2v7.01a2 2 0 0 1-.59 1.41L13 20a2 2 0 0 1-2.83 0L2 12.83A2 2 0 0 1 2 10zm13-5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>';
+        case 'bolt':
+            return '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>';
+        case 'heart':
+            return '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.716-4.363-9.192-8.102C1.143 10.065 2.07 6.7 4.82 5.326A5.047 5.047 0 0 1 12 7.09a5.047 5.047 0 0 1 7.18-1.764c2.75 1.374 3.677 4.739 2.012 7.572C18.716 16.637 12 21 12 21z"/></svg>';
+        case 'star':
+        default:
+            return '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+    }
+}
 
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -1939,10 +2202,7 @@ function generateTemplateReplacements(listing) {
     
     // Generate status badges
     let statusBadges = '';
-    if (listing.tier === 'PREMIUM') {
-        statusBadges += '<span class="badge badge-featured">Featured</span>';
-        statusBadges += '<span class="badge badge-verified">Verified</span>';
-    } else if (listing.tier === 'FEATURED') {
+    if (listing.tier === 'PREMIUM' || listing.tier === 'FEATURED') {
         statusBadges += '<span class="badge badge-featured">Featured</span>';
     } else if (listing.verified || listing.tier === 'VERIFIED') {
         statusBadges += '<span class="badge badge-verified">Verified</span>';
@@ -2173,6 +2433,44 @@ function generateTemplateReplacementsPart2(listing) {
     
     const socialMediaSection = generateSocialMediaSection(listing);
     const reviewSection = generateReviewSection(listing);
+
+    let additionalInfoSection = '';
+    const additionalInfo = Array.isArray(listing.additional_info) ? listing.additional_info : [];
+    if (additionalInfo.length > 0) {
+        const infoRows = additionalInfo.map(info => `
+            <div class="additional-info-row">
+                <span class="additional-info-name">${escapeHtml(info.name || '')}</span>
+                <span class="additional-info-value">${escapeHtml(info.value || '')}</span>
+            </div>
+        `).join('');
+        additionalInfoSection = `
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Additional Information</h3>
+                <div class="additional-info-list">
+                    ${infoRows}
+                </div>
+            </div>
+        `;
+    }
+
+    let ctaButtonsSection = '';
+    const allowedCtas = listing.tier === 'PREMIUM' ? 2 : listing.tier === 'FEATURED' ? 1 : 0;
+    const ctaButtons = Array.isArray(listing.cta_buttons) ? listing.cta_buttons.slice(0, allowedCtas) : [];
+    if (ctaButtons.length > 0) {
+        ctaButtonsSection = ctaButtons.map(cta => {
+            const label = (cta.label || '').substring(0, 15);
+            const safeLabel = escapeHtml(label);
+            const labelAttr = safeLabel.replace(/'/g, '\\\'');
+            const color = cta.color || '#055193';
+            const icon = getCtaIconSvg(cta.icon);
+            return `
+                <a href="${escapeHtml(cta.link || '#')}" target="_blank" rel="noopener noreferrer" class="cta-button" style="background:${color};" onclick="trackClick('cta', '${labelAttr}')">
+                    ${icon}
+                    <span>${safeLabel}</span>
+                </a>
+            `;
+        }).join('');
+    }
     
     // Only show map if has street address with number
     let mapSection = '';
@@ -2269,7 +2567,7 @@ function generateTemplateReplacementsPart2(listing) {
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
+                <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="claim-listing-button inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
             </div>
         `;
     }
@@ -2286,6 +2584,8 @@ function generateTemplateReplacementsPart2(listing) {
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
         'REVIEW_SECTION': reviewSection,
+        'ADDITIONAL_INFO_SECTION': additionalInfoSection,
+        'CTA_BUTTONS': ctaButtonsSection,
         'MAP_SECTION': mapSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
