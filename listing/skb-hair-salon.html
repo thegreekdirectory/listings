@@ -295,7 +295,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                         <div class="subcategories-display" id="subcategoriesDisplay">
                             <span class="subcategory-tag">Hair Salons</span><span class="subcategory-tag">Barbershops</span>
                         </div>
-                        <span class="badge badge-featured">Featured</span><span class="badge badge-verified">Verified</span><span class="badge badge-closed" id="openClosedBadge">Closed</span>
+                        <span class="badge badge-featured">Featured</span><span class="badge badge-closed" id="openClosedBadge">Closed</span>
                     </div>
                     <h2 class="text-3xl font-bold text-gray-900 mb-2">SKB Hair Salon</h2>
                     <p class="text-gray-600 italic mb-2">"Full-service hair salon in Niles, IL."</p>
@@ -382,7 +382,7 @@ Over the years, our expert team has had one mission-to make our devoted customer
         <div>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
             <div class="flex flex-wrap gap-2">
-                <a href="https://www.yelp.com/biz/skb-hair-salon-niles" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.64 10.28c-.09-.53-.6-.86-1.12-.75l-3.58.72a1 1 0 0 1-1.13-.64l-1.35-3.4a1 1 0 0 1 .52-1.29l3.42-1.48c.49-.22.72-.8.5-1.3A8.77 8.77 0 0 0 12 0c-.53 0-.96.42-1 .95l-.2 3.65a1 1 0 0 1-1.04.94l-3.66-.19a1 1 0 0 1-.95-1.05l.2-3.6A1 1 0 0 0 4.4.4a8.84 8.84 0 0 0-3.83 4.9c-.19.52.09 1.1.61 1.3l3.43 1.35a1 1 0 0 1 .58 1.2l-.93 3.62a1 1 0 0 1-1.1.74l-3.56-.5a1 1 0 0 0-1.1.82 8.89 8.89 0 0 0 1.8 6.8c.36.41.98.45 1.39.1l2.85-2.49a1 1 0 0 1 1.31-.03l2.72 2.43c.42.37.45 1.01.07 1.42l-2.54 2.83a1 1 0 0 0 .12 1.43A8.88 8.88 0 0 0 12 24c.54 0 .99-.43 1-.97l.19-3.62a1 1 0 0 1 1.03-.94l3.65.19a1 1 0 0 1 .95 1.05l-.2 3.6a1 1 0 0 0 .93 1.06 8.8 8.8 0 0 0 4.94-3.75 1 1 0 0 0-.44-1.36l-3.39-1.7a1 1 0 0 1-.52-1.21l1.2-3.5a1 1 0 0 1 1.17-.64l3.54.78a1 1 0 0 0 1.17-.78 8.79 8.79 0 0 0-.03-3.89z"/></svg></a>
+                <a href="https://www.yelp.com/biz/skb-hair-salon-niles" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><img src="https://static.thegreekdirectory.org/img/ylogo.svg" width="22" height="22" alt="Yelp"></a>
             </div>
         </div>
     
@@ -791,6 +791,8 @@ Over the years, our expert team has had one mission-to make our devoted customer
             modal.setAttribute('aria-hidden', 'true');
         }
 
+        
+        
         function updateClaimCheckmark() {
             let checkmark = document.getElementById('claimedCheckmark');
             if (!checkmark) {
@@ -807,9 +809,10 @@ Over the years, our expert team has had one mission-to make our devoted customer
             }
             const claimButton = document.querySelector('.claim-listing-button') ||
                 Array.from(document.querySelectorAll('a')).find(anchor => anchor.textContent.trim() === 'Claim This Listing');
-            if (!claimButton) {
-                checkmark.style.display = 'inline-flex';
-            }
+            const hasFeatured = document.querySelector('.badge-featured');
+            const hasVerified = document.querySelector('.badge-verified');
+            const shouldShow = Boolean(hasFeatured || hasVerified || !claimButton);
+            checkmark.style.display = shouldShow ? 'inline-flex' : 'none';
         }
 
         document.addEventListener('keydown', (event) => {

@@ -749,6 +749,8 @@ cnhd',
             modal.setAttribute('aria-hidden', 'true');
         }
 
+        
+        
         function updateClaimCheckmark() {
             let checkmark = document.getElementById('claimedCheckmark');
             if (!checkmark) {
@@ -765,9 +767,10 @@ cnhd',
             }
             const claimButton = document.querySelector('.claim-listing-button') ||
                 Array.from(document.querySelectorAll('a')).find(anchor => anchor.textContent.trim() === 'Claim This Listing');
-            if (!claimButton) {
-                checkmark.style.display = 'inline-flex';
-            }
+            const hasFeatured = document.querySelector('.badge-featured');
+            const hasVerified = document.querySelector('.badge-verified');
+            const shouldShow = Boolean(hasFeatured || hasVerified || !claimButton);
+            checkmark.style.display = shouldShow ? 'inline-flex' : 'none';
         }
 
         document.addEventListener('keydown', (event) => {
