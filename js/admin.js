@@ -1152,12 +1152,20 @@ function fillEditFormContinuation(listing, owner) {
                 <h3 class="text-lg font-bold mb-4">Media</h3>
                 <div class="grid grid-cols-1 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Logo URL</label>
-                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <label class="block text-sm font-medium mb-2">Logo</label>
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Logo URL (auto-filled after upload)">
+                            <input type="file" id="editLogoFile" accept="image/*" class="w-full md:w-64 px-3 py-2 border rounded-lg" onchange="handleLogoUpload(event)">
+                        </div>
+                        <p id="logoUploadStatus" class="text-xs text-gray-500 mt-1"></p>
+                        <div id="logoPreview" class="mt-2"></div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
                         <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                        <input type="file" id="editPhotosFiles" accept="image/*" multiple class="w-full mt-2 px-3 py-2 border rounded-lg" onchange="handlePhotosUpload(event)">
+                        <p id="photosUploadStatus" class="text-xs text-gray-500 mt-1"></p>
+                        <div id="photosPreview" class="mt-2 flex flex-wrap gap-2"></div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Video URL (YouTube/Vimeo embed)</label>
@@ -1179,7 +1187,115 @@ function fillEditFormContinuation(listing, owner) {
     if (additionalInfoContainer && additionalInfoContainer.children.length === 0) {
         addAdditionalInfoRow();
     }
+    initializeMediaUploads(listing);
 }
+
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
+function setUploadStatus(elementId, message, isError = false) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.textContent = message;
+    element.className = `text-xs mt-1 ${isError ? 'text-red-600' : 'text-gray-500'}`;
+}
+
+async function uploadCloudflareImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/cloudflare-image-upload`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            apikey: SUPABASE_ANON_KEY
+        },
+        body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data?.success) {
+        throw new Error(data?.error || 'Image upload failed');
+    }
+
+    return data.url;
+}
+
+function renderLogoPreview(url) {
+    const container = document.getElementById('logoPreview');
+    if (!container) return;
+    if (url) {
+        container.innerHTML = `<img src="${url}" alt="Logo preview" class="h-16 w-16 rounded-lg object-cover border">`;
+    } else {
+        container.innerHTML = '';
+    }
+}
+
+function renderPhotosPreview(urls = []) {
+    const container = document.getElementById('photosPreview');
+    if (!container) return;
+    container.innerHTML = urls
+        .map((url, index) => `
+            <div class="relative">
+                <img src="${url}" alt="Photo ${index + 1}" class="h-20 w-20 rounded-lg object-cover border">
+            </div>
+        `)
+        .join('');
+}
+
+function initializeMediaUploads(listing) {
+    const logoUrl = document.getElementById('editLogo')?.value.trim() || '';
+    const photosText = document.getElementById('editPhotos')?.value || '';
+    const photos = photosText ? photosText.split('\n').map(url => url.trim()).filter(Boolean) : [];
+    renderLogoPreview(logoUrl || (listing?.logo || ''));
+    renderPhotosPreview(photos);
+}
+
+window.handleLogoUpload = async function(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadStatus('logoUploadStatus', 'Uploading logo...');
+    try {
+        const url = await uploadCloudflareImage(file);
+        const logoInput = document.getElementById('editLogo');
+        if (logoInput) {
+            logoInput.value = url;
+        }
+        renderLogoPreview(url);
+        setUploadStatus('logoUploadStatus', 'Logo uploaded.');
+    } catch (error) {
+        console.error('Logo upload failed:', error);
+        setUploadStatus('logoUploadStatus', error.message, true);
+    } finally {
+        event.target.value = '';
+    }
+};
+
+window.handlePhotosUpload = async function(event) {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    setUploadStatus('photosUploadStatus', `Uploading ${files.length} photo(s)...`);
+    try {
+        const uploadedUrls = [];
+        for (const file of files) {
+            const url = await uploadCloudflareImage(file);
+            uploadedUrls.push(url);
+        }
+        const photosInput = document.getElementById('editPhotos');
+        const existing = photosInput?.value ? photosInput.value.split('\n').map(url => url.trim()).filter(Boolean) : [];
+        const updated = [...existing, ...uploadedUrls];
+        if (photosInput) {
+            photosInput.value = updated.join('\n');
+        }
+        renderPhotosPreview(updated);
+        setUploadStatus('photosUploadStatus', 'Photos uploaded.');
+    } catch (error) {
+        console.error('Photo upload failed:', error);
+        setUploadStatus('photosUploadStatus', error.message, true);
+    } finally {
+        event.target.value = '';
+    }
+};
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 

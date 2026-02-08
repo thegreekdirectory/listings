@@ -297,6 +297,35 @@ function renderEditForm() {
                     </div>
                 </div>
 
+                <!-- Media -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Media</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+                            <div class="flex flex-col md:flex-row gap-3">
+                                <input type="file" id="editLogoFile" accept="image/*" class="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg">
+                                <button type="button" id="uploadLogoButton" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">Upload Logo</button>
+                            </div>
+                            <p id="logoUploadStatus" class="text-xs text-gray-500 mt-1"></p>
+                            <div id="logoPreview" class="mt-2"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Photos (up to ${maxPhotos})</label>
+                            <div class="flex flex-col md:flex-row gap-3">
+                                <input type="file" id="editPhotosFiles" accept="image/*" multiple class="w-full md:flex-1 px-3 py-2 border border-gray-300 rounded-lg">
+                                <button type="button" id="uploadPhotosButton" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">Upload Photos</button>
+                            </div>
+                            <p id="photosUploadStatus" class="text-xs text-gray-500 mt-1"></p>
+                            <div id="photosPreview" class="mt-2 flex flex-wrap gap-2"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Video URL (YouTube/Vimeo embed)</label>
+                            <input type="url" id="editVideo" value="${currentListing.video || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://www.youtube.com/embed/...">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Hours -->
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Hours of Operation</h3>
@@ -444,11 +473,133 @@ function renderEditForm() {
     }
     
     renderSubcategories();
+    initializeBusinessMedia(maxPhotos);
 }
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
+
+function setBusinessUploadStatus(elementId, message, isError = false) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.textContent = message;
+    element.className = `text-xs mt-1 ${isError ? 'text-red-600' : 'text-gray-500'}`;
+}
+
+async function uploadBusinessImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/cloudflare-image-upload`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            apikey: SUPABASE_ANON_KEY
+        },
+        body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data?.success) {
+        throw new Error(data?.error || 'Image upload failed');
+    }
+
+    return data.url;
+}
+
+function renderBusinessMediaPreviews() {
+    const logoContainer = document.getElementById('logoPreview');
+    const photosContainer = document.getElementById('photosPreview');
+
+    if (logoContainer) {
+        logoContainer.innerHTML = uploadedImages.logo
+            ? `<img src="${uploadedImages.logo}" alt="Logo preview" class="h-16 w-16 rounded-lg object-cover border">`
+            : '';
+    }
+
+    if (photosContainer) {
+        photosContainer.innerHTML = uploadedImages.photos
+            .map((url, index) => `
+                <div class="relative">
+                    <img src="${url}" alt="Photo ${index + 1}" class="h-20 w-20 rounded-lg object-cover border">
+                    <button type="button" onclick="removeUploadedPhoto(${index})" class="absolute -top-2 -right-2 bg-white text-red-600 border border-red-200 rounded-full w-6 h-6 text-xs">✕</button>
+                </div>
+            `)
+            .join('');
+    }
+}
+
+function initializeBusinessMedia(maxPhotos) {
+    uploadedImages = {
+        logo: currentListing.logo || null,
+        photos: Array.isArray(currentListing.photos) ? [...currentListing.photos] : []
+    };
+
+    const logoButton = document.getElementById('uploadLogoButton');
+    const photosButton = document.getElementById('uploadPhotosButton');
+
+    if (logoButton) {
+        logoButton.addEventListener('click', async () => {
+            const input = document.getElementById('editLogoFile');
+            const file = input?.files?.[0];
+            if (!file) {
+                setBusinessUploadStatus('logoUploadStatus', 'Choose a logo file first.', true);
+                return;
+            }
+            setBusinessUploadStatus('logoUploadStatus', 'Uploading logo...');
+            try {
+                const url = await uploadBusinessImage(file);
+                uploadedImages.logo = url;
+                renderBusinessMediaPreviews();
+                setBusinessUploadStatus('logoUploadStatus', 'Logo uploaded.');
+            } catch (error) {
+                console.error('Logo upload failed:', error);
+                setBusinessUploadStatus('logoUploadStatus', error.message, true);
+            } finally {
+                if (input) input.value = '';
+            }
+        });
+    }
+
+    if (photosButton) {
+        photosButton.addEventListener('click', async () => {
+            const input = document.getElementById('editPhotosFiles');
+            const files = Array.from(input?.files || []);
+            if (files.length === 0) {
+                setBusinessUploadStatus('photosUploadStatus', 'Choose photo files first.', true);
+                return;
+            }
+            if (uploadedImages.photos.length + files.length > maxPhotos) {
+                setBusinessUploadStatus('photosUploadStatus', `You can upload up to ${maxPhotos} photos for your tier.`, true);
+                return;
+            }
+            setBusinessUploadStatus('photosUploadStatus', `Uploading ${files.length} photo(s)...`);
+            try {
+                for (const file of files) {
+                    const url = await uploadBusinessImage(file);
+                    uploadedImages.photos.push(url);
+                }
+                renderBusinessMediaPreviews();
+                setBusinessUploadStatus('photosUploadStatus', 'Photos uploaded.');
+            } catch (error) {
+                console.error('Photo upload failed:', error);
+                setBusinessUploadStatus('photosUploadStatus', error.message, true);
+            } finally {
+                if (input) input.value = '';
+            }
+        });
+    }
+
+    renderBusinessMediaPreviews();
+}
+
+window.removeUploadedPhoto = function(index) {
+    if (index < 0 || index >= uploadedImages.photos.length) return;
+    uploadedImages.photos.splice(index, 1);
+    renderBusinessMediaPreviews();
+};
 
 function renderSubcategories() {
     const category = currentListing.category;
@@ -592,6 +743,9 @@ async function saveChanges() {
     
     const phoneContainer = document.getElementById('editPhoneContainer');
     const phone = getPhoneValue(phoneContainer);
+    const video = document.getElementById('editVideo')?.value.trim() || null;
+    const logo = uploadedImages.logo || null;
+    const photos = uploadedImages.photos || [];
     
     const changes = [];
     if (currentListing.tagline !== tagline) changes.push(`Tagline updated`);
@@ -600,6 +754,10 @@ async function saveChanges() {
     const newSubcategories = selectedSubcategories.sort().join(',');
     const oldSubcategories = (currentListing.subcategories || []).sort().join(',');
     if (oldSubcategories !== newSubcategories) changes.push(`Subcategories updated`);
+    
+    if ((currentListing.logo || null) !== logo) changes.push('Logo updated');
+    if (JSON.stringify(currentListing.photos || []) !== JSON.stringify(photos)) changes.push('Photos updated');
+    if ((currentListing.video || null) !== video) changes.push('Video updated');
     
     if (changes.length === 0) {
         alert('No changes detected.');
@@ -627,6 +785,9 @@ async function saveChanges() {
             phone: phone,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
+            logo: logo,
+            photos: photos,
+            video: video,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
                 tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
