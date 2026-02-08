@@ -679,3 +679,4 @@ body.theme-dark .leaflet-tile {
 }
 
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. */
+svg, svg path, svg circle, svg rect, svg line, svg polyline, svg polygon { color: #045093; fill: currentColor; stroke: currentColor; }
