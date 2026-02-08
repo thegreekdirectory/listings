@@ -133,6 +133,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
+
+        .badge-opening-soon { background: #fbbf24; color: #78350f; }
+        .badge-closing-soon { background: #f59e0b; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
         .badge-verified { background: #0000FF; color: white; }
         .badge-claimed { background: #6B7280; color: white; }
@@ -146,6 +149,85 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
+
+        .claimed-checkmark { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #10b981; border-radius: 50%; margin-left: 6px; vertical-align: middle; flex-shrink: 0; }
+        .claimed-checkmark svg { width: 12px; height: 12px; fill: white; }
+        .gallery-button {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            background: rgba(0, 0, 0, 0.65);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 11;
+            border: none;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+        }
+        .gallery-button:hover { background: rgba(0, 0, 0, 0.8); }
+        .gallery-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 24px;
+        }
+        .gallery-modal.active { display: flex; }
+        .gallery-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 960px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: auto;
+            position: relative;
+            padding: 24px;
+        }
+        .gallery-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #111827;
+            color: white;
+            border: none;
+            border-radius: 999px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .gallery-grid img { width: 100%; border-radius: 8px; object-fit: contain; background: #f3f4f6; }
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: white;
+            text-decoration: none;
+        }
+        .additional-info-list { display: grid; gap: 10px; }
+        .additional-info-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; }
+        .additional-info-name { font-weight: 600; color: #111827; }
+        .additional-info-value { color: #374151; text-align: right; word-break: break-word; }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
@@ -177,6 +259,11 @@ or distribution of this code can result in legal action to the fullest extent pe
             .leaflet-popup-tip { background: #2a2a2a !important; }
             .subcategory-tag { background: #404040; color: #e5e5e5; }
             .owner-info-section { background: #2a2a2a; border-color: #404040; }
+
+            .gallery-content { background: #1f2937; }
+            .additional-info-row { background: #2a2a2a; border-color: #404040; }
+            .additional-info-name { color: #f3f4f6; }
+            .additional-info-value { color: #d1d5db; }
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
@@ -317,7 +404,7 @@ Neighborhood casual fast food restaurant serving Downers Grove for over 40 years
         <div>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
             <div class="flex flex-wrap gap-2">
-                <a href="https://www.google.com/search?sca_esv=be40058fb533a05b&sxsrf=AE3TifOm9YQkZvCrJeMlieSEs9Uxf-DBew:1767606361757&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8s73B0CjFloNrBSOE9oJJqp6p9xSDvoA7W1X3bTmbN01_5owvmdFRHO_BxehkIh-_HhBIbw-Yuyovq_O-iTvGH1RZP723&q=Eagle+Restaurant+Reviews" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews"><svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg></a><a href="https://www.yelp.com/biz/eagle-restaurant-downers-grove" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/ylogo.svg"/></svg></a><a href="https://www.tripadvisor.com/Restaurant_Review-g35904-d427213-Reviews-Eagle_Restaurant-Downers_Grove_DuPage_County_Illinois.html" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor"><?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/talogo.svg"/></svg></a>
+                <a href="https://www.google.com/search?sca_esv=be40058fb533a05b&sxsrf=AE3TifOm9YQkZvCrJeMlieSEs9Uxf-DBew:1767606361757&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8s73B0CjFloNrBSOE9oJJqp6p9xSDvoA7W1X3bTmbN01_5owvmdFRHO_BxehkIh-_HhBIbw-Yuyovq_O-iTvGH1RZP723&q=Eagle+Restaurant+Reviews" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews"><svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg></a><a href="https://www.yelp.com/biz/eagle-restaurant-downers-grove" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.64 10.28c-.09-.53-.6-.86-1.12-.75l-3.58.72a1 1 0 0 1-1.13-.64l-1.35-3.4a1 1 0 0 1 .52-1.29l3.42-1.48c.49-.22.72-.8.5-1.3A8.77 8.77 0 0 0 12 0c-.53 0-.96.42-1 .95l-.2 3.65a1 1 0 0 1-1.04.94l-3.66-.19a1 1 0 0 1-.95-1.05l.2-3.6A1 1 0 0 0 4.4.4a8.84 8.84 0 0 0-3.83 4.9c-.19.52.09 1.1.61 1.3l3.43 1.35a1 1 0 0 1 .58 1.2l-.93 3.62a1 1 0 0 1-1.1.74l-3.56-.5a1 1 0 0 0-1.1.82 8.89 8.89 0 0 0 1.8 6.8c.36.41.98.45 1.39.1l2.85-2.49a1 1 0 0 1 1.31-.03l2.72 2.43c.42.37.45 1.01.07 1.42l-2.54 2.83a1 1 0 0 0 .12 1.43A8.88 8.88 0 0 0 12 24c.54 0 .99-.43 1-.97l.19-3.62a1 1 0 0 1 1.03-.94l3.65.19a1 1 0 0 1 .95 1.05l-.2 3.6a1 1 0 0 0 .93 1.06 8.8 8.8 0 0 0 4.94-3.75 1 1 0 0 0-.44-1.36l-3.39-1.7a1 1 0 0 1-.52-1.21l1.2-3.5a1 1 0 0 1 1.17-.64l3.54.78a1 1 0 0 0 1.17-.78 8.79 8.79 0 0 0-.03-3.89z"/></svg></a><a href="https://www.tripadvisor.com/Restaurant_Review-g35904-d427213-Reviews-Eagle_Restaurant-Downers_Grove_DuPage_County_Illinois.html" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C7.41 0 3.07 1.58 0 4.24l1.4 1.58a8.9 8.9 0 0 1 2.7-1.63 5.22 5.22 0 0 0-1.1 3.2A5.25 5.25 0 0 0 8.25 12c1.31 0 2.52-.48 3.45-1.27L12 12l.3-.27A5.21 5.21 0 0 0 15.75 12 5.25 5.25 0 0 0 21 7.39c0-1.2-.4-2.31-1.08-3.2a8.9 8.9 0 0 1 2.68 1.63L24 4.24C20.93 1.58 16.59 0 12 0zm-3.75 4.5a2.9 2.9 0 1 1 0 5.8 2.9 2.9 0 0 1 0-5.8zm7.5 0a2.9 2.9 0 1 1 0 5.8 2.9 2.9 0 0 1 0-5.8zm-3.75 9.2-2.8 6.3h5.6L12 13.7z"/></svg></a>
             </div>
         </div>
     
@@ -358,7 +445,7 @@ Neighborhood casual fast food restaurant serving Downers Grove for over 40 years
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Eagle%20Restaurant%20-%20Downers%20Grove%2C%20IL" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
+                <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Eagle%20Restaurant%20-%20Downers%20Grove%2C%20IL" class=\"claim-listing-button inline-block px-6 py-3 text-white rounded-lg font-semibold\" style="background-color:#055193;">Claim This Listing</a>
             </div>
         
     </div>
@@ -512,17 +599,70 @@ Neighborhood casual fast food restaurant serving Downers Grove for over 40 years
 
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
+        
+        function parseHoursRange(hoursText) {
+            if (!hoursText || typeof hoursText !== 'string') return null;
+            const match = hoursText.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return null;
+            const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
+            let start = parseInt(startHour);
+            let end = parseInt(endHour);
+            if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
+            if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
+            if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
+            if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
+            return {
+                startMinutes: start * 60 + parseInt(startMin),
+                endMinutes: end * 60 + parseInt(endMin)
+            };
+        }
+
+        function isOpeningSoon(hours) {
+            if (!hours || typeof hours !== 'object') return false;
+            const now = new Date();
+            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = days[centralTime.getDay()];
+            const todayHours = hours[today];
+            if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
+            const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return false;
+            const [, startHour, startMin, startPeriod] = match;
+            let start = parseInt(startHour);
+            if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
+            if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
+            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+            const startMinutes = start * 60 + parseInt(startMin);
+            const diff = startMinutes - currentMinutes;
+            return diff > 0 && diff <= 60;
+        }
+
+        function isClosingSoon(hours) {
+            if (!hours || typeof hours !== 'object') return false;
+            const now = new Date();
+            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = days[centralTime.getDay()];
+            const todayHours = hours[today];
+            if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
+            const parsed = parseHoursRange(todayHours);
+            if (!parsed) return false;
+            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+            const diff = parsed.endMinutes - currentMinutes;
+            return diff > 0 && diff <= 60;
+        }
+
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
             if (!hoursData) return;
-            
+
             const now = new Date();
             const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
             const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             const today = days[centralTime.getDay()];
             const todayHours = hoursData[today];
-            
+
             if (!todayHours || todayHours.toLowerCase() === 'closed') {
                 if (badge) {
                     badge.textContent = 'Closed';
@@ -534,7 +674,7 @@ Neighborhood casual fast food restaurant serving Downers Grove for over 40 years
                 }
                 return;
             }
-            
+
             if (todayHours.toLowerCase().includes('24') || todayHours.toLowerCase().includes('open 24')) {
                 if (badge) {
                     badge.textContent = 'Open';
@@ -546,73 +686,168 @@ Neighborhood casual fast food restaurant serving Downers Grove for over 40 years
                 }
                 return;
             }
-            
-            /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-            
-            const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-            if (!match) {
+
+            const parsed = parseHoursRange(todayHours);
+            if (!parsed) {
                 if (badge) badge.style.display = 'none';
                 if (statusText) statusText.style.display = 'none';
                 return;
             }
-            
-            const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
-            let start = parseInt(startHour);
-            let end = parseInt(endHour);
-            
-            if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
-            if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
-            if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
-            if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
-            
+
             const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
-            const startMinutes = start * 60 + parseInt(startMin);
-            let endMinutes = end * 60 + parseInt(endMin);
-            
-            if (endMinutes < startMinutes) {
-                if (currentMinutes >= startMinutes || currentMinutes <= endMinutes) {
-                    if (badge) {
-                        badge.textContent = 'Open';
-                        badge.className = 'badge badge-open';
-                    }
-                    if (statusText) {
-                        statusText.textContent = 'Open Now';
-                        statusText.className = 'open-now';
-                    }
-                } else {
-                    if (badge) {
-                        badge.textContent = 'Closed';
-                        badge.className = 'badge badge-closed';
-                    }
-                    if (statusText) {
-                        statusText.textContent = 'Closed Now';
-                        statusText.className = 'closed-now';
-                    }
+            let { startMinutes, endMinutes } = parsed;
+
+            const openingSoon = isOpeningSoon(hoursData);
+            const closingSoon = isClosingSoon(hoursData);
+            const isOvernight = endMinutes < startMinutes;
+            let isOpen = false;
+
+            if (isOvernight) {
+                isOpen = currentMinutes >= startMinutes || currentMinutes <= endMinutes;
+            } else {
+                isOpen = currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+            }
+
+            if (openingSoon) {
+                if (badge) {
+                    badge.textContent = 'Opening Soon';
+                    badge.className = 'badge badge-opening-soon';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Opening Soon';
+                    statusText.className = 'open-now';
+                }
+                return;
+            }
+
+            if (closingSoon) {
+                if (badge) {
+                    badge.textContent = 'Closing Soon';
+                    badge.className = 'badge badge-closing-soon';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Closing Soon';
+                    statusText.className = 'open-now';
+                }
+                return;
+            }
+
+            if (isOpen) {
+                if (badge) {
+                    badge.textContent = 'Open';
+                    badge.className = 'badge badge-open';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Open Now';
+                    statusText.className = 'open-now';
                 }
             } else {
-                if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
-                    if (badge) {
-                        badge.textContent = 'Open';
-                        badge.className = 'badge badge-open';
-                    }
-                    if (statusText) {
-                        statusText.textContent = 'Open Now';
-                        statusText.className = 'open-now';
-                    }
-                } else {
-                    if (badge) {
-                        badge.textContent = 'Closed';
-                        badge.className = 'badge badge-closed';
-                    }
-                    if (statusText) {
-                        statusText.textContent = 'Closed Now';
-                        statusText.className = 'closed-now';
-                    }
+                if (badge) {
+                    badge.textContent = 'Closed';
+                    badge.className = 'badge badge-closed';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Closed Now';
+                    statusText.className = 'closed-now';
                 }
             }
         }
-        
-        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+        function getGalleryImages() {
+            const slides = Array.from(document.querySelectorAll('.carousel-slide'));
+            const urls = slides.map(slide => {
+                const bg = slide.style.background || '';
+                const match = bg.match(/url\(['"]?(.*?)['"]?\)/i);
+                return match ? match[1] : null;
+            }).filter(Boolean);
+            return urls.length ? urls : [];
+        }
+
+        function ensureGalleryElements() {
+            const carousel = document.getElementById('photoCarousel');
+            if (carousel && !carousel.querySelector('.gallery-button')) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'gallery-button';
+                button.innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h3.172a2 2 0 0 1 1.414.586l.828.828H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5zm2 1v9h12V7h-6.586l-1-1H6zm6 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>View All Photos';
+                button.addEventListener('click', openGallery);
+                carousel.appendChild(button);
+            }
+
+            if (!document.getElementById('galleryModal')) {
+                const modal = document.createElement('div');
+                modal.id = 'galleryModal';
+                modal.className = 'gallery-modal';
+                modal.setAttribute('aria-hidden', 'true');
+                modal.innerHTML = `
+                    <div class="gallery-content">
+                        <button class="gallery-close" type="button" aria-label="Close gallery">✕</button>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Photo Gallery</h3>
+                        <div class="gallery-grid" id="galleryGrid"></div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.querySelector('.gallery-close')?.addEventListener('click', closeGallery);
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) {
+                        closeGallery();
+                    }
+                });
+            }
+        }
+
+        function openGallery() {
+            ensureGalleryElements();
+            const modal = document.getElementById('galleryModal');
+            const grid = document.getElementById('galleryGrid');
+            if (!modal || !grid) return;
+            const images = getGalleryImages();
+            grid.innerHTML = images.map(url => `<img src="${url}" alt="${businessName} photo">`).join('');
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeGallery() {
+            const modal = document.getElementById('galleryModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        function updateClaimCheckmark() {
+            let checkmark = document.getElementById('claimedCheckmark');
+            if (!checkmark) {
+                const title = document.querySelector('h2.text-3xl');
+                if (!title) return;
+                checkmark = document.createElement('span');
+                checkmark.id = 'claimedCheckmark';
+                checkmark.className = 'claimed-checkmark';
+                checkmark.style.display = 'none';
+                checkmark.setAttribute('aria-label', 'Claimed');
+                checkmark.setAttribute('title', 'Claimed');
+                checkmark.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.00039 16.1702L4.83039 12.0002L3.41039 13.4102L9.00039 19.0002L21.0004 7.00024L19.5904 5.59024L9.00039 16.1702Z"/></svg>';
+                title.appendChild(checkmark);
+            }
+            const claimButton = document.querySelector('.claim-listing-button') ||
+                Array.from(document.querySelectorAll('a')).find(anchor => anchor.textContent.trim() === 'Claim This Listing');
+            if (!claimButton) {
+                checkmark.style.display = 'inline-flex';
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeGallery();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            ensureGalleryElements();
+            updateOpenClosedBadge();
+            updateClaimCheckmark();
+        });
+
+                /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
         if (totalSlides > 1) {
             function goToSlide(index) {
