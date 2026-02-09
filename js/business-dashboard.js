@@ -32,11 +32,13 @@ const SUBCATEGORIES = {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-let uploadedImages = { logo: null, photos: [] };
+let uploadedImages = { logo: null, photos: [], video: null };
 let photosSortable = null;
 let selectedSubcategories = [];
 let primarySubcategory = null;
 let settingsVisibility = { email: false, phone: false };
+let currentMaxPhotos = 1;
+let currentMaxCtas = 0;
 
 async function loadListingData() {
     if (!ownerData || ownerData.length === 0) {
@@ -101,6 +103,207 @@ function switchTab(tab) {
     
     document.getElementById(`content-${tab}`).classList.remove('hidden');
     document.getElementById(`tab-${tab}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600';
+}
+
+const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
+
+function getStoredCloudflareConfig() {
+    try {
+        const stored = localStorage.getItem(CLOUDFLARE_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+        console.warn('Unable to read Cloudflare config from storage:', error);
+        return {};
+    }
+}
+
+function setStoredCloudflareConfig(config) {
+    try {
+        localStorage.setItem(CLOUDFLARE_STORAGE_KEY, JSON.stringify(config));
+    } catch (error) {
+        console.warn('Unable to save Cloudflare config:', error);
+    }
+}
+
+function getCloudflareConfig() {
+    const config = window.CLOUDFLARE_IMAGES_CONFIG || {};
+    const stored = getStoredCloudflareConfig();
+    const accountInput = document.getElementById('cloudflareAccountId');
+    const apiKeyInput = document.getElementById('cloudflareApiKey');
+    const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
+    const inputAccountId = accountInput?.value?.trim() || '';
+    const inputApiKey = apiKeyInput?.value?.trim() || '';
+    const inputUploadEndpoint = uploadEndpointInput?.value?.trim() || '';
+    if ((inputAccountId || inputApiKey || inputUploadEndpoint) && (!stored.accountId || !stored.apiKey || !stored.uploadEndpoint)) {
+        setStoredCloudflareConfig({
+            accountId: inputAccountId,
+            apiKey: inputApiKey,
+            uploadEndpoint: inputUploadEndpoint
+        });
+    }
+    return {
+        accountId: stored.accountId || inputAccountId || config.accountId || '',
+        apiKey: stored.apiKey || inputApiKey || config.apiKey || '',
+        uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
+    };
+}
+
+function setMediaUploadStatus(message, isError = false) {
+    const statusEl = document.getElementById('mediaUploadStatus');
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
+}
+
+async function uploadToCloudflareImages(file) {
+    const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
+    if (uploadEndpoint) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch(uploadEndpoint, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
+            throw new Error(errorMessage);
+        }
+        
+        const variants = result?.result?.variants || [];
+        return variants[0] || result?.result?.url || '';
+    }
+    if (!accountId || !apiKey) {
+        throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${apiKey}`
+        },
+        body: formData
+    });
+    
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
+        throw new Error(errorMessage);
+    }
+    
+    const variants = result?.result?.variants || [];
+    return variants[0] || result?.result?.url || '';
+}
+
+function updateMediaPreview() {
+    const logoPreview = document.getElementById('mediaLogoPreview');
+    if (logoPreview) {
+        const logoUrl = uploadedImages.logo || currentListing?.logo || '';
+        logoPreview.src = logoUrl || '';
+        logoPreview.classList.toggle('hidden', !logoUrl);
+    }
+    
+    const photosPreview = document.getElementById('mediaPhotosPreview');
+    if (photosPreview) {
+        const allPhotos = [...(currentListing?.photos || []), ...uploadedImages.photos];
+        photosPreview.innerHTML = allPhotos.map(url => `
+            <img src="${url}" alt="Listing photo" class="w-20 h-20 rounded-lg object-cover">
+        `).join('');
+    }
+}
+
+async function handleLogoUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+        setMediaUploadStatus('Uploading logo...');
+        const url = await uploadToCloudflareImages(file);
+        uploadedImages.logo = url;
+        updateMediaPreview();
+        setMediaUploadStatus('Logo uploaded successfully.');
+    } catch (error) {
+        console.error('Logo upload failed:', error);
+        setMediaUploadStatus(`Logo upload failed: ${error.message}`, true);
+    }
+}
+
+async function handlePhotosUpload(event) {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    
+    const existingCount = (currentListing?.photos || []).length + uploadedImages.photos.length;
+    const availableSlots = currentMaxPhotos - existingCount;
+    if (availableSlots <= 0) {
+        setMediaUploadStatus(`Photo limit reached for your tier (${currentMaxPhotos}).`, true);
+        return;
+    }
+    
+    try {
+        setMediaUploadStatus('Uploading photos...');
+        const uploadFiles = files.slice(0, availableSlots);
+        for (const file of uploadFiles) {
+            const url = await uploadToCloudflareImages(file);
+            uploadedImages.photos.push(url);
+        }
+        updateMediaPreview();
+        setMediaUploadStatus('Photos uploaded successfully.');
+    } catch (error) {
+        console.error('Photo upload failed:', error);
+        setMediaUploadStatus(`Photo upload failed: ${error.message}`, true);
+    }
+}
+
+async function handleVideoUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+        setMediaUploadStatus('Uploading video...');
+        const url = await uploadToCloudflareImages(file);
+        uploadedImages.video = url;
+        setMediaUploadStatus('Video uploaded successfully.');
+    } catch (error) {
+        console.error('Video upload failed:', error);
+        setMediaUploadStatus(`Video upload failed: ${error.message}`, true);
+    }
+}
+
+function attachMediaUploadHandlers() {
+    const logoUpload = document.getElementById('editLogoUpload');
+    if (logoUpload) logoUpload.onchange = handleLogoUpload;
+    
+    const photosUpload = document.getElementById('editPhotosUpload');
+    if (photosUpload) photosUpload.onchange = handlePhotosUpload;
+    
+    const videoUpload = document.getElementById('editVideoUpload');
+    if (videoUpload) videoUpload.onchange = handleVideoUpload;
+}
+
+function attachCloudflareConfigHandlers() {
+    const accountInput = document.getElementById('cloudflareAccountId');
+    const apiKeyInput = document.getElementById('cloudflareApiKey');
+    const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
+    if (!accountInput || !apiKeyInput || !uploadEndpointInput) return;
+    
+    const config = getCloudflareConfig();
+    accountInput.value = config.accountId || '';
+    apiKeyInput.value = config.apiKey || '';
+    uploadEndpointInput.value = config.uploadEndpoint || '';
+    
+    const saveConfig = () => {
+        setStoredCloudflareConfig({
+            accountId: accountInput.value.trim(),
+            apiKey: apiKeyInput.value.trim(),
+            uploadEndpoint: uploadEndpointInput.value.trim()
+        });
+    };
+    
+    accountInput.addEventListener('input', saveConfig);
+    apiKeyInput.addEventListener('input', saveConfig);
+    uploadEndpointInput.addEventListener('input', saveConfig);
 }
 
 /*
@@ -211,6 +414,10 @@ function renderEditForm() {
     const tier = currentListing.tier || 'FREE';
     const maxDesc = tier === 'FREE' ? 1000 : 2000;
     const maxPhotos = tier === 'FREE' ? 1 : tier === 'FEATURED' ? 5 : tier === 'PREMIUM' ? 15 : 1;
+    const maxCtas = tier === 'PREMIUM' ? 2 : tier === 'FEATURED' ? 1 : 0;
+    currentMaxPhotos = maxPhotos;
+    currentMaxCtas = maxCtas;
+    uploadedImages = { logo: null, photos: [], video: null };
     
     selectedSubcategories = currentListing.subcategories || [];
     primarySubcategory = currentListing.primary_subcategory || null;
@@ -294,6 +501,48 @@ function renderEditForm() {
                             <label class="block text-sm font-medium text-gray-700 mb-2">🌐 Website</label>
                             <input type="url" id="editWebsite" value="${currentListing.website || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
+                    </div>
+                </div>
+
+                <!-- Media Uploads -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Media</h3>
+                    <p class="text-sm text-gray-600 mb-4">Upload media directly to Cloudflare Images. Photo limit for your tier: ${maxPhotos}</p>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="text-sm font-semibold text-gray-800">Cloudflare Images</div>
+                            <p class="text-xs text-gray-500 mt-1">Credentials and upload endpoint are stored locally in this browser.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Account ID</label>
+                                    <input type="text" id="cloudflareAccountId" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Cloudflare account ID">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">API Key</label>
+                                    <input type="password" id="cloudflareApiKey" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Cloudflare API key">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Upload Endpoint (required for production)</label>
+                                    <input type="url" id="cloudflareUploadEndpoint" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="https://your-domain.com/cloudflare-upload">
+                                    <p class="text-[11px] text-gray-500 mt-1">Must proxy to Cloudflare Images to avoid CORS errors.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+                            <input type="file" id="editLogoUpload" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <img id="mediaLogoPreview" src="${currentListing.logo || ''}" alt="Logo preview" class="mt-2 w-20 h-20 rounded-lg object-cover ${currentListing.logo ? '' : 'hidden'}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Photos</label>
+                            <input type="file" id="editPhotosUpload" accept="image/*" multiple class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <div id="mediaPhotosPreview" class="mt-3 flex flex-wrap gap-2"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Video (optional)</label>
+                            <input type="file" id="editVideoUpload" accept="video/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div id="mediaUploadStatus" class="text-sm text-gray-600"></div>
                     </div>
                 </div>
 
@@ -434,6 +683,59 @@ function renderEditForm() {
                         </div>
                     </div>
                 </div>
+
+                <!-- Additional Information -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Additional Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${[0, 1, 2, 3, 4].map(index => {
+                            const info = currentListing.additional_info?.[index] || {};
+                            return `
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Info Name ${index + 1}</label>
+                                <input type="text" id="editInfoName${index}" value="${info.label || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" maxlength="30">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Info Value ${index + 1}</label>
+                                <input type="text" id="editInfoValue${index}" value="${info.value || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" maxlength="120">
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- Custom CTA Buttons -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Custom CTA Buttons</h3>
+                    <p class="text-sm text-gray-600 mb-4">Featured listings get 1 CTA. Premium listings get 2. Name max 15 characters.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${[0, 1].map(index => {
+                            const cta = currentListing.custom_ctas?.[index] || {};
+                            return `
+                            <div class="md:col-span-2 border border-gray-200 rounded-lg p-4 space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">CTA ${index + 1} Name</label>
+                                    <input type="text" id="editCtaName${index}" value="${cta.name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" maxlength="15">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">CTA ${index + 1} Link</label>
+                                    <input type="url" id="editCtaUrl${index}" value="${cta.url || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://">
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Button Color</label>
+                                        <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-full h-10 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon (emoji or short text)</label>
+                                        <input type="text" id="editCtaIcon${index}" value="${cta.icon || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" maxlength="10">
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
             </div>
         </div>
     `;
@@ -444,6 +746,9 @@ function renderEditForm() {
     }
     
     renderSubcategories();
+    updateMediaPreview();
+    attachMediaUploadHandlers();
+    attachCloudflareConfigHandlers();
 }
 
 /*
@@ -593,6 +898,51 @@ async function saveChanges() {
     const phoneContainer = document.getElementById('editPhoneContainer');
     const phone = getPhoneValue(phoneContainer);
     
+    const additionalInfo = [];
+    for (let i = 0; i < 5; i += 1) {
+        const label = document.getElementById(`editInfoName${i}`)?.value.trim();
+        const value = document.getElementById(`editInfoValue${i}`)?.value.trim();
+        if (label && value) {
+            additionalInfo.push({ label, value });
+        }
+    }
+    
+    const customCtas = [];
+    for (let i = 0; i < 2; i += 1) {
+        const name = document.getElementById(`editCtaName${i}`)?.value.trim();
+        const url = document.getElementById(`editCtaUrl${i}`)?.value.trim();
+        const color = document.getElementById(`editCtaColor${i}`)?.value.trim();
+        const icon = document.getElementById(`editCtaIcon${i}`)?.value.trim();
+        
+        if (!name && !url && !icon) continue;
+        if (!name || !url) {
+            alert(`CTA ${i + 1} requires both a name and a link.`);
+            return;
+        }
+        if (name.length > 15) {
+            alert(`CTA ${i + 1} name must be 15 characters or fewer.`);
+            return;
+        }
+        customCtas.push({
+            name,
+            url,
+            color: color || '#055193',
+            icon: icon || ''
+        });
+    }
+    
+    if (currentMaxCtas === 0 && customCtas.length > 0) {
+        alert('Custom CTA buttons are only available for Featured and Premium listings.');
+        return;
+    }
+    
+    const mergedPhotos = [
+        ...(currentListing.photos || []),
+        ...uploadedImages.photos
+    ].slice(0, currentMaxPhotos);
+    const updatedLogo = uploadedImages.logo || currentListing.logo || null;
+    const updatedVideo = uploadedImages.video || currentListing.video || null;
+
     const changes = [];
     if (currentListing.tagline !== tagline) changes.push(`Tagline updated`);
     if (currentListing.description !== description) changes.push('Description updated');
@@ -600,6 +950,22 @@ async function saveChanges() {
     const newSubcategories = selectedSubcategories.sort().join(',');
     const oldSubcategories = (currentListing.subcategories || []).sort().join(',');
     if (oldSubcategories !== newSubcategories) changes.push(`Subcategories updated`);
+
+    if (JSON.stringify(currentListing.additional_info || []) !== JSON.stringify(additionalInfo)) {
+        changes.push('Additional info updated');
+    }
+    if (JSON.stringify(currentListing.custom_ctas || []) !== JSON.stringify(customCtas.slice(0, currentMaxCtas))) {
+        changes.push('Custom CTA buttons updated');
+    }
+    if ((currentListing.logo || '') !== (updatedLogo || '')) {
+        changes.push('Logo updated');
+    }
+    if (JSON.stringify(currentListing.photos || []) !== JSON.stringify(mergedPhotos)) {
+        changes.push('Photos updated');
+    }
+    if ((currentListing.video || '') !== (updatedVideo || '')) {
+        changes.push('Video updated');
+    }
     
     if (changes.length === 0) {
         alert('No changes detected.');
@@ -627,6 +993,9 @@ async function saveChanges() {
             phone: phone,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
+            logo: updatedLogo,
+            photos: mergedPhotos,
+            video: updatedVideo,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
                 tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
@@ -661,7 +1030,9 @@ async function saveChanges() {
                 other2: document.getElementById('editOtherReview2').value.trim() || null,
                 other3_name: document.getElementById('editOtherReview3Name').value.trim() || null,
                 other3: document.getElementById('editOtherReview3').value.trim() || null
-            }
+            },
+            additional_info: additionalInfo,
+            custom_ctas: customCtas.slice(0, currentMaxCtas)
         };
         
         const { data, error } = await window.TGDAuth.supabaseClient

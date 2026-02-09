@@ -106,6 +106,87 @@ or distribution of this code can result in legal action to the fullest extent pe
         .carousel-nav:hover { background: rgba(0,0,0,0.7); }
         .carousel-prev { left: 10px; }
         .carousel-next { right: 10px; }
+        .carousel-fullsize-btn {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            background: rgba(0,0,0,0.65);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            z-index: 12;
+            transition: all 0.2s ease;
+        }
+        .carousel-fullsize-btn:hover { background: rgba(0,0,0,0.8); }
+        .gallery-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 24px;
+        }
+        .gallery-modal.active { display: flex; }
+        .gallery-content {
+            position: relative;
+            max-width: 1000px;
+            width: 100%;
+            max-height: 90vh;
+            background: #111827;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .gallery-image {
+            max-height: 70vh;
+            width: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #111827;
+        }
+        .gallery-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 36px;
+            height: 36px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .gallery-nav-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 40px;
+            height: 40px;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        .gallery-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+        .gallery-counter {
+            color: #d1d5db;
+            font-size: 13px;
+            font-weight: 600;
+        }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
@@ -133,6 +214,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
+        .badge-opening-soon { background: #fbbf24; color: #78350f; }
+        .badge-closing-soon { background: #f59e0b; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
         .badge-verified { background: #0000FF; color: white; }
         .badge-claimed { background: #6B7280; color: white; }
@@ -195,6 +278,19 @@ or distribution of this code can result in legal action to the fullest extent pe
                     {{PHOTOS_SLIDES}}
                 </div>
                 {{CAROUSEL_CONTROLS}}
+                <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
+            </div>
+        </div>
+
+        <div class="gallery-modal" id="galleryModal" aria-hidden="true">
+            <div class="gallery-content">
+                <button class="gallery-close" type="button" onclick="closeGallery()" aria-label="Close gallery">×</button>
+                <img id="galleryImage" class="gallery-image" alt="{{BUSINESS_NAME}} photo">
+                <div class="gallery-controls">
+                    <button class="gallery-nav-btn" type="button" onclick="prevGallerySlide()">❮</button>
+                    <div class="gallery-counter" id="galleryCounter">1 / 1</div>
+                    <button class="gallery-nav-btn" type="button" onclick="nextGallerySlide()">❯</button>
+                </div>
             </div>
         </div>
 
@@ -208,9 +304,11 @@ or distribution of this code can result in legal action to the fullest extent pe
                         <div class="subcategories-display" id="subcategoriesDisplay">
                             {{SUBCATEGORIES_TAGS}}
                         </div>
-                        {{STATUS_BADGES}}
+                        <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
+                            {{STATUS_BADGES}}
+                        </div>
                     </div>
-                    <h2 class="text-3xl font-bold text-gray-900 mb-2">{{BUSINESS_NAME}}</h2>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">{{BUSINESS_NAME}}{{CLAIMED_CHECKMARK}}</h2>
                     {{TAGLINE_DISPLAY}}
                 </div>
                 <img src="{{LOGO}}" alt="{{BUSINESS_NAME}} logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
@@ -228,11 +326,14 @@ or distribution of this code can result in legal action to the fullest extent pe
                 {{HOURS_SECTION}}
             </div>
 
+            {{ADDITIONAL_INFO_SECTION}}
+
             <div class="flex flex-wrap gap-3 mb-6">
                 {{PHONE_BUTTON}}
                 {{EMAIL_BUTTON}}
                 {{WEBSITE_BUTTON}}
                 {{DIRECTIONS_BUTTON}}
+                {{CUSTOM_CTA_BUTTONS}}
             </div>
 
             {{OWNER_INFO_SECTION}}
@@ -339,6 +440,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         const listingUrl = '{{LISTING_URL}}';
         const listingId = '{{LISTING_ID}}';
         const hoursData = {{HOURS_JSON}};
+        const galleryPhotos = {{PHOTOS_JSON}};
+        let currentGalleryIndex = 0;
         
         function toggleSubcategories() {
             const display = document.getElementById('subcategoriesDisplay');
@@ -410,6 +513,10 @@ or distribution of this code can result in legal action to the fullest extent pe
                     el.addEventListener('click', () => trackClick('website'));
                 });
             }
+
+            document.querySelectorAll('[data-cta-name]').forEach(el => {
+                el.addEventListener('click', () => trackClick('custom_cta', el.dataset.ctaName || 'custom'));
+            });
             
             checkAdminRedirect();
         });
@@ -437,7 +544,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             
             if (!todayHours || todayHours.toLowerCase() === 'closed') {
                 if (badge) {
-                    badge.textContent = 'Closed';
+                    badge.textContent = 'Closed Now';
                     badge.className = 'badge badge-closed';
                 }
                 if (statusText) {
@@ -449,7 +556,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             
             if (todayHours.toLowerCase().includes('24') || todayHours.toLowerCase().includes('open 24')) {
                 if (badge) {
-                    badge.textContent = 'Open';
+                    badge.textContent = 'Open Now';
                     badge.className = 'badge badge-open';
                 }
                 if (statusText) {
@@ -481,51 +588,98 @@ or distribution of this code can result in legal action to the fullest extent pe
             const startMinutes = start * 60 + parseInt(startMin);
             let endMinutes = end * 60 + parseInt(endMin);
             
-            if (endMinutes < startMinutes) {
-                if (currentMinutes >= startMinutes || currentMinutes <= endMinutes) {
-                    if (badge) {
-                        badge.textContent = 'Open';
-                        badge.className = 'badge badge-open';
-                    }
-                    if (statusText) {
-                        statusText.textContent = 'Open Now';
-                        statusText.className = 'open-now';
-                    }
-                } else {
-                    if (badge) {
-                        badge.textContent = 'Closed';
-                        badge.className = 'badge badge-closed';
-                    }
-                    if (statusText) {
-                        statusText.textContent = 'Closed Now';
-                        statusText.className = 'closed-now';
-                    }
+            const isOvernight = endMinutes < startMinutes;
+            const isOpen = isOvernight
+                ? (currentMinutes >= startMinutes || currentMinutes <= endMinutes)
+                : (currentMinutes >= startMinutes && currentMinutes <= endMinutes);
+            const minutesToOpen = startMinutes - currentMinutes;
+            const minutesToClose = (isOvernight && currentMinutes <= endMinutes)
+                ? endMinutes - currentMinutes
+                : (isOvernight ? (24 * 60 - currentMinutes) + endMinutes : endMinutes - currentMinutes);
+
+            if (!isOpen && minutesToOpen > 0 && minutesToOpen <= 60) {
+                if (badge) {
+                    badge.textContent = 'Opening Soon';
+                    badge.className = 'badge badge-opening-soon';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Opening Soon';
+                    statusText.className = 'open-now';
+                }
+                return;
+            }
+
+            if (isOpen && minutesToClose > 0 && minutesToClose <= 60) {
+                if (badge) {
+                    badge.textContent = 'Closing Soon';
+                    badge.className = 'badge badge-closing-soon';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Closing Soon';
+                    statusText.className = 'open-now';
+                }
+                return;
+            }
+
+            if (isOpen) {
+                if (badge) {
+                    badge.textContent = 'Open Now';
+                    badge.className = 'badge badge-open';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Open Now';
+                    statusText.className = 'open-now';
                 }
             } else {
-                if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
-                    if (badge) {
-                        badge.textContent = 'Open';
-                        badge.className = 'badge badge-open';
-                    }
-                    if (statusText) {
-                        statusText.textContent = 'Open Now';
-                        statusText.className = 'open-now';
-                    }
-                } else {
-                    if (badge) {
-                        badge.textContent = 'Closed';
-                        badge.className = 'badge badge-closed';
-                    }
-                    if (statusText) {
-                        statusText.textContent = 'Closed Now';
-                        statusText.className = 'closed-now';
-                    }
+                if (badge) {
+                    badge.textContent = 'Closed Now';
+                    badge.className = 'badge badge-closed';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Closed Now';
+                    statusText.className = 'closed-now';
                 }
             }
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
+        function openGallery(index = 0) {
+            const modal = document.getElementById('galleryModal');
+            if (!modal || !galleryPhotos || galleryPhotos.length === 0) return;
+            modal.classList.add('active');
+            currentGalleryIndex = index;
+            updateGallerySlide();
+        }
+
+        function closeGallery() {
+            const modal = document.getElementById('galleryModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+        }
+
+        function updateGallerySlide() {
+            const image = document.getElementById('galleryImage');
+            const counter = document.getElementById('galleryCounter');
+            if (!image || !galleryPhotos || galleryPhotos.length === 0) return;
+            image.src = galleryPhotos[currentGalleryIndex];
+            if (counter) {
+                counter.textContent = `${currentGalleryIndex + 1} / ${galleryPhotos.length}`;
+            }
+        }
+
+        function nextGallerySlide() {
+            if (!galleryPhotos || galleryPhotos.length === 0) return;
+            currentGalleryIndex = (currentGalleryIndex + 1) % galleryPhotos.length;
+            updateGallerySlide();
+        }
+
+        function prevGallerySlide() {
+            if (!galleryPhotos || galleryPhotos.length === 0) return;
+            currentGalleryIndex = (currentGalleryIndex - 1 + galleryPhotos.length) % galleryPhotos.length;
+            updateGallerySlide();
+        }
+
         if (totalSlides > 1) {
             function goToSlide(index) {
                 const carousel = document.getElementById('photoCarousel');
@@ -560,6 +714,17 @@ or distribution of this code can result in legal action to the fullest extent pe
             window.nextSlide = nextSlide;
             window.prevSlide = prevSlide;
         }
+
+        window.openGallery = openGallery;
+        window.closeGallery = closeGallery;
+        window.nextGallerySlide = nextGallerySlide;
+        window.prevGallerySlide = prevGallerySlide;
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeGallery();
+            }
+        });
 
         function shareNative() {
             trackClick('share', 'native');
