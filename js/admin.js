@@ -1267,9 +1267,7 @@ function getCloudflareConfig() {
         });
     }
     return {
-        accountId: stored.accountId || inputAccountId || config.accountId || '',
-        apiKey: stored.apiKey || inputApiKey || config.apiKey || '',
-        uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
+    uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
     };
 }
 
@@ -1305,47 +1303,22 @@ function setMediaUploadStatus(message, isError = false) {
 }
 
 async function uploadToCloudflareImages(file) {
-    const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
-    if (uploadEndpoint) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const response = await fetch(uploadEndpoint, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        if (!response.ok || !result.success) {
-            const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-            throw new Error(errorMessage);
-        }
-        
-        const variants = result?.result?.variants || [];
-        return variants[0] || result?.result?.url || '';
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(
+    "https://tgd-images-upload.thegreekdirectory.org",
+    {
+      method: "POST",
+      body: formData,
     }
-    if (!accountId || !apiKey) {
-        throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`, {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${apiKey}`
-        },
-        body: formData
-    });
-    
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-        const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-        throw new Error(errorMessage);
-    }
-    
-    const variants = result?.result?.variants || [];
-    return variants[0] || result?.result?.url || '';
+  );
+
+  if (!res.ok) {
+    throw new Error("Upload failed");
+  }
+
+  return await res.json();
 }
 
 async function handleLogoUpload(event) {
