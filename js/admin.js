@@ -8,6 +8,17 @@
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
+const CLOUDFLARE_IMAGES_ACCOUNT_ID = window.CLOUDFLARE_IMAGES_ACCOUNT_ID || '';
+const CLOUDFLARE_IMAGES_TOKEN = window.CLDFLR_STRIMG_KEY || window.CLOUDFLARE_IMAGES_TOKEN || '';
+
+const CTA_ICON_SVGS = {
+    link: '<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M10.59 13.41a1 1 0 001.41 0l4.24-4.24a3 3 0 10-4.24-4.24l-1.41 1.41a1 1 0 11-1.41-1.41l1.41-1.41a5 5 0 017.07 7.07l-4.24 4.24a3 3 0 01-4.24 0 1 1 0 010-1.41z"/><path d="M13.41 10.59a1 1 0 010 1.41l-4.24 4.24a3 3 0 11-4.24-4.24l1.41-1.41a1 1 0 011.41 1.41l-1.41 1.41a1 1 0 004.24 4.24l4.24-4.24a1 1 0 011.41 0z"/></svg>',
+    bolt: '<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>',
+    calendar: '<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M7 2a1 1 0 011 1v1h8V3a1 1 0 112 0v1h1a2 2 0 012 2v3H2V6a2 2 0 012-2h1V3a1 1 0 011-1zm14 9v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9h18z"/></svg>',
+    phone: '<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M6.62 10.79a15.534 15.534 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C10.85 21 3 13.15 3 3a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.59a1 1 0 01-.24 1.01l-2.2 2.19z"/></svg>',
+    cart: '<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M7 4H5L2 11v2h2.4l1.6 7h12l1.6-7H22v-2l-3-7h-2l2 7H5l2-7zm1 16a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm7.5-1.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>',
+    star: '<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+};
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
@@ -982,6 +993,22 @@ function fillEditFormContinuation(listing, owner) {
                 </div>
             </div>
 
+            <!-- Additional Information -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Additional Information</h3>
+                <p class="text-sm text-gray-500 mb-2">Add extra info fields (Info Name + Info Value) to display on the listing page.</p>
+                <div id="additionalInfoFields" class="space-y-2"></div>
+                <button type="button" onclick="addAdditionalInfoRow()" class="mt-2 text-sm text-blue-600">+ Add Info Field</button>
+            </div>
+
+            <!-- Custom CTA Buttons -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Custom CTA Buttons</h3>
+                <p class="text-sm text-gray-500 mb-2">Featured listings can add 1 custom CTA. Premium listings can add 2.</p>
+                <div id="customCtaFields" class="space-y-2"></div>
+                <button type="button" id="addCustomCtaBtn" onclick="addCustomCtaRow()" class="mt-2 text-sm text-blue-600">+ Add CTA Button</button>
+            </div>
+
             <!-- Social Media -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Social Media Links</h3>
@@ -1127,14 +1154,26 @@ function fillEditFormContinuation(listing, owner) {
                     <div>
                         <label class="block text-sm font-medium mb-2">Logo URL</label>
                         <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <div class="flex items-center gap-2 mt-2">
+                            <input type="file" id="editLogoFile" accept="image/*" class="flex-1">
+                            <button type="button" id="uploadLogoBtn" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg">Upload Logo</button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
                         <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                        <div class="flex items-center gap-2 mt-2">
+                            <input type="file" id="editPhotosFiles" accept="image/*" multiple class="flex-1">
+                            <button type="button" id="uploadPhotosBtn" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg">Upload Photos</button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Video URL (YouTube/Vimeo embed)</label>
                         <input type="url" id="editVideo" value="${listing?.video || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="https://www.youtube.com/embed/...">
+                        <div class="flex items-center gap-2 mt-2">
+                            <input type="file" id="editVideoFile" accept="video/*" class="flex-1">
+                            <button type="button" id="uploadVideoBtn" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg">Upload Video</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1145,8 +1184,25 @@ function fillEditFormContinuation(listing, owner) {
     if (ownerPhoneContainer) {
         ownerPhoneContainer.innerHTML = createPhoneInput(owner?.owner_phone || '', userCountry);
     }
-    
+
     updateSubcategoriesForCategory();
+    renderAdditionalInfoRows(listing?.additional_info || []);
+    renderCustomCtaRows(listing?.custom_ctas || [], listing?.tier || 'FREE');
+    setupCloudflareUploadHandlers();
+
+    const tierSelect = document.getElementById('editTier');
+    if (tierSelect) {
+        tierSelect.addEventListener('change', () => {
+            const allowed = getAllowedCustomCtas(tierSelect.value);
+            const container = document.getElementById('customCtaFields');
+            if (container) {
+                while (container.children.length > allowed) {
+                    container.lastElementChild.remove();
+                }
+                updateCustomCtaAddState(allowed, container.children.length, document.getElementById('addCustomCtaBtn'));
+            }
+        });
+    }
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -1194,6 +1250,178 @@ function updateCharCounters() {
     
     if (taglineCount) taglineCount.textContent = tagline.length;
     if (descCount) descCount.textContent = desc.length;
+}
+
+function getAllowedCustomCtas(tier) {
+    if (tier === 'PREMIUM') return 2;
+    if (tier === 'FEATURED') return 1;
+    return 0;
+}
+
+function renderAdditionalInfoRows(infoRows = []) {
+    const container = document.getElementById('additionalInfoFields');
+    if (!container) return;
+    const rows = infoRows.length ? infoRows : [];
+    container.innerHTML = rows.map((row, index) => `
+        <div class="grid grid-cols-1 md:grid-cols-[1fr,1fr,auto] gap-2 items-center">
+            <input type="text" class="additional-info-name w-full px-3 py-2 border rounded-lg" placeholder="Info Name" maxlength="30" value="${escapeHtml(row?.name || '')}">
+            <input type="text" class="additional-info-value w-full px-3 py-2 border rounded-lg" placeholder="Info Value" maxlength="120" value="${escapeHtml(row?.value || '')}">
+            <button type="button" class="text-sm text-red-600" onclick="removeAdditionalInfoRow(${index})">Remove</button>
+        </div>
+    `).join('');
+    container.dataset.count = rows.length;
+}
+
+window.addAdditionalInfoRow = function() {
+    const container = document.getElementById('additionalInfoFields');
+    if (!container) return;
+    const newRow = document.createElement('div');
+    newRow.className = 'grid grid-cols-1 md:grid-cols-[1fr,1fr,auto] gap-2 items-center';
+    newRow.innerHTML = `
+        <input type="text" class="additional-info-name w-full px-3 py-2 border rounded-lg" placeholder="Info Name" maxlength="30">
+        <input type="text" class="additional-info-value w-full px-3 py-2 border rounded-lg" placeholder="Info Value" maxlength="120">
+        <button type="button" class="text-sm text-red-600" onclick="this.closest('div').remove()">Remove</button>
+    `;
+    container.appendChild(newRow);
+};
+
+window.removeAdditionalInfoRow = function(index) {
+    const container = document.getElementById('additionalInfoFields');
+    if (!container) return;
+    const rows = Array.from(container.children);
+    if (rows[index]) rows[index].remove();
+};
+
+function renderCustomCtaRows(ctas = [], tier = 'FREE') {
+    const container = document.getElementById('customCtaFields');
+    const addBtn = document.getElementById('addCustomCtaBtn');
+    if (!container) return;
+    const allowed = getAllowedCustomCtas(tier);
+    const rows = (ctas || []).slice(0, allowed);
+    container.innerHTML = rows.map((cta, index) => `
+        <div class="grid grid-cols-1 md:grid-cols-[1fr,120px,140px,1fr,auto] gap-2 items-center">
+            <input type="text" class="cta-name w-full px-3 py-2 border rounded-lg" placeholder="Button Name" maxlength="15" value="${escapeHtml(cta?.name || '')}">
+            <input type="color" class="cta-color w-full h-10 border rounded-lg" value="${cta?.color || '#055193'}">
+            <select class="cta-icon w-full px-3 py-2 border rounded-lg">
+                ${Object.keys(CTA_ICON_SVGS).map(icon => `<option value="${icon}" ${cta?.icon === icon ? 'selected' : ''}>${icon}</option>`).join('')}
+            </select>
+            <input type="url" class="cta-link w-full px-3 py-2 border rounded-lg" placeholder="https://..." value="${escapeHtml(cta?.link || '')}">
+            <button type="button" class="text-sm text-red-600" onclick="removeCustomCtaRow(${index})">Remove</button>
+        </div>
+    `).join('');
+    updateCustomCtaAddState(allowed, rows.length, addBtn);
+}
+
+window.addCustomCtaRow = function() {
+    const container = document.getElementById('customCtaFields');
+    if (!container) return;
+    const tier = document.getElementById('editTier')?.value || 'FREE';
+    const allowed = getAllowedCustomCtas(tier);
+    if (container.children.length >= allowed) return;
+    const row = document.createElement('div');
+    row.className = 'grid grid-cols-1 md:grid-cols-[1fr,120px,140px,1fr,auto] gap-2 items-center';
+    row.innerHTML = `
+        <input type="text" class="cta-name w-full px-3 py-2 border rounded-lg" placeholder="Button Name" maxlength="15">
+        <input type="color" class="cta-color w-full h-10 border rounded-lg" value="#055193">
+        <select class="cta-icon w-full px-3 py-2 border rounded-lg">
+            ${Object.keys(CTA_ICON_SVGS).map(icon => `<option value="${icon}">${icon}</option>`).join('')}
+        </select>
+        <input type="url" class="cta-link w-full px-3 py-2 border rounded-lg" placeholder="https://...">
+        <button type="button" class="text-sm text-red-600" onclick="this.closest('div').remove()">Remove</button>
+    `;
+    container.appendChild(row);
+    updateCustomCtaAddState(allowed, container.children.length, document.getElementById('addCustomCtaBtn'));
+};
+
+window.removeCustomCtaRow = function(index) {
+    const container = document.getElementById('customCtaFields');
+    if (!container) return;
+    const rows = Array.from(container.children);
+    if (rows[index]) rows[index].remove();
+    const tier = document.getElementById('editTier')?.value || 'FREE';
+    const allowed = getAllowedCustomCtas(tier);
+    updateCustomCtaAddState(allowed, container.children.length, document.getElementById('addCustomCtaBtn'));
+};
+
+function updateCustomCtaAddState(allowed, count, addBtn) {
+    if (!addBtn) return;
+    addBtn.disabled = allowed === 0 || count >= allowed;
+    addBtn.classList.toggle('opacity-50', addBtn.disabled);
+}
+
+async function uploadToCloudflare(file) {
+    if (!CLOUDFLARE_IMAGES_ACCOUNT_ID || !CLOUDFLARE_IMAGES_TOKEN) {
+        alert('Cloudflare Images is not configured. Set CLOUDFLARE_IMAGES_ACCOUNT_ID and CLDFLR_STRIMG_KEY.');
+        return null;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('metadata', JSON.stringify({ uploaded_by: 'admin-portal' }));
+
+    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_IMAGES_ACCOUNT_ID}/images/v1`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${CLOUDFLARE_IMAGES_TOKEN}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        console.error('Cloudflare upload failed', await response.text());
+        alert('Cloudflare upload failed.');
+        return null;
+    }
+
+    const result = await response.json();
+    return result?.result?.variants?.[0] || result?.result?.url || null;
+}
+
+function setupCloudflareUploadHandlers() {
+    const logoInput = document.getElementById('editLogoFile');
+    const logoUploadBtn = document.getElementById('uploadLogoBtn');
+    const photosInput = document.getElementById('editPhotosFiles');
+    const photosUploadBtn = document.getElementById('uploadPhotosBtn');
+    const videoInput = document.getElementById('editVideoFile');
+    const videoUploadBtn = document.getElementById('uploadVideoBtn');
+    const logoField = document.getElementById('editLogo');
+    const photosField = document.getElementById('editPhotos');
+    const videoField = document.getElementById('editVideo');
+
+    if (logoUploadBtn && logoInput && logoField) {
+        logoUploadBtn.onclick = async () => {
+            if (!logoInput.files || !logoInput.files[0]) return;
+            const url = await uploadToCloudflare(logoInput.files[0]);
+            if (url) {
+                logoField.value = url;
+            }
+        };
+    }
+
+    if (photosUploadBtn && photosInput && photosField) {
+        photosUploadBtn.onclick = async () => {
+            const files = Array.from(photosInput.files || []);
+            if (!files.length) return;
+            const urls = [];
+            for (const file of files) {
+                const url = await uploadToCloudflare(file);
+                if (url) urls.push(url);
+            }
+            if (urls.length) {
+                const existing = photosField.value ? photosField.value.split('\n').map(v => v.trim()).filter(Boolean) : [];
+                photosField.value = [...existing, ...urls].join('\n');
+            }
+        };
+    }
+
+    if (videoUploadBtn && videoInput && videoField) {
+        videoUploadBtn.onclick = async () => {
+            if (!videoInput.files || !videoInput.files[0]) return;
+            const url = await uploadToCloudflare(videoInput.files[0]);
+            if (url) {
+                videoField.value = url;
+            }
+        };
+    }
 }
 
 window.updateSubcategoriesForCategory = function() {
@@ -1442,6 +1670,26 @@ if (!slug) {
         }
         
         const isClaimed = document.getElementById('editIsClaimed').checked;
+        const additionalInfoRows = Array.from(document.querySelectorAll('#additionalInfoFields .grid')).map(row => {
+            const name = row.querySelector('.additional-info-name')?.value.trim();
+            const value = row.querySelector('.additional-info-value')?.value.trim();
+            if (!name || !value) return null;
+            return { name: name.slice(0, 30), value: value.slice(0, 120) };
+        }).filter(Boolean);
+
+        const tierValue = document.getElementById('editTier').value;
+        const allowedCtas = getAllowedCustomCtas(tierValue);
+        const customCtas = Array.from(document.querySelectorAll('#customCtaFields .grid')).map(row => {
+            const name = row.querySelector('.cta-name')?.value.trim().slice(0, 15);
+            const link = row.querySelector('.cta-link')?.value.trim();
+            if (!name || !link) return null;
+            return {
+                name,
+                color: row.querySelector('.cta-color')?.value || '#055193',
+                icon: row.querySelector('.cta-icon')?.value || 'link',
+                link
+            };
+        }).filter(Boolean).slice(0, allowedCtas);
         
         const listingData = {
             business_name: businessName,
@@ -1451,8 +1699,8 @@ if (!slug) {
             category: document.getElementById('editCategory').value,
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
-            tier: document.getElementById('editTier').value,
-            verified: document.getElementById('editTier').value !== 'FREE',
+            tier: tierValue,
+            verified: tierValue !== 'FREE',
             is_chain: isChain,
             is_claimed: isClaimed,
             chain_name: isChain ? chainName : null,
@@ -1469,6 +1717,8 @@ if (!slug) {
             logo: document.getElementById('editLogo').value.trim() || null,
             photos: photos,
             video: document.getElementById('editVideo').value.trim() || null,
+            additional_info: additionalInfoRows,
+            custom_ctas: customCtas,
             visible: editingListing?.visible !== false,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
@@ -1842,9 +2092,9 @@ function generateReviewSection(listing) {
     
     const googleSVG = '<svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>';
     
-    const yelpSVG = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/ylogo.svg"/></svg>';
+    const yelpSVG = '<img class="review-icon" src="https://static.thegreekdirectory.org/img/ylogo.svg" alt="Yelp">';
     
-    const tripadvisorSVG = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/talogo.svg"/></svg>';
+    const tripadvisorSVG = '<img class="review-icon" src="https://static.thegreekdirectory.org/img/talogo.svg" alt="TripAdvisor">';
     
     const starSVG = '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
     
@@ -1901,6 +2151,7 @@ function generateTemplateReplacements(listing) {
     
     const photos = listing.photos || [];
     const totalPhotos = photos.length || 1;
+    const photosArray = (photos.length ? photos : (listing.logo ? [listing.logo] : [])).map(photo => `'${String(photo).replace(/'/g, "\\'")}'`).join(', ');
     
     // Generate photo slides
     let photosSlides = '';
@@ -1938,13 +2189,14 @@ function generateTemplateReplacements(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     // Generate status badges
+    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+    const isVerified = listing.verified || listing.tier === 'VERIFIED';
+    const isClaimed = listing.is_claimed || (listing.owner && listing.owner[0] && listing.owner[0].owner_user_id);
+
     let statusBadges = '';
-    if (listing.tier === 'PREMIUM') {
+    if (isFeatured) {
         statusBadges += '<span class="badge badge-featured">Featured</span>';
-        statusBadges += '<span class="badge badge-verified">Verified</span>';
-    } else if (listing.tier === 'FEATURED') {
-        statusBadges += '<span class="badge badge-featured">Featured</span>';
-    } else if (listing.verified || listing.tier === 'VERIFIED') {
+    } else if (isVerified) {
         statusBadges += '<span class="badge badge-verified">Verified</span>';
     }
     
@@ -1953,6 +2205,26 @@ function generateTemplateReplacements(listing) {
     }
     
     statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
+
+    const claimedCheckmark = (isFeatured || isVerified || isClaimed) ? ' <svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' : '';
+
+    const allowedCustomCtas = getAllowedCustomCtas(listing.tier);
+    const customCtas = (listing.custom_ctas || []).slice(0, allowedCustomCtas);
+    const customCtaButtons = customCtas.map(cta => {
+        const name = (cta?.name || '').trim().slice(0, 15);
+        const safeName = escapeHtml(name || 'Learn More');
+        const trackingName = (name || 'Custom CTA').replace(/'/g, "\\'");
+        const safeLink = cta?.link ? escapeHtml(cta.link) : '#';
+        const safeColor = cta?.color || '#055193';
+        const iconKey = cta?.icon || 'link';
+        const iconSvg = CTA_ICON_SVGS[iconKey] || CTA_ICON_SVGS.link;
+        return `
+            <a href="${safeLink}" target="_blank" rel="noopener noreferrer" class="cta-custom-button" style="background-color:${safeColor};" onclick="trackClick('custom_cta', '${trackingName}')">
+                ${iconSvg}
+                ${safeName}
+            </a>
+        `;
+    }).join('');
     
     const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '';
     
@@ -2125,9 +2397,11 @@ function generateTemplateReplacements(listing) {
         'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
         'TOTAL_PHOTOS': totalPhotos,
         'PHOTOS_SLIDES': photosSlides,
+        'PHOTOS_ARRAY': photosArray,
         'CAROUSEL_CONTROLS': carouselControls,
         'SUBCATEGORIES_TAGS': subcategoriesTags,
         'STATUS_BADGES': statusBadges,
+        'CLAIMED_CHECKMARK': claimedCheckmark,
         'TAGLINE_DISPLAY': taglineDisplay,
         'ADDRESS_SECTION': addressSection,
         'PHONE_SECTION': phoneSection,
@@ -2137,7 +2411,8 @@ function generateTemplateReplacements(listing) {
         'PHONE_BUTTON': phoneButton,
         'EMAIL_BUTTON': emailButton,
         'WEBSITE_BUTTON': websiteButton,
-        'DIRECTIONS_BUTTON': directionsButton
+        'DIRECTIONS_BUTTON': directionsButton,
+        'CUSTOM_CTA_BUTTONS': customCtaButtons
     };
 }
 
@@ -2151,6 +2426,23 @@ function generateTemplateReplacements(listing) {
 // ============================================
 
 function generateTemplateReplacementsPart2(listing) {
+    let additionalInfoSection = '';
+    const additionalInfo = (listing.additional_info || []).filter(info => info && info.name && info.value);
+    if (additionalInfo.length > 0) {
+        const rows = additionalInfo.map(info => `
+            <div class="flex items-start justify-between gap-4 text-sm text-gray-700 border-b border-gray-200 pb-2">
+                <span class="font-medium">${escapeHtml(info.name)}</span>
+                <span class="text-right">${escapeHtml(info.value)}</span>
+            </div>
+        `).join('');
+        additionalInfoSection = `
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Additional Information</h3>
+                <div class="space-y-2">${rows}</div>
+            </div>
+        `;
+    }
+
     let ownerInfoSection = '';
     const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
     if (owner && (owner.full_name || owner.title)) {
@@ -2283,6 +2575,7 @@ function generateTemplateReplacementsPart2(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     return {
+        'ADDITIONAL_INFO_SECTION': additionalInfoSection,
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
         'REVIEW_SECTION': reviewSection,

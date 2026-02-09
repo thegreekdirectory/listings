@@ -61,12 +61,15 @@
         .social-yelp { background: white; color: #D32323; border: 2px solid #D32323; }
         .social-tripadvisor { background: white; color: #00AF87; border: 2px solid #00AF87; }
         .social-other { background: #6B7280; color: white; }
+        .review-icon { width: 22px; height: 22px; display: block; }
         .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
         .share-button:hover { transform: scale(1.1); }
         #listingMap { width: 100%; height: 400px; border-radius: 8px; }
         .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
+.badge-opening-soon { background: #fbbf24; color: #78350f; }
+        .badge-closing-soon { background: #f59e0b; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
         .badge-verified { background: #0000FF; color: white; }
         .badge-claimed { background: #6B7280; color: white; }
@@ -133,7 +136,12 @@
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
                     <div class="carousel-slide h-full"><img src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80" alt="A" class="w-full h-full object-cover"></div>
+
                 </div>
+<button class="photo-viewer-button" type="button" onclick="openPhotoViewer()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h2l2-2h10l2 2h2v11H3V7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 17a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                    View Photos
+                </button>
                 
             </div>
         </div>
@@ -150,7 +158,7 @@
                         </div>
                         <span class="badge" id="openClosedBadge">...</span>
                     </div>
-                    <h2 class="text-3xl font-bold text-gray-900 mb-2">A</h2>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">A <svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></h2>
                     <p class="text-gray-600 italic mb-2">"A"</p>
                     <p class="text-sm text-gray-600 mt-2">
                         <strong>A</strong> is listed on <a href="/" class="text-blue-600 hover:underline">The Greek Directory</a>, a trusted Greek directory connecting you to Greek businesses in Glenview.
@@ -247,8 +255,7 @@ C</p>
                     </div>
                 </div>
                 
-                <div><div id="listingMap"></div></div>
-            </div>
+                <div><div id="listingMap"></div></div></div>
         </div>
 
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
@@ -264,6 +271,8 @@ C</p>
         const businessName = 'A';
         const listingUrl = 'https://listings.thegreekdirectory.org/listing/a';
         const listingId = 'a';
+        const listingPhotos = (window.currentListingData && window.currentListingData.photos) ? window.currentListingData.photos.filter(Boolean) : [];
+        let photoModalIndex = 0;
         const hoursData = {"monday":"Closed","tuesday":"10:30 AM - 8:00 PM","wednesday":"10:30 AM - 8:00 PM","thursday":"8:00 AM - 5:30 PM","friday":"10:30 AM - 8:00 PM","saturday":"10:30 AM - 8:00 PM","sunday":"11:00 AM - 8:00 PM"};
         
         function toggleSubcategories() {

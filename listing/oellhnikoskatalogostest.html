@@ -133,6 +133,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
         .badge-open { background: #10b981; color: white; }
         .badge-closed { background: #ef4444; color: white; }
+.badge-opening-soon { background: #fbbf24; color: #78350f; }
+        .badge-closing-soon { background: #f59e0b; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
         .badge-verified { background: #0000FF; color: white; }
         .badge-claimed { background: #6B7280; color: white; }
@@ -146,6 +148,19 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
+.review-icon { width: 22px; height: 22px; display: block; }
+        .photo-viewer-button { position: absolute; right: 16px; bottom: 16px; background: rgba(5, 81, 147, 0.9); color: white; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; z-index: 15; }
+        .photo-viewer-button:hover { background: rgba(5, 81, 147, 1); }
+        .photo-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 24px; }
+        .photo-modal.active { display: flex; }
+        .photo-modal-content { background: #111827; border-radius: 16px; width: min(960px, 100%); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+        .photo-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; color: white; font-weight: 600; }
+        .photo-modal-body { display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow: auto; }
+        .photo-modal-image { width: 100%; max-height: 60vh; object-fit: contain; border-radius: 12px; background: #000; }
+        .photo-modal-thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+        .photo-modal-thumb { width: 80px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+        .photo-modal-thumb.active { border-color: #60a5fa; }
+        .cta-custom-button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 10px; color: white; font-weight: 600; text-decoration: none; }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
@@ -193,7 +208,12 @@ or distribution of this code can result in legal action to the fullest extent pe
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
                     <div class="carousel-slide" style="background: url('https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80') center/cover;"></div>
+
                 </div>
+<button class="photo-viewer-button" type="button" onclick="openPhotoViewer()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h2l2-2h10l2 2h2v11H3V7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 17a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                    View Photos
+                </button>
                 
             </div>
         </div>
@@ -315,7 +335,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
             <div class="flex flex-wrap gap-2">
-                <a href="https://g.page/s" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews"><svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg></a><a href="https://www.yelp.com/biz/test" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/ylogo.svg"/></svg></a><a href="https://www.tripadvisor.com/test" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor"><?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/talogo.svg"/></svg></a><a href="https://testr.com" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="TestR"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></a>
+                <a href="https://g.page/s" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews"><svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg></a><a href="https://www.yelp.com/biz/test" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp"><?xml version="1.0" encoding="UTF-8"?><img class="review-icon" src="https://static.thegreekdirectory.org/img/ylogo.svg" alt="Yelp"></a><a href="https://www.tripadvisor.com/test" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor"><?xml version="1.0" encoding="UTF-8"?><img class="review-icon" src="https://static.thegreekdirectory.org/img/talogo.svg" alt="TripAdvisor"></a><a href="https://testr.com" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="TestR"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></a>
             </div>
         </div>
     
@@ -364,6 +384,20 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20%CE%BF%CE%95%CE%BB%CE%BB%CE%B7%CE%BD%CE%B9%CE%BA%CE%BF%CF%82%CE%9A%CE%B1%CF%84%CE%B1%CE%BB%CE%BF%CE%B3%CE%BF%CF%82%CE%A4%CE%B5%CF%83%CF%84%20-%20Glenview%2C%20IL" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
             </div>
         
+    </div>
+
+
+    <div class="photo-modal" id="photoModal">
+        <div class="photo-modal-content">
+            <div class="photo-modal-header">
+                <span>Photos</span>
+                <button type="button" onclick="closePhotoViewer()">✕</button>
+            </div>
+            <div class="photo-modal-body">
+                <img id="photoModalImage" class="photo-modal-image" src="" alt="Listing photo">
+                <div class="photo-modal-thumbs" id="photoModalThumbs"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -427,6 +461,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         const businessName = 'οΕλληνικοςΚαταλογοςΤεστ';
         const listingUrl = 'https://thegreekdirectory.org/listing/oellhnikoskatalogostest';
         const listingId = '34';
+        const listingPhotos = (window.currentListingData && window.currentListingData.photos) ? window.currentListingData.photos.filter(Boolean) : [];
+        let photoModalIndex = 0;
         const hoursData = {"friday":"10:30 AM - 8:00 PM","monday":"Closed","sunday":"11:00 AM - 8:00 PM","tuesday":"Open 24 Hours","saturday":"10:30 AM - 8:00 PM","thursday":"Closed","wednesday":"Open 24 Hours"};
         
         function toggleSubcategories() {
@@ -513,6 +549,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
+        
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
@@ -548,7 +585,103 @@ or distribution of this code can result in legal action to the fullest extent pe
                 return;
             }
             
-            /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+            const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) {
+                if (badge) badge.style.display = 'none';
+                if (statusText) statusText.style.display = 'none';
+                return;
+            }
+            
+            const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
+            let start = parseInt(startHour);
+            let end = parseInt(endHour);
+            
+            if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
+            if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
+            if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
+            if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
+            
+            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
+            const startMinutes = start * 60 + parseInt(startMin);
+            let endMinutes = end * 60 + parseInt(endMin);
+            const openingSoon = isOpeningSoonFromMinutes(currentMinutes, startMinutes);
+            const closingSoon = isClosingSoonFromMinutes(currentMinutes, endMinutes);
+            
+            if (endMinutes < startMinutes) {
+                if (currentMinutes >= startMinutes || currentMinutes <= endMinutes) {
+                    if (badge) {
+                        if (closingSoon) {
+                            badge.textContent = 'Closing Soon';
+                            badge.className = 'badge badge-closing-soon';
+                        } else {
+                            badge.textContent = 'Open';
+                            badge.className = 'badge badge-open';
+                        }
+                    }
+                    if (statusText) {
+                        statusText.textContent = closingSoon ? 'Closing Soon' : 'Open Now';
+                        statusText.className = 'open-now';
+                    }
+                } else {
+                    if (badge) {
+                        if (openingSoon) {
+                            badge.textContent = 'Opening Soon';
+                            badge.className = 'badge badge-opening-soon';
+                        } else {
+                            badge.textContent = 'Closed';
+                            badge.className = 'badge badge-closed';
+                        }
+                    }
+                    if (statusText) {
+                        statusText.textContent = openingSoon ? 'Opening Soon' : 'Closed Now';
+                        statusText.className = 'closed-now';
+                    }
+                }
+            } else {
+                if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+                    if (badge) {
+                        if (closingSoon) {
+                            badge.textContent = 'Closing Soon';
+                            badge.className = 'badge badge-closing-soon';
+                        } else {
+                            badge.textContent = 'Open';
+                            badge.className = 'badge badge-open';
+                        }
+                    }
+                    if (statusText) {
+                        statusText.textContent = closingSoon ? 'Closing Soon' : 'Open Now';
+                        statusText.className = 'open-now';
+                    }
+                } else {
+                    if (badge) {
+                        if (openingSoon) {
+                            badge.textContent = 'Opening Soon';
+                            badge.className = 'badge badge-opening-soon';
+                        } else {
+                            badge.textContent = 'Closed';
+                            badge.className = 'badge badge-closed';
+                        }
+                    }
+                    if (statusText) {
+                        statusText.textContent = openingSoon ? 'Opening Soon' : 'Closed Now';
+                        statusText.className = 'closed-now';
+                    }
+                }
+            }
+        }
+
+        function isOpeningSoonFromMinutes(currentMinutes, startMinutes) {
+            const diff = startMinutes - currentMinutes;
+            return diff > 0 && diff <= 60;
+        }
+
+        function isClosingSoonFromMinutes(currentMinutes, endMinutes) {
+            const diff = endMinutes - currentMinutes;
+            return diff > 0 && diff <= 60;
+        }
+
+
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
             
             const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
             if (!match) {
@@ -649,6 +782,45 @@ or distribution of this code can result in legal action to the fullest extent pe
             window.nextSlide = nextSlide;
             window.prevSlide = prevSlide;
         }
+
+
+        function renderPhotoViewer() {
+            const modalImage = document.getElementById('photoModalImage');
+            const thumbContainer = document.getElementById('photoModalThumbs');
+            if (!modalImage || !thumbContainer) return;
+            if (!listingPhotos.length) return;
+
+            modalImage.src = listingPhotos[photoModalIndex];
+            thumbContainer.innerHTML = listingPhotos.map((photo, index) => `
+                <img src="${photo}" class="photo-modal-thumb ${index === photoModalIndex ? 'active' : ''}" onclick="setPhotoViewerIndex(${index})" alt="Listing photo ${index + 1}">
+            `).join('');
+        }
+
+        function openPhotoViewer() {
+            const modal = document.getElementById('photoModal');
+            if (!modal || !listingPhotos.length) return;
+            const carousel = document.getElementById('photoCarousel');
+            const current = carousel ? parseInt(carousel.dataset.current || 0, 10) : 0;
+            photoModalIndex = Math.max(0, Math.min(current, listingPhotos.length - 1));
+            modal.classList.add('active');
+            renderPhotoViewer();
+        }
+
+        function closePhotoViewer() {
+            const modal = document.getElementById('photoModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        function setPhotoViewerIndex(index) {
+            photoModalIndex = index;
+            renderPhotoViewer();
+        }
+
+        window.openPhotoViewer = openPhotoViewer;
+        window.closePhotoViewer = closePhotoViewer;
+        window.setPhotoViewerIndex = setPhotoViewerIndex;
 
         function shareNative() {
             trackClick('share', 'native');

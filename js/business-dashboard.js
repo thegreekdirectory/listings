@@ -32,6 +32,11 @@ const SUBCATEGORIES = {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+const CLOUDFLARE_IMAGES_ACCOUNT_ID = window.CLOUDFLARE_IMAGES_ACCOUNT_ID || '';
+const CLOUDFLARE_IMAGES_TOKEN = window.CLDFLR_STRIMG_KEY || window.CLOUDFLARE_IMAGES_TOKEN || '';
+
+const CTA_ICON_OPTIONS = ['link', 'bolt', 'calendar', 'phone', 'cart', 'star'];
+
 let uploadedImages = { logo: null, photos: [] };
 let photosSortable = null;
 let selectedSubcategories = [];
@@ -324,6 +329,22 @@ function renderEditForm() {
                     </div>
                 </div>
 
+                <!-- Additional Information -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Additional Information</h3>
+                    <p class="text-sm text-gray-500 mb-2">Add custom info fields (Info Name + Info Value) for your listing.</p>
+                    <div id="additionalInfoFields" class="space-y-2"></div>
+                    <button type="button" onclick="addAdditionalInfoRow()" class="mt-2 text-sm text-blue-600">+ Add Info Field</button>
+                </div>
+
+                <!-- Custom CTA Buttons -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Custom CTA Buttons</h3>
+                    <p class="text-sm text-gray-500 mb-2">Featured listings can add 1 custom CTA. Premium listings can add 2.</p>
+                    <div id="customCtaFields" class="space-y-2"></div>
+                    <button type="button" id="addCustomCtaBtn" onclick="addCustomCtaRow()" class="mt-2 text-sm text-blue-600">+ Add CTA Button</button>
+                </div>
+
                 <!-- Social Media -->
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Social Media Links</h3>
@@ -375,6 +396,37 @@ function renderEditForm() {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 3 URL</label>
                             <input type="url" id="editOtherSocial3" value="${currentListing.social_media?.other3 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Media</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
+                            <input type="url" id="editLogo" value="${currentListing.logo || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <div class="flex items-center gap-2 mt-2">
+                                <input type="file" id="editLogoFile" accept="image/*" class="flex-1">
+                                <button type="button" id="uploadLogoBtn" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg">Upload Logo</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Photos (one per line)</label>
+                            <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg">${currentListing.photos ? currentListing.photos.join('\n') : ''}</textarea>
+                            <div class="flex items-center gap-2 mt-2">
+                                <input type="file" id="editPhotosFiles" accept="image/*" multiple class="flex-1">
+                                <button type="button" id="uploadPhotosBtn" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg">Upload Photos</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
+                            <input type="url" id="editVideo" value="${currentListing.video || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <div class="flex items-center gap-2 mt-2">
+                                <input type="file" id="editVideoFile" accept="video/*" class="flex-1">
+                                <button type="button" id="uploadVideoBtn" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg">Upload Video</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -442,7 +494,10 @@ function renderEditForm() {
     if (phoneContainer) {
         phoneContainer.innerHTML = createPhoneInput(currentListing.phone || '', userCountry);
     }
-    
+
+    renderAdditionalInfoRows(currentListing.additional_info || []);
+    renderCustomCtaRows(currentListing.custom_ctas || [], currentListing.tier || 'FREE');
+    setupCloudflareUploadHandlers();
     renderSubcategories();
 }
 
@@ -569,6 +624,172 @@ window.toggle24Hours = function(day) {
     }
 };
 
+function getAllowedCustomCtas(tier) {
+    if (tier === 'PREMIUM') return 2;
+    if (tier === 'FEATURED') return 1;
+    return 0;
+}
+
+function renderAdditionalInfoRows(infoRows = []) {
+    const container = document.getElementById('additionalInfoFields');
+    if (!container) return;
+    container.innerHTML = (infoRows || []).map((row, index) => `
+        <div class="grid grid-cols-1 md:grid-cols-[1fr,1fr,auto] gap-2 items-center">
+            <input type="text" class="additional-info-name w-full px-3 py-2 border rounded-lg" placeholder="Info Name" maxlength="30" value="${row?.name || ''}">
+            <input type="text" class="additional-info-value w-full px-3 py-2 border rounded-lg" placeholder="Info Value" maxlength="120" value="${row?.value || ''}">
+            <button type="button" class="text-sm text-red-600" onclick="removeAdditionalInfoRow(${index})">Remove</button>
+        </div>
+    `).join('');
+}
+
+window.addAdditionalInfoRow = function() {
+    const container = document.getElementById('additionalInfoFields');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'grid grid-cols-1 md:grid-cols-[1fr,1fr,auto] gap-2 items-center';
+    row.innerHTML = `
+        <input type="text" class="additional-info-name w-full px-3 py-2 border rounded-lg" placeholder="Info Name" maxlength="30">
+        <input type="text" class="additional-info-value w-full px-3 py-2 border rounded-lg" placeholder="Info Value" maxlength="120">
+        <button type="button" class="text-sm text-red-600" onclick="this.closest('div').remove()">Remove</button>
+    `;
+    container.appendChild(row);
+};
+
+window.removeAdditionalInfoRow = function(index) {
+    const container = document.getElementById('additionalInfoFields');
+    if (!container) return;
+    const rows = Array.from(container.children);
+    if (rows[index]) rows[index].remove();
+};
+
+function renderCustomCtaRows(ctas = [], tier = 'FREE') {
+    const container = document.getElementById('customCtaFields');
+    const addBtn = document.getElementById('addCustomCtaBtn');
+    if (!container) return;
+    const allowed = getAllowedCustomCtas(tier);
+    const rows = (ctas || []).slice(0, allowed);
+    container.innerHTML = rows.map((cta, index) => `
+        <div class="grid grid-cols-1 md:grid-cols-[1fr,120px,140px,1fr,auto] gap-2 items-center">
+            <input type="text" class="cta-name w-full px-3 py-2 border rounded-lg" placeholder="Button Name" maxlength="15" value="${cta?.name || ''}">
+            <input type="color" class="cta-color w-full h-10 border rounded-lg" value="${cta?.color || '#055193'}">
+            <select class="cta-icon w-full px-3 py-2 border rounded-lg">
+                ${CTA_ICON_OPTIONS.map(icon => `<option value="${icon}" ${cta?.icon === icon ? 'selected' : ''}>${icon}</option>`).join('')}
+            </select>
+            <input type="url" class="cta-link w-full px-3 py-2 border rounded-lg" placeholder="https://..." value="${cta?.link || ''}">
+            <button type="button" class="text-sm text-red-600" onclick="removeCustomCtaRow(${index})">Remove</button>
+        </div>
+    `).join('');
+    updateCustomCtaAddState(allowed, rows.length, addBtn);
+}
+
+window.addCustomCtaRow = function() {
+    const container = document.getElementById('customCtaFields');
+    if (!container) return;
+    const tier = currentListing?.tier || 'FREE';
+    const allowed = getAllowedCustomCtas(tier);
+    if (container.children.length >= allowed) return;
+    const row = document.createElement('div');
+    row.className = 'grid grid-cols-1 md:grid-cols-[1fr,120px,140px,1fr,auto] gap-2 items-center';
+    row.innerHTML = `
+        <input type="text" class="cta-name w-full px-3 py-2 border rounded-lg" placeholder="Button Name" maxlength="15">
+        <input type="color" class="cta-color w-full h-10 border rounded-lg" value="#055193">
+        <select class="cta-icon w-full px-3 py-2 border rounded-lg">
+            ${CTA_ICON_OPTIONS.map(icon => `<option value="${icon}">${icon}</option>`).join('')}
+        </select>
+        <input type="url" class="cta-link w-full px-3 py-2 border rounded-lg" placeholder="https://...">
+        <button type="button" class="text-sm text-red-600" onclick="this.closest('div').remove()">Remove</button>
+    `;
+    container.appendChild(row);
+    updateCustomCtaAddState(allowed, container.children.length, document.getElementById('addCustomCtaBtn'));
+};
+
+window.removeCustomCtaRow = function(index) {
+    const container = document.getElementById('customCtaFields');
+    if (!container) return;
+    const rows = Array.from(container.children);
+    if (rows[index]) rows[index].remove();
+    const tier = currentListing?.tier || 'FREE';
+    const allowed = getAllowedCustomCtas(tier);
+    updateCustomCtaAddState(allowed, container.children.length, document.getElementById('addCustomCtaBtn'));
+};
+
+function updateCustomCtaAddState(allowed, count, addBtn) {
+    if (!addBtn) return;
+    addBtn.disabled = allowed === 0 || count >= allowed;
+    addBtn.classList.toggle('opacity-50', addBtn.disabled);
+}
+
+async function uploadToCloudflare(file) {
+    if (!CLOUDFLARE_IMAGES_ACCOUNT_ID || !CLOUDFLARE_IMAGES_TOKEN) {
+        alert('Cloudflare Images is not configured. Contact support to enable uploads.');
+        return null;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('metadata', JSON.stringify({ uploaded_by: 'business-portal' }));
+
+    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_IMAGES_ACCOUNT_ID}/images/v1`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${CLOUDFLARE_IMAGES_TOKEN}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        console.error('Cloudflare upload failed', await response.text());
+        alert('Cloudflare upload failed.');
+        return null;
+    }
+
+    const result = await response.json();
+    return result?.result?.variants?.[0] || result?.result?.url || null;
+}
+
+function setupCloudflareUploadHandlers() {
+    const logoInput = document.getElementById('editLogoFile');
+    const logoBtn = document.getElementById('uploadLogoBtn');
+    const photosInput = document.getElementById('editPhotosFiles');
+    const photosBtn = document.getElementById('uploadPhotosBtn');
+    const videoInput = document.getElementById('editVideoFile');
+    const videoBtn = document.getElementById('uploadVideoBtn');
+    const logoField = document.getElementById('editLogo');
+    const photosField = document.getElementById('editPhotos');
+    const videoField = document.getElementById('editVideo');
+
+    if (logoBtn && logoInput && logoField) {
+        logoBtn.onclick = async () => {
+            if (!logoInput.files || !logoInput.files[0]) return;
+            const url = await uploadToCloudflare(logoInput.files[0]);
+            if (url) logoField.value = url;
+        };
+    }
+
+    if (photosBtn && photosInput && photosField) {
+        photosBtn.onclick = async () => {
+            const files = Array.from(photosInput.files || []);
+            if (!files.length) return;
+            const urls = [];
+            for (const file of files) {
+                const url = await uploadToCloudflare(file);
+                if (url) urls.push(url);
+            }
+            if (urls.length) {
+                const existing = photosField.value ? photosField.value.split('\n').map(v => v.trim()).filter(Boolean) : [];
+                photosField.value = [...existing, ...urls].join('\n');
+            }
+        };
+    }
+
+    if (videoBtn && videoInput && videoField) {
+        videoBtn.onclick = async () => {
+            if (!videoInput.files || !videoInput.files[0]) return;
+            const url = await uploadToCloudflare(videoInput.files[0]);
+            if (url) videoField.value = url;
+        };
+    }
+}
+
 async function saveChanges() {
     const tagline = document.getElementById('editTagline').value.trim();
     if (!tagline) {
@@ -592,6 +813,30 @@ async function saveChanges() {
     
     const phoneContainer = document.getElementById('editPhoneContainer');
     const phone = getPhoneValue(phoneContainer);
+
+    const photosText = document.getElementById('editPhotos')?.value || '';
+    const photos = photosText ? photosText.split('\n').map(url => url.trim()).filter(Boolean) : [];
+    const logo = document.getElementById('editLogo')?.value.trim() || null;
+
+    const additionalInfoRows = Array.from(document.querySelectorAll('#additionalInfoFields .grid')).map(row => {
+        const name = row.querySelector('.additional-info-name')?.value.trim();
+        const value = row.querySelector('.additional-info-value')?.value.trim();
+        if (!name || !value) return null;
+        return { name: name.slice(0, 30), value: value.slice(0, 120) };
+    }).filter(Boolean);
+
+    const allowedCtas = getAllowedCustomCtas(tier);
+    const customCtas = Array.from(document.querySelectorAll('#customCtaFields .grid')).map(row => {
+        const name = row.querySelector('.cta-name')?.value.trim().slice(0, 15);
+        const link = row.querySelector('.cta-link')?.value.trim();
+        if (!name || !link) return null;
+        return {
+            name,
+            color: row.querySelector('.cta-color')?.value || '#055193',
+            icon: row.querySelector('.cta-icon')?.value || 'link',
+            link
+        };
+    }).filter(Boolean).slice(0, allowedCtas);
     
     const changes = [];
     if (currentListing.tagline !== tagline) changes.push(`Tagline updated`);
@@ -600,6 +845,11 @@ async function saveChanges() {
     const newSubcategories = selectedSubcategories.sort().join(',');
     const oldSubcategories = (currentListing.subcategories || []).sort().join(',');
     if (oldSubcategories !== newSubcategories) changes.push(`Subcategories updated`);
+    if (currentListing.logo !== logo) changes.push('Logo updated');
+    if ((currentListing.photos || []).join('|') !== photos.join('|')) changes.push('Photos updated');
+    if ((currentListing.video || '') !== (document.getElementById('editVideo')?.value.trim() || '')) changes.push('Video updated');
+    if (JSON.stringify(currentListing.additional_info || []) !== JSON.stringify(additionalInfoRows)) changes.push('Additional info updated');
+    if (JSON.stringify(currentListing.custom_ctas || []) !== JSON.stringify(customCtas)) changes.push('Custom CTA updated');
     
     if (changes.length === 0) {
         alert('No changes detected.');
@@ -627,6 +877,9 @@ async function saveChanges() {
             phone: phone,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
+            logo: logo,
+            photos: photos,
+            video: document.getElementById('editVideo').value.trim() || null,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
                 tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
@@ -661,7 +914,9 @@ async function saveChanges() {
                 other2: document.getElementById('editOtherReview2').value.trim() || null,
                 other3_name: document.getElementById('editOtherReview3Name').value.trim() || null,
                 other3: document.getElementById('editOtherReview3').value.trim() || null
-            }
+            },
+            additional_info: additionalInfoRows,
+            custom_ctas: customCtas
         };
         
         const { data, error } = await window.TGDAuth.supabaseClient
