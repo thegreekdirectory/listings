@@ -1080,6 +1080,59 @@ function fillEditFormContinuation(listing, owner) {
                 </div>
             </div>
 
+            <!-- Additional Information -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Additional Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${[0, 1, 2, 3, 4].map(index => {
+                        const info = listing?.additional_info?.[index] || {};
+                        return `
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Info Name ${index + 1}</label>
+                            <input type="text" id="editInfoName${index}" value="${info.label || ''}" class="w-full px-4 py-2 border rounded-lg" maxlength="30">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Info Value ${index + 1}</label>
+                            <input type="text" id="editInfoValue${index}" value="${info.value || ''}" class="w-full px-4 py-2 border rounded-lg" maxlength="120">
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- Custom CTA Buttons -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Custom CTA Buttons</h3>
+                <p class="text-sm text-gray-600 mb-4">Featured listings get 1 custom CTA. Premium listings get 2. Name max 15 characters.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${[0, 1].map(index => {
+                        const cta = listing?.custom_ctas?.[index] || {};
+                        return `
+                        <div class="md:col-span-2 border border-gray-200 rounded-lg p-4 space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">CTA ${index + 1} Name</label>
+                                <input type="text" id="editCtaName${index}" value="${cta.name || ''}" class="w-full px-4 py-2 border rounded-lg" maxlength="15">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">CTA ${index + 1} Link</label>
+                                <input type="url" id="editCtaUrl${index}" value="${cta.url || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="https://">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Button Color</label>
+                                    <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-full h-10 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Icon (emoji or short text)</label>
+                                    <input type="text" id="editCtaIcon${index}" value="${cta.icon || ''}" class="w-full px-4 py-2 border rounded-lg" maxlength="10">
+                                </div>
+                            </div>
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+
             <!-- Owner Info -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Owner Information</h3>
@@ -1125,17 +1178,24 @@ function fillEditFormContinuation(listing, owner) {
                 <h3 class="text-lg font-bold mb-4">Media</h3>
                 <div class="grid grid-cols-1 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Logo URL</label>
-                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg">
+                        <label class="block text-sm font-medium mb-2">Logo</label>
+                        <input type="file" id="editLogoUpload" accept="image/*" class="w-full px-4 py-2 border rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1">Uploads to Cloudflare Images and fills the URL below.</p>
+                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg mt-2" placeholder="Logo URL">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Photos (one per line)</label>
-                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                        <label class="block text-sm font-medium mb-2">Photos</label>
+                        <input type="file" id="editPhotosUpload" accept="image/*" multiple class="w-full px-4 py-2 border rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1">Uploads to Cloudflare Images and appends to the list below.</p>
+                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg mt-2" placeholder="Uploaded photo URLs (one per line)">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Video URL (YouTube/Vimeo embed)</label>
-                        <input type="url" id="editVideo" value="${listing?.video || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="https://www.youtube.com/embed/...">
+                        <label class="block text-sm font-medium mb-2">Video</label>
+                        <input type="file" id="editVideoUpload" accept="video/*" class="w-full px-4 py-2 border rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1">Uploads to Cloudflare Images and fills the URL below.</p>
+                        <input type="url" id="editVideo" value="${listing?.video || ''}" class="w-full px-4 py-2 border rounded-lg mt-2" placeholder="Video URL">
                     </div>
+                    <div id="mediaUploadStatus" class="text-sm text-gray-600"></div>
                 </div>
             </div>
         </div>
@@ -1147,6 +1207,109 @@ function fillEditFormContinuation(listing, owner) {
     }
     
     updateSubcategoriesForCategory();
+    attachMediaUploadHandlers();
+}
+
+function getCloudflareConfig() {
+    const config = window.CLOUDFLARE_IMAGES_CONFIG || {};
+    return {
+        accountId: config.accountId || '',
+        apiKey: config.apiKey || ''
+    };
+}
+
+function setMediaUploadStatus(message, isError = false) {
+    const statusEl = document.getElementById('mediaUploadStatus');
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
+}
+
+async function uploadToCloudflareImages(file) {
+    const { accountId, apiKey } = getCloudflareConfig();
+    if (!accountId || !apiKey) {
+        throw new Error('Cloudflare Images credentials are missing.');
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${apiKey}`
+        },
+        body: formData
+    });
+    
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
+        throw new Error(errorMessage);
+    }
+    
+    const variants = result?.result?.variants || [];
+    return variants[0] || result?.result?.url || '';
+}
+
+async function handleLogoUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+        setMediaUploadStatus('Uploading logo...');
+        const url = await uploadToCloudflareImages(file);
+        const logoInput = document.getElementById('editLogo');
+        if (logoInput) logoInput.value = url;
+        setMediaUploadStatus('Logo uploaded successfully.');
+    } catch (error) {
+        console.error('Logo upload failed:', error);
+        setMediaUploadStatus(`Logo upload failed: ${error.message}`, true);
+    }
+}
+
+async function handlePhotosUpload(event) {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    const photoInput = document.getElementById('editPhotos');
+    if (!photoInput) return;
+    
+    try {
+        setMediaUploadStatus('Uploading photos...');
+        for (const file of files) {
+            const url = await uploadToCloudflareImages(file);
+            photoInput.value = `${photoInput.value.trim() ? `${photoInput.value.trim()}\n` : ''}${url}`;
+        }
+        setMediaUploadStatus('Photos uploaded successfully.');
+    } catch (error) {
+        console.error('Photo upload failed:', error);
+        setMediaUploadStatus(`Photo upload failed: ${error.message}`, true);
+    }
+}
+
+async function handleVideoUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+        setMediaUploadStatus('Uploading video...');
+        const url = await uploadToCloudflareImages(file);
+        const videoInput = document.getElementById('editVideo');
+        if (videoInput) videoInput.value = url;
+        setMediaUploadStatus('Video uploaded successfully.');
+    } catch (error) {
+        console.error('Video upload failed:', error);
+        setMediaUploadStatus(`Video upload failed: ${error.message}`, true);
+    }
+}
+
+function attachMediaUploadHandlers() {
+    const logoUpload = document.getElementById('editLogoUpload');
+    if (logoUpload) logoUpload.onchange = handleLogoUpload;
+    
+    const photosUpload = document.getElementById('editPhotosUpload');
+    if (photosUpload) photosUpload.onchange = handlePhotosUpload;
+    
+    const videoUpload = document.getElementById('editVideoUpload');
+    if (videoUpload) videoUpload.onchange = handleVideoUpload;
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -1442,7 +1605,48 @@ if (!slug) {
         }
         
         const isClaimed = document.getElementById('editIsClaimed').checked;
+        const tierValue = document.getElementById('editTier').value;
+        const maxCtas = tierValue === 'PREMIUM' ? 2 : tierValue === 'FEATURED' ? 1 : 0;
         
+        const additionalInfo = [];
+        for (let i = 0; i < 5; i += 1) {
+            const label = document.getElementById(`editInfoName${i}`)?.value.trim();
+            const value = document.getElementById(`editInfoValue${i}`)?.value.trim();
+            if (label && value) {
+                additionalInfo.push({ label, value });
+            }
+        }
+        
+        const customCtas = [];
+        for (let i = 0; i < 2; i += 1) {
+            const name = document.getElementById(`editCtaName${i}`)?.value.trim();
+            const url = document.getElementById(`editCtaUrl${i}`)?.value.trim();
+            const color = document.getElementById(`editCtaColor${i}`)?.value.trim();
+            const icon = document.getElementById(`editCtaIcon${i}`)?.value.trim();
+            
+            if (!name && !url && !icon) continue;
+            if (!name || !url) {
+                alert(`CTA ${i + 1} requires both a name and a link.`);
+                return;
+            }
+            if (name.length > 15) {
+                alert(`CTA ${i + 1} name must be 15 characters or fewer.`);
+                return;
+            }
+            
+            customCtas.push({
+                name,
+                url,
+                color: color || '#055193',
+                icon: icon || ''
+            });
+        }
+        
+        if (maxCtas === 0 && customCtas.length > 0) {
+            alert('Custom CTA buttons are only available for Featured and Premium listings.');
+            return;
+        }
+
         const listingData = {
             business_name: businessName,
             slug: slug,
@@ -1451,8 +1655,8 @@ if (!slug) {
             category: document.getElementById('editCategory').value,
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
-            tier: document.getElementById('editTier').value,
-            verified: document.getElementById('editTier').value !== 'FREE',
+            tier: tierValue,
+            verified: tierValue !== 'FREE',
             is_chain: isChain,
             is_claimed: isClaimed,
             chain_name: isChain ? chainName : null,
@@ -1469,6 +1673,8 @@ if (!slug) {
             logo: document.getElementById('editLogo').value.trim() || null,
             photos: photos,
             video: document.getElementById('editVideo').value.trim() || null,
+            additional_info: additionalInfo,
+            custom_ctas: customCtas.slice(0, maxCtas),
             visible: editingListing?.visible !== false,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
@@ -1842,9 +2048,9 @@ function generateReviewSection(listing) {
     
     const googleSVG = '<svg width="22" height="22" viewBox="0 0 256 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>';
     
-    const yelpSVG = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/ylogo.svg"/></svg>';
+    const yelpSVG = '<img src="https://static.thegreekdirectory.org/img/ylogo.svg" alt="Yelp" width="22" height="22" style="width:22px;height:22px;">';
     
-    const tripadvisorSVG = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 1000 1000"><image x="0" y="0" width="22" height="22" xlink:href="https://static.thegreekdirectory.org/img/talogo.svg"/></svg>';
+    const tripadvisorSVG = '<img src="https://static.thegreekdirectory.org/img/talogo.svg" alt="TripAdvisor" width="22" height="22" style="width:22px;height:22px;">';
     
     const starSVG = '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
     
@@ -1900,12 +2106,13 @@ function generateTemplateReplacements(listing) {
     const inCity = listing.city ? ` in ${listing.city}` : '';
     
     const photos = listing.photos || [];
-    const totalPhotos = photos.length || 1;
+    const photoList = photos.length > 0 ? photos : (listing.logo ? [listing.logo] : []);
+    const totalPhotos = photoList.length || 1;
     
     // Generate photo slides
     let photosSlides = '';
-    if (photos.length > 0) {
-        photosSlides = photos.map((photo, index) => 
+    if (photoList.length > 0) {
+        photosSlides = photoList.map((photo, index) => 
             `<div class="carousel-slide" style="background: url('${photo}') center/cover;"></div>`
         ).join('');
     } else if (listing.logo) {
@@ -1916,8 +2123,8 @@ function generateTemplateReplacements(listing) {
     
     // Generate carousel controls
     let carouselControls = '';
-    if (photos.length > 1) {
-        const dots = photos.map((_, index) => 
+    if (photoList.length > 1) {
+        const dots = photoList.map((_, index) => 
             `<span class="carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>`
         ).join('');
         carouselControls = `
@@ -1938,13 +2145,15 @@ function generateTemplateReplacements(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     // Generate status badges
+    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
+    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+    const isVerified = listing.verified || listing.tier === 'VERIFIED';
+    const isClaimed = listing.is_claimed || (owner && owner.owner_user_id) || listing.show_claim_button === false;
+    
     let statusBadges = '';
-    if (listing.tier === 'PREMIUM') {
+    if (isFeatured) {
         statusBadges += '<span class="badge badge-featured">Featured</span>';
-        statusBadges += '<span class="badge badge-verified">Verified</span>';
-    } else if (listing.tier === 'FEATURED') {
-        statusBadges += '<span class="badge badge-featured">Featured</span>';
-    } else if (listing.verified || listing.tier === 'VERIFIED') {
+    } else if (isVerified) {
         statusBadges += '<span class="badge badge-verified">Verified</span>';
     }
     
@@ -1952,9 +2161,19 @@ function generateTemplateReplacements(listing) {
         statusBadges += '<span class="badge" style="background:#9333ea;color:white;">Chain</span>';
     }
     
-    statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed</span>';
+    statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed Now</span>';
     
     const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '';
+
+    let claimedCheckmark = '';
+    if (isFeatured || isVerified || isClaimed) {
+        claimedCheckmark = '<span class="inline-flex items-center ml-2">' +
+            '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+            '<circle cx="12" cy="12" r="12" fill="#045193"></circle>' +
+            '<path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+            '</svg>' +
+            '</span>';
+    }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
@@ -2048,6 +2267,27 @@ function generateTemplateReplacements(listing) {
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
+    let additionalInfoSection = '';
+    if (Array.isArray(listing.additional_info) && listing.additional_info.length > 0) {
+        const infoRows = listing.additional_info
+            .filter(info => info && info.label && info.value)
+            .map(info => `
+                <div class="flex justify-between text-sm gap-4">
+                    <span class="font-medium text-gray-900">${escapeHtml(info.label)}</span>
+                    <span class="text-gray-700">${escapeHtml(info.value)}</span>
+                </div>
+            `).join('');
+        
+        if (infoRows) {
+            additionalInfoSection = `
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-900 mb-2">Additional Information</h3>
+                    <div class="space-y-2">${infoRows}</div>
+                </div>
+            `;
+        }
+    }
     
     let phoneButton = '';
     if (listing.phone) {
@@ -2102,6 +2342,27 @@ function generateTemplateReplacements(listing) {
             </a>
         `;
     }
+
+    const maxCtaButtons = listing.tier === 'PREMIUM' ? 2 : (listing.tier === 'FEATURED' ? 1 : 0);
+    let customCtaButtons = '';
+    if (maxCtaButtons > 0 && Array.isArray(listing.custom_ctas)) {
+        customCtaButtons = listing.custom_ctas
+            .filter(cta => cta && cta.name && cta.url)
+            .slice(0, maxCtaButtons)
+            .map(cta => {
+                const label = String(cta.name).trim().slice(0, 15);
+                const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#055193';
+                const icon = cta.icon ? `<span class="text-base">${escapeHtml(String(cta.icon).trim())}</span>` : '';
+                return `
+                    <a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer"
+                        class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90"
+                        style="background-color:${color};" data-cta-name="${escapeHtml(label)}">
+                        ${icon}
+                        <span>${escapeHtml(label)}</span>
+                    </a>
+                `;
+            }).join('');
+    }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
@@ -2125,19 +2386,24 @@ function generateTemplateReplacements(listing) {
         'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
         'TOTAL_PHOTOS': totalPhotos,
         'PHOTOS_SLIDES': photosSlides,
+        'PHOTOS_ARRAY': photoList.map(photo => `'${photo.replace(/'/g, "\\'")}'`).join(', '),
+        'PHOTOS_JSON': JSON.stringify(photoList),
         'CAROUSEL_CONTROLS': carouselControls,
         'SUBCATEGORIES_TAGS': subcategoriesTags,
         'STATUS_BADGES': statusBadges,
         'TAGLINE_DISPLAY': taglineDisplay,
+        'CLAIMED_CHECKMARK': claimedCheckmark,
         'ADDRESS_SECTION': addressSection,
         'PHONE_SECTION': phoneSection,
         'EMAIL_SECTION': emailSection,
         'WEBSITE_SECTION': websiteSection,
         'HOURS_SECTION': hoursSection,
+        'ADDITIONAL_INFO_SECTION': additionalInfoSection,
         'PHONE_BUTTON': phoneButton,
         'EMAIL_BUTTON': emailButton,
         'WEBSITE_BUTTON': websiteButton,
-        'DIRECTIONS_BUTTON': directionsButton
+        'DIRECTIONS_BUTTON': directionsButton,
+        'CUSTOM_CTA_BUTTONS': customCtaButtons
     };
 }
 
@@ -2266,7 +2532,7 @@ function generateTemplateReplacementsPart2(listing) {
         const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
         
         claimButton = `
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center" id="claimListingSection">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
                 <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
