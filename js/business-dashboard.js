@@ -130,17 +130,21 @@ function getCloudflareConfig() {
     const stored = getStoredCloudflareConfig();
     const accountInput = document.getElementById('cloudflareAccountId');
     const apiKeyInput = document.getElementById('cloudflareApiKey');
+    const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
     const inputAccountId = accountInput?.value?.trim() || '';
     const inputApiKey = apiKeyInput?.value?.trim() || '';
-    if ((inputAccountId || inputApiKey) && (!stored.accountId || !stored.apiKey)) {
+    const inputUploadEndpoint = uploadEndpointInput?.value?.trim() || '';
+    if ((inputAccountId || inputApiKey || inputUploadEndpoint) && (!stored.accountId || !stored.apiKey || !stored.uploadEndpoint)) {
         setStoredCloudflareConfig({
             accountId: inputAccountId,
-            apiKey: inputApiKey
+            apiKey: inputApiKey,
+            uploadEndpoint: inputUploadEndpoint
         });
     }
     return {
         accountId: stored.accountId || inputAccountId || config.accountId || '',
-        apiKey: stored.apiKey || inputApiKey || config.apiKey || ''
+        apiKey: stored.apiKey || inputApiKey || config.apiKey || '',
+        uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
     };
 }
 
@@ -152,7 +156,24 @@ function setMediaUploadStatus(message, isError = false) {
 }
 
 async function uploadToCloudflareImages(file) {
-    const { accountId, apiKey } = getCloudflareConfig();
+    const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
+    if (uploadEndpoint) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch(uploadEndpoint, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
+            throw new Error(errorMessage);
+        }
+        
+        const variants = result?.result?.variants || [];
+        return variants[0] || result?.result?.url || '';
+    }
     if (!accountId || !apiKey) {
         throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
     }
@@ -264,21 +285,25 @@ function attachMediaUploadHandlers() {
 function attachCloudflareConfigHandlers() {
     const accountInput = document.getElementById('cloudflareAccountId');
     const apiKeyInput = document.getElementById('cloudflareApiKey');
-    if (!accountInput || !apiKeyInput) return;
+    const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
+    if (!accountInput || !apiKeyInput || !uploadEndpointInput) return;
     
     const config = getCloudflareConfig();
     accountInput.value = config.accountId || '';
     apiKeyInput.value = config.apiKey || '';
+    uploadEndpointInput.value = config.uploadEndpoint || '';
     
     const saveConfig = () => {
         setStoredCloudflareConfig({
             accountId: accountInput.value.trim(),
-            apiKey: apiKeyInput.value.trim()
+            apiKey: apiKeyInput.value.trim(),
+            uploadEndpoint: uploadEndpointInput.value.trim()
         });
     };
     
     accountInput.addEventListener('input', saveConfig);
     apiKeyInput.addEventListener('input', saveConfig);
+    uploadEndpointInput.addEventListener('input', saveConfig);
 }
 
 /*
@@ -486,7 +511,7 @@ function renderEditForm() {
                     <div class="grid grid-cols-1 gap-4">
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="text-sm font-semibold text-gray-800">Cloudflare Images</div>
-                            <p class="text-xs text-gray-500 mt-1">Credentials are stored locally in this browser.</p>
+                            <p class="text-xs text-gray-500 mt-1">Credentials and upload endpoint are stored locally in this browser.</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Account ID</label>
@@ -495,6 +520,11 @@ function renderEditForm() {
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">API Key</label>
                                     <input type="password" id="cloudflareApiKey" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Cloudflare API key">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Upload Endpoint (required for production)</label>
+                                    <input type="url" id="cloudflareUploadEndpoint" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="https://your-domain.com/cloudflare-upload">
+                                    <p class="text-[11px] text-gray-500 mt-1">Must proxy to Cloudflare Images to avoid CORS errors.</p>
                                 </div>
                             </div>
                         </div>
