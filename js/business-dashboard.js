@@ -105,11 +105,32 @@ function switchTab(tab) {
     document.getElementById(`tab-${tab}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600';
 }
 
+const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
+
+function getStoredCloudflareConfig() {
+    try {
+        const stored = localStorage.getItem(CLOUDFLARE_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+        console.warn('Unable to read Cloudflare config from storage:', error);
+        return {};
+    }
+}
+
+function setStoredCloudflareConfig(config) {
+    try {
+        localStorage.setItem(CLOUDFLARE_STORAGE_KEY, JSON.stringify(config));
+    } catch (error) {
+        console.warn('Unable to save Cloudflare config:', error);
+    }
+}
+
 function getCloudflareConfig() {
     const config = window.CLOUDFLARE_IMAGES_CONFIG || {};
+    const stored = getStoredCloudflareConfig();
     return {
-        accountId: config.accountId || '',
-        apiKey: config.apiKey || ''
+        accountId: stored.accountId || config.accountId || '',
+        apiKey: stored.apiKey || config.apiKey || ''
     };
 }
 
@@ -123,7 +144,7 @@ function setMediaUploadStatus(message, isError = false) {
 async function uploadToCloudflareImages(file) {
     const { accountId, apiKey } = getCloudflareConfig();
     if (!accountId || !apiKey) {
-        throw new Error('Cloudflare Images credentials are missing.');
+        throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
     }
     
     const formData = new FormData();
@@ -228,6 +249,26 @@ function attachMediaUploadHandlers() {
     
     const videoUpload = document.getElementById('editVideoUpload');
     if (videoUpload) videoUpload.onchange = handleVideoUpload;
+}
+
+function attachCloudflareConfigHandlers() {
+    const accountInput = document.getElementById('cloudflareAccountId');
+    const apiKeyInput = document.getElementById('cloudflareApiKey');
+    if (!accountInput || !apiKeyInput) return;
+    
+    const config = getCloudflareConfig();
+    accountInput.value = config.accountId || '';
+    apiKeyInput.value = config.apiKey || '';
+    
+    const saveConfig = () => {
+        setStoredCloudflareConfig({
+            accountId: accountInput.value.trim(),
+            apiKey: apiKeyInput.value.trim()
+        });
+    };
+    
+    accountInput.addEventListener('input', saveConfig);
+    apiKeyInput.addEventListener('input', saveConfig);
 }
 
 /*
@@ -433,6 +474,20 @@ function renderEditForm() {
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Media</h3>
                     <p class="text-sm text-gray-600 mb-4">Upload media directly to Cloudflare Images. Photo limit for your tier: ${maxPhotos}</p>
                     <div class="grid grid-cols-1 gap-4">
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="text-sm font-semibold text-gray-800">Cloudflare Images</div>
+                            <p class="text-xs text-gray-500 mt-1">Credentials are stored locally in this browser.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Account ID</label>
+                                    <input type="text" id="cloudflareAccountId" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Cloudflare account ID">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">API Key</label>
+                                    <input type="password" id="cloudflareApiKey" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Cloudflare API key">
+                                </div>
+                            </div>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
                             <input type="file" id="editLogoUpload" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
@@ -653,6 +708,7 @@ function renderEditForm() {
     renderSubcategories();
     updateMediaPreview();
     attachMediaUploadHandlers();
+    attachCloudflareConfigHandlers();
 }
 
 /*
