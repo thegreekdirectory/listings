@@ -1248,9 +1248,19 @@ function setStoredCloudflareConfig(config) {
 function getCloudflareConfig() {
     const config = window.CLOUDFLARE_IMAGES_CONFIG || {};
     const stored = getStoredCloudflareConfig();
+    const accountInput = document.getElementById('cloudflareAccountId');
+    const apiKeyInput = document.getElementById('cloudflareApiKey');
+    const inputAccountId = accountInput?.value?.trim() || '';
+    const inputApiKey = apiKeyInput?.value?.trim() || '';
+    if ((inputAccountId || inputApiKey) && (!stored.accountId || !stored.apiKey)) {
+        setStoredCloudflareConfig({
+            accountId: inputAccountId,
+            apiKey: inputApiKey
+        });
+    }
     return {
-        accountId: stored.accountId || config.accountId || '',
-        apiKey: stored.apiKey || config.apiKey || ''
+        accountId: stored.accountId || inputAccountId || config.accountId || '',
+        apiKey: stored.apiKey || inputApiKey || config.apiKey || ''
     };
 }
 
