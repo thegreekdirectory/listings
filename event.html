@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event | The Greek Directory</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/supabase-config.js" defer></script>
+  <script src="/js/partials-loader.js" defer></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-white">
+  <div data-partial="header"></div>
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <h1 id="eventTitle" class="text-3xl font-bold"></h1>
+    <img id="eventImage" class="w-full h-72 object-cover rounded-xl mt-4" loading="lazy" alt="Event image" />
+    <p id="eventDescription" class="mt-5 text-gray-700"></p>
+    <div class="mt-4 flex items-center gap-2 text-gray-700"><span>🕒</span><span id="eventDateTime"></span></div>
+    <a id="eventWebsite" class="mt-3 inline-block text-blue-700" target="_blank" rel="noopener"></a>
+    <div id="quickInfo" class="mt-6 bg-gray-50 border rounded-xl p-4"></div>
+    <div class="grid md:grid-cols-2 gap-4 mt-6">
+      <section id="organizerBox" class="border rounded-xl p-4"></section>
+      <section id="venueBox" class="border rounded-xl p-4"></section>
+    </div>
+    <section class="mt-6">
+      <h2 class="font-semibold text-lg mb-2">Map</h2>
+      <div id="eventMap" class="h-72 rounded-xl border"></div>
+    </section>
+  </main>
+  <div data-partial="footer"></div>
+  <script type="module">
+    const slug = window.location.pathname.split('/').pop();
+    const { data: event } = await window.supabaseClient.from('events').select('*').eq('slug', slug).single();
+    if (!event) return;
+
+    const showField = (label, value) => value ? `<p class='text-sm mt-1'><span class='font-semibold'>${label}:</span> ${value}</p>` : '';
+    eventTitle.textContent = event.title;
+    eventImage.src = event.image_url || 'https://placehold.co/960x540';
+    eventDescription.textContent = event.description || '';
+    eventDateTime.textContent = `${new Date(event.start_datetime).toLocaleString()}${event.end_datetime ? ` - ${new Date(event.end_datetime).toLocaleString()}` : ''}`;
+    if (event.organizer_website) { eventWebsite.href = event.organizer_website; eventWebsite.textContent = event.organizer_website; }
+    quickInfo.innerHTML = showField('Venue', event.venue_name) + showField('Address', event.venue_address);
+    organizerBox.innerHTML = `<h3 class='font-semibold'>Organizer</h3>${showField('Name', event.organizer_name)}${showField('Phone', event.organizer_phone)}${showField('Email', event.organizer_email)}${showField('Website', event.organizer_website)}`;
+    venueBox.innerHTML = `<h3 class='font-semibold'>Venue</h3>${showField('Name', event.venue_name)}${showField('Phone', event.venue_phone)}${showField('Email', event.venue_email)}${showField('Website', event.venue_website)}`;
+    if (!organizerBox.textContent.trim().replace('Organizer', '')) organizerBox.classList.add('hidden');
+    if (!venueBox.textContent.trim().replace('Venue', '')) venueBox.classList.add('hidden');
+
+    if (event.venue_address) {
+      const map = L.map('eventMap').setView([41.8781, -87.6298], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+      const result = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(event.venue_address)}`).then((r) => r.json());
+      if (result[0]) {
+        const point = [Number(result[0].lat), Number(result[0].lon)];
+        map.setView(point, 14);
+        L.marker(point).addTo(map);
+      }
+    }
+  </script>
+</body>
+</html>

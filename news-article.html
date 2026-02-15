@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Article | The Greek Directory</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/supabase-config.js" defer></script>
+  <script src="/js/partials-loader.js" defer></script>
+</head>
+<body class="bg-white">
+  <div data-partial="header"></div>
+  <main class="max-w-3xl mx-auto px-4 py-8">
+    <article class="prose prose-lg max-w-none">
+      <h1 id="newsTitle"></h1>
+      <p id="newsMeta" class="text-sm text-gray-500"></p>
+      <img id="newsImage" class="rounded-xl w-full h-80 object-cover" loading="lazy" alt="" />
+      <div id="newsContent" class="mt-6"></div>
+    </article>
+  </main>
+  <div data-partial="footer"></div>
+  <script type="module">
+    const slug = window.location.pathname.split('/').pop();
+    const { data } = await window.supabaseClient
+      .from('news_articles')
+      .select('*, listings(business_name,slug)')
+      .eq('slug', slug)
+      .single();
+    if (!data) return;
+    newsTitle.textContent = data.title;
+    newsMeta.textContent = `${new Date(data.created_at).toLocaleDateString()}${data.listings?.business_name ? ` • Source: ${data.listings.business_name}` : ''}`;
+    if (data.image_url) newsImage.src = data.image_url; else newsImage.classList.add('hidden');
+    newsContent.innerHTML = data.content;
+  </script>
+</body>
+</html>
