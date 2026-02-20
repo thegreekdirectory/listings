@@ -39,6 +39,7 @@ let primarySubcategory = null;
 let settingsVisibility = { email: false, phone: false };
 let currentMaxPhotos = 1;
 let currentMaxCtas = 0;
+let analyticsEvents = [];
 
 async function loadListingData() {
     if (!ownerData || ownerData.length === 0) {
@@ -59,6 +60,7 @@ async function loadListingData() {
         
         currentListing = data;
         console.log('Listing loaded:', currentListing);
+        await loadListingAnalytics(listingId);
         
     } catch (error) {
         console.error('Error loading listing:', error);
@@ -69,6 +71,24 @@ async function loadListingData() {
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
+
+
+async function loadListingAnalytics(listingId) {
+    try {
+        const { data, error } = await window.TGDAuth.supabaseClient
+            .from('listing_analytics')
+            .select('*')
+            .eq('listing_id', listingId)
+            .order('timestamp', { ascending: false })
+            .limit(5000);
+
+        if (error) throw error;
+        analyticsEvents = data || [];
+    } catch (error) {
+        console.error('Error loading listing analytics:', error);
+        analyticsEvents = [];
+    }
+}
 
 function renderDashboard() {
     if (!currentListing) return;
@@ -1062,111 +1082,51 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function renderAnalytics() {
     if (!currentListing) return;
-    
+
     const tier = currentListing.tier || 'FREE';
-    const analytics = currentListing.analytics || {
-        views: 0,
-        call_clicks: 0,
-        website_clicks: 0,
-        direction_clicks: 0,
-        share_clicks: 0,
-        video_plays: 0
-    };
-    
     const content = document.getElementById('content-analytics');
-    
-    let html = '';
-    
+    const summary = window.TGDAnalytics.summarizeEvents(analyticsEvents);
+    const totals = summary.totals;
+    const totalEngagement = totals.call_clicks + totals.website_clicks + totals.direction_clicks + totals.share_clicks + totals.custom_cta_clicks;
+
+    const topItems = (obj, max = 5) => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, max);
+    const renderMiniTable = (title, items) => `
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-3">${title}</h4>
+            ${items.length ? `<div class="space-y-2">${items.map(([k,v]) => `<div class="flex justify-between text-sm"><span class="text-gray-600 break-all pr-2">${k}</span><strong>${v}</strong></div>`).join('')}</div>` : '<div class="text-sm text-gray-500">No data yet</div>'}
+        </div>`;
+
+    let html = `
+        <div class="bg-white rounded-lg p-6 shadow-sm space-y-6">
+            <h2 class="text-2xl font-bold text-gray-900">Analytics</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="analytics-stat-card"><div class="text-3xl font-bold mb-2">${totals.views}</div><div class="text-sm opacity-90">Views</div></div>
+                <div class="analytics-stat-card" style="background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);"><div class="text-3xl font-bold mb-2">${totals.call_clicks}</div><div class="text-sm opacity-90">Call Clicks</div></div>
+                <div class="analytics-stat-card" style="background:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);"><div class="text-3xl font-bold mb-2">${totals.website_clicks}</div><div class="text-sm opacity-90">Website Clicks</div></div>
+                <div class="analytics-stat-card" style="background:linear-gradient(135deg,#43e97b 0%,#38f9d7 100%);"><div class="text-3xl font-bold mb-2">${totals.direction_clicks}</div><div class="text-sm opacity-90">Directions</div></div>
+                <div class="analytics-stat-card" style="background:linear-gradient(135deg,#fa709a 0%,#fee140 100%);"><div class="text-3xl font-bold mb-2">${totals.share_clicks}</div><div class="text-sm opacity-90">Shares</div></div>
+                <div class="analytics-stat-card" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);"><div class="text-3xl font-bold mb-2">${totalEngagement}</div><div class="text-sm opacity-90">Total Engagement</div></div>
+            </div>`;
+
     if (tier === 'FREE') {
-        html = `
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="analytics-stat-card">
-                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                        <div class="text-sm opacity-90">Total Views</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="text-4xl font-bold mb-2">${(analytics.call_clicks || 0) + (analytics.website_clicks || 0) + (analytics.direction_clicks || 0) + (analytics.share_clicks || 0)}</div>
-                        <div class="text-sm opacity-90">Total Engagement</div>
-                    </div>
-                </div>
-                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-sm text-blue-900"><strong>Want more?</strong> Upgrade to see detailed analytics!</p>
-                </div>
-            </div>
-        `;
-    } else if (tier === 'VERIFIED') {
-        html = `
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
-                
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div class="analytics-stat-card">
-                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                        <div class="text-sm opacity-90">Views</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90">📞 Calls</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90">🌐 Website</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90">🗺️ Directions</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Shares</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    } else {
-        html = `
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
-                
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div class="analytics-stat-card">
-                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                        <div class="text-sm opacity-90">Views</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90">📞 Calls</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90">🌐 Website</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90">🗺️ Directions</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Shares</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.video_plays || 0}</div>
-                        <div class="text-sm opacity-90">Video Plays</div>
-                    </div>
-                </div>
-            </div>
-        `;
+        html += `<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900"><strong>Free Tier:</strong> You can view top-line performance. Upgrade to unlock UTM campaign, source and referrer analytics.</div>`;
     }
-    
+
+    if (tier === 'VERIFIED' || tier === 'FEATURED' || tier === 'PREMIUM') {
+        html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${renderMiniTable('Top Traffic Sources (utm_source)', topItems(summary.bySource))}${renderMiniTable('Top Mediums (utm_medium)', topItems(summary.byMedium))}</div>`;
+    }
+
+    if (tier === 'FEATURED' || tier === 'PREMIUM') {
+        html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${renderMiniTable('Top Campaigns (utm_campaign)', topItems(summary.byCampaign))}${renderMiniTable('Top Referrers', topItems(summary.byReferrer))}</div>`;
+    }
+
+    if (tier === 'PREMIUM') {
+        html += `<div class="bg-gray-50 border border-gray-200 rounded-lg p-4"><h4 class="font-semibold text-gray-900 mb-3">Recent Events</h4><div class="max-h-64 overflow-auto">${analyticsEvents.slice(0, 75).map((e) => `<div class="text-xs py-1 border-b border-gray-200"><strong>${e.action}</strong> • ${new Date(e.timestamp).toLocaleString()} • ${e.utm_source || 'direct'} / ${e.utm_medium || 'none'} ${e.utm_campaign ? ' / '+e.utm_campaign : ''}</div>`).join('') || '<div class="text-sm text-gray-500">No events yet</div>'}</div></div>`;
+    }
+
+    html += '</div>';
     content.innerHTML = html;
 }
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
 
 function renderSettings() {
     if (!ownerData || ownerData.length === 0) return;

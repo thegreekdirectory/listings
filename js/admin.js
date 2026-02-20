@@ -504,46 +504,8 @@ window.viewAnalytics = async function(listingId) {
         
         console.log('Analytics data fetched:', analyticsData?.length || 0, 'events');
         
-        // Aggregate analytics
-        const analytics = {
-            views: 0,
-            call_clicks: 0,
-            website_clicks: 0,
-            direction_clicks: 0,
-            share_clicks: 0,
-            video_plays: 0,
-            detailedViews: analyticsData || [],
-            sharePlatforms: {}
-        };
-        
-        if (analyticsData && analyticsData.length > 0) {
-            analyticsData.forEach(event => {
-                switch(event.action) {
-                    case 'view':
-                        analytics.views++;
-                        break;
-                    case 'call':
-                        analytics.call_clicks++;
-                        break;
-                    case 'website':
-                        analytics.website_clicks++;
-                        break;
-                    case 'directions':
-                        analytics.direction_clicks++;
-                        break;
-                    case 'share':
-                        analytics.share_clicks++;
-                        if (event.platform) {
-                            analytics.sharePlatforms[event.platform] = (analytics.sharePlatforms[event.platform] || 0) + 1;
-                        }
-                        break;
-                    case 'video':
-                        analytics.video_plays++;
-                        break;
-                }
-            });
-        }
-        
+        const analytics = window.TGDAnalytics.summarizeEvents(analyticsData || []);
+        analytics.detailedViews = analyticsData || [];
         console.log('Aggregated analytics:', analytics);
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -556,7 +518,7 @@ window.viewAnalytics = async function(listingId) {
             modalTitle.textContent = `Analytics: ${listing.business_name}`;
         }
         if (modalContent) {
-            modalContent.innerHTML = generateAnalyticsContent(listing, analytics, analytics.detailedViews, analytics.sharePlatforms);
+            modalContent.innerHTML = generateAnalyticsContent(listing, analytics, analytics.detailedViews);
         }
 
         if (modal) {
@@ -572,145 +534,66 @@ window.viewAnalytics = async function(listingId) {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
-function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatforms) {
-    const views = analytics.views || 0;
-    const callClicks = analytics.call_clicks || 0;
-    const websiteClicks = analytics.website_clicks || 0;
-    const directionClicks = analytics.direction_clicks || 0;
-    const shareClicks = analytics.share_clicks || 0;
-    const videoPlays = analytics.video_plays || 0;
+function generateAnalyticsContent(listing, analytics, detailedViews) {
+    const totals = analytics.totals || {};
+    const views = totals.views || 0;
+    const callClicks = totals.call_clicks || 0;
+    const websiteClicks = totals.website_clicks || 0;
+    const directionClicks = totals.direction_clicks || 0;
+    const shareClicks = totals.share_clicks || 0;
+    const videoPlays = totals.video_plays || 0;
     const lastViewed = detailedViews.length > 0 ? new Date(detailedViews[0].timestamp).toLocaleString() : 'Never';
-    
-    // Summary stats
+
+    const renderTop = (title, obj) => {
+        const items = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        return `
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">${title}</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    ${items.length ? items.map(([name, count]) => `<div class="bg-white border border-gray-200 p-3 rounded-lg"><div class="text-2xl font-bold text-gray-900">${count}</div><div class="text-xs text-gray-600 break-all">${name}</div></div>`).join('') : '<div class="text-sm text-gray-500">No data yet</div>'}
+                </div>
+            </div>`;
+    };
+
     let content = `
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${views}</div>
-                <div class="text-sm opacity-90">Total Views</div>
-            </div>
-            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${callClicks}</div>
-                <div class="text-sm opacity-90">Call Clicks</div>
-            </div>
-            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${websiteClicks}</div>
-                <div class="text-sm opacity-90">Website Clicks</div>
-            </div>
-            <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${directionClicks}</div>
-                <div class="text-sm opacity-90">Direction Clicks</div>
-            </div>
-            <div class="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${shareClicks}</div>
-                <div class="text-sm opacity-90">Shares</div>
-            </div>
-            <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${videoPlays}</div>
-                <div class="text-sm opacity-90">Video Plays</div>
-            </div>
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg"><div class="text-3xl font-bold">${views}</div><div class="text-sm opacity-90">Total Views</div></div>
+            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg"><div class="text-3xl font-bold">${callClicks}</div><div class="text-sm opacity-90">Call Clicks</div></div>
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-lg"><div class="text-3xl font-bold">${websiteClicks}</div><div class="text-sm opacity-90">Website Clicks</div></div>
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg"><div class="text-3xl font-bold">${directionClicks}</div><div class="text-sm opacity-90">Direction Clicks</div></div>
+            <div class="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-4 rounded-lg"><div class="text-3xl font-bold">${shareClicks}</div><div class="text-sm opacity-90">Share Clicks</div></div>
+            <div class="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-lg"><div class="text-3xl font-bold">${videoPlays}</div><div class="text-sm opacity-90">Video Plays</div></div>
         </div>
-        
-        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-            <div class="text-sm text-gray-600">Last Viewed: <span class="font-semibold text-gray-900">${lastViewed}</span></div>
+
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+            <div class="text-sm text-gray-600">Last Activity</div>
+            <div class="text-lg font-semibold">${lastViewed}</div>
         </div>
     `;
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
-    // Share platforms breakdown
-    if (Object.keys(sharePlatforms).length > 0) {
-        content += `
-            <div class="mb-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-3">Share Platform Breakdown</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        `;
-        
-        const platformNames = {
-            'facebook': '📘 Facebook',
-            'twitter': '🐦 Twitter/X',
-            'linkedin': '💼 LinkedIn',
-            'sms': '💬 SMS',
-            'email': '📧 Email',
-            'native': '📱 Native Share'
-        };
-        
-        Object.entries(sharePlatforms).forEach(([platform, count]) => {
-            content += `
-                <div class="bg-white border border-gray-200 p-3 rounded-lg">
-                    <div class="text-2xl font-bold text-gray-900">${count}</div>
-                    <div class="text-xs text-gray-600">${platformNames[platform] || platform}</div>
-                </div>
-            `;
-        });
-        
-        content += `
-                </div>
-            </div>
-        `;
-    }
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
-    // Detailed activity log
+
+    content += renderTop('Share Platform Breakdown', analytics.sharePlatforms);
+    content += renderTop('Top UTM Sources', analytics.bySource);
+    content += renderTop('Top UTM Mediums', analytics.byMedium);
+    content += renderTop('Top UTM Campaigns', analytics.byCampaign);
+    content += renderTop('Top Referrers', analytics.byReferrer);
+
     if (detailedViews.length > 0) {
         content += `
             <div class="mb-6">
                 <h3 class="text-lg font-bold text-gray-900 mb-3">Activity Log (Last ${Math.min(detailedViews.length, 100)} Events)</h3>
                 <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50 border-b">
-                            <tr>
-                                <th class="text-left py-2 px-4 font-semibold">Timestamp</th>
-                                <th class="text-left py-2 px-4 font-semibold">Action</th>
-                                <th class="text-left py-2 px-4 font-semibold">Details</th>
-                            </tr>
-                        </thead>
+                        <thead class="bg-gray-50 border-b"><tr><th class="text-left py-2 px-4 font-semibold">Timestamp</th><th class="text-left py-2 px-4 font-semibold">Action</th><th class="text-left py-2 px-4 font-semibold">Attribution</th></tr></thead>
                         <tbody>
-        `;
-        
-        // Show latest 100 events
-        const recentViews = detailedViews.slice(0, 100);
-        
-        recentViews.forEach(view => {
-            const timestamp = new Date(view.timestamp).toLocaleString();
-            const actionIcons = {
-                'view': '👁️ View',
-                'call': '📞 Call',
-                'website': '🌐 Website',
-                'directions': '🗺️ Directions',
-                'share': '📤 Share',
-                'video': '🎥 Video'
-            };
-            
-            const actionText = actionIcons[view.action] || view.action;
-            const platform = view.platform ? ` (${view.platform})` : '';
-            const userAgent = view.user_agent ? view.user_agent.substring(0, 50) + '...' : 'Unknown';
-            
-            content += `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-2 px-4 text-gray-600">${timestamp}</td>
-                    <td class="py-2 px-4 font-medium">${actionText}${platform}</td>
-                    <td class="py-2 px-4 text-xs text-gray-500">${userAgent}</td>
-                </tr>
-            `;
-        });
-        
-        content += `
+                        ${detailedViews.slice(0,100).map((view) => `<tr class="border-b hover:bg-gray-50"><td class="py-2 px-4 text-gray-600">${new Date(view.timestamp).toLocaleString()}</td><td class="py-2 px-4 font-medium">${view.action}${view.platform ? ' (' + view.platform + ')' : ''}</td><td class="py-2 px-4 text-xs text-gray-500 break-all">${view.utm_source || 'direct'} / ${view.utm_medium || 'none'}${view.utm_campaign ? ' / ' + view.utm_campaign : ''}</td></tr>`).join('')}
                         </tbody>
                     </table>
                 </div>
-            </div>
-        `;
+            </div>`;
     } else {
-        content += `
-            <div class="p-8 text-center bg-gray-50 rounded-lg">
-                <div class="text-gray-400 text-4xl mb-2">📊</div>
-                <div class="text-gray-600">No analytics data available yet</div>
-                <div class="text-sm text-gray-500 mt-2">Visit the listing page to generate some activity</div>
-            </div>
-        `;
+        content += `<div class="p-8 text-center bg-gray-50 rounded-lg"><div class="text-gray-400 text-4xl mb-2">📊</div><div class="text-gray-600">No analytics data available yet</div></div>`;
     }
-    
+
     return content;
 }
 
