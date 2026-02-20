@@ -389,6 +389,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     <script src="/js/pwa/app.js"></script>
     <script src="/js/pwa/dock.js"></script>
     <script src="/js/pwa/starred.js"></script>
+    <script src="/js/analytics-engine.js"></script>
 
     <script>
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -432,9 +433,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         
         const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
-        
+
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
+
         const totalSlides = {{TOTAL_PHOTOS}};
         const businessName = '{{BUSINESS_NAME}}';
         const listingUrl = '{{LISTING_URL}}';
@@ -442,12 +443,20 @@ or distribution of this code can result in legal action to the fullest extent pe
         const hoursData = {{HOURS_JSON}};
         const galleryPhotos = {{PHOTOS_JSON}};
         let currentGalleryIndex = 0;
-        
+        const websiteDomain = '{{WEBSITE_DOMAIN}}';
+
+        const analyticsTracker = window.TGDAnalytics.createTracker({
+            supabaseClient,
+            listingId,
+            listingUrl,
+            websiteDomain
+        });
+
         function toggleSubcategories() {
             const display = document.getElementById('subcategoriesDisplay');
             display.classList.toggle('active');
         }
-        
+
         function formatPhoneDisplay(phone) {
             if (!phone) return '';
             const digits = phone.replace(/\D/g, '');
@@ -456,9 +465,9 @@ or distribution of this code can result in legal action to the fullest extent pe
             }
             return phone;
         }
-        
+
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.text-gray-600, .text-gray-700').forEach(el => {
                 if (el.textContent.includes('+1')) {
@@ -468,59 +477,19 @@ or distribution of this code can result in legal action to the fullest extent pe
                     }
                 }
             });
-        });
-        
-        async function trackAnalytics(action, platform) {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('listing_analytics')
-                    .insert({
-                        listing_id: listingId,
-                        action: action,
-                        platform: platform || null,
-                        timestamp: new Date().toISOString(),
-                        user_agent: navigator.userAgent
-                    });
-                
-                if (error) throw error;
-            } catch (e) {
-                console.log('Analytics tracking error:', e.message);
-            }
-        }
-        
-        window.addEventListener('load', () => {
-            trackAnalytics('view');
-        });
-        
-        function trackClick(action, platform) {
-            trackAnalytics(action, platform);
-        }
-        
-        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('a[href^="tel:"]').forEach(el => {
-                el.addEventListener('click', () => trackClick('call'));
-            });
-            
-            document.querySelectorAll('a[href*="maps"]').forEach(el => {
-                el.addEventListener('click', () => trackClick('directions'));
-            });
-            
-            const websiteDomain = '{{WEBSITE_DOMAIN}}';
-            if (websiteDomain) {
-                document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
-                    el.addEventListener('click', () => trackClick('website'));
-                });
-            }
 
-            document.querySelectorAll('[data-cta-name]').forEach(el => {
-                el.addEventListener('click', () => trackClick('custom_cta', el.dataset.ctaName || 'custom'));
-            });
-            
+            analyticsTracker.bindAutoTracking();
             checkAdminRedirect();
         });
-        
+
+        window.addEventListener('load', () => {
+            analyticsTracker.track('view');
+        });
+
+        function trackClick(action, platform) {
+            analyticsTracker.track(action, { platform });
+        }
+
         function checkAdminRedirect() {
             const path = window.location.pathname;
             if (path.endsWith('/admin')) {
