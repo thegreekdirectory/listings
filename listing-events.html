@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Listing Events | The Greek Directory</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/supabase-config.js" defer></script>
+  <script src="/js/partials-loader.js" defer></script>
+</head>
+<body class="bg-gray-50">
+  <div data-partial="header"></div>
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="flex gap-2 text-sm mb-5">
+      <a id="overviewTab" class="px-4 py-2 bg-gray-200 rounded-lg" href="#">Overview</a>
+      <a id="eventsTab" class="px-4 py-2 bg-blue-700 text-white rounded-lg" href="#">Events</a>
+    </nav>
+    <h1 id="listingEventsTitle" class="text-2xl font-bold">Listing Events</h1>
+    <div id="listingEventsGrid" class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </main>
+  <div data-partial="footer"></div>
+  <script type="module">
+    import { fetchPublishedEvents, renderEventCards } from '/js/events.js';
+    const listingSlug = window.location.pathname.split('/')[1];
+    const { data } = await window.supabaseClient.from('listings').select('id,business_name,slug').eq('slug', listingSlug).single();
+    if (data) {
+      document.getElementById('listingEventsTitle').textContent = `${data.business_name} Events`;
+      document.getElementById('overviewTab').href = `/listing/${data.slug}`;
+      document.getElementById('eventsTab').href = `/${data.slug}/events`;
+      const events = await fetchPublishedEvents({ listingId: data.id });
+      renderEventCards(events, document.getElementById('listingEventsGrid'));
+    }
+  </script>
+</body>
+</html>

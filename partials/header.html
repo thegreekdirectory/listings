@@ -14,6 +14,8 @@
             <nav id="headerFullNav" class="flex items-center gap-1">
                 <a href="/" id="navHome" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
                 <a href="/listings" id="navListings" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
+                <a href="/events" id="navEvents" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Events</a>
+                <a href="/news" id="navNews" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">News</a>
                 <a href="/about" id="navAbout" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
                 <a href="/listings?starred=1" 
                    id="headerStarBtn" 
@@ -51,6 +53,8 @@
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
             <a href="/" id="dropHome" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
             <a href="/listings" id="dropListings" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
+            <a href="/events" id="dropEvents" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Events</a>
+            <a href="/news" id="dropNews" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">News</a>
             <a href="/about" id="dropAbout" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
         </div>
     </div>
@@ -82,9 +86,13 @@
 
     applyActive(document.getElementById('navHome'),     '/');
     applyActive(document.getElementById('navListings'), '/listings');
+    applyActive(document.getElementById('navEvents'),   '/events');
+    applyActive(document.getElementById('navNews'),     '/news');
     applyActive(document.getElementById('navAbout'),    '/about');
     applyActive(document.getElementById('dropHome'),     '/');
     applyActive(document.getElementById('dropListings'), '/listings');
+    applyActive(document.getElementById('dropEvents'),   '/events');
+    applyActive(document.getElementById('dropNews'),     '/news');
     applyActive(document.getElementById('dropAbout'),    '/about');
 
     // ── Responsive hamburger ──
