@@ -32,7 +32,7 @@ class PWADock {
         ];
         
         // Default dock order with Categories
-        this.defaultDockOrder = ['home', 'categories', 'search', 'starred', 'settings'];
+        this.defaultDockOrder = ['home', 'search', 'map', 'starred', 'settings'];
         
         // Load saved dock configuration or use default
         this.loadDockConfig();
