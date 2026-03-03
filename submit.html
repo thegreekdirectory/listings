@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Your Business - The Greek Directory</title>
+    <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/submit.css">
+</head>
+<body>
+    <main class="submit-wrap">
+        <header class="submit-header">
+            <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory logo">
+            <h1>Business Listing Submission</h1>
+            <p>Submit your business and our admin team will review it.</p>
+        </header>
+
+        <form id="submitForm" class="submit-form">
+            <section>
+                <h2>Basic Information</h2>
+                <label>Business Name * <input type="text" id="business_name" required></label>
+                <label>Slug <input type="text" id="slug" placeholder="auto-generated if empty"></label>
+                <label>Tagline * <input type="text" id="tagline" maxlength="75" required></label>
+                <label>Description * <textarea id="description" rows="5" required></textarea></label>
+                <label>Category *
+                    <select id="category" required></select>
+                </label>
+                <label>Subcategories *
+                    <div id="subcategoryCheckboxes" class="checks"></div>
+                </label>
+                <label><input type="checkbox" id="is_chain"> This is a chain business</label>
+                <label>Chain Name <input type="text" id="chain_name"></label>
+                <label>Chain ID <input type="text" id="chain_id"></label>
+            </section>
+
+            <section>
+                <h2>Location</h2>
+                <label>Address <input type="text" id="address"></label>
+                <label>City <input type="text" id="city"></label>
+                <label>State
+                    <select id="state"></select>
+                </label>
+                <label>Zip Code <input type="text" id="zip_code"></label>
+                <label>Country
+                    <select id="country"><option value="USA">USA</option></select>
+                </label>
+            </section>
+
+            <section>
+                <h2>Contact</h2>
+                <label>Phone <input type="text" id="phone"></label>
+                <label>Email <input type="email" id="email"></label>
+                <label>Website <input type="url" id="website"></label>
+            </section>
+
+            <section>
+                <h2>Hours of Operation</h2>
+                <div id="hoursFields" class="hours-grid"></div>
+            </section>
+
+            <section>
+                <h2>Social Media</h2>
+                <label>Facebook <input type="text" id="facebook"></label>
+                <label>Instagram <input type="text" id="instagram"></label>
+                <label>Twitter/X <input type="text" id="twitter"></label>
+                <label>YouTube <input type="text" id="youtube"></label>
+                <label>TikTok <input type="text" id="tiktok"></label>
+                <label>LinkedIn URL <input type="url" id="linkedin"></label>
+                <label>Other Social 1 Name <input type="text" id="other1_name"></label>
+                <label>Other Social 1 URL <input type="url" id="other1"></label>
+                <label>Other Social 2 Name <input type="text" id="other2_name"></label>
+                <label>Other Social 2 URL <input type="url" id="other2"></label>
+                <label>Other Social 3 Name <input type="text" id="other3_name"></label>
+                <label>Other Social 3 URL <input type="url" id="other3"></label>
+            </section>
+
+            <section>
+                <h2>Reviews</h2>
+                <label>Google Reviews URL <input type="url" id="google_reviews"></label>
+                <label>Yelp URL <input type="url" id="yelp"></label>
+                <label>TripAdvisor URL <input type="url" id="tripadvisor"></label>
+                <label>Other Review 1 Name <input type="text" id="other_review_1_name"></label>
+                <label>Other Review 1 URL <input type="url" id="other_review_1"></label>
+                <label>Other Review 2 Name <input type="text" id="other_review_2_name"></label>
+                <label>Other Review 2 URL <input type="url" id="other_review_2"></label>
+                <label>Other Review 3 Name <input type="text" id="other_review_3_name"></label>
+                <label>Other Review 3 URL <input type="url" id="other_review_3"></label>
+            </section>
+
+            <section>
+                <h2>Additional Information</h2>
+                <div id="additionalInfoFields" class="pair-grid"></div>
+                <h3>Custom CTA Buttons (optional)</h3>
+                <div id="ctaFields" class="pair-grid"></div>
+            </section>
+
+            <section>
+                <h2>Owner Information</h2>
+                <label>Owner Name <input type="text" id="owner_name"></label>
+                <label>Title <input type="text" id="owner_title"></label>
+                <label>From Greece <input type="text" id="from_greece"></label>
+                <label>Owner Email <input type="email" id="owner_email"></label>
+                <label>Owner Phone <input type="text" id="owner_phone"></label>
+            </section>
+
+            <section>
+                <h2>Media URLs</h2>
+                <label>Logo URL <input type="url" id="logo"></label>
+                <label>Photos URLs (one per line) <textarea id="photos" rows="4"></textarea></label>
+                <label>Video URL <input type="url" id="video"></label>
+            </section>
+
+            <button type="submit" id="submitBtn">Submit for Review</button>
+            <p id="submitStatus"></p>
+        </form>
+    </main>
+
+    <script src="js/submit.js"></script>
+</body>
+</html>

@@ -58,6 +58,8 @@
 
         <div class="max-w-7xl mx-auto px-4 py-6">
             <div class="mb-6 flex gap-3 flex-wrap">
+                <button id="listingsViewBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">Listings</button>
+                <button id="requestsViewBtn" class="px-4 py-2 bg-orange-100 text-orange-800 rounded-lg font-medium">Requests</button>
                 <button id="newListingBtn" class="px-4 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">+ New Listing</button>
                 <input type="text" id="adminSearch" placeholder="Search listings..." 
                     class="px-4 py-2 border border-gray-300 rounded-lg flex-1 min-w-[200px]">
@@ -67,7 +69,7 @@
                 <input type="file" id="csvUpload" accept=".csv" class="hidden" onchange="handleCSVUpload(event)">
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div id="listingsSection" class="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-50">
@@ -84,6 +86,24 @@
                             </tr>
                         </thead>
                         <tbody id="listingsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="requestsSection" class="bg-white rounded-lg shadow-sm overflow-hidden hidden mt-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-orange-50">
+                            <tr>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Request ID</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Business Name</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Category</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Location</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Submitted</th>
+                                <th class="text-right py-3 px-4 font-semibold text-gray-900">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTableBody"></tbody>
                     </table>
                 </div>
             </div>
