@@ -88,6 +88,8 @@ let editingListing = null;
 let selectedSubcategories = [];
 let primarySubcategory = null;
 let userCountry = 'USA';
+let allRequests = [];
+let currentAdminView = 'listings';
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing Admin Portal...');
@@ -145,14 +147,22 @@ function setupEventListeners() {
     document.getElementById('saveEdit')?.addEventListener('click', saveListing);
     document.getElementById('generateAllBtn')?.addEventListener('click', generateAllListingPages);
     document.getElementById('csvUpload')?.addEventListener('change', handleCSVUpload);
+    document.getElementById('listingsViewBtn')?.addEventListener('click', () => switchAdminView('listings'));
+    document.getElementById('requestsViewBtn')?.addEventListener('click', () => switchAdminView('requests'));
     document.getElementById('cancelEdit')?.addEventListener('click', () => {
         if (confirm('Discard changes?')) {
             document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').dataset.mode = '';
+            document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('saveEdit')?.classList.remove('hidden');
         }
     });
     document.getElementById('closeModal')?.addEventListener('click', () => {
         if (confirm('Discard changes?')) {
             document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').dataset.mode = '';
+            document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('saveEdit')?.classList.remove('hidden');
         }
     });
     document.getElementById('closeAnalyticsModal')?.addEventListener('click', () => {
@@ -206,6 +216,7 @@ async function handleAdminLogin() {
         showSuccess('Login successful!');
         showDashboard();
         await loadListings();
+        await loadRequests();
         
     } catch (error) {
         console.error('Login error:', error);
@@ -361,10 +372,258 @@ async function loadListings() {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
+
+
+async function loadRequests() {
+    try {
+        const { data, error } = await adminSupabase
+            .from('listing_requests')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            if (error.code === '42P01') {
+                allRequests = [];
+                renderRequestsTable();
+                return;
+            }
+            throw error;
+        }
+
+        allRequests = data || [];
+        renderRequestsTable();
+    } catch (error) {
+        console.error('❌ Error loading requests:', error);
+        alert('Failed to load requests: ' + error.message);
+    }
+}
+
+function switchAdminView(view) {
+    currentAdminView = view;
+    const listingsBtn = document.getElementById('listingsViewBtn');
+    const requestsBtn = document.getElementById('requestsViewBtn');
+    const listingsSection = document.getElementById('listingsSection');
+    const requestsSection = document.getElementById('requestsSection');
+    const newListingBtn = document.getElementById('newListingBtn');
+
+    if (view === 'requests') {
+        listingsSection?.classList.add('hidden');
+        requestsSection?.classList.remove('hidden');
+        if (newListingBtn) newListingBtn.classList.add('hidden');
+        if (listingsBtn) {
+            listingsBtn.className = 'px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-medium';
+        }
+        if (requestsBtn) {
+            requestsBtn.className = 'px-4 py-2 bg-orange-600 text-white rounded-lg font-medium';
+        }
+        loadRequests();
+    } else {
+        requestsSection?.classList.add('hidden');
+        listingsSection?.classList.remove('hidden');
+        if (newListingBtn) newListingBtn.classList.remove('hidden');
+        if (listingsBtn) {
+            listingsBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg font-medium';
+        }
+        if (requestsBtn) {
+            requestsBtn.className = 'px-4 py-2 bg-orange-100 text-orange-800 rounded-lg font-medium';
+        }
+        renderTable();
+    }
+}
+
+function renderRequestsTable() {
+    const tbody = document.getElementById('requestsTableBody');
+    if (!tbody) return;
+
+    const searchTerm = document.getElementById('adminSearch')?.value.toLowerCase() || '';
+    const filtered = searchTerm
+        ? allRequests.filter((r) =>
+            (r.business_name || '').toLowerCase().includes(searchTerm) ||
+            (r.category || '').toLowerCase().includes(searchTerm) ||
+            (r.city || '').toLowerCase().includes(searchTerm) ||
+            String(r.id || '').includes(searchTerm)
+        )
+        : allRequests;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="py-10 px-4 text-center text-gray-500">No listing requests found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map((r) => `
+        <tr class="border-b hover:bg-orange-50">
+            <td class="py-4 px-4 text-sm font-mono text-gray-600">#${r.id}</td>
+            <td class="py-4 px-4 font-medium">${r.business_name || ''}</td>
+            <td class="py-4 px-4 text-gray-700">${r.category || ''}</td>
+            <td class="py-4 px-4 text-sm text-gray-600">${r.city || ''}${r.state ? ', ' + r.state : ''}</td>
+            <td class="py-4 px-4 text-sm text-gray-600">${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</td>
+            <td class="py-4 px-4">
+                <div class="flex justify-end gap-2 flex-wrap">
+                    <button onclick="viewRequest('${r.id}')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View</button>
+                    <button onclick="editRequest('${r.id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                    <button onclick="acceptRequest('${r.id}')" class="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200">Accept</button>
+                    <button onclick="denyRequest('${r.id}')" class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Deny</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+window.viewRequest = async function(requestId) {
+    await openRequestInEditor(requestId, false);
+};
+
+window.editRequest = async function(requestId) {
+    await openRequestInEditor(requestId, true);
+};
+
+async function openRequestInEditor(requestId, editable) {
+    const request = allRequests.find((r) => String(r.id) === String(requestId));
+    if (!request) {
+        alert('Request not found');
+        return;
+    }
+
+    const normalized = normalizeRequestToListing(request);
+    editingListing = { ...normalized, id: null };
+    selectedSubcategories = normalized.subcategories || [];
+    primarySubcategory = normalized.primary_subcategory || null;
+
+    document.getElementById('modalTitle').textContent = editable
+        ? `Edit Request #${request.id}`
+        : `View Request #${request.id}`;
+    fillEditForm(editingListing);
+
+    if (!editable) {
+        const fields = document.querySelectorAll('#editFormContent input, #editFormContent textarea, #editFormContent select');
+        fields.forEach((el) => el.setAttribute('disabled', 'disabled'));
+        const saveBtn = document.getElementById('saveEdit');
+        if (saveBtn) saveBtn.classList.add('hidden');
+    } else {
+        const saveBtn = document.getElementById('saveEdit');
+        if (saveBtn) saveBtn.classList.remove('hidden');
+    }
+
+    document.getElementById('editModal').dataset.requestId = String(request.id);
+    document.getElementById('editModal').dataset.mode = editable ? 'request-edit' : 'request-view';
+    document.getElementById('editModal').classList.remove('hidden');
+}
+
+function normalizeRequestToListing(request) {
+    return {
+        business_name: request.business_name || '',
+        slug: request.slug || '',
+        tagline: request.tagline || '',
+        description: request.description || '',
+        category: request.category || CATEGORIES[0],
+        subcategories: request.subcategories || [],
+        primary_subcategory: request.primary_subcategory || null,
+        verified: false,
+        is_chain: !!request.is_chain,
+        is_claimed: false,
+        chain_name: request.chain_name || '',
+        chain_id: request.chain_id || '',
+        address: request.address || '',
+        city: request.city || '',
+        state: request.state || '',
+        zip_code: request.zip_code || '',
+        country: request.country || 'USA',
+        phone: request.phone || '',
+        email: request.email || '',
+        website: request.website || '',
+        logo: request.logo || '',
+        photos: request.photos || [],
+        video: request.video || '',
+        additional_info: request.additional_info || [],
+        custom_ctas: request.custom_ctas || [],
+        hours: request.hours || {},
+        social_media: request.social_media || {},
+        reviews: request.reviews || {},
+        owner: [{
+            full_name: request.owner_name || '',
+            title: request.owner_title || '',
+            from_greece: request.from_greece || '',
+            owner_email: request.owner_email || '',
+            owner_phone: request.owner_phone || '',
+            confirmation_key: null
+        }]
+    };
+}
+
+window.acceptRequest = async function(requestId) {
+    const request = allRequests.find((r) => String(r.id) === String(requestId));
+    if (!request) return;
+    if (!confirm(`Accept request from ${request.business_name || 'business'} and create listing?`)) return;
+
+    try {
+        const listingData = normalizeRequestToListing(request);
+        const payload = {
+            ...listingData,
+            tier: 'FREE',
+            verified: false,
+            visible: true,
+            owner: undefined
+        };
+        delete payload.owner;
+
+        const { data: inserted, error } = await adminSupabase
+            .from('listings')
+            .insert(payload)
+            .select()
+            .single();
+        if (error) throw error;
+
+        const ownerData = {
+            listing_id: inserted.id,
+            full_name: request.owner_name || null,
+            title: request.owner_title || null,
+            from_greece: request.from_greece || null,
+            owner_email: request.owner_email || null,
+            owner_phone: request.owner_phone || null,
+            confirmation_key: null
+        };
+        await adminSupabase.from('business_owners').insert(ownerData);
+
+        await adminSupabase.from('listing_requests').delete().eq('id', requestId);
+        await loadRequests();
+        await loadListings();
+        await generateListingPage(inserted.id);
+        await updateSitemap();
+        alert('✅ Request accepted and listing created.');
+    } catch (error) {
+        console.error('Error accepting request:', error);
+        alert('Failed to accept request: ' + error.message);
+    }
+};
+
+window.denyRequest = async function(requestId) {
+    const request = allRequests.find((r) => String(r.id) === String(requestId));
+    if (!request) return;
+    if (!confirm(`Deny request from ${request.business_name || 'business'}?`)) return;
+
+    try {
+        const { error } = await adminSupabase.from('listing_requests').delete().eq('id', requestId);
+        if (error) throw error;
+        await loadRequests();
+    } catch (error) {
+        console.error('Error denying request:', error);
+        alert('Failed to deny request: ' + error.message);
+    }
+};
+
 function renderTable() {
     const tbody = document.getElementById('listingsTableBody');
     const searchTerm = document.getElementById('adminSearch')?.value.toLowerCase() || '';
     
+    if (currentAdminView === 'requests') {
+        renderRequestsTable();
+        return;
+    }
+
     const filtered = searchTerm ? allListings.filter(l => 
         l.business_name.toLowerCase().includes(searchTerm) ||
         l.category.toLowerCase().includes(searchTerm) ||
@@ -1593,6 +1852,9 @@ async function geocodeAddress(address, city, state, zipCode) {
 
 async function saveListing() {
     try {
+        const editModal = document.getElementById('editModal');
+        const isRequestEdit = editModal?.dataset.mode === 'request-edit';
+        const requestId = editModal?.dataset.requestId;
         const businessName = document.getElementById('editBusinessName').value.trim();
         const tagline = document.getElementById('editTagline').value.trim();
         
@@ -1782,7 +2044,58 @@ if (!slug) {
         };
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        
+
+        if (isRequestEdit && requestId) {
+            const requestPayload = {
+                business_name: listingData.business_name,
+                slug: listingData.slug,
+                tagline: listingData.tagline,
+                description: listingData.description,
+                category: listingData.category,
+                subcategories: listingData.subcategories,
+                primary_subcategory: listingData.primary_subcategory,
+                is_chain: listingData.is_chain,
+                chain_name: listingData.chain_name,
+                chain_id: listingData.chain_id,
+                address: listingData.address,
+                city: listingData.city,
+                state: listingData.state,
+                zip_code: listingData.zip_code,
+                country: listingData.country,
+                phone: listingData.phone,
+                email: listingData.email,
+                website: listingData.website,
+                logo: listingData.logo,
+                photos: listingData.photos,
+                video: listingData.video,
+                additional_info: listingData.additional_info,
+                custom_ctas: listingData.custom_ctas,
+                hours: listingData.hours,
+                social_media: listingData.social_media,
+                reviews: listingData.reviews,
+                owner_name: document.getElementById('editOwnerName').value.trim() || null,
+                owner_title: document.getElementById('editOwnerTitle').value.trim() || null,
+                from_greece: document.getElementById('editOwnerGreece').value.trim() || null,
+                owner_email: document.getElementById('editOwnerEmail').value.trim() || null,
+                owner_phone: getPhoneValue(document.getElementById('editOwnerPhoneContainer'))
+            };
+
+            const { error: requestUpdateError } = await adminSupabase
+                .from('listing_requests')
+                .update(requestPayload)
+                .eq('id', requestId);
+
+            if (requestUpdateError) throw requestUpdateError;
+
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').dataset.mode = '';
+            document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('saveEdit')?.classList.remove('hidden');
+            await loadRequests();
+            alert('✅ Request updated successfully!');
+            return;
+        }
+
         let savedListing;
         const isExisting = editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id);
         

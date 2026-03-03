@@ -1,0 +1,14 @@
+body { font-family: Arial, sans-serif; background: #f5f7fb; margin: 0; color: #1f2937; }
+.submit-wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
+.submit-header { text-align: center; margin-bottom: 20px; }
+.submit-header img { width: 88px; height: auto; }
+.submit-form { display: grid; gap: 18px; }
+section { background: white; border-radius: 10px; padding: 16px; border: 1px solid #e5e7eb; display: grid; gap: 10px; }
+h2 { margin: 0 0 8px; color: #055193; }
+h3 { margin: 10px 0 6px; }
+label { display: grid; gap: 6px; font-size: 14px; font-weight: 600; }
+input, textarea, select { font: inherit; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; }
+.checks { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 8px; font-weight: 500; }
+.hours-grid, .pair-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap: 10px; }
+button[type="submit"] { background: #055193; color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+#submitStatus { min-height: 20px; font-weight: 600; }
