@@ -584,6 +584,9 @@ window.acceptRequest = async function(requestId) {
             from_greece: request.from_greece || null,
             owner_email: request.owner_email || null,
             owner_phone: request.owner_phone || null,
+            name_title_visible: request.owner_name_title_visible !== false,
+            email_visible: request.owner_email_visible !== false,
+            phone_visible: request.owner_phone_visible === true,
             confirmation_key: null
         };
         await adminSupabase.from('business_owners').insert(ownerData);
@@ -1364,7 +1367,7 @@ function fillEditFormContinuation(listing, owner) {
                 <h3 class="text-lg font-bold mb-4">Custom CTA Buttons</h3>
                 <p class="text-sm text-gray-600 mb-4">Featured listings get 1 custom CTA. Premium listings get 2. Name max 15 characters.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    ${[0, 1].map(index => {
+                    ${[0].map(index => {
                         const cta = listing?.custom_ctas?.[index] || {};
                         return `
                         <div class="md:col-span-2 border border-gray-200 rounded-lg p-4 space-y-3">
@@ -1414,7 +1417,7 @@ function fillEditFormContinuation(listing, owner) {
                         <input type="text" id="editOwnerTitle" value="${owner?.title || ''}" class="w-full px-4 py-2 border rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">From Greece</label>
+                        <label class="block text-sm font-medium mb-2">Where in Greece are you from?</label>
                         <input type="text" id="editOwnerGreece" value="${owner?.from_greece || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g. Athens">
                     </div>
                     <div>
@@ -1424,6 +1427,11 @@ function fillEditFormContinuation(listing, owner) {
                     <div>
                         <label class="block text-sm font-medium mb-2">Owner Phone</label>
                         <div id="editOwnerPhoneContainer"></div>
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <label class="flex items-center gap-2"><input type="checkbox" id="editOwnerNameTitleVisible" ${owner?.name_title_visible !== false ? 'checked' : ''}> <span class="text-sm">Show Name + Title</span></label>
+                        <label class="flex items-center gap-2"><input type="checkbox" id="editOwnerEmailVisible" ${owner?.email_visible !== false ? 'checked' : ''}> <span class="text-sm">Show Owner Email</span></label>
+                        <label class="flex items-center gap-2"><input type="checkbox" id="editOwnerPhoneVisible" ${owner?.phone_visible ? 'checked' : ''}> <span class="text-sm">Show Owner Phone</span></label>
                     </div>
                     <div id="confirmationKeyField">
                         <label class="block text-sm font-medium mb-2">Confirmation Key</label>
@@ -1937,7 +1945,7 @@ if (!slug) {
         
         const isClaimed = document.getElementById('editIsClaimed').checked;
         const tierValue = document.getElementById('editTier').value;
-        const maxCtas = tierValue === 'PREMIUM' ? 2 : tierValue === 'FEATURED' ? 1 : 0;
+        const maxCtas = 1;
         
         const additionalInfo = [];
         for (let i = 0; i < 5; i += 1) {
@@ -1949,7 +1957,7 @@ if (!slug) {
         }
         
         const customCtas = [];
-        for (let i = 0; i < 2; i += 1) {
+        for (let i = 0; i < 1; i += 1) {
             const name = document.getElementById(`editCtaName${i}`)?.value.trim();
             const url = document.getElementById(`editCtaUrl${i}`)?.value.trim();
             const color = document.getElementById(`editCtaColor${i}`)?.value.trim();
@@ -1973,10 +1981,6 @@ if (!slug) {
             });
         }
         
-        if (maxCtas === 0 && customCtas.length > 0) {
-            alert('Custom CTA buttons are only available for Featured and Premium listings.');
-            return;
-        }
 
         const listingData = {
             business_name: businessName,
@@ -2156,6 +2160,9 @@ async function saveOwnerInfo(listingId, isClaimed) {
         from_greece: document.getElementById('editOwnerGreece').value.trim() || null,
         owner_email: document.getElementById('editOwnerEmail').value.trim() || null,
         owner_phone: ownerPhone,
+        name_title_visible: document.getElementById('editOwnerNameTitleVisible') ? document.getElementById('editOwnerNameTitleVisible').checked : true,
+        email_visible: document.getElementById('editOwnerEmailVisible') ? document.getElementById('editOwnerEmailVisible').checked : true,
+        phone_visible: document.getElementById('editOwnerPhoneVisible') ? document.getElementById('editOwnerPhoneVisible').checked : false,
         confirmation_key: isClaimed ? null : (document.getElementById('editConfirmationKey').value.trim() || null)
     };
     
@@ -2725,7 +2732,7 @@ function generateTemplateReplacements(listing) {
         `;
     }
 
-    const maxCtaButtons = listing.tier === 'PREMIUM' ? 2 : (listing.tier === 'FEATURED' ? 1 : 0);
+    const maxCtaButtons = 1;
     let customCtaButtons = '';
     if (maxCtaButtons > 0 && Array.isArray(listing.custom_ctas)) {
         customCtaButtons = listing.custom_ctas
@@ -2807,8 +2814,8 @@ function generateTemplateReplacementsPart2(listing) {
     const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
     if (owner && (owner.full_name || owner.title)) {
         let ownerDetails = '';
-        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
-        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
+        if (owner.name_title_visible !== false && owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
+        if (owner.name_title_visible !== false && owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
         if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
         if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${owner.owner_phone}</a></p>`;

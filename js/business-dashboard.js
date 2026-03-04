@@ -36,7 +36,7 @@ let uploadedImages = { logo: null, photos: [], video: null };
 let photosSortable = null;
 let selectedSubcategories = [];
 let primarySubcategory = null;
-let settingsVisibility = { email: false, phone: false };
+let settingsVisibility = { nameTitle: true, email: false, phone: false };
 let currentMaxPhotos = 1;
 let currentMaxCtas = 0;
 
@@ -1173,6 +1173,7 @@ function renderSettings() {
     
     const owner = ownerData[0];
     settingsVisibility = {
+        nameTitle: owner.name_title_visible !== false,
         email: owner.email_visible || false,
         phone: owner.phone_visible || false
     };
@@ -1186,6 +1187,18 @@ function renderSettings() {
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="owner-field md:col-span-2">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">👤 Owner Name + Title Visibility</label>
+                                <p class="text-xs text-gray-500">Owner name and title always show/hide together.</p>
+                            </div>
+                            <div class="mt-2">
+                                <button class="visibility-toggle ${settingsVisibility.nameTitle ? 'visible' : 'hidden'}" onclick="toggleSettingsFieldVisibility('nameTitle')">
+                                    ${settingsVisibility.nameTitle ? 'Visible' : 'Hidden'}
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="owner-field">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">✉️ Owner Email</label>
@@ -1300,6 +1313,7 @@ async function saveSettings() {
     const updates = {
         owner_email: updatedEmail,
         owner_phone: updatedPhone,
+        name_title_visible: settingsVisibility.nameTitle,
         email_visible: settingsVisibility.email,
         phone_visible: settingsVisibility.phone
     };
