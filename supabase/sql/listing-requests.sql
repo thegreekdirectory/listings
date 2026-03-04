@@ -9,9 +9,6 @@ create table if not exists listing_requests (
     category text not null,
     subcategories text[] not null default '{}',
     primary_subcategory text,
-    is_chain boolean not null default false,
-    chain_name text,
-    chain_id text,
     address text,
     city text,
     state text,
@@ -34,9 +31,16 @@ create table if not exists listing_requests (
     owner_email text,
     owner_phone text,
     owner_name_title_visible boolean not null default true,
-    owner_email_visible boolean not null default true,
-    owner_phone_visible boolean not null default false
+    owner_email_visible boolean not null default false,
+    owner_phone_visible boolean not null default false,
+    owner_contacts jsonb default '[]'::jsonb
 );
+
+alter table if exists listing_requests
+  add column if not exists owner_name_title_visible boolean not null default true,
+  add column if not exists owner_email_visible boolean not null default false,
+  add column if not exists owner_phone_visible boolean not null default false,
+  add column if not exists owner_contacts jsonb default '[]'::jsonb;
 
 create or replace function set_listing_requests_updated_at()
 returns trigger as $$
@@ -66,3 +70,8 @@ begin
       with check (true);
   end if;
 end $$;
+
+alter table if exists listing_requests
+  alter column owner_name_title_visible set default true,
+  alter column owner_email_visible set default false,
+  alter column owner_phone_visible set default false;

@@ -577,7 +577,8 @@ window.acceptRequest = async function(requestId) {
             .single();
         if (error) throw error;
 
-        const ownerData = {
+        const ownerRows = [];
+        ownerRows.push({
             listing_id: inserted.id,
             full_name: request.owner_name || null,
             title: request.owner_title || null,
@@ -585,11 +586,29 @@ window.acceptRequest = async function(requestId) {
             owner_email: request.owner_email || null,
             owner_phone: request.owner_phone || null,
             name_title_visible: request.owner_name_title_visible !== false,
-            email_visible: request.owner_email_visible !== false,
+            email_visible: request.owner_email_visible === true,
             phone_visible: request.owner_phone_visible === true,
             confirmation_key: null
-        };
-        await adminSupabase.from('business_owners').insert(ownerData);
+        });
+
+        const extraOwners = Array.isArray(request.owner_contacts) ? request.owner_contacts.slice(1) : [];
+        extraOwners.forEach((o) => {
+            if (!o || !o.enabled) return;
+            ownerRows.push({
+                listing_id: inserted.id,
+                full_name: o.name || null,
+                title: o.title || null,
+                from_greece: request.from_greece || null,
+                owner_email: o.email || null,
+                owner_phone: o.phone ? `+1${String(o.phone).replace(/\D/g, '')}` : null,
+                name_title_visible: true,
+                email_visible: true,
+                phone_visible: true,
+                confirmation_key: null
+            });
+        });
+
+        await adminSupabase.from('business_owners').insert(ownerRows);
 
         await adminSupabase.from('listing_requests').delete().eq('id', requestId);
         await loadRequests();
@@ -2811,19 +2830,21 @@ function generateTemplateReplacements(listing) {
 
 function generateTemplateReplacementsPart2(listing) {
     let ownerInfoSection = '';
-    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    if (owner && (owner.full_name || owner.title)) {
+    const owners = Array.isArray(listing.owner) ? listing.owner : [];
+    const ownerCards = owners.map((owner) => {
         let ownerDetails = '';
         if (owner.name_title_visible !== false && owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
         if (owner.name_title_visible !== false && owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
         if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
         if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${owner.owner_phone}</a></p>`;
-        
+        return ownerDetails ? `<div class="mb-4">${ownerDetails}</div>` : '';
+    }).filter(Boolean).join('');
+    if (ownerCards) {
         ownerInfoSection = `
             <div class="owner-info-section">
                 <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                ${ownerDetails}
+                ${ownerCards}
             </div>
         `;
     }

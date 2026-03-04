@@ -48,7 +48,7 @@
 
       <section>
         <h2>Contact</h2>
-        <label>Phone <input type="tel" id="phone" inputmode="numeric" maxlength="17" placeholder="+1 (___) ___-____" /></label>
+        <label>Phone <div class="url-prefix-wrap"><span>+1</span><input type="text" id="phone" inputmode="numeric" maxlength="14" placeholder="(___) ___-____" /></div></label>
         <label>Email <input type="email" id="email" autocomplete="email" /></label>
         <label>
           Website
@@ -110,11 +110,15 @@
 
         <label>Where in Greece are you from? <input type="text" id="from_greece" /></label>
         <label>Owner Email * <input type="email" id="owner_email" required autocomplete="email" /></label>
-        <label>Owner Phone <input type="tel" id="owner_phone" inputmode="numeric" maxlength="17" placeholder="+1 (___) ___-____" /></label>
+        <label>Owner Phone <div class="url-prefix-wrap"><span>+1</span><input type="text" id="owner_phone" inputmode="numeric" maxlength="14" placeholder="(___) ___-____" /></div></label>
+
+
+        <div id="extraOwnersSection" class="pair-grid"></div>
+        <button type="button" id="addOwnerBtn" class="secondary-btn">+ Add Another Owner</button>
 
         <div class="toggles">
           <label class="toggle-line"><input type="checkbox" id="owner_name_title_visible" checked /> Show Owner Name + Title on listing page</label>
-          <label class="toggle-line"><input type="checkbox" id="owner_email_visible" checked /> Show Owner Email on listing page</label>
+          <label class="toggle-line"><input type="checkbox" id="owner_email_visible" /> Show Owner Email on listing page</label>
           <label class="toggle-line"><input type="checkbox" id="owner_phone_visible" /> Show Owner Phone on listing page</label>
         </div>
       </section>

@@ -1,6 +1,6 @@
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
-const FORM_STORAGE_KEY = 'tgd_submit_form_draft_v2';
+const FORM_STORAGE_KEY = 'tgd_submit_form_draft_v3';
 
 const CATEGORIES = {
   'Automotive & Transportation': ['Auto Detailer','Auto Repair Shop','Car Dealer','Taxi & Limo Service'],
@@ -23,17 +23,22 @@ const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sun
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let map, marker;
 
-function onlyDigits(v){ return (v || '').replace(/\D/g,''); }
-function formatUSPhone(input){
-  const d = onlyDigits(input).slice(0,10);
+const onlyDigits = (v='') => v.replace(/\D/g, '');
+const formatUSPhoneNoCode = (v='') => {
+  const d = onlyDigits(v).slice(0, 10);
   if (!d) return '';
-  if (d.length < 4) return `+1 (${d}`;
-  if (d.length < 7) return `+1 (${d.slice(0,3)}) ${d.slice(3)}`;
-  return `+1 (${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
-}
+  if (d.length < 4) return `(${d}`;
+  if (d.length < 7) return `(${d.slice(0,3)}) ${d.slice(3)}`;
+  return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+};
+const normalizePhone = (id) => {
+  const d = onlyDigits(document.getElementById(id)?.value || '');
+  return d ? `+1${d}` : null;
+};
 function attachPhoneMask(id){
   const el = document.getElementById(id);
-  el?.addEventListener('input', () => { el.value = formatUSPhone(el.value); saveDraft(); });
+  if (!el) return;
+  el.addEventListener('input', () => { el.value = formatUSPhoneNoCode(el.value); saveDraft(); });
 }
 
 function setupMap(){
@@ -41,19 +46,13 @@ function setupMap(){
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
   marker = L.marker([39.5, -98.35]).addTo(map);
 }
-function setMapPin(lat,lng){
-  if (!map || !marker) return;
-  marker.setLatLng([lat,lng]);
-  map.setView([lat,lng], 14);
-}
-
+function setMapPin(lat,lng){ if (map && marker) { marker.setLatLng([lat,lng]); map.setView([lat,lng], 14); } }
 async function geocodeAddress(query){
   if (!query || query.length < 4) return [];
   const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(query)}`;
   const resp = await fetch(url, { headers: { 'Accept-Language':'en' } });
   return await resp.json();
 }
-
 function setupAddressAutocomplete(){
   const input = document.getElementById('address');
   const list = document.getElementById('addressSuggestions');
@@ -63,21 +62,9 @@ function setupAddressAutocomplete(){
     clearTimeout(timer);
     timer = setTimeout(async () => {
       const results = await geocodeAddress(input.value.trim());
-      list.innerHTML = results.map(r => `<option value="${r.display_name.replace(/"/g,'&quot;')}"></option>`).join('');
+      list.innerHTML = results.map(r => `<option value="${r.display_name.replace(/"/g, '&quot;')}"></option>`).join('');
       if (results[0]) setMapPin(parseFloat(results[0].lat), parseFloat(results[0].lon));
     }, 300);
-  });
-  input.addEventListener('change', async () => {
-    const results = await geocodeAddress(input.value.trim());
-    if (results[0]) {
-      const top = results[0];
-      setMapPin(parseFloat(top.lat), parseFloat(top.lon));
-      const addr = top.address || {};
-      document.getElementById('city').value = document.getElementById('city').value || addr.city || addr.town || addr.village || '';
-      if (!document.getElementById('zip_code').value) document.getElementById('zip_code').value = addr.postcode ? String(addr.postcode).slice(0,5) : '';
-      if (!document.getElementById('state').value && addr.state_code) document.getElementById('state').value = addr.state_code;
-      saveDraft();
-    }
   });
 }
 
@@ -92,13 +79,22 @@ function buildHoursRows(){
         <button type="button" class="tiny-btn" data-day="${day}" data-kind="open24">Open 24 Hours</button>
       </div>
     </div>`).join('');
+
   box.querySelectorAll('.tiny-btn').forEach(btn => btn.addEventListener('click', () => {
     const { day, kind } = btn.dataset;
     const input = document.getElementById(`hours_${day}`);
     const sibs = box.querySelectorAll(`.tiny-btn[data-day="${day}"]`);
+    if (btn.classList.contains('active')) {
+      sibs.forEach(s => s.classList.remove('active'));
+      input.disabled = false;
+      if (input.value === 'Closed' || input.value === 'Open 24 Hours') input.value = '';
+      saveDraft();
+      return;
+    }
     sibs.forEach(s => s.classList.remove('active'));
-    if (kind === 'closed') { input.value = 'Closed'; input.disabled = true; btn.classList.add('active'); }
-    if (kind === 'open24') { input.value = 'Open 24 Hours'; input.disabled = true; btn.classList.add('active'); }
+    if (kind === 'closed') { input.value = 'Closed'; input.disabled = true; }
+    if (kind === 'open24') { input.value = 'Open 24 Hours'; input.disabled = true; }
+    btn.classList.add('active');
     saveDraft();
   }));
 }
@@ -109,47 +105,97 @@ function renderSubcategories(selected = []){
   document.getElementById('subcategoryCheckboxes').innerHTML = options.map(sub =>
     `<label><input type="checkbox" value="${sub}" ${selected.includes(sub)?'checked':''}/> ${sub}</label>`
   ).join('');
-  document.querySelectorAll('#subcategoryCheckboxes input').forEach(i => i.addEventListener('change', saveDraft));
 }
 
 function setupAdditionalInfoRows(prefill=[]){
   const holder = document.getElementById('additionalInfoFields');
   holder.innerHTML='';
-  const addRow = (v={label:'',value:''}) => {
+  const rows = prefill.length ? prefill : [{}];
+  rows.forEach((r,idx)=>{
+    const row = document.createElement('div');
+    row.className = 'pair-grid';
+    row.innerHTML = `<label>Info Name ${idx+1}<input type="text" id="info_name_${idx}" maxlength="30" value="${r.label||''}"></label>
+      <label>Info Value ${idx+1}<input type="text" id="info_value_${idx}" maxlength="120" value="${r.value||''}"></label>`;
+    holder.appendChild(row);
+  });
+  document.getElementById('addInfoRowBtn').onclick = () => {
+    const last = holder.lastElementChild;
+    if (last && ![...last.querySelectorAll('input')].every(i => i.value.trim())) return;
+    if (holder.children.length >= 5) return;
     const idx = holder.children.length;
     const row = document.createElement('div');
     row.className = 'pair-grid';
-    row.innerHTML = `<label>Info Name ${idx+1}<input type="text" id="info_name_${idx}" maxlength="30" value="${v.label||''}"></label>
-    <label>Info Value ${idx+1}<input type="text" id="info_value_${idx}" maxlength="120" value="${v.value||''}"></label>`;
+    row.innerHTML = `<label>Info Name ${idx+1}<input type="text" id="info_name_${idx}" maxlength="30"></label>
+      <label>Info Value ${idx+1}<input type="text" id="info_value_${idx}" maxlength="120"></label>`;
     holder.appendChild(row);
-    row.querySelectorAll('input').forEach(i => i.addEventListener('input', saveDraft));
   };
-  (prefill.length ? prefill : [{}]).forEach(addRow);
-  document.getElementById('addInfoRowBtn').onclick = () => {
-    const last = holder.lastElementChild;
-    if (last) {
-      const inputs = last.querySelectorAll('input');
-      if (![...inputs].every(i => i.value.trim())) return;
-    }
-    if (holder.children.length < 5) addRow({});
+}
+
+function setupExtraOwners(prefill=[]){
+  const section = document.getElementById('extraOwnersSection');
+  const addBtn = document.getElementById('addOwnerBtn');
+  let owners = prefill.slice(0,2);
+  const render = () => {
+    section.innerHTML = owners.map((o, idx) => {
+      const n = idx + 2;
+      return `
+      <div class="owner-extra-card">
+        <label><input type="checkbox" id="owner${n}_enabled" ${o.enabled ? 'checked' : ''}> Show Owner ${n} on listing page</label>
+        <label>Owner ${n} Name<input type="text" id="owner${n}_name" value="${o.name || ''}"></label>
+        <label>Owner ${n} Title<input type="text" id="owner${n}_title" value="${o.title || ''}"></label>
+        <label>Owner ${n} Email<input type="email" id="owner${n}_email" value="${o.email || ''}"></label>
+        <label>Owner ${n} Phone<div class="url-prefix-wrap"><span>+1</span><input type="text" id="owner${n}_phone" inputmode="numeric" maxlength="14" value="${o.phone || ''}" placeholder="(___) ___-____"></div></label>
+      </div>`;
+    }).join('');
+    for (let i=2;i<=3;i++) attachPhoneMask(`owner${i}_phone`);
+    addBtn.classList.toggle('hidden', owners.length >= 2);
   };
+  addBtn.onclick = () => { if (owners.length < 2) owners.push({enabled:false,name:'',title:'',email:'',phone:''}); render(); saveDraft(); };
+  render();
+}
+
+function getOwnerContacts(){
+  const ownerTitle = document.getElementById('owner_title').value === 'Other' ? document.getElementById('owner_title_other').value.trim() : document.getElementById('owner_title').value;
+  const contacts = [{
+    enabled: document.getElementById('owner_name_title_visible').checked || document.getElementById('owner_email_visible').checked || document.getElementById('owner_phone_visible').checked,
+    name: document.getElementById('owner_name').value.trim(),
+    title: ownerTitle,
+    email: document.getElementById('owner_email').value.trim(),
+    phone: document.getElementById('owner_phone').value.trim(),
+    name_title_visible: document.getElementById('owner_name_title_visible').checked,
+    email_visible: document.getElementById('owner_email_visible').checked,
+    phone_visible: document.getElementById('owner_phone_visible').checked
+  }];
+  for (let i=2;i<=3;i++) {
+    const enabled = document.getElementById(`owner${i}_enabled`);
+    if (!enabled) continue;
+    contacts.push({
+      enabled: enabled.checked,
+      name: document.getElementById(`owner${i}_name`)?.value.trim() || '',
+      title: document.getElementById(`owner${i}_title`)?.value.trim() || '',
+      email: document.getElementById(`owner${i}_email`)?.value.trim() || '',
+      phone: document.getElementById(`owner${i}_phone`)?.value.trim() || '',
+      name_title_visible: enabled.checked,
+      email_visible: enabled.checked,
+      phone_visible: enabled.checked
+    });
+  }
+  return contacts;
 }
 
 function getFormData(){
   const subcategories = [...document.querySelectorAll('#subcategoryCheckboxes input:checked')].map(i => i.value);
   const websiteRaw = document.getElementById('website').value.trim();
   const website = websiteRaw ? `https://${websiteRaw.replace(/^https?:\/\//i,'')}` : null;
-  const additionalInfo = Array.from({length:5}).map((_,i)=>({label:document.getElementById(`info_name_${i}`)?.value.trim(),value:document.getElementById(`info_value_${i}`)?.value.trim()})).filter(v=>v.label&&v.value);
+  const additional_info = Array.from({length:5}).map((_,i)=>({label:document.getElementById(`info_name_${i}`)?.value?.trim(),value:document.getElementById(`info_value_${i}`)?.value?.trim()})).filter(v=>v.label&&v.value);
+  const hours = {};
+  days.forEach(day => { const val = document.getElementById(`hours_${day}`)?.value.trim(); if (val) hours[day] = val; });
+  const ownerContacts = getOwnerContacts();
+
   const custom_ctas = [];
   const ctaName = document.getElementById('cta_name_0').value.trim();
   const ctaUrl = document.getElementById('cta_url_0').value.trim();
-  if (ctaName || ctaUrl) custom_ctas.push({ name: ctaName || 'Custom Button', url: ctaUrl, color: document.getElementById('cta_color_0').value, icon: document.getElementById('cta_icon_0').value.trim() });
-
-  const hours = {};
-  days.forEach(day=>{ const val=document.getElementById(`hours_${day}`).value.trim(); if(val) hours[day]=val; });
-  const ownerTitle = document.getElementById('owner_title').value === 'Other'
-    ? document.getElementById('owner_title_other').value.trim()
-    : document.getElementById('owner_title').value;
+  if (ctaName || ctaUrl) custom_ctas.push({name: ctaName || 'Custom Button', url: ctaUrl, color: document.getElementById('cta_color_0').value.trim() || '#055193', icon: document.getElementById('cta_icon_0').value.trim()});
 
   return {
     business_name: document.getElementById('business_name').value.trim(),
@@ -163,7 +209,7 @@ function getFormData(){
     state: document.getElementById('state').value || null,
     zip_code: document.getElementById('zip_code').value.trim() || null,
     country: document.getElementById('country').value || 'USA',
-    phone: document.getElementById('phone').value.trim() || null,
+    phone: normalizePhone('phone'),
     email: document.getElementById('email').value.trim() || null,
     website,
     logo: document.getElementById('logo').value.trim() || null,
@@ -183,16 +229,17 @@ function getFormData(){
       yelp: document.getElementById('yelp').value.trim() || null,
       tripadvisor: document.getElementById('tripadvisor').value.trim() || null
     },
-    additional_info: additionalInfo,
+    additional_info,
     custom_ctas,
-    owner_name: document.getElementById('owner_name').value.trim() || null,
-    owner_title: ownerTitle || null,
+    owner_name: ownerContacts[0].name || null,
+    owner_title: ownerContacts[0].title || null,
     from_greece: document.getElementById('from_greece').value.trim() || null,
-    owner_email: document.getElementById('owner_email').value.trim() || null,
-    owner_phone: document.getElementById('owner_phone').value.trim() || null,
+    owner_email: ownerContacts[0].email || null,
+    owner_phone: normalizePhone('owner_phone'),
     owner_name_title_visible: document.getElementById('owner_name_title_visible').checked,
     owner_email_visible: document.getElementById('owner_email_visible').checked,
-    owner_phone_visible: document.getElementById('owner_phone_visible').checked
+    owner_phone_visible: document.getElementById('owner_phone_visible').checked,
+    owner_contacts: ownerContacts
   };
 }
 
@@ -202,27 +249,21 @@ function validatePayload(p){
   if (!p.subcategories.length) errors.push('Select at least one subcategory.');
   if (!p.owner_name || !p.owner_title || !p.owner_email) errors.push('Owner name, title, and email are required.');
   if (p.zip_code && !/^\d{5}$/.test(p.zip_code)) errors.push('ZIP code must be exactly 5 digits.');
-  if (p.phone && onlyDigits(p.phone).length !== 10) errors.push('Phone number must be complete (10 digits).');
-  if (p.owner_phone && onlyDigits(p.owner_phone).length !== 10) errors.push('Owner phone number must be complete (10 digits).');
+  if (!p.owner_name_title_visible && (p.owner_email_visible || p.owner_phone_visible)) errors.push('Enable Owner Name + Title before showing owner email or phone.');
+  if (p.phone && onlyDigits(p.phone).length !== 11) errors.push('Phone number must be complete (10 digits).');
+  if (p.owner_phone && onlyDigits(p.owner_phone).length !== 11) errors.push('Owner phone number must be complete (10 digits).');
   if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) errors.push('Business email is incomplete/invalid.');
   if (p.owner_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.owner_email)) errors.push('Owner email is incomplete/invalid.');
   if (p.website && !/^https:\/\/[\w.-]+\.[a-z]{2,}/i.test(p.website)) errors.push('Website is incomplete/invalid.');
-  for (const d of Object.keys(p.hours || {})) {
-    const h = p.hours[d];
-    if (!h) continue;
-    if (h === 'Closed' || h === 'Open 24 Hours') continue;
-    if (!/\d{1,2}:\d{2}\s?(AM|PM)\s?-\s?\d{1,2}:\d{2}\s?(AM|PM)/i.test(h)) errors.push(`Hours for ${d} are incomplete. Use e.g. 9:00 AM - 5:00 PM`);
-  }
+  Object.entries(p.hours || {}).forEach(([d,h]) => {
+    if (h && h !== 'Closed' && h !== 'Open 24 Hours' && !/\d{1,2}:\d{2}\s?(AM|PM)\s?-\s?\d{1,2}:\d{2}\s?(AM|PM)/i.test(h)) errors.push(`Hours for ${d} are incomplete.`);
+  });
   return errors;
 }
 
-function saveDraft(){
-  const data = getFormData();
-  localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
-}
+function saveDraft(){ localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(getFormData())); }
 function restoreDraft(){
-  const raw = localStorage.getItem(FORM_STORAGE_KEY);
-  if (!raw) return;
+  const raw = localStorage.getItem(FORM_STORAGE_KEY); if (!raw) return;
   try {
     const d = JSON.parse(raw);
     Object.entries(d).forEach(([k,v]) => {
@@ -231,23 +272,30 @@ function restoreDraft(){
       if (el.type === 'checkbox') el.checked = !!v;
       else if (typeof v === 'string') el.value = v;
     });
-    if (d.website) document.getElementById('website').value = d.website.replace(/^https:\/\//i,'');
+    if (d.website) document.getElementById('website').value = d.website.replace(/^https:\/\//i, '');
     if (Array.isArray(d.photos)) document.getElementById('photos').value = d.photos.join('\n');
-    if (d.hours) Object.entries(d.hours).forEach(([day,val]) => {
-      const el = document.getElementById(`hours_${day}`);
-      if (el) {
-        el.value = val;
-        if (val === 'Closed' || val === 'Open 24 Hours') el.disabled = true;
-      }
-    });
-    if (Array.isArray(d.additional_info)) setupAdditionalInfoRows(d.additional_info);
     if (Array.isArray(d.subcategories)) renderSubcategories(d.subcategories);
-  } catch (e) { console.warn('draft restore failed', e); }
+    if (Array.isArray(d.additional_info)) setupAdditionalInfoRows(d.additional_info);
+    if (Array.isArray(d.owner_contacts)) setupExtraOwners(d.owner_contacts.slice(1));
+    if (d.hours) {
+      Object.entries(d.hours).forEach(([day,val]) => {
+        const input = document.getElementById(`hours_${day}`);
+        if (!input) return;
+        input.value = val;
+        if (val === 'Closed' || val === 'Open 24 Hours') {
+          input.disabled = true;
+          const btn = document.querySelector(`.tiny-btn[data-day="${day}"][data-kind="${val === 'Closed' ? 'closed':'open24'}"]`);
+          if (btn) btn.classList.add('active');
+        }
+      });
+    }
+    if (d.phone) document.getElementById('phone').value = formatUSPhoneNoCode(d.phone);
+    if (d.owner_phone) document.getElementById('owner_phone').value = formatUSPhoneNoCode(d.owner_phone);
+  } catch (e) { console.warn('restore failed', e); }
 }
 
 async function uploadToCloudflare(file){
-  const fd = new FormData();
-  fd.append('file', file);
+  const fd = new FormData(); fd.append('file', file);
   const res = await fetch('https://tgd-images-upload.thegreekdirectory.org', { method:'POST', body: fd });
   if (!res.ok) throw new Error('Upload failed');
   return await res.json();
@@ -256,18 +304,19 @@ function attachUploaders(){
   document.getElementById('logo_upload').addEventListener('change', async (e) => {
     const f = e.target.files?.[0]; if (!f) return;
     const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading logo...';
-    try { const url = await uploadToCloudflare(f); document.getElementById('logo').value = url; s.textContent='Logo uploaded.'; saveDraft(); }
+    try { const url = await uploadToCloudflare(f); document.getElementById('logo').value = url; s.textContent = 'Logo uploaded.'; saveDraft(); }
     catch(err){ s.textContent = `Logo upload failed: ${err.message}`; }
   });
   document.getElementById('photos_upload').addEventListener('change', async (e) => {
-    const files = [...(e.target.files||[])]; if (!files.length) return;
+    const files = [...(e.target.files || [])]; if (!files.length) return;
     const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading photos...';
     try {
       const urls = [];
       for (const f of files) urls.push(await uploadToCloudflare(f));
       const t = document.getElementById('photos');
       t.value = [t.value.trim(), ...urls].filter(Boolean).join('\n');
-      s.textContent = 'Photos uploaded.'; saveDraft();
+      s.textContent = 'Photos uploaded.';
+      saveDraft();
     } catch(err){ s.textContent = `Photo upload failed: ${err.message}`; }
   });
 }
@@ -278,11 +327,7 @@ async function submitListingRequest(event){
   const submitBtn = document.getElementById('submitBtn');
   const payload = getFormData();
   const errors = validatePayload(payload);
-  if (errors.length) {
-    status.textContent = errors[0];
-    status.style.color = '#b91c1c';
-    return;
-  }
+  if (errors.length) { status.textContent = errors[0]; status.style.color = '#b91c1c'; return; }
 
   submitBtn.disabled = true;
   status.textContent = 'Submitting...';
@@ -299,25 +344,41 @@ async function submitListingRequest(event){
     document.getElementById('submitForm').reset();
     renderSubcategories();
     setupAdditionalInfoRows();
+    setupExtraOwners();
   }
   submitBtn.disabled = false;
 }
 
 function init(){
   const category = document.getElementById('category');
-  category.innerHTML = Object.keys(CATEGORIES).map(c=>`<option value="${c}">${c}</option>`).join('');
+  category.innerHTML = Object.keys(CATEGORIES).map(c => `<option value="${c}">${c}</option>`).join('');
   category.addEventListener('change', () => { renderSubcategories(); saveDraft(); });
   const state = document.getElementById('state');
-  state.innerHTML = Object.entries(US_STATES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  state.innerHTML = Object.entries(US_STATES).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
 
   buildHoursRows();
   renderSubcategories();
   setupAdditionalInfoRows();
+  setupExtraOwners();
   attachPhoneMask('phone');
   attachPhoneMask('owner_phone');
   setupMap();
   setupAddressAutocomplete();
   attachUploaders();
+
+  const nameTitleToggle = document.getElementById('owner_name_title_visible');
+  const emailToggle = document.getElementById('owner_email_visible');
+  const phoneToggle = document.getElementById('owner_phone_visible');
+  emailToggle.checked = false;
+  const enforceVisibility = () => {
+    if (!nameTitleToggle.checked) { emailToggle.checked = false; phoneToggle.checked = false; }
+    emailToggle.disabled = !nameTitleToggle.checked;
+    phoneToggle.disabled = !nameTitleToggle.checked;
+    saveDraft();
+  };
+  nameTitleToggle.addEventListener('change', enforceVisibility);
+  emailToggle.addEventListener('change', enforceVisibility);
+  phoneToggle.addEventListener('change', enforceVisibility);
 
   document.getElementById('owner_title').addEventListener('change', () => {
     const show = document.getElementById('owner_title').value === 'Other';
@@ -329,7 +390,9 @@ function init(){
     el.addEventListener('input', saveDraft);
     el.addEventListener('change', saveDraft);
   });
+
   restoreDraft();
+  enforceVisibility();
   document.getElementById('submitForm').addEventListener('submit', submitListingRequest);
 }
 

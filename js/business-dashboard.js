@@ -1259,14 +1259,26 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 window.toggleSettingsFieldVisibility = function(field) {
     settingsVisibility[field] = !settingsVisibility[field];
-    const button = document.querySelector(`.visibility-toggle[onclick*="${field}"]`);
-    if (settingsVisibility[field]) {
-        button.className = 'visibility-toggle visible';
-        button.textContent = 'Visible';
-    } else {
-        button.className = 'visibility-toggle hidden';
-        button.textContent = 'Hidden';
+    if (field === 'nameTitle' && !settingsVisibility.nameTitle) {
+        settingsVisibility.email = false;
+        settingsVisibility.phone = false;
     }
+    if ((field === 'email' || field === 'phone') && settingsVisibility[field] && !settingsVisibility.nameTitle) {
+        settingsVisibility[field] = false;
+        alert('Enable Name + Title visibility first.');
+    }
+
+    ['nameTitle', 'email', 'phone'].forEach((f) => {
+        const button = document.querySelector(`.visibility-toggle[onclick*="${f}"]`);
+        if (!button) return;
+        if (settingsVisibility[f]) {
+            button.className = 'visibility-toggle visible';
+            button.textContent = 'Visible';
+        } else {
+            button.className = 'visibility-toggle hidden';
+            button.textContent = 'Hidden';
+        }
+    });
 };
 
 async function updatePassword() {

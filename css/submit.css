@@ -18,3 +18,5 @@ input,textarea,select{font:inherit;padding:10px;border:1px solid #cbd5e1;border-
 button[type=submit]{background:#055193;color:#fff;border:none;padding:12px 16px;border-radius:8px;font-size:16px;cursor:pointer}
 .secondary-btn{width:max-content;border:1px solid #055193;background:#fff;color:#055193;padding:8px 12px;border-radius:8px;cursor:pointer}
 .hidden{display:none}#submitStatus,#uploadStatus{min-height:20px;font-weight:600}
+
+.owner-extra-card{border:1px dashed #cbd5e1;border-radius:10px;padding:10px;display:grid;gap:8px}
