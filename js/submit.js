@@ -1,6 +1,6 @@
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
-const FORM_STORAGE_KEY = 'tgd_submit_form_draft_v3';
+const FORM_STORAGE_KEY = 'tgd_submit_form_draft_v4';
 
 let SUBCATEGORY_MAP = {
   'Automotive & Transportation': ['Auto Detailer','Auto Repair Shop','Car Dealer','Taxi & Limo Service'],
@@ -18,6 +18,7 @@ let SUBCATEGORY_MAP = {
   'Real Estate & Development': ['Appraiser','Broker','Developer','Lender','Property Management','Real Estate Agent'],
   'Retail & Shopping': ['Boutique Shop','ECommerce','Jewelry','Souvenir Shop']
 };
+
 const MAIN_CATEGORIES = [
   'Automotive & Transportation','Beauty & Health','Church & Religious Organization','Cultural/Fraternal Organization','Education & Community','Entertainment, Arts & Recreation','Food & Hospitality','Grocery & Imports','Home & Construction','Industrial & Manufacturing','Pets & Veterinary','Professional & Business Services','Real Estate & Development','Retail & Shopping'
 ];
@@ -28,6 +29,11 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 let map, marker;
 
 const onlyDigits = (v='') => v.replace(/\D/g, '');
+const stripProtocol = (v='') => v.trim().replace(/^https?:\/\//i, '').replace(/^\/+/, '');
+const normalizeHttpsUrl = (v='') => {
+  const clean = stripProtocol(v);
+  return clean ? `https://${clean}` : null;
+};
 const formatUSPhoneNoCode = (v='') => {
   const d = onlyDigits(v).slice(0, 10);
   if (!d) return '';
@@ -37,12 +43,65 @@ const formatUSPhoneNoCode = (v='') => {
 };
 const normalizePhone = (id) => {
   const d = onlyDigits(document.getElementById(id)?.value || '');
-  return d ? `+1${d}` : null;
+  return d ? `1${d}` : null;
 };
+
+function lockHttpsInputs() {
+  document.querySelectorAll('input[type="url"]').forEach((input) => {
+    if (input.dataset.lockedHttps === '1') return;
+    input.dataset.lockedHttps = '1';
+    const wrap = document.createElement('div');
+    wrap.className = 'url-prefix-wrap';
+    const span = document.createElement('span');
+    span.textContent = 'https://';
+    const replacement = document.createElement('input');
+    replacement.type = 'text';
+    replacement.id = input.id;
+    replacement.value = stripProtocol(input.value || '');
+    replacement.placeholder = input.placeholder || 'example.com';
+    replacement.autocomplete = input.autocomplete || 'off';
+    replacement.className = input.className;
+    replacement.addEventListener('input', () => {
+      replacement.value = stripProtocol(replacement.value);
+      saveDraft();
+    });
+    wrap.appendChild(span);
+    wrap.appendChild(replacement);
+    input.replaceWith(wrap);
+  });
+}
+
 function attachPhoneMask(id){
   const el = document.getElementById(id);
   if (!el) return;
   el.addEventListener('input', () => { el.value = formatUSPhoneNoCode(el.value); saveDraft(); });
+}
+
+function setupPhotoUrlRows(prefill = []) {
+  const list = document.getElementById('photoUrlsList');
+  const addBtn = document.getElementById('addPhotoUrlBtn');
+  list.innerHTML = '';
+
+  const addRow = (value = '') => {
+    const row = document.createElement('div');
+    row.className = 'photo-url-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'photo-url-input';
+    input.placeholder = 'https://image-url...';
+    input.value = stripProtocol(value);
+    input.addEventListener('input', () => { input.value = stripProtocol(input.value); saveDraft(); });
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.textContent = 'Remove';
+    rm.addEventListener('click', () => { row.remove(); saveDraft(); });
+    row.appendChild(input);
+    row.appendChild(rm);
+    list.appendChild(row);
+  };
+
+  (prefill.length ? prefill : ['']).forEach(v => addRow(v));
+  addBtn.onclick = () => addRow('');
 }
 
 function setupMap(){
@@ -189,8 +248,6 @@ function getOwnerContacts(){
 
 function getFormData(){
   const subcategories = [...document.querySelectorAll('#subcategoryCheckboxes input:checked')].map(i => i.value);
-  const websiteRaw = document.getElementById('website').value.trim();
-  const website = websiteRaw ? `https://${websiteRaw.replace(/^https?:\/\//i,'')}` : null;
   const additional_info = Array.from({length:5}).map((_,i)=>({label:document.getElementById(`info_name_${i}`)?.value?.trim(),value:document.getElementById(`info_value_${i}`)?.value?.trim()})).filter(v=>v.label&&v.value);
   const hours = {};
   days.forEach(day => { const val = document.getElementById(`hours_${day}`)?.value.trim(); if (val) hours[day] = val; });
@@ -199,7 +256,9 @@ function getFormData(){
   const custom_ctas = [];
   const ctaName = document.getElementById('cta_name_0').value.trim();
   const ctaUrl = document.getElementById('cta_url_0').value.trim();
-  if (ctaName || ctaUrl) custom_ctas.push({name: ctaName || 'Custom Button', url: ctaUrl, color: document.getElementById('cta_color_0').value.trim() || '#055193', icon: document.getElementById('cta_icon_0').value.trim()});
+  if (ctaName || ctaUrl) custom_ctas.push({name: ctaName || 'Custom Button', url: normalizeHttpsUrl(ctaUrl), color: document.getElementById('cta_color_0').value.trim() || '#055193', icon: document.getElementById('cta_icon_0').value.trim()});
+
+  const photoUrls = [...document.querySelectorAll('.photo-url-input')].map(i => normalizeHttpsUrl(i.value)).filter(Boolean);
 
   return {
     business_name: document.getElementById('business_name').value.trim(),
@@ -215,10 +274,10 @@ function getFormData(){
     country: document.getElementById('country').value || 'USA',
     phone: normalizePhone('phone'),
     email: document.getElementById('email').value.trim() || null,
-    website,
-    logo: document.getElementById('logo').value.trim() || null,
-    photos: document.getElementById('photos').value.split('\n').map(v=>v.trim()).filter(Boolean),
-    video: document.getElementById('video').value.trim() || null,
+    website: normalizeHttpsUrl(document.getElementById('website').value),
+    logo: normalizeHttpsUrl(document.getElementById('logo').value),
+    photos: photoUrls,
+    video: normalizeHttpsUrl(document.getElementById('video').value),
     hours,
     social_media: {
       facebook: document.getElementById('facebook').value.trim() || null,
@@ -226,12 +285,12 @@ function getFormData(){
       twitter: document.getElementById('twitter').value.trim() || null,
       youtube: document.getElementById('youtube').value.trim() || null,
       tiktok: document.getElementById('tiktok').value.trim() || null,
-      linkedin: document.getElementById('linkedin').value.trim() || null
+      linkedin: normalizeHttpsUrl(document.getElementById('linkedin').value)
     },
     reviews: {
-      google: document.getElementById('google_reviews').value.trim() || null,
-      yelp: document.getElementById('yelp').value.trim() || null,
-      tripadvisor: document.getElementById('tripadvisor').value.trim() || null
+      google: normalizeHttpsUrl(document.getElementById('google_reviews').value),
+      yelp: normalizeHttpsUrl(document.getElementById('yelp').value),
+      tripadvisor: normalizeHttpsUrl(document.getElementById('tripadvisor').value)
     },
     additional_info,
     custom_ctas,
@@ -276,8 +335,10 @@ function restoreDraft(){
       if (el.type === 'checkbox') el.checked = !!v;
       else if (typeof v === 'string') el.value = v;
     });
-    if (d.website) document.getElementById('website').value = d.website.replace(/^https:\/\//i, '');
-    if (Array.isArray(d.photos)) document.getElementById('photos').value = d.photos.join('\n');
+    if (d.website) document.getElementById('website').value = stripProtocol(d.website);
+    if (d.logo) document.getElementById('logo').value = stripProtocol(d.logo);
+    if (d.video) document.getElementById('video').value = stripProtocol(d.video);
+    setupPhotoUrlRows(Array.isArray(d.photos) ? d.photos : []);
     if (Array.isArray(d.subcategories)) renderSubcategories(d.subcategories);
     if (Array.isArray(d.additional_info)) setupAdditionalInfoRows(d.additional_info);
     if (Array.isArray(d.owner_contacts)) setupExtraOwners(d.owner_contacts.slice(1));
@@ -308,7 +369,7 @@ function attachUploaders(){
   document.getElementById('logo_upload').addEventListener('change', async (e) => {
     const f = e.target.files?.[0]; if (!f) return;
     const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading logo...';
-    try { const url = await uploadToCloudflare(f); document.getElementById('logo').value = url; s.textContent = 'Logo uploaded.'; saveDraft(); }
+    try { const url = await uploadToCloudflare(f); document.getElementById('logo').value = stripProtocol(String(url)); s.textContent = 'Logo uploaded.'; saveDraft(); }
     catch(err){ s.textContent = `Logo upload failed: ${err.message}`; }
   });
   document.getElementById('photos_upload').addEventListener('change', async (e) => {
@@ -317,8 +378,8 @@ function attachUploaders(){
     try {
       const urls = [];
       for (const f of files) urls.push(await uploadToCloudflare(f));
-      const t = document.getElementById('photos');
-      t.value = [t.value.trim(), ...urls].filter(Boolean).join('\n');
+      const existing = [...document.querySelectorAll('.photo-url-input')].map(i => i.value).filter(Boolean);
+      setupPhotoUrlRows([...existing, ...urls.map(u => stripProtocol(String(u)))]);
       s.textContent = 'Photos uploaded.';
       saveDraft();
     } catch(err){ s.textContent = `Photo upload failed: ${err.message}`; }
@@ -349,6 +410,7 @@ async function submitListingRequest(event){
     renderSubcategories();
     setupAdditionalInfoRows();
     setupExtraOwners();
+    setupPhotoUrlRows();
   }
   submitBtn.disabled = false;
 }
@@ -366,6 +428,7 @@ async function loadDynamicSubcategories(){
 }
 
 async function init(){
+  lockHttpsInputs();
   const category = document.getElementById('category');
   category.innerHTML = MAIN_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
   category.addEventListener('change', () => { renderSubcategories(); saveDraft(); });
@@ -377,6 +440,7 @@ async function init(){
   renderSubcategories();
   setupAdditionalInfoRows();
   setupExtraOwners();
+  setupPhotoUrlRows();
   attachPhoneMask('phone');
   attachPhoneMask('owner_phone');
   setupMap();

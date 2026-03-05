@@ -347,6 +347,20 @@ window.logout = logout;
 // Load & Render Listings
 // ============================================
 
+
+function generateSlugFromName(name = '') {
+    const greekToLatin = {
+        'α':'a','β':'b','γ':'g','δ':'d','ε':'e','ζ':'z','η':'h','θ':'th','ι':'i','κ':'k','λ':'l','μ':'m','ν':'n','ξ':'x','ο':'o','π':'p','ρ':'r','σ':'s','ς':'s','τ':'t','υ':'y','φ':'f','χ':'ch','ψ':'ps','ω':'o',
+        'Α':'a','Β':'b','Γ':'g','Δ':'d','Ε':'e','Ζ':'z','Η':'h','Θ':'th','Ι':'i','Κ':'k','Λ':'l','Μ':'m','Ν':'n','Ξ':'x','Ο':'o','Π':'p','Ρ':'r','Σ':'s','Τ':'t','Υ':'y','Φ':'f','Χ':'ch','Ψ':'ps','Ω':'o'
+    };
+    let out = name || '';
+    Object.entries(greekToLatin).forEach(([gr, lt]) => {
+        out = out.replace(new RegExp(gr, 'g'), lt);
+    });
+    out = out.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return out || `listing-${Date.now()}`;
+}
+
 async function loadSubcategories() {
     try {
         const { data, error } = await adminSupabase
@@ -601,8 +615,12 @@ window.acceptRequest = async function(requestId) {
 
     try {
         const listingData = normalizeRequestToListing(request);
+        const safeSlug = listingData.slug && listingData.slug.trim()
+            ? generateSlugFromName(listingData.slug)
+            : generateSlugFromName(listingData.business_name || request.business_name || 'listing');
         const payload = {
             ...listingData,
+            slug: safeSlug,
             tier: 'FREE',
             verified: false,
             visible: true,
@@ -653,9 +671,13 @@ window.acceptRequest = async function(requestId) {
         await adminSupabase.from('listing_requests').delete().eq('id', requestId);
         await loadRequests();
         await loadListings();
-        await generateListingPage(inserted.id);
-        await updateSitemap();
-        alert('✅ Request accepted and listing created.');
+        const pageGenerated = await generateListingPage(inserted.id);
+        if (pageGenerated) {
+            await updateSitemap();
+            alert('✅ Request accepted, listing created, and page generated.');
+        } else {
+            alert('⚠️ Request accepted and listing created, but page generation failed. Please click 🔨 on the listing row.');
+        }
     } catch (error) {
         console.error('Error accepting request:', error);
         alert('Failed to accept request: ' + error.message);
@@ -3117,10 +3139,12 @@ window.generateListingPage = async function(listingId) {
         await updateSitemap();
         
         console.log('✅ Page generated successfully');
+        return true;
         
     } catch (error) {
         console.error('Error generating page:', error);
         alert('❌ Failed to generate listing page: ' + error.message);
+        return false;
     }
 };
 
