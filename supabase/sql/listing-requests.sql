@@ -75,3 +75,17 @@ alter table if exists listing_requests
   alter column owner_name_title_visible set default true,
   alter column owner_email_visible set default false,
   alter column owner_phone_visible set default false;
+
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='listing_requests' and policyname='Allow admin read listing requests') then
+    create policy "Allow admin read listing requests" on listing_requests for select to anon, authenticated using (true);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='listing_requests' and policyname='Allow admin update listing requests') then
+    create policy "Allow admin update listing requests" on listing_requests for update to anon, authenticated using (true) with check (true);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='listing_requests' and policyname='Allow admin delete listing requests') then
+    create policy "Allow admin delete listing requests" on listing_requests for delete to anon, authenticated using (true);
+  end if;
+end $$;

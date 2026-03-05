@@ -2,7 +2,7 @@ const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 const FORM_STORAGE_KEY = 'tgd_submit_form_draft_v3';
 
-const CATEGORIES = {
+let SUBCATEGORY_MAP = {
   'Automotive & Transportation': ['Auto Detailer','Auto Repair Shop','Car Dealer','Taxi & Limo Service'],
   'Beauty & Health': ['Barbershops','Esthetician','Hair Salons','Nail Salon','Spas','Chiropractor','Dentist','Doctor','Nutritionist','Optometrist','Orthodontist','Physical Therapist','Physical Trainer'],
   'Church & Religious Organization': ['Church'],
@@ -18,6 +18,10 @@ const CATEGORIES = {
   'Real Estate & Development': ['Appraiser','Broker','Developer','Lender','Property Management','Real Estate Agent'],
   'Retail & Shopping': ['Boutique Shop','ECommerce','Jewelry','Souvenir Shop']
 };
+const MAIN_CATEGORIES = [
+  'Automotive & Transportation','Beauty & Health','Church & Religious Organization','Cultural/Fraternal Organization','Education & Community','Entertainment, Arts & Recreation','Food & Hospitality','Grocery & Imports','Home & Construction','Industrial & Manufacturing','Pets & Veterinary','Professional & Business Services','Real Estate & Development','Retail & Shopping'
+];
+
 const US_STATES = {'':'Select State','AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming'};
 const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -101,7 +105,7 @@ function buildHoursRows(){
 
 function renderSubcategories(selected = []){
   const selectedCategory = document.getElementById('category').value;
-  const options = CATEGORIES[selectedCategory] || [];
+  const options = SUBCATEGORY_MAP[selectedCategory] || [];
   document.getElementById('subcategoryCheckboxes').innerHTML = options.map(sub =>
     `<label><input type="checkbox" value="${sub}" ${selected.includes(sub)?'checked':''}/> ${sub}</label>`
   ).join('');
@@ -349,13 +353,26 @@ async function submitListingRequest(event){
   submitBtn.disabled = false;
 }
 
-function init(){
+async function loadDynamicSubcategories(){
+  try {
+    const { data, error } = await supabaseClient.from('category_subcategories').select('category, subcategories');
+    if (error) return;
+    if (Array.isArray(data)) {
+      const next = {};
+      data.forEach((row) => { if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories; });
+      SUBCATEGORY_MAP = { ...SUBCATEGORY_MAP, ...next };
+    }
+  } catch (e) { console.warn('Could not load dynamic subcategories', e); }
+}
+
+async function init(){
   const category = document.getElementById('category');
-  category.innerHTML = Object.keys(CATEGORIES).map(c => `<option value="${c}">${c}</option>`).join('');
+  category.innerHTML = MAIN_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
   category.addEventListener('change', () => { renderSubcategories(); saveDraft(); });
   const state = document.getElementById('state');
   state.innerHTML = Object.entries(US_STATES).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
 
+  await loadDynamicSubcategories();
   buildHoursRows();
   renderSubcategories();
   setupAdditionalInfoRows();

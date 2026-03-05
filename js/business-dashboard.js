@@ -11,7 +11,7 @@ or distribution of this code will result in legal action to the fullest extent p
 // Configuration & State Management
 // ============================================
 
-const SUBCATEGORIES = {
+let SUBCATEGORIES = {
     'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
     'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
     'Church & Religious Organization': ['Church'],
@@ -39,6 +39,24 @@ let primarySubcategory = null;
 let settingsVisibility = { nameTitle: true, email: false, phone: false };
 let currentMaxPhotos = 1;
 let currentMaxCtas = 0;
+async function loadDynamicSubcategories() {
+    try {
+        const { data, error } = await window.TGDAuth.supabaseClient
+            .from('category_subcategories')
+            .select('category, subcategories');
+        if (error) return;
+        if (Array.isArray(data)) {
+            const next = {};
+            data.forEach((row) => {
+                if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
+            });
+            SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
+        }
+    } catch (error) {
+        console.warn('Could not load dynamic subcategories', error);
+    }
+}
+
 
 async function loadListingData() {
     if (!ownerData || ownerData.length === 0) {
@@ -58,6 +76,7 @@ async function loadListingData() {
         if (error) throw error;
         
         currentListing = data;
+        await loadDynamicSubcategories();
         console.log('Listing loaded:', currentListing);
         
     } catch (error) {
@@ -1045,6 +1064,7 @@ async function saveChanges() {
         if (error) throw error;
         
         currentListing = data;
+        await loadDynamicSubcategories();
         
         alert('✅ Changes saved successfully!');
         renderDashboard();

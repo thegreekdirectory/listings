@@ -18,7 +18,7 @@ const CATEGORIES = [
     'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
 ];
 
-const SUBCATEGORIES = {
+let SUBCATEGORIES = {
     'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
     'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
     'Church & Religious Organization': ['Church'],
@@ -51,12 +51,12 @@ const US_STATES = {
 };
 
 const COUNTRY_CODES = {
-    'USA': '+1',
-    'Greece': '+30',
-    'Canada': '+1',
-    'UK': '+44',
-    'Cyprus': '+357',
-    'Australia': '+61'
+    'USA': '1',
+    'Greece': '30',
+    'Canada': '1',
+    'UK': '44',
+    'Cyprus': '357',
+    'Australia': '61'
 };
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -143,6 +143,7 @@ function setupEventListeners() {
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
     document.getElementById('newListingBtn')?.addEventListener('click', newListing);
     document.getElementById('refreshBtn')?.addEventListener('click', loadListings);
+    document.getElementById('manageSubcategoriesBtn')?.addEventListener('click', manageSubcategories);
     document.getElementById('adminSearch')?.addEventListener('input', renderTable);
     document.getElementById('saveEdit')?.addEventListener('click', saveListing);
     document.getElementById('generateAllBtn')?.addEventListener('click', generateAllListingPages);
@@ -215,6 +216,7 @@ async function handleAdminLogin() {
         
         showSuccess('Login successful!');
         showDashboard();
+        await loadSubcategories();
         await loadListings();
         await loadRequests();
         
@@ -273,7 +275,7 @@ function formatPhoneNumber(phone, country = 'USA') {
     
     const digits = phone.replace(/\D/g, '');
     
-    if (phone.startsWith('+1') && digits.length === 11) {
+    if (digits.length === 11 && digits.startsWith('1')) {
         return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
     }
     
@@ -287,7 +289,7 @@ function createPhoneInput(value = '', country = 'USA') {
         <div class="flex gap-2">
             <select class="phone-country-select px-3 py-2 border border-gray-300 rounded-lg" onchange="updatePhoneFormat(this)">
                 ${Object.entries(COUNTRY_CODES).map(([c, code]) => 
-                    `<option value="${c}" ${country === c ? 'selected' : ''}>${c} ${code}</option>`
+                    `<option value="${c}" ${country === c ? 'selected' : ''}>${c} +${code}</option>`
                 ).join('')}
             </select>
             <input type="tel" class="phone-number-input flex-1 px-4 py-2 border border-gray-300 rounded-lg" 
@@ -328,7 +330,7 @@ function getPhoneValue(container) {
     const digits = phoneInput.value.replace(/\D/g, '');
     const code = COUNTRY_CODES[country];
     
-    return `${code}${digits}`;
+    return `${code}${digits}`.replace(/\D/g, "");
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -344,6 +346,44 @@ window.logout = logout;
 // ADMIN PORTAL - PART 3
 // Load & Render Listings
 // ============================================
+
+async function loadSubcategories() {
+    try {
+        const { data, error } = await adminSupabase
+            .from('category_subcategories')
+            .select('category, subcategories');
+        if (error) return;
+        if (Array.isArray(data) && data.length > 0) {
+            const next = {};
+            data.forEach((row) => {
+                if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
+            });
+            if (Object.keys(next).length > 0) SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
+        }
+    } catch (error) {
+        console.warn('Could not load dynamic subcategories', error);
+    }
+}
+
+window.manageSubcategories = async function() {
+    const category = prompt('Enter the exact main category to edit subcategories for:\n\n' + CATEGORIES.join('\n'));
+    if (!category || !CATEGORIES.includes(category)) return;
+    const current = (SUBCATEGORIES[category] || []).join(', ');
+    const updated = prompt(`Enter comma-separated subcategories for ${category}:`, current);
+    if (updated === null) return;
+    const list = updated.split(',').map(v => v.trim()).filter(Boolean);
+    try {
+        const { error } = await adminSupabase
+            .from('category_subcategories')
+            .upsert({ category, subcategories: list }, { onConflict: 'category' });
+        if (error) throw error;
+        SUBCATEGORIES[category] = list;
+        updateSubcategoriesForCategory();
+        alert('Subcategories updated.');
+    } catch (error) {
+        alert('Failed to save subcategories: ' + error.message);
+    }
+};
 
 async function loadListings() {
     try {

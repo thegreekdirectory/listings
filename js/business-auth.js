@@ -12,12 +12,12 @@ or distribution of this code will result in legal action to the fullest extent p
 // ============================================
 
 const COUNTRY_CODES = {
-    'USA': '+1',
-    'Greece': '+30',
-    'Canada': '+1',
-    'UK': '+44',
-    'Cyprus': '+357',
-    'Australia': '+61'
+    'USA': '1',
+    'Greece': '30',
+    'Canada': '1',
+    'UK': '44',
+    'Cyprus': '357',
+    'Australia': '61'
 };
 
 /*
@@ -403,7 +403,7 @@ function createPhoneInput(value = '', country = 'USA') {
         <div class="flex gap-2">
             <select class="phone-country-select px-3 py-2 border border-gray-300 rounded-lg" onchange="updatePhoneFormat(this)">
                 ${Object.entries(COUNTRY_CODES).map(([c, code]) => 
-                    `<option value="${c}" ${country === c ? 'selected' : ''}>${c} ${code}</option>`
+                    `<option value="${c}" ${country === c ? 'selected' : ''}>${c} +${code}</option>`
                 ).join('')}
             </select>
             <input type="tel" class="phone-number-input flex-1 px-4 py-2 border border-gray-300 rounded-lg" 
@@ -456,7 +456,7 @@ function getPhoneValue(container) {
     const digits = phoneInput.value.replace(/\D/g, '');
     const code = COUNTRY_CODES[country];
     
-    return `${code}${digits}`;
+    return `${code}${digits}`.replace(/\D/g, "");
 }
 
 window.formatPhoneNumber = formatPhoneNumber;
