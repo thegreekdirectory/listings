@@ -450,9 +450,12 @@ or distribution of this code can result in legal action to the fullest extent pe
         
         function formatPhoneDisplay(phone) {
             if (!phone) return '';
-            const digits = phone.replace(/\D/g, '');
+            const digits = String(phone).replace(/\D/g, '');
             if (digits.length === 11 && digits.startsWith('1')) {
-                return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
+                return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
+            }
+            if (digits.length === 10) {
+                return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
             }
             return phone;
         }
@@ -461,12 +464,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.text-gray-600, .text-gray-700').forEach(el => {
-                if (el.textContent.includes('+1')) {
-                    const phone = el.textContent.match(/\+1\d{10}/);
-                    if (phone) {
-                        el.textContent = el.textContent.replace(phone[0], formatPhoneDisplay(phone[0]));
-                    }
-                }
+                const phoneMatch = el.textContent.match(/\b(?:\+?1)?\d{10}\b/);
+                if (!phoneMatch) return;
+                el.textContent = el.textContent.replace(phoneMatch[0], formatPhoneDisplay(phoneMatch[0]));
             });
         });
         

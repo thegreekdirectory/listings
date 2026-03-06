@@ -578,7 +578,7 @@ function normalizeRequestToListing(request) {
         primary_subcategory: request.primary_subcategory || null,
         verified: false,
         is_chain: !!request.is_chain,
-        is_claimed: false,
+        is_claimed: true,
         chain_name: request.chain_name || '',
         chain_id: request.chain_id || '',
         address: request.address || '',
@@ -633,6 +633,7 @@ window.acceptRequest = async function(requestId) {
             tier: 'FREE',
             verified: false,
             visible: true,
+            is_claimed: true,
             owner: undefined
         };
         delete payload.owner;

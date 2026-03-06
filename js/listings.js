@@ -76,11 +76,22 @@ function getPreferredListingsLayout() {
 
 function formatPhoneDisplay(phone) {
     if (!phone) return '';
-    const digits = phone.replace(/\D/g, '');
-    if (phone.startsWith('+1') && digits.length === 11) {
-        return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
+    const digits = String(phone).replace(/\D/g, '');
+    if (digits.length === 11 && digits.startsWith('1')) {
+        return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
+    }
+    if (digits.length === 10) {
+        return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
     }
     return phone;
+}
+
+function normalizePhoneHref(phone) {
+    if (!phone) return '';
+    const digits = String(phone).replace(/\D/g, '');
+    if (digits.length === 10) return `1${digits}`;
+    if (digits.length === 11 && digits.startsWith('1')) return digits;
+    return digits || String(phone);
 }
 
 function getDirectionsUrl(listing) {
@@ -2561,7 +2572,7 @@ function generateCallButton(listing) {
     if (!listing.phone) return '';
     
     return `
-        <a href="tel:${listing.phone}" 
+        <a href="tel:${normalizePhoneHref(listing.phone)}" 
            onclick="event.stopPropagation();"
            style="position:absolute;bottom:8px;right:116px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#10b981;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;z-index:10;" 
            onmouseover="this.style.background='#059669'" 
