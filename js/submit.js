@@ -27,6 +27,7 @@ const US_STATES = {'':'Select State','AL':'Alabama','AK':'Alaska','AZ':'Arizona'
 const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let map, marker;
+let selectedPrimarySubcategory = null;
 
 const onlyDigits = (v='') => v.replace(/\D/g, '');
 const stripProtocol = (v='') => v.trim().replace(/^https?:\/\//i, '').replace(/^\/+/, '');
@@ -162,12 +163,51 @@ function buildHoursRows(){
   }));
 }
 
-function renderSubcategories(selected = []){
+function renderSubcategories(selected = [], primary = null){
   const selectedCategory = document.getElementById('category').value;
   const options = SUBCATEGORY_MAP[selectedCategory] || [];
-  document.getElementById('subcategoryCheckboxes').innerHTML = options.map(sub =>
-    `<label><input type="checkbox" value="${sub}" ${selected.includes(sub)?'checked':''}/> ${sub}</label>`
-  ).join('');
+  if (!selectedPrimarySubcategory && primary) selectedPrimarySubcategory = primary;
+  document.getElementById('subcategoryCheckboxes').innerHTML = options.map(sub => {
+    const checked = selected.includes(sub);
+    const isPrimary = (selectedPrimarySubcategory ? selectedPrimarySubcategory === sub : selected[0] === sub);
+    return `<label>
+      <input type="checkbox" value="${sub}" ${checked ? 'checked' : ''}/> ${sub}
+      <input type="radio" name="submitPrimarySubcategory" value="${sub}" ${checked && isPrimary ? 'checked' : ''} ${!checked ? 'disabled' : ''} title="Primary">
+    </label>`;
+  }).join('');
+
+  document.querySelectorAll('#subcategoryCheckboxes input[type="checkbox"]').forEach((cb) => {
+    cb.addEventListener('change', () => {
+      const value = cb.value;
+      const radio = document.querySelector(`#subcategoryCheckboxes input[type="radio"][value="${CSS.escape(value)}"]`);
+      if (cb.checked) {
+        radio.disabled = false;
+        if (!selectedPrimarySubcategory) {
+          selectedPrimarySubcategory = value;
+          radio.checked = true;
+        }
+      } else {
+        radio.checked = false;
+        radio.disabled = true;
+        if (selectedPrimarySubcategory === value) {
+          const firstChecked = document.querySelector('#subcategoryCheckboxes input[type="checkbox"]:checked');
+          selectedPrimarySubcategory = firstChecked ? firstChecked.value : null;
+          if (firstChecked) {
+            const r = document.querySelector(`#subcategoryCheckboxes input[type="radio"][value="${CSS.escape(firstChecked.value)}"]`);
+            if (r) r.checked = true;
+          }
+        }
+      }
+      saveDraft();
+    });
+  });
+
+  document.querySelectorAll('#subcategoryCheckboxes input[type="radio"]').forEach((r) => {
+    r.addEventListener('change', () => {
+      if (r.checked) selectedPrimarySubcategory = r.value;
+      saveDraft();
+    });
+  });
 }
 
 function setupAdditionalInfoRows(prefill=[]){
@@ -266,7 +306,7 @@ function getFormData(){
     description: document.getElementById('description').value.trim(),
     category: document.getElementById('category').value,
     subcategories,
-    primary_subcategory: subcategories[0] || null,
+    primary_subcategory: (selectedPrimarySubcategory && subcategories.includes(selectedPrimarySubcategory)) ? selectedPrimarySubcategory : (subcategories[0] || null),
     address: document.getElementById('address').value.trim() || null,
     city: document.getElementById('city').value.trim() || null,
     state: document.getElementById('state').value || null,
@@ -310,6 +350,7 @@ function validatePayload(p){
   const errors = [];
   if (!p.business_name || !p.tagline || !p.description) errors.push('Complete all required business fields.');
   if (!p.subcategories.length) errors.push('Select at least one subcategory.');
+  if (p.subcategories.length && !p.primary_subcategory) errors.push('Select a primary subcategory.');
   if (!p.owner_name || !p.owner_title || !p.owner_email) errors.push('Owner name, title, and email are required.');
   if (p.zip_code && !/^\d{5}$/.test(p.zip_code)) errors.push('ZIP code must be exactly 5 digits.');
   if (!p.owner_name_title_visible && (p.owner_email_visible || p.owner_phone_visible)) errors.push('Enable Owner Name + Title before showing owner email or phone.');
@@ -339,7 +380,7 @@ function restoreDraft(){
     if (d.logo) document.getElementById('logo').value = stripProtocol(d.logo);
     if (d.video) document.getElementById('video').value = stripProtocol(d.video);
     setupPhotoUrlRows(Array.isArray(d.photos) ? d.photos : []);
-    if (Array.isArray(d.subcategories)) renderSubcategories(d.subcategories);
+    if (Array.isArray(d.subcategories)) renderSubcategories(d.subcategories, d.primary_subcategory || null);
     if (Array.isArray(d.additional_info)) setupAdditionalInfoRows(d.additional_info);
     if (Array.isArray(d.owner_contacts)) setupExtraOwners(d.owner_contacts.slice(1));
     if (d.hours) {
@@ -431,7 +472,7 @@ async function init(){
   lockHttpsInputs();
   const category = document.getElementById('category');
   category.innerHTML = MAIN_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
-  category.addEventListener('change', () => { renderSubcategories(); saveDraft(); });
+  category.addEventListener('change', () => { selectedPrimarySubcategory = null; renderSubcategories(); saveDraft(); });
   const state = document.getElementById('state');
   state.innerHTML = Object.entries(US_STATES).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
 

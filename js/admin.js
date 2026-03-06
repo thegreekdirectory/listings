@@ -2607,7 +2607,15 @@ function generateTemplateReplacements(listing) {
     // Generate subcategory tags
     let subcategoriesTags = '';
     if (listing.subcategories && listing.subcategories.length > 0) {
-        subcategoriesTags = listing.subcategories.map(sub => 
+        const uniqueSubs = [...new Set(listing.subcategories.filter(Boolean))];
+        const primary = listing.primary_subcategory && uniqueSubs.includes(listing.primary_subcategory)
+            ? listing.primary_subcategory
+            : null;
+        const orderedSubs = [
+            ...(primary ? [primary] : []),
+            ...uniqueSubs.filter((s) => s !== primary).sort((a, b) => a.localeCompare(b))
+        ];
+        subcategoriesTags = orderedSubs.map(sub => 
             `<span class="subcategory-tag">${escapeHtml(sub)}</span>`
         ).join('');
     }
@@ -3000,7 +3008,8 @@ function generateTemplateReplacementsPart2(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     let claimButton = '';
-    const isClaimed = listing.is_claimed || (owner && owner.owner_user_id);
+    const firstOwner = owners.length > 0 ? owners[0] : null;
+    const isClaimed = listing.is_claimed || (firstOwner && firstOwner.owner_user_id);
     if (!isClaimed && listing.show_claim_button !== false) {
         const cityState = listing.city && listing.state ? `${listing.city}, ${listing.state}` : '';
         const country = listing.country && listing.country !== 'USA' ? `, ${listing.country}` : '';
