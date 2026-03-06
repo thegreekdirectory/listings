@@ -442,6 +442,47 @@ or distribution of this code can result in legal action to the fullest extent pe
         const hoursData = {{HOURS_JSON}};
         const galleryPhotos = {{PHOTOS_JSON}};
         let currentGalleryIndex = 0;
+        const TRACKING_SESSION_KEY = 'tgd_tracking_session_id';
+
+        function getTrackingSessionId() {
+            let sessionId = localStorage.getItem(TRACKING_SESSION_KEY);
+            if (!sessionId) {
+                sessionId = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+                localStorage.setItem(TRACKING_SESSION_KEY, sessionId);
+            }
+            return sessionId;
+        }
+
+        function getAttributionSnapshot() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                referrer: document.referrer || null,
+                utm_source: params.get('utm_source'),
+                utm_medium: params.get('utm_medium'),
+                utm_campaign: params.get('utm_campaign'),
+                utm_term: params.get('utm_term'),
+                utm_content: params.get('utm_content')
+            };
+        }
+
+        async function trackEvent(eventName, properties = {}) {
+            try {
+                await supabaseClient
+                    .from('tracking_events')
+                    .insert({
+                        event_name: eventName,
+                        session_id: getTrackingSessionId(),
+                        page_context: 'listing_detail',
+                        listing_id: listingId || null,
+                        attribution_snapshot: getAttributionSnapshot(),
+                        properties,
+                        timestamp: new Date().toISOString(),
+                        user_agent: navigator.userAgent
+                    });
+            } catch (e) {
+                console.log('Event tracking error:', e.message);
+            }
+        }
         
         function toggleSubcategories() {
             const display = document.getElementById('subcategoriesDisplay');
@@ -490,10 +531,26 @@ or distribution of this code can result in legal action to the fullest extent pe
         
         window.addEventListener('load', () => {
             trackAnalytics('view');
+            trackEvent('page_view');
         });
         
         function trackClick(action, platform) {
             trackAnalytics(action, platform);
+
+            const eventMap = {
+                call: 'call_click',
+                website: 'website_click',
+                directions: 'directions_click',
+                share: 'share_click'
+            };
+
+            const mappedEventName = eventMap[action];
+            if (mappedEventName) {
+                trackEvent(mappedEventName, {
+                    platform: platform || null,
+                    legacy_action: action
+                });
+            }
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */

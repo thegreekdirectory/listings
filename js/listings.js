@@ -55,12 +55,64 @@ let displayedListingsCount = 25;
 let estimatedUserLocation = null;
 let selectedSplitListingId = null;
 let desktopFiltersOverlay = false;
+const TRACKING_SESSION_KEY = 'tgd_tracking_session_id';
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+
+function getTrackingClient() {
+    if (listingsSupabase) return listingsSupabase;
+    if (!window.supabase) return null;
+    listingsSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return listingsSupabase;
+}
+
+function getTrackingSessionId() {
+    let sessionId = localStorage.getItem(TRACKING_SESSION_KEY);
+    if (!sessionId) {
+        sessionId = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        localStorage.setItem(TRACKING_SESSION_KEY, sessionId);
+    }
+    return sessionId;
+}
+
+function getAttributionSnapshot() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        referrer: document.referrer || null,
+        utm_source: params.get('utm_source'),
+        utm_medium: params.get('utm_medium'),
+        utm_campaign: params.get('utm_campaign'),
+        utm_term: params.get('utm_term'),
+        utm_content: params.get('utm_content')
+    };
+}
+
+async function trackSurfaceEvent(eventName, properties = {}) {
+    try {
+        const client = getTrackingClient();
+        if (!client) return;
+
+        const payload = {
+            event_name: eventName,
+            session_id: getTrackingSessionId(),
+            page_context: 'listings',
+            listing_id: properties.listing_id || null,
+            attribution_snapshot: getAttributionSnapshot(),
+            properties,
+            timestamp: new Date().toISOString(),
+            user_agent: navigator.userAgent
+        };
+
+        const { error } = await client.from('tracking_events').insert(payload);
+        if (error) throw error;
+    } catch (error) {
+        console.log('Surface tracking error:', error.message);
+    }
+}
 
 function isPwaMode() {
     return (window.PWAApp && window.PWAApp.isStandalone) ||
@@ -2000,6 +2052,10 @@ function toggleMap() {
     
     mapOpen = !mapOpen;
     if (mapOpen) {
+        trackSurfaceEvent('map_opened', {
+            view_mode: currentView,
+            split_view_active: splitViewActive
+        });
         container.classList.remove('hidden');
         if (filtersOpen) toggleFilters();
         if (splitViewActive) toggleSplitView();
@@ -2030,6 +2086,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function setView(view, options = {}) {
     const { skipRender = false } = options;
+    const previousView = currentView;
     currentView = view;
     const gridViewBtn = document.getElementById('gridViewBtn');
     const listViewBtn = document.getElementById('listViewBtn');
@@ -2052,6 +2109,15 @@ function setView(view, options = {}) {
     
     if (isPwaMode()) {
         localStorage.setItem('tgd_listings_layout', view);
+    }
+
+    if (!skipRender && previousView !== view) {
+        trackSurfaceEvent('view_mode_changed', {
+            from_view: previousView,
+            to_view: view,
+            map_open: mapOpen,
+            split_view_active: splitViewActive
+        });
     }
 
     if (!skipRender) {
@@ -3030,6 +3096,10 @@ or distribution of this code can result in legal action to the fullest extent pe
 function toggleSplitView() {
     splitViewActive = !splitViewActive;
     if (splitViewActive) {
+        trackSurfaceEvent('split_view_opened', {
+            view_mode: currentView,
+            map_open: mapOpen
+        });
         document.getElementById('normalViewControls').classList.add('hidden');
         document.getElementById('normalViewListings').classList.add('hidden');
         document.getElementById('mapContainer').classList.add('hidden');
