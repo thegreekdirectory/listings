@@ -11,7 +11,7 @@ or distribution of this code will result in legal action to the fullest extent p
 // Configuration & State Management
 // ============================================
 
-const SUBCATEGORIES = {
+let SUBCATEGORIES = {
     'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
     'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
     'Church & Religious Organization': ['Church'],
@@ -36,9 +36,27 @@ let uploadedImages = { logo: null, photos: [], video: null };
 let photosSortable = null;
 let selectedSubcategories = [];
 let primarySubcategory = null;
-let settingsVisibility = { email: false, phone: false };
+let settingsVisibility = { nameTitle: true, email: false, phone: false };
 let currentMaxPhotos = 1;
 let currentMaxCtas = 0;
+async function loadDynamicSubcategories() {
+    try {
+        const { data, error } = await window.TGDAuth.supabaseClient
+            .from('category_subcategories')
+            .select('category, subcategories');
+        if (error) return;
+        if (Array.isArray(data)) {
+            const next = {};
+            data.forEach((row) => {
+                if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
+            });
+            SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
+        }
+    } catch (error) {
+        console.warn('Could not load dynamic subcategories', error);
+    }
+}
+
 
 async function loadListingData() {
     if (!ownerData || ownerData.length === 0) {
@@ -58,6 +76,7 @@ async function loadListingData() {
         if (error) throw error;
         
         currentListing = data;
+        await loadDynamicSubcategories();
         console.log('Listing loaded:', currentListing);
         
     } catch (error) {
@@ -1045,6 +1064,7 @@ async function saveChanges() {
         if (error) throw error;
         
         currentListing = data;
+        await loadDynamicSubcategories();
         
         alert('✅ Changes saved successfully!');
         renderDashboard();
@@ -1173,6 +1193,7 @@ function renderSettings() {
     
     const owner = ownerData[0];
     settingsVisibility = {
+        nameTitle: owner.name_title_visible !== false,
         email: owner.email_visible || false,
         phone: owner.phone_visible || false
     };
@@ -1186,6 +1207,18 @@ function renderSettings() {
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="owner-field md:col-span-2">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">👤 Owner Name + Title Visibility</label>
+                                <p class="text-xs text-gray-500">Owner name and title always show/hide together.</p>
+                            </div>
+                            <div class="mt-2">
+                                <button class="visibility-toggle ${settingsVisibility.nameTitle ? 'visible' : 'hidden'}" onclick="toggleSettingsFieldVisibility('nameTitle')">
+                                    ${settingsVisibility.nameTitle ? 'Visible' : 'Hidden'}
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="owner-field">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">✉️ Owner Email</label>
@@ -1246,14 +1279,26 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 window.toggleSettingsFieldVisibility = function(field) {
     settingsVisibility[field] = !settingsVisibility[field];
-    const button = document.querySelector(`.visibility-toggle[onclick*="${field}"]`);
-    if (settingsVisibility[field]) {
-        button.className = 'visibility-toggle visible';
-        button.textContent = 'Visible';
-    } else {
-        button.className = 'visibility-toggle hidden';
-        button.textContent = 'Hidden';
+    if (field === 'nameTitle' && !settingsVisibility.nameTitle) {
+        settingsVisibility.email = false;
+        settingsVisibility.phone = false;
     }
+    if ((field === 'email' || field === 'phone') && settingsVisibility[field] && !settingsVisibility.nameTitle) {
+        settingsVisibility[field] = false;
+        alert('Enable Name + Title visibility first.');
+    }
+
+    ['nameTitle', 'email', 'phone'].forEach((f) => {
+        const button = document.querySelector(`.visibility-toggle[onclick*="${f}"]`);
+        if (!button) return;
+        if (settingsVisibility[f]) {
+            button.className = 'visibility-toggle visible';
+            button.textContent = 'Visible';
+        } else {
+            button.className = 'visibility-toggle hidden';
+            button.textContent = 'Hidden';
+        }
+    });
 };
 
 async function updatePassword() {
@@ -1300,6 +1345,7 @@ async function saveSettings() {
     const updates = {
         owner_email: updatedEmail,
         owner_phone: updatedPhone,
+        name_title_visible: settingsVisibility.nameTitle,
         email_visible: settingsVisibility.email,
         phone_visible: settingsVisibility.phone
     };

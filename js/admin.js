@@ -18,7 +18,7 @@ const CATEGORIES = [
     'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
 ];
 
-const SUBCATEGORIES = {
+let SUBCATEGORIES = {
     'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
     'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
     'Church & Religious Organization': ['Church'],
@@ -51,12 +51,12 @@ const US_STATES = {
 };
 
 const COUNTRY_CODES = {
-    'USA': '+1',
-    'Greece': '+30',
-    'Canada': '+1',
-    'UK': '+44',
-    'Cyprus': '+357',
-    'Australia': '+61'
+    'USA': '1',
+    'Greece': '30',
+    'Canada': '1',
+    'UK': '44',
+    'Cyprus': '357',
+    'Australia': '61'
 };
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -88,6 +88,8 @@ let editingListing = null;
 let selectedSubcategories = [];
 let primarySubcategory = null;
 let userCountry = 'USA';
+let allRequests = [];
+let currentAdminView = 'listings';
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing Admin Portal...');
@@ -141,18 +143,27 @@ function setupEventListeners() {
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
     document.getElementById('newListingBtn')?.addEventListener('click', newListing);
     document.getElementById('refreshBtn')?.addEventListener('click', loadListings);
+    document.getElementById('manageSubcategoriesBtn')?.addEventListener('click', manageSubcategories);
     document.getElementById('adminSearch')?.addEventListener('input', renderTable);
     document.getElementById('saveEdit')?.addEventListener('click', saveListing);
     document.getElementById('generateAllBtn')?.addEventListener('click', generateAllListingPages);
     document.getElementById('csvUpload')?.addEventListener('change', handleCSVUpload);
+    document.getElementById('listingsViewBtn')?.addEventListener('click', () => switchAdminView('listings'));
+    document.getElementById('requestsViewBtn')?.addEventListener('click', () => switchAdminView('requests'));
     document.getElementById('cancelEdit')?.addEventListener('click', () => {
         if (confirm('Discard changes?')) {
             document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').dataset.mode = '';
+            document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('saveEdit')?.classList.remove('hidden');
         }
     });
     document.getElementById('closeModal')?.addEventListener('click', () => {
         if (confirm('Discard changes?')) {
             document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').dataset.mode = '';
+            document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('saveEdit')?.classList.remove('hidden');
         }
     });
     document.getElementById('closeAnalyticsModal')?.addEventListener('click', () => {
@@ -205,7 +216,9 @@ async function handleAdminLogin() {
         
         showSuccess('Login successful!');
         showDashboard();
+        await loadSubcategories();
         await loadListings();
+        await loadRequests();
         
     } catch (error) {
         console.error('Login error:', error);
@@ -262,7 +275,7 @@ function formatPhoneNumber(phone, country = 'USA') {
     
     const digits = phone.replace(/\D/g, '');
     
-    if (phone.startsWith('+1') && digits.length === 11) {
+    if (digits.length === 11 && digits.startsWith('1')) {
         return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
     }
     
@@ -276,7 +289,7 @@ function createPhoneInput(value = '', country = 'USA') {
         <div class="flex gap-2">
             <select class="phone-country-select px-3 py-2 border border-gray-300 rounded-lg" onchange="updatePhoneFormat(this)">
                 ${Object.entries(COUNTRY_CODES).map(([c, code]) => 
-                    `<option value="${c}" ${country === c ? 'selected' : ''}>${c} ${code}</option>`
+                    `<option value="${c}" ${country === c ? 'selected' : ''}>${c} +${code}</option>`
                 ).join('')}
             </select>
             <input type="tel" class="phone-number-input flex-1 px-4 py-2 border border-gray-300 rounded-lg" 
@@ -317,7 +330,7 @@ function getPhoneValue(container) {
     const digits = phoneInput.value.replace(/\D/g, '');
     const code = COUNTRY_CODES[country];
     
-    return `${code}${digits}`;
+    return `${code}${digits}`.replace(/\D/g, "");
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -333,6 +346,58 @@ window.logout = logout;
 // ADMIN PORTAL - PART 3
 // Load & Render Listings
 // ============================================
+
+
+function generateSlugFromName(name = '') {
+    const greekToLatin = {
+        'α':'a','β':'b','γ':'g','δ':'d','ε':'e','ζ':'z','η':'h','θ':'th','ι':'i','κ':'k','λ':'l','μ':'m','ν':'n','ξ':'x','ο':'o','π':'p','ρ':'r','σ':'s','ς':'s','τ':'t','υ':'y','φ':'f','χ':'ch','ψ':'ps','ω':'o',
+        'Α':'a','Β':'b','Γ':'g','Δ':'d','Ε':'e','Ζ':'z','Η':'h','Θ':'th','Ι':'i','Κ':'k','Λ':'l','Μ':'m','Ν':'n','Ξ':'x','Ο':'o','Π':'p','Ρ':'r','Σ':'s','Τ':'t','Υ':'y','Φ':'f','Χ':'ch','Ψ':'ps','Ω':'o'
+    };
+    let out = name || '';
+    Object.entries(greekToLatin).forEach(([gr, lt]) => {
+        out = out.replace(new RegExp(gr, 'g'), lt);
+    });
+    out = out.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return out || `listing-${Date.now()}`;
+}
+
+async function loadSubcategories() {
+    try {
+        const { data, error } = await adminSupabase
+            .from('category_subcategories')
+            .select('category, subcategories');
+        if (error) return;
+        if (Array.isArray(data) && data.length > 0) {
+            const next = {};
+            data.forEach((row) => {
+                if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
+            });
+            if (Object.keys(next).length > 0) SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
+        }
+    } catch (error) {
+        console.warn('Could not load dynamic subcategories', error);
+    }
+}
+
+window.manageSubcategories = async function() {
+    const category = prompt('Enter the exact main category to edit subcategories for:\n\n' + CATEGORIES.join('\n'));
+    if (!category || !CATEGORIES.includes(category)) return;
+    const current = (SUBCATEGORIES[category] || []).join(', ');
+    const updated = prompt(`Enter comma-separated subcategories for ${category}:`, current);
+    if (updated === null) return;
+    const list = updated.split(',').map(v => v.trim()).filter(Boolean);
+    try {
+        const { error } = await adminSupabase
+            .from('category_subcategories')
+            .upsert({ category, subcategories: list }, { onConflict: 'category' });
+        if (error) throw error;
+        SUBCATEGORIES[category] = list;
+        updateSubcategoriesForCategory();
+        alert('Subcategories updated.');
+    } catch (error) {
+        alert('Failed to save subcategories: ' + error.message);
+    }
+};
 
 async function loadListings() {
     try {
@@ -361,10 +426,288 @@ async function loadListings() {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
+
+
+async function loadRequests() {
+    try {
+        const { data, error } = await adminSupabase
+            .from('listing_requests')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            if (error.code === '42P01') {
+                allRequests = [];
+                renderRequestsTable();
+                return;
+            }
+            throw error;
+        }
+
+        allRequests = data || [];
+        renderRequestsTable();
+    } catch (error) {
+        console.error('❌ Error loading requests:', error);
+        alert('Failed to load requests: ' + error.message);
+    }
+}
+
+function switchAdminView(view) {
+    currentAdminView = view;
+    const listingsBtn = document.getElementById('listingsViewBtn');
+    const requestsBtn = document.getElementById('requestsViewBtn');
+    const listingsSection = document.getElementById('listingsSection');
+    const requestsSection = document.getElementById('requestsSection');
+    const newListingBtn = document.getElementById('newListingBtn');
+
+    if (view === 'requests') {
+        listingsSection?.classList.add('hidden');
+        requestsSection?.classList.remove('hidden');
+        if (newListingBtn) newListingBtn.classList.add('hidden');
+        if (listingsBtn) {
+            listingsBtn.className = 'px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-medium';
+        }
+        if (requestsBtn) {
+            requestsBtn.className = 'px-4 py-2 bg-orange-600 text-white rounded-lg font-medium';
+        }
+        loadRequests();
+    } else {
+        requestsSection?.classList.add('hidden');
+        listingsSection?.classList.remove('hidden');
+        if (newListingBtn) newListingBtn.classList.remove('hidden');
+        if (listingsBtn) {
+            listingsBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg font-medium';
+        }
+        if (requestsBtn) {
+            requestsBtn.className = 'px-4 py-2 bg-orange-100 text-orange-800 rounded-lg font-medium';
+        }
+        renderTable();
+    }
+}
+
+function renderRequestsTable() {
+    const tbody = document.getElementById('requestsTableBody');
+    if (!tbody) return;
+
+    const searchTerm = document.getElementById('adminSearch')?.value.toLowerCase() || '';
+    const filtered = searchTerm
+        ? allRequests.filter((r) =>
+            (r.business_name || '').toLowerCase().includes(searchTerm) ||
+            (r.category || '').toLowerCase().includes(searchTerm) ||
+            (r.city || '').toLowerCase().includes(searchTerm) ||
+            String(r.id || '').includes(searchTerm)
+        )
+        : allRequests;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="py-10 px-4 text-center text-gray-500">No listing requests found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map((r) => `
+        <tr class="border-b hover:bg-orange-50">
+            <td class="py-4 px-4 text-sm font-mono text-gray-600">#${r.id}</td>
+            <td class="py-4 px-4 font-medium">${r.business_name || ''}</td>
+            <td class="py-4 px-4 text-gray-700">${r.category || ''}</td>
+            <td class="py-4 px-4 text-sm text-gray-600">${r.city || ''}${r.state ? ', ' + r.state : ''}</td>
+            <td class="py-4 px-4 text-sm text-gray-600">${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</td>
+            <td class="py-4 px-4">
+                <div class="flex justify-end gap-2 flex-wrap">
+                    <button onclick="viewRequest('${r.id}')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View</button>
+                    <button onclick="editRequest('${r.id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                    <button onclick="acceptRequest('${r.id}')" class="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200">Accept</button>
+                    <button onclick="denyRequest('${r.id}')" class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Deny</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+window.viewRequest = async function(requestId) {
+    await openRequestInEditor(requestId, false);
+};
+
+window.editRequest = async function(requestId) {
+    await openRequestInEditor(requestId, true);
+};
+
+async function openRequestInEditor(requestId, editable) {
+    const request = allRequests.find((r) => String(r.id) === String(requestId));
+    if (!request) {
+        alert('Request not found');
+        return;
+    }
+
+    const normalized = normalizeRequestToListing(request);
+    editingListing = { ...normalized, id: null };
+    selectedSubcategories = normalized.subcategories || [];
+    primarySubcategory = normalized.primary_subcategory || null;
+
+    document.getElementById('modalTitle').textContent = editable
+        ? `Edit Request #${request.id}`
+        : `View Request #${request.id}`;
+    fillEditForm(editingListing);
+
+    if (!editable) {
+        const fields = document.querySelectorAll('#editFormContent input, #editFormContent textarea, #editFormContent select');
+        fields.forEach((el) => el.setAttribute('disabled', 'disabled'));
+        const saveBtn = document.getElementById('saveEdit');
+        if (saveBtn) saveBtn.classList.add('hidden');
+    } else {
+        const saveBtn = document.getElementById('saveEdit');
+        if (saveBtn) saveBtn.classList.remove('hidden');
+    }
+
+    document.getElementById('editModal').dataset.requestId = String(request.id);
+    document.getElementById('editModal').dataset.mode = editable ? 'request-edit' : 'request-view';
+    document.getElementById('editModal').classList.remove('hidden');
+}
+
+function normalizeRequestToListing(request) {
+    return {
+        business_name: request.business_name || '',
+        slug: request.slug || '',
+        tagline: request.tagline || '',
+        description: request.description || '',
+        category: request.category || CATEGORIES[0],
+        subcategories: request.subcategories || [],
+        primary_subcategory: request.primary_subcategory || null,
+        verified: false,
+        is_chain: !!request.is_chain,
+        is_claimed: false,
+        chain_name: request.chain_name || '',
+        chain_id: request.chain_id || '',
+        address: request.address || '',
+        city: request.city || '',
+        state: request.state || '',
+        zip_code: request.zip_code || '',
+        country: request.country || 'USA',
+        phone: request.phone || '',
+        email: request.email || '',
+        website: request.website || '',
+        logo: request.logo || '',
+        photos: request.photos || [],
+        video: request.video || '',
+        additional_info: request.additional_info || [],
+        custom_ctas: request.custom_ctas || [],
+        hours: request.hours || {},
+        social_media: request.social_media || {},
+        reviews: request.reviews || {},
+        owner: [{
+            full_name: request.owner_name || '',
+            title: request.owner_title || '',
+            from_greece: request.from_greece || '',
+            owner_email: request.owner_email || '',
+            owner_phone: request.owner_phone || '',
+            confirmation_key: null
+        }]
+    };
+}
+
+window.acceptRequest = async function(requestId) {
+    const request = allRequests.find((r) => String(r.id) === String(requestId));
+    if (!request) return;
+    if (!confirm(`Accept request from ${request.business_name || 'business'} and create listing?`)) return;
+
+    try {
+        const listingData = normalizeRequestToListing(request);
+        const safeSlug = listingData.slug && listingData.slug.trim()
+            ? generateSlugFromName(listingData.slug)
+            : generateSlugFromName(listingData.business_name || request.business_name || 'listing');
+        const payload = {
+            ...listingData,
+            slug: safeSlug,
+            tier: 'FREE',
+            verified: false,
+            visible: true,
+            owner: undefined
+        };
+        delete payload.owner;
+
+        const { data: inserted, error } = await adminSupabase
+            .from('listings')
+            .insert(payload)
+            .select()
+            .single();
+        if (error) throw error;
+
+        const ownerRows = [];
+        ownerRows.push({
+            listing_id: inserted.id,
+            full_name: request.owner_name || null,
+            title: request.owner_title || null,
+            from_greece: request.from_greece || null,
+            owner_email: request.owner_email || null,
+            owner_phone: request.owner_phone || null,
+            name_title_visible: request.owner_name_title_visible !== false,
+            email_visible: request.owner_email_visible === true,
+            phone_visible: request.owner_phone_visible === true,
+            confirmation_key: null
+        });
+
+        const extraOwners = Array.isArray(request.owner_contacts) ? request.owner_contacts.slice(1) : [];
+        extraOwners.forEach((o) => {
+            if (!o || !o.enabled) return;
+            ownerRows.push({
+                listing_id: inserted.id,
+                full_name: o.name || null,
+                title: o.title || null,
+                from_greece: request.from_greece || null,
+                owner_email: o.email || null,
+                owner_phone: o.phone ? `+1${String(o.phone).replace(/\D/g, '')}` : null,
+                name_title_visible: true,
+                email_visible: true,
+                phone_visible: true,
+                confirmation_key: null
+            });
+        });
+
+        await adminSupabase.from('business_owners').insert(ownerRows);
+
+        await adminSupabase.from('listing_requests').delete().eq('id', requestId);
+        await loadRequests();
+        await loadListings();
+        const pageGenerated = await generateListingPage(inserted.id);
+        if (pageGenerated) {
+            await updateSitemap();
+            alert('✅ Request accepted, listing created, and page generated.');
+        } else {
+            alert('⚠️ Request accepted and listing created, but page generation failed. Please click 🔨 on the listing row.');
+        }
+    } catch (error) {
+        console.error('Error accepting request:', error);
+        alert('Failed to accept request: ' + error.message);
+    }
+};
+
+window.denyRequest = async function(requestId) {
+    const request = allRequests.find((r) => String(r.id) === String(requestId));
+    if (!request) return;
+    if (!confirm(`Deny request from ${request.business_name || 'business'}?`)) return;
+
+    try {
+        const { error } = await adminSupabase.from('listing_requests').delete().eq('id', requestId);
+        if (error) throw error;
+        await loadRequests();
+    } catch (error) {
+        console.error('Error denying request:', error);
+        alert('Failed to deny request: ' + error.message);
+    }
+};
+
 function renderTable() {
     const tbody = document.getElementById('listingsTableBody');
     const searchTerm = document.getElementById('adminSearch')?.value.toLowerCase() || '';
     
+    if (currentAdminView === 'requests') {
+        renderRequestsTable();
+        return;
+    }
+
     const filtered = searchTerm ? allListings.filter(l => 
         l.business_name.toLowerCase().includes(searchTerm) ||
         l.category.toLowerCase().includes(searchTerm) ||
@@ -1105,7 +1448,7 @@ function fillEditFormContinuation(listing, owner) {
                 <h3 class="text-lg font-bold mb-4">Custom CTA Buttons</h3>
                 <p class="text-sm text-gray-600 mb-4">Featured listings get 1 custom CTA. Premium listings get 2. Name max 15 characters.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    ${[0, 1].map(index => {
+                    ${[0].map(index => {
                         const cta = listing?.custom_ctas?.[index] || {};
                         return `
                         <div class="md:col-span-2 border border-gray-200 rounded-lg p-4 space-y-3">
@@ -1155,7 +1498,7 @@ function fillEditFormContinuation(listing, owner) {
                         <input type="text" id="editOwnerTitle" value="${owner?.title || ''}" class="w-full px-4 py-2 border rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">From Greece</label>
+                        <label class="block text-sm font-medium mb-2">Where in Greece are you from?</label>
                         <input type="text" id="editOwnerGreece" value="${owner?.from_greece || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g. Athens">
                     </div>
                     <div>
@@ -1165,6 +1508,11 @@ function fillEditFormContinuation(listing, owner) {
                     <div>
                         <label class="block text-sm font-medium mb-2">Owner Phone</label>
                         <div id="editOwnerPhoneContainer"></div>
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <label class="flex items-center gap-2"><input type="checkbox" id="editOwnerNameTitleVisible" ${owner?.name_title_visible !== false ? 'checked' : ''}> <span class="text-sm">Show Name + Title</span></label>
+                        <label class="flex items-center gap-2"><input type="checkbox" id="editOwnerEmailVisible" ${owner?.email_visible !== false ? 'checked' : ''}> <span class="text-sm">Show Owner Email</span></label>
+                        <label class="flex items-center gap-2"><input type="checkbox" id="editOwnerPhoneVisible" ${owner?.phone_visible ? 'checked' : ''}> <span class="text-sm">Show Owner Phone</span></label>
                     </div>
                     <div id="confirmationKeyField">
                         <label class="block text-sm font-medium mb-2">Confirmation Key</label>
@@ -1593,6 +1941,9 @@ async function geocodeAddress(address, city, state, zipCode) {
 
 async function saveListing() {
     try {
+        const editModal = document.getElementById('editModal');
+        const isRequestEdit = editModal?.dataset.mode === 'request-edit';
+        const requestId = editModal?.dataset.requestId;
         const businessName = document.getElementById('editBusinessName').value.trim();
         const tagline = document.getElementById('editTagline').value.trim();
         
@@ -1675,7 +2026,7 @@ if (!slug) {
         
         const isClaimed = document.getElementById('editIsClaimed').checked;
         const tierValue = document.getElementById('editTier').value;
-        const maxCtas = tierValue === 'PREMIUM' ? 2 : tierValue === 'FEATURED' ? 1 : 0;
+        const maxCtas = 1;
         
         const additionalInfo = [];
         for (let i = 0; i < 5; i += 1) {
@@ -1687,7 +2038,7 @@ if (!slug) {
         }
         
         const customCtas = [];
-        for (let i = 0; i < 2; i += 1) {
+        for (let i = 0; i < 1; i += 1) {
             const name = document.getElementById(`editCtaName${i}`)?.value.trim();
             const url = document.getElementById(`editCtaUrl${i}`)?.value.trim();
             const color = document.getElementById(`editCtaColor${i}`)?.value.trim();
@@ -1711,10 +2062,6 @@ if (!slug) {
             });
         }
         
-        if (maxCtas === 0 && customCtas.length > 0) {
-            alert('Custom CTA buttons are only available for Featured and Premium listings.');
-            return;
-        }
 
         const listingData = {
             business_name: businessName,
@@ -1782,7 +2129,58 @@ if (!slug) {
         };
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        
+
+        if (isRequestEdit && requestId) {
+            const requestPayload = {
+                business_name: listingData.business_name,
+                slug: listingData.slug,
+                tagline: listingData.tagline,
+                description: listingData.description,
+                category: listingData.category,
+                subcategories: listingData.subcategories,
+                primary_subcategory: listingData.primary_subcategory,
+                is_chain: listingData.is_chain,
+                chain_name: listingData.chain_name,
+                chain_id: listingData.chain_id,
+                address: listingData.address,
+                city: listingData.city,
+                state: listingData.state,
+                zip_code: listingData.zip_code,
+                country: listingData.country,
+                phone: listingData.phone,
+                email: listingData.email,
+                website: listingData.website,
+                logo: listingData.logo,
+                photos: listingData.photos,
+                video: listingData.video,
+                additional_info: listingData.additional_info,
+                custom_ctas: listingData.custom_ctas,
+                hours: listingData.hours,
+                social_media: listingData.social_media,
+                reviews: listingData.reviews,
+                owner_name: document.getElementById('editOwnerName').value.trim() || null,
+                owner_title: document.getElementById('editOwnerTitle').value.trim() || null,
+                from_greece: document.getElementById('editOwnerGreece').value.trim() || null,
+                owner_email: document.getElementById('editOwnerEmail').value.trim() || null,
+                owner_phone: getPhoneValue(document.getElementById('editOwnerPhoneContainer'))
+            };
+
+            const { error: requestUpdateError } = await adminSupabase
+                .from('listing_requests')
+                .update(requestPayload)
+                .eq('id', requestId);
+
+            if (requestUpdateError) throw requestUpdateError;
+
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').dataset.mode = '';
+            document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('saveEdit')?.classList.remove('hidden');
+            await loadRequests();
+            alert('✅ Request updated successfully!');
+            return;
+        }
+
         let savedListing;
         const isExisting = editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id);
         
@@ -1843,6 +2241,9 @@ async function saveOwnerInfo(listingId, isClaimed) {
         from_greece: document.getElementById('editOwnerGreece').value.trim() || null,
         owner_email: document.getElementById('editOwnerEmail').value.trim() || null,
         owner_phone: ownerPhone,
+        name_title_visible: document.getElementById('editOwnerNameTitleVisible') ? document.getElementById('editOwnerNameTitleVisible').checked : true,
+        email_visible: document.getElementById('editOwnerEmailVisible') ? document.getElementById('editOwnerEmailVisible').checked : true,
+        phone_visible: document.getElementById('editOwnerPhoneVisible') ? document.getElementById('editOwnerPhoneVisible').checked : false,
         confirmation_key: isClaimed ? null : (document.getElementById('editConfirmationKey').value.trim() || null)
     };
     
@@ -2206,7 +2607,15 @@ function generateTemplateReplacements(listing) {
     // Generate subcategory tags
     let subcategoriesTags = '';
     if (listing.subcategories && listing.subcategories.length > 0) {
-        subcategoriesTags = listing.subcategories.map(sub => 
+        const uniqueSubs = [...new Set(listing.subcategories.filter(Boolean))];
+        const primary = listing.primary_subcategory && uniqueSubs.includes(listing.primary_subcategory)
+            ? listing.primary_subcategory
+            : null;
+        const orderedSubs = [
+            ...(primary ? [primary] : []),
+            ...uniqueSubs.filter((s) => s !== primary).sort((a, b) => a.localeCompare(b))
+        ];
+        subcategoriesTags = orderedSubs.map(sub => 
             `<span class="subcategory-tag">${escapeHtml(sub)}</span>`
         ).join('');
     }
@@ -2412,7 +2821,7 @@ function generateTemplateReplacements(listing) {
         `;
     }
 
-    const maxCtaButtons = listing.tier === 'PREMIUM' ? 2 : (listing.tier === 'FEATURED' ? 1 : 0);
+    const maxCtaButtons = 1;
     let customCtaButtons = '';
     if (maxCtaButtons > 0 && Array.isArray(listing.custom_ctas)) {
         customCtaButtons = listing.custom_ctas
@@ -2491,19 +2900,21 @@ function generateTemplateReplacements(listing) {
 
 function generateTemplateReplacementsPart2(listing) {
     let ownerInfoSection = '';
-    const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    if (owner && (owner.full_name || owner.title)) {
+    const owners = Array.isArray(listing.owner) ? listing.owner : [];
+    const ownerCards = owners.map((owner) => {
         let ownerDetails = '';
-        if (owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
-        if (owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
+        if (owner.name_title_visible !== false && owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
+        if (owner.name_title_visible !== false && owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
         if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
         if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${owner.owner_phone}</a></p>`;
-        
+        return ownerDetails ? `<div class="mb-4">${ownerDetails}</div>` : '';
+    }).filter(Boolean).join('');
+    if (ownerCards) {
         ownerInfoSection = `
             <div class="owner-info-section">
                 <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                ${ownerDetails}
+                ${ownerCards}
             </div>
         `;
     }
@@ -2597,7 +3008,8 @@ function generateTemplateReplacementsPart2(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     let claimButton = '';
-    const isClaimed = listing.is_claimed || (owner && owner.owner_user_id);
+    const firstOwner = owners.length > 0 ? owners[0] : null;
+    const isClaimed = listing.is_claimed || (firstOwner && firstOwner.owner_user_id);
     if (!isClaimed && listing.show_claim_button !== false) {
         const cityState = listing.city && listing.state ? `${listing.city}, ${listing.state}` : '';
         const country = listing.country && listing.country !== 'USA' ? `, ${listing.country}` : '';
@@ -2736,10 +3148,12 @@ window.generateListingPage = async function(listingId) {
         await updateSitemap();
         
         console.log('✅ Page generated successfully');
+        return true;
         
     } catch (error) {
         console.error('Error generating page:', error);
         alert('❌ Failed to generate listing page: ' + error.message);
+        return false;
     }
 };
 

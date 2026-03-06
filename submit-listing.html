@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit Your Business - The Greek Directory</title>
+  <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <link rel="stylesheet" href="css/submit.css" />
+</head>
+<body>
+  <main class="submit-wrap">
+    <header class="submit-header">
+      <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory logo" />
+      <h1>Business Listing Submission</h1>
+      <p>Submit your business and our admin team will review it.</p>
+    </header>
+
+    <form id="submitForm" class="submit-form" novalidate>
+      <section>
+        <h2>Basic Information</h2>
+        <label>Business Name * <input type="text" id="business_name" required autocomplete="organization" /></label>
+        <label>Tagline * <input type="text" id="tagline" maxlength="75" required /></label>
+        <label>Description * <textarea id="description" rows="5" required></textarea></label>
+        <label>Category * <select id="category" required></select></label>
+
+        <div>
+          <div class="field-title">Subcategories *</div>
+          <div id="subcategoryCheckboxes" class="checks"></div>
+          <p class="text-xs text-gray-500">Select one as Primary Subcategory.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Location</h2>
+        <label>
+          Address
+          <input type="text" id="address" list="addressSuggestions" autocomplete="street-address" />
+          <datalist id="addressSuggestions"></datalist>
+        </label>
+        <div id="submitMap"></div>
+        <label>City <input type="text" id="city" autocomplete="address-level2" /></label>
+        <label>State <select id="state"></select></label>
+        <label>ZIP Code <input type="text" id="zip_code" maxlength="5" inputmode="numeric" autocomplete="postal-code" /></label>
+        <label>Country <select id="country"><option value="USA">USA</option></select></label>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <label>Phone <div class="url-prefix-wrap"><span>+1</span><input type="text" id="phone" inputmode="numeric" maxlength="14" placeholder="(___) ___-____" /></div></label>
+        <label>Email <input type="email" id="email" autocomplete="email" /></label>
+        <label>
+          Website
+          <div class="url-prefix-wrap">
+            <span>https://</span>
+            <input type="text" id="website" placeholder="example.com" />
+          </div>
+        </label>
+      </section>
+
+      <section>
+        <h2>Hours of Operation</h2>
+        <div id="hoursFields" class="hours-grid"></div>
+      </section>
+
+      <section>
+        <h2>Social Media</h2>
+        <label>Facebook <input type="text" id="facebook" /></label>
+        <label>Instagram <input type="text" id="instagram" /></label>
+        <label>Twitter/X <input type="text" id="twitter" /></label>
+        <label>YouTube <input type="text" id="youtube" /></label>
+        <label>TikTok <input type="text" id="tiktok" /></label>
+        <label>LinkedIn URL <input type="url" id="linkedin" /></label>
+      </section>
+
+      <section>
+        <h2>Reviews</h2>
+        <label>Google Reviews URL <input type="url" id="google_reviews" /></label>
+        <label>Yelp URL <input type="url" id="yelp" /></label>
+        <label>TripAdvisor URL <input type="url" id="tripadvisor" /></label>
+      </section>
+
+      <section>
+        <h2>Additional Information</h2>
+        <div id="additionalInfoFields" class="pair-grid"></div>
+        <button type="button" id="addInfoRowBtn" class="secondary-btn">+ Add Info Row</button>
+
+        <h3>Custom Button (optional)</h3>
+        <div class="pair-grid">
+          <label>Button Label<input type="text" id="cta_name_0" maxlength="15" /></label>
+          <label>Button URL<input type="url" id="cta_url_0" /></label>
+          <label>Button Color<input type="color" id="cta_color_0" value="#055193" /></label>
+          <label>Icon<input type="text" id="cta_icon_0" maxlength="10" /></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Owner Information</h2>
+        <label>Owner Name * <input type="text" id="owner_name" required autocomplete="name" /></label>
+
+        <label>Title *
+          <select id="owner_title" required>
+            <option value="">Select title</option>
+            <option>Founder</option><option>Co-Founder</option><option>CEO</option><option>Owner</option>
+            <option>Manager</option><option>Principal</option><option>Director</option><option>Co-Owner</option><option>Other</option>
+          </select>
+        </label>
+        <label id="ownerTitleOtherWrap" class="hidden">Custom Title * <input type="text" id="owner_title_other" /></label>
+
+        <label>Where in Greece are you from? <input type="text" id="from_greece" /></label>
+        <label>Owner Email * <input type="email" id="owner_email" required autocomplete="email" /></label>
+        <label>Owner Phone <div class="url-prefix-wrap"><span>+1</span><input type="text" id="owner_phone" inputmode="numeric" maxlength="14" placeholder="(___) ___-____" /></div></label>
+
+
+        <div id="extraOwnersSection" class="pair-grid"></div>
+        <button type="button" id="addOwnerBtn" class="secondary-btn">+ Add Another Owner</button>
+
+        <div class="toggles">
+          <label class="toggle-line"><input type="checkbox" id="owner_name_title_visible" checked /> Show Owner Name + Title on listing page</label>
+          <label class="toggle-line"><input type="checkbox" id="owner_email_visible" /> Show Owner Email on listing page</label>
+          <label class="toggle-line"><input type="checkbox" id="owner_phone_visible" /> Show Owner Phone on listing page</label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Media</h2>
+        <label>Logo upload (optional)<input type="file" id="logo_upload" accept="image/*" /></label>
+        <label>Logo URL (or paste URL)<input type="url" id="logo" /></label>
+
+        <label>Photos upload (optional, multiple)<input type="file" id="photos_upload" accept="image/*" multiple /></label>
+        <div><div class="field-title">Photo URLs</div><div id="photoUrlsList" class="photo-url-list"></div><button type="button" id="addPhotoUrlBtn" class="secondary-btn">+ Add Photo URL</button></div>
+
+        <label>Video URL (URL only)<input type="url" id="video" /></label>
+        <p id="uploadStatus"></p>
+      </section>
+
+      <button type="submit" id="submitBtn">Submit for Review</button>
+      <p id="submitStatus"></p>
+    </form>
+  </main>
+
+  <script src="js/submit.js"></script>
+</body>
+</html>
