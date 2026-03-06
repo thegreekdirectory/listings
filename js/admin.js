@@ -597,6 +597,15 @@ function normalizeRequestToListing(request) {
         hours: request.hours || {},
         social_media: request.social_media || {},
         reviews: request.reviews || {},
+        owner_name: request.owner_name || '',
+        owner_title: request.owner_title || '',
+        from_greece: request.from_greece || '',
+        owner_email: request.owner_email || '',
+        owner_phone: request.owner_phone || '',
+        owner_name_title_visible: request.owner_name_title_visible !== false,
+        owner_email_visible: request.owner_email_visible === true,
+        owner_phone_visible: request.owner_phone_visible === true,
+        owner_contacts: request.owner_contacts || [],
         owner: [{
             full_name: request.owner_name || '',
             title: request.owner_title || '',
@@ -656,7 +665,7 @@ window.acceptRequest = async function(requestId) {
                 listing_id: inserted.id,
                 full_name: o.name || null,
                 title: o.title || null,
-                from_greece: request.from_greece || null,
+                from_greece: o.from_greece || request.from_greece || null,
                 owner_email: o.email || null,
                 owner_phone: o.phone ? `+1${String(o.phone).replace(/\D/g, '')}` : null,
                 name_title_visible: true,
@@ -2091,6 +2100,14 @@ if (!slug) {
             video: document.getElementById('editVideo').value.trim() || null,
             additional_info: additionalInfo,
             custom_ctas: customCtas.slice(0, maxCtas),
+            owner_name: document.getElementById('editOwnerName').value.trim() || null,
+            owner_title: document.getElementById('editOwnerTitle').value.trim() || null,
+            from_greece: document.getElementById('editOwnerGreece').value.trim() || null,
+            owner_email: document.getElementById('editOwnerEmail').value.trim() || null,
+            owner_phone: getPhoneValue(document.getElementById('editOwnerPhoneContainer')) || null,
+            owner_name_title_visible: document.getElementById('editOwnerNameTitleVisible') ? document.getElementById('editOwnerNameTitleVisible').checked : true,
+            owner_email_visible: document.getElementById('editOwnerEmailVisible') ? document.getElementById('editOwnerEmailVisible').checked : true,
+            owner_phone_visible: document.getElementById('editOwnerPhoneVisible') ? document.getElementById('editOwnerPhoneVisible').checked : false,
             visible: editingListing?.visible !== false,
             hours: {
                 monday: document.getElementById('editHoursMonday').value.trim() || null,
@@ -2162,7 +2179,24 @@ if (!slug) {
                 owner_title: document.getElementById('editOwnerTitle').value.trim() || null,
                 from_greece: document.getElementById('editOwnerGreece').value.trim() || null,
                 owner_email: document.getElementById('editOwnerEmail').value.trim() || null,
-                owner_phone: getPhoneValue(document.getElementById('editOwnerPhoneContainer'))
+                owner_phone: getPhoneValue(document.getElementById('editOwnerPhoneContainer')),
+                owner_name_title_visible: document.getElementById('editOwnerNameTitleVisible') ? document.getElementById('editOwnerNameTitleVisible').checked : true,
+                owner_email_visible: document.getElementById('editOwnerEmailVisible') ? document.getElementById('editOwnerEmailVisible').checked : false,
+                owner_phone_visible: document.getElementById('editOwnerPhoneVisible') ? document.getElementById('editOwnerPhoneVisible').checked : false,
+                owner_contacts: Array.isArray(editingListing?.owner)
+                    ? editingListing.owner.map((owner, index) => ({
+                        enabled: (owner.name_title_visible !== false) || !!owner.email_visible || !!owner.phone_visible,
+                        name: owner.full_name || '',
+                        title: owner.title || '',
+                        from_greece: owner.from_greece || '',
+                        email: owner.owner_email || '',
+                        phone: owner.owner_phone || '',
+                        name_title_visible: owner.name_title_visible !== false,
+                        email_visible: !!owner.email_visible,
+                        phone_visible: !!owner.phone_visible,
+                        is_primary: index === 0
+                    }))
+                    : []
             };
 
             const { error: requestUpdateError } = await adminSupabase
