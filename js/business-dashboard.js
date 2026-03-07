@@ -63,13 +63,22 @@ async function loadListingData() {
         console.error('No owner data available');
         return;
     }
-    
-    const listingId = ownerData[0].listing_id;
+
+    const ownedListingIds = ownerData
+        .map(owner => owner?.listing_id)
+        .filter(listingId => listingId !== null && listingId !== undefined);
+    const listingId = ownedListingIds[0];
+
+    if (!listingId) {
+        console.error('No owned listing IDs found for this account');
+        return;
+    }
     
     try {
         const { data, error } = await window.TGDAuth.supabaseClient
             .from('listings')
             .select('*')
+            .in('id', ownedListingIds)
             .eq('id', listingId)
             .single();
         
@@ -83,6 +92,73 @@ async function loadListingData() {
         console.error('Error loading listing:', error);
         alert('Failed to load listing data');
     }
+}
+
+function getOwnedListingIds() {
+    if (!Array.isArray(ownerData)) return [];
+    return [...new Set(ownerData
+        .map(owner => owner?.listing_id)
+        .filter(listingId => listingId !== null && listingId !== undefined))];
+}
+
+function hasListingAccess(listingId) {
+    return getOwnedListingIds().includes(listingId);
+}
+
+async function fetchAnalyticsV2(listingId, tier) {
+    const emptyAnalytics = {
+        totals: {
+            views: 0,
+            call_clicks: 0,
+            website_clicks: 0,
+            direction_clicks: 0,
+            share_clicks: 0,
+            video_plays: 0
+        },
+        detail: {
+            map_views: 0,
+            filter_uses: 0,
+            search_appearances: 0,
+            star_clicks: 0,
+            attribution_clicks: 0,
+            top_search_terms: []
+        }
+    };
+
+    if (!hasListingAccess(listingId)) {
+        throw new Error(`Access denied for listing ID ${listingId}`);
+    }
+
+    const { data: viewData, error: viewError } = await window.TGDAuth.supabaseClient
+        .from('listing_analytics_v2')
+        .select('*')
+        .eq('listing_id', listingId)
+        .maybeSingle();
+
+    if (viewError) throw viewError;
+
+    const merged = {
+        ...emptyAnalytics,
+        totals: {
+            ...emptyAnalytics.totals,
+            ...(viewData || {})
+        }
+    };
+
+    if (tier === 'PREMIUM') {
+        const { data: rpcData, error: rpcError } = await window.TGDAuth.supabaseClient
+            .rpc('get_listing_analytics_v2', { p_listing_id: listingId });
+
+        if (rpcError) throw rpcError;
+
+        const details = Array.isArray(rpcData) ? (rpcData[0] || {}) : (rpcData || {});
+        merged.detail = {
+            ...emptyAnalytics.detail,
+            ...details
+        };
+    }
+
+    return merged;
 }
 
 /*
@@ -1080,20 +1156,36 @@ async function saveChanges() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-function renderAnalytics() {
+async function renderAnalytics() {
     if (!currentListing) return;
-    
+
     const tier = currentListing.tier || 'FREE';
-    const analytics = currentListing.analytics || {
-        views: 0,
-        call_clicks: 0,
-        website_clicks: 0,
-        direction_clicks: 0,
-        share_clicks: 0,
-        video_plays: 0
-    };
-    
     const content = document.getElementById('content-analytics');
+    if (!content) return;
+
+    content.innerHTML = `
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Analytics</h2>
+            <p class="text-gray-600">Loading analytics…</p>
+        </div>
+    `;
+
+    let analytics;
+    try {
+        analytics = await fetchAnalyticsV2(currentListing.id, tier);
+    } catch (error) {
+        console.error('Error loading analytics v2:', error);
+        content.innerHTML = `
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Analytics</h2>
+                <p class="text-red-600">Unable to load analytics right now. Please try again later.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const totals = analytics.totals;
+    const details = analytics.detail;
     
     let html = '';
     
@@ -1104,11 +1196,11 @@ function renderAnalytics() {
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="analytics-stat-card">
-                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.views || 0}</div>
                         <div class="text-sm opacity-90">Total Views</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="text-4xl font-bold mb-2">${(analytics.call_clicks || 0) + (analytics.website_clicks || 0) + (analytics.direction_clicks || 0) + (analytics.share_clicks || 0)}</div>
+                        <div class="text-4xl font-bold mb-2">${(totals.call_clicks || 0) + (totals.website_clicks || 0) + (totals.direction_clicks || 0) + (totals.share_clicks || 0)}</div>
                         <div class="text-sm opacity-90">Total Engagement</div>
                     </div>
                 </div>
@@ -1117,30 +1209,30 @@ function renderAnalytics() {
                 </div>
             </div>
         `;
-    } else if (tier === 'VERIFIED') {
+    } else if (tier === 'VERIFIED' || tier === 'FEATURED') {
         html = `
             <div class="bg-white rounded-lg p-6 shadow-sm">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
                 
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div class="analytics-stat-card">
-                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.views || 0}</div>
                         <div class="text-sm opacity-90">Views</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.call_clicks || 0}</div>
                         <div class="text-sm opacity-90">📞 Calls</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.website_clicks || 0}</div>
                         <div class="text-sm opacity-90">🌐 Website</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.direction_clicks || 0}</div>
                         <div class="text-sm opacity-90">🗺️ Directions</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.share_clicks || 0}</div>
                         <div class="text-sm opacity-90">Shares</div>
                     </div>
                 </div>
@@ -1153,29 +1245,62 @@ function renderAnalytics() {
                 
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div class="analytics-stat-card">
-                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.views || 0}</div>
                         <div class="text-sm opacity-90">Views</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.call_clicks || 0}</div>
                         <div class="text-sm opacity-90">📞 Calls</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.website_clicks || 0}</div>
                         <div class="text-sm opacity-90">🌐 Website</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.direction_clicks || 0}</div>
                         <div class="text-sm opacity-90">🗺️ Directions</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.share_clicks || 0}</div>
                         <div class="text-sm opacity-90">Shares</div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.video_plays || 0}</div>
+                        <div class="text-4xl font-bold mb-2">${totals.video_plays || 0}</div>
                         <div class="text-sm opacity-90">Video Plays</div>
                     </div>
+                </div>
+
+                <div class="mt-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-3">Premium Detail</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div class="analytics-stat-card" style="background: linear-gradient(135deg, #7f7fd5 0%, #86a8e7 100%);">
+                            <div class="text-4xl font-bold mb-2">${details.map_views || 0}</div>
+                            <div class="text-sm opacity-90">Map</div>
+                        </div>
+                        <div class="analytics-stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                            <div class="text-4xl font-bold mb-2">${details.filter_uses || 0}</div>
+                            <div class="text-sm opacity-90">Filters</div>
+                        </div>
+                        <div class="analytics-stat-card" style="background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);">
+                            <div class="text-4xl font-bold mb-2">${details.search_appearances || 0}</div>
+                            <div class="text-sm opacity-90">Search</div>
+                        </div>
+                        <div class="analytics-stat-card" style="background: linear-gradient(135deg, #8360c3 0%, #2ebf91 100%);">
+                            <div class="text-4xl font-bold mb-2">${details.star_clicks || 0}</div>
+                            <div class="text-sm opacity-90">Stars</div>
+                        </div>
+                        <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f857a6 0%, #ff5858 100%);">
+                            <div class="text-4xl font-bold mb-2">${details.attribution_clicks || 0}</div>
+                            <div class="text-sm opacity-90">Attribution</div>
+                        </div>
+                    </div>
+                    ${(details.top_search_terms && details.top_search_terms.length > 0) ? `
+                    <div class="mt-4 bg-gray-50 rounded-lg border border-gray-200 p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">Top Search Terms</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${details.top_search_terms.map(term => `<span class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm text-gray-700">${term}</span>`).join('')}
+                        </div>
+                    </div>` : ''}
                 </div>
             </div>
         `;

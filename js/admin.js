@@ -899,7 +899,12 @@ window.viewAnalytics = async function(listingId) {
             modalTitle.textContent = `Analytics: ${listing.business_name}`;
         }
         if (modalContent) {
-            modalContent.innerHTML = generateAnalyticsContent(listing, analytics, analytics.detailedViews, analytics.sharePlatforms);
+            modalContent.innerHTML = generateAnalyticsContent(
+                listing,
+                analytics,
+                analytics.detailedViews || [],
+                analytics.sharePlatforms || {}
+            );
         }
 
         if (modal) {
@@ -913,6 +918,191 @@ window.viewAnalytics = async function(listingId) {
     }
 };
 
+function createEmptyAnalytics() {
+    return {
+        views: 0,
+        call_clicks: 0,
+        website_clicks: 0,
+        direction_clicks: 0,
+        share_clicks: 0,
+        video_plays: 0,
+        detailedViews: [],
+        sharePlatforms: {},
+        attribution_breakdown: {},
+        discovery_metrics: {
+            map_interactions: 0,
+            search_impressions: 0,
+            filter_uses: 0,
+            star_actions: 0
+        }
+    };
+}
+
+function incrementCount(bucket, key, amount = 1) {
+    if (!key) return;
+    bucket[key] = (bucket[key] || 0) + amount;
+}
+
+function aggregateLegacyEvents(events) {
+    const analytics = createEmptyAnalytics();
+    analytics.detailedViews = events;
+
+    if (!events?.length) {
+        return analytics;
+    }
+
+    events.forEach(event => {
+        switch (event.action) {
+            case 'view':
+                analytics.views++;
+                break;
+            case 'call':
+                analytics.call_clicks++;
+                break;
+            case 'website':
+                analytics.website_clicks++;
+                break;
+            case 'directions':
+                analytics.direction_clicks++;
+                break;
+            case 'share':
+                analytics.share_clicks++;
+                incrementCount(analytics.sharePlatforms, event.platform);
+                break;
+            case 'video':
+                analytics.video_plays++;
+                break;
+            case 'map_open':
+            case 'map_click':
+                analytics.discovery_metrics.map_interactions++;
+                break;
+            case 'search':
+                analytics.discovery_metrics.search_impressions++;
+                break;
+            case 'filter':
+                analytics.discovery_metrics.filter_uses++;
+                break;
+            case 'star':
+            case 'star_add':
+            case 'star_remove':
+                analytics.discovery_metrics.star_actions++;
+                break;
+        }
+
+        const attributionKey = event.attribution || event.referrer_source || event.referrer || event.source;
+        incrementCount(analytics.attribution_breakdown, attributionKey);
+    });
+
+    return analytics;
+}
+
+function firstDefinedValue(source, keys) {
+    for (const key of keys) {
+        const value = source?.[key];
+        if (value !== undefined && value !== null) {
+            return value;
+        }
+    }
+    return undefined;
+}
+
+function normalizeNewAnalyticsPayload(payload) {
+    const normalized = createEmptyAnalytics();
+    const rows = Array.isArray(payload) ? payload : [payload];
+
+    if (!rows.length || !rows[0]) {
+        return normalized;
+    }
+
+    // If the payload still contains event rows, use the legacy aggregator to preserve existing rendering.
+    if (rows[0].action) {
+        return aggregateLegacyEvents(rows);
+    }
+
+    const row = rows[0];
+    normalized.views = Number(firstDefinedValue(row, ['views', 'total_views'])) || 0;
+    normalized.call_clicks = Number(firstDefinedValue(row, ['call_clicks', 'total_call_clicks'])) || 0;
+    normalized.website_clicks = Number(firstDefinedValue(row, ['website_clicks', 'total_website_clicks'])) || 0;
+    normalized.direction_clicks = Number(firstDefinedValue(row, ['direction_clicks', 'total_direction_clicks'])) || 0;
+    normalized.share_clicks = Number(firstDefinedValue(row, ['share_clicks', 'total_share_clicks'])) || 0;
+    normalized.video_plays = Number(firstDefinedValue(row, ['video_plays', 'total_video_plays'])) || 0;
+
+    normalized.attribution_breakdown = firstDefinedValue(row, ['attribution_breakdown', 'attribution']) || {};
+    normalized.sharePlatforms = firstDefinedValue(row, ['share_platforms', 'share_breakdown']) || {};
+
+    normalized.discovery_metrics = {
+        map_interactions: Number(firstDefinedValue(row, ['map_interactions', 'map_clicks', 'map_opens'])) || 0,
+        search_impressions: Number(firstDefinedValue(row, ['search_impressions', 'search_views', 'search_count'])) || 0,
+        filter_uses: Number(firstDefinedValue(row, ['filter_uses', 'filter_applies', 'filter_count'])) || 0,
+        star_actions: Number(firstDefinedValue(row, ['star_actions', 'star_toggles', 'star_count'])) || 0
+    };
+
+    normalized.detailedViews = firstDefinedValue(row, ['activity_log', 'detailed_views', 'events']) || [];
+
+    return normalized;
+}
+
+function isSourceMissingError(error) {
+    return Boolean(
+        error && (
+            error.code === 'PGRST202' ||
+            error.code === '42P01' ||
+            /does not exist|not found|Could not find the function/i.test(error.message || '')
+        )
+    );
+}
+
+async function fetchAnalyticsFromNewSources(listingId) {
+    const rpcCandidates = [
+        'admin_listing_analytics',
+        'get_admin_listing_analytics',
+        'get_listing_analytics_admin',
+        'listing_analytics_admin'
+    ];
+
+    for (const rpcName of rpcCandidates) {
+        const { data, error } = await adminSupabase.rpc(rpcName, {
+            p_listing_id: listingId,
+            listing_id: listingId
+        });
+
+        if (error) {
+            if (isSourceMissingError(error)) continue;
+            throw error;
+        }
+
+        if (data) {
+            return { source: `rpc:${rpcName}`, analytics: normalizeNewAnalyticsPayload(data) };
+        }
+    }
+
+    const viewCandidates = [
+        'admin_listing_analytics_v',
+        'listing_analytics_admin_v',
+        'listing_analytics_rollup_v',
+        'listing_analytics_summary_v'
+    ];
+
+    for (const viewName of viewCandidates) {
+        const { data, error } = await adminSupabase
+            .from(viewName)
+            .select('*')
+            .eq('listing_id', listingId)
+            .limit(1);
+
+        if (error) {
+            if (isSourceMissingError(error)) continue;
+            throw error;
+        }
+
+        if (data?.length) {
+            return { source: `view:${viewName}`, analytics: normalizeNewAnalyticsPayload(data) };
+        }
+    }
+
+    return null;
+}
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatforms) {
@@ -922,6 +1112,12 @@ function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatfo
     const directionClicks = analytics.direction_clicks || 0;
     const shareClicks = analytics.share_clicks || 0;
     const videoPlays = analytics.video_plays || 0;
+    const attributionBreakdown = analytics.attribution_breakdown || {};
+    const discoveryMetrics = analytics.discovery_metrics || {};
+    const mapInteractions = discoveryMetrics.map_interactions || 0;
+    const searchImpressions = discoveryMetrics.search_impressions || 0;
+    const filterUses = discoveryMetrics.filter_uses || 0;
+    const starActions = discoveryMetrics.star_actions || 0;
     const lastViewed = detailedViews.length > 0 ? new Date(detailedViews[0].timestamp).toLocaleString() : 'Never';
     
     // Summary stats
@@ -987,6 +1183,57 @@ function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatfo
         });
         
         content += `
+                </div>
+            </div>
+        `;
+    }
+
+    if (Object.keys(attributionBreakdown).length > 0) {
+        content += `
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Attribution Breakdown</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        `;
+
+        Object.entries(attributionBreakdown)
+            .sort((a, b) => b[1] - a[1])
+            .forEach(([source, count]) => {
+                const safeLabel = String(source).replace(/[_-]/g, ' ');
+                content += `
+                    <div class="bg-white border border-gray-200 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-gray-900">${count}</div>
+                        <div class="text-xs text-gray-600 capitalize">${safeLabel}</div>
+                    </div>
+                `;
+            });
+
+        content += `
+                </div>
+            </div>
+        `;
+    }
+
+    if (mapInteractions || searchImpressions || filterUses || starActions) {
+        content += `
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Map/Search/Filter/Star Metrics</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="bg-white border border-gray-200 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-gray-900">${mapInteractions}</div>
+                        <div class="text-xs text-gray-600">🗺️ Map Interactions</div>
+                    </div>
+                    <div class="bg-white border border-gray-200 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-gray-900">${searchImpressions}</div>
+                        <div class="text-xs text-gray-600">🔎 Search Impressions</div>
+                    </div>
+                    <div class="bg-white border border-gray-200 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-gray-900">${filterUses}</div>
+                        <div class="text-xs text-gray-600">🧩 Filter Uses</div>
+                    </div>
+                    <div class="bg-white border border-gray-200 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-gray-900">${starActions}</div>
+                        <div class="text-xs text-gray-600">⭐ Star Actions</div>
+                    </div>
                 </div>
             </div>
         `;
