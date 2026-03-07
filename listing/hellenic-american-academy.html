@@ -405,6 +405,11 @@ or distribution of this code can result in legal action to the fullest extent pe
             </div>
 
             
+            <div class="owner-info-section">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
+                <div class="mb-4"><p><strong>Owner:</strong> Paul Louis</p><p><strong>Title:</strong> Principal</p></div>
+            </div>
+        
 
             <div class="social-map-grid">
                 <div>
@@ -471,6 +476,8 @@ or distribution of this code can result in legal action to the fullest extent pe
     <script src="/js/pwa/app.js"></script>
     <script src="/js/pwa/dock.js"></script>
     <script src="/js/pwa/starred.js"></script>
+    <script src="/js/analytics/attribution.js"></script>
+    <script src="/js/analytics/tracker.js"></script>
 
     <script>
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -524,6 +531,47 @@ or distribution of this code can result in legal action to the fullest extent pe
         const hoursData = {"friday":"8:00 AM - 5:30 PM","monday":"8:00 AM - 5:30 PM","sunday":"Closed","tuesday":"8:00 AM - 5:30 PM","saturday":"9:00 AM - 1:00 PM","thursday":"8:00 AM - 5:30 PM","wednesday":"8:00 AM - 5:30 PM"};
         const galleryPhotos = ["https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-1.png","https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-2.png"];
         let currentGalleryIndex = 0;
+        const TRACKING_SESSION_KEY = 'tgd_tracking_session_id';
+
+        function getTrackingSessionId() {
+            let sessionId = localStorage.getItem(TRACKING_SESSION_KEY);
+            if (!sessionId) {
+                sessionId = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+                localStorage.setItem(TRACKING_SESSION_KEY, sessionId);
+            }
+            return sessionId;
+        }
+
+        function getAttributionSnapshot() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                referrer: document.referrer || null,
+                utm_source: params.get('utm_source'),
+                utm_medium: params.get('utm_medium'),
+                utm_campaign: params.get('utm_campaign'),
+                utm_term: params.get('utm_term'),
+                utm_content: params.get('utm_content')
+            };
+        }
+
+        async function trackEvent(eventName, properties = {}) {
+            try {
+                await supabaseClient
+                    .from('tracking_events')
+                    .insert({
+                        event_name: eventName,
+                        session_id: getTrackingSessionId(),
+                        page_context: 'listing_detail',
+                        listing_id: listingId || null,
+                        attribution_snapshot: getAttributionSnapshot(),
+                        properties,
+                        timestamp: new Date().toISOString(),
+                        user_agent: navigator.userAgent
+                    });
+            } catch (e) {
+                console.log('Event tracking error:', e.message);
+            }
+        }
         
         function toggleSubcategories() {
             const display = document.getElementById('subcategoriesDisplay');
@@ -533,7 +581,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         function formatPhoneDisplay(phone) {
             if (!phone) return '';
             const digits = phone.replace(/\D/g, '');
-            if (phone.startsWith('+1') && digits.length === 11) {
+            if (digits.length === 11 && digits.startsWith('1')) {
                 return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
             }
             return phone;
@@ -552,7 +600,36 @@ or distribution of this code can result in legal action to the fullest extent pe
             });
         });
         
+        const dualWriteEnabled = window.__ANALYTICS_DUAL_WRITE__ === true || localStorage.getItem('tgd_analytics_dual_write') === '1';
+        const ingestEndpoint = window.__ANALYTICS_INGEST_ENDPOINT__ || '/api/analytics/ingest';
+
+        const attribution = window.AnalyticsAttribution?.captureAndStore?.() || null;
+        const ingestionTracker = window.AnalyticsTracker ? new window.AnalyticsTracker({
+            endpoint: ingestEndpoint,
+            sendBeaconPath: ingestEndpoint,
+            dualWriteFlag: dualWriteEnabled
+        }) : null;
+
+        ingestionTracker?.start();
+
+        function track(action, platform) {
+            try {
+                trackAnalytics(action, platform);
+            } catch (e) {
+                // no-op fallback prevents analytics issues from breaking UI interactions
+            }
+        }
+
         async function trackAnalytics(action, platform) {
+            const eventPayload = {
+                listing_id: listingId,
+                action: action,
+                platform: platform || null,
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent,
+                attribution: attribution
+            };
+
             try {
                 const { error } = await supabaseClient
                     .rpc('track_analytics_event', {
@@ -567,14 +644,18 @@ or distribution of this code can result in legal action to the fullest extent pe
             } catch (e) {
                 console.log('Analytics tracking error:', e.message);
             }
+
+            if (dualWriteEnabled && ingestionTracker) {
+                ingestionTracker.track(eventPayload);
+            }
         }
         
         window.addEventListener('load', () => {
-            trackAnalytics('view');
+            track('view');
         });
         
         function trackClick(action, platform) {
-            trackAnalytics(action, platform);
+            track(action, platform);
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
