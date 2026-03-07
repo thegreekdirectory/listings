@@ -389,6 +389,8 @@ or distribution of this code can result in legal action to the fullest extent pe
     <script src="/js/pwa/app.js"></script>
     <script src="/js/pwa/dock.js"></script>
     <script src="/js/pwa/starred.js"></script>
+    <script src="/js/analytics/attribution.js"></script>
+    <script src="/js/analytics/tracker.js"></script>
 
     <script>
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -511,46 +513,57 @@ or distribution of this code can result in legal action to the fullest extent pe
             });
         });
         
-        async function trackAnalytics(action, platform) {
+        const dualWriteEnabled = window.__ANALYTICS_DUAL_WRITE__ === true || localStorage.getItem('tgd_analytics_dual_write') === '1';
+        const ingestEndpoint = window.__ANALYTICS_INGEST_ENDPOINT__ || '/api/analytics/ingest';
+
+        const attribution = window.AnalyticsAttribution?.captureAndStore?.() || null;
+        const ingestionTracker = window.AnalyticsTracker ? new window.AnalyticsTracker({
+            endpoint: ingestEndpoint,
+            sendBeaconPath: ingestEndpoint,
+            dualWriteFlag: dualWriteEnabled
+        }) : null;
+
+        ingestionTracker?.start();
+
+        function track(action, platform) {
             try {
-                const { data, error } = await supabaseClient
+                trackAnalytics(action, platform);
+            } catch (e) {
+                // no-op fallback prevents analytics issues from breaking UI interactions
+            }
+        }
+
+        async function trackAnalytics(action, platform) {
+            const eventPayload = {
+                listing_id: listingId,
+                action: action,
+                platform: platform || null,
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent,
+                attribution: attribution
+            };
+
+            try {
+                const { error } = await supabaseClient
                     .from('listing_analytics')
-                    .insert({
-                        listing_id: listingId,
-                        action: action,
-                        platform: platform || null,
-                        timestamp: new Date().toISOString(),
-                        user_agent: navigator.userAgent
-                    });
-                
+                    .insert(eventPayload);
+
                 if (error) throw error;
             } catch (e) {
                 console.log('Analytics tracking error:', e.message);
             }
+
+            if (dualWriteEnabled && ingestionTracker) {
+                ingestionTracker.track(eventPayload);
+            }
         }
         
         window.addEventListener('load', () => {
-            trackAnalytics('view');
-            trackEvent('page_view');
+            track('view');
         });
         
         function trackClick(action, platform) {
-            trackAnalytics(action, platform);
-
-            const eventMap = {
-                call: 'call_click',
-                website: 'website_click',
-                directions: 'directions_click',
-                share: 'share_click'
-            };
-
-            const mappedEventName = eventMap[action];
-            if (mappedEventName) {
-                trackEvent(mappedEventName, {
-                    platform: platform || null,
-                    legacy_action: action
-                });
-            }
+            track(action, platform);
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
