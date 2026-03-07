@@ -1,0 +1,1155 @@
+{
+  "listings": [
+    {
+      "businessName": "Hellenic American Academy",
+      "tagline": "Private dual-language day school & examination center for Ellinomatheia.",
+      "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy's problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.",
+      "category": "Education & Community",
+      "subcategories": [
+        "Greek School"
+      ],
+      "phone": "(847) 317-1063",
+      "address": "445 Pine St",
+      "city": "Deerfield",
+      "state": "IL",
+      "zipCode": "60015",
+      "country": "USA",
+      "email": "info@haamail.net",
+      "website": "https://hellenicamericanacademy.org",
+      "tier": "VERIFIED",
+      "verified": true,
+      "showClaimButton": false,
+      "businessPortalPassword": "102030",
+      "placesUrlEnding": null,
+      "slug": "hellenic-american-academy",
+      "hours": {
+        "monday": "8:00 AM - 5:30 PM",
+        "tuesday": "8:00 AM - 5:30 PM",
+        "wednesday": "8:00 AM - 5:30 PM",
+        "thursday": "8:00 AM - 5:30 PM",
+        "friday": "8:00 AM - 5:30 PM",
+        "saturday": "9:00 AM - 1:00 PM",
+        "sunday": "Closed"
+      },
+      "socialMedia": {
+        "facebook": "hellenicamericanacademy",
+        "instagram": "hellenicamericanacademy",
+        "twitter": null,
+        "youtube": "hellenicamericanacademy",
+        "tiktok": null,
+        "linkedin": "https://www.linkedin.com/company/hellenicamericanacademy.org",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://www.google.com/search?sca_esv=a7b494c8dfb9f393&sxsrf=AE3TifN-8ti95cDOoxaIQ3kfc7Y0wYleXA:1767604514111&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8syw1cwovHj5Xyj1Cj8d-SfoufsCekGlzEcyDIh1Etk22C_DhCnQ7SVTx15tIVSmPepCEudFiD_qYUPDCGbmSDgkQ42Li9cJv5spewFeWIJHDyo02XA%3D%3D&q=Hellenic+American+Academy+Reviews",
+        "yelp": "https://www.yelp.com/biz/hellenic-american-academy-deerfield",
+        "tripadvisor": null,
+        "other1": "https://www.niche.com/k12/hellenic-american-academy-deerfield-il/#reviews",
+        "other2": "https://www.greatschools.org/illinois/northbrook/7499-Hellenic-American-Academy/reviews/",
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "Paul Louis",
+        "title": "Principal",
+        "fromGreece": null,
+        "ownerEmail": "plouis@haamail.net",
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.1612138,
+        "lng": -87.8568086
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/logo/logo/logo.png",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-1.png",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-2.png"
+      ],
+      "id": "hellenic-american-academy",
+      "metadata": {
+        "createdAt": "2026-01-05T09:16:39.211Z",
+        "updatedAt": "2026-01-13T08:56:24.161Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "videoPlays": 0,
+        "lastViewed": "2026-01-05T09:16:39.211Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "Eagle Restaurant",
+      "tagline": "Family-owned dining staple in Downers Grove since 1981.",
+      "description": "Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.\nEverything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.\nNeighborhood casual fast food restaurant serving Downers Grove for over 40 years.",
+      "category": "Food & Hospitality",
+      "subcategories": [
+        "Catering Service",
+        "Restaurant",
+        "Lunch"
+      ],
+      "phone": "(630) 963-9161",
+      "address": "406 Maple Ave",
+      "city": "Downers Grove",
+      "state": "IL",
+      "zipCode": "60515",
+      "country": "USA",
+      "email": "eagledownersgrove@gmail.com",
+      "website": "https://eagledg.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": false,
+      "businessPortalPassword": "12345",
+      "placesUrlEnding": null,
+      "slug": "eagle-restaurant",
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "10:30 AM - 8:00 PM",
+        "wednesday": "10:30 AM - 8:00 PM",
+        "thursday": "10:30 AM - 8:00 PM",
+        "friday": "10:30 AM - 8:00 PM",
+        "saturday": "10:30 AM - 8:00 PM",
+        "sunday": "11:00 AM - 8:00 PM"
+      },
+      "socialMedia": {
+        "facebook": "EagleRestaurant",
+        "instagram": "eagle_downers_grove",
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://www.google.com/search?sca_esv=be40058fb533a05b&sxsrf=AE3TifOm9YQkZvCrJeMlieSEs9Uxf-DBew:1767606361757&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8s73B0CjFloNrBSOE9oJJqp6p9xSDvoA7W1X3bTmbN01_5owvmdFRHO_BxehkIh-_HhBIbw-Yuyovq_O-iTvGH1RZP723&q=Eagle+Restaurant+Reviews",
+        "yelp": "https://www.yelp.com/biz/eagle-restaurant-downers-grove",
+        "tripadvisor": "https://www.tripadvisor.com/Restaurant_Review-g35904-d427213-Reviews-Eagle_Restaurant-Downers_Grove_DuPage_County_Illinois.html",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "John Zografos",
+        "title": "Owner",
+        "fromGreece": "Xios",
+        "ownerEmail": "jzografo@gmail.com",
+        "ownerPhone": "(630) 712-5050",
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 41.7965214,
+        "lng": -87.9955015
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/logo/logo/logo.png",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/food-hospitality/eagle-restaurant/photos/photos/photo-1.png"
+      ],
+      "id": "eagle-restaurant",
+      "metadata": {
+        "createdAt": "2026-01-05T09:47:32.093Z",
+        "updatedAt": "2026-01-13T16:34:53.961Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "videoPlays": 0,
+        "lastViewed": "2026-01-05T09:47:32.093Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "Filakia",
+      "tagline": "Clean and non-toxic products that nourish, heal and hydrate your lips and skin.",
+      "description": "At Filakia, we focus on small-batch, handmade beauty products. Everything is thoughtfully developed with clean ingredients that support your natural glow without compromise, toxins, or unnecessary ingredients. \n\nI was inspired to start Filakia because my son suffered from severe eczema when he was a baby. For a while, I thought we finally had it under control, but a few years later it came back even worse than before. This time, not only did the eczema return, but he also suddenly developed multiple allergies. I realized it wasn't just about what I put into his body-it was equally important to pay attention to what I put onto his skin. That realization fueled my determination to find safer, more nourishing options and ultimately sparked the passion behind my business. \n\nOur mission is simple - to create everyday essentials that make you feel good inside and out. From our ultra-hydrating lip balms to our delicately crafted whipped tallow balm, each homemade product is made with intention, purity, and care.\n\nFilakia is derived from the Greek root philia meaning \"friendship\" or \"affectionate regard\". Filakia also means little kisses!\n\n We appreciate you visiting us and hope you love our products!",
+      "category": "Beauty & Health",
+      "subcategories": [],
+      "phone": null,
+      "address": null,
+      "city": "Oakbrook Terrace",
+      "state": "IL",
+      "zipCode": null,
+      "country": "USA",
+      "email": null,
+      "website": "https://filakialips.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "businessPortalPassword": null,
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": "Filakia-61574397982198",
+        "instagram": "filakia_beauty",
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "Vicki Zografos",
+        "title": "Owner",
+        "fromGreece": "Xios",
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/beauty-health/filakia/logo/logo/logo.png",
+      "photos": [
+        "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80"
+      ],
+      "video": null,
+      "id": "filakia",
+      "slug": "filakia",
+      "metadata": {
+        "createdAt": "2026-01-05T09:51:17.373Z",
+        "updatedAt": "2026-01-05T18:59:58.724Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "videoPlays": 0,
+        "lastViewed": "2026-01-05T09:51:17.373Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "Brillakis Import Foods",
+      "tagline": "Family-owned grocery store with Greek imports.",
+      "description": "Brillakis Import Foods is a family-owned grocery store in Niles, Illinois, specializing in authentic Greek and imported foods, including cheeses, olive oil, pastries, and meats. It is known for its high-quality products, friendly service, and a wide selection of Greek groceries, imported beers, and other specialty items.",
+      "category": "Grocery & Imports",
+      "subcategories": [
+        "Market"
+      ],
+      "phone": "(847) 966-1250",
+      "address": "9061 Courtland Dr",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "businessPortalPassword": null,
+      "hours": {
+        "monday": "9:00 AM - 6:00 PM",
+        "tuesday": "9:00 AM - 6:00 PM",
+        "wednesday": "9:00 AM - 6:00 PM",
+        "thursday": "9:00 AM - 6:00 PM",
+        "friday": "9:00 AM - 6:00 PM",
+        "saturday": "9:00 AM - 6:00 PM",
+        "sunday": "9:00 AM - 4:00 PM"
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "John Brillakis",
+        "title": "Owner",
+        "fromGreece": "Xania",
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/brillakis-import-foods/photos/photos/photo-1.jpeg"
+      ],
+      "video": null,
+      "id": "brillakis-import-foods",
+      "slug": "brillakis-import-foods",
+      "metadata": {
+        "createdAt": "2026-01-05T10:54:25.512Z",
+        "updatedAt": "2026-01-12T23:26:04.539Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "videoPlays": 0,
+        "lastViewed": "2026-01-05T10:54:25.512Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "Meraki Events Chicago",
+      "tagline": "Wedding planning service in Niles, IL.",
+      "description": "At Meraki Event Designs & Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.\nWe provide for each of our clients a courteous and professional environment from set up to service breakdown. Meraki Event Designs & Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs & Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.",
+      "category": "Professional & Business Services",
+      "subcategories": [
+        "Wedding Planner"
+      ],
+      "phone": "(847) 779-3056",
+      "address": "9073 Courtland Dr",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
+      "country": "USA",
+      "email": "merakieventsniles@gmail.com",
+      "website": "https://merakieventschicago.com/",
+      "tier": "FEATURED",
+      "verified": true,
+      "showClaimButton": false,
+      "businessPortalPassword": null,
+      "placesUrlEnding": null,
+      "slug": "meraki-events-chicago",
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.0459021,
+        "lng": -87.8305043
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/professional-business-services/meraki-events-chicago/logo/logo/logo.jpeg",
+      "photos": [
+        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80"
+      ],
+      "id": "meraki-events-chicago",
+      "metadata": {
+        "createdAt": "2026-01-05T11:01:49.789Z",
+        "updatedAt": "2026-01-13T16:32:33.528Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "videoPlays": 0,
+        "lastViewed": "2026-01-05T11:01:49.789Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "Lekas Auto Construction",
+      "tagline": "Auto body shop offering repairs and installations, including mirrors.",
+      "description": "",
+      "category": "Automotive & Transportation",
+      "subcategories": [
+        "Auto Repair Shop"
+      ],
+      "phone": "(847) 657-8181",
+      "address": "3148 W Lake Ave",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60026",
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "businessPortalPassword": null,
+      "hours": {
+        "monday": "7:30 AM - 6:00 PM",
+        "tuesday": "7:30 AM - 6:00 PM",
+        "wednesday": "7:30 AM - 6:00 PM",
+        "thursday": "7:30 AM - 6:00 PM",
+        "friday": "7:30 AM - 6:00 PM",
+        "saturday": "8:00 AM - 1:00 PM",
+        "sunday": "Closed"
+      },
+      "socialMedia": {
+        "facebook": "Lekas-Auto-Construction-100042247874611",
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://google.com/search?sca_esv=cea07bd29ebaa7bd&hl=en-US&sxsrf=AE3TifM6iZPOouxWa2eAQhmPzBKmPlZEkw:1767386762400&si=AMgyJEuzsz2NflaaWzrzdpjxXXRaJ2hfdMsbe_mSWso6src8s2mHO8pwZpp11OP5qdZ-LdW1aj_mBYxLU5POfOOl_wHaceO80qLg9koObBor6ZUlN-TFdBiodS1J5Ey66kQPVgkxHtX7&q=Lekas+Auto+Ltd+Reviews",
+        "yelp": "https://www.yelp.com/biz/lekas-auto-construction-glenview",
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"
+      ],
+      "video": null,
+      "id": "lekas-auto-construction",
+      "slug": "lekas-auto-construction",
+      "metadata": {
+        "createdAt": "2026-01-05T13:27:28.712Z",
+        "updatedAt": "2026-01-12T23:27:00.667Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "videoPlays": 0,
+        "lastViewed": "2026-01-05T13:27:28.712Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "SKB Hair Salon",
+      "tagline": "Full-service hair salon in Niles, IL.",
+      "description": "From the day we opened our doors in Niles in 2000, we've earned our spot as a top Salon. We offer unparalleled beauty pampering, but also respect our clients' busy schedules and will get you looking fabulous and on your way as soon as possible.\nOver the years, our expert team has had one mission--to make our devoted customers look stunning and feel their best. Contact us and see what our team of qualified professionals can do for you today. ",
+      "category": "Beauty & Health",
+      "subcategories": [
+        "Hair Salons"
+      ],
+      "phone": "(847) 966-0686",
+      "address": "9081 Courtland Dr",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
+      "country": "USA",
+      "email": null,
+      "website": "https://skbsalon.wixsite.com/website-1/",
+      "tier": "PREMIUM",
+      "verified": true,
+      "showClaimButton": true,
+      "businessPortalPassword": null,
+      "placesUrlEnding": null,
+      "slug": "skb-hair-salon",
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": "SKBHAIRSALON",
+        "instagram": "skbhairsalon",
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": "https://www.yelp.com/biz/skb-hair-salon-niles",
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "Sandy Brillakis",
+        "title": "Owner",
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.0458939,
+        "lng": -87.8303263
+      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/beauty-health/skb-hair-salon/logo/logo/logo.jpg",
+      "photos": [
+        "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80"
+      ],
+      "id": "skb-hair-salon",
+      "metadata": {
+        "createdAt": "2026-01-05T15:02:36.405Z",
+        "updatedAt": "2026-01-13T16:32:48.438Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "videoPlays": 0,
+        "lastViewed": "2026-01-05T15:02:36.405Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "A",
+      "tagline": "A",
+      "description": "A\n\nBd \nC",
+      "category": "Automotive & Transportation",
+      "subcategories": [
+        "Car Dealer",
+        "Taxi & Limo Service",
+        "Auto Repair Shop"
+      ],
+      "phone": "(312) 555-0455",
+      "address": "123 Harlem Ave",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60026",
+      "country": "USA",
+      "email": "example@example.com",
+      "website": "https://www.example.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "businessPortalPassword": null,
+      "placesUrlEnding": "chicago",
+      "slug": "a",
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "10:30 AM - 8:00 PM",
+        "wednesday": "10:30 AM - 8:00 PM",
+        "thursday": "8:00 AM - 5:30 PM",
+        "friday": "10:30 AM - 8:00 PM",
+        "saturday": "10:30 AM - 8:00 PM",
+        "sunday": "11:00 AM - 8:00 PM"
+      },
+      "socialMedia": {
+        "facebook": "ah",
+        "instagram": "a",
+        "twitter": "a",
+        "youtube": "a",
+        "tiktok": "a",
+        "linkedin": "https://www.linkedin.com/company/ex",
+        "other1": "https://test.com/es",
+        "other2": "https://test.com/esa",
+        "other3": "https://test.com/esb"
+      },
+      "reviews": {
+        "google": "https://g.page/test",
+        "yelp": "https://www.yelp.com/biz/test",
+        "tripadvisor": "https://www.tripadvisor.com/test",
+        "other1": "https://test.com/es1",
+        "other2": "https://test.com/es2",
+        "other3": "https://test.com/es3"
+      },
+      "ownerInfo": {
+        "fullName": "Test Name",
+        "title": "Founder",
+        "fromGreece": "Athens",
+        "ownerEmail": "example@example.com",
+        "ownerPhone": "(312) 555-0457",
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": true,
+          "email": true,
+          "phone": true
+        }
+      },
+      "coordinates": {
+        "lat": 42.0732503,
+        "lng": -87.8055076
+      },
+      "logo": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"
+      ],
+      "id": "a",
+      "listingId": 1,
+      "metadata": {
+        "createdAt": "2026-01-13T08:51:41.440Z",
+        "updatedAt": "2026-01-13T18:20:04.576Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-13T08:51:41.440Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "B",
+      "tagline": "B",
+      "description": "B\\n P",
+      "category": "Home & Construction",
+      "subcategories": [
+        "Carpenter",
+        "Electrician"
+      ],
+      "phone": "(847) 291-1939",
+      "address": "213 Harlem Ave",
+      "city": "Glenview",
+      "state": "IL",
+      "zipCode": "60626",
+      "country": "USA",
+      "email": "example@example.com",
+      "website": "https://example.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "businessPortalPassword": null,
+      "placesUrlEnding": "chicago",
+      "slug": "b",
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "Open",
+        "wednesday": "Open",
+        "thursday": "Open",
+        "friday": "Open",
+        "saturday": "Open",
+        "sunday": "Open"
+      },
+      "socialMedia": {
+        "facebook": "B",
+        "instagram": "B",
+        "twitter": "B",
+        "youtube": "B",
+        "tiktok": "B",
+        "linkedin": "https://linkedin.com/b",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": "https://g.page/b",
+        "yelp": "https://yelp.com/b",
+        "tripadvisor": "https://tripadvisor.com/b",
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "John Smith",
+        "title": "Manager",
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "logo": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80"
+      ],
+      "id": "b",
+      "listingId": 2,
+      "metadata": {
+        "createdAt": "2026-01-13T18:28:48.103Z",
+        "updatedAt": "2026-01-14T22:18:28.168Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-13T18:28:48.103Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "c",
+      "tagline": "c",
+      "description": "csdwfgrh",
+      "category": "Cultural/Fraternal Organization",
+      "subcategories": [
+        "Youth Organization"
+      ],
+      "phone": null,
+      "address": null,
+      "city": null,
+      "state": "IL",
+      "zipCode": null,
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "placesUrlEnding": null,
+      "slug": "c",
+      "logo": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80"
+      ],
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": null,
+        "title": null,
+        "fromGreece": null,
+        "ownerEmail": null,
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "id": "c",
+      "listingId": 3,
+      "metadata": {
+        "createdAt": "2026-01-15T03:57:51.894Z",
+        "updatedAt": "2026-01-15T06:35:52.033Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-15T03:57:51.895Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "g",
+      "tagline": "gl",
+      "description": "ggg",
+      "category": "Home & Construction",
+      "subcategories": [
+        "Handyman"
+      ],
+      "phone": null,
+      "address": null,
+      "city": "Downers Grove",
+      "state": "CA",
+      "zipCode": null,
+      "country": "USA",
+      "email": null,
+      "website": null,
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": false,
+      "placesUrlEnding": null,
+      "slug": "g",
+      "logo": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80"
+      ],
+      "hours": {
+        "monday": null,
+        "tuesday": null,
+        "wednesday": null,
+        "thursday": null,
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "twitter": null,
+        "youtube": null,
+        "tiktok": null,
+        "linkedin": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "reviews": {
+        "google": null,
+        "yelp": null,
+        "tripadvisor": null,
+        "other1": null,
+        "other2": null,
+        "other3": null
+      },
+      "ownerInfo": {
+        "fullName": "John Pappas",
+        "title": "Owner",
+        "fromGreece": null,
+        "ownerEmail": "admin@thegreekdirectory.org",
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "id": "g",
+      "listingId": 4,
+      "metadata": {
+        "createdAt": "2026-01-15T06:36:40.945Z",
+        "updatedAt": "2026-01-15T20:44:28.572Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-15T06:36:40.946Z",
+        "detailedViews": []
+      },
+      "visible": true
+    },
+    {
+      "businessName": "D",
+      "tagline": "D tag",
+      "description": "D\nDesc",
+      "category": "Education & Community",
+      "subcategories": [
+        "Senior Care",
+        "Childcare",
+        "Tutor",
+        "Greek School"
+      ],
+      "phone": "(123) 456-7890",
+      "address": "123 Main St",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
+      "country": "USA",
+      "email": "example@example.com",
+      "website": "https://example.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "placesUrlEnding": "chicago",
+      "slug": "d",
+      "logo": "https://example.com/photo.png",
+      "photos": [
+        "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80"
+      ],
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "Closed",
+        "wednesday": "Closed",
+        "thursday": "Closed",
+        "friday": "10:00 AM - 5:00 PM",
+        "saturday": "Closed",
+        "sunday": "Closed"
+      },
+      "socialMedia": {
+        "facebook": "D",
+        "instagram": "d",
+        "twitter": "d",
+        "youtube": "d",
+        "tiktok": "d",
+        "linkedin": "https://linkedin.com/d",
+        "other1": "https://other.com/soc1/d",
+        "other2": "https://other.com/soc2/d",
+        "other3": "https://other.com/soc3/d"
+      },
+      "reviews": {
+        "google": "https://google.com/d",
+        "yelp": "https://yelp.com/biz/d",
+        "tripadvisor": "https://tripadvisor.com/d",
+        "other1": "https://other.com/rev1/d",
+        "other2": "https://other.com/rev2/d",
+        "other3": "https://other.com/rev3/d"
+      },
+      "ownerInfo": {
+        "fullName": "D E",
+        "title": "Owner",
+        "fromGreece": "Attica",
+        "ownerEmail": "example1@example.com",
+        "ownerPhone": "(098) 765-4321",
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.0331241,
+        "lng": -87.8231913
+      },
+      "id": "d",
+      "listingId": 5,
+      "visible": true,
+      "metadata": {
+        "createdAt": "2026-01-16T16:47:36.745Z",
+        "updatedAt": "2026-01-16T16:47:36.745Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-16T16:47:36.745Z",
+        "detailedViews": []
+      }
+    },
+    {
+      "businessName": "Example Busness",
+      "tagline": "Example Business is a thriving business in Chicago.",
+      "description": "A paragraph is a distinct unit of writing, a collection of related sentences focused on a single idea or topic, serving to organize thoughts and guide readers through an essay's structure. Typically, it includes a topic sentence (the main point), supporting sentences (details, evidence, examples), and sometimes a concluding or transition sentence, though length varies (often 3-10 sentences) and is less important than unity and coherence.",
+      "category": "Home & Construction",
+      "subcategories": [
+        "Electrician",
+        "Handyman",
+        "Landscaping",
+        "HVAC"
+      ],
+      "phone": "(987) 293-2345",
+      "address": "111 Main St",
+      "city": "Niles",
+      "state": "IL",
+      "zipCode": "60714",
+      "country": "USA",
+      "email": "a@ex.com",
+      "website": "https://ex.com",
+      "tier": "FREE",
+      "verified": false,
+      "showClaimButton": true,
+      "placesUrlEnding": "wyoming",
+      "slug": "e",
+      "logo": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80"
+      ],
+      "hours": {
+        "monday": "Closed",
+        "tuesday": "Closed",
+        "wednesday": "Closed",
+        "thursday": "Closed",
+        "friday": "10:00 AM - 11:30 AM",
+        "saturday": "Closed",
+        "sunday": "Closed"
+      },
+      "socialMedia": {
+        "facebook": "e",
+        "instagram": "e",
+        "twitter": "e",
+        "youtube": "e",
+        "tiktok": "e",
+        "linkedin": "https://ex.com/l",
+        "other1": "https://ex.com/o1",
+        "other2": "https://ex.com/o2",
+        "other3": "https://ex.com/o3"
+      },
+      "reviews": {
+        "google": "https://g.com/g",
+        "yelp": "https://g.com/y",
+        "tripadvisor": "https://g.com/t",
+        "other1": "https://g.com/or1",
+        "other2": "https://g.com/or2",
+        "other3": "https://g.com/or3"
+      },
+      "ownerInfo": {
+        "fullName": "E F",
+        "title": "Manager",
+        "fromGreece": null,
+        "ownerEmail": "gdv@e.com",
+        "ownerPhone": null,
+        "visibility": {
+          "name": true,
+          "title": true,
+          "greece": false,
+          "email": false,
+          "phone": false
+        }
+      },
+      "coordinates": {
+        "lat": 42.0331241,
+        "lng": -87.8231913
+      },
+      "id": "e",
+      "listingId": 6,
+      "metadata": {
+        "createdAt": "2026-01-16T16:56:38.076Z",
+        "updatedAt": "2026-01-17T02:17:05.868Z"
+      },
+      "analytics": {
+        "views": 0,
+        "callClicks": 0,
+        "websiteClicks": 0,
+        "directionClicks": 0,
+        "shareClicks": 0,
+        "sharePlatforms": {},
+        "videoPlays": 0,
+        "lastViewed": "2026-01-16T16:56:38.076Z",
+        "detailedViews": []
+      },
+      "visible": true
+    }
+  ]
+}

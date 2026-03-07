@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Business Portal - The Greek Directory</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="white">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="TGD Business">
+    <link rel="apple-touch-startup-image" href="https://thegreekdirectory.org/Squarekeylogoapple4.png">
+    <link rel="apple-touch-icon" href="https://thegreekdirectory.org/Squarekeylogoapple4.png">
+    <link rel="icon" href="https://thegreekdirectory.org/Square%20key%20logo.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <meta name="cloudflare-account-id" content="">
+    <meta name="cloudflare-api-key" content="">
+    <link rel="stylesheet" href="css/business.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Login/Signup Page -->
+    <div id="authPage" class="auth-container hidden">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="https://static.thegreekdirectory.org/Logo2white.png" alt="The Greek Directory logo" class="h-16 w-auto mx-auto mb-4">
+                <h1 class="text-3xl font-bold">Business Portal</h1>
+                <p class="text-blue-100 mt-2">Manage your listing on The Greek Directory</p>
+            </div>
+            
+            <div class="auth-body">
+                <div id="authMessage" class="hidden"></div>
+                
+                <!-- Sign In Form -->
+                <div id="signInForm">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Sign In</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <input type="email" id="signInEmail" class="tgd-input" placeholder="your@email.com" autocomplete="email">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <input type="password" id="signInPassword" class="tgd-input" placeholder="Enter your password" autocomplete="current-password">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="rememberMe" class="w-4 h-4 mr-2">
+                                <span class="text-sm text-gray-700">Remember me</span>
+                            </label>
+                            <a href="#" onclick="showForgotPassword()" class="text-sm text-blue-600 hover:text-blue-800">Forgot password?</a>
+                        </div>
+                        <button onclick="handleSignIn()" class="tgd-button-primary w-full">
+                            Sign In
+                        </button>
+                    </div>
+                    
+                    <div class="auth-divider">
+                        <span>Don't have an account?</span>
+                    </div>
+                    
+                    <button onclick="showSignUpForm()" class="tgd-button-secondary w-full">
+                        Create Account
+                    </button>
+                    
+                    <p class="text-center text-sm text-gray-600 mt-4">
+                        Need help? <a href="mailto:contact@thegreekdirectory.org" class="text-blue-600 hover:underline">Contact us</a>
+                    </p>
+                </div>
+                
+                <!-- Sign Up Form -->
+                <div id="signUpForm" class="hidden">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Create Account</h2>
+                    <p class="text-sm text-gray-600 mb-6">Sign up to claim and manage your business listing</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Find Your Business *</label>
+                            <input type="text" id="signUpListingSearch" class="tgd-input" placeholder="Search by business name or ID..." oninput="searchListingForSignup()">
+                            <div id="listingSearchResults" class="mt-2 max-h-48 overflow-y-auto border rounded-lg"></div>
+                            <input type="hidden" id="signUpListingId">
+                        </div>
+                        
+                        <div id="confirmationKeyContainer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirmation Key *</label>
+                            <input type="text" id="signUpConfirmationKey" class="tgd-input" placeholder="Enter confirmation key">
+                            <p class="text-xs text-gray-500 mt-1">Contact admin@thegreekdirectory.org if you need your confirmation key</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Email *</label>
+                            <input type="email" id="signUpEmail" class="tgd-input" placeholder="your@business.com" autocomplete="email">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Phone (Optional)</label>
+                            <input type="tel" id="signUpPhone" class="tgd-input" placeholder="(555) 123-4567" autocomplete="tel">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                            <input type="password" id="signUpPassword" class="tgd-input" placeholder="Create a secure password" autocomplete="new-password">
+                            <p class="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
+                            <input type="password" id="signUpPasswordConfirm" class="tgd-input" placeholder="Re-enter your password" autocomplete="new-password">
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <input type="checkbox" id="agreeTerms" class="w-4 h-4 mt-1 mr-2">
+                            <label for="agreeTerms" class="text-sm text-gray-700">
+                                I agree to the <a href="https://thegreekdirectory.org/terms" target="_blank" class="text-blue-600 hover:underline">Terms of Service</a> and <a href="https://thegreekdirectory.org/privacy" target="_blank" class="text-blue-600 hover:underline">Privacy Policy</a>
+                            </label>
+                        </div>
+                        
+                        <button onclick="handleSignUp()" class="tgd-button-primary w-full">
+                            Create Account
+                        </button>
+                    </div>
+                    
+                    <div class="auth-divider">
+                        <span>Already have an account?</span>
+                    </div>
+                    
+                    <button onclick="showSignInForm()" class="tgd-button-secondary w-full">
+                        Sign In
+                    </button>
+                </div>
+                
+                <!-- Forgot Password Form -->
+                <div id="forgotPasswordForm" class="hidden">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Reset Password</h2>
+                    <p class="text-sm text-gray-600 mb-6">Enter your email to receive a password reset link</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <input type="email" id="resetEmail" class="tgd-input" placeholder="your@email.com" autocomplete="email">
+                        </div>
+                        
+                        <button onclick="handlePasswordReset()" class="tgd-button-primary w-full">
+                            Send Reset Link
+                        </button>
+                    </div>
+                    
+                    <div class="auth-divider">
+                        <span>Remember your password?</span>
+                    </div>
+                    
+                    <button onclick="showSignInForm()" class="tgd-button-secondary w-full">
+                        Back to Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="hidden">
+        <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
+                        <div>
+                            <h1 class="text-xl font-bold" style="color: #055193;">Business Portal</h1>
+                            <p class="text-sm text-gray-600"><span id="businessName"></span> <span id="listingIdDisplay" class="id-badge"></span></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="tierBadge" class="tier-badge"></span>
+                        <button onclick="logout()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <!-- Navigation Tabs -->
+            <div class="flex gap-2 mb-6 overflow-x-auto">
+                <button onclick="switchTab('overview')" id="tab-overview" class="px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600">Overview</button>
+                <button onclick="switchTab('edit')" id="tab-edit" class="px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700">Edit Listing</button>
+                <button onclick="switchTab('analytics')" id="tab-analytics" class="px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700">Analytics</button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700">Settings</button>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div id="content-overview" class="space-y-6"></div>
+
+            <!-- Edit Tab -->
+            <div id="content-edit" class="hidden"></div>
+            
+            <!-- Analytics Tab -->
+            <div id="content-analytics" class="hidden"></div>
+            
+            <!-- Settings Tab -->
+            <div id="content-settings" class="hidden"></div>
+        </div>
+    </div>
+    <script>
+        window.CLOUDFLARE_IMAGES_CONFIG = {
+            accountId: document.querySelector('meta[name="cloudflare-account-id"]')?.content || '',
+            apiKey: document.querySelector('meta[name="cloudflare-api-key"]')?.content || ''
+        };
+    </script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/business-auth.js"></script>
+    <script src="js/business-dashboard.js"></script>
+</body>
+</html>

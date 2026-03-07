@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - The Greek Directory</title>
+    <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <meta name="cloudflare-account-id" content="">
+    <meta name="cloudflare-api-key" content="">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+    
+<body class="bg-gray-50">
+    <!-- Login Page -->
+    <div id="loginPage" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-16 w-auto mx-auto mb-4">
+                <h1 class="text-3xl font-bold">Admin Portal</h1>
+                <p class="text-blue-100 mt-2">Enter your GitHub Personal Access Token</p>
+            </div>
+            
+            <div class="auth-body">
+                <div id="authMessage" class="hidden"></div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">GitHub Personal Access Token</label>
+                        <input type="password" id="githubToken" class="tgd-input" placeholder="ghp_..." autocomplete="off">
+                        <p class="text-xs text-gray-500 mt-1">Token must have repo access</p>
+                    </div>
+                    <button id="loginBtn" class="tgd-button-primary">
+                        Access Admin Portal
+                    </button>
+                </div>
+                
+                <p class="text-center text-sm text-gray-600 mt-4">
+                    If you are here by mistake, <a href="https://thegreekdirectory.org" class="text-blue-600 hover:underline">click here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="hidden">
+        <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+            <div class="px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
+                    <h1 class="text-xl font-bold" style="color: #055193;">Admin Portal</h1>
+                </div>
+                <button id="logoutBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Logout</button>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="mb-6 flex gap-3 flex-wrap">
+                <button id="listingsViewBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">Listings</button>
+                <button id="requestsViewBtn" class="px-4 py-2 bg-orange-100 text-orange-800 rounded-lg font-medium">Requests</button>
+                <button id="newListingBtn" class="px-4 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">+ New Listing</button>
+                <input type="text" id="adminSearch" placeholder="Search listings..." 
+                    class="px-4 py-2 border border-gray-300 rounded-lg flex-1 min-w-[200px]">
+                <button id="manageSubcategoriesBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium">🧩 Subcategories</button>
+                <button id="refreshBtn" class="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">🔄 Refresh</button>
+                <button id="generateAllBtn" class="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700">🔨 Generate All Pages</button>
+                <label for="csvUpload" class="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 cursor-pointer">📁 Upload CSV</label>
+                <input type="file" id="csvUpload" accept=".csv" class="hidden" onchange="handleCSVUpload(event)">
+            </div>
+
+            <div id="listingsSection" class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">ID</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Tier</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Business Name</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Category</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Location</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Analytics</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Last Updated</th>
+                                <th class="text-right py-3 px-4 font-semibold text-gray-900">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listingsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="requestsSection" class="bg-white rounded-lg shadow-sm overflow-hidden hidden mt-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-orange-50">
+                            <tr>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Request ID</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Business Name</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Category</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Location</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-900">Submitted</th>
+                                <th class="text-right py-3 px-4 font-semibold text-gray-900">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-lg max-w-4xl w-full my-8">
+            <div class="p-6 border-b flex items-center justify-between">
+                <h2 id="modalTitle" class="text-2xl font-bold text-gray-900">Edit Listing</h2>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <div class="p-6 max-h-[70vh] overflow-y-auto">
+                <div class="space-y-6" id="editFormContent"></div>
+            </div>
+            <div class="p-6 border-t flex justify-end gap-3">
+                <button id="cancelEdit" class="px-6 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium">Cancel</button>
+                <button id="saveEdit" class="px-6 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div id="analyticsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-lg max-w-6xl w-full my-8">
+            <div class="p-6 border-b flex items-center justify-between">
+                <h2 id="analyticsModalTitle" class="text-2xl font-bold text-gray-900">Analytics</h2>
+                <button id="closeAnalyticsModal" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <div class="p-6 max-h-[70vh] overflow-y-auto">
+                <div id="analyticsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.CLOUDFLARE_IMAGES_CONFIG = {
+            accountId: document.querySelector('meta[name="cloudflare-account-id"]')?.content || '',
+            apiKey: document.querySelector('meta[name="cloudflare-api-key"]')?.content || ''
+        };
+    </script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

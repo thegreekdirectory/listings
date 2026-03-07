@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>The Greek Directory</title>
+<link rel="icon" href="https://social.thegreekdirectory.org/Logocircleonly2.png" sizes="32x32">
+    <link rel="icon" href="https://social.thegreekdirectory.org/Logocircleonly2.png" sizes="192x192">
+    
+    <meta name="apple-mobile-web-app-status-bar-style" content="white">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Greek Directory">
+    <link rel="apple-touch-startup-image" href="https://social.thegreekdirectory.org/Logocircleonly2.png">
+    <link rel="apple-touch-icon" href="https://social.thegreekdirectory.org/Logocircleonly2.png" type="image/x-icon">
+<script>
+  // Check if running as iOS web app (standalone mode) or PWA
+  const isIOSWebApp = window.navigator.standalone === true;
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+  
+  if (isIOSWebApp || isPWA) {
+    // Redirect immediately if in iOS web app or PWA mode
+    window.location.href = "https://www.thegreekdirectory.org";
+  }
+  // Otherwise, do nothing (no redirect)
+</script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 30px 25px;
+    text-align: center;
+    box-sizing: border-box;
+    background-color: white;
+    color: black;
+  }
+  img.logo {
+    max-width: 400px;
+    width: 100%;
+    height: auto;
+    margin-bottom: 30px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    line-height: 1.3;
+  }
+  ol {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 30px;
+  }
+  ol li {
+    margin-bottom: 12px;
+  }
+  p {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: black;
+      color: white;
+    }
+  }
+</style>
+</head>
+<body>
+  <div>
+    <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="logo">
+    <h1>Steps to install The Greek Directory onto your iPhone or iPad:</h1>
+    <ol style="text-align: left; display: inline-block; max-width: 600px;">
+      <li>Open <a href="https://app.thegreekdirectory.org">
+    app.thegreekdirectory.org</a> in Safari.</li>
+      <li>
+       Click 
+       <span class="NoBreak"><img src="https://help.apple.com/assets/68C0B0EF25E484123E06FB66/68C0B0F3C1383B6ACB089921/en_US/d26fe35d3438fe81179a80c2b6c9b0c9.png" alt="the Share button icon" height="16.8" width="14" originalimagename="GlobalArt/IL_ShareBlue.png">.</span> If you don't see this icon, click 
+       <span class="NoBreak"><img src="https://help.apple.com/assets/68C0B0EF25E484123E06FB66/68C0B0F3C1383B6ACB089921/en_US/06e015c4e2efbb35dc5002169cd64c33.png" alt="the 3 Dots button icon" height="15" width="15" originalimagename="GlobalArt/IL_ShareBlue.png">.</span>
+      </li>
+      <li>Click  <span class="NoBreak"><img src="https://help.apple.com/assets/68C0B0EF25E484123E06FB66/68C0B0F3C1383B6ACB089921/en_US/7c24a87974c9f3d927f73dd5edc48c38.png" alt="the Plus button icon" height="15" width="15" originalimagename="GlobalArt/IL_ShareBlue.png"></span>  Add to Home Screen.</li>
+      <li>If applicable, toggle on 'Open as Web App'.</li>
+      <li>Click 'Add'.</li>
+    </ol>
+   <p>You're done! Check your home screen to test the app. If you experience any difficulties, delete the faulty app, refresh the page and try again. If you keep experiencing issues, please email us at <a href="mailto:contact@thegreekdirectory.org?subject=App%20Installation%20Support">
+    support@thegreekdirectory.org</a>.</p>
+    <p style="margin-top: 30px; font-weight: bold; color: #d9534f;">Warning: You must install the app via this link — attempting to download it via any other page will cause it to not install properly.</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>The Greek Directory - Verified Locations</name>
+    <description>Greek-owned businesses and organizations with verified public locations.</description>
+    <Placemark>
+      <name>Hellenic American Academy</name>
+      <ExtendedData>
+        <Data name="category"><value>Education & Community</value></Data>
+        <Data name="address"><value>445 Pine St, Deerfield, IL 60015, USA</value></Data>
+        <Data name="city"><value>Deerfield</value></Data>
+        <Data name="state"><value>IL</value></Data>
+      </ExtendedData>
+      <Point><coordinates>-87.8568086,42.1612138,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>Eagle Restaurant</name>
+      <ExtendedData>
+        <Data name="category"><value>Food & Hospitality</value></Data>
+        <Data name="address"><value>406 Maple Ave, Downers Grove, IL 60515, USA</value></Data>
+        <Data name="city"><value>Downers Grove</value></Data>
+        <Data name="state"><value>IL</value></Data>
+      </ExtendedData>
+      <Point><coordinates>-87.9955015,41.7965214,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>Meraki Events Chicago</name>
+      <ExtendedData>
+        <Data name="category"><value>Professional & Business Services</value></Data>
+        <Data name="address"><value>9073 Courtland Dr, Niles, IL 60714, USA</value></Data>
+        <Data name="city"><value>Niles</value></Data>
+        <Data name="state"><value>IL</value></Data>
+      </ExtendedData>
+      <Point><coordinates>-87.8305043,42.0459021,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>SKB Hair Salon</name>
+      <ExtendedData>
+        <Data name="category"><value>Beauty & Health</value></Data>
+        <Data name="address"><value>9081 Courtland Dr, Niles, IL 60714, USA</value></Data>
+        <Data name="city"><value>Niles</value></Data>
+        <Data name="state"><value>IL</value></Data>
+      </ExtendedData>
+      <Point><coordinates>-87.8303263,42.0458939,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>A</name>
+      <ExtendedData>
+        <Data name="category"><value>Automotive & Transportation</value></Data>
+        <Data name="address"><value>123 Harlem Ave, Glenview, IL 60026, USA</value></Data>
+        <Data name="city"><value>Glenview</value></Data>
+        <Data name="state"><value>IL</value></Data>
+      </ExtendedData>
+      <Point><coordinates>-87.8055076,42.0732503,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>D</name>
+      <ExtendedData>
+        <Data name="category"><value>Education & Community</value></Data>
+        <Data name="address"><value>123 Main St, Niles, IL 60714, USA</value></Data>
+        <Data name="city"><value>Niles</value></Data>
+        <Data name="state"><value>IL</value></Data>
+      </ExtendedData>
+      <Point><coordinates>-87.8231913,42.0331241,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>Example Busness</name>
+      <ExtendedData>
+        <Data name="category"><value>Home & Construction</value></Data>
+        <Data name="address"><value>111 Main St, Niles, IL 60714, USA</value></Data>
+        <Data name="city"><value>Niles</value></Data>
+        <Data name="state"><value>IL</value></Data>
+      </ExtendedData>
+      <Point><coordinates>-87.8231913,42.0331241,0</coordinates></Point>
+    </Placemark>
+  </Document>
+</kml>

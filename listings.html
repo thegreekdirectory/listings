@@ -1,0 +1,481 @@
+<!-- listings.html -->
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">    
+    <title>The Greek Directory - Local Greek-Owned Businesses, Churches & Cultural Centers</title>
+    
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="manifest" href="/manifest.json">
+
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <meta name="apple-mobile-web-app-title" content="Greek Directory">
+    <link rel="apple-touch-startup-image" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
+    <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg" type="image/x-icon">
+    
+    <meta name="description" content="Discover Greek and Hellenic American businesses, restaurants, churches, schools, and cultural centers. Your complete guide to the Greek-American community.">
+    <meta name="keywords" content="greek, greek american, greek-american, greek americans, greek-americans, directory, greek directory, the greek directory, greek american directory, the greek american directory, local greek, local greeks, hellenic, hellenic american, hellenic-american, hellenic americans, hellenic-americans, hellenic directory, hellenic-american directory, hellenic american directory, local hellenic, greek businesses, greek restaurants, greek orthodox churches, greek cultural centers">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="css/listings.css">
+    <link rel="stylesheet" href="css/index.css">
+    <script>
+        // Only load PWA CSS when running as a PWA
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'css/pwa.css';
+            document.head.appendChild(link);
+        }
+    </script>
+
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
+<style>
+    .pwa-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .pwa-splash.fade-out {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .pwa-splash-logo {
+        width: 120px;
+        height: auto;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .pwa-splash {
+            background: #000000;
+        }
+    }
+
+    /* Desktop filters overlay: positions the sidebar panel as a fixed overlay on top of content */
+    .desktop-filters-overlay {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        z-index: 200;
+        background: white;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+    }
+
+    /* Semi-transparent backdrop behind the overlay */
+    #desktopFiltersBackdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.3);
+        z-index: 199;
+    }
+
+    /* ── Star button: floating circular pill with backdrop blur ── */
+    .star-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border: 1.5px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0,0,0,0.04);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+    .star-button:hover {
+        transform: scale(1.15);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.30), 0 0 0 1px rgba(0,0,0,0.06);
+        background: rgba(255, 255, 255, 1);
+    }
+    .star-button:active {
+        transform: scale(0.92);
+    }
+    .star-icon {
+        width: 17px;
+        height: 17px;
+        fill: #d1d5db;
+        stroke: #9ca3af;
+        stroke-width: 1.8;
+        transition: fill 0.15s ease, stroke 0.15s ease;
+    }
+    .star-button.starred {
+        background: rgba(255, 253, 235, 0.97);
+        border-color: rgba(234, 179, 8, 0.5);
+        box-shadow: 0 2px 10px rgba(202, 138, 4, 0.30), 0 0 0 1px rgba(234,179,8,0.15);
+    }
+    .star-button.starred .star-icon {
+        fill: #facc15;
+        stroke: #ca8a04;
+    }
+    .star-button.starred:hover {
+        box-shadow: 0 4px 16px rgba(202, 138, 4, 0.40), 0 0 0 1px rgba(234,179,8,0.2);
+    }
+
+    /* ── filterPanel top-bar style (used mobile + split-view overlay) ── */
+    #filterPanel {
+        position: relative;
+        z-index: 30;
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+    }
+
+    /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+    /* ── Global mobile touch fix ── */
+    /* All <a> and <button> must respond to single taps on iOS/Android.
+       touch-action:manipulation disables double-tap-to-zoom on the element,
+       which is the #1 cause of swallowed taps on mobile Safari.
+       The -webkit-tap-highlight-color removal prevents the grey flash. */
+
+
+    /* Touch-action fixes: ensure all interactive buttons respond to taps on touchscreen */
+    .map-control-btn,
+    #filterBtn,
+    #mapBtn,
+    #refreshBtn,
+    #gridViewBtn, #gridViewBtn2,
+    #listViewBtn, #listViewBtn2,
+    #loadMoreBtn,
+    #splitFiltersBtn,
+    .subcategory-tag,
+    .location-search-result,
+    .star-button {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }</style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header (loaded via partial) -->
+    <div data-partial="header"></div>
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <div class="max-w-7xl mx-auto px-4 pt-4">
+        <div class="relative mb-4 max-w-2xl mx-auto">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+            <input type="text" id="searchInput" placeholder="Search businesses, categories, or locations..." 
+                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" 
+                style="color: #045093; --tw-ring-color: #055193;">
+        </div>
+    </div>
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <div class="max-w-7xl mx-auto px-4 pt-2">
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:hidden" id="mobileControls">
+            <button id="filterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <span class="text-sm font-medium">Filters</span>
+            </button>
+            <button id="hideStarredBtn" class="hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm" onclick="if(typeof toggleStarredView === 'function') toggleStarredView();">
+                <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <span class="text-sm font-medium">Hide Starred</span>
+            </button>
+            <button id="mapBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                <span class="text-sm font-medium">Map</span>
+            </button>
+            <button id="refreshBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap" style="display: none;">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#045093"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+            <div class="flex items-center gap-1 ml-auto bg-gray-100 rounded-lg p-1">
+                <button id="gridViewBtn" class="p-2 rounded bg-white shadow-sm"><svg width="16" height="16" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path fill="#045093" d="M 5,4 C 4.446,4 4,4.446 4,5 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 14,4.446 13.554,4 13,4 Z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 26,4.446 25.554,4 25,4 Z M 5,16 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z"/></svg></button>
+                <button id="listViewBtn" class="p-2 rounded"><svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18v2H3zm0 6h18v2H3zm0 6h18v2H3z"/></svg></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER PANEL — slides in from top on mobile & split view -->
+    <div id="filterPanel" class="hidden">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-900">Filters</h3>
+                <div class="flex gap-2">
+                    <button id="clearFiltersBtn" class="text-sm text-blue-600 hover:text-blue-800">Clear All</button>
+                    <button id="closeFilterBtn" class="text-gray-500">✕</button>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Categories & Subcategories</label>
+                    <input type="text" id="categorySearch" placeholder="Type to search..." 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <div id="categoryFilters" class="grid grid-cols-2 gap-2"></div>
+                </div>
+                <div id="subcategoryContainer" class="hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Subcategories</label>
+                        <div class="toggle-group">
+                            <button class="toggle-option active" data-mode="any" onclick="setSubcategoryMode('any')">Any</button>
+                            <button class="toggle-option" data-mode="all" onclick="setSubcategoryMode('all')">All</button>
+                        </div>
+                    </div>
+                    <div id="subcategoryFilters" class="flex flex-wrap"></div>
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="openNowFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Open Now</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="closedNowFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Closed Now</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="openingSoonFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Opening Soon (60 min)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="closingSoonFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Closing Soon (60 min)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="onlineOnlyFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Online Only</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><span>Radius</span>: <span class="radius-value" id="radiusValue">Any distance</span></label>
+                    <input type="range" id="radiusFilter" min="0" max="200" value="0" step="1" class="w-full">
+                </div>
+                <div class="location-search-container">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location Search</label>
+                    <input type="text" id="locationSearch" placeholder="City, State, Zip, or Country..." 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <div id="locationSearchResults" class="location-search-results"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <select id="countryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="">All Countries</option>
+                    </select>
+                </div>
+                <div id="stateFilterContainer" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <select id="stateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="">All States</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
+    <div id="mapContainer" class="hidden border-b relative" style="max-height: calc(100vh - 60px); overflow: hidden; position:relative; z-index:30;">
+        <!-- Scroll-to-zoom overlay -->
+
+        <div class="map-loading" id="mapLoading">
+            <div class="spinner"></div>
+            <p class="text-sm text-gray-600 mt-2 text-center">Loading map...</p>
+        </div>
+        <div id="map"></div>
+        <div class="map-controls">
+            <button class="map-control-btn" id="splitViewBtn" title="Toggle split view">
+                <svg width="16" height="16" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="#045093"><rect x="15" y="4" width="2" height="24"/><path d="M10,7V25H4V7h6m0-2H4A2,2,0,0,0,2,7V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/><path d="M28,7V25H22V7h6m0-2H22a2,2,0,0,0-2,2V25a2,2,0,0,0,2,2h6a2,2,0,0,0,2-2V7a2,2,0,0,0-2-2Z"/></svg>
+                <span class="desktop-only">Split View</span>
+            </button>
+            <button class="map-control-btn" id="locateBtn" title="Find my location">
+                <svg id="locateBtnIcon" width="16" height="16" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="#045093">
+                    <polygon points="0,9.28 9.894,9.99 10.78,20 20,0"/>
+                </svg>
+                <span class="desktop-only">Current Location</span>
+            </button>
+            <button class="map-control-btn" id="resetMapBtn" title="Reset map view">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#045093"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span class="desktop-only">Reload</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="splitViewContainer" class="hidden"></div>
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <!-- Backdrop for desktop filters overlay (click to close) -->
+    <div id="desktopFiltersBackdrop" class="hidden"></div>
+
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <div class="desktop-layout" id="desktopLayout">
+            <!-- DESKTOP FILTER SIDEBAR -->
+            <div class="desktop-filters hidden" id="desktopFiltersContainer">
+                <div id="desktopFilterPanel" class="desktop-sidebar">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-gray-900">Filters</h3>
+                        <button id="toggleFilterPosition" class="text-xs px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" title="Toggle filter position">⇄</button>
+                    </div>
+                    <button id="clearFiltersBtn2" class="text-sm text-blue-600 hover:text-blue-800 mb-4 block">Clear All</button>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                            <input type="text" id="categorySearch2" placeholder="Categories & subcategories..." 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <div id="categoryFilters2" class="grid grid-cols-2 gap-2"></div>
+                        </div>
+                        <div id="subcategoryContainer2" class="hidden">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Subcategories</label>
+                                <div class="toggle-group">
+                                    <button class="toggle-option active text-xs" data-mode="any" onclick="setSubcategoryMode('any')">Any</button>
+                                    <button class="toggle-option text-xs" data-mode="all" onclick="setSubcategoryMode('all')">All</button>
+                                </div>
+                            </div>
+                            <div id="subcategoryFilters2" class="flex flex-wrap"></div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="openNowFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Open Now</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="closedNowFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Closed Now</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="openingSoonFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Opening Soon</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="closingSoonFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Closing Soon</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="onlineOnlyFilter2" class="w-4 h-4">
+                                <span class="text-sm font-medium text-gray-700">Online Only</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><span>Radius</span>: <span class="radius-value" id="radiusValue2">Any distance</span></label>
+                            <input type="range" id="radiusFilter2" min="0" max="200" value="0" step="1" class="w-full">
+                        </div>
+                        <div class="location-search-container">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Location Search</label>
+                            <input type="text" id="locationSearch2" placeholder="City, State, Zip, or Country..." 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <div id="locationSearchResults2" class="location-search-results"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                            <select id="countryFilter2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">All Countries</option>
+                            </select>
+                        </div>
+                        <div id="stateFilterContainer2" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                            <select id="stateFilter2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">All States</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+            <div class="desktop-content">
+                <div id="normalViewControls" class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="flex flex-col">
+                            <p id="resultsCount" class="text-sm text-gray-600">Loading...</p>
+                            <div id="typoSuggestion" class="text-sm text-gray-500 hidden"></div>
+                        </div>
+                        <!-- Desktop Filters toggle button: visible when sidebar is collapsed or map is open -->
+                        <button id="desktopFilterToggleBtn" class="hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <span class="text-sm font-medium">Filters</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="mapBtnDesktop" class="hidden lg:flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
+                            <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                            <span class="text-sm font-medium">Map</span>
+                        </button>
+                        <div class="hidden lg:flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                            <button id="gridViewBtn2" class="p-2 rounded bg-white shadow-sm"><svg width="16" height="16" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path fill="#045093" d="M 5,4 C 4.446,4 4,4.446 4,5 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 14,4.446 13.554,4 13,4 Z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 26,4.446 25.554,4 25,4 Z M 5,16 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z"/></svg></button>
+                            <button id="listViewBtn2" class="p-2 rounded"><svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18v2H3zm0 6h18v2H3zm0 6h18v2H3z"/></svg></button>
+                        </div>
+                        <select id="sortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                            <option value="default">Default</option>
+                            <option value="az">A-Z</option>
+                            <option value="closest">Closest to Me</option>
+                            <option value="random">Random</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="normalViewListings">
+                    <div id="listingsContainer"></div>
+                    <button id="loadMoreBtn" class="load-more-btn hidden">Load More Listings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div data-partial="footer"></div>
+    
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="js/partials-loader.js"></script>
+    <script src="js/pwa/storage.js"></script>
+    <script src="js/listings.js"></script>
+    <script src="js/pwa/app.js"></script>
+    <script src="js/pwa/dock.js"></script>
+
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+<script>
+    window.currentListingData = null;
+</script>
+
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->

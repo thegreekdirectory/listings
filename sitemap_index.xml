@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://thegreekdirectory.org/sitemap-general.xml</loc>
+    <lastmod>2026-02-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://thegreekdirectory.org/sitemap-listings.xml</loc>
+    <lastmod>2026-02-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://thegreekdirectory.org/sitemap-categories.xml</loc>
+    <lastmod>2026-02-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://thegreekdirectory.org/sitemap-places.xml</loc>
+    <lastmod>2026-02-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://thegreekdirectory.org/sitemap-news.xml</loc>
+    <lastmod>2026-02-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://thegreekdirectory.org/sitemap-events.xml</loc>
+    <lastmod>2026-02-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://thegreekdirectory.org/sitemap-kml.xml</loc>
+    <lastmod>2026-02-06</lastmod>
+  </sitemap>
+</sitemapindex>

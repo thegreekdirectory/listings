@@ -1,0 +1,591 @@
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
+
+/* ============================================
+   INDEX PAGE - COMPLETE CSS
+   Homepage styling
+   ============================================ */
+
+:root {
+    --primary-blue: #055193;
+    --secondary-gold: #D4AF37;
+    --text-dark: #1a1a1a;
+    --text-light: #666;
+    --border-color: #e5e7eb;
+    --bg-light: #f9fafb;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-dark);
+    background: white;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+/* Header */
+header {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo-link {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 48px;
+    width: auto;
+}
+
+.header-nav {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.header-nav a {
+    text-decoration: none;
+    color: var(--text-dark);
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.header-nav a:hover {
+    color: var(--primary-blue);
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, #1e40af 100%);
+    color: white;
+    padding: 4rem 1.5rem;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+/* Search Container */
+.search-container {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-category {
+    padding: 1rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: white;
+    color: #1a1a1a;
+    min-width: 180px;
+    width: 100%;
+}
+
+.search-input {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: white;
+    color: #1a1a1a;
+}
+
+.search-input::placeholder {
+    color: #666;
+}
+
+.search-input:focus {
+    outline: none;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.search-button {
+    padding: 1rem 2rem;
+    background: var(--secondary-gold);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.search-button:hover {
+    background: #c49b2a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.subcategory-filter {
+    max-width: 600px;
+    margin: 0.75rem auto 0;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(6px);
+}
+
+.subcategory-filter.hidden {
+    display: none;
+}
+
+.subcategory-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.subcategory-title {
+    font-weight: 600;
+    color: #fff;
+}
+
+.toggle-group {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    padding: 2px;
+}
+
+.toggle-option {
+    border: none;
+    background: transparent;
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-option.active {
+    background: #fff;
+    color: #1a1a1a;
+}
+
+.subcategory-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.subcategory-button {
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.85);
+    color: #1a1a1a;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.subcategory-button.active {
+    background: #045093;
+    color: #fff;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+/* Sections */
+.categories-section,
+.featured-section,
+.recent-section {
+    padding: 4rem 1.5rem;
+}
+
+.categories-section {
+    background: var(--bg-light);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+    color: var(--text-dark);
+}
+
+/* Categories Grid */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.category-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.category-icon {
+    font-size: 3rem;
+}
+
+.category-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.category-count {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+/* Listings Grid */
+.listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.listing-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+    text-decoration: none;
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+}
+
+.listing-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.listing-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.listing-content {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.listing-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-verified {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-featured {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-premium {
+    background: #ede9fe;
+    color: #6b21a8;
+}
+
+.listing-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.listing-tagline {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    font-style: italic;
+    margin-bottom: 0.75rem;
+}
+
+.listing-category {
+    display: inline-block;
+    background: var(--primary-blue);
+    color: white;
+    padding: 0.375rem 0.875rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.listing-location {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-top: auto;
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+/* Loading State */
+.loading {
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-light);
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary-blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Footer */
+footer {
+    background: var(--text-dark);
+    color: white;
+    padding: 3rem 1.5rem 1.5rem;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-logo {
+    height: 40px;
+    width: auto;
+    margin-bottom: 1rem;
+}
+
+.footer-section h4 {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+    color: var(--secondary-gold);
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-section a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-section a:hover {
+    color: white;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1.5rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-nav {
+        gap: 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.125rem;
+    }
+    
+    .search-container {
+        flex-direction: column;
+    }
+    
+    .categories-grid,
+    .listings-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-dark: #e5e7eb;
+        --text-light: #9ca3af;
+        --border-color: #374151;
+        --bg-light: #1f2937;
+    }
+    
+    body {
+        background: #111827;
+        color: #e5e7eb;
+    }
+    
+    header {
+        background: #1f2937;
+        border-bottom-color: #374151;
+    }
+    
+    .header-nav a {
+        color: #e5e7eb;
+    }
+    
+    .categories-section {
+        background: #111827;
+    }
+    
+    .category-card,
+    .listing-card {
+        background: #1f2937;
+    }
+    
+    .listing-category {
+        background: #60a5fa;
+    }
+    
+    .featured-section,
+    .recent-section {
+        background: #1f2937;
+    }
+    
+    .search-input {
+        background: #1a1a1a;
+        color: #e5e7eb;
+    }
+    
+    .search-category {
+        background: #1a1a1a;
+        color: #e5e7eb;
+    }
+
+    .search-input::placeholder {
+        color: #9ca3af;
+    }
+}
+
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code will result in legal action to the fullest extent permitted by law.
+*/
