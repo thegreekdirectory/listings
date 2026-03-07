@@ -151,3 +151,38 @@ console.log('iOS Standalone:', window.navigator.standalone);
 4. Test on actual devices, not just emulators
 
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
+
+## Analytics Event Pipeline Migration (listing_analytics ➜ analytics_events)
+
+### Files
+- `supabase/sql/analytics-events-migration.sql`
+- `supabase/sql/analytics-events-finalize.sql`
+
+### Final Schema (`analytics_events`)
+- `id bigint` identity primary key
+- `listing_id text` (listing slug/id)
+- `action text` (`view`, `call`, `website`, `directions`, `share`, `video_play`, etc.)
+- `platform text` (optional share/custom CTA context)
+- `timestamp timestamptz`
+- `user_agent text`
+- `source text` (`rpc`, `backfill`, etc.)
+- `legacy_event_id bigint unique` (links backfilled records to legacy ids)
+- `inserted_at timestamptz`
+
+### Operational Flow
+1. Run `analytics-events-migration.sql` once.
+   - Creates `analytics_events`.
+   - Backfills from legacy `listing_analytics`.
+   - Adds `track_analytics_event(...)` RPC for client tracking.
+   - Locks `listing_analytics` to read-only (write trigger).
+   - Provides 7-day and 30-day old-vs-new count query.
+2. Observe parity during validation window.
+3. Run `analytics-events-finalize.sql` after validation.
+   - Archives legacy rows to `listing_analytics_archive`.
+   - Drops `listing_analytics`.
+   - Keeps `listing_analytics_legacy_view` for compatibility reads.
+
+### Front-End Contract
+- Clients must call the RPC:
+  - `track_analytics_event(p_listing_id, p_action, p_platform, p_timestamp, p_user_agent)`
+- Direct inserts into `listing_analytics` are no longer supported.

@@ -384,16 +384,15 @@ fgjkhjl,/.</p>
         
         async function trackAnalytics(action, platform) {
             try {
-                const { data, error } = await supabaseClient
-                    .from('listing_analytics')
-                    .insert({
-                        listing_id: listingId,
-                        action: action,
-                        platform: platform || null,
-                        timestamp: new Date().toISOString(),
-                        user_agent: navigator.userAgent
+                const { error } = await supabaseClient
+                    .rpc('track_analytics_event', {
+                        p_listing_id: listingId,
+                        p_action: action,
+                        p_platform: platform || null,
+                        p_timestamp: new Date().toISOString(),
+                        p_user_agent: navigator.userAgent
                     });
-                
+
                 if (error) throw error;
             } catch (e) {
                 console.log('Analytics tracking error:', e.message);
