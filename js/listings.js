@@ -55,6 +55,62 @@ let displayedListingsCount = 25;
 let estimatedUserLocation = null;
 let selectedSplitListingId = null;
 let desktopFiltersOverlay = false;
+let pendingSearchQuery = '';
+let awaitingSearchEngagement = false;
+
+function getAnalyticsSessionId() {
+    const key = 'tgd_analytics_session_id';
+    let sessionId = sessionStorage.getItem(key);
+    if (!sessionId) {
+        sessionId = `s_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        sessionStorage.setItem(key, sessionId);
+    }
+    return sessionId;
+}
+
+function trackListingsEvent(eventName, payload = {}) {
+    try {
+        if (typeof window.gtag === 'function') {
+            window.gtag('event', eventName, payload);
+        }
+        if (Array.isArray(window.dataLayer)) {
+            window.dataLayer.push({ event: eventName, ...payload });
+        }
+    } catch (error) {
+        console.warn('Analytics tracking failed:', eventName, error);
+    }
+}
+
+function throttle(fn, waitMs) {
+    let lastRun = 0;
+    return (...args) => {
+        const now = Date.now();
+        if (now - lastRun < waitMs) return;
+        lastRun = now;
+        fn(...args);
+    };
+}
+
+function queueSearchQueryForEngagement(query) {
+    const normalized = (query || '').trim();
+    if (!normalized) {
+        pendingSearchQuery = '';
+        awaitingSearchEngagement = false;
+        return;
+    }
+    pendingSearchQuery = normalized;
+    awaitingSearchEngagement = true;
+}
+
+function flushQueuedSearchQuery(engagementType) {
+    if (!awaitingSearchEngagement || !pendingSearchQuery) return;
+    trackListingsEvent('search_engaged', {
+        query: pendingSearchQuery,
+        engagement_type: engagementType
+    });
+    awaitingSearchEngagement = false;
+    pendingSearchQuery = '';
+}
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -158,9 +214,17 @@ function toggleStar(listingId, event) {
     if (index > -1) {
         starredListings.splice(index, 1);
         console.log('Removed from starred. New list:', starredListings);
+        trackListingsEvent('listing_unstarred', {
+            listing_id: listingId,
+            session_id: getAnalyticsSessionId()
+        });
     } else {
         starredListings.push(listingId);
         console.log('Added to starred. New list:', starredListings);
+        trackListingsEvent('listing_starred', {
+            listing_id: listingId,
+            session_id: getAnalyticsSessionId()
+        });
     }
     saveStarredListings();
     console.log('saveStarredListings() called');
@@ -1533,6 +1597,7 @@ function setupEventListeners() {
             // Debounce the filtering for performance
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
+                queueSearchQueryForEngagement(searchInput.value);
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1622,6 +1687,8 @@ function setupEventListeners() {
                 if (radiusFilter2) radiusFilter2.value = selectedRadius;
                 updateRadiusValue();
                 updateURL();
+                trackListingsEvent('filter_changed', { filter_type: 'radius', value: selectedRadius });
+                flushQueuedSearchQuery('filter_change');
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1640,6 +1707,8 @@ function setupEventListeners() {
                 if (openFilter) openFilter.checked = openNowOnly;
                 if (openFilter2) openFilter2.checked = openNowOnly;
                 updateURL();
+                trackListingsEvent('filter_changed', { filter_type: 'open_now', value: openNowOnly });
+                flushQueuedSearchQuery('filter_change');
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1658,6 +1727,8 @@ function setupEventListeners() {
                 if (closedFilter) closedFilter.checked = closedNowOnly;
                 if (closedFilter2) closedFilter2.checked = closedNowOnly;
                 updateURL();
+                trackListingsEvent('filter_changed', { filter_type: 'closed_now', value: closedNowOnly });
+                flushQueuedSearchQuery('filter_change');
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1676,6 +1747,8 @@ function setupEventListeners() {
                 if (openingSoonFilter) openingSoonFilter.checked = openingSoonOnly;
                 if (openingSoonFilter2) openingSoonFilter2.checked = openingSoonOnly;
                 updateURL();
+                trackListingsEvent('filter_changed', { filter_type: 'opening_soon', value: openingSoonOnly });
+                flushQueuedSearchQuery('filter_change');
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1694,6 +1767,8 @@ function setupEventListeners() {
                 if (closingSoonFilter) closingSoonFilter.checked = closingSoonOnly;
                 if (closingSoonFilter2) closingSoonFilter2.checked = closingSoonOnly;
                 updateURL();
+                trackListingsEvent('filter_changed', { filter_type: 'closing_soon', value: closingSoonOnly });
+                flushQueuedSearchQuery('filter_change');
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1712,6 +1787,8 @@ function setupEventListeners() {
                 if (hoursUnknownFilter) hoursUnknownFilter.checked = hoursUnknownOnly;
                 if (hoursUnknownFilter2) hoursUnknownFilter2.checked = hoursUnknownOnly;
                 updateURL();
+                trackListingsEvent('filter_changed', { filter_type: 'hours_unknown', value: hoursUnknownOnly });
+                flushQueuedSearchQuery('filter_change');
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1730,6 +1807,8 @@ function setupEventListeners() {
                 if (onlineFilter) onlineFilter.checked = onlineOnly;
                 if (onlineFilter2) onlineFilter2.checked = onlineOnly;
                 updateURL();
+                trackListingsEvent('filter_changed', { filter_type: 'online_only', value: onlineOnly });
+                flushQueuedSearchQuery('filter_change');
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1746,6 +1825,8 @@ function setupEventListeners() {
     if (sortSelect) {
         sortSelect.addEventListener('change', () => {
             displayedListingsCount = 25;
+            trackListingsEvent('sort_changed', { sort: sortSelect.value || '' });
+            flushQueuedSearchQuery('sort_change');
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
         });
@@ -1775,6 +1856,8 @@ function setupEventListeners() {
                     selectedState = '';
                 }
                 updateURL();
+                trackListingsEvent('filter_changed', { filter_type: 'country', value: selectedCountry });
+                flushQueuedSearchQuery('filter_change');
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1793,6 +1876,8 @@ function setupEventListeners() {
                 if (stateFilter) stateFilter.value = selectedState;
                 if (stateFilter2) stateFilter2.value = selectedState;
                 updateURL();
+                trackListingsEvent('filter_changed', { filter_type: 'state', value: selectedState });
+                flushQueuedSearchQuery('filter_change');
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1874,6 +1959,12 @@ function setupEventListeners() {
     console.log('Star button event listener registered');
     
     window.addEventListener('resize', checkFilterPosition);
+
+    const listingsContainer = document.getElementById('listingsContainer');
+    if (listingsContainer) {
+        const onScrollEngagement = throttle(() => flushQueuedSearchQuery('scroll'), 1000);
+        listingsContainer.addEventListener('scroll', onScrollEngagement);
+    }
 }
 
 /*
@@ -1986,6 +2077,7 @@ function toggleFilters() {
     if (!panel) return;
     
     filtersOpen = !filtersOpen;
+    trackListingsEvent('filter_panel_toggled', { open: filtersOpen });
     if (filtersOpen) {
         panel.classList.remove('hidden');
         if (mapOpen) toggleMap();
@@ -1999,6 +2091,7 @@ function toggleMap() {
     if (!container) return;
     
     mapOpen = !mapOpen;
+    trackListingsEvent('map_toggled', { open: mapOpen });
     if (mapOpen) {
         container.classList.remove('hidden');
         if (filtersOpen) toggleFilters();
@@ -2031,6 +2124,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 function setView(view, options = {}) {
     const { skipRender = false } = options;
     currentView = view;
+    trackListingsEvent('view_toggled', { view });
     const gridViewBtn = document.getElementById('gridViewBtn');
     const listViewBtn = document.getElementById('listViewBtn');
     const gridViewBtn2 = document.getElementById('gridViewBtn2');
@@ -2122,6 +2216,11 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function filterByCategory(category) {
     selectedCategory = category || 'All';
+    trackListingsEvent('filter_changed', {
+        filter_type: 'category',
+        value: selectedCategory
+    });
+    flushQueuedSearchQuery('filter_change');
     selectedSubcategories = [];
     
     createCategoryButtons();
@@ -2194,6 +2293,13 @@ function toggleSubcategory(subcategory) {
     } else {
         selectedSubcategories.push(subcategory);
     }
+
+    trackListingsEvent('filter_changed', {
+        filter_type: 'subcategory',
+        value: subcategory,
+        mode: subcategoryMode
+    });
+    flushQueuedSearchQuery('filter_change');
     
     updateSubcategoryDisplay();
     updateURL();
@@ -2259,6 +2365,8 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function clearAllFilters() {
     selectedCategory = 'All';
+    trackListingsEvent('filter_changed', { filter_type: 'clear_all' });
+    flushQueuedSearchQuery('filter_change');
     selectedSubcategories = [];
     selectedCountry = '';
     selectedState = '';
@@ -2680,6 +2788,8 @@ function initMap() {
     
     map.on('click', function() {
         map.scrollWheelZoom.enable();
+        trackListingsEvent('map_clicked', { map_context: 'main' });
+        flushQueuedSearchQuery('map_interaction');
     });
     map.on('mouseout', function() {
         map.scrollWheelZoom.disable();
@@ -2742,7 +2852,17 @@ function initMap() {
         }
     });
 
+    const throttledMainMapPan = throttle(() => {
+        trackListingsEvent('map_panned', { map_context: 'main' });
+        flushQueuedSearchQuery('map_interaction');
+    }, 1000);
+    const throttledMainMapZoom = throttle(() => {
+        trackListingsEvent('map_zoomed', { map_context: 'main', zoom: map ? map.getZoom() : null });
+        flushQueuedSearchQuery('map_interaction');
+    }, 1000);
+    map.on('moveend', throttledMainMapPan);
     map.on('zoomend', () => {
+        throttledMainMapZoom();
         if (mapOpen) updateMapMarkers();
     });
     
@@ -2943,6 +3063,36 @@ function buildMapPopupContent(listing) {
     `;
 }
 
+function bindPopupAnalyticsHandlers(listing, mapContext) {
+    const popupRoot = document.querySelector('.leaflet-popup-content');
+    if (!popupRoot) return;
+
+    const listingId = String(listing.id);
+    const listingLink = popupRoot.querySelector('.map-popup-title');
+    if (listingLink && !listingLink.dataset.analyticsBound) {
+        listingLink.dataset.analyticsBound = '1';
+        listingLink.addEventListener('click', () => {
+            trackListingsEvent('pin_to_listing_click', { listing_id: listingId, map_context: mapContext });
+        }, { once: true });
+    }
+
+    const callLink = popupRoot.querySelector('a[href^="tel:"]');
+    if (callLink && !callLink.dataset.analyticsBound) {
+        callLink.dataset.analyticsBound = '1';
+        callLink.addEventListener('click', () => {
+            trackListingsEvent('pin_call_click', { listing_id: listingId, map_context: mapContext });
+        }, { once: true });
+    }
+
+    const directionsLink = popupRoot.querySelector('a[href*="google.com/maps/dir"], a[href*="maps.apple.com"], a[href*="waze.com/ul"]');
+    if (directionsLink && !directionsLink.dataset.analyticsBound) {
+        directionsLink.dataset.analyticsBound = '1';
+        directionsLink.addEventListener('click', () => {
+            trackListingsEvent('pin_directions_click', { listing_id: listingId, map_context: mapContext });
+        }, { once: true });
+    }
+}
+
 function updateMapMarkers() {
     if (!map || !markerClusterGroup || !mapReady) return;
     markerClusterGroup.clearLayers();
@@ -2988,8 +3138,11 @@ function updateMapMarkers() {
             
             marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
             marker.on('popupopen', () => {
+                trackListingsEvent('pin_opened', { listing_id: String(listing.id), map_context: 'main' });
+                flushQueuedSearchQuery('map_interaction');
                 const closeBtn = document.querySelector('.leaflet-popup-close-button');
                 if (closeBtn) closeBtn.textContent = '×';
+                setTimeout(() => bindPopupAnalyticsHandlers(listing, 'main'), 0);
             });
             markerClusterGroup.addLayer(marker);
             bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
@@ -3235,8 +3388,11 @@ function updateSplitMapMarkers() {
         const popupContent = buildMapPopupContent(listing);
         marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
         marker.on('popupopen', () => {
+            trackListingsEvent('pin_opened', { listing_id: String(listing.id), map_context: 'split' });
+            flushQueuedSearchQuery('map_interaction');
             const closeBtn = document.querySelector('.leaflet-popup-close-button');
             if (closeBtn) closeBtn.textContent = '×';
+            setTimeout(() => bindPopupAnalyticsHandlers(listing, 'split'), 0);
         });
         splitMarkerClusterGroup.addLayer(marker);
         bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
@@ -3275,6 +3431,8 @@ function initSplitMap() {
     
     splitMap.on('click', function() {
         splitMap.scrollWheelZoom.enable();
+        trackListingsEvent('map_clicked', { map_context: 'split' });
+        flushQueuedSearchQuery('map_interaction');
     });
     splitMap.on('mouseout', function() {
         splitMap.scrollWheelZoom.disable();
@@ -3323,7 +3481,17 @@ function initSplitMap() {
 
     updateSplitMapMarkers();
 
+    const throttledSplitMapPan = throttle(() => {
+        trackListingsEvent('map_panned', { map_context: 'split' });
+        flushQueuedSearchQuery('map_interaction');
+    }, 1000);
+    const throttledSplitMapZoom = throttle(() => {
+        trackListingsEvent('map_zoomed', { map_context: 'split', zoom: splitMap ? splitMap.getZoom() : null });
+        flushQueuedSearchQuery('map_interaction');
+    }, 1000);
+    splitMap.on('moveend', throttledSplitMapPan);
     splitMap.on('zoomend', () => {
+        throttledSplitMapZoom();
         updateSplitMapMarkers();
     });
     
