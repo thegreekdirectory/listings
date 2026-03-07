@@ -230,6 +230,29 @@
         let selectedState = '';
         let SUBCATEGORIES = {};
         let filtersOpen = false;
+
+        function trackMapEvent(eventName, payload = {}) {
+            try {
+                if (typeof window.gtag === 'function') {
+                    window.gtag('event', eventName, payload);
+                }
+                if (Array.isArray(window.dataLayer)) {
+                    window.dataLayer.push({ event: eventName, ...payload });
+                }
+            } catch (error) {
+                console.warn('Map analytics failed:', eventName, error);
+            }
+        }
+
+        function throttle(fn, waitMs) {
+            let lastRun = 0;
+            return (...args) => {
+                const now = Date.now();
+                if (now - lastRun < waitMs) return;
+                lastRun = now;
+                fn(...args);
+            };
+        }
         
         function formatPhoneDisplay(phone) {
             if (!phone) return '';
@@ -380,6 +403,8 @@
             if (!listing.phone) return '';
             return `
                 <a href="tel:${listing.phone}" 
+                   data-track="pin-call"
+                   data-listing-id="${listing.id}"
                    onclick="event.stopPropagation();"
                    style="position:absolute;bottom:8px;right:116px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#10b981;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;z-index:10;" 
                    onmouseover="this.style.background='#059669'" 
@@ -429,6 +454,8 @@
                             
                             <a href="/listing/${listing.slug}" 
                                class="map-popup-title" 
+                               data-track="pin-listing"
+                               data-listing-id="${listing.id}"
                                style="font-size:16px;font-weight:700;color:#1f2937;text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;line-height:1.3;">
                                 ${listing.business_name}${checkmarkHtml}
                             </a>
@@ -460,10 +487,12 @@
                             
                             ${callButton}
                             
-                            <a href="${directionsUrl}" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               onclick="event.stopPropagation();"
+                    <a href="${directionsUrl}" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       data-track="pin-directions"
+                       data-listing-id="${listing.id}"
+                       onclick="event.stopPropagation();"
                                style="position:absolute;bottom:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#045093;color:white;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:background 0.2s;" 
                                onmouseover="this.style.background='#033d7a'" 
                                onmouseout="this.style.background='#045093'">
@@ -476,6 +505,35 @@
                     </div>
                 </div>
             `;
+        }
+
+        function bindMapPopupAnalyticsHandlers(listingId) {
+            const popupRoot = document.querySelector('.leaflet-popup-content');
+            if (!popupRoot) return;
+
+            const listingLink = popupRoot.querySelector('[data-track="pin-listing"]');
+            if (listingLink && !listingLink.dataset.analyticsBound) {
+                listingLink.dataset.analyticsBound = '1';
+                listingLink.addEventListener('click', () => {
+                    trackMapEvent('pin_to_listing_click', { listing_id: String(listingId), map_context: 'map_page' });
+                }, { once: true });
+            }
+
+            const callLink = popupRoot.querySelector('[data-track="pin-call"]');
+            if (callLink && !callLink.dataset.analyticsBound) {
+                callLink.dataset.analyticsBound = '1';
+                callLink.addEventListener('click', () => {
+                    trackMapEvent('pin_call_click', { listing_id: String(listingId), map_context: 'map_page' });
+                }, { once: true });
+            }
+
+            const directionsLink = popupRoot.querySelector('[data-track="pin-directions"]');
+            if (directionsLink && !directionsLink.dataset.analyticsBound) {
+                directionsLink.dataset.analyticsBound = '1';
+                directionsLink.addEventListener('click', () => {
+                    trackMapEvent('pin_directions_click', { listing_id: String(listingId), map_context: 'map_page' });
+                }, { once: true });
+            }
         }
         
         function extractSubcategoriesFromListings(listings) {
@@ -545,6 +603,7 @@
             
             map.on('click', function() {
                 map.scrollWheelZoom.enable();
+                trackMapEvent('map_clicked', { map_context: 'map_page' });
             });
             
             map.on('mouseout', function() {
@@ -576,6 +635,15 @@
             });
             
             map.addLayer(markerClusterGroup);
+
+            const throttledMapPan = throttle(() => {
+                trackMapEvent('map_panned', { map_context: 'map_page' });
+            }, 1000);
+            const throttledMapZoom = throttle(() => {
+                trackMapEvent('map_zoomed', { map_context: 'map_page', zoom: map ? map.getZoom() : null });
+            }, 1000);
+            map.on('moveend', throttledMapPan);
+            map.on('zoomend', throttledMapZoom);
             
             if (userLocation) addUserLocationMarker();
             
@@ -642,6 +710,10 @@
 
                     const popupContent = buildMapPopupContent(listing);
                     marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' });
+                    marker.on('popupopen', () => {
+                        trackMapEvent('pin_opened', { listing_id: String(listing.id), map_context: 'map_page' });
+                        setTimeout(() => bindMapPopupAnalyticsHandlers(listing.id), 0);
+                    });
                     markerClusterGroup.addLayer(marker);
                     bounds.push([listing.coordinates.lat, listing.coordinates.lng]);
                 }
@@ -737,6 +809,7 @@
         function filterByCategory(category) {
             selectedCategory = category || 'All';
             selectedSubcategories = [];
+            trackMapEvent('filter_changed', { filter_type: 'category', value: selectedCategory });
             createCategoryButtons();
             updateSubcategoryDisplay();
             applyFilters();
@@ -774,12 +847,18 @@
             } else {
                 selectedSubcategories.push(subcategory);
             }
+            trackMapEvent('filter_changed', {
+                filter_type: 'subcategory',
+                value: subcategory,
+                mode: subcategoryMode
+            });
             updateSubcategoryDisplay();
             applyFilters();
         }
         
         window.setSubcategoryMode = function(mode) {
             subcategoryMode = mode;
+            trackMapEvent('filter_changed', { filter_type: 'subcategory_mode', value: mode });
             document.querySelectorAll('.toggle-option').forEach(opt => {
                 if (opt.dataset.mode === mode) opt.classList.add('active');
                 else opt.classList.remove('active');
@@ -824,6 +903,7 @@
         function setupEventListeners() {
             document.getElementById('filterBtn')?.addEventListener('click', () => {
                 filtersOpen = !filtersOpen;
+                trackMapEvent('filter_panel_toggled', { open: filtersOpen });
                 const panel = document.getElementById('filterPanel');
                 if (filtersOpen) {
                     panel.classList.remove('hidden');
@@ -850,6 +930,7 @@
                 
                 createCategoryButtons();
                 updateSubcategoryDisplay();
+                trackMapEvent('filter_changed', { filter_type: 'clear_all' });
                 applyFilters();
             });
             
@@ -890,11 +971,13 @@
                     selectedState = '';
                 }
                 
+                trackMapEvent('filter_changed', { filter_type: 'country', value: selectedCountry });
                 applyFilters();
             });
             
             document.getElementById('stateFilter')?.addEventListener('change', (e) => {
                 selectedState = e.target.value;
+                trackMapEvent('filter_changed', { filter_type: 'state', value: selectedState });
                 applyFilters();
             });
             
