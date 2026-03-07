@@ -1,7 +1,8 @@
 // service-worker.js
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
-const CACHE_NAME = 'tgd-cache-v1';
+const STATIC_CACHE_NAME = 'tgd-static-v2';
+const RUNTIME_CACHE_NAME = 'tgd-runtime-v2';
 const OFFLINE_PAGE = '/offline.html';
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -38,7 +39,7 @@ const CORE_ASSETS = [
 self.addEventListener('install', (event) => {
   console.log('[SW] Install event');
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(STATIC_CACHE_NAME).then((cache) => {
       console.log('[SW] Caching core assets');
       return cache.addAll(CORE_ASSETS);
     })
@@ -54,7 +55,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
+          .filter((name) => ![STATIC_CACHE_NAME, RUNTIME_CACHE_NAME].includes(name))
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -69,42 +70,55 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  const requestUrl = new URL(event.request.url);
+
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(networkFirst(event.request, RUNTIME_CACHE_NAME, true));
+    return;
+  }
+
+  if (requestUrl.origin === self.location.origin) {
+    event.respondWith(networkFirst(event.request, RUNTIME_CACHE_NAME));
+    return;
+  }
   
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      
-      return fetch(event.request)
-        .then((response) => {
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
-          }
-          
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-          
-          return response;
-        })
-        .catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match(OFFLINE_PAGE);
-          }
-          return new Response('Offline', { status: 503 });
-        });
-    })
+    caches.match(event.request).then((cachedResponse) => cachedResponse || fetch(event.request))
   );
 });
+
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
+async function networkFirst(request, cacheName, isNavigation = false) {
+  try {
+    const response = await fetch(request, { cache: 'no-store' });
+
+    if (response && response.status === 200 && response.type !== 'error') {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (error) {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    if (isNavigation) {
+      return caches.match(OFFLINE_PAGE);
+    }
+
+    return new Response('Offline', { status: 503 });
+  }
+}
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CACHE_IMAGE') {
     const imageUrl = event.data.url;
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(RUNTIME_CACHE_NAME).then((cache) => {
       fetch(imageUrl).then((response) => {
         cache.put(imageUrl, response);
       });

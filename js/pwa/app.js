@@ -22,8 +22,9 @@ class PWAApp {
         this.checkStandalone();
         this.applyPWAMode();
         
+        this.registerServiceWorker();
+
         if (this.isStandalone) {
-            this.registerServiceWorker();
             this.checkRestrictedPages();
             this.showSplashScreen();
         }
@@ -74,24 +75,41 @@ class PWAApp {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     async registerServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            try {
-                const registration = await navigator.serviceWorker.register('/service-worker.js');
-                console.log('Service Worker registered:', registration);
-                
-                // Check for updates
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            this.notifyUpdate();
-                        }
-                    });
+        if (!('serviceWorker' in navigator)) return;
+
+        try {
+            const registration = await navigator.serviceWorker.register('/service-worker.js');
+            console.log('Service Worker registered:', registration);
+
+            // Check immediately and then periodically while online
+            registration.update();
+            this.setupServiceWorkerUpdateChecks(registration);
+
+            // Check for updates
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        this.notifyUpdate();
+                    }
                 });
-            } catch (error) {
-                console.error('Service Worker registration failed:', error);
-            }
+            });
+        } catch (error) {
+            console.error('Service Worker registration failed:', error);
         }
+    }
+
+    setupServiceWorkerUpdateChecks(registration) {
+        const checkForServiceWorkerUpdate = () => {
+            if (navigator.onLine) {
+                registration.update();
+            }
+        };
+
+        window.addEventListener('online', checkForServiceWorkerUpdate);
+
+        // Also check every 5 minutes while app is open
+        setInterval(checkForServiceWorkerUpdate, 5 * 60 * 1000);
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
