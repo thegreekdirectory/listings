@@ -85,6 +85,7 @@ let currentAdminUser = null;
 let adminGithubToken = null;
 let allListings = [];
 let editingListing = null;
+let adminDescriptionEditor = null;
 let selectedSubcategories = [];
 let primarySubcategory = null;
 let userCountry = 'USA';
@@ -272,14 +273,19 @@ function clearAuthMessage() {
 
 function formatPhoneNumber(phone, country = 'USA') {
     if (!phone) return '';
-    
-    const digits = phone.replace(/\D/g, '');
-    
+    const digits = String(phone).replace(/\D/g, '');
     if (digits.length === 11 && digits.startsWith('1')) {
-        return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
+        return `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7,11)}`;
     }
-    
+    if (digits.length === 10) {
+        return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6,10)}`;
+    }
     return phone;
+}
+
+function sanitizeListingDescription(value) {
+    if (window.RichTextEditor) return window.RichTextEditor.sanitizeRichTextHtml(value || '');
+    return escapeHtml(value || '');
 }
 
 function createPhoneInput(value = '', country = 'USA') {
@@ -1176,8 +1182,8 @@ function fillEditForm(listing) {
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-2">Description *</label>
-                        <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">${listing?.description || ''}</textarea>
-                        <p class="text-xs text-gray-500 mt-1"><span id="descCount">${(listing?.description || '').length}</span> characters</p>
+                        <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg">${listing?.description || ''}</textarea>
+                        <p class="text-xs text-gray-500 mt-1"><span id="descCount">${(window.RichTextEditor ? window.RichTextEditor.stripHtml(listing?.description || '') : (listing?.description || '').length)}</span> characters</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Category *</label>
@@ -1574,6 +1580,10 @@ function fillEditFormContinuation(listing, owner) {
     }
     
     updateSubcategoriesForCategory();
+    if (window.RichTextEditor) {
+        adminDescriptionEditor = window.RichTextEditor.mount({ inputId: 'editDescription', onChange: () => updateCharCounters() });
+    }
+    updateCharCounters();
     attachMediaUploadHandlers();
     attachCloudflareConfigHandlers();
 }
@@ -1767,7 +1777,8 @@ window.checkSlugAvailability = async function() {
 
 function updateCharCounters() {
     const tagline = document.getElementById('editTagline')?.value || '';
-    const desc = document.getElementById('editDescription')?.value || '';
+    const descRaw = document.getElementById('editDescription')?.value || '';
+    const desc = window.RichTextEditor ? window.RichTextEditor.stripHtml(descRaw) : descRaw;
     
     const taglineCount = document.getElementById('taglineCount');
     const descCount = document.getElementById('descCount');
@@ -2067,7 +2078,7 @@ if (!slug) {
             business_name: businessName,
             slug: slug,
             tagline: tagline,
-            description: document.getElementById('editDescription').value.trim(),
+            description: sanitizeListingDescription(adminDescriptionEditor ? adminDescriptionEditor.getHtml() : document.getElementById('editDescription').value.trim()),
             category: document.getElementById('editCategory').value,
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
@@ -2690,7 +2701,7 @@ function generateTemplateReplacements(listing) {
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                 </svg>
-                <span>${listing.phone}</span>
+                <span>${formatPhoneNumber(listing.phone)}</span>
             </div>
         `;
     }
@@ -2850,7 +2861,7 @@ function generateTemplateReplacements(listing) {
         'CITY_STATE': cityState,
         'IN_CITY': inCity,
         'TAGLINE': escapeHtml(listing.tagline || ''),
-        'DESCRIPTION': escapeHtml(listing.description || ''),
+        'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
         'DESCRIPTION_JS': JSON.stringify(listing.description || '').slice(1, -1),
         'CATEGORY': escapeHtml(listing.category),
         'LISTING_URL': listingUrl,
@@ -2907,7 +2918,7 @@ function generateTemplateReplacementsPart2(listing) {
         if (owner.name_title_visible !== false && owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
         if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
-        if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${owner.owner_phone}</a></p>`;
+        if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
         return ownerDetails ? `<div class="mb-4">${ownerDetails}</div>` : '';
     }).filter(Boolean).join('');
     if (ownerCards) {
@@ -2927,7 +2938,7 @@ function generateTemplateReplacementsPart2(listing) {
     // Only show map if has street address with number
     let mapSection = '';
     const hasStreetAddress = listing.address && /\d/.test(listing.address);
-    if (hasStreetAddress && listing.coordinates && listing.coordinates.lat && listing.coordinates.lng) {
+    if (hasStreetAddress || (listing.city && listing.state)) {
         mapSection = `
             <div>
                 <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>

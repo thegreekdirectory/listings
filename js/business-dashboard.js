@@ -35,6 +35,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 let uploadedImages = { logo: null, photos: [], video: null };
 let photosSortable = null;
 let selectedSubcategories = [];
+let businessDescriptionEditor = null;
 let primarySubcategory = null;
 let settingsVisibility = { nameTitle: true, email: false, phone: false };
 let currentMaxPhotos = 1;
@@ -466,8 +467,8 @@ function renderEditForm() {
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Description (max ${maxDesc} chars)</label>
-                            <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('description')">${currentListing.description || ''}</textarea>
-                            <p class="char-counter mt-1"><span id="descriptionCount">${(currentListing.description || '').length}</span>/<span id="descriptionMax">${maxDesc}</span></p>
+                            <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg">${currentListing.description || ''}</textarea>
+                            <p class="char-counter mt-1"><span id="descriptionCount">${(window.RichTextEditor ? window.RichTextEditor.stripHtml(currentListing.description || '') : (currentListing.description || '').length)}</span>/<span id="descriptionMax">${maxDesc}</span></p>
                         </div>
                         <div class="disabled-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
@@ -767,6 +768,10 @@ function renderEditForm() {
     renderSubcategories();
     updateMediaPreview();
     attachMediaUploadHandlers();
+    if (window.RichTextEditor) {
+        businessDescriptionEditor = window.RichTextEditor.mount({ inputId: 'editDescription', onChange: () => updateCharCounter('description') });
+    }
+
     attachCloudflareConfigHandlers();
 }
 
@@ -840,15 +845,13 @@ window.updateCharCounter = function(field) {
         const input = document.getElementById('editDescription');
         const counter = document.getElementById('descriptionCount');
         const max = parseInt(document.getElementById('descriptionMax').textContent);
-        const current = input.value.length;
+        const current = window.RichTextEditor ? window.RichTextEditor.stripHtml(input.value).length : input.value.length;
         
         counter.textContent = current;
         counter.parentElement.className = 'char-counter mt-1';
         
         if (current > max) {
             counter.parentElement.className = 'char-counter error mt-1';
-            input.value = input.value.substring(0, max);
-            counter.textContent = max;
         } else if (current > max * 0.9) {
             counter.parentElement.className = 'char-counter warning mt-1';
         }
@@ -907,9 +910,9 @@ async function saveChanges() {
     
     const tier = currentListing.tier || 'FREE';
     const maxDesc = tier === 'FREE' ? 1000 : 2000;
-    const description = document.getElementById('editDescription').value;
+    const description = window.RichTextEditor ? window.RichTextEditor.sanitizeRichTextHtml(businessDescriptionEditor ? businessDescriptionEditor.getHtml() : document.getElementById('editDescription').value) : document.getElementById('editDescription').value;
     
-    if (description.length > maxDesc) {
+    if ((window.RichTextEditor ? window.RichTextEditor.stripHtml(description).length : description.length) > maxDesc) {
         alert(`Description too long! Maximum ${maxDesc} characters for ${tier} tier.`);
         return;
     }

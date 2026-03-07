@@ -28,6 +28,7 @@ const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sun
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let map, marker;
 let selectedPrimarySubcategory = null;
+let descriptionEditor = null;
 
 const onlyDigits = (v='') => v.replace(/\D/g, '');
 const stripProtocol = (v='') => v.trim().replace(/^https?:\/\//i, '').replace(/^\/+/, '');
@@ -303,7 +304,7 @@ function getFormData(){
   return {
     business_name: document.getElementById('business_name').value.trim(),
     tagline: document.getElementById('tagline').value.trim(),
-    description: document.getElementById('description').value.trim(),
+    description: descriptionEditor ? descriptionEditor.getHtml() : document.getElementById('description').value.trim(),
     category: document.getElementById('category').value,
     subcategories,
     primary_subcategory: (selectedPrimarySubcategory && subcategories.includes(selectedPrimarySubcategory)) ? selectedPrimarySubcategory : (subcategories[0] || null),
@@ -348,7 +349,7 @@ function getFormData(){
 
 function validatePayload(p){
   const errors = [];
-  if (!p.business_name || !p.tagline || !p.description) errors.push('Complete all required business fields.');
+  if (!p.business_name || !p.tagline || !p.description || (window.RichTextEditor && !window.RichTextEditor.stripHtml(p.description))) errors.push('Complete all required business fields.');
   if (!p.subcategories.length) errors.push('Select at least one subcategory.');
   if (p.subcategories.length && !p.primary_subcategory) errors.push('Select a primary subcategory.');
   if (!p.owner_name || !p.owner_title || !p.owner_email) errors.push('Owner name, title, and email are required.');
@@ -404,13 +405,16 @@ async function uploadToCloudflare(file){
   const fd = new FormData(); fd.append('file', file);
   const res = await fetch('https://tgd-images-upload.thegreekdirectory.org', { method:'POST', body: fd });
   if (!res.ok) throw new Error('Upload failed');
-  return await res.json();
+  const data = await res.json();
+  if (typeof data === 'string') return data;
+  return data.url || data.result?.variants?.[0] || data.result?.delivery_url || data.result?.url || '';
 }
+
 function attachUploaders(){
   document.getElementById('logo_upload').addEventListener('change', async (e) => {
     const f = e.target.files?.[0]; if (!f) return;
     const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading logo...';
-    try { const url = await uploadToCloudflare(f); document.getElementById('logo').value = stripProtocol(String(url)); s.textContent = 'Logo uploaded.'; saveDraft(); }
+    try { const url = await uploadToCloudflare(f); if (!url) throw new Error('No URL returned from upload'); document.getElementById('logo').value = stripProtocol(String(url)); s.textContent = 'Logo uploaded.'; saveDraft(); }
     catch(err){ s.textContent = `Logo upload failed: ${err.message}`; }
   });
   document.getElementById('photos_upload').addEventListener('change', async (e) => {
@@ -418,7 +422,7 @@ function attachUploaders(){
     const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading photos...';
     try {
       const urls = [];
-      for (const f of files) urls.push(await uploadToCloudflare(f));
+      for (const f of files) { const u = await uploadToCloudflare(f); if (u) urls.push(u); }
       const existing = [...document.querySelectorAll('.photo-url-input')].map(i => i.value).filter(Boolean);
       setupPhotoUrlRows([...existing, ...urls.map(u => stripProtocol(String(u)))]);
       s.textContent = 'Photos uploaded.';
@@ -452,6 +456,7 @@ async function submitListingRequest(event){
     setupAdditionalInfoRows();
     setupExtraOwners();
     setupPhotoUrlRows();
+    if (descriptionEditor) descriptionEditor.setHtml('');
   }
   submitBtn.disabled = false;
 }
@@ -513,7 +518,14 @@ async function init(){
     el.addEventListener('change', saveDraft);
   });
 
+  if (window.RichTextEditor) {
+    descriptionEditor = window.RichTextEditor.mount({ inputId: 'description', onChange: saveDraft });
+  }
+
   restoreDraft();
+  if (descriptionEditor) {
+    descriptionEditor.setHtml(document.getElementById('description').value || '');
+  }
   enforceVisibility();
   document.getElementById('submitForm').addEventListener('submit', submitListingRequest);
 }
