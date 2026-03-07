@@ -832,26 +832,59 @@ window.viewAnalytics = async function(listingId) {
     
     try {
         console.log('Fetching analytics data...');
-
-        let analytics;
-        const newSourceResult = await fetchAnalyticsFromNewSources(listingId);
-        if (newSourceResult) {
-            analytics = newSourceResult.analytics;
-            console.log('Analytics loaded from new source:', newSourceResult.source);
-        } else {
-            console.log('New analytics source unavailable, falling back to listing_analytics table');
-            const { data: analyticsData, error } = await adminSupabase
-                .from('listing_analytics')
-                .select('*')
-                .eq('listing_id', listingId)
-                .order('timestamp', { ascending: false });
-
-            if (error) {
-                console.error('Analytics fallback fetch error:', error);
-                throw error;
-            }
-
-            analytics = aggregateLegacyEvents(analyticsData || []);
+        
+        // Fetch analytics data from Supabase
+        const { data: analyticsData, error } = await adminSupabase
+            .from('analytics_events')
+            .select('*')
+            .eq('listing_id', listingId)
+            .order('timestamp', { ascending: false });
+        
+        if (error) {
+            console.error('Analytics fetch error:', error);
+            throw error;
+        }
+        
+        console.log('Analytics data fetched:', analyticsData?.length || 0, 'events');
+        
+        // Aggregate analytics
+        const analytics = {
+            views: 0,
+            call_clicks: 0,
+            website_clicks: 0,
+            direction_clicks: 0,
+            share_clicks: 0,
+            video_plays: 0,
+            detailedViews: analyticsData || [],
+            sharePlatforms: {}
+        };
+        
+        if (analyticsData && analyticsData.length > 0) {
+            analyticsData.forEach(event => {
+                switch(event.action) {
+                    case 'view':
+                        analytics.views++;
+                        break;
+                    case 'call':
+                        analytics.call_clicks++;
+                        break;
+                    case 'website':
+                        analytics.website_clicks++;
+                        break;
+                    case 'directions':
+                        analytics.direction_clicks++;
+                        break;
+                    case 'share':
+                        analytics.share_clicks++;
+                        if (event.platform) {
+                            analytics.sharePlatforms[event.platform] = (analytics.sharePlatforms[event.platform] || 0) + 1;
+                        }
+                        break;
+                    case 'video':
+                        analytics.video_plays++;
+                        break;
+                }
+            });
         }
         
         console.log('Aggregated analytics:', analytics);

@@ -545,8 +545,13 @@ or distribution of this code can result in legal action to the fullest extent pe
 
             try {
                 const { error } = await supabaseClient
-                    .from('listing_analytics')
-                    .insert(eventPayload);
+                    .rpc('track_analytics_event', {
+                        p_listing_id: listingId,
+                        p_action: action,
+                        p_platform: platform || null,
+                        p_timestamp: new Date().toISOString(),
+                        p_user_agent: navigator.userAgent
+                    });
 
                 if (error) throw error;
             } catch (e) {

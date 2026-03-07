@@ -480,7 +480,7 @@ window.viewAnalytics = async function(listingId) {
         
         // Fetch analytics data from Supabase
         const { data: analyticsData, error } = await adminSupabase
-            .from('listing_analytics')
+            .from('analytics_events')
             .select('*')
             .eq('listing_id', listingId)
             .order('timestamp', { ascending: false });
