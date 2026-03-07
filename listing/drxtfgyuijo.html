@@ -496,6 +496,8 @@ or distribution of this code can result in legal action to the fullest extent pe
     <script src="/js/pwa/app.js"></script>
     <script src="/js/pwa/dock.js"></script>
     <script src="/js/pwa/starred.js"></script>
+    <script src="/js/analytics/attribution.js"></script>
+    <script src="/js/analytics/tracker.js"></script>
 
     <script>
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -549,6 +551,47 @@ or distribution of this code can result in legal action to the fullest extent pe
         const hoursData = {"friday":"9:00 AM - 4:00 PM","monday":"Open 24 Hours","sunday":"Closed","tuesday":"9:00 AM - 10:00 PM","saturday":"9:00 PM - 10:00 PM","thursday":"9:00 AM - 2:00 PM","wednesday":"Open 24 Hours"};
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/caf3ba46-6143-4860-6077-cd40645c4d01/public?sig=6392eac5dc395a48e6c4c2cd82958d26ce4d657c926273200ba1136557b29664"];
         let currentGalleryIndex = 0;
+        const TRACKING_SESSION_KEY = 'tgd_tracking_session_id';
+
+        function getTrackingSessionId() {
+            let sessionId = localStorage.getItem(TRACKING_SESSION_KEY);
+            if (!sessionId) {
+                sessionId = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+                localStorage.setItem(TRACKING_SESSION_KEY, sessionId);
+            }
+            return sessionId;
+        }
+
+        function getAttributionSnapshot() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                referrer: document.referrer || null,
+                utm_source: params.get('utm_source'),
+                utm_medium: params.get('utm_medium'),
+                utm_campaign: params.get('utm_campaign'),
+                utm_term: params.get('utm_term'),
+                utm_content: params.get('utm_content')
+            };
+        }
+
+        async function trackEvent(eventName, properties = {}) {
+            try {
+                await supabaseClient
+                    .from('tracking_events')
+                    .insert({
+                        event_name: eventName,
+                        session_id: getTrackingSessionId(),
+                        page_context: 'listing_detail',
+                        listing_id: listingId || null,
+                        attribution_snapshot: getAttributionSnapshot(),
+                        properties,
+                        timestamp: new Date().toISOString(),
+                        user_agent: navigator.userAgent
+                    });
+            } catch (e) {
+                console.log('Event tracking error:', e.message);
+            }
+        }
         
         function toggleSubcategories() {
             const display = document.getElementById('subcategoriesDisplay');
@@ -577,7 +620,36 @@ or distribution of this code can result in legal action to the fullest extent pe
             });
         });
         
+        const dualWriteEnabled = window.__ANALYTICS_DUAL_WRITE__ === true || localStorage.getItem('tgd_analytics_dual_write') === '1';
+        const ingestEndpoint = window.__ANALYTICS_INGEST_ENDPOINT__ || '/api/analytics/ingest';
+
+        const attribution = window.AnalyticsAttribution?.captureAndStore?.() || null;
+        const ingestionTracker = window.AnalyticsTracker ? new window.AnalyticsTracker({
+            endpoint: ingestEndpoint,
+            sendBeaconPath: ingestEndpoint,
+            dualWriteFlag: dualWriteEnabled
+        }) : null;
+
+        ingestionTracker?.start();
+
+        function track(action, platform) {
+            try {
+                trackAnalytics(action, platform);
+            } catch (e) {
+                // no-op fallback prevents analytics issues from breaking UI interactions
+            }
+        }
+
         async function trackAnalytics(action, platform) {
+            const eventPayload = {
+                listing_id: listingId,
+                action: action,
+                platform: platform || null,
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent,
+                attribution: attribution
+            };
+
             try {
                 const { error } = await supabaseClient
                     .rpc('track_analytics_event', {
@@ -592,14 +664,18 @@ or distribution of this code can result in legal action to the fullest extent pe
             } catch (e) {
                 console.log('Analytics tracking error:', e.message);
             }
+
+            if (dualWriteEnabled && ingestionTracker) {
+                ingestionTracker.track(eventPayload);
+            }
         }
         
         window.addEventListener('load', () => {
-            trackAnalytics('view');
+            track('view');
         });
         
         function trackClick(action, platform) {
-            trackAnalytics(action, platform);
+            track(action, platform);
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
