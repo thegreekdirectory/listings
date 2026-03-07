@@ -1,0 +1,83 @@
+name: Business Portal API
+
+on:
+  repository_dispatch:
+    types: [business_update, business_login]
+
+jobs:
+  handle-request:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Handle Business Portal Request
+        uses: actions/github-script@v7
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const action = context.payload.action;
+            
+            if (action === 'business_login') {
+              // Verify login credentials
+              const { slug, email, password } = context.payload.client_payload;
+              
+              const databasePath = 'listings-database.json';
+              const fileContent = fs.readFileSync(databasePath, 'utf8');
+              const database = JSON.parse(fileContent);
+              
+              const listing = database.listings.find(l => 
+                l.slug === slug && 
+                l.ownerInfo?.ownerEmail === email && 
+                l.businessPortalPassword === password
+              );
+              
+              if (listing) {
+                // Return success with listing data
+                core.setOutput('success', 'true');
+                core.setOutput('listing', JSON.stringify(listing));
+              } else {
+                core.setOutput('success', 'false');
+              }
+            }
+            
+            if (action === 'business_update') {
+              // Update listing data
+              const { slug, updatedData } = context.payload.client_payload;
+              
+              const databasePath = 'listings-database.json';
+              const fileContent = fs.readFileSync(databasePath, 'utf8');
+              const database = JSON.parse(fileContent);
+              
+              const index = database.listings.findIndex(l => l.slug === slug);
+              if (index > -1) {
+                database.listings[index] = {
+                  ...database.listings[index],
+                  ...updatedData,
+                  metadata: {
+                    ...database.listings[index].metadata,
+                    updatedAt: new Date().toISOString()
+                  }
+                };
+                
+                fs.writeFileSync(databasePath, JSON.stringify(database, null, 2));
+                
+                core.setOutput('success', 'true');
+              } else {
+                core.setOutput('success', 'false');
+              }
+            }
+      
+      - name: Commit changes
+        if: github.event.client_payload.action == 'business_update'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add listings-database.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update business listing" && git push)
