@@ -16,9 +16,6 @@
     if (params.get(SECRET_redirect_KEY) !== SECRET_redirect_VALUE) {
       window.location.replace("https://thegreekdirectory.org"); // .replace() prevents the user from clicking "back" to the admin page
     }
-    else{
-        window.location.replace("/admin"); // .replace() prevents the user from clicking "back" to the admin page
-    }
   })();
 
 // ============================================
