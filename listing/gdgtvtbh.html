@@ -229,11 +229,19 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
+        .listing-description p { margin-bottom: 0.75rem; }
+        .desktop-listing-layout { display: block; }
+        .desktop-main-column, .desktop-side-column { min-width: 0; }
+        .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
         @media (min-width: 768px) {
             .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
+        }
+        @media (min-width: 1024px) {
+            .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
+            .desktop-side-column { position: sticky; top: 24px; }
         }
         @media (max-width: 767px) {
             .share-section { margin-bottom: 24px; }
@@ -271,7 +279,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-    <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto px-4 py-8">
         <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
@@ -295,50 +303,33 @@ or distribution of this code can result in legal action to the fullest extent pe
         </div>
 
         <div class="bg-white rounded-lg p-6 mb-6 card-shadow">
-            <div class="flex justify-between items-start mb-4">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-4 flex-wrap">
-                        <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
-                            Real Estate &amp; Development
-                        </span>
-                        <div class="subcategories-display" id="subcategoriesDisplay">
-                            <span class="subcategory-tag">Broker</span>
+            <div class="desktop-listing-layout">
+                <div class="desktop-main-column">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-4 flex-wrap">
+                                <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
+                                    Real Estate &amp; Development
+                                </span>
+                                <div class="subcategories-display" id="subcategoriesDisplay">
+                                    <span class="subcategory-tag">Broker</span>
+                                </div>
+                                <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
+                                    <span class="badge badge-closed" id="openClosedBadge">Closed Now</span>
+                                </div>
+                            </div>
+                            <h2 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">drhg</h2>
+                            <p class="text-gray-600 italic mb-2">"gfbfgv"</p>
                         </div>
-                        <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
-                            <span class="badge badge-closed" id="openClosedBadge">Closed Now</span>
-                        </div>
+                        <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&h=200&fit=crop&q=80" alt="drhg logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
                     </div>
-                    <h2 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">drhg</h2>
-                    <p class="text-gray-600 italic mb-2">"gfbfgv"</p>
-                </div>
-                <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&h=200&fit=crop&q=80" alt="drhg logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
-            </div>
 
-            <p class="text-gray-700 mb-6"></p>
+                    <div class="text-gray-700 mb-6 listing-description"></div>
 
-            <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+                    
+                    
 
-            <div class="space-y-3 mb-6">
-                
-                
-                
-                
-                
-            </div>
-
-            
-
-            <div class="flex flex-wrap gap-3 mb-6">
-                
-                
-                
-                
-                
-            </div>
-
-            
-
-            <div class="social-map-grid">
+                    <div class="social-map-grid">
                 <div>
                     
                     
@@ -368,6 +359,27 @@ or distribution of this code can result in legal action to the fullest extent pe
                 </div>
                 
                 
+                    </div>
+                </div>
+                <aside class="desktop-side-column">
+                    <div class="desktop-contact-card">
+                        <div class="space-y-3 mb-6">
+                            
+                            
+                            
+                            
+                            
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 mb-2">
+                            
+                            
+                            
+                            
+                            
+                        </div>
+                    </div>
+                </aside>
             </div>
         </div>
 
@@ -458,7 +470,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             if (!phone) return '';
             const digits = phone.replace(/\D/g, '');
             if (digits.length === 11 && digits.startsWith('1')) {
-                return `(${digits.substr(1, 3)}) ${digits.substr(4, 3)}-${digits.substr(7, 4)}`;
+                return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
+            }
+            if (digits.length === 10) {
+                return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
             }
             return phone;
         }
@@ -467,11 +482,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.text-gray-600, .text-gray-700').forEach(el => {
-                if (el.textContent.includes('+1')) {
-                    const phone = el.textContent.match(/\+1\d{10}/);
-                    if (phone) {
-                        el.textContent = el.textContent.replace(phone[0], formatPhoneDisplay(phone[0]));
-                    }
+                const phone = el.textContent.match(/\b1?\d{10}\b/);
+                if (phone) {
+                    el.textContent = el.textContent.replace(phone[0], formatPhoneDisplay(phone[0]));
                 }
             });
         });
@@ -757,9 +770,22 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         const coordinatesStr = '';
         const fullAddress = '';
+
+        async function geocodeAddress(address) {
+            try {
+                const endpoint = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+                const response = await fetch(endpoint, { headers: { 'Accept': 'application/json' } });
+                if (!response.ok) return null;
+                const data = await response.json();
+                if (!Array.isArray(data) || !data.length) return null;
+                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            } catch (_) {
+                return null;
+            }
+        }
         
-        function initializeMap() {
-            if (!coordinatesStr || coordinatesStr === '' || !fullAddress || fullAddress === '') {
+        async function initializeMap() {
+            if (!fullAddress || fullAddress === '') {
                 const mapSection = document.querySelector('#listingMap');
                 if (mapSection && mapSection.parentElement) {
                     mapSection.parentElement.style.display = 'none';
@@ -773,22 +799,24 @@ or distribution of this code can result in legal action to the fullest extent pe
             }
             
             try {
-                const coords = coordinatesStr.split(',');
-                if (coords.length !== 2) {
-                    if (mapElement.parentElement) {
-                        mapElement.parentElement.style.display = 'none';
-                    }
-                    return;
+                let lat;
+                let lng;
+
+                if (coordinatesStr && coordinatesStr.includes(',')) {
+                    const coords = coordinatesStr.split(',');
+                    lat = parseFloat(coords[0].trim());
+                    lng = parseFloat(coords[1].trim());
                 }
-                
-                const lat = parseFloat(coords[0].trim());
-                const lng = parseFloat(coords[1].trim());
-                
+
                 if (isNaN(lat) || isNaN(lng)) {
-                    if (mapElement.parentElement) {
-                        mapElement.parentElement.style.display = 'none';
+                    const geocoded = await geocodeAddress(fullAddress);
+                    if (!geocoded) {
+                        if (mapElement.parentElement) {
+                            mapElement.parentElement.style.display = 'none';
+                        }
+                        return;
                     }
-                    return;
+                    [lat, lng] = geocoded;
                 }
                 
                 if (typeof L === 'undefined') {
