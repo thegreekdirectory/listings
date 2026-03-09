@@ -14,7 +14,7 @@
 
     // 3. If the key is missing or the value is wrong, redirect to home
     if (params.get(SECRET_redirect_KEY) !== SECRET_redirect_VALUE) {
-      window.location.replace("/"); // .replace() prevents the user from clicking "back" to the admin page
+      window.location.replace("https://thegreekdirectory.org"); // .replace() prevents the user from clicking "back" to the admin page
     }
   })();
 
