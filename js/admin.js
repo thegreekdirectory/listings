@@ -1,6 +1,23 @@
 // js/admin.js - PART 1
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. For more information, visit https://thegreekdirectory.org/legal.
 
+// ============================
+// PAGE SECURITY REDIRECT RULE
+// ============================
+(function() {
+    // 1. Define your secret key and expected value
+    const SECRET_redirect_KEY = 'mpesmesa';
+    const SECRET_redirect_VALUE = 'thelonampo';
+
+    // 2. Parse the current URL's query parameters
+    const params = new URLSearchParams(window.location.search);
+
+    // 3. If the key is missing or the value is wrong, redirect to home
+    if (params.get(SECRET_redirect_KEY) !== SECRET_redirect_VALUE) {
+      window.location.replace("/"); // .replace() prevents the user from clicking "back" to the admin page
+    }
+  })();
+
 // ============================================
 // ADMIN PORTAL - PART 1
 // Configuration & State Management
