@@ -18,6 +18,42 @@
     }
   })();
 
+// ============================
+// CONSOLE LOGS MESSAGES POPUPS 
+// ============================
+
+(function () {
+
+  const oldLog = console.log;
+
+  console.log = function (...args) {
+
+    oldLog.apply(console, args);
+
+    const msg = args.join(" ");
+
+    const box = document.createElement("div");
+    box.textContent = msg;
+
+    box.style.position = "fixed";
+    box.style.bottom = "10px";
+    box.style.right = "10px";
+    box.style.background = "#222";
+    box.style.color = "#fff";
+    box.style.padding = "10px";
+    box.style.borderRadius = "4px";
+    box.style.fontFamily = "monospace";
+    box.style.zIndex = "9999";
+
+    document.body.appendChild(box);
+
+    setTimeout(() => {
+      box.remove();
+    }, 4000);
+  };
+
+})();
+
 // ============================================
 // ADMIN PORTAL - PART 1
 // Configuration & State Management
