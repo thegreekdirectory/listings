@@ -2003,6 +2003,19 @@ async function geocodeAddress(address, city, state, zipCode) {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
+function normalizeCoordinates(value) {
+    if (!value || typeof value !== 'object') return null;
+
+    const lat = Number(value.lat);
+    const lng = Number(value.lng);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return null;
+    }
+
+    return { lat, lng };
+}
+
 async function saveListing() {
     try {
         const editModal = document.getElementById('editModal');
