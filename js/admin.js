@@ -2003,6 +2003,21 @@ async function geocodeAddress(address, city, state, zipCode) {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
+function normalizeCoordinates(value) {
+    if (!value || typeof value !== 'object') return null;
+
+    const lat = Number(value.lat);
+    const lng = Number(value.lng);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return null;
+    }
+
+    return { lat, lng };
+}
+
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
 async function saveListing() {
     try {
         const editModal = document.getElementById('editModal');
@@ -2077,10 +2092,10 @@ if (!slug) {
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
         // AUTO-GEOCODING
-        let coordinates = null;
+        let coordinates = normalizeCoordinates(editingListing?.coordinates);
         if (address && city && state) {
             console.log('🌍 Auto-geocoding address...');
-            coordinates = await geocodeAddress(address, city, state, zipCode);
+            coordinates = normalizeCoordinates(await geocodeAddress(address, city, state, zipCode));
             if (coordinates) {
                 console.log('✅ Coordinates found:', coordinates);
             } else {
@@ -2249,15 +2264,17 @@ if (!slug) {
         const isExisting = editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id);
         
         if (isExisting) {
-            const { data, error } = await adminSupabase
+            const { error } = await adminSupabase
                 .from('listings')
                 .update(listingData)
-                .eq('id', editingListing.id)
-                .select()
-                .single();
+                .eq('id', editingListing.id);
             
             if (error) throw error;
-            savedListing = data;
+            savedListing = {
+                ...editingListing,
+                ...listingData,
+                id: editingListing.id
+            };
         } else {
             const { data, error } = await adminSupabase
                 .from('listings')
