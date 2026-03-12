@@ -5,16 +5,15 @@
 // PAGE SECURITY REDIRECT RULE
 // ============================
 (function() {
-    // 1. Define your secret key and expected value
+    // vars
     const SECRET_redirect_KEY = 'mpesmesa';
     const SECRET_redirect_VALUE = 'thelonampo';
-
-    // 2. Parse the current URL's query parameters
+    const newdatetoday = new Date();
+    const dateDD = String(newdatetoday.getDate()).padStart(2, '0');
     const params = new URLSearchParams(window.location.search);
-
-    // 3. If the key is missing or the value is wrong, redirect to home
-    if (params.get(SECRET_redirect_KEY) !== SECRET_redirect_VALUE) {
-      window.location.replace("https://thegreekdirectory.org"); // .replace() prevents the user from clicking "back" to the admin page
+    // function part
+    if (params.get(SECRET_redirect_KEY) !== SECRET_redirect_VALUE + dateDD) {
+      window.location.replace("https://thegreekdirectory.org");
     }
   })();
 
