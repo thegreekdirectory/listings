@@ -3143,6 +3143,9 @@ function generateTemplateReplacementsPart2(listing) {
         '@type': 'FAQPage',
         mainEntity: faqEntities
     };
+
+    // Backward-compat alias for any legacy template replacement still expecting structuredData.
+    const structuredData = localBusinessJsonLd || {};
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
@@ -3157,6 +3160,7 @@ function generateTemplateReplacementsPart2(listing) {
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,
         'HOURS_JSON': hoursJson,
+        'STRUCTURED_DATA': JSON.stringify(structuredData, null, 2),
         'LOCAL_BUSINESS_JSON_LD': JSON.stringify(localBusinessJsonLd || {}, null, 2),
         'BREADCRUMB_JSON_LD': JSON.stringify(breadcrumbJsonLd, null, 2),
         'WEBPAGE_JSON_LD': JSON.stringify(webpageJsonLd, null, 2),
