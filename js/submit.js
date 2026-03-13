@@ -2,22 +2,7 @@ const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 const FORM_STORAGE_KEY = 'tgd_submit_form_draft_v4';
 
-let SUBCATEGORY_MAP = {
-  'Automotive & Transportation': ['Auto Detailer','Auto Repair Shop','Car Dealer','Taxi & Limo Service'],
-  'Beauty & Health': ['Barbershops','Esthetician','Hair Salons','Nail Salon','Spas','Chiropractor','Dentist','Doctor','Nutritionist','Optometrist','Orthodontist','Physical Therapist','Physical Trainer'],
-  'Church & Religious Organization': ['Church'],
-  'Cultural/Fraternal Organization': ['Dance Troupe','Non-Profit','Philanthropic Group','Society','Youth Organization'],
-  'Education & Community': ['Childcare','Greek School','Senior Care','Tutor'],
-  'Entertainment, Arts & Recreation': ['Band','DJs','Entertainment Group','Photographer','Art'],
-  'Food & Hospitality': ['Banquet Hall','Catering Service','Event Venue','Bakeries','Deli','Pastry Shop','Bar','Breakfast','Coffee','Lunch','Dinner','Restaurant','Hotel','Airbnb'],
-  'Grocery & Imports': ['Butcher Shop','Liquor Shop','Market','Greek Alcohol','Honey','Olive Oil','Food Distribution','Food Manufacturer'],
-  'Home & Construction': ['Carpenter','Electrician','General Contractor','Handyman','HVAC','Landscaping','Painter','Plumber','Roofing','Tile & Stone Specialist'],
-  'Industrial & Manufacturing': ['Food Manufacturer'],
-  'Pets & Veterinary': ['Veterinarian','Pet Accessories Maker'],
-  'Professional & Business Services': ['Business Services','Consultant','CPA','Financial Advisor','Insurance Agent','IT Service & Repair','Lawyer','Marketing & Creative Agency','Notaries','Wedding Planner','Travel Agency'],
-  'Real Estate & Development': ['Appraiser','Broker','Developer','Lender','Property Management','Real Estate Agent'],
-  'Retail & Shopping': ['Boutique Shop','ECommerce','Jewelry','Souvenir Shop']
-};
+let SUBCATEGORY_MAP = {};
 
 const MAIN_CATEGORIES = [
   'Automotive & Transportation','Beauty & Health','Church & Religious Organization','Cultural/Fraternal Organization','Education & Community','Entertainment, Arts & Recreation','Food & Hospitality','Grocery & Imports','Home & Construction','Industrial & Manufacturing','Pets & Veterinary','Professional & Business Services','Real Estate & Development','Retail & Shopping'
@@ -463,13 +448,8 @@ async function submitListingRequest(event){
 
 async function loadDynamicSubcategories(){
   try {
-    const { data, error } = await supabaseClient.from('category_subcategories').select('category, subcategories');
-    if (error) return;
-    if (Array.isArray(data)) {
-      const next = {};
-      data.forEach((row) => { if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories; });
-      SUBCATEGORY_MAP = { ...SUBCATEGORY_MAP, ...next };
-    }
+    const next = await window.TGDSubcategories.fetchAll();
+    SUBCATEGORY_MAP = { ...next };
   } catch (e) { console.warn('Could not load dynamic subcategories', e); }
 }
 
