@@ -11,22 +11,7 @@ or distribution of this code will result in legal action to the fullest extent p
 // Configuration & State Management
 // ============================================
 
-let SUBCATEGORIES = {
-    'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
-    'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
-    'Church & Religious Organization': ['Church'],
-    'Cultural/Fraternal Organization': ['Dance Troupe', 'Non-Profit', 'Philanthropic Group', 'Society', 'Youth Organization'],
-    'Education & Community': ['Childcare', 'Greek School', 'Senior Care', 'Tutor'],
-    'Entertainment, Arts & Recreation': ['Band', 'DJs', 'Entertainment Group', 'Photographer', 'Art'],
-    'Food & Hospitality': ['Banquet Hall', 'Catering Service', 'Event Venue', 'Bakeries', 'Deli', 'Pastry Shop', 'Bar', 'Breakfast', 'Coffee', 'Lunch', 'Dinner', 'Restaurant', 'Hotel', 'Airbnb'],
-    'Grocery & Imports': ['Butcher Shop', 'Liquor Shop', 'Market', 'Greek Alcohol', 'Honey', 'Olive Oil', 'Food Distribution', 'Food Manufacturer'],
-    'Home & Construction': ['Carpenter', 'Electrician', 'General Contractor', 'Handyman', 'HVAC', 'Landscaping', 'Painter', 'Plumber', 'Roofing', 'Tile & Stone Specialist'],
-    'Industrial & Manufacturing': ['Food Manufacturer'],
-    'Pets & Veterinary': ['Veterinarian', 'Pet Accessories Maker'],
-    'Professional & Business Services': ['Business Services', 'Consultant', 'CPA', 'Financial Advisor', 'Insurance Agent', 'IT Service & Repair', 'Lawyer', 'Marketing & Creative Agency', 'Notaries', 'Wedding Planner', 'Travel Agency'],
-    'Real Estate & Development': ['Appraiser', 'Broker', 'Developer', 'Lender', 'Property Management', 'Real Estate Agent'],
-    'Retail & Shopping': ['Boutique Shop', 'ECommerce', 'Jewelry', 'Souvenir Shop']
-};
+let SUBCATEGORIES = {};
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -42,17 +27,8 @@ let currentMaxPhotos = 1;
 let currentMaxCtas = 0;
 async function loadDynamicSubcategories() {
     try {
-        const { data, error } = await window.TGDAuth.supabaseClient
-            .from('category_subcategories')
-            .select('category, subcategories');
-        if (error) return;
-        if (Array.isArray(data)) {
-            const next = {};
-            data.forEach((row) => {
-                if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
-            });
-            SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
-        }
+        const next = await window.TGDSubcategories.fetchAll(window.TGDAuth.supabaseClient);
+        SUBCATEGORIES = next || {};
     } catch (error) {
         console.warn('Could not load dynamic subcategories', error);
     }

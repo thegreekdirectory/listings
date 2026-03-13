@@ -333,76 +333,49 @@
     <script src="js/pwa/app.js"></script>
     <script src="js/pwa/dock.js"></script>
     <script src="js/partials-loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/subcategories.js"></script>
     
     <script>
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
-        const CATEGORIES = {
-            'Automotive & Transportation': {
-                icon: '🚗',
-                subcategories: ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service']
-            },
-            'Beauty & Health': {
-                icon: '💅',
-                subcategories: ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer']
-            },
-            'Church & Religious Organization': {
-                icon: '⛪',
-                subcategories: ['Church']
-            },
-            'Cultural/Fraternal Organization': {
-                icon: '🎭',
-                subcategories: ['Dance Troupe', 'Non-Profit', 'Philanthropic Group', 'Society', 'Youth Organization']
-            },
-            'Education & Community': {
-                icon: '📚',
-                subcategories: ['Childcare', 'Greek School', 'Senior Care', 'Tutor']
-            },
-            'Entertainment, Arts & Recreation': {
-                icon: '🎨',
-                subcategories: ['Band', 'DJs', 'Entertainment Group', 'Photographer', 'Art']
-            },
-            'Food & Hospitality': {
-                icon: '🍽️',
-                subcategories: ['Banquet Hall', 'Catering Service', 'Event Venue', 'Bakeries', 'Deli', 'Pastry Shop', 'Bar', 'Breakfast', 'Coffee', 'Lunch', 'Dinner', 'Restaurant', 'Hotel', 'Airbnb']
-            },
-            'Grocery & Imports': {
-                icon: '🛒',
-                subcategories: ['Butcher Shop', 'Liquor Shop', 'Market', 'Greek Alcohol', 'Honey', 'Olive Oil', 'Food Distribution', 'Food Manufacturer']
-            },
-            'Home & Construction': {
-                icon: '🏠',
-                subcategories: ['Carpenter', 'Electrician', 'General Contractor', 'Handyman', 'HVAC', 'Landscaping', 'Painter', 'Plumber', 'Roofing', 'Tile & Stone Specialist']
-            },
-            'Industrial & Manufacturing': {
-                icon: '🏭',
-                subcategories: ['Food Manufacturer']
-            },
-            'Pets & Veterinary': {
-                icon: '🐾',
-                subcategories: ['Veterinarian', 'Pet Accessories Maker']
-            },
-            'Professional & Business Services': {
-                icon: '💼',
-                subcategories: ['Business Services', 'Consultant', 'CPA', 'Financial Advisor', 'Insurance Agent', 'IT Service & Repair', 'Lawyer', 'Marketing & Creative Agency', 'Notaries', 'Wedding Planner', 'Travel Agency']
-            },
-            'Real Estate & Development': {
-                icon: '🏢',
-                subcategories: ['Appraiser', 'Broker', 'Developer', 'Lender', 'Property Management', 'Real Estate Agent']
-            },
-            'Retail & Shopping': {
-                icon: '🛍️',
-                subcategories: ['Boutique Shop', 'ECommerce', 'Jewelry', 'Souvenir Shop']
-            }
+        const CATEGORY_SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
+        const CATEGORY_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
+        const categorySupabaseClient = window.supabase.createClient(CATEGORY_SUPABASE_URL, CATEGORY_SUPABASE_ANON_KEY);
+
+        const CATEGORY_ICONS = {
+            'Automotive & Transportation': '🚗',
+            'Beauty & Health': '💅',
+            'Church & Religious Organization': '⛪',
+            'Cultural/Fraternal Organization': '🎭',
+            'Education & Community': '📚',
+            'Entertainment, Arts & Recreation': '🎨',
+            'Food & Hospitality': '🍽️',
+            'Grocery & Imports': '🛒',
+            'Home & Construction': '🏠',
+            'Industrial & Manufacturing': '🏭',
+            'Pets & Veterinary': '🐾',
+            'Professional & Business Services': '💼',
+            'Real Estate & Development': '🏢',
+            'Retail & Shopping': '🛍️'
         };
+
+        const CATEGORIES = {};
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
         const categoryStates = {};
         let allCategories = Object.keys(CATEGORIES);
         
-        function initCategories() {
+        async function initCategories() {
+            const subcategoryMap = await window.TGDSubcategories.fetchAll(categorySupabaseClient);
+            allCategories = Object.keys(subcategoryMap);
             allCategories.forEach(name => {
+                CATEGORIES[name] = {
+                    icon: CATEGORY_ICONS[name] || "📁",
+                    subcategories: subcategoryMap[name] || []
+                };
                 categoryStates[name] = {
                     expanded: false,
                     selectedSubcategories: [],

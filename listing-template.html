@@ -14,14 +14,27 @@ or distribution of this code can result in legal action to the fullest extent pe
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     
-    <title>{{BUSINESS_NAME}}{{CITY_STATE}} | The Greek Directory</title>
+    <title>{{SEO_TITLE}}</title>
 
-    <meta name="description" content="{{TAGLINE}}{{IN_CITY}}. View address, phone, hours, and photos.">
-    <meta property="og:title" content="{{BUSINESS_NAME}}{{CITY_STATE}} | The Greek Directory">
-    <meta property="og:description" content="{{TAGLINE}}{{IN_CITY}}">
+    <meta name="description" content="{{META_DESCRIPTION}}">
+    <meta property="og:title" content="{{SEO_TITLE}}">
+    <meta property="og:description" content="{{META_DESCRIPTION}}">
     <meta property="og:type" content="business.business">
     <meta property="og:url" content="{{LISTING_URL}}">
     <meta property="og:image" content="{{LOGO}}">
+    <meta property="og:site_name" content="The Greek Directory">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:image:alt" content="{{BUSINESS_NAME}} logo">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{TWITTER_TITLE}}">
+    <meta name="twitter:description" content="{{TWITTER_DESCRIPTION}}">
+    <meta name="twitter:image" content="{{LOGO}}">
+    <meta name="geo.region" content="US-{{STATE}}">
+    <meta name="geo.placename" content="{{CITY}}">
+    {{GEO_COORDS_TAGS}}
+    <meta name="robots" content="index, follow, max-image-preview:large">
     <style>
     .pwa-splash {
         position: fixed;
@@ -68,24 +81,19 @@ or distribution of this code can result in legal action to the fullest extent pe
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
     
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "name": "{{BUSINESS_NAME}}",
-        "description": "{{TAGLINE}}",
-        "url": "{{LISTING_URL}}",
-        "image": "{{LOGO}}",
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "{{ADDRESS}}",
-            "addressLocality": "{{CITY}}",
-            "addressRegion": "{{STATE}}",
-            "postalCode": "{{ZIP_CODE}}",
-            "addressCountry": "{{COUNTRY}}"
-        },
-        "telephone": "{{PHONE}}",
-        "openingHoursSpecification": {{HOURS_SCHEMA}}
-    }
+    {{LOCAL_BUSINESS_JSON_LD}}
+    </script>
+
+    <script type="application/ld+json">
+    {{BREADCRUMB_JSON_LD}}
+    </script>
+
+    <script type="application/ld+json">
+    {{WEBPAGE_JSON_LD}}
+    </script>
+
+    <script type="application/ld+json">
+    {{FAQ_JSON_LD}}
     </script>
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
