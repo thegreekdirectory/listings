@@ -67,22 +67,7 @@ const CATEGORIES = [
     'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
 ];
 
-let SUBCATEGORIES = {
-    'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
-    'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
-    'Church & Religious Organization': ['Church'],
-    'Cultural/Fraternal Organization': ['Dance Troupe', 'Non-Profit', 'Philanthropic Group', 'Society', 'Youth Organization'],
-    'Education & Community': ['Childcare', 'Greek School', 'Senior Care', 'Tutor'],
-    'Entertainment, Arts & Recreation': ['Band', 'DJs', 'Entertainment Group', 'Photographer', 'Art'],
-    'Food & Hospitality': ['Banquet Hall', 'Catering Service', 'Event Venue', 'Bakeries', 'Deli', 'Pastry Shop', 'Bar', 'Breakfast', 'Coffee', 'Lunch', 'Dinner', 'Restaurant', 'Hotel', 'Airbnb'],
-    'Grocery & Imports': ['Butcher Shop', 'Liquor Shop', 'Market', 'Greek Alcohol', 'Honey', 'Olive Oil', 'Food Distribution', 'Food Manufacturer'],
-    'Home & Construction': ['Carpenter', 'Electrician', 'General Contractor', 'Handyman', 'HVAC', 'Landscaping', 'Painter', 'Plumber', 'Roofing', 'Tile & Stone Specialist'],
-    'Industrial & Manufacturing': ['Food Manufacturer'],
-    'Pets & Veterinary': ['Veterinarian', 'Pet Accessories Maker'],
-    'Professional & Business Services': ['Business Services', 'Consultant', 'CPA', 'Financial Advisor', 'Insurance Agent', 'IT Service & Repair', 'Lawyer', 'Marketing & Creative Agency', 'Notaries', 'Wedding Planner', 'Travel Agency'],
-    'Real Estate & Development': ['Appraiser', 'Broker', 'Developer', 'Lender', 'Property Management', 'Real Estate Agent'],
-    'Retail & Shopping': ['Boutique Shop', 'ECommerce', 'Jewelry', 'Souvenir Shop']
-};
+let SUBCATEGORIES = {};
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
@@ -432,14 +417,8 @@ function generateSlugFromName(name = '') {
 
 async function loadSubcategories() {
     try {
-        const data = await adminProxy('subcategories:list');
-        if (Array.isArray(data) && data.length > 0) {
-            const next = {};
-            data.forEach((row) => {
-                if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
-            });
-            if (Object.keys(next).length > 0) SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
-        }
+        const next = await window.TGDSubcategories.fetchAll();
+        SUBCATEGORIES = { ...next };
     } catch (error) {
         console.warn('Could not load dynamic subcategories', error);
     }
@@ -1174,6 +1153,8 @@ function fillEditForm(listing) {
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-2">Description *</label>
                         <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border rounded-lg">${listing?.description || ''}</textarea>
+                        <label class="block text-sm font-medium mt-3 mb-2">Meta Description</label>
+                        <input type="text" id="editMetaDescription" value="${listing?.meta_description || ''}" maxlength="170" class="w-full px-4 py-2 border rounded-lg" placeholder="Optional SEO override">
                         <p class="text-xs text-gray-500 mt-1"><span id="descCount">${(window.RichTextEditor ? window.RichTextEditor.stripHtml(listing?.description || '') : (listing?.description || '').length)}</span> characters</p>
                     </div>
                     <div>
@@ -2082,6 +2063,7 @@ if (!slug) {
             slug: slug,
             tagline: tagline,
             description: sanitizeListingDescription(adminDescriptionEditor ? adminDescriptionEditor.getHtml() : document.getElementById('editDescription').value.trim()),
+            meta_description: document.getElementById('editMetaDescription').value.trim() || null,
             category: document.getElementById('editCategory').value,
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
@@ -2402,6 +2384,143 @@ function generateHoursSchema(listing) {
     return JSON.stringify(schemaHours);
 }
 
+
+function omitEmpty(value) {
+    if (Array.isArray(value)) {
+        const out = value.map(omitEmpty).filter((v) => v !== undefined);
+        return out.length ? out : undefined;
+    }
+    if (value && typeof value === 'object') {
+        const out = {};
+        Object.entries(value).forEach(([k, v]) => {
+            const next = omitEmpty(v);
+            if (next !== undefined) out[k] = next;
+        });
+        return Object.keys(out).length ? out : undefined;
+    }
+    if (value === null || value === undefined) return undefined;
+    if (typeof value === 'string' && value.trim() === '') return undefined;
+    return value;
+}
+
+function mapSchemaType(primarySubcategory, category) {
+    const sub = String(primarySubcategory || '').toLowerCase();
+    const rules = [
+        [['restaurant', 'diner', 'fine dining', 'brunch'], 'Restaurant'],
+        [['bakery', 'pastry'], 'Bakery'],
+        [['bar', 'lounge', 'brewery', 'winery'], 'BarOrPub'],
+        [['café', 'cafe', 'coffee'], 'CafeOrCoffeeShop'],
+        [['hotel'], 'Hotel'],
+        [['church'], 'Church'],
+        [['hair salon', 'barbershop', 'nail'], 'HairSalon'],
+        [['spa', 'massage'], 'DaySpa'],
+        [['gym', 'fitness'], 'SportsClub'],
+        [['dentist'], 'Dentist'],
+        [['medical', 'clinic', 'pharmacy'], 'MedicalBusiness'],
+        [['lawyer', 'attorney'], 'Attorney'],
+        [['accountant', 'financial', 'insurance'], 'AccountingService'],
+        [['auto repair', 'auto detailer'], 'AutoRepair'],
+        [['car dealer'], 'AutoDealer'],
+        [['travel', 'hotel'], 'TravelAgency'],
+        [['real estate', 'broker', 'property'], 'RealEstateAgent'],
+        [['school', 'childcare', 'tutoring'], 'EducationalOrganization'],
+        [['event', 'wedding', 'catering'], 'EventVenue']
+    ];
+    for (const [terms, schema] of rules) {
+        if (terms.some((term) => sub.includes(term))) return schema;
+    }
+    if (category === 'Food & Hospitality') return 'FoodEstablishment';
+    return 'LocalBusiness';
+}
+
+function categorySlugify(category) {
+    return String(category || '')
+        .toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+}
+
+function buildMetaDescription(listing) {
+    const meta = String(listing.meta_description || '').trim();
+    if (meta) return meta;
+    const tagline = String(listing.tagline || '').trim();
+    const place = [listing.city, listing.state].filter(Boolean).join(', ');
+    if (tagline && place) return `${tagline} Located in ${place}.`;
+    return tagline || `${listing.business_name} on The Greek Directory.`;
+}
+
+function buildStructuredData(listing, listingUrl) {
+    const lat = listing.coordinates && typeof listing.coordinates.lat === 'number' ? listing.coordinates.lat : null;
+    const lng = listing.coordinates && typeof listing.coordinates.lng === 'number' ? listing.coordinates.lng : null;
+    const hasGeo = Number.isFinite(lat) && Number.isFinite(lng);
+    const social = listing.social_media || {};
+    const sameAs = [social.facebook, social.instagram, social.twitter, social.yelp].filter((v) => typeof v === 'string' && v.trim());
+    const hours = JSON.parse(generateHoursSchema(listing));
+
+    const local = omitEmpty({
+        '@context': 'https://schema.org',
+        '@type': mapSchemaType(listing.primary_subcategory, listing.category),
+        '@id': `${listingUrl}#business`,
+        name: listing.business_name,
+        description: listing.tagline,
+        url: listingUrl,
+        image: listing.logo ? { '@type': 'ImageObject', url: listing.logo, caption: `${listing.business_name} logo` } : undefined,
+        logo: listing.logo,
+        telephone: listing.phone,
+        address: {
+            '@type': 'PostalAddress',
+            streetAddress: listing.address,
+            addressLocality: listing.city,
+            addressRegion: listing.state,
+            postalCode: listing.zip_code,
+            addressCountry: listing.country || 'USA'
+        },
+        geo: hasGeo ? { '@type': 'GeoCoordinates', latitude: lat, longitude: lng } : undefined,
+        hasMap: hasGeo ? `https://maps.google.com/?q=${lat},${lng}` : undefined,
+        areaServed: listing.city ? { '@type': 'City', name: listing.city } : undefined,
+        openingHoursSpecification: hours,
+        sameAs,
+        identifier: { '@type': 'PropertyValue', propertyID: 'TGD Listing ID', value: String(listing.id) }
+    });
+
+    const breadcrumb = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://thegreekdirectory.org' },
+            { '@type': 'ListItem', position: 2, name: listing.category || 'Listings', item: `https://thegreekdirectory.org/${categorySlugify(listing.category)}` },
+            { '@type': 'ListItem', position: 3, name: listing.business_name, item: listingUrl }
+        ]
+    };
+
+    const webpage = {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: `${listing.business_name} | The Greek Directory`,
+        url: listingUrl,
+        isPartOf: { '@type': 'WebSite', name: 'The Greek Directory', url: 'https://thegreekdirectory.org' }
+    };
+
+    const faqEntries = [];
+    if (listing.address && listing.city && listing.state) {
+        faqEntries.push({ '@type': 'Question', name: `Where is ${listing.business_name} located?`, acceptedAnswer: { '@type': 'Answer', text: `${listing.business_name} is located at ${listing.address}, ${listing.city}, ${listing.state}${listing.zip_code ? ` ${listing.zip_code}` : ''}.` } });
+    }
+    if (hours.length > 0) {
+        faqEntries.push({ '@type': 'Question', name: `What are the hours of ${listing.business_name}?`, acceptedAnswer: { '@type': 'Answer', text: 'Hours vary by day. Visit the listing page for full hours details.' } });
+    }
+    if (listing.phone) {
+        faqEntries.push({ '@type': 'Question', name: `How can I contact ${listing.business_name}?`, acceptedAnswer: { '@type': 'Answer', text: `You can contact ${listing.business_name} by phone at ${listing.phone} or visit their listing on The Greek Directory at ${listingUrl}.` } });
+    }
+
+    return {
+        local: JSON.stringify(local),
+        breadcrumb: JSON.stringify(breadcrumb),
+        webpage: JSON.stringify(webpage),
+        faqScript: faqEntries.length ? `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqEntries })}</script>` : ''
+    };
+}
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function generateSocialMediaSection(listing) {
@@ -2532,10 +2651,19 @@ function generateReviewSection(listing) {
 
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listing/${listing.slug}`;
+    const siteBaseUrl = (window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : 'https://thegreekdirectory.org';
+    const listingUrl = `${siteBaseUrl}/listing/${listing.slug}`;
     
-    const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
-    const inCity = listing.city ? ` in ${listing.city}` : '';
+    const metaDescription = buildMetaDescription(listing);
+    const seoTitle = listing.city && listing.state
+        ? `${listing.business_name} in ${listing.city}, ${listing.state} | Greek Businesses | The Greek Directory`
+        : `${listing.business_name} | Greek Businesses | The Greek Directory`;
+    const twitterTitle = listing.city && listing.state
+        ? `${listing.business_name} in ${listing.city}, ${listing.state} | The Greek Directory`
+        : `${listing.business_name} | The Greek Directory`;
+    const twitterDescription = listing.tagline && listing.city && listing.state
+        ? `${listing.tagline} in ${listing.city}, ${listing.state}.`
+        : metaDescription;
     
     const photos = listing.photos || [];
     const photoList = photos.length > 0 ? photos : (listing.logo ? [listing.logo] : []);
@@ -2805,12 +2933,21 @@ function generateTemplateReplacements(listing) {
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
+    const structuredData = buildStructuredData(listing, listingUrl);
+    const hasGeo = listing.coordinates && typeof listing.coordinates.lat === 'number' && typeof listing.coordinates.lng === 'number';
+    const geoCoordinateMeta = hasGeo
+        ? `<meta name="geo.position" content="${listing.coordinates.lat};${listing.coordinates.lng}">
+    <meta name="ICBM" content="${listing.coordinates.lat}, ${listing.coordinates.lng}">`
+        : '';
     
     return {
         'BUSINESS_NAME': escapeHtml(listing.business_name),
         'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
-        'CITY_STATE': cityState,
-        'IN_CITY': inCity,
+        'SEO_TITLE': escapeHtml(seoTitle),
+        'META_DESCRIPTION': escapeHtml(metaDescription),
+        'TWITTER_TITLE': escapeHtml(twitterTitle),
+        'TWITTER_DESCRIPTION': escapeHtml(twitterDescription),
         'TAGLINE': escapeHtml(listing.tagline || ''),
         'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
         'DESCRIPTION_JS': JSON.stringify(listing.description || '').slice(1, -1),
@@ -3005,7 +3142,12 @@ function generateTemplateReplacementsPart2(listing) {
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,
-        'HOURS_JSON': hoursJson
+        'HOURS_JSON': hoursJson,
+        'LOCAL_BUSINESS_SCHEMA': structuredData.local,
+        'BREADCRUMB_SCHEMA': structuredData.breadcrumb,
+        'WEBPAGE_SCHEMA': structuredData.webpage,
+        'FAQ_SCHEMA_SCRIPT': structuredData.faqScript,
+        'GEO_COORDINATE_META': geoCoordinateMeta
     };
 }
 
