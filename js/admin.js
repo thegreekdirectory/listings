@@ -2530,12 +2530,69 @@ function generateReviewSection(listing) {
 // Template Replacements Generation - Part 1
 // ============================================
 
+function getBusinessSchemaType(listing) {
+    const category = String(listing.category || '').toLowerCase();
+    const subcategories = Array.isArray(listing.subcategories)
+        ? listing.subcategories.map((sub) => String(sub || '').toLowerCase())
+        : [];
+    const primarySubcategory = String(listing.primary_subcategory || '').toLowerCase();
+    const terms = [category, primarySubcategory, ...subcategories].filter(Boolean).join(' ');
+
+    const keywordTypeMap = [
+        { keywords: ['restaurant', 'diner', 'taverna'], type: 'Restaurant' },
+        { keywords: ['church'], type: 'Church' },
+        { keywords: ['bakery'], type: 'Bakery' },
+        { keywords: ['travel', 'tour'], type: 'TravelAgency' },
+        { keywords: ['bar', 'pub', 'lounge'], type: 'BarOrPub' },
+        { keywords: ['hair', 'salon', 'beauty', 'spa'], type: 'HairSalon' },
+        { keywords: ['dentist', 'dental'], type: 'Dentist' },
+        { keywords: ['attorney', 'law', 'legal'], type: 'Attorney' },
+        { keywords: ['accounting', 'accountant', 'tax'], type: 'AccountingService' },
+        { keywords: ['auto', 'automotive', 'car repair', 'mechanic'], type: 'AutoRepair' }
+    ];
+
+    const match = keywordTypeMap.find((entry) => entry.keywords.some((keyword) => terms.includes(keyword)));
+    return match ? match.type : 'LocalBusiness';
+}
+
+function getSameAsLinks(listing) {
+    const social = listing.social_media || {};
+    const reviews = listing.reviews || {};
+    const links = [];
+
+    const facebook = String(social.facebook || '').trim();
+    if (facebook) links.push(`https://facebook.com/${facebook}`);
+
+    const instagram = String(social.instagram || '').trim();
+    if (instagram) links.push(`https://instagram.com/${instagram}`);
+
+    const twitter = String(social.twitter || '').trim();
+    if (twitter) links.push(`https://twitter.com/${twitter}`);
+
+    if (social.linkedin) links.push(String(social.linkedin).trim());
+    if (social.other1) links.push(String(social.other1).trim());
+    if (social.other2) links.push(String(social.other2).trim());
+    if (social.other3) links.push(String(social.other3).trim());
+
+    if (reviews.yelp) links.push(String(reviews.yelp).trim());
+
+    return [...new Set(links.filter(Boolean))];
+}
+
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const listingUrl = `https://listings.thegreekdirectory.org/listing/${listing.slug}`;
+    const categoryUrl = `https://thegreekdirectory.org/${categorySlug}`;
     
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
+    const primarySubcategorySchemaType = String(listing.primary_subcategory || '').trim();
+    const businessSchemaType = primarySubcategorySchemaType || getBusinessSchemaType(listing);
+    const hasCoordinates = listing.coordinates && listing.coordinates.lat && listing.coordinates.lng;
+    const latitude = hasCoordinates ? String(listing.coordinates.lat) : '';
+    const longitude = hasCoordinates ? String(listing.coordinates.lng) : '';
+    const hasMapUrl = hasCoordinates ? `https://maps.google.com/?q=${latitude},${longitude}` : '';
+    const sameAsSchema = JSON.stringify(getSameAsLinks(listing));
     
     const photos = listing.photos || [];
     const photoList = photos.length > 0 ? photos : (listing.logo ? [listing.logo] : []);
@@ -2815,6 +2872,7 @@ function generateTemplateReplacements(listing) {
         'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
         'DESCRIPTION_JS': JSON.stringify(listing.description || '').slice(1, -1),
         'CATEGORY': escapeHtml(listing.category),
+        'CATEGORY_URL': categoryUrl,
         'LISTING_URL': listingUrl,
         'LISTING_ID': listing.id,
         'SLUG': listing.slug || '',
@@ -2822,6 +2880,11 @@ function generateTemplateReplacements(listing) {
         'ADDRESS': escapeHtml(listing.address || ''),
         'CITY': escapeHtml(listing.city || ''),
         'STATE': escapeHtml(listing.state || ''),
+        'LAT': latitude,
+        'LNG': longitude,
+        'HAS_MAP_URL': hasMapUrl,
+        'BUSINESS_SCHEMA_TYPE': businessSchemaType,
+        'SAME_AS_SCHEMA': sameAsSchema,
         'ZIP_CODE': escapeHtml(listing.zip_code || ''),
         'COUNTRY': escapeHtml(listing.country || 'USA'),
         'PHONE': listing.phone || '',
