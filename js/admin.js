@@ -2586,7 +2586,8 @@ function generateTemplateReplacements(listing) {
     
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
-    const businessSchemaType = getBusinessSchemaType(listing);
+    const primarySubcategorySchemaType = String(listing.primary_subcategory || '').trim();
+    const businessSchemaType = primarySubcategorySchemaType || getBusinessSchemaType(listing);
     const hasCoordinates = listing.coordinates && listing.coordinates.lat && listing.coordinates.lng;
     const latitude = hasCoordinates ? String(listing.coordinates.lat) : '';
     const longitude = hasCoordinates ? String(listing.coordinates.lng) : '';
