@@ -58,9 +58,6 @@
 // Configuration & State Management
 // ============================================
 
-const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
-
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 const CATEGORIES = [
@@ -132,7 +129,6 @@ const CATEGORY_DEFAULT_IMAGES = {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
-let adminSupabase = null;
 let currentAdminUser = null;
 let adminGithubToken = null;
 let allListings = [];
@@ -144,11 +140,26 @@ let userCountry = 'USA';
 let allRequests = [];
 let currentAdminView = 'listings';
 
+async function adminProxy(action, payload = {}) {
+    const res = await fetch(
+        'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/admin-proxy',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-github-token': adminGithubToken,
+            },
+            body: JSON.stringify({ action, payload }),
+        }
+    );
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Admin proxy error');
+    return json.data;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing Admin Portal...');
-    
-    adminSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Supabase initialized');
+    console.log('✅ Admin proxy initialized');
     
     await detectUserCountry();
     setupEventListeners();
@@ -421,10 +432,7 @@ function generateSlugFromName(name = '') {
 
 async function loadSubcategories() {
     try {
-        const { data, error } = await adminSupabase
-            .from('category_subcategories')
-            .select('category, subcategories');
-        if (error) return;
+        const data = await adminProxy('subcategories:list');
         if (Array.isArray(data) && data.length > 0) {
             const next = {};
             data.forEach((row) => {
@@ -445,10 +453,7 @@ window.manageSubcategories = async function() {
     if (updated === null) return;
     const list = updated.split(',').map(v => v.trim()).filter(Boolean);
     try {
-        const { error } = await adminSupabase
-            .from('category_subcategories')
-            .upsert({ category, subcategories: list }, { onConflict: 'category' });
-        if (error) throw error;
+        await adminProxy('subcategories:insert', { category, subcategories: list });
         SUBCATEGORIES[category] = list;
         updateSubcategoriesForCategory();
         alert('Subcategories updated.');
@@ -460,18 +465,11 @@ window.manageSubcategories = async function() {
 async function loadListings() {
     try {
         console.log('📥 Loading listings from Supabase...');
-        
-        const { data: listings, error } = await adminSupabase
-            .from('listings')
-            .select(`
-                *,
-                owner:business_owners(*)
-            `)
-            .order('id', { ascending: true });
-        
-        if (error) throw error;
-        
-        allListings = listings || [];
+
+        const listings = await adminProxy('listings:list');
+        allListings = Array.isArray(listings)
+            ? listings.slice().sort((a, b) => Number(a.id || 0) - Number(b.id || 0))
+            : [];
         console.log(`✅ Loaded ${allListings.length} listings`);
         
         renderTable();
@@ -488,21 +486,10 @@ async function loadListings() {
 
 async function loadRequests() {
     try {
-        const { data, error } = await adminSupabase
-            .from('listing_requests')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            if (error.code === '42P01') {
-                allRequests = [];
-                renderRequestsTable();
-                return;
-            }
-            throw error;
-        }
-
-        allRequests = data || [];
+        const data = await adminProxy('requests:list');
+        allRequests = Array.isArray(data)
+            ? data.slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+            : [];
         renderRequestsTable();
     } catch (error) {
         console.error('❌ Error loading requests:', error);
@@ -686,12 +673,7 @@ window.acceptRequest = async function(requestId) {
         };
         delete payload.owner;
 
-        const { data: inserted, error } = await adminSupabase
-            .from('listings')
-            .insert(payload)
-            .select()
-            .single();
-        if (error) throw error;
+        const inserted = await adminProxy('listings:insert', payload);
 
         const ownerRows = [];
         ownerRows.push({
@@ -724,9 +706,11 @@ window.acceptRequest = async function(requestId) {
             });
         });
 
-        await adminSupabase.from('business_owners').insert(ownerRows);
+        for (const row of ownerRows) {
+            await adminProxy('owners:upsert', row);
+        }
 
-        await adminSupabase.from('listing_requests').delete().eq('id', requestId);
+        await adminProxy('requests:delete', { id: requestId });
         await loadRequests();
         await loadListings();
         const pageGenerated = await generateListingPage(inserted.id);
@@ -748,8 +732,7 @@ window.denyRequest = async function(requestId) {
     if (!confirm(`Deny request from ${request.business_name || 'business'}?`)) return;
 
     try {
-        const { error } = await adminSupabase.from('listing_requests').delete().eq('id', requestId);
-        if (error) throw error;
+        await adminProxy('requests:delete', { id: requestId });
         await loadRequests();
     } catch (error) {
         console.error('Error denying request:', error);
@@ -849,12 +832,7 @@ window.toggleVisibility = async function(id) {
         const listing = allListings.find(l => l.id === id);
         const newVisible = !listing.visible;
         
-        const { error } = await adminSupabase
-            .from('listings')
-            .update({ visible: newVisible })
-            .eq('id', id);
-        
-        if (error) throw error;
+        await adminProxy('listings:update', { id, visible: newVisible });
         
         listing.visible = newVisible;
         renderTable();
@@ -891,19 +869,8 @@ window.viewAnalytics = async function(listingId) {
     try {
         console.log('Fetching analytics data...');
         
-        // Fetch analytics data from Supabase
-        const { data: analyticsData, error } = await adminSupabase
-            .from('listing_analytics')
-            .select('*')
-            .eq('listing_id', listingId)
-            .order('timestamp', { ascending: false });
-        
-        if (error) {
-            console.error('Analytics fetch error:', error);
-            throw error;
-        }
-        
-        console.log('Analytics data fetched:', analyticsData?.length || 0, 'events');
+        const analyticsData = await adminProxy('analytics:get', { listing_id: listingId });
+        console.log('Analytics data fetched:', analyticsData ? 1 : 0, 'events');
         
         // Aggregate analytics
         const analytics = {
@@ -913,36 +880,17 @@ window.viewAnalytics = async function(listingId) {
             direction_clicks: 0,
             share_clicks: 0,
             video_plays: 0,
-            detailedViews: analyticsData || [],
-            sharePlatforms: {}
+            detailedViews: [],
+            sharePlatforms: analyticsData?.share_platforms || {}
         };
-        
-        if (analyticsData && analyticsData.length > 0) {
-            analyticsData.forEach(event => {
-                switch(event.action) {
-                    case 'view':
-                        analytics.views++;
-                        break;
-                    case 'call':
-                        analytics.call_clicks++;
-                        break;
-                    case 'website':
-                        analytics.website_clicks++;
-                        break;
-                    case 'directions':
-                        analytics.direction_clicks++;
-                        break;
-                    case 'share':
-                        analytics.share_clicks++;
-                        if (event.platform) {
-                            analytics.sharePlatforms[event.platform] = (analytics.sharePlatforms[event.platform] || 0) + 1;
-                        }
-                        break;
-                    case 'video':
-                        analytics.video_plays++;
-                        break;
-                }
-            });
+
+        if (analyticsData) {
+            analytics.views = Number(analyticsData.views) || 0;
+            analytics.call_clicks = Number(analyticsData.call_clicks) || 0;
+            analytics.website_clicks = Number(analyticsData.website_clicks) || 0;
+            analytics.direction_clicks = Number(analyticsData.direction_clicks) || 0;
+            analytics.share_clicks = Number(analyticsData.share_clicks) || 0;
+            analytics.video_plays = Number(analyticsData.video_plays) || 0;
         }
         
         console.log('Aggregated analytics:', analytics);
@@ -1137,16 +1085,11 @@ window.closeAnalyticsModal = function() {
 
 window.editListing = async function(id) {
     try {
-        const { data: listing, error } = await adminSupabase
-            .from('listings')
-            .select(`
-                *,
-                owner:business_owners(*)
-            `)
-            .eq('id', id)
-            .single();
-        
-        if (error) throw error;
+        const listings = await adminProxy('listings:list');
+        const listing = Array.isArray(listings)
+            ? listings.find((row) => String(row.id) === String(id))
+            : null;
+        if (!listing) throw new Error('Listing not found');
         
         editingListing = listing;
         selectedSubcategories = listing.subcategories || [];
@@ -1166,15 +1109,11 @@ window.editListing = async function(id) {
 
 window.newListing = async function() {
     try {
-        const { data: maxIdResult, error: maxIdError } = await adminSupabase
-            .from('listings')
-            .select('id')
-            .order('id', { ascending: false })
-            .limit(1);
-        
-        if (maxIdError) throw maxIdError;
-        
-        const nextId = maxIdResult && maxIdResult.length > 0 ? maxIdResult[0].id + 1 : 1;
+        const listings = await adminProxy('listings:list');
+        const maxId = Array.isArray(listings)
+            ? listings.reduce((acc, row) => Math.max(acc, Number(row.id) || 0), 0)
+            : 0;
+        const nextId = maxId + 1;
         
         editingListing = {
             id: nextId,
@@ -1804,13 +1743,10 @@ window.checkSlugAvailability = async function() {
     }
     
     try {
-        const { data, error } = await adminSupabase
-            .from('listings')
-            .select('id')
-            .eq('slug', slug)
-            .maybeSingle();
-        
-        if (error) throw error;
+        const listings = await adminProxy('listings:list');
+        const data = Array.isArray(listings)
+            ? listings.find((row) => row.slug === slug) || null
+            : null;
         
         if (data && data.id !== editingListing?.id) {
             statusEl.textContent = '❌ Slug already in use';
@@ -2015,6 +1951,8 @@ function normalizeCoordinates(value) {
     return { lat, lng };
 }
 
+// Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
 async function saveListing() {
     try {
         const editModal = document.getElementById('editModal');
@@ -2089,10 +2027,10 @@ if (!slug) {
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
         // AUTO-GEOCODING
-        let coordinates = null;
+        let coordinates = normalizeCoordinates(editingListing?.coordinates);
         if (address && city && state) {
             console.log('🌍 Auto-geocoding address...');
-            coordinates = await geocodeAddress(address, city, state, zipCode);
+            coordinates = normalizeCoordinates(await geocodeAddress(address, city, state, zipCode));
             if (coordinates) {
                 console.log('✅ Coordinates found:', coordinates);
             } else {
@@ -2241,12 +2179,10 @@ if (!slug) {
                 owner_phone: getPhoneValue(document.getElementById('editOwnerPhoneContainer'))
             };
 
-            const { error: requestUpdateError } = await adminSupabase
-                .from('listing_requests')
-                .update(requestPayload)
-                .eq('id', requestId);
-
-            if (requestUpdateError) throw requestUpdateError;
+            await adminProxy('requests:update', {
+                id: requestId,
+                ...requestPayload
+            });
 
             document.getElementById('editModal').classList.add('hidden');
             document.getElementById('editModal').dataset.mode = '';
@@ -2261,24 +2197,12 @@ if (!slug) {
         const isExisting = editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id);
         
         if (isExisting) {
-            const { data, error } = await adminSupabase
-                .from('listings')
-                .update(listingData)
-                .eq('id', editingListing.id)
-                .select()
-                .single();
-            
-            if (error) throw error;
-            savedListing = data;
+            savedListing = await adminProxy('listings:update', {
+                id: editingListing.id,
+                ...listingData
+            });
         } else {
-            const { data, error } = await adminSupabase
-                .from('listings')
-                .insert(listingData)
-                .select()
-                .single();
-            
-            if (error) throw error;
-            savedListing = data;
+            savedListing = await adminProxy('listings:insert', listingData);
         }
         
         await saveOwnerInfo(savedListing.id, isClaimed);
@@ -2323,47 +2247,19 @@ async function saveOwnerInfo(listingId, isClaimed) {
         confirmation_key: isClaimed ? null : (document.getElementById('editConfirmationKey').value.trim() || null)
     };
     
-    const { data: existing } = await adminSupabase
-        .from('business_owners')
-        .select('*')
-        .eq('listing_id', listingId)
-        .maybeSingle();
-    
-    if (existing) {
-        const updates = { ...ownerData };
-        
-        // If claimed, clear confirmation key
-        if (isClaimed) {
-            updates.confirmation_key = null;
-        }
-        
-        const { error } = await adminSupabase
-            .from('business_owners')
-            .update(updates)
-            .eq('listing_id', listingId);
-        
-        if (error) throw error;
-        
-    } else {
-        // Generate confirmation key if not claimed and not provided
-        if (!isClaimed && !ownerData.confirmation_key) {
-            const words = [
-                'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
-                'iota', 'kappa', 'lambda', 'sigma', 'omega', 'phoenix', 'apollo',
-                'athena', 'zeus', 'hera', 'poseidon', 'demeter', 'ares', 'hermes'
-            ];
-            const word1 = words[Math.floor(Math.random() * words.length)];
-            const word2 = words[Math.floor(Math.random() * words.length)];
-            const word3 = words[Math.floor(Math.random() * words.length)];
-            ownerData.confirmation_key = `${word1}-${word2}-${word3}`;
-        }
-        
-        const { error } = await adminSupabase
-            .from('business_owners')
-            .insert(ownerData);
-        
-        if (error) throw error;
+    if (!isClaimed && !ownerData.confirmation_key) {
+        const words = [
+            'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
+            'iota', 'kappa', 'lambda', 'sigma', 'omega', 'phoenix', 'apollo',
+            'athena', 'zeus', 'hera', 'poseidon', 'demeter', 'ares', 'hermes'
+        ];
+        const word1 = words[Math.floor(Math.random() * words.length)];
+        const word2 = words[Math.floor(Math.random() * words.length)];
+        const word3 = words[Math.floor(Math.random() * words.length)];
+        ownerData.confirmation_key = `${word1}-${word2}-${word3}`;
     }
+
+    await adminProxy('owners:upsert', ownerData);
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -2381,16 +2277,11 @@ window.saveListing = saveListing;
 
 window.sendMagicLink = async function(listingId) {
     try {
-        const { data: listing, error: listingError } = await adminSupabase
-            .from('listings')
-            .select(`
-                business_name,
-                owner:business_owners(owner_email, owner_user_id)
-            `)
-            .eq('id', listingId)
-            .single();
-        
-        if (listingError) throw listingError;
+        const listings = await adminProxy('listings:list');
+        const listing = Array.isArray(listings)
+            ? listings.find((row) => String(row.id) === String(listingId))
+            : null;
+        if (!listing) throw new Error('Listing not found');
         
         const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
         if (!owner || !owner.owner_email || !owner.owner_user_id) {
@@ -2404,14 +2295,20 @@ window.sendMagicLink = async function(listingId) {
             return;
         }
         
-        const { error } = await adminSupabase.auth.signInWithOtp({
-            email: owner.owner_email,
-            options: {
-                emailRedirectTo: `${window.location.origin}/business.html`
-            }
+        const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/send-magic-link', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: owner.owner_email,
+                redirectTo: `${window.location.origin}/business.html`
+            })
         });
-        
-        if (error) throw error;
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Failed to send magic link');
+        }
         
         alert(`Magic link sent successfully to ${owner.owner_email}`);
         
@@ -2434,19 +2331,8 @@ window.deleteListing = async function(listingId) {
     }
     
     try {
-        const { error: ownerError } = await adminSupabase
-            .from('business_owners')
-            .delete()
-            .eq('listing_id', listingId);
-        
-        if (ownerError) console.error('Error deleting owner:', ownerError);
-        
-        const { error } = await adminSupabase
-            .from('listings')
-            .delete()
-            .eq('id', listingId);
-        
-        if (error) throw error;
+        await adminProxy('owners:delete', { listing_id: listingId });
+        await adminProxy('listings:delete', { id: listingId });
         
         alert('✅ Listing deleted successfully');
         await loadListings();
@@ -3134,16 +3020,10 @@ function generateTemplateReplacementsPart2(listing) {
 
 window.generateListingPage = async function(listingId) {
     try {
-        const { data: listing, error } = await adminSupabase
-            .from('listings')
-            .select(`
-                *,
-                owner:business_owners(*)
-            `)
-            .eq('id', listingId)
-            .single();
-        
-        if (error) throw error;
+        const listings = await adminProxy('listings:list');
+        const listing = Array.isArray(listings)
+            ? listings.find((row) => String(row.id) === String(listingId))
+            : null;
         if (!listing) {
             console.error('Listing not found');
             return;
@@ -3158,46 +3038,29 @@ window.generateListingPage = async function(listingId) {
             listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
             
             // Update in database
-            await adminSupabase
-                .from('listings')
-                .update({ logo: listing.logo })
-                .eq('id', listingId);
+            await adminProxy('listings:update', { id: listingId, logo: listing.logo });
         }
         
         if (!listing.photos || listing.photos.length === 0) {
             listing.photos = [`${defaultImage}?w=800&q=80`];
             
             // Update in database
-            await adminSupabase
-                .from('listings')
-                .update({ photos: listing.photos })
-                .eq('id', listingId);
+            await adminProxy('listings:update', { id: listingId, photos: listing.photos });
         }
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
-        // Create analytics entry if it doesn't exist
-        const { data: analyticsEntry } = await adminSupabase
-            .from('analytics')
-            .select('*')
-            .eq('listing_id', listingId)
-            .maybeSingle();
-        
-        if (!analyticsEntry) {
-            console.log('Creating analytics entry for listing:', listingId);
-            await adminSupabase
-                .from('analytics')
-                .insert({
-                    listing_id: listingId,
-                    views: 0,
-                    call_clicks: 0,
-                    website_clicks: 0,
-                    direction_clicks: 0,
-                    share_clicks: 0,
-                    video_plays: 0,
-                    last_viewed: new Date().toISOString()
-                });
-        }
+        console.log('Creating analytics entry for listing:', listingId);
+        await adminProxy('analytics:upsert', {
+            listing_id: listingId,
+            views: 0,
+            call_clicks: 0,
+            website_clicks: 0,
+            direction_clicks: 0,
+            share_clicks: 0,
+            video_plays: 0,
+            last_viewed: new Date().toISOString()
+        });
         
         const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
         if (!templateResponse.ok) {
@@ -3237,14 +3100,12 @@ window.generateListingPage = async function(listingId) {
 
 async function updateSitemap() {
     try {
-        const { data: listings, error } = await adminSupabase
-            .from('listings')
-            .select('*')
-            .eq('visible', true);
-        
-        if (error) throw error;
-        
-        const database = { listings: listings || [] };
+        const allListingsData = await adminProxy('listings:list');
+        const database = {
+            listings: Array.isArray(allListingsData)
+                ? allListingsData.filter((listing) => listing.visible)
+                : []
+        };
         
         const now = new Date().toISOString().split('T')[0];
         const baseUrl = 'https://thegreekdirectory.org';
@@ -3641,27 +3502,19 @@ async function uploadListingsFromCSV(listings) {
             
             // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
             
-            const { data, error } = await adminSupabase
-                .from('listings')
-                .insert(listingData)
-                .select()
-                .single();
-            
-            if (error) throw error;
+            const data = await adminProxy('listings:insert', listingData);
             
             // Create analytics entry
-            await adminSupabase
-                .from('analytics')
-                .insert({
-                    listing_id: data.id,
-                    views: 0,
-                    call_clicks: 0,
-                    website_clicks: 0,
-                    direction_clicks: 0,
-                    share_clicks: 0,
-                    video_plays: 0,
-                    last_viewed: new Date().toISOString()
-                });
+            await adminProxy('analytics:upsert', {
+                listing_id: data.id,
+                views: 0,
+                call_clicks: 0,
+                website_clicks: 0,
+                direction_clicks: 0,
+                share_clicks: 0,
+                video_plays: 0,
+                last_viewed: new Date().toISOString()
+            });
             
             const ownerData = {
                 listing_id: data.id,
@@ -3685,11 +3538,9 @@ async function uploadListingsFromCSV(listings) {
                 ownerData.confirmation_key = `${word1}-${word2}-${word3}`;
             }
             
-            const { error: ownerError } = await adminSupabase
-                .from('business_owners')
-                .insert(ownerData);
-            
-            if (ownerError) {
+            try {
+                await adminProxy('owners:upsert', ownerData);
+            } catch (ownerError) {
                 console.warn('⚠️ Failed to create owner record for', businessName, ownerError);
             }
             
