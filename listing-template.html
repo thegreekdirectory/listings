@@ -14,14 +14,30 @@ or distribution of this code can result in legal action to the fullest extent pe
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     
-    <title>{{BUSINESS_NAME}}{{CITY_STATE}} | The Greek Directory</title>
+    <title>{{BUSINESS_NAME}} in {{CITY}}, {{STATE}} | Greek Businesses | The Greek Directory</title>
 
     <meta name="description" content="{{TAGLINE}}{{IN_CITY}}. View address, phone, hours, and photos.">
-    <meta property="og:title" content="{{BUSINESS_NAME}}{{CITY_STATE}} | The Greek Directory">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="geo.region" content="{{STATE}}">
+    <meta name="geo.placename" content="{{CITY}}">
+    <meta name="geo.position" content="{{LAT}};{{LNG}}">
+    <meta name="ICBM" content="{{LAT}}, {{LNG}}">
+
+    <meta property="og:title" content="{{BUSINESS_NAME}} in {{CITY}}, {{STATE}} | Greek Businesses | The Greek Directory">
     <meta property="og:description" content="{{TAGLINE}}{{IN_CITY}}">
     <meta property="og:type" content="business.business">
+    <meta property="og:site_name" content="The Greek Directory">
+    <meta property="og:locale" content="en_US">
     <meta property="og:url" content="{{LISTING_URL}}">
     <meta property="og:image" content="{{LOGO}}">
+    <meta property="og:image:alt" content="{{BUSINESS_NAME}} logo">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{BUSINESS_NAME}}{{CITY_STATE}} | The Greek Directory">
+    <meta name="twitter:description" content="{{TAGLINE}}{{IN_CITY}}">
+    <meta name="twitter:image" content="{{LOGO}}">
     <style>
     .pwa-splash {
         position: fixed;
@@ -70,11 +86,13 @@ or distribution of this code can result in legal action to the fullest extent pe
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "LocalBusiness",
+        "@type": "{{BUSINESS_SCHEMA_TYPE}}",
+        "@id": "{{LISTING_URL}}#business",
         "name": "{{BUSINESS_NAME}}",
         "description": "{{TAGLINE}}",
         "url": "{{LISTING_URL}}",
         "image": "{{LOGO}}",
+        "logo": "{{LOGO}}",
         "address": {
             "@type": "PostalAddress",
             "streetAddress": "{{ADDRESS}}",
@@ -83,8 +101,95 @@ or distribution of this code can result in legal action to the fullest extent pe
             "postalCode": "{{ZIP_CODE}}",
             "addressCountry": "{{COUNTRY}}"
         },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "{{LAT}}",
+            "longitude": "{{LNG}}"
+        },
+        "hasMap": "{{HAS_MAP_URL}}",
+        "areaServed": {
+            "@type": "City",
+            "name": "{{CITY}}"
+        },
         "telephone": "{{PHONE}}",
-        "openingHoursSpecification": {{HOURS_SCHEMA}}
+        "openingHoursSpecification": {{HOURS_SCHEMA}},
+        "sameAs": {{SAME_AS_SCHEMA}},
+        "identifier": {
+            "@type": "PropertyValue",
+            "propertyID": "TGD Listing ID",
+            "value": "{{LISTING_ID}}"
+        }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://thegreekdirectory.org"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "{{CATEGORY}}",
+                "item": "{{CATEGORY_URL}}"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "{{BUSINESS_NAME}}",
+                "item": "{{LISTING_URL}}"
+            }
+        ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "{{BUSINESS_NAME}}",
+        "url": "{{LISTING_URL}}",
+        "isPartOf": {
+            "@type": "WebSite",
+            "name": "The Greek Directory",
+            "url": "https://thegreekdirectory.org"
+        },
+        "primaryImageOfPage": {
+            "@type": "ImageObject",
+            "url": "{{LOGO}}",
+            "caption": "{{BUSINESS_NAME}} logo"
+        }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Where is {{BUSINESS_NAME}} located?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "{{BUSINESS_NAME}} is located in {{CITY}}, {{STATE}}."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What are the hours of {{BUSINESS_NAME}}?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Hours vary by day. See the listing page for full details."
+                }
+            }
+        ]
     }
     </script>
 
