@@ -35,6 +35,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     <meta property="og:image:height" content="630">
 
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@thegreekdir">
     <meta name="twitter:title" content="dcbvhnm | The Greek Directory">
     <meta name="twitter:description" content="gtfrnm">
     <meta name="twitter:image" content="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop&q=80">
@@ -71,6 +72,8 @@ or distribution of this code can result in legal action to the fullest extent pe
     /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 </style>
 
+    <link rel="preconnect" href="https://images.thegreekdirectory.org">
+    <link rel="dns-prefetch" href="https://images.thegreekdirectory.org">
     <link rel="stylesheet" href="/css/pwa.css">
     <link rel="canonical" href="https://listings.thegreekdirectory.org/listing/def">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
@@ -91,7 +94,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         "name": "dcbvhnm",
         "description": "gtfrnm",
         "url": "https://listings.thegreekdirectory.org/listing/def",
-        "image": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop&q=80",
+        "image": {"@type": "ImageObject", "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop&q=80", "width": 1200, "height": 630},
         "logo": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop&q=80",
         "address": {
             "@type": "PostalAddress",
@@ -108,12 +111,13 @@ or distribution of this code can result in legal action to the fullest extent pe
         },
         "hasMap": "",
         "areaServed": {
-            "@type": "City",
+            "@type": "AdministrativeArea",
             "name": ""
         },
         "telephone": "",
         "openingHoursSpecification": [],
         "sameAs": [],
+        "mainEntityOfPage": {"@type": "WebPage", "@id": "https://listings.thegreekdirectory.org/listing/def"},
         "identifier": {
             "@type": "PropertyValue",
             "propertyID": "TGD Listing ID",
@@ -152,9 +156,10 @@ or distribution of this code can result in legal action to the fullest extent pe
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "WebPage",
+        "@type": "ItemPage",
         "name": "dcbvhnm",
         "url": "https://listings.thegreekdirectory.org/listing/def",
+        "about": {"@type": "LocalBusiness", "name": "dcbvhnm"},
         "isPartOf": {
             "@type": "WebSite",
             "name": "The Greek Directory",
@@ -165,31 +170,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop&q=80",
             "caption": "dcbvhnm logo"
         }
-    }
-    </script>
-
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-            {
-                "@type": "Question",
-                "name": "Where is dcbvhnm located?",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "dcbvhnm is located in , ."
-                }
-            },
-            {
-                "@type": "Question",
-                "name": "What are the hours of dcbvhnm?",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Hours vary by day. See the listing page for full details."
-                }
-            }
-        ]
     }
     </script>
 

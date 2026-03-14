@@ -32,6 +32,42 @@ let SUBCATEGORIES = {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
+
+const META_DESCRIPTION_SUFFIX = 'Greek business in {city}, {state}. View address, phone, hours, and photos.';
+
+function getTaglineMaxLength(city = '', state = '') {
+    const suffixLength = META_DESCRIPTION_SUFFIX.replace('{city}', city || '').replace('{state}', state || '').length;
+    return Math.max(30, Math.min(75, 160 - suffixLength - 2));
+}
+
+function normalizeSingleTime(value) {
+    const raw = String(value || '').trim().toUpperCase();
+    if (!raw) return null;
+    const match = raw.match(/^(\d{1,2})(?::?(\d{2}))?\s*(AM|PM)?$/i);
+    if (!match) return null;
+    let hour = Number(match[1]);
+    const minute = Number(match[2] || '0');
+    const meridiem = match[3];
+    if (minute > 59 || hour > 24) return null;
+    if (meridiem === 'PM' && hour < 12) hour += 12;
+    if (meridiem === 'AM' && hour === 12) hour = 0;
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+function normalizeHoursInput(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    if (/^closed$/i.test(raw)) return 'Closed';
+    if (/24\s*hours|open\s*24/i.test(raw)) return '00:00-23:59';
+    const parts = raw.split(/\s*-\s*/);
+    if (parts.length === 2) {
+        const start = normalizeSingleTime(parts[0]);
+        const end = normalizeSingleTime(parts[1]);
+        return start && end ? `${start}-${end}` : null;
+    }
+    return normalizeSingleTime(raw);
+}
+
 let uploadedImages = { logo: null, photos: [], video: null };
 let photosSortable = null;
 let selectedSubcategories = [];
@@ -192,7 +228,7 @@ async function uploadToCloudflareImages(file) {
         }
         
         const variants = result?.result?.variants || [];
-        return variants[0] || result?.result?.url || '';
+        return (variants[0] || result?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
     }
     if (!accountId || !apiKey) {
         throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
@@ -216,7 +252,7 @@ async function uploadToCloudflareImages(file) {
     }
     
     const variants = result?.result?.variants || [];
-    return variants[0] || result?.result?.url || '';
+    return (variants[0] || result?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
 }
 
 function updateMediaPreview() {
@@ -461,8 +497,8 @@ function renderEditForm() {
                             <p class="info-notice">Contact Support to change this</p>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (max 75 chars) *</label>
-                            <input type="text" id="editTagline" value="${currentListing.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('tagline')">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (SEO-limited) *</label>
+                            <input type="text" id="editTagline" value="${currentListing.tagline || ''}" maxlength="60" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('tagline')">
                             <p class="char-counter mt-1"><span id="taglineCount">${(currentListing.tagline || '').length}</span>/75</p>
                         </div>
                         <div class="md:col-span-2">
@@ -902,6 +938,11 @@ async function saveChanges() {
         alert('Tagline is required');
         return;
     }
+    const taglineLimit = getTaglineMaxLength(document.getElementById('editCity').value.trim(), document.getElementById('editState').value.trim());
+    if (tagline.length > taglineLimit) {
+        alert(`Tagline must be ${taglineLimit} characters or fewer for SEO metadata compliance.`);
+        return;
+    }
     
     if (selectedSubcategories.length === 0) {
         alert('At least one subcategory is required');
@@ -1019,13 +1060,13 @@ async function saveChanges() {
             photos: mergedPhotos,
             video: updatedVideo,
             hours: {
-                monday: document.getElementById('editHoursMonday').value.trim() || null,
-                tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
-                wednesday: document.getElementById('editHoursWednesday').value.trim() || null,
-                thursday: document.getElementById('editHoursThursday').value.trim() || null,
-                friday: document.getElementById('editHoursFriday').value.trim() || null,
-                saturday: document.getElementById('editHoursSaturday').value.trim() || null,
-                sunday: document.getElementById('editHoursSunday').value.trim() || null
+                monday: normalizeHoursInput(document.getElementById('editHoursMonday').value.trim()),
+                tuesday: normalizeHoursInput(document.getElementById('editHoursTuesday').value.trim()),
+                wednesday: normalizeHoursInput(document.getElementById('editHoursWednesday').value.trim()),
+                thursday: normalizeHoursInput(document.getElementById('editHoursThursday').value.trim()),
+                friday: normalizeHoursInput(document.getElementById('editHoursFriday').value.trim()),
+                saturday: normalizeHoursInput(document.getElementById('editHoursSaturday').value.trim()),
+                sunday: normalizeHoursInput(document.getElementById('editHoursSunday').value.trim())
             },
             social_media: {
                 facebook: document.getElementById('editFacebook').value.trim() || null,
