@@ -388,7 +388,7 @@ function formatPhoneNumber(phone) {
     if (!phone) return '';
     const digits = String(phone).replace(/\D/g, '');
     if (digits.length === 11 && digits.startsWith('1')) {
-        return `+1-${digits.slice(1, 4)}-${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
+        return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
     }
     return String(phone);
 }
@@ -397,9 +397,16 @@ function normalizePhoneE164(value, country = 'USA') {
     if (!value) return null;
     const digits = String(value).replace(/\D/g, '');
     if (!digits) return null;
+
+    if (country === 'USA') {
+        if (digits.length === 10) return `+1${digits}`;
+        if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+        return null;
+    }
+
     const code = COUNTRY_CODES[country] || '1';
     const national = digits.startsWith(code) ? digits.slice(code.length) : digits;
-    return `+${code}${national}`;
+    return national ? `+${code}${national}` : null;
 }
 
 function createPhoneInput(value = '', country = 'USA') {

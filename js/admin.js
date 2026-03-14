@@ -67,6 +67,8 @@ const CATEGORIES = [
     'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
 ];
 
+let CATEGORY_SCHEMA_TYPE_MAPS = {};
+
 let SUBCATEGORIES = {
     'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
     'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
@@ -364,7 +366,6 @@ function normalizeImageCdnUrl(url = '') {
     return raw
         .replace('https://raw.githubusercontent.com/thegreekdirectory/listings/main/images', LISTING_IMAGE_CDN)
         .replace('https://github.com/thegreekdirectory/listings/raw/main/images', LISTING_IMAGE_CDN)
-        .replace('https://listings.thegreekdirectory.org/images', LISTING_IMAGE_CDN)
         .replace('/images/', `${LISTING_IMAGE_CDN}/`);
 }
 
@@ -372,16 +373,23 @@ function normalizePhoneE164(value, country = 'USA') {
     if (!value) return null;
     const digits = String(value).replace(/\D/g, '');
     if (!digits) return null;
+
+    if (country === 'USA') {
+        if (digits.length === 10) return `+1${digits}`;
+        if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+        return null;
+    }
+
     const code = COUNTRY_CODES[country] || '1';
     const national = digits.startsWith(code) ? digits.slice(code.length) : digits;
-    return `+${code}${national}`;
+    return national ? `+${code}${national}` : null;
 }
 
 function formatPhoneNumber(phone) {
     if (!phone) return '';
     const digits = String(phone).replace(/\D/g, '');
     if (digits.length === 11 && digits.startsWith('1')) {
-        return `+1-${digits.slice(1,4)}-${digits.slice(4,7)}-${digits.slice(7,11)}`;
+        return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
     }
     return String(phone);
 }
@@ -480,6 +488,9 @@ async function loadSubcategories() {
             const next = {};
             data.forEach((row) => {
                 if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
+                if (row.category && row.schema_type_map && typeof row.schema_type_map === 'object') {
+                    CATEGORY_SCHEMA_TYPE_MAPS[row.category] = row.schema_type_map;
+                }
             });
             if (Object.keys(next).length > 0) SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
         }
@@ -2072,6 +2083,11 @@ async function saveListing() {
         
         const phoneContainer = document.getElementById('editPhoneContainer');
         const phone = getPhoneValue(phoneContainer);
+        const phoneRawValue = phoneContainer?.querySelector('.phone-number-input')?.value?.trim();
+        if (phoneRawValue && !phone) {
+            alert('Phone number must be a valid US 10-digit number and is stored as E.164.');
+            return;
+        }
         
 // In saveListing function, replace the slug generation with:
 
@@ -2650,14 +2666,28 @@ function getSameAsLinks(listing) {
     return [...new Set(links.filter(Boolean))];
 }
 
+
+function getListingSchemaTypes(listing) {
+    const categoryMap = CATEGORY_SCHEMA_TYPE_MAPS[listing.category] || {};
+    const mappedTypes = categoryMap && listing.primary_subcategory
+        ? categoryMap[listing.primary_subcategory]
+        : null;
+
+    if (Array.isArray(mappedTypes) && mappedTypes.length > 0) {
+        return mappedTypes;
+    }
+
+    return ['LocalBusiness'];
+}
+
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listing/${listing.slug}`;
+    const listingUrl = `https://thegreekdirectory.org/listing/${listing.slug}`;
     const categoryUrl = `https://thegreekdirectory.org/${categorySlug}`;
     
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
-    const businessSchemaType = 'LocalBusiness';
+    const schemaTypes = getListingSchemaTypes(listing);
     const hasCoordinates = listing.coordinates && listing.coordinates.lat && listing.coordinates.lng;
     const latitude = hasCoordinates ? String(listing.coordinates.lat) : '';
     const longitude = hasCoordinates ? String(listing.coordinates.lng) : '';
@@ -2943,6 +2973,7 @@ function generateTemplateReplacements(listing) {
         'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
         'DESCRIPTION_JS': JSON.stringify(listing.description || '').slice(1, -1),
         'CATEGORY': escapeHtml(listing.category),
+        'PRIMARY_SUBCATEGORY': escapeHtml(listing.primary_subcategory || 'business'),
         'CATEGORY_URL': categoryUrl,
         'LISTING_URL': listingUrl,
         'LISTING_ID': listing.id,
@@ -2955,12 +2986,12 @@ function generateTemplateReplacements(listing) {
         'LAT': latitude,
         'LNG': longitude,
         'HAS_MAP_URL': hasMapUrl,
-        'BUSINESS_SCHEMA_TYPE': businessSchemaType,
+        'SCHEMA_TYPES_JSON': JSON.stringify(schemaTypes),
         'SAME_AS_SCHEMA': sameAsSchema,
         'ZIP_CODE': escapeHtml(listing.zip_code || ''),
-        'COUNTRY': escapeHtml(listing.country || 'USA'),
+        'COUNTRY': 'US',
         'PHONE': listing.phone || '',
-        'PHONE_SCHEMA': formatPhoneNumber(listing.phone || ''),
+        'PHONE_SCHEMA': listing.phone || '',
         'META_DESCRIPTION': escapeHtml(buildMetaDescription(listing.tagline || '', listing.city || '', listing.state || '')),
         'EMAIL': listing.email || '',
         'WEBSITE': listing.website || '',

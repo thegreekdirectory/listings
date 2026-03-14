@@ -960,6 +960,11 @@ async function saveChanges() {
     
     const phoneContainer = document.getElementById('editPhoneContainer');
     const phone = getPhoneValue(phoneContainer);
+    const phoneRawValue = phoneContainer?.querySelector('.phone-number-input')?.value?.trim();
+    if (phoneRawValue && !phone) {
+        alert('Phone number must be a valid US 10-digit number and is stored as E.164.');
+        return;
+    }
     
     const additionalInfo = [];
     for (let i = 0; i < 5; i += 1) {
