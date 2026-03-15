@@ -375,9 +375,8 @@ function normalizePhoneE164(value, country = 'USA') {
     if (!digits) return null;
 
     if (country === 'USA') {
-        if (digits.length === 10) return `+1${digits}`;
-        if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
-        return null;
+        if (digits.length !== 10) return null;
+        return `+1${digits}`;
     }
 
     const code = COUNTRY_CODES[country] || '1';
@@ -752,7 +751,7 @@ window.acceptRequest = async function(requestId) {
                 title: o.title || null,
                 from_greece: request.from_greece || null,
                 owner_email: o.email || null,
-                owner_phone: o.phone ? `+1${String(o.phone).replace(/\D/g, '')}` : null,
+                owner_phone: normalizePhoneE164(o.phone, 'USA'),
                 name_title_visible: true,
                 email_visible: true,
                 phone_visible: true,
@@ -2667,6 +2666,10 @@ function getSameAsLinks(listing) {
 }
 
 
+function isValidSchemaOrgType(type) {
+    return typeof type === 'string' && /^[A-Z][A-Za-z0-9]*$/.test(type);
+}
+
 function getListingSchemaTypes(listing) {
     const categoryMap = CATEGORY_SCHEMA_TYPE_MAPS[listing.category] || {};
     const mappedTypes = categoryMap && listing.primary_subcategory
@@ -2674,10 +2677,19 @@ function getListingSchemaTypes(listing) {
         : null;
 
     if (Array.isArray(mappedTypes) && mappedTypes.length > 0) {
-        return mappedTypes;
+        const validTypes = mappedTypes.filter(isValidSchemaOrgType);
+        if (validTypes.length > 0) return [...new Set(validTypes)];
     }
 
     return ['LocalBusiness'];
+}
+
+function detectImageMimeType(url = '') {
+    const cleanUrl = String(url || '').split('?')[0].toLowerCase();
+    if (cleanUrl.endsWith('.png')) return 'image/png';
+    if (cleanUrl.endsWith('.webp')) return 'image/webp';
+    if (cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg')) return 'image/jpeg';
+    return 'image/jpeg';
 }
 
 function generateTemplateReplacements(listing) {
@@ -2979,7 +2991,9 @@ function generateTemplateReplacements(listing) {
         'LISTING_ID': listing.id,
         'SLUG': listing.slug || '',
         'LOGO': listing.logo || '',
+        'PRIMARY_IMAGE': photoList[0] || listing.logo || '',
         'LOGO_ALT': `${escapeHtml(listing.business_name)} in ${escapeHtml(listing.city || '')}, ${escapeHtml(listing.state || '')}`,
+        'OG_IMAGE_TYPE': detectImageMimeType(photoList[0] || listing.logo || ''),
         'ADDRESS': escapeHtml(listing.address || ''),
         'CITY': escapeHtml(listing.city || ''),
         'STATE': escapeHtml(listing.state || ''),
