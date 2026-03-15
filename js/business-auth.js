@@ -399,9 +399,8 @@ function normalizePhoneE164(value, country = 'USA') {
     if (!digits) return null;
 
     if (country === 'USA') {
-        if (digits.length === 10) return `+1${digits}`;
-        if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
-        return null;
+        if (digits.length !== 10) return null;
+        return `+1${digits}`;
     }
 
     const code = COUNTRY_CODES[country] || '1';

@@ -46,9 +46,8 @@ const formatUSPhoneNoCode = (v='') => {
 const normalizePhone = (id) => {
   const d = onlyDigits(document.getElementById(id)?.value || '');
   if (!d) return null;
-  if (d.length === 10) return `+1${d}`;
-  if (d.length === 11 && d.startsWith('1')) return `+${d}`;
-  return null;
+  if (d.length !== 10) return null;
+  return `+1${d}`;
 };
 
 function lockHttpsInputs() {
