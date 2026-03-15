@@ -67,6 +67,8 @@ const CATEGORIES = [
     'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
 ];
 
+let CATEGORY_SCHEMA_TYPE_MAPS = {};
+
 let SUBCATEGORIES = {
     'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
     'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
@@ -334,16 +336,62 @@ function clearAuthMessage() {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
-function formatPhoneNumber(phone, country = 'USA') {
+const LISTING_IMAGE_CDN = 'https://images.thegreekdirectory.org';
+const META_DESCRIPTION_SUFFIX = 'Greek business in {city}, {state}. View address, phone, hours, and photos.';
+
+function normalizeTagline(tagline = '') {
+    const cleaned = String(tagline || '').replace(/[.!?]+$/g, '').replace(/\s+/g, ' ').trim();
+    return cleaned ? `${cleaned}.` : '';
+}
+
+function buildMetaDescription(tagline, city, state) {
+    const normalizedTagline = normalizeTagline(tagline);
+    const base = `${normalizedTagline} ${META_DESCRIPTION_SUFFIX.replace('{city}', city || '').replace('{state}', state || '')}`
+        .replace(/\s+/g, ' ')
+        .replace(/\.{2,}/g, '.')
+        .replace(/\s+([.,!?])/g, '$1')
+        .trim();
+    return base.length > 160 ? `${base.slice(0, 157).trimEnd()}.` : base;
+}
+
+function getTaglineMaxLength(city = '', state = '') {
+    const suffixLength = META_DESCRIPTION_SUFFIX.replace('{city}', city || '').replace('{state}', state || '').length;
+    const available = 160 - suffixLength - 2;
+    return Math.max(30, Math.min(75, available));
+}
+
+function normalizeImageCdnUrl(url = '') {
+    const raw = String(url || '').trim();
+    if (!raw) return '';
+    return raw
+        .replace('https://raw.githubusercontent.com/thegreekdirectory/listings/main/images', LISTING_IMAGE_CDN)
+        .replace('https://github.com/thegreekdirectory/listings/raw/main/images', LISTING_IMAGE_CDN)
+        .replace('/images/', `${LISTING_IMAGE_CDN}/`);
+}
+
+function normalizePhoneE164(value, country = 'USA') {
+    if (!value) return null;
+    const digits = String(value).replace(/\D/g, '');
+    if (!digits) return null;
+
+    if (country === 'USA') {
+        if (digits.length === 10) return `+1${digits}`;
+        if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+        return null;
+    }
+
+    const code = COUNTRY_CODES[country] || '1';
+    const national = digits.startsWith(code) ? digits.slice(code.length) : digits;
+    return national ? `+${code}${national}` : null;
+}
+
+function formatPhoneNumber(phone) {
     if (!phone) return '';
     const digits = String(phone).replace(/\D/g, '');
     if (digits.length === 11 && digits.startsWith('1')) {
-        return `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7,11)}`;
+        return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
     }
-    if (digits.length === 10) {
-        return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6,10)}`;
-    }
-    return phone;
+    return String(phone);
 }
 
 function sanitizeListingDescription(value) {
@@ -352,7 +400,10 @@ function sanitizeListingDescription(value) {
 }
 
 function createPhoneInput(value = '', country = 'USA') {
-    const digits = value ? value.replace(/\D/g, '') : '';
+    const numericValue = value ? value.replace(/\D/g, '') : '';
+    const digits = country === 'USA' && numericValue.startsWith('1') && numericValue.length === 11
+        ? numericValue.slice(1)
+        : numericValue;
     
     return `
         <div class="flex gap-2">
@@ -363,7 +414,7 @@ function createPhoneInput(value = '', country = 'USA') {
             </select>
             <input type="tel" class="phone-number-input flex-1 px-4 py-2 border border-gray-300 rounded-lg" 
                 value="${digits}" 
-                placeholder="${country === 'USA' ? '5551234567' : 'Phone number'}"
+                placeholder="${country === 'USA' ? '(555) 123-4567' : 'Phone number'}"
                 oninput="formatPhoneInput(this)">
         </div>
     `;
@@ -399,7 +450,7 @@ function getPhoneValue(container) {
     const digits = phoneInput.value.replace(/\D/g, '');
     const code = COUNTRY_CODES[country];
     
-    return `${code}${digits}`.replace(/\D/g, "");
+    return normalizePhoneE164(digits, country);
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -437,6 +488,9 @@ async function loadSubcategories() {
             const next = {};
             data.forEach((row) => {
                 if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
+                if (row.category && row.schema_type_map && typeof row.schema_type_map === 'object') {
+                    CATEGORY_SCHEMA_TYPE_MAPS[row.category] = row.schema_type_map;
+                }
             });
             if (Object.keys(next).length > 0) SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
         }
@@ -1953,6 +2007,35 @@ function normalizeCoordinates(value) {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
+
+function normalizeSingleTime(value) {
+    const raw = String(value || '').trim().toUpperCase();
+    if (!raw) return null;
+    const match = raw.match(/^(\d{1,2})(?::?(\d{2}))?\s*(AM|PM)?$/i);
+    if (!match) return null;
+    let hour = Number(match[1]);
+    const minute = Number(match[2] || '0');
+    const meridiem = match[3];
+    if (minute > 59 || hour > 24) return null;
+    if (meridiem === 'PM' && hour < 12) hour += 12;
+    if (meridiem === 'AM' && hour === 12) hour = 0;
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+function normalizeHoursInput(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    if (/^closed$/i.test(raw)) return 'Closed';
+    if (/24\s*hours|open\s*24/i.test(raw)) return '00:00-23:59';
+    const parts = raw.split(/\s*-\s*/);
+    if (parts.length === 2) {
+        const start = normalizeSingleTime(parts[0]);
+        const end = normalizeSingleTime(parts[1]);
+        return start && end ? `${start}-${end}` : null;
+    }
+    return normalizeSingleTime(raw);
+}
+
 async function saveListing() {
     try {
         const editModal = document.getElementById('editModal');
@@ -1968,6 +2051,12 @@ async function saveListing() {
         
         if (!tagline) {
             alert('Tagline is required');
+            return;
+        }
+
+        const taglineLimit = getTaglineMaxLength(document.getElementById('editCity').value.trim(), document.getElementById('editState').value.trim());
+        if (tagline.length > taglineLimit) {
+            alert(`Tagline must be ${taglineLimit} characters or fewer for SEO metadata compliance.`);
             return;
         }
         
@@ -1994,6 +2083,11 @@ async function saveListing() {
         
         const phoneContainer = document.getElementById('editPhoneContainer');
         const phone = getPhoneValue(phoneContainer);
+        const phoneRawValue = phoneContainer?.querySelector('.phone-number-input')?.value?.trim();
+        if (phoneRawValue && !phone) {
+            alert('Phone number must be a valid US 10-digit number and is stored as E.164.');
+            return;
+        }
         
 // In saveListing function, replace the slug generation with:
 
@@ -2100,20 +2194,20 @@ if (!slug) {
             phone: phone,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
-            logo: document.getElementById('editLogo').value.trim() || null,
-            photos: photos,
-            video: document.getElementById('editVideo').value.trim() || null,
+            logo: normalizeImageCdnUrl(document.getElementById('editLogo').value.trim()) || null,
+            photos: photos.map((photo) => normalizeImageCdnUrl(photo)).filter(Boolean),
+            video: normalizeImageCdnUrl(document.getElementById('editVideo').value.trim()) || null,
             additional_info: additionalInfo,
             custom_ctas: customCtas.slice(0, maxCtas),
             visible: editingListing?.visible !== false,
             hours: {
-                monday: document.getElementById('editHoursMonday').value.trim() || null,
-                tuesday: document.getElementById('editHoursTuesday').value.trim() || null,
-                wednesday: document.getElementById('editHoursWednesday').value.trim() || null,
-                thursday: document.getElementById('editHoursThursday').value.trim() || null,
-                friday: document.getElementById('editHoursFriday').value.trim() || null,
-                saturday: document.getElementById('editHoursSaturday').value.trim() || null,
-                sunday: document.getElementById('editHoursSunday').value.trim() || null
+                monday: normalizeHoursInput(document.getElementById('editHoursMonday').value.trim()),
+                tuesday: normalizeHoursInput(document.getElementById('editHoursTuesday').value.trim()),
+                wednesday: normalizeHoursInput(document.getElementById('editHoursWednesday').value.trim()),
+                thursday: normalizeHoursInput(document.getElementById('editHoursThursday').value.trim()),
+                friday: normalizeHoursInput(document.getElementById('editHoursFriday').value.trim()),
+                saturday: normalizeHoursInput(document.getElementById('editHoursSaturday').value.trim()),
+                sunday: normalizeHoursInput(document.getElementById('editHoursSunday').value.trim())
             },
             social_media: {
                 facebook: document.getElementById('editFacebook').value.trim() || null,
@@ -2372,33 +2466,26 @@ function generateHoursSchema(listing) {
     if (!listing.hours || Object.keys(listing.hours).length === 0) {
         return '[]';
     }
-    
+
     const dayMap = {
-        'monday': 'Monday',
-        'tuesday': 'Tuesday',
-        'wednesday': 'Wednesday',
-        'thursday': 'Thursday',
-        'friday': 'Friday',
-        'saturday': 'Saturday',
-        'sunday': 'Sunday'
+        monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday',
+        friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday'
     };
-    
+
     const schemaHours = [];
-    
     Object.entries(listing.hours).forEach(([day, hours]) => {
-        if (hours && hours.toLowerCase() !== 'closed') {
-            const match = hours.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?\s*-\s*(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
-            if (match) {
-                schemaHours.push({
-                    "@type": "OpeningHoursSpecification",
-                    "dayOfWeek": dayMap[day],
-                    "opens": match[1] + (match[2] || ':00') + (match[3] || ''),
-                    "closes": match[4] + (match[5] || ':00') + (match[6] || '')
-                });
-            }
-        }
+        const normalized = normalizeHoursInput(hours);
+        if (!normalized || normalized === 'Closed') return;
+        const range = normalized.split('-');
+        if (range.length !== 2) return;
+        schemaHours.push({
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: dayMap[day],
+            opens: range[0],
+            closes: range[1]
+        });
     });
-    
+
     return JSON.stringify(schemaHours);
 }
 
@@ -2579,22 +2666,36 @@ function getSameAsLinks(listing) {
     return [...new Set(links.filter(Boolean))];
 }
 
+
+function getListingSchemaTypes(listing) {
+    const categoryMap = CATEGORY_SCHEMA_TYPE_MAPS[listing.category] || {};
+    const mappedTypes = categoryMap && listing.primary_subcategory
+        ? categoryMap[listing.primary_subcategory]
+        : null;
+
+    if (Array.isArray(mappedTypes) && mappedTypes.length > 0) {
+        return mappedTypes;
+    }
+
+    return ['LocalBusiness'];
+}
+
 function generateTemplateReplacements(listing) {
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://listings.thegreekdirectory.org/listing/${listing.slug}`;
+    const listingUrl = `https://thegreekdirectory.org/listing/${listing.slug}`;
     const categoryUrl = `https://thegreekdirectory.org/${categorySlug}`;
     
     const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
     const inCity = listing.city ? ` in ${listing.city}` : '';
-    const primarySubcategorySchemaType = String(listing.primary_subcategory || '').trim();
-    const businessSchemaType = primarySubcategorySchemaType || getBusinessSchemaType(listing);
+    const schemaTypes = getListingSchemaTypes(listing);
     const hasCoordinates = listing.coordinates && listing.coordinates.lat && listing.coordinates.lng;
     const latitude = hasCoordinates ? String(listing.coordinates.lat) : '';
     const longitude = hasCoordinates ? String(listing.coordinates.lng) : '';
     const hasMapUrl = hasCoordinates ? `https://maps.google.com/?q=${latitude},${longitude}` : '';
     const sameAsSchema = JSON.stringify(getSameAsLinks(listing));
     
-    const photos = listing.photos || [];
+    const photos = (listing.photos || []).map((photo) => normalizeImageCdnUrl(photo)).filter(Boolean);
+    listing.logo = normalizeImageCdnUrl(listing.logo || '');
     const photoList = photos.length > 0 ? photos : (listing.logo ? [listing.logo] : []);
     const totalPhotos = photoList.length || 1;
     
@@ -2602,7 +2703,7 @@ function generateTemplateReplacements(listing) {
     let photosSlides = '';
     if (photoList.length > 0) {
         photosSlides = photoList.map((photo, index) => 
-            `<div class="carousel-slide" style="background: url('${photo}') center/cover;"></div>`
+            `<div class="carousel-slide" style="background: url('${photo}') center/cover;" role="img" aria-label="${escapeHtml(listing.business_name)} in ${escapeHtml(listing.city || '')}, ${escapeHtml(listing.state || '')}"></div>`
         ).join('');
     } else if (listing.logo) {
         photosSlides = `<div class="carousel-slide" style="background: url('${listing.logo}') center/cover;"></div>`;
@@ -2868,26 +2969,30 @@ function generateTemplateReplacements(listing) {
         'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
         'CITY_STATE': cityState,
         'IN_CITY': inCity,
-        'TAGLINE': escapeHtml(listing.tagline || ''),
+        'TAGLINE': escapeHtml(normalizeTagline(listing.tagline || '')),
         'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
         'DESCRIPTION_JS': JSON.stringify(listing.description || '').slice(1, -1),
         'CATEGORY': escapeHtml(listing.category),
+        'PRIMARY_SUBCATEGORY': escapeHtml(listing.primary_subcategory || 'business'),
         'CATEGORY_URL': categoryUrl,
         'LISTING_URL': listingUrl,
         'LISTING_ID': listing.id,
         'SLUG': listing.slug || '',
         'LOGO': listing.logo || '',
+        'LOGO_ALT': `${escapeHtml(listing.business_name)} in ${escapeHtml(listing.city || '')}, ${escapeHtml(listing.state || '')}`,
         'ADDRESS': escapeHtml(listing.address || ''),
         'CITY': escapeHtml(listing.city || ''),
         'STATE': escapeHtml(listing.state || ''),
         'LAT': latitude,
         'LNG': longitude,
         'HAS_MAP_URL': hasMapUrl,
-        'BUSINESS_SCHEMA_TYPE': businessSchemaType,
+        'SCHEMA_TYPES_JSON': JSON.stringify(schemaTypes),
         'SAME_AS_SCHEMA': sameAsSchema,
         'ZIP_CODE': escapeHtml(listing.zip_code || ''),
-        'COUNTRY': escapeHtml(listing.country || 'USA'),
+        'COUNTRY': 'US',
         'PHONE': listing.phone || '',
+        'PHONE_SCHEMA': listing.phone || '',
+        'META_DESCRIPTION': escapeHtml(buildMetaDescription(listing.tagline || '', listing.city || '', listing.state || '')),
         'EMAIL': listing.email || '',
         'WEBSITE': listing.website || '',
         'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',

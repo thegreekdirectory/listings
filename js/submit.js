@@ -45,7 +45,10 @@ const formatUSPhoneNoCode = (v='') => {
 };
 const normalizePhone = (id) => {
   const d = onlyDigits(document.getElementById(id)?.value || '');
-  return d ? `1${d}` : null;
+  if (!d) return null;
+  if (d.length === 10) return `+1${d}`;
+  if (d.length === 11 && d.startsWith('1')) return `+${d}`;
+  return null;
 };
 
 function lockHttpsInputs() {
@@ -355,8 +358,8 @@ function validatePayload(p){
   if (!p.owner_name || !p.owner_title || !p.owner_email) errors.push('Owner name, title, and email are required.');
   if (p.zip_code && !/^\d{5}$/.test(p.zip_code)) errors.push('ZIP code must be exactly 5 digits.');
   if (!p.owner_name_title_visible && (p.owner_email_visible || p.owner_phone_visible)) errors.push('Enable Owner Name + Title before showing owner email or phone.');
-  if (p.phone && onlyDigits(p.phone).length !== 11) errors.push('Phone number must be complete (10 digits).');
-  if (p.owner_phone && onlyDigits(p.owner_phone).length !== 11) errors.push('Owner phone number must be complete (10 digits).');
+  if (document.getElementById('phone')?.value.trim() && !p.phone) errors.push('Phone number must be a valid US number.');
+  if (document.getElementById('owner_phone')?.value.trim() && !p.owner_phone) errors.push('Owner phone number must be a valid US number.');
   if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) errors.push('Business email is incomplete/invalid.');
   if (p.owner_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.owner_email)) errors.push('Owner email is incomplete/invalid.');
   if (p.website && !/^https:\/\/[\w.-]+\.[a-z]{2,}/i.test(p.website)) errors.push('Website is incomplete/invalid.');

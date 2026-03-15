@@ -384,20 +384,36 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 // Phone formatting utilities
-function formatPhoneNumber(phone, country = 'USA') {
+function formatPhoneNumber(phone) {
     if (!phone) return '';
-    
-    const digits = phone.replace(/\D/g, '');
-    
-    if (country === 'USA' && digits.length === 10) {
-        return `(${digits.substr(0, 3)}) ${digits.substr(3, 3)}-${digits.substr(6, 4)}`;
+    const digits = String(phone).replace(/\D/g, '');
+    if (digits.length === 11 && digits.startsWith('1')) {
+        return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
     }
-    
-    return phone;
+    return String(phone);
+}
+
+function normalizePhoneE164(value, country = 'USA') {
+    if (!value) return null;
+    const digits = String(value).replace(/\D/g, '');
+    if (!digits) return null;
+
+    if (country === 'USA') {
+        if (digits.length === 10) return `+1${digits}`;
+        if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+        return null;
+    }
+
+    const code = COUNTRY_CODES[country] || '1';
+    const national = digits.startsWith(code) ? digits.slice(code.length) : digits;
+    return national ? `+${code}${national}` : null;
 }
 
 function createPhoneInput(value = '', country = 'USA') {
-    const digits = value ? value.replace(/\D/g, '') : '';
+    const numericValue = value ? value.replace(/\D/g, '') : '';
+    const digits = country === 'USA' && numericValue.startsWith('1') && numericValue.length === 11
+        ? numericValue.slice(1)
+        : numericValue;
     
     return `
         <div class="flex gap-2">
@@ -456,7 +472,7 @@ function getPhoneValue(container) {
     const digits = phoneInput.value.replace(/\D/g, '');
     const code = COUNTRY_CODES[country];
     
-    return `${code}${digits}`.replace(/\D/g, "");
+    return normalizePhoneE164(digits, country);
 }
 
 window.formatPhoneNumber = formatPhoneNumber;
