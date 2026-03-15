@@ -23,12 +23,12 @@ class PWADock {
         
         // All available apps
         this.availableApps = [
-            { id: 'home', label: 'Home', icon: '🏠', path: '/index.html', required: true },
-            { id: 'categories', label: 'Categories', icon: '📋', path: '/categories.html', required: false },
-            { id: 'search', label: 'Search', icon: '🔍', path: '/listings.html', required: false },
-            { id: 'map', label: 'Map', icon: '🗺️', path: '/map.html', required: false },
-            { id: 'starred', label: 'Starred', icon: '⭐', path: '/starred.html', required: false },
-            { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings.html', required: true }
+            { id: 'home', label: 'Home', icon: '🏠', path: '/', required: true },
+            { id: 'categories', label: 'Categories', icon: '📋', path: '/categories', required: false },
+            { id: 'search', label: 'Search', icon: '🔍', path: '/listings', required: false },
+            { id: 'map', label: 'Map', icon: '🗺️', path: '/map', required: false },
+            { id: 'starred', label: 'Starred', icon: '⭐', path: '/starred', required: false },
+            { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings', required: true }
         ];
         
         // Default dock order with Categories
@@ -393,8 +393,8 @@ class PWADock {
     isActive(path) {
         const currentPath = window.location.pathname;
         if (currentPath === path) return true;
-        if (path === '/index.html' && (currentPath === '/' || currentPath === '/index.html')) return true;
-        if (path === '/listings.html' && currentPath.includes('/listing')) return true;
+        if (path === '/' && (currentPath === '/' || currentPath === '/index.html')) return true;
+        if (path === '/listings' && currentPath.includes('/listing')) return true;
         return false;
     }
     

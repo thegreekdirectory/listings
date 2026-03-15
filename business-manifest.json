@@ -1,0 +1,21 @@
+{
+  "name": "The Greek Directory Business Portal",
+  "short_name": "TGD Business",
+  "start_url": "/business#overview",
+  "scope": "/business",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#055193",
+  "icons": [
+    {
+      "src": "/Squarekeylogoapple4.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Squarekeylogoapple4.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

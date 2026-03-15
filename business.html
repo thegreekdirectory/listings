@@ -8,6 +8,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="white">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="TGD Business">
+    <meta name="theme-color" content="#055193">
+    <link rel="manifest" href="/business-manifest.json">
     <link rel="apple-touch-startup-image" href="https://thegreekdirectory.org/Squarekeylogoapple4.png">
     <link rel="apple-touch-icon" href="https://thegreekdirectory.org/Squarekeylogoapple4.png">
     <link rel="icon" href="https://thegreekdirectory.org/Square%20key%20logo.png">
@@ -170,7 +172,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span id="tierBadge" class="tier-badge"></span>
+                        <span id="planBadge" class="tier-badge"></span>
                         <button onclick="logout()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Logout</button>
                     </div>
                 </div>
@@ -207,7 +209,14 @@
     </script>
     <script src="js/supabase-config.js"></script>
     <script src="js/business-auth.js"></script>
-        <script src="js/rich-text-editor.js"></script>
+    <script src="js/rich-text-editor.js"></script>
     <script src="js/business-dashboard.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/business-sw.js').catch((error) => {
+                console.warn('Business portal service worker registration failed:', error);
+            });
+        }
+    </script>
 </body>
 </html>
