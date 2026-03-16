@@ -346,7 +346,18 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
-        .listing-description p { margin-bottom: 0.75rem; }
+        .listing-description { margin: 0 0 1.5rem; padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; line-height: 1.8; }
+        .listing-description p { margin-bottom: 1rem; }
+        .listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
+        .listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
+        .read-more-btn { margin-top: 10px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+        .verified-checkmark-btn { border: 0; background: transparent; padding: 0; margin-left: 8px; cursor: pointer; position: relative; display: inline-flex; align-items: center; }
+        .verified-checkmark-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; min-width: 230px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .verified-checkmark-btn.open .verified-checkmark-tooltip { display: block; }
+        .hours-tooltip-wrap { position: relative; display: inline-flex; align-items: center; margin-left: 8px; }
+        .hours-tooltip-icon { width: 16px; height: 16px; color: #6b7280; cursor: pointer; }
+        .hours-tooltip { position: absolute; top: 20px; left: 0; z-index: 20; min-width: 220px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .hours-tooltip-wrap.open .hours-tooltip { display: block; }
         .desktop-listing-layout { display: block; }
         .desktop-main-column, .desktop-side-column { min-width: 0; }
         .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
@@ -366,7 +377,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         @media (min-width: 1024px) {
             .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-            .desktop-side-column { position: sticky; top: 24px; }
+            .desktop-side-column { position: sticky; top: 72px; }
         }
         @media (max-width: 767px) {
             .share-section { margin-bottom: 24px; }
@@ -468,15 +479,16 @@ or distribution of this code can result in legal action to the fullest extent pe
                         </div>
                     </div>
 
-                    <div class="text-gray-700 mb-6 listing-description">Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.
+                    <div class="text-gray-700 listing-description" id="listingDescription">Established in 1981, Eagle restaurant has been a family run business that focuses on quality, cleanliness, and service every day.
 Everything is fresh, made to order, including our salads. Soups are homemade daily also the Italian beef seasoned perfectly cooked to perfection. Local favorite -Gyros.
 Neighborhood casual fast food restaurant serving Downers Grove for over 40 years.</div>
+                    <button type="button" class="read-more-btn hidden" id="listingReadMoreBtn">Read more</button>
 
                     
                     
             <div class="owner-info-section">
                 <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                <div class="mb-4"><p><strong>Owner:</strong> John Zografos</p><p><strong>Title:</strong> Owner</p><p><strong>From:</strong> Xios, Greece</p></div>
+                <div class="mb-4"><p><strong>Owner:</strong> John Zografos, Owner</p><p><strong>From:</strong> Xios, Greece</p></div>
             </div>
         
 
@@ -572,7 +584,12 @@ Neighborhood casual fast food restaurant serving Downers Grove for over 40 years
         
                             
             <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+                <h3 class="font-semibold text-gray-900 mb-2">Hours
+                    <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
+                        <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
+                        <span class="hours-tooltip">Last updated 16 hours ago by TGD Admin.</span>
+                    </span>
+                </h3>
                 <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>Closed</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>11:00 AM - 8:00 PM</span></div></div>
                 <div id="openStatusText" class="mt-2 text-sm"></div>
                 <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
@@ -776,7 +793,37 @@ Neighborhood casual fast food restaurant serving Downers Grove for over 40 years
             });
             
             checkAdminRedirect();
+            initializeReadMore();
+            initializeTooltipToggle('verifiedCheckmarkButton');
+            initializeTooltipToggle('hoursTooltipButton');
         });
+
+        function initializeTooltipToggle(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                button.classList.toggle('open');
+            });
+            document.addEventListener('click', () => button.classList.remove('open'));
+        }
+
+        function initializeReadMore() {
+            const description = document.getElementById('listingDescription');
+            const readMoreButton = document.getElementById('listingReadMoreBtn');
+            if (!description || !readMoreButton) return;
+            if (description.scrollHeight <= 300) return;
+
+            let expanded = false;
+            description.classList.add('collapsed');
+            readMoreButton.classList.remove('hidden');
+
+            readMoreButton.addEventListener('click', () => {
+                expanded = !expanded;
+                description.classList.toggle('collapsed', !expanded);
+                readMoreButton.textContent = expanded ? 'Read less' : 'Read more';
+            });
+        }
         
         function checkAdminRedirect() {
             const path = window.location.pathname;
