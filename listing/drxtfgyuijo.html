@@ -38,7 +38,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     <meta property="business:contact_data:region" content="IL">
     <meta property="business:contact_data:postal_code" content="60714">
     <meta property="business:contact_data:country_name" content="United States">
-    <meta property="business:contact_data:phone_number" content="18474567890">
+    <meta property="business:contact_data:phone_number" content="+18474567890">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="drxtfgyuijo in Niles, IL | Greek Businesses | The Greek Directory">
@@ -102,7 +102,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "name": "drxtfgyuijo",
                 "description": "1tfyguklihjo;kp. Greek business in Niles, IL. View address, phone, hours, and photos.",
                 "url": "https://thegreekdirectory.org/listing/drxtfgyuijo",
-                "telephone": "18474567890",
+                "telephone": "+18474567890",
                 "image": ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/caf3ba46-6143-4860-6077-cd40645c4d01/public?sig=6392eac5dc395a48e6c4c2cd82958d26ce4d657c926273200ba1136557b29664"],
                 "logo": "https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/54bd6ff5-0ec8-460f-1fe8-311f8b864400/public",
                 "address": {
@@ -125,8 +125,6 @@ or distribution of this code can result in legal action to the fullest extent pe
                 },
                 "openingHoursSpecification": [{"@type":"OpeningHoursSpecification","dayOfWeek":"Friday","opens":"09:00","closes":"16:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Monday","opens":"00:00","closes":"23:59"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Tuesday","opens":"09:00","closes":"22:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Saturday","opens":"21:00","closes":"22:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Thursday","opens":"09:00","closes":"14:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Wednesday","opens":"00:00","closes":"23:59"}],
                 "sameAs": ["https://facebook.com/dfxtfghjkl","https://instagram.com/ycgvuybinompk","https://twitter.com/iugyuctfrygvhubjnio","https://linkedin.com/dwefgrthjmm","https://yelp.com/wqefghjfghty"],
-                "isPartOf": {"@type": "WebSite", "name": "The Greek Directory", "url": "https://thegreekdirectory.org"},
-                "provider": {"@type": "Organization", "name": "The Greek Directory", "url": "https://thegreekdirectory.org"},
                 "mainEntityOfPage": {"@id": "https://thegreekdirectory.org/listing/drxtfgyuijo#page"},
                 "identifier": {
                     "@type": "PropertyValue",
@@ -352,6 +350,14 @@ or distribution of this code can result in legal action to the fullest extent pe
         .desktop-listing-layout { display: block; }
         .desktop-main-column, .desktop-side-column { min-width: 0; }
         .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
+        .mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
+        .mobile-cta-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+        .additional-info-table { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+        .additional-info-row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr); gap: 16px; padding: 10px 14px; border-bottom: 1px solid #f3f4f6; }
+        .additional-info-row:last-child { border-bottom: none; }
+        .additional-info-row:nth-child(even) { background: #f9fafb; }
+        .map-fallback { display: none; margin-top: 12px; padding: 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 14px; }
+        .map-fallback.visible { display: block; }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
@@ -364,6 +370,15 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         @media (max-width: 767px) {
             .share-section { margin-bottom: 24px; }
+            .desktop-side-column { position: static; }
+        }
+
+        #listingMap,
+        #listingMap .leaflet-pane,
+        #listingMap .leaflet-top,
+        #listingMap .leaflet-bottom,
+        #listingMap .leaflet-control {
+            z-index: 1 !important;
         }
         
         @media (prefers-color-scheme: dark) {
@@ -437,10 +452,20 @@ or distribution of this code can result in legal action to the fullest extent pe
                                     <span class="badge badge-closed" id="openClosedBadge">Closed Now</span>
                                 </div>
                             </div>
-                            <h2 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">drxtfgyuijo</h2>
-                            <p class="text-gray-600 italic mb-2">"1tfyguklihjo;kp"</p>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">drxtfgyuijo</h1>
+                            <h2 class="text-gray-600 italic text-xl font-semibold mb-2">1tfyguklihjo;kp</h2>
                         </div>
                         <img src="https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/54bd6ff5-0ec8-460f-1fe8-311f8b864400/public" alt="drxtfgyuijo in Niles, IL" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
+                    </div>
+
+                    <div class="md:hidden">
+                        <div class="mobile-cta-bar">
+                            <a href="tel:+18474567890" class="mobile-cta-button" style="background:#16a34a;" onclick="trackClick('call')">Call</a>
+                            <a href="mailto:exampdfghsale@example.com" class="mobile-cta-button" style="background:#6b7280;">Email</a>
+                            <a href="https://example.edu" target="_blank" class="mobile-cta-button" style="background:#2563eb;" onclick="trackClick('website')">Website</a>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=123%20Dempster%20St%2C%20Niles%2C%20IL%2060714" target="_blank" class="mobile-cta-button" style="background:#111827;" onclick="trackClick('directions')">Directions</a>
+                            <a href="https://example.org/sdefrgh" target="_blank" rel="noopener noreferrer" class="mobile-cta-button" style="background:#ff00d0;" data-cta-name="wedfgh">wedfgh</a>
+                        </div>
                     </div>
 
                     <div class="text-gray-700 mb-6 listing-description">rtyguhijokpl[\
@@ -449,8 +474,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                     
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-900 mb-2">Additional Information</h3>
-                    <div class="space-y-2">
-                <div class="flex justify-between text-sm gap-4">
+                    <div class="additional-info-table">
+                <div class="additional-info-row text-sm">
                     <span class="font-medium text-gray-900">TestingName12</span>
                     <span class="text-gray-700">TestignValue12</span>
                 </div>
@@ -474,6 +499,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             </div>
         </div>
     
+                    <br>
                     
         <div>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
@@ -482,6 +508,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             </div>
         </div>
     
+                    <br>
                     <div class="share-section">
                         <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                         <div class="flex flex-wrap gap-2">
@@ -511,6 +538,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             <div>
                 <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
                 <div id="listingMap"></div>
+                <div id="mapFallback" class="map-fallback" role="status" aria-live="polite"></div>
             </div>
         
                     </div>
@@ -563,7 +591,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
                         <div class="flex flex-wrap gap-3 mb-2">
                             
-            <a href="tel:18474567890" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
+            <a href="tel:+18474567890" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                 </svg>
@@ -646,7 +674,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         city: 'Niles',
         state: 'IL',
         address: '123 Dempster St',
-        phone: '18474567890',
+        phone: '+18474567890',
         email: 'exampdfghsale@example.com',
         website: 'https://example.edu',
         logo: 'https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/54bd6ff5-0ec8-460f-1fe8-311f8b864400/public',
@@ -683,6 +711,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const listingUrl = 'https://thegreekdirectory.org/listing/drxtfgyuijo';
         const listingId = '46';
         const hoursData = {"friday":"9:00 AM - 4:00 PM","monday":"Open 24 Hours","sunday":"Closed","tuesday":"9:00 AM - 10:00 PM","saturday":"9:00 PM - 10:00 PM","thursday":"9:00 AM - 2:00 PM","wednesday":"Open 24 Hours"};
+        const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/caf3ba46-6143-4860-6077-cd40645c4d01/public?sig=6392eac5dc395a48e6c4c2cd82958d26ce4d657c926273200ba1136557b29664"];
         let currentGalleryIndex = 0;
         
@@ -775,15 +804,42 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
+        function parseHoursToMinutes(hoursText) {
+            if (!hoursText || typeof hoursText !== 'string') return null;
+            const value = hoursText.trim();
+            if (!value || value.toLowerCase() === 'closed') return null;
+            if (/24/.test(value.toLowerCase())) return { startMinutes: 0, endMinutes: 1439, overnight: false };
+
+            const h24 = value.match(/^(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})$/);
+            if (h24) {
+                const startMinutes = parseInt(h24[1], 10) * 60 + parseInt(h24[2], 10);
+                const endMinutes = parseInt(h24[3], 10) * 60 + parseInt(h24[4], 10);
+                return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
+            }
+
+            const h12 = value.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!h12) return null;
+            let [, sh, sm, sp, eh, em, ep] = h12;
+            let start = parseInt(sh, 10);
+            let end = parseInt(eh, 10);
+            if (sp.toUpperCase() === 'PM' && start !== 12) start += 12;
+            if (sp.toUpperCase() === 'AM' && start === 12) start = 0;
+            if (ep.toUpperCase() === 'PM' && end !== 12) end += 12;
+            if (ep.toUpperCase() === 'AM' && end === 12) end = 0;
+            const startMinutes = start * 60 + parseInt(sm, 10);
+            const endMinutes = end * 60 + parseInt(em, 10);
+            return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
+        }
+
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
             if (!hoursData) return;
             
             const now = new Date();
-            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const localNow = new Date(now.toLocaleString('en-US', { timeZone: businessTimezone }));
             const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-            const today = days[centralTime.getDay()];
+            const today = days[localNow.getDay()];
             const todayHours = hoursData[today];
             
             if (!todayHours || todayHours.toLowerCase() === 'closed') {
@@ -812,27 +868,16 @@ or distribution of this code can result in legal action to the fullest extent pe
             
             /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
             
-            const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-            if (!match) {
+            const parsed = parseHoursToMinutes(todayHours);
+            if (!parsed) {
                 if (badge) badge.style.display = 'none';
                 if (statusText) statusText.style.display = 'none';
                 return;
             }
-            
-            const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
-            let start = parseInt(startHour);
-            let end = parseInt(endHour);
-            
-            if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
-            if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
-            if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
-            if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
-            
-            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
-            const startMinutes = start * 60 + parseInt(startMin);
-            let endMinutes = end * 60 + parseInt(endMin);
-            
-            const isOvernight = endMinutes < startMinutes;
+
+            const currentMinutes = localNow.getHours() * 60 + localNow.getMinutes();
+            const { startMinutes, endMinutes, overnight: isOvernight } = parsed;
+
             const isOpen = isOvernight
                 ? (currentMinutes >= startMinutes || currentMinutes <= endMinutes)
                 : (currentMinutes >= startMinutes && currentMinutes <= endMinutes);
@@ -1010,11 +1055,16 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         
         async function initializeMap() {
-            if (!fullAddress || fullAddress === '') {
-                const mapSection = document.querySelector('#listingMap');
-                if (mapSection && mapSection.parentElement) {
-                    mapSection.parentElement.style.display = 'none';
+            const mapFallback = document.getElementById('mapFallback');
+            const showMapFallback = (message) => {
+                if (mapFallback) {
+                    mapFallback.textContent = message || 'Map is currently unavailable for this listing.';
+                    mapFallback.classList.add('visible');
                 }
+            };
+
+            if (!fullAddress || fullAddress === '') {
+                showMapFallback('Map is unavailable because this listing does not include a mappable address.');
                 return;
             }
             
@@ -1036,9 +1086,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 if (isNaN(lat) || isNaN(lng)) {
                     const geocoded = await geocodeAddress(fullAddress);
                     if (!geocoded) {
-                        if (mapElement.parentElement) {
-                            mapElement.parentElement.style.display = 'none';
-                        }
+                        showMapFallback('We could not load this map right now. Please use Directions for navigation.');
                         return;
                     }
                     [lat, lng] = geocoded;
@@ -1080,9 +1128,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 });
             } catch (e) {
                 console.error('Map error:', e);
-                if (mapElement && mapElement.parentElement) {
-                    mapElement.parentElement.style.display = 'none';
-                }
+                showMapFallback('Map failed to load. Please try again later.');
             }
         }
         
