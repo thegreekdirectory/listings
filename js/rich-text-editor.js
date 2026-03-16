@@ -16,7 +16,7 @@
   function sanitizeRichTextHtml(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(`<div>${html || ''}</div>`, 'text/html');
-    const allowed = new Set(['P','BR','B','STRONG','I','EM','U','UL','OL','LI','A','H1','H2','H3','H4','H5','H6']);
+    const allowed = new Set(['P','BR','B','STRONG','I','EM','U','UL','OL','LI','A','H3']);
     const attrs = { A: ['href','target','rel'] };
 
     const walk = (node) => {
@@ -58,12 +58,7 @@
     toolbar.innerHTML = `
       <select data-cmd="formatBlock" class="rte-select">
         <option value="P">Paragraph</option>
-        <option value="H1">Heading 1</option>
-        <option value="H2">Heading 2</option>
         <option value="H3">Heading 3</option>
-        <option value="H4">Heading 4</option>
-        <option value="H5">Heading 5</option>
-        <option value="H6">Heading 6</option>
       </select>
       <button type="button" data-cmd="bold"><b>B</b></button>
       <button type="button" data-cmd="italic"><i>I</i></button>

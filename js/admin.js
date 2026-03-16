@@ -398,6 +398,62 @@ function sanitizeListingDescription(value) {
     return escapeHtml(value || '');
 }
 
+function toDisplayHourLabel(hoursValue) {
+    const raw = String(hoursValue || '').trim();
+    if (!raw || /^closed$/i.test(raw) || /24/.test(raw.toLowerCase())) return raw || 'Closed';
+    if (raw === '00:00-23:59' || raw === '00:00 - 23:59') return 'Open All Day';
+    const match = raw.match(/^(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})$/);
+    if (!match) return raw;
+
+    const toTwelveHour = (hourPart, minutePart) => {
+        const hour = parseInt(hourPart, 10);
+        const suffix = hour >= 12 ? 'PM' : 'AM';
+        const convertedHour = hour % 12 || 12;
+        return `${convertedHour}:${minutePart} ${suffix}`;
+    };
+
+    return `${toTwelveHour(match[1], match[2])} - ${toTwelveHour(match[3], match[4])}`;
+}
+
+function formatRelativeTime(timestamp) {
+    if (!timestamp) return 'recently';
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return 'recently';
+    const diffMs = Date.now() - date.getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 60) return `${Math.max(minutes, 1)} minute${minutes === 1 ? '' : 's'} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
+    const months = Math.floor(days / 30);
+    return `${months} month${months === 1 ? '' : 's'} ago`;
+}
+
+function getHoursUpdatedByLabel(listing) {
+    const raw = String(listing.hours_updated_by || listing.updated_by_role || listing.updated_by || '').trim().toLowerCase();
+    if (!raw) return 'TGD Admin';
+    if (raw.includes('owner') || raw.includes('business')) return 'Business Owner';
+    if (raw.includes('admin')) return 'TGD Admin';
+    return raw.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getCustomCtaIconOptions(selected = '') {
+    const options = [
+        { value: '', label: 'No icon' },
+        { value: '⭐', label: 'Star' },
+        { value: '🛍️', label: 'Shop' },
+        { value: '📅', label: 'Calendar' },
+        { value: '🎟️', label: 'Ticket' },
+        { value: '🍽️', label: 'Food' },
+        { value: '📦', label: 'Package' },
+        { value: '💬', label: 'Message' },
+        { value: '🧾', label: 'Quote' },
+        { value: '🎉', label: 'Event' }
+    ];
+    return options.map((option) => `<option value="${option.value}" ${selected === option.value ? 'selected' : ''}>${option.value ? `${option.value} ${option.label}` : option.label}</option>`).join('');
+}
+
 function createPhoneInput(value = '', country = 'USA') {
     const numericValue = value ? value.replace(/\D/g, '') : '';
     const digits = country === 'USA' && numericValue.startsWith('1') && numericValue.length === 11
@@ -1516,8 +1572,10 @@ function fillEditFormContinuation(listing, owner) {
                                     <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-full h-10 border rounded-lg">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium mb-2">Icon (emoji or short text)</label>
-                                    <input type="text" id="editCtaIcon${index}" value="${cta.icon || ''}" class="w-full px-4 py-2 border rounded-lg" maxlength="10">
+                                    <label class="block text-sm font-medium mb-2">Icon</label>
+                                    <select id="editCtaIcon${index}" class="w-full px-4 py-2 border rounded-lg">
+                                        ${getCustomCtaIconOptions(cta.icon || '')}
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -2505,7 +2563,7 @@ function generateSocialMediaSection(listing) {
         youtube: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
         tiktok: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>',
         linkedin: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>',
-        other: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm0 22c-5.514 0-10-4.486-10-10s4.486-10 10-10 10 4.486 10 10-4.486 10-10 10zm1-11h-2v-6h2v6zm0 4h-2v-2h2v2z"/></svg>'
+        other: '<svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"/><path d="M5 5h6v2H7v10h10v-4h2v6H5z"/></svg>'
     };
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -2773,16 +2831,17 @@ function generateTemplateReplacements(listing) {
     
     statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed Now</span>';
     
-    const taglineDisplay = listing.tagline ? `<p class="text-gray-600 italic mb-2">"${escapeHtml(listing.tagline)}"</p>` : '';
+    const taglineDisplay = listing.tagline ? `<h2 class="text-gray-600 italic text-xl font-semibold mb-2">${escapeHtml(listing.tagline)}</h2>` : '';
 
     let claimedCheckmark = '';
     if (isFeatured || isVerified || isClaimed) {
-        claimedCheckmark = '<span class="inline-flex items-center ml-2">' +
+        claimedCheckmark = '<button type="button" id="verifiedCheckmarkButton" class="verified-checkmark-btn" aria-label="Listing verification info">' +
             '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
             '<circle cx="12" cy="12" r="12" fill="#045093"></circle>' +
             '<path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>' +
             '</svg>' +
-            '</span>';
+            '<span class="verified-checkmark-tooltip">This checkmark means that this listing has been claimed by its owner.</span>' +
+            '</button>';
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -2858,17 +2917,24 @@ function generateTemplateReplacements(listing) {
     
     let hoursSection = '';
     if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
+        const hoursUpdatedAgo = formatRelativeTime(listing.hours_updated_at || listing.updated_at || listing.modified_at);
+        const hoursUpdatedBy = getHoursUpdatedByLabel(listing);
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         
         const hoursRows = dayKeys.map((key, index) => {
             const hours = listing.hours[key] || 'Closed';
-            return `<div class="flex justify-between text-sm"><span class="font-medium">${days[index]}:</span><span>${escapeHtml(hours)}</span></div>`;
+            return `<div class="flex justify-between text-sm"><span class="font-medium">${days[index]}:</span><span>${escapeHtml(toDisplayHourLabel(hours))}</span></div>`;
         }).join('');
         
         hoursSection = `
             <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+                <h3 class="font-semibold text-gray-900 mb-2">Hours
+                    <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
+                        <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
+                        <span class="hours-tooltip">Last updated ${escapeHtml(hoursUpdatedAgo)} by ${escapeHtml(hoursUpdatedBy)}.</span>
+                    </span>
+                </h3>
                 <div class="space-y-1">${hoursRows}</div>
                 <div id="openStatusText" class="mt-2 text-sm"></div>
                 <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
@@ -2883,7 +2949,7 @@ function generateTemplateReplacements(listing) {
         const infoRows = listing.additional_info
             .filter(info => info && info.label && info.value)
             .map(info => `
-                <div class="flex justify-between text-sm gap-4">
+                <div class="additional-info-row text-sm">
                     <span class="font-medium text-gray-900">${escapeHtml(info.label)}</span>
                     <span class="text-gray-700">${escapeHtml(info.value)}</span>
                 </div>
@@ -2893,13 +2959,14 @@ function generateTemplateReplacements(listing) {
             additionalInfoSection = `
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-900 mb-2">Additional Information</h3>
-                    <div class="space-y-2">${infoRows}</div>
+                    <div class="additional-info-table">${infoRows}</div>
                 </div>
             `;
         }
     }
     
     let phoneButton = '';
+    let phoneButtonMobile = '';
     if (listing.phone) {
         phoneButton = `
             <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
@@ -2909,9 +2976,11 @@ function generateTemplateReplacements(listing) {
                 Call
             </a>
         `;
+        phoneButtonMobile = `<a href="tel:${listing.phone}" class="mobile-cta-button" style="background:#16a34a;" onclick="trackClick('call')">Call</a>`;
     }
-    
+
     let emailButton = '';
+    let emailButtonMobile = '';
     if (listing.email) {
         emailButton = `
             <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium">
@@ -2921,11 +2990,13 @@ function generateTemplateReplacements(listing) {
                 Email
             </a>
         `;
+        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button" style="background:#6b7280;">Email</a>`;
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     let websiteButton = '';
+    let websiteButtonMobile = '';
     if (listing.website) {
         websiteButton = `
             <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
@@ -2935,10 +3006,12 @@ function generateTemplateReplacements(listing) {
                 Website
             </a>
         `;
+        websiteButtonMobile = `<a href="${listing.website}" target="_blank" class="mobile-cta-button" style="background:#2563eb;" onclick="trackClick('website')">Website</a>`;
     }
     
     // Only show directions if has street address with number
     let directionsButton = '';
+    let directionsButtonMobile = '';
     if (hasStreetAddress && listing.city) {
         const destination = `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim();
         const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
@@ -2951,10 +3024,12 @@ function generateTemplateReplacements(listing) {
                 Directions
             </a>
         `;
+        directionsButtonMobile = `<a href="${mapsUrl}" target="_blank" class="mobile-cta-button" style="background:#111827;" onclick="trackClick('directions')">Directions</a>`;
     }
 
     const maxCtaButtons = 1;
     let customCtaButtons = '';
+    let customCtaButtonsMobile = '';
     if (maxCtaButtons > 0 && Array.isArray(listing.custom_ctas)) {
         customCtaButtons = listing.custom_ctas
             .filter(cta => cta && cta.name && cta.url)
@@ -2971,6 +3046,14 @@ function generateTemplateReplacements(listing) {
                         <span>${escapeHtml(label)}</span>
                     </a>
                 `;
+            }).join('');
+
+        customCtaButtonsMobile = listing.custom_ctas
+            .filter(cta => cta && cta.name && cta.url)
+            .map(cta => {
+                const label = String(cta.name).trim().slice(0, 15);
+                const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#055193';
+                return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button" style="background:${color};" data-cta-name="${escapeHtml(label)}">${escapeHtml(label)}</a>`;
             }).join('');
     }
     
@@ -3029,7 +3112,12 @@ function generateTemplateReplacements(listing) {
         'EMAIL_BUTTON': emailButton,
         'WEBSITE_BUTTON': websiteButton,
         'DIRECTIONS_BUTTON': directionsButton,
-        'CUSTOM_CTA_BUTTONS': customCtaButtons
+        'CUSTOM_CTA_BUTTONS': customCtaButtons,
+        'PHONE_BUTTON_MOBILE': phoneButtonMobile,
+        'EMAIL_BUTTON_MOBILE': emailButtonMobile,
+        'WEBSITE_BUTTON_MOBILE': websiteButtonMobile,
+        'DIRECTIONS_BUTTON_MOBILE': directionsButtonMobile,
+        'CUSTOM_CTA_BUTTONS_MOBILE': customCtaButtonsMobile
     };
 }
 
@@ -3047,8 +3135,10 @@ function generateTemplateReplacementsPart2(listing) {
     const owners = Array.isArray(listing.owner) ? listing.owner : [];
     const ownerCards = owners.map((owner) => {
         let ownerDetails = '';
-        if (owner.name_title_visible !== false && owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
-        if (owner.name_title_visible !== false && owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
+        if (owner.name_title_visible !== false && owner.full_name) {
+            const ownerName = owner.title ? `${owner.full_name}, ${owner.title}` : owner.full_name;
+            ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(ownerName)}</p>`;
+        }
         if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
         if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
@@ -3076,6 +3166,7 @@ function generateTemplateReplacementsPart2(listing) {
             <div>
                 <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
                 <div id="listingMap"></div>
+                <div id="mapFallback" class="map-fallback" role="status" aria-live="polite"></div>
             </div>
         `;
     }
@@ -3187,7 +3278,8 @@ function generateTemplateReplacementsPart2(listing) {
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,
-        'HOURS_JSON': hoursJson
+        'HOURS_JSON': hoursJson,
+        'BUSINESS_TIMEZONE': escapeHtml(listing.timezone || 'America/Chicago')
     };
 }
 

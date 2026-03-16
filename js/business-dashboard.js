@@ -133,9 +133,17 @@ function renderDashboard() {
     document.getElementById('listingIdDisplay').textContent = `#${currentListing.id}`;
     
     const tier = currentListing.tier || 'FREE';
-    const tierBadge = document.getElementById('tierBadge');
-    tierBadge.textContent = tier + ' Tier';
-    tierBadge.className = `tier-badge tier-${tier}`;
+    const planBadge = document.getElementById('planBadge');
+    if (planBadge) {
+        const badges = {
+            FREE: 'Standard Profile',
+            VERIFIED: 'Verified Profile',
+            FEATURED: 'Featured Profile',
+            PREMIUM: 'Premium Profile'
+        };
+        planBadge.textContent = badges[tier] || 'Business Profile';
+        planBadge.className = `tier-badge tier-${tier}`;
+    }
     
     const categorySlug = currentListing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const listingUrl = `https://thegreekdirectory.org/listing/${currentListing.slug}`;
@@ -149,9 +157,13 @@ function renderDashboard() {
     renderEditForm();
     renderAnalytics();
     renderSettings();
+    syncTabWithHash();
 }
 
 function switchTab(tab) {
+    const validTabs = ['overview', 'edit', 'analytics', 'settings'];
+    if (!validTabs.includes(tab)) tab = 'overview';
+
     ['overview', 'edit', 'analytics', 'settings'].forEach(t => {
         document.getElementById(`content-${t}`).classList.add('hidden');
         document.getElementById(`tab-${t}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700';
@@ -159,6 +171,15 @@ function switchTab(tab) {
     
     document.getElementById(`content-${tab}`).classList.remove('hidden');
     document.getElementById(`tab-${tab}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600';
+    if (window.location.hash !== `#${tab}`) {
+        history.replaceState({}, '', `${window.location.pathname}#${tab}`);
+    }
+}
+
+function syncTabWithHash() {
+    const hashTab = (window.location.hash || '').replace('#', '').trim();
+    const target = ['overview', 'edit', 'analytics', 'settings'].includes(hashTab) ? hashTab : 'overview';
+    switchTab(target);
 }
 
 const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
@@ -209,6 +230,22 @@ function setMediaUploadStatus(message, isError = false) {
     if (!statusEl) return;
     statusEl.textContent = message;
     statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
+}
+
+function getCustomCtaIconOptions(selected = '') {
+    const options = [
+        { value: '', label: 'No icon' },
+        { value: '⭐', label: 'Star' },
+        { value: '🛍️', label: 'Shop' },
+        { value: '📅', label: 'Calendar' },
+        { value: '🎟️', label: 'Ticket' },
+        { value: '🍽️', label: 'Food' },
+        { value: '📦', label: 'Package' },
+        { value: '💬', label: 'Message' },
+        { value: '🧾', label: 'Quote' },
+        { value: '🎉', label: 'Event' }
+    ];
+    return options.map((option) => `<option value="${option.value}" ${selected === option.value ? 'selected' : ''}>${option.value ? `${option.value} ${option.label}` : option.label}</option>`).join('');
 }
 
 async function uploadToCloudflareImages(file) {
@@ -294,7 +331,7 @@ async function handlePhotosUpload(event) {
     const existingCount = (currentListing?.photos || []).length + uploadedImages.photos.length;
     const availableSlots = currentMaxPhotos - existingCount;
     if (availableSlots <= 0) {
-        setMediaUploadStatus(`Photo limit reached for your tier (${currentMaxPhotos}).`, true);
+        setMediaUploadStatus(`Photo limit reached for your current plan (${currentMaxPhotos}).`, true);
         return;
     }
     
@@ -382,21 +419,21 @@ function renderOverview() {
             '✅ Basic analytics (total views and engagement)'
         ],
         'VERIFIED': [
-            '✅ All FREE features',
+            '✅ Includes all Standard Profile features',
             '✅ Verified badge',
             '✅ Extended description (max 2000 characters)',
             '✅ Enhanced analytics (website, call, and direction clicks)',
             '✅ Monthly analytics totals'
         ],
         'FEATURED': [
-            '✅ All VERIFIED features',
+            '✅ Includes all Verified Profile features',
             '✅ Featured badge and priority placement',
             '✅ Photo gallery (up to 5 photos)',
             '✅ Advanced analytics (click breakdown and trends)',
             '✅ Category placement indicator'
         ],
         'PREMIUM': [
-            '✅ All FEATURED features',
+            '✅ Includes all Featured Profile features',
             '✅ Premium badge and top placement',
             '✅ Extended photo gallery (up to 15 photos)',
             '✅ Video embedding (1 video)',
@@ -412,7 +449,7 @@ function renderOverview() {
     content.innerHTML = `
         <div class="bg-white rounded-lg p-6 shadow-sm">
             <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome!</h2>
-            <p class="text-gray-700 mb-4">Manage your listing on The Greek Directory. Your current tier allows you to access the following features:</p>
+            <p class="text-gray-700 mb-4">Manage your listing on The Greek Directory. Your current plan includes the following features:</p>
             
             <div class="space-y-2 mb-6">
                 ${features[tier].map(f => `<div class="flex items-start gap-2"><span>${f}</span></div>`).join('')}
@@ -563,7 +600,7 @@ function renderEditForm() {
                 <!-- Media Uploads -->
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Media</h3>
-                    <p class="text-sm text-gray-600 mb-4">Upload media directly to Cloudflare Images. Photo limit for your tier: ${maxPhotos}</p>
+                    <p class="text-sm text-gray-600 mb-4">Upload media directly to Cloudflare Images. Photo limit for your plan: ${maxPhotos}</p>
                     <div class="grid grid-cols-1 gap-4">
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="text-sm font-semibold text-gray-800">Cloudflare Images</div>
@@ -783,8 +820,10 @@ function renderEditForm() {
                                         <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-full h-10 border border-gray-300 rounded-lg">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon (emoji or short text)</label>
-                                        <input type="text" id="editCtaIcon${index}" value="${cta.icon || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" maxlength="10">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon</label>
+                                        <select id="editCtaIcon${index}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                            ${getCustomCtaIconOptions(cta.icon || '')}
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -954,7 +993,7 @@ async function saveChanges() {
     const description = window.RichTextEditor ? window.RichTextEditor.sanitizeRichTextHtml(businessDescriptionEditor ? businessDescriptionEditor.getHtml() : document.getElementById('editDescription').value) : document.getElementById('editDescription').value;
     
     if ((window.RichTextEditor ? window.RichTextEditor.stripHtml(description).length : description.length) > maxDesc) {
-        alert(`Description too long! Maximum ${maxDesc} characters for ${tier} tier.`);
+        alert(`Description too long! Maximum ${maxDesc} characters for your current plan.`);
         return;
     }
     
@@ -1162,7 +1201,7 @@ function renderAnalytics() {
                     </div>
                 </div>
                 <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-sm text-blue-900"><strong>Want more?</strong> Upgrade to see detailed analytics!</p>
+                    <p class="text-sm text-blue-900"><strong>Want more?</strong> Contact support to unlock detailed analytics.</p>
                 </div>
             </div>
         `;
@@ -1415,6 +1454,8 @@ window.updatePassword = updatePassword;
 window.saveChanges = saveChanges;
 window.switchTab = switchTab;
 window.loadListingData = loadListingData;
+
+window.addEventListener('hashchange', syncTabWithHash);
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.

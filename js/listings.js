@@ -687,6 +687,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 function updateURL() {
     const url = new URL(window.location);
     const searchTerm = document.getElementById('searchInput').value;
+    const preserveStarred = url.searchParams.get('starred') === '1' || viewingStarredOnly;
     url.search = '';
     if (selectedCategory && selectedCategory !== 'All') url.searchParams.set('category', selectedCategory);
     if (selectedSubcategories.length > 0) {
@@ -705,8 +706,25 @@ function updateURL() {
     if (hoursUnknownOnly) url.searchParams.set('hours', 'unknown');
     if (onlineOnly) url.searchParams.set('online', 'true');
     if (searchTerm) url.searchParams.set('q', searchTerm);
+    if (preserveStarred) url.searchParams.set('starred', '1');
     window.history.replaceState({}, '', url);
+    window.dispatchEvent(new CustomEvent('tgd:starred-state-changed'));
 }
+
+function syncStarredViewFromUrl() {
+    const shouldShowStarred = new URLSearchParams(window.location.search).get('starred') === '1';
+    if (shouldShowStarred !== viewingStarredOnly) {
+        toggleStarredView();
+    }
+    window.dispatchEvent(new CustomEvent('tgd:starred-state-changed'));
+}
+
+window.applyUrlFilters = function applyUrlFilters() {
+    syncStarredViewFromUrl();
+    if (!viewingStarredOnly) {
+        applyFilters();
+    }
+};
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -3383,6 +3401,12 @@ window.selectSplitListing = function(listingId, lat, lng) {
     renderSplitViewListings();
 };
 // ═══════════════════════════════════════════════════════════════
+
+window.addEventListener('tgd:starred-filter-requested', () => {
+    if (typeof window.applyUrlFilters === 'function') {
+        window.applyUrlFilters();
+    }
+});
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
