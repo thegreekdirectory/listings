@@ -346,7 +346,18 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
-        .listing-description p { margin-bottom: 0.75rem; }
+        .listing-description { margin: 0 0 1.5rem; padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; line-height: 1.8; }
+        .listing-description p { margin-bottom: 1rem; }
+        .listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
+        .listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
+        .read-more-btn { margin-top: 10px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+        .verified-checkmark-btn { border: 0; background: transparent; padding: 0; margin-left: 8px; cursor: pointer; position: relative; display: inline-flex; align-items: center; }
+        .verified-checkmark-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; min-width: 230px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .verified-checkmark-btn.open .verified-checkmark-tooltip { display: block; }
+        .hours-tooltip-wrap { position: relative; display: inline-flex; align-items: center; margin-left: 8px; }
+        .hours-tooltip-icon { width: 16px; height: 16px; color: #6b7280; cursor: pointer; }
+        .hours-tooltip { position: absolute; top: 20px; left: 0; z-index: 20; min-width: 220px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .hours-tooltip-wrap.open .hours-tooltip { display: block; }
         .desktop-listing-layout { display: block; }
         .desktop-main-column, .desktop-side-column { min-width: 0; }
         .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
@@ -366,7 +377,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         @media (min-width: 1024px) {
             .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-            .desktop-side-column { position: sticky; top: 24px; }
+            .desktop-side-column { position: sticky; top: 72px; }
         }
         @media (max-width: 767px) {
             .share-section { margin-bottom: 24px; }
@@ -456,7 +467,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                                     <span class="badge badge-verified">Verified</span><span class="badge badge-closed" id="openClosedBadge">Closed Now</span>
                                 </div>
                             </div>
-                            <h1 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">Hellenic American Academy<span class="inline-flex items-center ml-2"><svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></h1>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">Hellenic American Academy<button type="button" id="verifiedCheckmarkButton" class="verified-checkmark-btn" aria-label="Listing verification info"><svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="verified-checkmark-tooltip">This checkmark means that this listing has been claimed by its owner.</span></button></h1>
                             <h2 class="text-gray-600 italic text-xl font-semibold mb-2">Private dual-language day school &amp; examination center for Ellinomatheia.</h2>
                         </div>
                         <img src="https://beta.thegreekdirectory.orghttps://images.thegreekdirectory.org/education-community/hellenic-american-academy/logo/logo/logo.png" alt="Hellenic American Academy in Deerfield, IL" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
@@ -472,13 +483,14 @@ or distribution of this code can result in legal action to the fullest extent pe
                         </div>
                     </div>
 
-                    <div class="text-gray-700 mb-6 listing-description"><b>Hellenic American Academy</b> is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy's problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.<div><br></div><div><div>Hellenic American Academy has been recognized by Education Insider Magazine as Top Language Private Day School, a distinguished honor that underscores the Academy’s ongoing commitment to academic excellence, cultural heritage, and strong community values. <a href="https://www.educationinsidermagazine.com/hellenic-american-academy-2026"><u>Read full feature here.</u></a> This recognition reflects the collective dedication of the Academy’s students, faculty, staff, and families, whose shared efforts continue to advance high-quality education and cultural enrichment. Hellenic American Academy extends its sincere appreciation to its entire community for being an integral part of this journey. Together, the Academy continues to celebrate education, culture, and achievement while shaping future generations of global citizens.</div><div><br></div></div></div>
+                    <div class="text-gray-700 listing-description" id="listingDescription"><b>Hellenic American Academy</b> is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy's problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.<div><br></div><div><div>Hellenic American Academy has been recognized by Education Insider Magazine as Top Language Private Day School, a distinguished honor that underscores the Academy’s ongoing commitment to academic excellence, cultural heritage, and strong community values. <a href="https://www.educationinsidermagazine.com/hellenic-american-academy-2026"><u>Read full feature here.</u></a> This recognition reflects the collective dedication of the Academy’s students, faculty, staff, and families, whose shared efforts continue to advance high-quality education and cultural enrichment. Hellenic American Academy extends its sincere appreciation to its entire community for being an integral part of this journey. Together, the Academy continues to celebrate education, culture, and achievement while shaping future generations of global citizens.</div><div><br></div></div></div>
+                    <button type="button" class="read-more-btn hidden" id="listingReadMoreBtn">Read more</button>
 
                     
                     
             <div class="owner-info-section">
                 <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                <div class="mb-4"><p><strong>Owner:</strong> Paul Louis</p><p><strong>Title:</strong> Principal</p></div>
+                <div class="mb-4"><p><strong>Owner:</strong> Paul Louis, Principal</p></div>
             </div>
         
 
@@ -574,7 +586,12 @@ or distribution of this code can result in legal action to the fullest extent pe
         
                             
             <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+                <h3 class="font-semibold text-gray-900 mb-2">Hours
+                    <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
+                        <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
+                        <span class="hours-tooltip">Last updated 11 hours ago by TGD Admin.</span>
+                    </span>
+                </h3>
                 <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>8:00 AM - 5:30 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>8:00 AM - 5:30 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>8:00 AM - 5:30 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>8:00 AM - 5:30 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>8:00 AM - 5:30 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>9:00 AM - 1:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>Closed</span></div></div>
                 <div id="openStatusText" class="mt-2 text-sm"></div>
                 <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
@@ -657,8 +674,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         phone: '+18473171063',
         email: 'info@haamail.net',
         website: 'https://hellenicamericanacademy.org',
-        logo: 'https://beta.thegreekdirectory.org/images/education-community/hellenic-american-academy/logo/logo/logo.png',
-        photos: ["https://beta.thegreekdirectory.org/images/education-community/hellenic-american-academy/photos/photos/photo-1.png","https://beta.thegreekdirectory.org/images/education-community/hellenic-american-academy/photos/photos/photo-2.png"],
+        logo: 'https://beta.thegreekdirectory.orghttps://images.thegreekdirectory.org/education-community/hellenic-american-academy/logo/logo/logo.png',
+        photos: ["https://beta.thegreekdirectory.orghttps://images.thegreekdirectory.org/education-community/hellenic-american-academy/photos/photos/photo-1.png","https://beta.thegreekdirectory.orghttps://images.thegreekdirectory.org/education-community/hellenic-american-academy/photos/photos/photo-2.png"],
         slug: 'hellenic-american-academy'
     };
     
@@ -692,7 +709,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const listingId = '1';
         const hoursData = {"friday":"08:00-17:30","monday":"08:00-17:30","sunday":"Closed","tuesday":"08:00-17:30","saturday":"09:00-13:00","thursday":"08:00-17:30","wednesday":"08:00-17:30"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
-        const galleryPhotos = ["https://beta.thegreekdirectory.org/images/education-community/hellenic-american-academy/photos/photos/photo-1.png","https://beta.thegreekdirectory.org/images/education-community/hellenic-american-academy/photos/photos/photo-2.png"];
+        const galleryPhotos = ["https://beta.thegreekdirectory.orghttps://images.thegreekdirectory.org/education-community/hellenic-american-academy/photos/photos/photo-1.png","https://beta.thegreekdirectory.orghttps://images.thegreekdirectory.org/education-community/hellenic-american-academy/photos/photos/photo-2.png"];
         let currentGalleryIndex = 0;
         
         function toggleSubcategories() {
@@ -772,7 +789,37 @@ or distribution of this code can result in legal action to the fullest extent pe
             });
             
             checkAdminRedirect();
+            initializeReadMore();
+            initializeTooltipToggle('verifiedCheckmarkButton');
+            initializeTooltipToggle('hoursTooltipButton');
         });
+
+        function initializeTooltipToggle(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                button.classList.toggle('open');
+            });
+            document.addEventListener('click', () => button.classList.remove('open'));
+        }
+
+        function initializeReadMore() {
+            const description = document.getElementById('listingDescription');
+            const readMoreButton = document.getElementById('listingReadMoreBtn');
+            if (!description || !readMoreButton) return;
+            if (description.scrollHeight <= 300) return;
+
+            let expanded = false;
+            description.classList.add('collapsed');
+            readMoreButton.classList.remove('hidden');
+
+            readMoreButton.addEventListener('click', () => {
+                expanded = !expanded;
+                description.classList.toggle('collapsed', !expanded);
+                readMoreButton.textContent = expanded ? 'Read less' : 'Read more';
+            });
+        }
         
         function checkAdminRedirect() {
             const path = window.location.pathname;
