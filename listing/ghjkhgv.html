@@ -42,7 +42,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Ghjkhgv in ,  | Greek Businesses | The Greek Directory">
-    <meta name="twitter:site" content="@thegreekdir">
+    <meta name="twitter:site" content="@greekdirectory">
     <meta name="twitter:description" content="bvgcftyguhij. Greek business in,. View address, phone, hours, and photos.">
     <meta name="twitter:image" content="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80">
     <style>
@@ -346,7 +346,21 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
-        .listing-description p { margin-bottom: 0.75rem; }
+        .listing-description-wrap { margin: 0 0 1.5rem; }
+        .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #e5e7eb; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; }
+        .listing-description p { margin-bottom: 1rem; }
+        .listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
+        .listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
+        .description-divider { display: flex; align-items: center; }
+        .description-divider-line { flex: 1; border-top: 1px solid #e5e7eb; min-width: 0; }
+        .read-more-btn { margin: 0 12px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+        .verified-checkmark-btn { border: 0; background: transparent; padding: 0; margin-left: 8px; cursor: pointer; position: relative; display: inline-flex; align-items: center; }
+        .verified-checkmark-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; min-width: 230px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .verified-checkmark-btn.open .verified-checkmark-tooltip { display: block; }
+        .hours-tooltip-wrap { position: relative; display: inline-flex; align-items: center; margin-left: 8px; }
+        .hours-tooltip-icon { width: 16px; height: 16px; color: #6b7280; cursor: pointer; }
+        .hours-tooltip { position: absolute; top: 20px; left: 0; z-index: 20; min-width: 220px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .hours-tooltip-wrap.open .hours-tooltip { display: block; }
         .desktop-listing-layout { display: block; }
         .desktop-main-column, .desktop-side-column { min-width: 0; }
         .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
@@ -358,6 +372,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         .additional-info-row:nth-child(even) { background: #f9fafb; }
         .map-fallback { display: none; margin-top: 12px; padding: 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 14px; }
         .map-fallback.visible { display: block; }
+        .location-section.map-unavailable #listingMap { display: none; }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
@@ -366,7 +381,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         @media (min-width: 1024px) {
             .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-            .desktop-side-column { position: sticky; top: 24px; }
+            .desktop-side-column { position: sticky; top: 72px; }
         }
         @media (max-width: 767px) {
             .share-section { margin-bottom: 24px; }
@@ -452,7 +467,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                                     <span class="badge badge-closed" id="openClosedBadge">Closed Now</span>
                                 </div>
                             </div>
-                            <h1 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">Ghjkhgv<span class="inline-flex items-center ml-2"><svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></h1>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">Ghjkhgv<button type="button" id="verifiedCheckmarkButton" class="verified-checkmark-btn" aria-label="Listing verification info"><svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="verified-checkmark-tooltip">This checkmark means that this listing has been claimed by its owner.</span></button></h1>
                             <h2 class="text-gray-600 italic text-xl font-semibold mb-2">bvgcftyguhij</h2>
                         </div>
                         <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop&q=80" alt="Ghjkhgv in , " class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
@@ -468,13 +483,20 @@ or distribution of this code can result in legal action to the fullest extent pe
                         </div>
                     </div>
 
-                    <div class="text-gray-700 mb-6 listing-description">ugvhbijkn</div>
+                    <div class="listing-description-wrap">
+                        <div class="text-gray-700 listing-description" id="listingDescription">ugvhbijkn</div>
+                        <div class="description-divider">
+                            <span class="description-divider-line"></span>
+                            <button type="button" class="read-more-btn hidden" id="listingReadMoreBtn">Read more</button>
+                            <span class="description-divider-line"></span>
+                        </div>
+                    </div>
 
                     
                     
             <div class="owner-info-section">
                 <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                <div class="mb-4"><p><strong>Owner:</strong> John Smith</p><p><strong>Title:</strong> Owner</p><p><strong>Email:</strong> <a href="mailto:example@example.com" class="text-blue-600 hover:underline">example@example.com</a></p></div>
+                <div class="mb-4"><p><strong>Owner:</strong> John Smith, Owner</p><p><strong>Email:</strong> <a href="mailto:example@example.com" class="text-blue-600 hover:underline">example@example.com</a></p></div>
             </div>
         
 
@@ -684,7 +706,37 @@ or distribution of this code can result in legal action to the fullest extent pe
             });
             
             checkAdminRedirect();
+            initializeReadMore();
+            initializeTooltipToggle('verifiedCheckmarkButton');
+            initializeTooltipToggle('hoursTooltipButton');
         });
+
+        function initializeTooltipToggle(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                button.classList.toggle('open');
+            });
+            document.addEventListener('click', () => button.classList.remove('open'));
+        }
+
+        function initializeReadMore() {
+            const description = document.getElementById('listingDescription');
+            const readMoreButton = document.getElementById('listingReadMoreBtn');
+            if (!description || !readMoreButton) return;
+            if (description.scrollHeight <= 300) return;
+
+            let expanded = false;
+            description.classList.add('collapsed');
+            readMoreButton.classList.remove('hidden');
+
+            readMoreButton.addEventListener('click', () => {
+                expanded = !expanded;
+                description.classList.toggle('collapsed', !expanded);
+                readMoreButton.textContent = expanded ? 'Read less' : 'Read more';
+            });
+        }
         
         function checkAdminRedirect() {
             const path = window.location.pathname;
@@ -953,6 +1005,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                     mapFallback.textContent = message || 'Map is currently unavailable for this listing.';
                     mapFallback.classList.add('visible');
                 }
+                const locationSection = document.getElementById('locationSection');
+                if (locationSection) locationSection.classList.add('map-unavailable');
             };
 
             if (!fullAddress || fullAddress === '') {
