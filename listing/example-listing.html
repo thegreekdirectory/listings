@@ -346,7 +346,18 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
-        .listing-description p { margin-bottom: 0.75rem; }
+        .listing-description { margin: 0 0 1.5rem; padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; line-height: 1.8; }
+        .listing-description p { margin-bottom: 1rem; }
+        .listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
+        .listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
+        .read-more-btn { margin-top: 10px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+        .verified-checkmark-btn { border: 0; background: transparent; padding: 0; margin-left: 8px; cursor: pointer; position: relative; display: inline-flex; align-items: center; }
+        .verified-checkmark-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; min-width: 230px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .verified-checkmark-btn.open .verified-checkmark-tooltip { display: block; }
+        .hours-tooltip-wrap { position: relative; display: inline-flex; align-items: center; margin-left: 8px; }
+        .hours-tooltip-icon { width: 16px; height: 16px; color: #6b7280; cursor: pointer; }
+        .hours-tooltip { position: absolute; top: 20px; left: 0; z-index: 20; min-width: 220px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .hours-tooltip-wrap.open .hours-tooltip { display: block; }
         .desktop-listing-layout { display: block; }
         .desktop-main-column, .desktop-side-column { min-width: 0; }
         .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
@@ -366,7 +377,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         @media (min-width: 1024px) {
             .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-            .desktop-side-column { position: sticky; top: 24px; }
+            .desktop-side-column { position: sticky; top: 72px; }
         }
         @media (max-width: 767px) {
             .share-section { margin-bottom: 24px; }
@@ -468,7 +479,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                         </div>
                     </div>
 
-                    <div class="text-gray-700 mb-6 listing-description"><h1><b><u>Information</u></b></h1><b>Example Listing</b>&nbsp;is a thriving business in the <i>Chicagoland Area</i>!<div><br></div><div><u><a href="https://tgd.gr/example">Click here</a></u> to learn more!</div></div>
+                    <div class="text-gray-700 listing-description" id="listingDescription"><h1>The Industrial Revolution was a major turning point in world history that transformed the way goods were produced, how people lived, and how economies functioned. Beginning in the late 18th century, it marked the shift from traditional hand production methods to machines, factories, and large-scale industry. This transformation first began in Great Britain and later spread to other parts of Europe, North America, and eventually the rest of the world.</h1><h1><br></h1><h1>Before the Industrial Revolution, most people lived in rural areas and worked in agriculture or small-scale crafts. Production was often done by hand or with simple tools, and goods were made in homes or small workshops. Transportation was slow, and economies were largely local. However, several factors helped set the stage for industrialization in Britain. These included access to natural resources such as coal and iron, a stable political system, a growing population, and expanding global trade networks. In addition, technological innovation and investment in new machinery played a key role.</h1><h1><br></h1><h1>One of the earliest and most important industries to change was the textile industry. New inventions such as the spinning jenny, the water frame, and the power loom allowed cloth to be produced much faster and in larger quantities than before. These machines led to the creation of factories, where workers gathered to operate machinery. The factory system dramatically increased productivity but also changed working conditions and daily life.</h1><h1><br></h1><h1>Another major development was the improvement of steam power. The steam engine allowed machines to operate without relying on human or animal power, or even water sources. This meant factories could be built in more locations, and industries such as mining, manufacturing, and transportation expanded rapidly. Steam-powered locomotives and railroads revolutionized transportation by allowing goods and people to move quickly over long distances.</h1><h1><br></h1><h1>The Industrial Revolution also brought significant social changes. As factories grew, many people moved from rural areas to cities in search of work. This rapid urbanization led to the growth of large industrial cities. While cities offered new opportunities, they also faced serious problems, including overcrowded housing, pollution, poor sanitation, and difficult working conditions. Factory workers often worked long hours for low wages, and children were frequently employed in dangerous jobs.</h1><h1><br></h1><h1>Over time, these harsh conditions led to social reforms and new political movements. Labor unions formed to advocate for workers’ rights, including safer workplaces, shorter hours, and better pay. Governments gradually introduced laws regulating child labor, improving factory safety, and establishing labor protections. These reforms slowly improved conditions for many workers.</h1><h1><br></h1><h1>Economically, the Industrial Revolution greatly increased production and helped create modern capitalist economies. Businesses expanded, new industries developed, and international trade grew rapidly. Innovations continued in areas such as steel production, chemicals, and electricity during the later phases of industrialization.</h1><h1><br></h1><h1>The effects of the Industrial Revolution were not limited to Europe and North America. Industrialized nations expanded their influence around the world, often through imperialism and colonialism. They sought raw materials and new markets for manufactured goods, which reshaped global economic and political relationships.</h1><h1><br></h1><h1>Despite its challenges, the Industrial Revolution laid the foundation for modern industrial society. It introduced new technologies, transformed transportation and communication, and greatly increased the availability of goods. At the same time, it raised important questions about labor rights, environmental impacts, and economic inequality that continue to be discussed today.</h1><h1><br></h1><h1>In conclusion, the Industrial Revolution was a complex and transformative period that reshaped nearly every aspect of human life. By introducing new machines, industries, and ways of organizing work, it helped create the modern world while also presenting social and economic challenges that societies continue to address.</h1></div>
+                    <button type="button" class="read-more-btn hidden" id="listingReadMoreBtn">Read more</button>
 
                     
                 <div class="mb-6">
@@ -687,7 +699,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         id: '55',
         business_name: 'Example Listing',
         tagline: 'Example Listing in Chicagoland.',
-        description: '<h1><b><u>Information</u></b></h1><b>Example Listing</b>&nbsp;is a thriving business in the <i>Chicagoland Area</i>!<div><br></div><div><u><a href=\"https://tgd.gr/example\">Click here</a></u> to learn more!</div>',
+        description: '<h1>The Industrial Revolution was a major turning point in world history that transformed the way goods were produced, how people lived, and how economies functioned. Beginning in the late 18th century, it marked the shift from traditional hand production methods to machines, factories, and large-scale industry. This transformation first began in Great Britain and later spread to other parts of Europe, North America, and eventually the rest of the world.</h1><h1><br></h1><h1>Before the Industrial Revolution, most people lived in rural areas and worked in agriculture or small-scale crafts. Production was often done by hand or with simple tools, and goods were made in homes or small workshops. Transportation was slow, and economies were largely local. However, several factors helped set the stage for industrialization in Britain. These included access to natural resources such as coal and iron, a stable political system, a growing population, and expanding global trade networks. In addition, technological innovation and investment in new machinery played a key role.</h1><h1><br></h1><h1>One of the earliest and most important industries to change was the textile industry. New inventions such as the spinning jenny, the water frame, and the power loom allowed cloth to be produced much faster and in larger quantities than before. These machines led to the creation of factories, where workers gathered to operate machinery. The factory system dramatically increased productivity but also changed working conditions and daily life.</h1><h1><br></h1><h1>Another major development was the improvement of steam power. The steam engine allowed machines to operate without relying on human or animal power, or even water sources. This meant factories could be built in more locations, and industries such as mining, manufacturing, and transportation expanded rapidly. Steam-powered locomotives and railroads revolutionized transportation by allowing goods and people to move quickly over long distances.</h1><h1><br></h1><h1>The Industrial Revolution also brought significant social changes. As factories grew, many people moved from rural areas to cities in search of work. This rapid urbanization led to the growth of large industrial cities. While cities offered new opportunities, they also faced serious problems, including overcrowded housing, pollution, poor sanitation, and difficult working conditions. Factory workers often worked long hours for low wages, and children were frequently employed in dangerous jobs.</h1><h1><br></h1><h1>Over time, these harsh conditions led to social reforms and new political movements. Labor unions formed to advocate for workers’ rights, including safer workplaces, shorter hours, and better pay. Governments gradually introduced laws regulating child labor, improving factory safety, and establishing labor protections. These reforms slowly improved conditions for many workers.</h1><h1><br></h1><h1>Economically, the Industrial Revolution greatly increased production and helped create modern capitalist economies. Businesses expanded, new industries developed, and international trade grew rapidly. Innovations continued in areas such as steel production, chemicals, and electricity during the later phases of industrialization.</h1><h1><br></h1><h1>The effects of the Industrial Revolution were not limited to Europe and North America. Industrialized nations expanded their influence around the world, often through imperialism and colonialism. They sought raw materials and new markets for manufactured goods, which reshaped global economic and political relationships.</h1><h1><br></h1><h1>Despite its challenges, the Industrial Revolution laid the foundation for modern industrial society. It introduced new technologies, transformed transportation and communication, and greatly increased the availability of goods. At the same time, it raised important questions about labor rights, environmental impacts, and economic inequality that continue to be discussed today.</h1><h1><br></h1><h1>In conclusion, the Industrial Revolution was a complex and transformative period that reshaped nearly every aspect of human life. By introducing new machines, industries, and ways of organizing work, it helped create the modern world while also presenting social and economic challenges that societies continue to address.</h1>',
         category: 'Professional &amp; Business Services',
         city: 'Niles',
         state: 'IL',
@@ -810,7 +822,37 @@ or distribution of this code can result in legal action to the fullest extent pe
             });
             
             checkAdminRedirect();
+            initializeReadMore();
+            initializeTooltipToggle('verifiedCheckmarkButton');
+            initializeTooltipToggle('hoursTooltipButton');
         });
+
+        function initializeTooltipToggle(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                button.classList.toggle('open');
+            });
+            document.addEventListener('click', () => button.classList.remove('open'));
+        }
+
+        function initializeReadMore() {
+            const description = document.getElementById('listingDescription');
+            const readMoreButton = document.getElementById('listingReadMoreBtn');
+            if (!description || !readMoreButton) return;
+            if (description.scrollHeight <= 300) return;
+
+            let expanded = false;
+            description.classList.add('collapsed');
+            readMoreButton.classList.remove('hidden');
+
+            readMoreButton.addEventListener('click', () => {
+                expanded = !expanded;
+                description.classList.toggle('collapsed', !expanded);
+                readMoreButton.textContent = expanded ? 'Read less' : 'Read more';
+            });
+        }
         
         function checkAdminRedirect() {
             const path = window.location.pathname;
