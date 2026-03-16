@@ -401,6 +401,7 @@ function sanitizeListingDescription(value) {
 function toDisplayHourLabel(hoursValue) {
     const raw = String(hoursValue || '').trim();
     if (!raw || /^closed$/i.test(raw) || /24/.test(raw.toLowerCase())) return raw || 'Closed';
+    if (raw === '00:00-23:59' || raw === '00:00 - 23:59') return 'Open All Day';
     const match = raw.match(/^(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})$/);
     if (!match) return raw;
 
@@ -412,6 +413,45 @@ function toDisplayHourLabel(hoursValue) {
     };
 
     return `${toTwelveHour(match[1], match[2])} - ${toTwelveHour(match[3], match[4])}`;
+}
+
+function formatRelativeTime(timestamp) {
+    if (!timestamp) return 'recently';
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return 'recently';
+    const diffMs = Date.now() - date.getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 60) return `${Math.max(minutes, 1)} minute${minutes === 1 ? '' : 's'} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
+    const months = Math.floor(days / 30);
+    return `${months} month${months === 1 ? '' : 's'} ago`;
+}
+
+function getHoursUpdatedByLabel(listing) {
+    const raw = String(listing.hours_updated_by || listing.updated_by_role || listing.updated_by || '').trim().toLowerCase();
+    if (!raw) return 'TGD Admin';
+    if (raw.includes('owner') || raw.includes('business')) return 'Business Owner';
+    if (raw.includes('admin')) return 'TGD Admin';
+    return raw.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getCustomCtaIconOptions(selected = '') {
+    const options = [
+        { value: '', label: 'No icon' },
+        { value: '⭐', label: 'Star' },
+        { value: '🛍️', label: 'Shop' },
+        { value: '📅', label: 'Calendar' },
+        { value: '🎟️', label: 'Ticket' },
+        { value: '🍽️', label: 'Food' },
+        { value: '📦', label: 'Package' },
+        { value: '💬', label: 'Message' },
+        { value: '🧾', label: 'Quote' },
+        { value: '🎉', label: 'Event' }
+    ];
+    return options.map((option) => `<option value="${option.value}" ${selected === option.value ? 'selected' : ''}>${option.value ? `${option.value} ${option.label}` : option.label}</option>`).join('');
 }
 
 function createPhoneInput(value = '', country = 'USA') {
@@ -1532,8 +1572,10 @@ function fillEditFormContinuation(listing, owner) {
                                     <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-full h-10 border rounded-lg">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium mb-2">Icon (emoji or short text)</label>
-                                    <input type="text" id="editCtaIcon${index}" value="${cta.icon || ''}" class="w-full px-4 py-2 border rounded-lg" maxlength="10">
+                                    <label class="block text-sm font-medium mb-2">Icon</label>
+                                    <select id="editCtaIcon${index}" class="w-full px-4 py-2 border rounded-lg">
+                                        ${getCustomCtaIconOptions(cta.icon || '')}
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -2793,12 +2835,13 @@ function generateTemplateReplacements(listing) {
 
     let claimedCheckmark = '';
     if (isFeatured || isVerified || isClaimed) {
-        claimedCheckmark = '<span class="inline-flex items-center ml-2">' +
+        claimedCheckmark = '<button type="button" id="verifiedCheckmarkButton" class="verified-checkmark-btn" aria-label="Listing verification info">' +
             '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
             '<circle cx="12" cy="12" r="12" fill="#045093"></circle>' +
             '<path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>' +
             '</svg>' +
-            '</span>';
+            '<span class="verified-checkmark-tooltip">This checkmark means that this listing has been claimed by its owner.</span>' +
+            '</button>';
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -2874,6 +2917,8 @@ function generateTemplateReplacements(listing) {
     
     let hoursSection = '';
     if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
+        const hoursUpdatedAgo = formatRelativeTime(listing.hours_updated_at || listing.updated_at || listing.modified_at);
+        const hoursUpdatedBy = getHoursUpdatedByLabel(listing);
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         
@@ -2884,7 +2929,12 @@ function generateTemplateReplacements(listing) {
         
         hoursSection = `
             <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+                <h3 class="font-semibold text-gray-900 mb-2">Hours
+                    <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
+                        <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
+                        <span class="hours-tooltip">Last updated ${escapeHtml(hoursUpdatedAgo)} by ${escapeHtml(hoursUpdatedBy)}.</span>
+                    </span>
+                </h3>
                 <div class="space-y-1">${hoursRows}</div>
                 <div id="openStatusText" class="mt-2 text-sm"></div>
                 <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
@@ -3085,8 +3135,10 @@ function generateTemplateReplacementsPart2(listing) {
     const owners = Array.isArray(listing.owner) ? listing.owner : [];
     const ownerCards = owners.map((owner) => {
         let ownerDetails = '';
-        if (owner.name_title_visible !== false && owner.full_name) ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(owner.full_name)}</p>`;
-        if (owner.name_title_visible !== false && owner.title) ownerDetails += `<p><strong>Title:</strong> ${escapeHtml(owner.title)}</p>`;
+        if (owner.name_title_visible !== false && owner.full_name) {
+            const ownerName = owner.title ? `${owner.full_name}, ${owner.title}` : owner.full_name;
+            ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(ownerName)}</p>`;
+        }
         if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
         if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;

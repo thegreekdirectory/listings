@@ -232,6 +232,22 @@ function setMediaUploadStatus(message, isError = false) {
     statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
 }
 
+function getCustomCtaIconOptions(selected = '') {
+    const options = [
+        { value: '', label: 'No icon' },
+        { value: '⭐', label: 'Star' },
+        { value: '🛍️', label: 'Shop' },
+        { value: '📅', label: 'Calendar' },
+        { value: '🎟️', label: 'Ticket' },
+        { value: '🍽️', label: 'Food' },
+        { value: '📦', label: 'Package' },
+        { value: '💬', label: 'Message' },
+        { value: '🧾', label: 'Quote' },
+        { value: '🎉', label: 'Event' }
+    ];
+    return options.map((option) => `<option value="${option.value}" ${selected === option.value ? 'selected' : ''}>${option.value ? `${option.value} ${option.label}` : option.label}</option>`).join('');
+}
+
 async function uploadToCloudflareImages(file) {
     const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
     if (uploadEndpoint) {
@@ -804,8 +820,10 @@ function renderEditForm() {
                                         <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-full h-10 border border-gray-300 rounded-lg">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon (emoji or short text)</label>
-                                        <input type="text" id="editCtaIcon${index}" value="${cta.icon || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" maxlength="10">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon</label>
+                                        <select id="editCtaIcon${index}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                            ${getCustomCtaIconOptions(cta.icon || '')}
+                                        </select>
                                     </div>
                                 </div>
                             </div>

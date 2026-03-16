@@ -1,46 +1,48 @@
-# TailwindCSS Production Setup Plan (Recommended Method: Tailwind CLI)
+# Tailwind CLI setup files prepared in this repo
 
-For this project, the **Tailwind CLI** approach is the best fit because the codebase is static HTML + vanilla JS (no existing Vite/PostCSS bundler pipeline).
+I added the files Tailwind's CLI quickstart expects so you can run the commands directly:
 
-## Why this method fits
-1. No framework lock-in.
-2. Minimal tooling overhead.
-3. Easy to generate one production CSS file and remove CDN runtime dependency.
+- `package.json`
+- `src/input.css`
 
-## Manual steps
-1. Install Tailwind tooling:
-   ```bash
-   npm install -D tailwindcss @tailwindcss/cli
-   ```
-2. Create `tailwind.config.js` with `content` globs for all HTML/JS templates.
-3. Create a source stylesheet (for example `css/tailwind.input.css`) containing:
-   ```css
-   @tailwind base;
-   @tailwind components;
-   @tailwind utilities;
-   ```
-4. Build production CSS:
-   ```bash
-   npx tailwindcss -i ./css/tailwind.input.css -o ./css/tailwind.css --minify
-   ```
-5. Replace every `<script src="https://cdn.tailwindcss.com"></script>` with:
-   ```html
-   <link rel="stylesheet" href="/css/tailwind.css">
-   ```
-6. Add an npm script for rebuilds (example in `package.json`):
-   ```json
-   {
-     "scripts": {
-       "build:tailwind": "tailwindcss -i ./css/tailwind.input.css -o ./css/tailwind.css --minify"
-     }
-   }
-   ```
-7. Run a full UI regression pass on:
-   - listings index
-   - listing detail template output
-   - business portal
-   - admin portal
+## What is already created
 
-## Notes
-- This keeps Tailwind in production-safe mode (precompiled CSS, no CDN runtime).
-- If you share the exact Tailwind docs snippet you referenced, I can align file names/commands 1:1 to that doc section.
+### 1) `package.json`
+Includes scripts:
+- `npm run tailwind:build`
+- `npm run tailwind:watch`
+
+### 2) `src/input.css`
+Contains:
+```css
+@import "tailwindcss";
+```
+
+## Run the exact Tailwind commands
+
+1. Install dependencies:
+```bash
+npm install tailwindcss @tailwindcss/cli
+```
+
+2. Build once:
+```bash
+npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css
+```
+
+3. Watch mode (optional):
+```bash
+npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
+```
+
+## Next manual step after build
+In any page you migrate off the CDN, replace:
+```html
+<script src="https://cdn.tailwindcss.com"></script>
+```
+with:
+```html
+<link href="/src/output.css" rel="stylesheet">
+```
+
+Do this page-by-page after generating `src/output.css`.

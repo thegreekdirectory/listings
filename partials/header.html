@@ -150,15 +150,27 @@
 
         url.searchParams.set('starred', '1');
         history.replaceState({}, '', url.pathname + '?' + url.searchParams.toString() + url.hash);
+        updateStarredButtonState();
         window.dispatchEvent(new CustomEvent('tgd:starred-filter-requested'));
         if (typeof window.applyUrlFilters === 'function') {
             window.applyUrlFilters();
         }
     }
 
+    function updateStarredButtonState() {
+        var active = new URL(window.location.href).searchParams.get('starred') === '1';
+        starButtons.forEach(function(btn) {
+            btn.style.backgroundColor = active ? '#fbbf24' : '';
+            btn.style.color = active ? '#78350f' : '';
+        });
+    }
+
     var starButtons = document.querySelectorAll('a[href="/listings?starred=1"]');
     starButtons.forEach(function(btn) {
         btn.addEventListener('click', navigateToStarred);
     });
+    updateStarredButtonState();
+    window.addEventListener('popstate', updateStarredButtonState);
+    window.addEventListener('tgd:starred-state-changed', updateStarredButtonState);
 })();
 </script>
