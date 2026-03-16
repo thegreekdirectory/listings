@@ -430,6 +430,13 @@ function formatRelativeTime(timestamp) {
     return `${months} month${months === 1 ? '' : 's'} ago`;
 }
 
+function formatUtcTimestamp(timestamp) {
+    if (!timestamp) return 'unknown';
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return 'unknown';
+    return date.toISOString().replace('T', ' ').slice(0, 16);
+}
+
 function getHoursUpdatedByLabel(listing) {
     const raw = String(listing.hours_updated_by || listing.updated_by_role || listing.updated_by || '').trim().toLowerCase();
     if (!raw) return 'TGD Admin';
@@ -439,19 +446,54 @@ function getHoursUpdatedByLabel(listing) {
 }
 
 function getCustomCtaIconOptions(selected = '') {
+    const normalizedSelected = normalizeCustomCtaIcon(selected);
     const options = [
         { value: '', label: 'No icon' },
-        { value: '⭐', label: 'Star' },
-        { value: '🛍️', label: 'Shop' },
-        { value: '📅', label: 'Calendar' },
-        { value: '🎟️', label: 'Ticket' },
-        { value: '🍽️', label: 'Food' },
-        { value: '📦', label: 'Package' },
-        { value: '💬', label: 'Message' },
-        { value: '🧾', label: 'Quote' },
-        { value: '🎉', label: 'Event' }
+        { value: 'star', label: 'Star' },
+        { value: 'shop', label: 'Shop' },
+        { value: 'calendar', label: 'Calendar' },
+        { value: 'ticket', label: 'Ticket' },
+        { value: 'food', label: 'Food' },
+        { value: 'package', label: 'Package' },
+        { value: 'message', label: 'Message' },
+        { value: 'quote', label: 'Quote' },
+        { value: 'event', label: 'Event' }
     ];
-    return options.map((option) => `<option value="${option.value}" ${selected === option.value ? 'selected' : ''}>${option.value ? `${option.value} ${option.label}` : option.label}</option>`).join('');
+    return options.map((option) => `<option value="${option.value}" ${normalizedSelected === option.value ? 'selected' : ''}>${option.label}</option>`).join('');
+}
+
+function normalizeCustomCtaIcon(icon = '') {
+    const value = String(icon || '').trim();
+    const legacyMap = {
+        '⭐': 'star',
+        '🛍️': 'shop',
+        '📅': 'calendar',
+        '🎟️': 'ticket',
+        '🍽️': 'food',
+        '📦': 'package',
+        '💬': 'message',
+        '🧾': 'quote',
+        '🎉': 'event'
+    };
+    return legacyMap[value] || value;
+}
+
+function getCustomCtaIconSvg(icon = '', className = 'w-5 h-5') {
+    const normalized = normalizeCustomCtaIcon(icon);
+    const iconPaths = {
+        star: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321 1.012l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.386a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0l-4.725 2.885a.562.562 0 01-.84-.61l1.285-5.386a.563.563 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-1.012l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />',
+        shop: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7.5h18M6 7.5l1.2 12h9.6L18 7.5M9.75 11.25v4.5m4.5-4.5v4.5M9 4.5h6"/>',
+        calendar: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 2.75v2.5m8-2.5v2.5M3.75 9.25h16.5m-15 10h13.5a1.5 1.5 0 001.5-1.5V6.25a1.5 1.5 0 00-1.5-1.5H5.25a1.5 1.5 0 00-1.5 1.5v11.5a1.5 1.5 0 001.5 1.5z"/>',
+        ticket: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 8.25A2.25 2.25 0 016.75 6h10.5A2.25 2.25 0 0119.5 8.25V10a1.5 1.5 0 000 3v1.75A2.25 2.25 0 0117.25 17H6.75A2.25 2.25 0 014.5 14.75V13a1.5 1.5 0 000-3V8.25z"/>',
+        food: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 3v8.25M5.25 3v8.25m2.25 0a2.25 2.25 0 01-2.25 2.25m2.25-2.25a2.25 2.25 0 002.25 2.25M15 3v18m0-10.5h3.75c0-4.142-1.678-7.5-3.75-7.5"/>',
+        package: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 7.5L12 3l8.25 4.5M3.75 7.5V16.5L12 21m-8.25-13.5L12 12m8.25-4.5V16.5L12 21m0-9v9"/>',
+        message: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 12c0-4.28 4.364-7.75 9.75-7.75s9.75 3.47 9.75 7.75-4.364 7.75-9.75 7.75a11.7 11.7 0 01-3.725-.6l-4.025 1.35 1.13-3.39A7.12 7.12 0 012.25 12z"/>',
+        quote: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 9a3.75 3.75 0 00-3.75 3.75V15a3 3 0 003 3h2.25A1.5 1.5 0 0011.25 16.5V10.5A1.5 1.5 0 009.75 9h-1.5zm8.25 0a3.75 3.75 0 00-3.75 3.75V15a3 3 0 003 3H18a1.5 1.5 0 001.5-1.5V10.5A1.5 1.5 0 0018 9h-1.5z"/>',
+        event: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM12 12v9m0-9c-4.5 0-7.5 2.1-7.5 5.25V21h15v-3.75C19.5 14.1 16.5 12 12 12z"/>'
+    };
+    const path = iconPaths[normalized];
+    if (!path) return '';
+    return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">${path}</svg>`;
 }
 
 function createPhoneInput(value = '', country = 'USA') {
@@ -2207,7 +2249,7 @@ if (!slug) {
             const name = document.getElementById(`editCtaName${i}`)?.value.trim();
             const url = document.getElementById(`editCtaUrl${i}`)?.value.trim();
             const color = document.getElementById(`editCtaColor${i}`)?.value.trim();
-            const icon = document.getElementById(`editCtaIcon${i}`)?.value.trim();
+            const icon = normalizeCustomCtaIcon(document.getElementById(`editCtaIcon${i}`)?.value.trim());
             
             if (!name && !url && !icon) continue;
             if (!name || !url) {
@@ -2917,7 +2959,7 @@ function generateTemplateReplacements(listing) {
     
     let hoursSection = '';
     if (listing.hours && Object.keys(listing.hours).some(day => listing.hours[day])) {
-        const hoursUpdatedAgo = formatRelativeTime(listing.hours_updated_at || listing.updated_at || listing.modified_at);
+        const hoursUpdatedAtUtc = formatUtcTimestamp(listing.hours_updated_at || listing.updated_at || listing.modified_at);
         const hoursUpdatedBy = getHoursUpdatedByLabel(listing);
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -2932,7 +2974,7 @@ function generateTemplateReplacements(listing) {
                 <h3 class="font-semibold text-gray-900 mb-2">Hours
                     <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
                         <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
-                        <span class="hours-tooltip">Last updated ${escapeHtml(hoursUpdatedAgo)} by ${escapeHtml(hoursUpdatedBy)}.</span>
+                        <span class="hours-tooltip">Last updated at ${escapeHtml(hoursUpdatedAtUtc)} UTC by ${escapeHtml(hoursUpdatedBy)}.</span>
                     </span>
                 </h3>
                 <div class="space-y-1">${hoursRows}</div>
@@ -3037,7 +3079,7 @@ function generateTemplateReplacements(listing) {
             .map(cta => {
                 const label = String(cta.name).trim().slice(0, 15);
                 const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#055193';
-                const icon = cta.icon ? `<span class="text-base">${escapeHtml(String(cta.icon).trim())}</span>` : '';
+                const icon = getCustomCtaIconSvg(cta.icon, 'w-5 h-5') || '';
                 return `
                     <a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer"
                         class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90"
@@ -3053,7 +3095,8 @@ function generateTemplateReplacements(listing) {
             .map(cta => {
                 const label = String(cta.name).trim().slice(0, 15);
                 const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#055193';
-                return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button" style="background:${color};" data-cta-name="${escapeHtml(label)}">${escapeHtml(label)}</a>`;
+                const icon = getCustomCtaIconSvg(cta.icon, 'w-4 h-4') || '';
+                return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button" style="background:${color};" data-cta-name="${escapeHtml(label)}">${icon}<span>${escapeHtml(label)}</span></a>`;
             }).join('');
     }
     
@@ -3163,7 +3206,7 @@ function generateTemplateReplacementsPart2(listing) {
     const hasStreetAddress = listing.address && /\d/.test(listing.address);
     if (hasStreetAddress || (listing.city && listing.state)) {
         mapSection = `
-            <div>
+            <div id="locationSection" class="location-section">
                 <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
                 <div id="listingMap"></div>
                 <div id="mapFallback" class="map-fallback" role="status" aria-live="polite"></div>
