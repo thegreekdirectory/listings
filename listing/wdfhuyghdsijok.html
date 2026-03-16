@@ -42,7 +42,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="wdfhuyghdsijok in Glenview, IL | Greek Businesses | The Greek Directory">
-    <meta name="twitter:site" content="@thegreekdir">
+    <meta name="twitter:site" content="@greekdirectory">
     <meta name="twitter:description" content="bhgvyfcutiiuoj;k. Greek business in Glenview, IL. View address, phone, hours, and photos.">
     <meta name="twitter:image" content="https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/caf3ba46-6143-4860-6077-cd40645c4d01/public?sig=6392eac5dc395a48e6c4c2cd82958d26ce4d657c926273200ba1136557b29664">
     <style>
@@ -346,7 +346,21 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
-        .listing-description p { margin-bottom: 0.75rem; }
+        .listing-description-wrap { margin: 0 0 1.5rem; }
+        .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #e5e7eb; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; }
+        .listing-description p { margin-bottom: 1rem; }
+        .listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
+        .listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
+        .description-divider { display: flex; align-items: center; }
+        .description-divider-line { flex: 1; border-top: 1px solid #e5e7eb; min-width: 0; }
+        .read-more-btn { margin: 0 12px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+        .verified-checkmark-btn { border: 0; background: transparent; padding: 0; margin-left: 8px; cursor: pointer; position: relative; display: inline-flex; align-items: center; }
+        .verified-checkmark-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; min-width: 230px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .verified-checkmark-btn.open .verified-checkmark-tooltip { display: block; }
+        .hours-tooltip-wrap { position: relative; display: inline-flex; align-items: center; margin-left: 8px; }
+        .hours-tooltip-icon { width: 16px; height: 16px; color: #6b7280; cursor: pointer; }
+        .hours-tooltip { position: absolute; top: 20px; left: 0; z-index: 20; min-width: 220px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .hours-tooltip-wrap.open .hours-tooltip { display: block; }
         .desktop-listing-layout { display: block; }
         .desktop-main-column, .desktop-side-column { min-width: 0; }
         .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
@@ -358,6 +372,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         .additional-info-row:nth-child(even) { background: #f9fafb; }
         .map-fallback { display: none; margin-top: 12px; padding: 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 14px; }
         .map-fallback.visible { display: block; }
+        .location-section.map-unavailable #listingMap { display: none; }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
@@ -366,7 +381,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         @media (min-width: 1024px) {
             .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-            .desktop-side-column { position: sticky; top: 24px; }
+            .desktop-side-column { position: sticky; top: 72px; }
         }
         @media (max-width: 767px) {
             .share-section { margin-bottom: 24px; }
@@ -468,9 +483,16 @@ or distribution of this code can result in legal action to the fullest extent pe
                         </div>
                     </div>
 
-                    <div class="text-gray-700 mb-6 listing-description">lvycfgtuiyuijokp
+                    <div class="listing-description-wrap">
+                        <div class="text-gray-700 listing-description" id="listingDescription">lvycfgtuiyuijokp
 newline\nhgw dyuh
 JUd</div>
+                        <div class="description-divider">
+                            <span class="description-divider-line"></span>
+                            <button type="button" class="read-more-btn hidden" id="listingReadMoreBtn">Read more</button>
+                            <span class="description-divider-line"></span>
+                        </div>
+                    </div>
 
                     
                 <div class="mb-6">
@@ -486,7 +508,7 @@ JUd</div>
                     
             <div class="owner-info-section">
                 <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
-                <div class="mb-4"><p><strong>Owner:</strong> Jwdjfuhbfcv edv</p><p><strong>Title:</strong> Director</p><p><strong>From:</strong> Athens, Greece</p><p><strong>Email:</strong> <a href="mailto:example2@example.com" class="text-blue-600 hover:underline">example2@example.com</a></p><p><strong>Phone:</strong> <a href="tel:11708456789" class="text-blue-600 hover:underline">(170) 845-6789</a></p></div>
+                <div class="mb-4"><p><strong>Owner:</strong> Jwdjfuhbfcv edv, Director</p><p><strong>From:</strong> Athens, Greece</p><p><strong>Email:</strong> <a href="mailto:example2@example.com" class="text-blue-600 hover:underline">example2@example.com</a></p><p><strong>Phone:</strong> <a href="tel:11708456789" class="text-blue-600 hover:underline">(170) 845-6789</a></p></div>
             </div>
         
 
@@ -529,7 +551,7 @@ JUd</div>
                 </div>
                 
                 
-            <div>
+            <div id="locationSection" class="location-section">
                 <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
                 <div id="listingMap"></div>
                 <div id="mapFallback" class="map-fallback" role="status" aria-live="polite"></div>
@@ -575,7 +597,12 @@ JUd</div>
         
                             
             <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Hours</h3>
+                <h3 class="font-semibold text-gray-900 mb-2">Hours
+                    <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
+                        <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
+                        <span class="hours-tooltip">Last updated at 2026-03-15 23:07 UTC by TGD Admin.</span>
+                    </span>
+                </h3>
                 <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>Open 24 Hours</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>9:00 AM - 10:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>Closed</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>9:00 AM - 2:00 AM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>9:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>9:00 PM - 10:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>Closed</span></div></div>
                 <div id="openStatusText" class="mt-2 text-sm"></div>
                 <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
@@ -779,7 +806,37 @@ JUd</div>
             });
             
             checkAdminRedirect();
+            initializeReadMore();
+            initializeTooltipToggle('verifiedCheckmarkButton');
+            initializeTooltipToggle('hoursTooltipButton');
         });
+
+        function initializeTooltipToggle(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                button.classList.toggle('open');
+            });
+            document.addEventListener('click', () => button.classList.remove('open'));
+        }
+
+        function initializeReadMore() {
+            const description = document.getElementById('listingDescription');
+            const readMoreButton = document.getElementById('listingReadMoreBtn');
+            if (!description || !readMoreButton) return;
+            if (description.scrollHeight <= 300) return;
+
+            let expanded = false;
+            description.classList.add('collapsed');
+            readMoreButton.classList.remove('hidden');
+
+            readMoreButton.addEventListener('click', () => {
+                expanded = !expanded;
+                description.classList.toggle('collapsed', !expanded);
+                readMoreButton.textContent = expanded ? 'Read less' : 'Read more';
+            });
+        }
         
         function checkAdminRedirect() {
             const path = window.location.pathname;
@@ -1048,6 +1105,8 @@ JUd</div>
                     mapFallback.textContent = message || 'Map is currently unavailable for this listing.';
                     mapFallback.classList.add('visible');
                 }
+                const locationSection = document.getElementById('locationSection');
+                if (locationSection) locationSection.classList.add('map-unavailable');
             };
 
             if (!fullAddress || fullAddress === '') {
