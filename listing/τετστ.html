@@ -13,7 +13,6 @@ or distribution of this code can result in legal action to the fullest extent pe
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    
     <title>Tetst in Glenview, IL | Greek Businesses | The Greek Directory</title>
 
     <meta name="description" content="testigntieu. Greek business in Glenview, IL. View address, phone, hours, and photos.">
@@ -87,9 +86,8 @@ or distribution of this code can result in legal action to the fullest extent pe
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="manifest" href="/manifest.json">
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+    <script src="https://cdn.tailwindcss.com"></script>    
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
     
     <script type="application/ld+json">
@@ -315,9 +313,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         .social-youtube { background: #FF0000; color: white; }
         .social-tiktok { background: #000000; color: white; }
         .social-linkedin { background: #0077B5; color: white; }
-        .social-google { background: #4285F4; color: white; }
-        .social-yelp { background: #D32323; color: white; }
-        .social-tripadvisor { background: #00AF87; color: white; }
+        .social-google { background: #ffffff; color: #4285F4; border: 1px solid #d1d5db; }
+        .social-yelp { background: #ffffff; }
+        .social-tripadvisor { background: #ffffff; }
+        .social-yelp img, .social-tripadvisor img { width: 22px; height: 22px; display: block; }
         .social-other { background: #6B7280; color: white; }
         .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
         .share-button:hover { transform: scale(1.1); }
@@ -417,6 +416,11 @@ or distribution of this code can result in legal action to the fullest extent pe
             .leaflet-popup-tip { background: #2a2a2a !important; }
             .subcategory-tag { background: #404040; color: #e5e5e5; }
             .owner-info-section { background: #2a2a2a; border-color: #404040; }
+            .listing-description { background: #2a2a2a; border-color: #404040; }
+            .listing-description.collapsed::after { background: linear-gradient(to bottom, rgba(42,42,42,0), rgba(42,42,42,1)); }
+            .description-divider-line, .additional-info-table, .additional-info-row { border-color: #404040; }
+            .additional-info-row:nth-child(even), .map-fallback, .read-more-btn, .desktop-contact-card { background: #1f1f1f; color: #e5e7eb; border-color: #404040; }
+            .social-google, .social-yelp, .social-tripadvisor { background: #ffffff; }
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
@@ -464,7 +468,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                                     <span class="subcategory-tag">Auto Detailer</span>
                                 </div>
                                 <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
-                                    <span class="badge badge-closed" id="openClosedBadge">Closed Now</span>
+                                    
                                 </div>
                             </div>
                             <h1 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">Tetst</h1>
@@ -478,7 +482,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                             
                             
                             
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=123%20Harlem%20Ave%2C%20Glenview%2C%20IL%2060026" target="_blank" class="mobile-cta-button" style="background:#111827;" onclick="trackClick('directions')">Directions</a>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=123%20Harlem%20Ave%2C%20Glenview%2C%20IL%2060026" target="_blank" class="mobile-cta-button" style="background:#111827;" onclick="trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>
                             
                         </div>
                     </div>
@@ -801,7 +805,12 @@ axjkduiwf</div>
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
-            if (!hoursData) return;
+            const hasHours = hoursData && Object.values(hoursData).some(value => typeof value === 'string' && value.trim().length > 0);
+            if (!hasHours) {
+                if (badge) badge.style.display = 'none';
+                if (statusText) statusText.style.display = 'none';
+                return;
+            }
             
             const now = new Date();
             const localNow = new Date(now.toLocaleString('en-US', { timeZone: businessTimezone }));
@@ -1074,7 +1083,7 @@ axjkduiwf</div>
                 });
                 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors',
+                    attribution: '',
                     maxZoom: 19
                 }).addTo(map);
                 
