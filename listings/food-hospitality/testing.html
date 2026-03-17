@@ -16,7 +16,7 @@
     <link rel="icon" href="https://static.thegreekdirectory.org/whitefavicon.png" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="https://social.thegreekdirectory.org/Logo2.png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/src/output.css" rel="stylesheet">
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -379,7 +379,11 @@
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
-            if (!hoursData) return;
+            if (!hoursData || Object.values(hoursData).every(value => !value || String(value).trim().toLowerCase() === 'closed')) {
+                if (badge) badge.style.display = 'none';
+                if (statusText) statusText.style.display = 'none';
+                return;
+            }
             
             const now = new Date();
             const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));

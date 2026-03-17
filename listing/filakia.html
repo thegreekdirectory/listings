@@ -87,7 +87,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="manifest" href="/manifest.json">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/src/output.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
@@ -315,9 +315,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         .social-youtube { background: #FF0000; color: white; }
         .social-tiktok { background: #000000; color: white; }
         .social-linkedin { background: #0077B5; color: white; }
-        .social-google { background: #4285F4; color: white; }
-        .social-yelp { background: #D32323; color: white; }
-        .social-tripadvisor { background: #00AF87; color: white; }
+        .social-google { background: white; color: #4285F4; border: 2px solid #4285F4; }
+        .social-yelp { background: white; color: #D32323; border: 2px solid #D32323; }
+        .social-tripadvisor { background: white; color: #00AF87; border: 2px solid #00AF87; }
         .social-other { background: #6B7280; color: white; }
         .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
         .share-button:hover { transform: scale(1.1); }
@@ -477,7 +477,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                         <div class="mobile-cta-bar">
                             
                             
-                            <a href="https://filakialips.com" target="_blank" class="mobile-cta-button" style="background:#2563eb;" onclick="trackClick('website')">Website</a>
+                            <a href="https://filakialips.com" target="_blank" class="mobile-cta-button" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>
                             
                             
                         </div>
@@ -827,7 +827,11 @@ Filakia is derived from the Greek root philia meaning "friendship" or "affection
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
-            if (!hoursData) return;
+            if (!hoursData || Object.values(hoursData).every(value => !value || String(value).trim().toLowerCase() === 'closed')) {
+                if (badge) badge.style.display = 'none';
+                if (statusText) statusText.style.display = 'none';
+                return;
+            }
             
             const now = new Date();
             const localNow = new Date(now.toLocaleString('en-US', { timeZone: businessTimezone }));
