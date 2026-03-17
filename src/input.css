@@ -1,1 +1,4 @@
 @import "tailwindcss";
+
+/* Only scan files where you write class names */
+@source "../**/*.{html,js}"; 
