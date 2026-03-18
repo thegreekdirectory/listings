@@ -1,8 +1,8 @@
 // service-worker.js
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
-const STATIC_CACHE_NAME = 'tgd-static-v2';
-const RUNTIME_CACHE_NAME = 'tgd-runtime-v2';
+const STATIC_CACHE_NAME = 'tgd-static-v3';
+const RUNTIME_CACHE_NAME = 'tgd-runtime-v3';
 const OFFLINE_PAGE = '/offline.html';
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -15,6 +15,7 @@ const CORE_ASSETS = [
   '/starred.html',
   '/settings.html',
   '/offline.html',
+  '/src/output.css',
   '/css/index.css',
   '/css/listings.css',
   '/css/admin.css',

@@ -1,7 +1,8 @@
-const BUSINESS_CACHE = 'tgd-business-v1';
+const BUSINESS_CACHE = 'tgd-business-v2';
 const BUSINESS_ASSETS = [
   '/business',
   '/business.html',
+  '/src/output.css',
   '/css/business.css',
   '/js/business-auth.js',
   '/js/business-dashboard.js',

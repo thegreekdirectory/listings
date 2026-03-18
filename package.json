@@ -1,0 +1,8 @@
+{
+  "name": "listings",
+  "private": true,
+  "scripts": {
+    "tailwind:build": "node ./scripts/build-tailwind-output.js",
+    "tailwind:watch": "while true; do node ./scripts/build-tailwind-output.js; sleep 2; done"
+  }
+}
