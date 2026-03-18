@@ -11,6 +11,26 @@ or distribution of this code will result in legal action to the fullest extent p
 // Load header and footer partials
 // ============================================
 
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+*/
+
+// Re-execute <script> tags that were injected via innerHTML.
+// Browsers do NOT run scripts inserted this way — this helper clones each
+// script as a real DOM element so the browser executes it.
+function executePartialScripts(container) {
+    var scripts = container.querySelectorAll('script');
+    scripts.forEach(function (oldScript) {
+        var newScript = document.createElement('script');
+        for (var i = 0; i < oldScript.attributes.length; i++) {
+            var attr = oldScript.attributes[i];
+            newScript.setAttribute(attr.name, attr.value);
+        }
+        newScript.textContent = oldScript.textContent;
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+    });
+}
+
 async function loadPartials() {
     try {
         // Load header
@@ -19,6 +39,8 @@ async function loadPartials() {
             const headerResponse = await fetch('/partials/header.html');
             if (headerResponse.ok) {
                 headerElement.innerHTML = await headerResponse.text();
+                // Execute scripts that were silently dropped by innerHTML
+                executePartialScripts(headerElement);
             }
         }
         
@@ -32,6 +54,8 @@ async function loadPartials() {
             const footerResponse = await fetch('/partials/footer.html');
             if (footerResponse.ok) {
                 footerElement.innerHTML = await footerResponse.text();
+                // Execute scripts that were silently dropped by innerHTML
+                executePartialScripts(footerElement);
             }
         }
         
