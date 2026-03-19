@@ -1,48 +1,41 @@
-# Tailwind CLI setup files prepared in this repo
+# Tailwind production setup
 
-I added the files Tailwind's CLI quickstart expects so you can run the commands directly:
+This repo now includes the files needed to replace the Tailwind CDN script with a built stylesheet.
+
+## Included files
 
 - `package.json`
+- `tailwind.config.js`
 - `src/input.css`
+- generated `src/output.css` after build
 
-## What is already created
+## Install dependencies
 
-### 1) `package.json`
-Includes scripts:
-- `npm run tailwind:build`
-- `npm run tailwind:watch`
-
-### 2) `src/input.css`
-Contains:
-```css
-@import "tailwindcss";
-```
-
-## Run the exact Tailwind commands
-
-1. Install dependencies:
 ```bash
-npm install tailwindcss @tailwindcss/cli
+npm install
 ```
 
-2. Build once:
+## Build Tailwind
+
 ```bash
-npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css
+npm run tailwind:build
 ```
 
-3. Watch mode (optional):
+## Watch Tailwind changes
+
 ```bash
-npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
+npm run tailwind:watch
 ```
 
-## Next manual step after build
-In any page you migrate off the CDN, replace:
-```html
-<script src="https://cdn.tailwindcss.com"></script>
-```
-with:
-```html
-<link href="/src/output.css" rel="stylesheet">
-```
+## What changed
 
-Do this page-by-page after generating `src/output.css`.
+- All HTML pages now load `/src/output.css` instead of `https://cdn.tailwindcss.com`.
+- Existing repo-owned CSS files such as `css/index.css`, `css/listings.css`, `css/admin.css`, `css/business.css`, `css/pwa.css`, and `css/submit.css` continue to provide the custom styles that are not Tailwind utilities.
+- `src/input.css` scans the full repo so the generated stylesheet includes the utilities used across root pages, partials, JS templates, listing pages, and generated listing detail pages.
+
+## Migration workflow on this branch
+
+1. Run `npm install`
+2. Run `npm run tailwind:build`
+3. Commit both source changes and `src/output.css`
+4. Ship one PR from `feat/tailwind-migration`
