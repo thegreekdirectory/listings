@@ -4,5 +4,9 @@
   "scripts": {
     "tailwind:build": "node ./scripts/build-tailwind-output.js",
     "tailwind:watch": "while true; do node ./scripts/build-tailwind-output.js; sleep 2; done"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.2.2",
+    "tailwindcss": "^4.2.2"
   }
 }
