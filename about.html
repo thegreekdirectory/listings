@@ -1,0 +1,286 @@
+<!-- about.html -->
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <title>About Us - The Greek Directory</title>
+    <meta name="description" content="Unifying Greek-Americans Everywhere. Learn about The Greek Directory, our mission, and the story behind building a central hub for Greek-owned businesses across America.">
+
+    <meta property="og:title" content="About Us - The Greek Directory">
+    <meta property="og:description" content="Unifying Greek-Americans Everywhere. Learn about The Greek Directory and our mission to connect Greek communities with Greek-owned businesses.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://thegreekdirectory.org/about">
+    <meta property="og:site_name" content="The Greek Directory">
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/icon-192.png">
+    <link rel="canonical" href="https://thegreekdirectory.org/about">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/pwa.css">
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <style>
+        /* PWA splash screen */
+        .pwa-splash {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .pwa-splash.fade-out { opacity: 0; visibility: hidden; }
+        .pwa-splash-logo { width: 120px; height: auto; }
+        @media (prefers-color-scheme: dark) { .pwa-splash { background: #000000; } }
+
+        /* ── Fonts ── */
+        .font-bitter   { font-family: 'Bitter', Georgia, serif; }
+        .font-montserrat { font-family: 'Montserrat', Arial, sans-serif; }
+
+        /* ── Hero ── */
+        .about-hero {
+            position: relative;
+            height: 340px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #1f1f1f;
+        }
+        @media (max-width: 479px) { .about-hero { height: 250px; } }
+
+        .about-hero-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('https://lh3.googleusercontent.com/sitesv/APaQ0STQ79yaU2GBRMX0rgB-QibK26Wo3nfdpVfLZLueNLgRvHbgkLdBy_6_ivg-kEuSxfy_mAgIgJ6wCR8RpnbA9UXCAuUPLJdiG-jpBLeQYk8r29GcKBRqPTSWCgC8oNqJB7XvCRWo_Un3uplGz8OUVQ9Cx6dEggjJU7pbidyRm_ABLjettmPVqBnjVqE=w16383');
+            background-size: cover;
+            background-position: center center;
+        }
+        .about-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(31, 31, 31, 0.5);
+        }
+        .about-hero-title {
+            position: relative;
+            z-index: 1;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 700;
+            font-size: clamp(2.25rem, 5vw, 3.625rem);
+            line-height: 1.06;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+        }
+
+        /* ── Section headings (Montserrat 34pt bold, TGD blue) ── */
+        .section-heading {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-weight: 700;
+            font-size: clamp(1.5rem, 4vw, 2.125rem);
+            line-height: 1.2;
+            color: #055193;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        /* ── Body text (Bitter 11pt, #212121) ── */
+        .body-text {
+            font-family: 'Bitter', Georgia, serif;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #212121;
+        }
+
+        /* ── Horizontal rule: 2px, blue, matches Google Sites divider ── */
+        .tgd-divider {
+            height: 2px;
+            background-color: #055193;
+            opacity: 0.15;
+            border: none;
+            margin: 0;
+        }
+
+        /* ── CTA buttons (Google Sites style: filled blue, white text) ── */
+        .cta-btn-filled {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            background-color: #055193;
+            color: #ffffff;
+            font-family: 'Bitter', Georgia, serif;
+            font-size: 1rem;
+            line-height: normal;
+            border: 2px solid #ffffff;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.2s, opacity 0.2s;
+            white-space: nowrap;
+        }
+        .cta-btn-filled:hover { background-color: #044174; }
+
+        /* ── Footer link overrides ── */
+        .footer-legal-link {
+            color: inherit;
+            text-decoration: underline;
+        }
+        .footer-legal-link:hover { opacity: 0.7; }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- Header -->
+    <div data-partial="header"></div>
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <!-- ════════════════════════════════════════════════════
+         HERO — "About Us"
+         ════════════════════════════════════════════════════ -->
+    <section class="about-hero" aria-label="About Us hero">
+        <div class="about-hero-bg" role="presentation"></div>
+        <div class="about-hero-overlay" role="presentation"></div>
+        <h1 class="about-hero-title">About Us</h1>
+    </section>
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <!-- ════════════════════════════════════════════════════
+         SECTION 1 — "Unifying Greek-Americans Everywhere"
+         ════════════════════════════════════════════════════ -->
+    <section class="py-14 px-4 bg-white" aria-labelledby="unifying-heading">
+        <div class="max-w-3xl mx-auto">
+            <h2 id="unifying-heading" class="section-heading mb-8">
+                Unifying Greek-Americans Everywhere
+            </h2>
+            <p class="body-text mb-5">
+                All across the world, Greek immigrants have established restaurants, schools, churches, law firms and so many other endeavors. The United States is home to about 3 million Greek-Americans, all embedded into their communities, but there's not a central hub where we can find and support these businesses. Until now.
+            </p>
+            <p class="body-text">
+                The Greek Directory is a modern digital platform created and developed by a young Greek-American from the Chicagoland area with aspirations to be the bridge between our Greek communities and our Greek-owned businesses. Created from scratch, our Directory is fast, reliable, and smart.
+            </p>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <hr class="tgd-divider">
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <!-- ════════════════════════════════════════════════════
+         SECTION 2 — "Message from Our Founder"
+         Light gray background (#f0f0f0)
+         ════════════════════════════════════════════════════ -->
+    <section class="py-14 px-4" style="background-color: #f0f0f0;" aria-labelledby="founder-heading">
+        <div class="max-w-3xl mx-auto">
+            <h2 id="founder-heading" class="section-heading mb-8">
+                Message from Our Founder
+            </h2>
+
+            <p class="body-text mb-5">
+                Greek businesses are everywhere, but they're not easy to find. That is the problem I set out to solve.
+            </p>
+
+            <p class="body-text mb-5">
+                I grew up in the suburbs of Chicago in a Greek-speaking environment and have been part of it my entire life.
+            </p>
+
+            <p class="body-text mb-5">
+                But I started noticing something: outside of personal connections, Greek resources are scattered, outdated, or simply hidden.
+            </p>
+
+            <p class="body-text mb-5">
+                My idea for <em>The Greek Directory</em> came from something simple. I was at church one Sunday, using the GOARCH Digital Chant Stand to follow the liturgy on my device. Afterward, some people around me had asked how I had gotten it so easily.
+            </p>
+
+            <p class="body-text mb-5">
+                That moment made me question something: why isn't everything Greek-related this easy to find? Not just church readings, but businesses, organizations, events, churches. That's when this became more than an idea.
+            </p>
+
+            <p class="body-text mb-5">
+                I reached out to business owners, restaurateurs, entrepreneurs, and other Greeks throughout Chicagoland, and their responses were consistent: "Greek businesses need better visibility…the community needs a central place to connect."
+            </p>
+
+            <p class="body-text mb-5">
+                <em>The Greek Directory</em> is being built to be exactly that: a trusted, organized, and growing platform where anyone can discover and support Greek-owned businesses.&nbsp;
+            </p>
+
+            <p class="body-text mb-5">
+                Since November 2025, I have been building this from the ground up—writing thousands of lines of code from scratch.
+            </p>
+
+            <p class="body-text mb-5">
+                Right now, this is a one-person operation. I'm actively searching and verifying businesses across Chicagoland, but to scale this properly and achieve this mission, our community needs to be involved.
+            </p>
+
+            <p class="body-text">
+                If you're Greek and own a business, submit it.<br>
+                If you know one (or many) that should be listed, suggest it.
+            </p>
+
+            <p class="body-text mt-5">
+                This only works if we build it together.
+            </p>
+
+            <p class="body-text mt-5" style="font-size: 1.125rem;">
+                Ζήτω το Έθνος! Ζήτω η Ελλάδα!
+            </p>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <hr class="tgd-divider">
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <!-- ════════════════════════════════════════════════════
+         SECTION 3 — CTA Buttons
+         ════════════════════════════════════════════════════ -->
+    <section class="py-14 px-4 bg-white" aria-label="Call to action">
+        <div class="max-w-3xl mx-auto flex flex-wrap gap-4 justify-center md:justify-start">
+            <a href="/submit-listing" class="cta-btn-filled">
+                Submit a Listing!
+            </a>
+            <a href="https://www.thegreekdirectory.org/newsletter" target="_blank" rel="noopener noreferrer" class="cta-btn-filled">
+                Subscribe to Our Newsletter!
+            </a>
+            <a href="/contact" class="cta-btn-filled">
+                Contact Us
+            </a>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <hr class="tgd-divider">
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <!-- Footer -->
+    <div data-partial="footer"></div>
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <script src="js/partials-loader.js"></script>
+    <script src="js/pwa/storage.js"></script>
+    <script src="js/pwa/app.js"></script>
+    <script src="js/pwa/dock.js"></script>
+</body>
+</html>
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
