@@ -1,199 +1,772 @@
 <!-- partials/header.html -->
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-<header id="listingsHeader" class="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
-    <div class="max-w-7xl mx-auto px-4">
-        <div class="flex items-center justify-between h-14">
-            <!-- Logo -->
-            <a href="/" class="flex items-center gap-2 flex-shrink-0" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
-                <img src="https://static.thegreekdirectory.org/img/logo/blue.svg" alt="The Greek Directory" class="h-8 w-auto">
-                <span class="text-sm font-semibold text-gray-900 hidden sm:inline">The Greek Directory</span>
-            </a>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-            <!-- Full nav (shown when everything fits) -->
-            <nav id="headerFullNav" class="flex items-center gap-1">
-                <a href="/" id="navHome" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
-                <a href="/listings" id="navListings" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
-                <a href="/about" id="navAbout" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
-                <a href="/listings?starred=1"
-                   id="headerStarBtn"
-                   onclick="return window.tgdNavigateToStarred(event)"
-                   class="px-2 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-                   title="View Starred"
-                   style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#facc15" stroke="#ca8a04" stroke-width="1.5">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                </a>
-            </nav>
+/* ── Variables ────────────────────────────────────────────────────────────── */
+:root {
+  --tgd-blue:      #045093;
+  --tgd-blue-dark: #033d7a;
+  --tgd-blue-deep: #022f5a;
+  --tgd-blue-mid:  #034580;
+  --tgd-muted:     rgba(255,255,255,0.60);
+  --tgd-hover:     rgba(255,255,255,0.10);
+  --tgd-border:    rgba(255,255,255,0.14);
+  --tgd-sep:       rgba(255,255,255,0.16);
+}
 
-            <!-- Hamburger mode: star icon stays in header, hamburger opens dropdown -->
-            <div id="headerHamburgerRow" class="hidden items-center gap-2">
-                <a href="/listings?starred=1"
-                   onclick="return window.tgdNavigateToStarred(event)"
-                   class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-                   title="View Starred"
-                   style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#facc15" stroke="#ca8a04" stroke-width="1.5">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                </a>
-                <button id="hamburgerBtn" class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;" aria-label="Menu">
-                    <svg id="hamburgerIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    <svg id="hamburgerCloseIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
+/* ── Scope reset ──────────────────────────────────────────────────────────── */
+#tgdHeader, #tgdHeader * { box-sizing: border-box; }
+#tgdHeader a { text-decoration: none; }
+#tgdHeader button { font-family: 'DM Sans', sans-serif; }
+#tgdHeader a, #tgdHeader button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ── Header shell ─────────────────────────────────────────────────────────── */
+#tgdHeader {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 50;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: box-shadow .25s ease;
+}
+#tgdHeader.tgd-scrolled {
+  box-shadow: 0 4px 32px rgba(2,47,90,.60);
+}
+
+/* ── ROW 1 — Utility bar ──────────────────────────────────────────────────── */
+#tgd-util {
+  background: var(--tgd-blue-deep);
+  height: 34px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+#tgd-util-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  height: 100%; display: flex; align-items: center; justify-content: space-between;
+}
+.tgd-util-tag {
+  font-size: .705rem; font-weight: 300;
+  color: var(--tgd-muted); letter-spacing: .03em;
+}
+.tgd-util-nav { display: flex; align-items: center; gap: 20px; }
+.tgd-util-link {
+  font-size: .72rem; font-weight: 400;
+  color: var(--tgd-muted); transition: color .14s;
+}
+.tgd-util-link:hover { color: #fff; }
+.tgd-util-hl { color: rgba(255,255,255,.82); font-weight: 500; }
+.tgd-util-hl:hover { color: #fff !important; }
+
+/* ── ROW 2 — Brand + search ───────────────────────────────────────────────── */
+#tgd-main { background: var(--tgd-blue); padding: 16px 0; }
+#tgd-main-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; gap: 18px;
+}
+
+/* Logo */
+#tgd-logo {
+  flex-shrink: 0; display: flex; align-items: center; gap: 11px;
+}
+#tgd-logo-svg {
+  width: 48px; height: 48px; flex-shrink: 0;
+  filter: drop-shadow(0 1px 5px rgba(0,0,0,.22));
+  transition: filter .2s;
+}
+#tgd-logo:hover #tgd-logo-svg { filter: drop-shadow(0 2px 9px rgba(0,0,0,.32)); }
+#tgd-logo-words { display: flex; flex-direction: column; }
+#tgd-logo-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.55rem; font-weight: 700;
+  color: #fff; line-height: 1.1; letter-spacing: .01em;
+  transition: opacity .15s;
+}
+#tgd-logo:hover #tgd-logo-name { opacity: .88; }
+#tgd-logo-sub {
+  font-size: .595rem; font-weight: 600;
+  color: rgba(255,255,255,.55);
+  letter-spacing: .28em; text-transform: uppercase; margin-top: 2px;
+}
+@media (max-width: 420px) { #tgd-logo-name { font-size: 1.2rem; } }
+
+/* Search form */
+#tgd-sf {
+  flex: 1; max-width: 660px;
+  display: flex; border-radius: 10px; overflow: hidden;
+  background: #fff;
+  border: 2px solid transparent;
+  transition: border-color .2s, box-shadow .2s;
+}
+#tgd-sf:focus-within {
+  border-color: rgba(255,255,255,.50);
+  box-shadow: 0 0 0 4px rgba(255,255,255,.13);
+}
+.tgd-seg { display: flex; align-items: center; gap: 8px; padding: 0 14px; }
+.tgd-seg-q   { flex: 1; border-right: 1.5px solid rgba(4,80,147,.12); }
+.tgd-seg-loc { width: 162px; border-right: 1.5px solid rgba(4,80,147,.12); }
+.tgd-seg svg { flex-shrink: 0; color: var(--tgd-blue); opacity: .65; }
+.tgd-seg input {
+  flex: 1; min-width: 0; background: transparent;
+  border: none; outline: none;
+  font-family: 'DM Sans', sans-serif; font-size: .875rem;
+  color: var(--tgd-blue-deep); padding: 13px 0;
+}
+.tgd-seg input::placeholder { color: rgba(4,80,147,.35); }
+#tgd-sbtn {
+  display: flex; align-items: center; gap: 7px; padding: 0 20px;
+  background: var(--tgd-blue-deep); color: #fff;
+  font-size: .85rem; font-weight: 600;
+  border: none; cursor: pointer; white-space: nowrap;
+  transition: background .14s;
+}
+#tgd-sbtn:hover { background: var(--tgd-blue-dark); }
+#tgd-sbtn svg { flex-shrink: 0; }
+
+/* Action buttons */
+#tgd-star-wrap {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 8px;
+  border: 1.5px solid var(--tgd-border);
+  background: var(--tgd-hover); color: #fff;
+  text-decoration: none; cursor: pointer;
+  transition: background .14s, border-color .14s;
+}
+#tgd-star-wrap:hover, #tgd-star-wrap.tgd-active {
+  background: rgba(255,255,255,.18);
+  border-color: rgba(255,255,255,.35);
+}
+#tgd-star-wrap.tgd-active svg { fill: #fff; }
+
+#tgd-cta {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 18px; border-radius: 8px;
+  background: #fff; color: var(--tgd-blue);
+  font-size: .84rem; font-weight: 700;
+  white-space: nowrap; border: none; cursor: pointer;
+  text-decoration: none; font-family: 'DM Sans', sans-serif;
+  transition: background .14s, transform .1s;
+}
+#tgd-cta:hover { background: #eef4fc; transform: translateY(-1px); }
+
+#tgd-ham {
+  display: none; flex-shrink: 0; margin-left: auto;
+  background: var(--tgd-hover);
+  border: 1.5px solid var(--tgd-border);
+  border-radius: 8px; color: #fff; cursor: pointer;
+  padding: 9px; transition: background .14s;
+}
+#tgd-ham:hover { background: rgba(255,255,255,.18); }
+
+@media (max-width: 767px) {
+  #tgd-sf, #tgd-cta, #tgd-star-wrap { display: none; }
+  #tgd-ham { display: flex; }
+}
+@media (min-width: 768px) and (max-width: 960px) {
+  #tgd-cta { display: none; }
+  .tgd-seg-loc { display: none; }
+}
+
+/* ── ROW 3 — Category / nav bar ───────────────────────────────────────────── */
+#tgd-catbar {
+  background: var(--tgd-blue-mid);
+  border-top: 1px solid rgba(255,255,255,.07);
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+#tgd-cat-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: stretch; overflow-x: auto; scrollbar-width: none;
+}
+#tgd-cat-inner::-webkit-scrollbar { display: none; }
+
+/* Shared tab/pill style */
+.tgd-tab, .tgd-pill, #tgd-all-btn, #tgd-more {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 14px; height: 44px;
+  font-size: .79rem; font-weight: 500;
+  color: var(--tgd-muted); white-space: nowrap;
+  border: none; border-bottom: 2px solid transparent;
+  background: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  text-decoration: none; border-radius: 0;
+  transition: color .13s, border-color .13s, background .13s;
+}
+.tgd-tab:hover, .tgd-pill:hover, #tgd-more:hover {
+  color: #fff; background: var(--tgd-hover);
+  border-bottom-color: rgba(255,255,255,.38);
+}
+.tgd-tab.tgd-active, .tgd-pill.tgd-active {
+  color: #fff; border-bottom-color: #fff; font-weight: 600;
+}
+.tgd-tab svg, .tgd-pill svg { opacity: .68; flex-shrink: 0; }
+.tgd-tab:hover svg, .tgd-tab.tgd-active svg,
+.tgd-pill:hover svg, .tgd-pill.tgd-active svg { opacity: 1; }
+
+#tgd-all-btn {
+  font-weight: 600; color: rgba(255,255,255,.80);
+  border-right: 1px solid var(--tgd-sep);
+  flex-shrink: 0; padding: 0 17px;
+}
+#tgd-all-btn.tgd-open { color: #fff; border-bottom-color: #fff; }
+.tgd-chev { transition: transform .2s; }
+#tgd-all-btn.tgd-open .tgd-chev { transform: rotate(180deg); }
+
+.tgd-vsep { width: 1px; margin: 10px 4px; background: var(--tgd-sep); flex-shrink: 0; }
+
+#tgd-more { margin-left: auto; flex-shrink: 0; color: rgba(255,255,255,.46); padding: 0 6px 0 14px; }
+#tgd-more svg { transform: rotate(-90deg); }
+
+/* All-categories dropdown */
+#tgd-all-wrap { position: relative; display: flex; align-items: stretch; }
+#tgd-drop {
+  position: absolute; top: calc(100% + 4px); left: 0; width: 340px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: var(--tgd-blue-dark);
+  box-shadow: 0 16px 48px rgba(2,47,90,.70), 0 0 0 1px rgba(255,255,255,.05);
+  z-index: 200; padding: 8px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+  animation: tgdIn .13s ease;
+}
+@keyframes tgdIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:none} }
+#tgd-drop.tgd-hidden { display: none; }
+.tgd-ditem {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px; border-radius: 8px;
+  font-size: .775rem; font-weight: 500;
+  color: rgba(255,255,255,.70);
+  text-decoration: none;
+  transition: background .11s, color .11s;
+}
+.tgd-ditem:hover { background: var(--tgd-hover); color: #fff; }
+.tgd-ditem svg { flex-shrink: 0; opacity: .70; }
+.tgd-ditem:hover svg { opacity: 1; }
+
+/* ── Mobile menu ──────────────────────────────────────────────────────────── */
+#tgd-mob {
+  background: var(--tgd-blue-dark);
+  border-top: 1px solid rgba(255,255,255,.09);
+  display: none;
+}
+#tgd-mob.tgd-open { display: block; }
+
+#tgd-mob-srch { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.tgd-mob-row {
+  display: flex; border-radius: 8px; overflow: hidden;
+  border: 1.5px solid rgba(255,255,255,.13);
+  background: rgba(255,255,255,.07); margin-bottom: 8px;
+}
+.tgd-mob-row:focus-within { border-color: rgba(255,255,255,.32); }
+.tgd-mseg { display: flex; align-items: center; gap: 8px; padding: 0 12px; flex: 1; }
+.tgd-mseg svg { color: rgba(255,255,255,.55); flex-shrink: 0; }
+.tgd-mseg input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #fff; font-family: 'DM Sans', sans-serif; font-size: .85rem; padding: 11px 0;
+}
+.tgd-mseg input::placeholder { color: rgba(255,255,255,.35); }
+#tgd-mgo {
+  padding: 0 14px; background: var(--tgd-blue-deep);
+  border: none; cursor: pointer; display: flex; align-items: center; color: #fff;
+  transition: background .14s;
+}
+#tgd-mgo:hover { background: #022347; }
+.tgd-mloc {
+  display: flex; align-items: center; gap: 8px; padding: 0 12px;
+  background: rgba(255,255,255,.06); border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,.09);
+}
+.tgd-mloc:focus-within { border-color: rgba(255,255,255,.28); }
+.tgd-mloc svg { color: rgba(255,255,255,.55); flex-shrink: 0; }
+.tgd-mloc input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #fff; font-family: 'DM Sans', sans-serif; font-size: .85rem; padding: 11px 0;
+}
+.tgd-mloc input::placeholder { color: rgba(255,255,255,.35); }
+
+#tgd-mob-nav { padding: 10px 12px; display: flex; flex-direction: column; gap: 1px; }
+.tgd-mlink {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: 8px;
+  font-size: .875rem; font-weight: 500;
+  color: rgba(255,255,255,.78); text-decoration: none;
+  transition: background .12s, color .12s;
+}
+.tgd-mlink:hover  { background: var(--tgd-hover); color: #fff; }
+.tgd-mlink.tgd-active { color: #fff; font-weight: 600; background: rgba(255,255,255,.10); }
+.tgd-mlink svg { flex-shrink: 0; opacity: .72; }
+.tgd-mlink:hover svg, .tgd-mlink.tgd-active svg { opacity: 1; }
+
+.tgd-msec {
+  font-size: .655rem; font-weight: 700;
+  color: rgba(255,255,255,.36);
+  text-transform: uppercase; letter-spacing: .22em; padding: 14px 14px 5px;
+}
+#tgd-mcats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; padding: 0 2px; }
+.tgd-mcat {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 14px; border-radius: 8px;
+  font-size: .78rem; font-weight: 500;
+  color: rgba(255,255,255,.70); text-decoration: none;
+  transition: background .12s, color .12s;
+}
+.tgd-mcat:hover { background: var(--tgd-hover); color: #fff; }
+.tgd-mcat svg { flex-shrink: 0; opacity: .68; }
+.tgd-mcat:hover svg { opacity: 1; }
+
+.tgd-mcta-wrap { padding: 12px 14px 18px; }
+#tgd-mcta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px; border-radius: 9px;
+  background: #fff; color: var(--tgd-blue);
+  font-size: .9rem; font-weight: 700;
+  text-decoration: none; font-family: 'DM Sans', sans-serif;
+  transition: background .14s;
+}
+#tgd-mcta:hover { background: #eef4fc; }
+</style>
+
+<!-- ═══════════════════════════════════════
+     SVG SYMBOL DEFS
+════════════════════════════════════════ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <!-- UI -->
+  <symbol id="s-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>
+  </symbol>
+  <symbol id="s-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/>
+  </symbol>
+  <symbol id="s-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M4 6h16M4 12h16M4 18h16"/>
+  </symbol>
+  <symbol id="s-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M6 18L18 6M6 6l12 12"/>
+  </symbol>
+  <symbol id="s-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 9l6 6 6-6"/>
+  </symbol>
+  <symbol id="s-arrr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12h14M13 6l6 6-6 6"/>
+  </symbol>
+  <symbol id="s-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+  </symbol>
+  <symbol id="s-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2l3.09 6.26 6.91 1.01-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>
+  </symbol>
+  <symbol id="s-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/>
+  </symbol>
+  <symbol id="s-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+    <circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12.5"/><circle cx="12" cy="16" r=".8" fill="currentColor"/>
+  </symbol>
+  <symbol id="s-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+    <rect x="3" y="3" width="18" height="18" rx="2"/>
+    <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
+    <line x1="9" y1="9" x2="9" y2="21"/>
+  </symbol>
+  <!-- Category icons -->
+  <symbol id="s-food" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3v18M8 3v6c0 1.7 1.3 3 3 3v6M11 3v6c0 1.7-1.3 3-3 3"/><path d="M18 3v18M18 3c2.5 0 4 2 4 5s-1.5 5-4 5"/>
+  </symbol>
+  <symbol id="s-scissors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+    <path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>
+  </symbol>
+  <symbol id="s-brief" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2"/>
+    <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+    <line x1="2" y1="12" x2="22" y2="12"/>
+  </symbol>
+  <symbol id="s-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <path d="M16 10a4 4 0 01-8 0"/>
+  </symbol>
+  <symbol id="s-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 2H3l.34 2M3.34 4l2 10A2 2 0 007.28 15.5h9.44a2 2 0 001.94-1.5L20.5 7H3.34"/>
+    <circle cx="9" cy="21" r="1.2"/><circle cx="19" cy="21" r="1.2"/>
+  </symbol>
+  <symbol id="s-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77A6 6 0 0119.7 15H4a6 6 0 106-6h3.7l-4 4z"/>
+  </symbol>
+  <symbol id="s-church" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2v5M9.5 4.5h5"/>
+    <path d="M3 21h18M5 21V11l7-5 7 5v10"/>
+    <rect x="10" y="15" width="4" height="6"/>
+  </symbol>
+  <symbol id="s-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
+    <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+  </symbol>
+  <symbol id="s-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 17H5a2 2 0 01-2-2v-3l2.3-5.4A2 2 0 017.12 5h9.76a2 2 0 011.82 1.6L21 12v3a2 2 0 01-2 2h-2"/>
+    <circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/>
+    <line x1="10" y1="17.5" x2="14" y2="17.5"/>
+  </symbol>
+  <symbol id="s-ticket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 9a2 2 0 002 2v2a2 2 0 00-2 2v1a2 2 0 002 2h16a2 2 0 002-2v-1a2 2 0 00-2-2v-2a2 2 0 002-2V8a2 2 0 00-2-2H4a2 2 0 00-2 2v1z"/>
+    <line x1="9" y1="6" x2="9" y2="18"/>
+    <line x1="15" y1="6" x2="15" y2="18"/>
+  </symbol>
+  <symbol id="s-paw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="17" rx="4" ry="3"/>
+    <circle cx="7" cy="10" r="2"/><circle cx="17" cy="10" r="2"/>
+    <circle cx="10" cy="6" r="1.5"/><circle cx="14" cy="6" r="1.5"/>
+    <path d="M8 14.5c0-2.5 1.8-4.5 4-4.5s4 2 4 4.5"/>
+  </symbol>
+  <symbol id="s-bldg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="1"/>
+    <path d="M3 9h18M9 21V9"/>
+    <rect x="12" y="12" width="3" height="3"/><rect x="12" y="6" width="3" height="3"/>
+    <rect x="5"  y="12" width="3" height="3"/><rect x="5"  y="6" width="3" height="3"/>
+  </symbol>
+  <symbol id="s-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M12 1v2.2M12 20.8V23M4.22 4.22l1.55 1.55M18.23 18.23l1.55 1.55M1 12h2.2M20.8 12H23M4.22 19.78l1.55-1.55M18.23 5.77l1.55-1.55"/>
+  </symbol>
+  <symbol id="s-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+    <path d="M16 3.13a4 4 0 010 7.75"/>
+  </symbol>
+</svg>
+
+<!-- ═══════════════════════════════════════
+     HEADER HTML
+════════════════════════════════════════ -->
+<header id="tgdHeader">
+
+  <!-- Row 1 — Utility bar -->
+  <div id="tgd-util">
+    <div id="tgd-util-inner">
+      <span class="tgd-util-tag" id="tgd-util-tag">
+        Connecting Greek-owned businesses with communities across America
+      </span>
+      <nav class="tgd-util-nav">
+        <a href="/about.html"          class="tgd-util-link">About</a>
+        <a href="/contact.html"        class="tgd-util-link">Contact</a>
+        <a href="/submit-listing.html" class="tgd-util-link tgd-util-hl">Add Your Business</a>
+        <a href="/business.html"       class="tgd-util-link tgd-util-hl">Business Portal</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Row 2 — Logo + search + CTA -->
+  <div id="tgd-main">
+    <div id="tgd-main-inner">
+
+      <!-- Logo: Greek key spiral SVG (converted from uploaded logo) -->
+      <a href="/" id="tgd-logo" aria-label="The Greek Directory home">
+        <svg id="tgd-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="100" height="100" rx="9" fill="#ffffff"/>
+          <path d="M 9,91 L 9,9 L 91,9 L 91,73 L 27,73 L 27,27 L 73,27 L 73,55 L 45,55 L 45,45 L 61,45"
+                fill="none" stroke="#045093" stroke-width="11.5"
+                stroke-linecap="square" stroke-linejoin="miter"/>
+        </svg>
+        <div id="tgd-logo-words">
+          <span id="tgd-logo-name">The Greek Directory</span>
+          <span id="tgd-logo-sub">Greek-Owned Businesses</span>
         </div>
+      </a>
+
+      <!-- Search -->
+      <form id="tgd-sf" role="search" aria-label="Search businesses">
+        <div class="tgd-seg tgd-seg-q">
+          <svg width="16" height="16" aria-hidden="true"><use href="#s-search"/></svg>
+          <input id="tgd-q" type="search" placeholder="Restaurants, lawyers, bakeries…"
+                 autocomplete="off" aria-label="Search query">
+        </div>
+        <div class="tgd-seg tgd-seg-loc">
+          <svg width="15" height="15" aria-hidden="true"><use href="#s-pin"/></svg>
+          <input id="tgd-loc" type="text" placeholder="City or state"
+                 autocomplete="off" aria-label="Location">
+        </div>
+        <button type="submit" id="tgd-sbtn" aria-label="Search">
+          <svg width="15" height="15" aria-hidden="true"><use href="#s-search"/></svg>
+          Search
+        </button>
+      </form>
+
+      <!-- Starred -->
+      <a href="/listings?starred=1"
+         id="headerStarBtn"
+         class="tgd-star-wrap" id="tgd-star-wrap"
+         onclick="return window.tgdNavigateToStarred(event)"
+         aria-label="Starred listings" title="Starred listings">
+        <svg width="18" height="18" aria-hidden="true"><use href="#s-star"/></svg>
+      </a>
+
+      <!-- CTA -->
+      <a href="/submit-listing.html" id="tgd-cta">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-star"/></svg>
+        List Your Business
+      </a>
+
+      <!-- Hamburger -->
+      <button id="tgd-ham" aria-label="Open menu" aria-expanded="false" aria-controls="tgd-mob">
+        <svg id="tgd-hic" width="22" height="22" aria-hidden="true"><use href="#s-menu"/></svg>
+        <svg id="tgd-cic" width="22" height="22" style="display:none" aria-hidden="true"><use href="#s-x"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Row 3 — Category nav -->
+  <div id="tgd-catbar">
+    <div id="tgd-cat-inner">
+
+      <!-- All categories dropdown -->
+      <div id="tgd-all-wrap">
+        <button id="tgd-all-btn" aria-haspopup="true" aria-expanded="false" aria-controls="tgd-drop">
+          <svg width="14" height="14" aria-hidden="true"><use href="#s-grid"/></svg>
+          All Categories
+          <svg width="13" height="13" class="tgd-chev" aria-hidden="true"><use href="#s-chev"/></svg>
+        </button>
+        <div id="tgd-drop" class="tgd-hidden" role="menu" aria-label="All categories"><!-- filled by JS --></div>
+      </div>
+
+      <div class="tgd-vsep"></div>
+
+      <!-- Primary nav tabs -->
+      <a href="/"            class="tgd-tab" id="navHome">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-home"/></svg>Home
+      </a>
+      <a href="/listings"    class="tgd-tab" id="navListings">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-list"/></svg>Listings
+      </a>
+      <a href="/about.html"  class="tgd-tab" id="navAbout">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-info"/></svg>About
+      </a>
+
+      <div class="tgd-vsep"></div>
+
+      <!-- Quick category pills -->
+      <a href="/listings?category=Food+%26+Hospitality"              class="tgd-pill" data-cat="Food &amp; Hospitality">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-food"/></svg>Restaurants</a>
+      <a href="/listings?category=Beauty+%26+Health"                  class="tgd-pill" data-cat="Beauty &amp; Health">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-scissors"/></svg>Beauty &amp; Health</a>
+      <a href="/listings?category=Professional+%26+Business+Services" class="tgd-pill" data-cat="Professional &amp; Business Services">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-brief"/></svg>Professional</a>
+      <a href="/listings?category=Retail+%26+Shopping"                class="tgd-pill" data-cat="Retail &amp; Shopping">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-bag"/></svg>Retail</a>
+      <a href="/listings?category=Grocery+%26+Imports"                class="tgd-pill" data-cat="Grocery &amp; Imports">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-cart"/></svg>Grocery</a>
+      <a href="/listings?category=Home+%26+Construction"              class="tgd-pill" data-cat="Home &amp; Construction">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-wrench"/></svg>Construction</a>
+      <a href="/listings?category=Church+%26+Religious+Organization"  class="tgd-pill" data-cat="Church &amp; Religious Organization">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-church"/></svg>Church</a>
+      <a href="/listings?category=Education+%26+Community"            class="tgd-pill" data-cat="Education &amp; Community">
+        <svg width="14" height="14" aria-hidden="true"><use href="#s-book"/></svg>Education</a>
+
+      <!-- More -->
+      <a href="/categories" id="tgd-more" aria-label="All categories">
+        More <svg width="13" height="13" aria-hidden="true"><use href="#s-arrr"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Mobile menu panel -->
+  <div id="tgd-mob" aria-label="Mobile navigation">
+
+    <div id="tgd-mob-srch">
+      <div class="tgd-mob-row">
+        <div class="tgd-mseg">
+          <svg width="15" height="15" aria-hidden="true"><use href="#s-search"/></svg>
+          <input id="tgd-mq" type="search" placeholder="Search Greek businesses…"
+                 autocomplete="off" aria-label="Mobile search">
+        </div>
+        <button id="tgd-mgo" aria-label="Search">
+          <svg width="16" height="16" aria-hidden="true"><use href="#s-search"/></svg>
+        </button>
+      </div>
+      <div class="tgd-mloc">
+        <svg width="15" height="15" aria-hidden="true"><use href="#s-pin"/></svg>
+        <input id="tgd-ml" type="text" placeholder="City or state"
+               autocomplete="off" aria-label="Mobile location">
+      </div>
     </div>
 
-    <!-- Hamburger dropdown panel -->
-    <div id="hamburgerDropdown" class="hidden border-t border-gray-100 bg-white">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
-            <a href="/" id="dropHome" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
-            <a href="/listings" id="dropListings" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
-            <a href="/about" id="dropAbout" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
-        </div>
+    <div id="tgd-mob-nav">
+      <a href="/"            class="tgd-mlink" id="dropHome">
+        <svg width="16" height="16" aria-hidden="true"><use href="#s-home"/></svg>Home</a>
+      <a href="/listings"    class="tgd-mlink" id="dropListings">
+        <svg width="16" height="16" aria-hidden="true"><use href="#s-list"/></svg>Listings</a>
+      <a href="/about.html"  class="tgd-mlink" id="dropAbout">
+        <svg width="16" height="16" aria-hidden="true"><use href="#s-info"/></svg>About</a>
+      <a href="/listings?starred=1" class="tgd-mlink"
+         onclick="return window.tgdNavigateToStarred(event)">
+        <svg width="16" height="16" aria-hidden="true"><use href="#s-star"/></svg>Starred Listings</a>
+
+      <div class="tgd-msec">Browse Categories</div>
+      <div id="tgd-mcats"><!-- filled by JS --></div>
     </div>
+
+    <div class="tgd-mcta-wrap">
+      <a href="/submit-listing.html" id="tgd-mcta">
+        <svg width="15" height="15" aria-hidden="true"><use href="#s-star"/></svg>
+        List Your Business
+      </a>
+    </div>
+  </div>
+
 </header>
-<!-- Spacer to push content below the fixed header (h-14 = 56px) -->
-<div style="height:56px;"></div>
+
+<!-- Spacer so content sits below fixed header -->
+<div id="tgd-spacer" aria-hidden="true"></div>
 
 <script>
-(function initHeader() {
-    // ── Active-tab highlighting ──
-    var path = window.location.pathname;
+(function () {
+  'use strict';
 
-    function isActive(href) {
-        // Strip .html from both sides so /listings matches /listings.html and vice-versa
-        var normPath = path.replace(/\.html$/, '');
-        var hrefPath = href.split('?')[0].split('#')[0].replace(/\.html$/, '');
-        if (hrefPath === '/') return normPath === '/';
-        return normPath === hrefPath || normPath.startsWith(hrefPath + '/');
-    }
+  /* ── Category data ──────────────────────────────────────────────────────── */
+  var CATS = [
+    { label:'Automotive & Transportation',       q:'Automotive+%26+Transportation',        ico:'s-car'     },
+    { label:'Beauty & Health',                   q:'Beauty+%26+Health',                    ico:'s-scissors'},
+    { label:'Church & Religious Organization',   q:'Church+%26+Religious+Organization',    ico:'s-church'  },
+    { label:'Cultural / Fraternal Organization', q:'Cultural%2FFraternal+Organization',    ico:'s-users'   },
+    { label:'Education & Community',             q:'Education+%26+Community',              ico:'s-book'    },
+    { label:'Entertainment, Arts & Recreation',  q:'Entertainment%2C+Arts+%26+Recreation', ico:'s-ticket'  },
+    { label:'Food & Hospitality',                q:'Food+%26+Hospitality',                 ico:'s-food'    },
+    { label:'Grocery & Imports',                 q:'Grocery+%26+Imports',                  ico:'s-cart'    },
+    { label:'Home & Construction',               q:'Home+%26+Construction',                ico:'s-wrench'  },
+    { label:'Industrial & Manufacturing',        q:'Industrial+%26+Manufacturing',         ico:'s-gear'    },
+    { label:'Pets & Veterinary',                 q:'Pets+%26+Veterinary',                  ico:'s-paw'     },
+    { label:'Professional & Business Services',  q:'Professional+%26+Business+Services',   ico:'s-brief'   },
+    { label:'Real Estate & Development',         q:'Real+Estate+%26+Development',          ico:'s-bldg'    },
+    { label:'Retail & Shopping',                 q:'Retail+%26+Shopping',                  ico:'s-bag'     },
+  ];
 
-    function applyActive(el, href) {
-        if (!el) return;
-        if (isActive(href)) {
-            el.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-100');
-            el.classList.add('font-semibold', 'text-white');
-            el.style.backgroundColor = '#055193';
-        }
-    }
+  function icon(id, size) {
+    return '<svg width="'+size+'" height="'+size+'" aria-hidden="true"><use href="#'+id+'"/></svg>';
+  }
 
-    applyActive(document.getElementById('navHome'),     '/');
-    applyActive(document.getElementById('navListings'), '/listings');
-    applyActive(document.getElementById('navAbout'),    '/about');
-    applyActive(document.getElementById('dropHome'),     '/');
-    applyActive(document.getElementById('dropListings'), '/listings');
-    applyActive(document.getElementById('dropAbout'),    '/about');
-
-    // ── Responsive hamburger ──
-    var fullNav      = document.getElementById('headerFullNav');
-    var hamburgerRow = document.getElementById('headerHamburgerRow');
-    var hamburgerBtn = document.getElementById('hamburgerBtn');
-    var hamburgerIcon      = document.getElementById('hamburgerIcon');
-    var hamburgerCloseIcon = document.getElementById('hamburgerCloseIcon');
-    var dropdown     = document.getElementById('hamburgerDropdown');
-    var dropdownOpen = false;
-
-    function measure() {
-        fullNav.style.display = 'flex';
-        hamburgerRow.style.display = 'none';
-
-        var headerBar  = fullNav.closest('.flex.items-center.justify-between');
-        var availWidth = headerBar.clientWidth;
-        var logoEl     = headerBar.querySelector('a');
-        var logoWidth  = logoEl.offsetWidth;
-        var available  = availWidth - logoWidth - 32;
-        var navNeeded  = fullNav.scrollWidth;
-
-        if (navNeeded <= available) {
-            fullNav.style.display = 'flex';
-            hamburgerRow.style.display = 'none';
-        } else {
-            fullNav.style.display  = 'none';
-            hamburgerRow.style.display = 'flex';
-        }
-    }
-
-    function toggleDropdown() {
-        dropdownOpen = !dropdownOpen;
-        dropdown.classList.toggle('hidden', !dropdownOpen);
-        hamburgerIcon.classList.toggle('hidden', dropdownOpen);
-        hamburgerCloseIcon.classList.toggle('hidden', !dropdownOpen);
-    }
-
-    hamburgerBtn.addEventListener('click', toggleDropdown);
-
-    document.addEventListener('click', function(e) {
-        if (dropdownOpen && !hamburgerBtn.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdownOpen = false;
-            dropdown.classList.add('hidden');
-            hamburgerIcon.classList.remove('hidden');
-            hamburgerCloseIcon.classList.add('hidden');
-        }
+  /* ── Build dropdown + mobile grid ──────────────────────────────────────── */
+  (function buildMenus() {
+    var dd  = document.getElementById('tgd-drop');
+    var mob = document.getElementById('tgd-mcats');
+    var ddH = '', mobH = '';
+    CATS.forEach(function(c) {
+      var url = '/listings?category=' + c.q;
+      ddH  += '<a href="'+url+'" class="tgd-ditem" role="menuitem">'+icon(c.ico,14)+'<span>'+c.label+'</span></a>';
+      mobH += '<a href="'+url+'" class="tgd-mcat">'+icon(c.ico,15)+'<span>'+c.label+'</span></a>';
     });
+    if (dd)  dd.innerHTML  = ddH;
+    if (mob) mob.innerHTML = mobH;
+  })();
 
-    measure();
-    window.addEventListener('resize', measure);
+  /* ── Active nav highlighting ────────────────────────────────────────────── */
+  var p = window.location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+  function act(id, href) {
+    var el = document.getElementById(id); if (!el) return;
+    var h  = href.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+    if (h === '/' ? p === '/' : (p === h || p.startsWith(h + '/'))) el.classList.add('tgd-active');
+  }
+  act('navHome',     '/'); act('dropHome',     '/');
+  act('navListings', '/listings'); act('dropListings', '/listings');
+  act('navAbout',    '/about');    act('dropAbout',    '/about');
 
-    // ── Starred navigation ──────────────────────────────────────────────
-
-    function normalizeListingsPath(pathname) {
-        // Strip .html extension and trailing slash so
-        // /listings  /listings/  /listings.html  all match
-        return pathname.replace(/\.html$/, '').replace(/\/$/, '');
-    }
-
-    function navigateToStarred(event) {
-        event.preventDefault();
-
-        var url      = new URL(window.location.href);
-        var normPath = normalizeListingsPath(url.pathname);
-
-        // Not on listings at all → hard navigate, preserving nothing
-        if (normPath !== '/listings') {
-            window.location.href = '/listings?starred=1';
-            return false;
-        }
-
-        // On listings → inject starred=1 into existing params, no page reload
-        url.searchParams.set('starred', '1');
-
-        // Build new URL: preserve pathname, all existing + new params, and hash
-        var qs     = url.searchParams.toString(); // always non-empty after .set()
-        var newUrl = url.pathname + '?' + qs + (url.hash || '');
-
-        history.replaceState({}, '', newUrl);
-
-        updateStarredButtonState();
-        window.dispatchEvent(new CustomEvent('tgd:starred-filter-requested'));
-        if (typeof window.applyUrlFilters === 'function') {
-            window.applyUrlFilters();
-        }
-
-        return false; // stops <a> default even when called via onclick=""
-    }
-
-    // Expose globally so onclick="return window.tgdNavigateToStarred(event)"
-    // works even in the narrow window before the addEventListener wire-up below
-    window.tgdNavigateToStarred = navigateToStarred;
-
-    function updateStarredButtonState() {
-        var active = new URL(window.location.href).searchParams.get('starred') === '1';
-        starButtons.forEach(function(btn) {
-            btn.style.backgroundColor = active ? '#fbbf24' : '';
-            btn.style.color           = active ? '#78350f' : '';
-        });
-    }
-
-    var starButtons = document.querySelectorAll('a[href="/listings?starred=1"]');
-    starButtons.forEach(function(btn) {
-        btn.addEventListener('click', navigateToStarred);
+  /* ── Active category pill ───────────────────────────────────────────────── */
+  var activeCat = new URLSearchParams(window.location.search).get('category') || '';
+  if (activeCat) {
+    document.querySelectorAll('.tgd-pill[data-cat]').forEach(function(el) {
+      if (decodeURIComponent(el.dataset.cat) === decodeURIComponent(activeCat))
+        el.classList.add('tgd-active');
     });
+  }
 
-    updateStarredButtonState();
-    window.addEventListener('popstate',                  updateStarredButtonState);
-    window.addEventListener('tgd:starred-state-changed', updateStarredButtonState);
+  /* ── Scroll shadow ──────────────────────────────────────────────────────── */
+  var hdr = document.getElementById('tgdHeader');
+  window.addEventListener('scroll', function() {
+    hdr.classList.toggle('tgd-scrolled', window.scrollY > 8);
+  }, { passive: true });
+
+  /* ── Spacer height ──────────────────────────────────────────────────────── */
+  var spacer = document.getElementById('tgd-spacer'), raf;
+  function sync() {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(function() {
+      if (spacer && hdr) spacer.style.height = hdr.offsetHeight + 'px';
+    });
+  }
+  sync();
+  window.addEventListener('resize', sync);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sync);
+
+  /* ── Utility-bar tagline responsive hide ───────────────────────────────── */
+  var utTag = document.getElementById('tgd-util-tag');
+  function checkXs() { if (utTag) utTag.style.display = window.innerWidth < 600 ? 'none' : ''; }
+  checkXs(); window.addEventListener('resize', checkXs);
+
+  /* ── All-categories dropdown ────────────────────────────────────────────── */
+  var allBtn  = document.getElementById('tgd-all-btn');
+  var drop    = document.getElementById('tgd-drop');
+  var allWrap = document.getElementById('tgd-all-wrap');
+  function openDrop()  { drop.classList.remove('tgd-hidden'); allBtn.classList.add('tgd-open'); allBtn.setAttribute('aria-expanded','true'); }
+  function closeDrop() { drop.classList.add('tgd-hidden');    allBtn.classList.remove('tgd-open'); allBtn.setAttribute('aria-expanded','false'); }
+  allBtn.addEventListener('click', function(e) { e.stopPropagation(); drop.classList.contains('tgd-hidden') ? openDrop() : closeDrop(); });
+  document.addEventListener('click', function(e) { if (allWrap && !allWrap.contains(e.target)) closeDrop(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeDrop(); closeMob(); } });
+
+  /* ── Mobile menu ────────────────────────────────────────────────────────── */
+  var ham = document.getElementById('tgd-ham');
+  var mob = document.getElementById('tgd-mob');
+  var hic = document.getElementById('tgd-hic');
+  var cic = document.getElementById('tgd-cic');
+  var isOpen = false;
+  function openMob()  { isOpen=true;  mob.classList.add('tgd-open');    hic.style.display='none'; cic.style.display=''; ham.setAttribute('aria-expanded','true');  sync(); }
+  function closeMob() { isOpen=false; mob.classList.remove('tgd-open'); hic.style.display='';     cic.style.display='none'; ham.setAttribute('aria-expanded','false'); sync(); }
+  ham.addEventListener('click', function() { isOpen ? closeMob() : openMob(); });
+  mob.addEventListener('click', function(e) { if (e.target.closest('a') && !e.target.closest('#tgd-mob-srch')) closeMob(); });
+
+  /* ── Mobile search ──────────────────────────────────────────────────────── */
+  function doMobSearch() {
+    var q = (document.getElementById('tgd-mq').value||'').trim();
+    var l = (document.getElementById('tgd-ml').value||'').trim();
+    var ps = new URLSearchParams();
+    if (q) ps.set('q', q); if (l) ps.set('location', l);
+    window.location.href = '/listings?' + ps.toString();
+  }
+  document.getElementById('tgd-mgo').addEventListener('click', doMobSearch);
+  document.getElementById('tgd-mq').addEventListener('keydown', function(e) { if (e.key==='Enter') doMobSearch(); });
+
+  /* ── Desktop search ─────────────────────────────────────────────────────── */
+  document.getElementById('tgd-sf').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var q = (document.getElementById('tgd-q').value||'').trim();
+    var l = (document.getElementById('tgd-loc').value||'').trim();
+    var ps = new URLSearchParams();
+    if (q) ps.set('q', q); if (l) ps.set('location', l);
+    window.location.href = '/listings?' + ps.toString();
+  });
+
+  /* ── Starred navigation (preserves existing logic) ──────────────────────── */
+  function navigateToStarred(ev) {
+    ev.preventDefault();
+    var url  = new URL(window.location.href);
+    var norm = url.pathname.replace(/\.html$/,'').replace(/\/$/,'');
+    if (norm !== '/listings') { window.location.href='/listings?starred=1'; return false; }
+    url.searchParams.set('starred','1');
+    history.replaceState({}, '', url.pathname+'?'+url.searchParams.toString()+(url.hash||''));
+    updateStarred();
+    window.dispatchEvent(new CustomEvent('tgd:starred-filter-requested'));
+    if (typeof window.applyUrlFilters === 'function') window.applyUrlFilters();
+    return false;
+  }
+  window.tgdNavigateToStarred = navigateToStarred;
+
+  function updateStarred() {
+    var on  = new URL(window.location.href).searchParams.get('starred') === '1';
+    var btn = document.getElementById('headerStarBtn');
+    if (btn) btn.classList.toggle('tgd-active', on);
+  }
+  updateStarred();
+  window.addEventListener('popstate', updateStarred);
+  window.addEventListener('tgd:starred-state-changed', updateStarred);
+
 })();
 </script>
