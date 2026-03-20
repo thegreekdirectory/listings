@@ -42,6 +42,9 @@ let selectedCategory = '';
 let selectedSubcategories = [];
 let subcategoryMode = 'any';
 let subcategoriesByCategory = {};
+const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+const LOCATION_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
+const PHONE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>`;
 
 function formatPhoneDisplay(phone) {
     if (!phone) return '';
@@ -364,7 +367,6 @@ function renderRecentListings() {
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function renderListingCard(listing) {
-    const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const url = `/listing/${listing.slug}`;
     
     const photos = listing.photos || [];
@@ -372,18 +374,24 @@ function renderListingCard(listing) {
     
     const badges = [];
     if (listing.tier === 'PREMIUM') {
-        badges.push('<span class="badge badge-featured">⭐ Featured</span>');
-        badges.push('<span class="badge badge-verified">✓ Verified</span>');
+        badges.push('<span class="badge badge-featured">Featured</span>');
+        badges.push('<span class="badge badge-verified">Verified</span>');
     } else {
         if (listing.tier === 'FEATURED') {
-            badges.push('<span class="badge badge-featured">⭐ Featured</span>');
+            badges.push('<span class="badge badge-featured">Featured</span>');
         }
         if (listing.verified || listing.tier === 'VERIFIED') {
-            badges.push('<span class="badge badge-verified">✓ Verified</span>');
+            badges.push('<span class="badge badge-verified">Verified</span>');
         }
     }
     
     const phoneDisplay = listing.phone ? formatPhoneDisplay(listing.phone) : '';
+    const showCheckmark = listing.verified ||
+        listing.tier === 'VERIFIED' ||
+        listing.tier === 'FEATURED' ||
+        listing.tier === 'PREMIUM' ||
+        listing.is_claimed ||
+        listing.show_claim_button === false;
     
     return `
         <a href="${url}" class="listing-card">
@@ -392,17 +400,17 @@ function renderListingCard(listing) {
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
                         ${badges.length > 0 ? `<div class="listing-badges mb-2">${badges.join('')}</div>` : ''}
-                        <h3 class="listing-name">${listing.business_name}</h3>
+                        <h3 class="listing-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${listing.business_name}${showCheckmark ? VERIFIED_CHECKMARK_SVG : ''}</h3>
                         ${listing.tagline ? `<p class="listing-tagline">"${listing.tagline}"</p>` : ''}
                     </div>
                     ${listing.logo && mainImage !== listing.logo ? `<img src="${listing.logo}" alt="${listing.business_name} logo" class="w-12 h-12 rounded-lg object-cover ml-2 flex-shrink-0">` : ''}
                 </div>
                 <span class="listing-category">${listing.category}</span>
                 ${listing.city && listing.state ? `
-                    <p class="listing-location">📍 ${listing.city}, ${listing.state}</p>
+                    <p class="listing-location" style="display:flex;align-items:center;gap:8px;">${LOCATION_ICON_SVG}<span>${listing.city}, ${listing.state}</span></p>
                 ` : ''}
                 ${listing.phone ? `
-                    <p class="listing-location">📞 ${phoneDisplay}</p>
+                    <p class="listing-location" style="display:flex;align-items:center;gap:8px;">${PHONE_ICON_SVG}<span>${phoneDisplay}</span></p>
                 ` : ''}
             </div>
         </a>

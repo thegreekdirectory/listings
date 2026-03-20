@@ -34,6 +34,12 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 
 const META_DESCRIPTION_SUFFIX = 'Greek business in {city}, {state}. View address, phone, hours, and photos.';
+const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+const LOCATION_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
+const PHONE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>`;
+const EMAIL_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.945a2 2 0 002.22 0L21 8"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>`;
+const WEBSITE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.6 9h16.8M3.6 15h16.8M10 3.4A15.4 15.4 0 0112.75 12 15.4 15.4 0 0110 20.6M14 3.4A15.4 15.4 0 0011.25 12 15.4 15.4 0 0014 20.6"></path></svg>`;
+const CHECK_ICON_SVG = `<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
 
 function getTaglineMaxLength(city = '', state = '') {
     const suffixLength = META_DESCRIPTION_SUFFIX.replace('{city}', city || '').replace('{state}', state || '').length;
@@ -133,6 +139,9 @@ function renderDashboard() {
     document.getElementById('listingIdDisplay').textContent = `#${currentListing.id}`;
     
     const tier = currentListing.tier || 'FREE';
+    const previewCheckmark = currentListing.verified || tier === 'VERIFIED' || tier === 'FEATURED' || tier === 'PREMIUM' || currentListing.is_claimed || currentListing.show_claim_button === false
+        ? VERIFIED_CHECKMARK_SVG
+        : '';
     const planBadge = document.getElementById('planBadge');
     if (planBadge) {
         const badges = {
@@ -452,7 +461,7 @@ function renderOverview() {
             <p class="text-gray-700 mb-4">Manage your listing on The Greek Directory. Your current plan includes the following features:</p>
             
             <div class="space-y-2 mb-6">
-                ${features[tier].map(f => `<div class="flex items-start gap-2"><span>${f}</span></div>`).join('')}
+                ${features[tier].map(f => `<div class="flex items-start gap-2">${CHECK_ICON_SVG}<span>${String(f).replace(/^✅\s*/, '')}</span></div>`).join('')}
             </div>
             
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -472,7 +481,7 @@ function renderOverview() {
                 <div class="preview-info">
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
-                            <h4 id="previewBusinessName" class="text-2xl font-bold text-gray-900 mb-1">${currentListing.business_name}</h4>
+                            <h4 id="previewBusinessName" class="text-2xl font-bold text-gray-900 mb-1" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${currentListing.business_name}${previewCheckmark}</h4>
                             <p id="previewTagline" class="text-gray-600 italic text-sm mb-2">${currentListing.tagline || ''}</p>
                             <div id="previewCategory" class="inline-block px-3 py-1 text-sm font-semibold text-white rounded-full mb-2" style="background-color:#055193;">${currentListing.category}</div>
                         </div>
@@ -483,13 +492,13 @@ function renderOverview() {
                         ${currentListing.subcategories && currentListing.subcategories.length > 0 ? 
                             `<div><span class="font-semibold">Subcategories:</span> ${currentListing.subcategories.join(', ')}</div>` : ''}
                         ${currentListing.city && currentListing.state ? 
-                            `<div><span class="font-semibold">📍 Location:</span> ${currentListing.city}, ${currentListing.state}</div>` : ''}
+                            `<div class="flex items-center gap-2">${LOCATION_ICON_SVG}<span><span class="font-semibold">Location:</span> ${currentListing.city}, ${currentListing.state}</span></div>` : ''}
                         ${currentListing.phone ? 
-                            `<div><span class="font-semibold">📞 Phone:</span> ${formatPhoneNumber(currentListing.phone)}</div>` : ''}
+                            `<div class="flex items-center gap-2">${PHONE_ICON_SVG}<span><span class="font-semibold">Phone:</span> ${formatPhoneNumber(currentListing.phone)}</span></div>` : ''}
                         ${currentListing.email ? 
-                            `<div><span class="font-semibold">✉️ Email:</span> ${currentListing.email}</div>` : ''}
+                            `<div class="flex items-center gap-2">${EMAIL_ICON_SVG}<span><span class="font-semibold">Email:</span> ${currentListing.email}</span></div>` : ''}
                         ${currentListing.website ? 
-                            `<div><span class="font-semibold">🌐 Website:</span> <a href="${currentListing.website}" target="_blank" class="text-blue-600 hover:underline">${currentListing.website}</a></div>` : ''}
+                            `<div class="flex items-center gap-2">${WEBSITE_ICON_SVG}<span><span class="font-semibold">Website:</span> <a href="${currentListing.website}" target="_blank" class="text-blue-600 hover:underline">${currentListing.website}</a></span></div>` : ''}
                     </div>
                 </div>
             </div>
@@ -1217,15 +1226,15 @@ function renderAnalytics() {
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90">📞 Calls</div>
+                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${PHONE_ICON_SVG}<span>Calls</span></div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90">🌐 Website</div>
+                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${WEBSITE_ICON_SVG}<span>Website</span></div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90">🗺️ Directions</div>
+                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${LOCATION_ICON_SVG}<span>Directions</span></div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
@@ -1246,15 +1255,15 @@ function renderAnalytics() {
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90">📞 Calls</div>
+                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${PHONE_ICON_SVG}<span>Calls</span></div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90">🌐 Website</div>
+                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${WEBSITE_ICON_SVG}<span>Website</span></div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90">🗺️ Directions</div>
+                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${LOCATION_ICON_SVG}<span>Directions</span></div>
                     </div>
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
                         <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>

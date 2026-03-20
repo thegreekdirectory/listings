@@ -63,6 +63,8 @@ async function loadPartials() {
         if (window.translationSystem) {
             window.translationSystem.applyTranslations();
         }
+
+        document.dispatchEvent(new CustomEvent('tgd:partials-loaded'));
     } catch (error) {
         console.error('Error loading partials:', error);
     }

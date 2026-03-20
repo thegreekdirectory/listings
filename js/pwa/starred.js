@@ -124,6 +124,9 @@ window.StarredManager = {
                 const listingUrl = `/listing/${listing.slug}`;
                 const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
                 const logoImage = listing.logo || '';
+                const checkmarkHtml = listing.verified || listing.tier === 'VERIFIED' || listing.tier === 'FEATURED' || listing.tier === 'PREMIUM' || listing.is_claimed || listing.show_claim_button === false
+                    ? '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
+                    : '';
                 
                 return `
                     <a href="${listingUrl}" class="listing-card bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block">
@@ -140,11 +143,11 @@ window.StarredManager = {
                                 ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name} logo" class="listing-logo w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                                 <div class="flex-1 min-w-0">
                                     <span class="listing-category text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${listing.category || 'General'}</span>
-                                    <h3 class="listing-name text-lg font-bold text-gray-900 line-clamp-1">${listing.business_name}</h3>
+                                    <h3 class="listing-name text-lg font-bold text-gray-900 line-clamp-1" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${listing.business_name}${checkmarkHtml}</h3>
                                 </div>
                             </div>
                             <p class="listing-tagline text-sm text-gray-600 mb-3 line-clamp-2">${listing.tagline || listing.description || ''}</p>
-                            <p class="listing-location text-sm text-gray-600">📍 ${listing.city ? `${listing.city}, ${listing.state}` : (listing.address || 'Location not specified')}</p>
+                            <p class="listing-location text-sm text-gray-600" style="display:flex;align-items:center;gap:8px;"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>${listing.city ? `${listing.city}, ${listing.state}` : (listing.address || 'Location not specified')}</span></p>
                         </div>
                     </a>
                 `;

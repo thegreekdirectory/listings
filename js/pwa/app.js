@@ -21,18 +21,20 @@ class PWAApp {
     async init() {
         this.checkStandalone();
         this.applyPWAMode();
-        
-        this.registerServiceWorker();
 
         if (this.isStandalone) {
+            this.registerServiceWorker();
             this.checkRestrictedPages();
             this.showSplashScreen();
+            this.injectUniversalBackButton();
         }
         
         this.setupExternalLinks();
         this.applyTheme();
+        this.applyStoredLanguagePreference();
         this.setupInstallPrompt();
         this.preventLinkPreviews();
+        document.addEventListener('tgd:partials-loaded', () => this.applyStoredLanguagePreference());
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -75,7 +77,7 @@ class PWAApp {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     async registerServiceWorker() {
-        if (!('serviceWorker' in navigator)) return;
+        if (!this.isStandalone || !('serviceWorker' in navigator)) return;
 
         try {
             const registration = await navigator.serviceWorker.register('/service-worker.js');
@@ -158,7 +160,7 @@ class PWAApp {
     
     checkRestrictedPages() {
         const path = window.location.pathname;
-        const restrictedPages = ['/starred.html', '/settings.html'];
+        const restrictedPages = ['/starred', '/starred.html', '/settings', '/settings.html'];
         
         if (restrictedPages.includes(path) && !this.isStandalone) {
             window.location.href = '/404.html';
@@ -210,6 +212,88 @@ class PWAApp {
                 document.body.classList.add(e.matches ? 'theme-dark' : 'theme-light');
             }
         });
+    }
+
+    getStoredLanguage() {
+        return localStorage.getItem('tgd_language') || 'en';
+    }
+
+    getGoogTransValue(language) {
+        return language === 'el' ? '/en/el' : '/en/en';
+    }
+
+    persistGoogTransCookie(language) {
+        const value = this.getGoogTransValue(language);
+        const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `googtrans=${value}; path=/; SameSite=Lax${secure}`;
+        document.cookie = `googtrans=${value}; domain=.thegreekdirectory.org; path=/; SameSite=Lax${secure}`;
+    }
+
+    applyStoredLanguagePreference() {
+        const language = this.getStoredLanguage();
+        this.setLanguage(language, { persist: false, reload: false, silent: true });
+    }
+
+    setLanguage(language, options = {}) {
+        const { persist = true, reload = false, silent = false } = options;
+        const targetLanguage = language === 'el' ? 'el' : 'en';
+
+        if (persist) {
+            localStorage.setItem('tgd_language', targetLanguage);
+        }
+
+        this.persistGoogTransCookie(targetLanguage);
+        document.documentElement.lang = targetLanguage;
+
+        const syncWidget = () => {
+            const combo = document.querySelector('.goog-te-combo');
+            if (combo && combo.value !== targetLanguage) {
+                combo.value = targetLanguage;
+                combo.dispatchEvent(new Event('change'));
+                return true;
+            }
+            return Boolean(combo);
+        };
+
+        if (!syncWidget()) {
+            window.setTimeout(syncWidget, 500);
+            window.setTimeout(syncWidget, 1500);
+        }
+
+        if (!silent && this.isStandalone) {
+            this.showToast(targetLanguage === 'el' ? 'Greek enabled' : 'English enabled');
+        }
+
+        if (reload) {
+            window.location.reload();
+        }
+    }
+
+    injectUniversalBackButton() {
+        if (document.getElementById('pwaUniversalBackButton')) return;
+
+        const button = document.createElement('button');
+        button.id = 'pwaUniversalBackButton';
+        button.type = 'button';
+        button.setAttribute('aria-label', 'Go back');
+        button.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top, 0px) + 12px);left:16px;z-index:1001;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:none;background:rgba(4,81,147,.96);color:#fff;box-shadow:0 12px 24px rgba(15,23,42,.22);font-weight:600;backdrop-filter:blur(12px);';
+        button.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            <span>Back</span>
+        `;
+        button.addEventListener('click', () => {
+            const hasHistory = window.history.length > 1;
+            const sameOriginReferrer = document.referrer && new URL(document.referrer).origin === window.location.origin;
+            if (hasHistory && sameOriginReferrer) {
+                window.history.back();
+                return;
+            }
+            window.location.href = '/';
+        });
+
+        document.body.appendChild(button);
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
