@@ -313,9 +313,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         .social-youtube { background: #FF0000; color: white; }
         .social-tiktok { background: #000000; color: white; }
         .social-linkedin { background: #0077B5; color: white; }
-        .social-google { background: #ffffff; color: #4285F4; border: 1px solid #d1d5db; }
-        .social-yelp { background: #ffffff; }
-        .social-tripadvisor { background: #ffffff; }
+        .social-google { background: #ffffff; color: #4285F4; border: 2px solid #4285F4; box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.18); }
+        .social-yelp { background: #ffffff; border: 2px solid #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.16); }
+        .social-tripadvisor { background: #ffffff; border: 2px solid #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.16); }
         .social-yelp img, .social-tripadvisor img { width: 22px; height: 22px; display: block; }
         .social-other { background: #6B7280; color: white; }
         .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
@@ -380,7 +380,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         @media (min-width: 1024px) {
             .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-            .desktop-side-column { position: sticky; top: 72px; }
+            .desktop-side-column { position: sticky; top: 72px; margin-top: 0; }
+        }
+        @media (max-width: 1023px) {
+            .desktop-side-column { margin-top: 24px; }
         }
         @media (max-width: 767px) {
             .share-section { margin-bottom: 24px; }
@@ -483,12 +486,12 @@ or distribution of this code can result in legal action to the fullest extent pe
                             <a href="mailto:ewertx@example.com" class="mobile-cta-button" style="background:#6b7280;"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>
                             <a href="https://example.org" target="_blank" class="mobile-cta-button" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>
                             <a href="https://www.google.com/maps/dir/?api=1&destination=8001%20Milwaukee%20Ave%2C%20Niles%2C%20IL%2060714" target="_blank" class="mobile-cta-button" style="background:#111827;" onclick="trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>
-                            <a href="https://tgd.gr/sdfghj" target="_blank" rel="noopener noreferrer" class="mobile-cta-button" style="background:#ff0000;" data-cta-name="frgredfgb"><span>frgredfgb</span></a>
+                            
                         </div>
                     </div>
 
                     <div class="listing-description-wrap">
-                        <div class="text-gray-700 listing-description" id="listingDescription"><h1>Hello</h1>sdfghjhgfd<div>dghyjhytgf</div><div><br></div></div>
+                        <div class="text-gray-700 listing-description" id="listingDescription"><h3>Hello</h3>sdfghjhgfd<div>dghyjhytgf</div><div><br></div></div>
                         <div class="description-divider">
                             <span class="description-divider-line"></span>
                             <button type="button" class="read-more-btn hidden" id="listingReadMoreBtn">Read more</button>
@@ -609,10 +612,10 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <h3 class="font-semibold text-gray-900 mb-2">Hours
                     <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
                         <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
-                        <span class="hours-tooltip">Last updated at 2026-03-15 23:08 UTC by TGD Admin.</span>
+                        <span class="hours-tooltip">Last updated at 2026-03-20 03:41 UTC by TGD Admin.</span>
                     </span>
                 </h3>
-                <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>7:30 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>Open 24 Hours</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>Closed</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>Closed</span></div></div>
+                <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>7:30 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>Open All Day</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>Closed</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>Closed</span></div></div>
                 <div id="openStatusText" class="mt-2 text-sm"></div>
                 <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
             </div>
@@ -653,13 +656,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             </a>
         
                             
-                    <a href="https://tgd.gr/sdfghj" target="_blank" rel="noopener noreferrer"
-                        class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90"
-                        style="background-color:#ff0000;" data-cta-name="frgredfgb">
-                        
-                        <span>frgredfgb</span>
-                    </a>
-                
                         </div>
                     </div>
                 </aside>
@@ -699,7 +695,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         id: '47',
         business_name: 'AASMDFJzgnhkik',
         tagline: 'dsfghjm.',
-        description: '<h1>Hello</h1>sdfghjhgfd<div>dghyjhytgf</div><div><br></div>',
+        description: '<h3>Hello</h3>sdfghjhgfd<div>dghyjhytgf</div><div><br></div>',
         category: 'Automotive &amp; Transportation',
         city: 'Niles',
         state: 'IL',
@@ -740,7 +736,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const businessName = 'AASMDFJzgnhkik';
         const listingUrl = 'https://thegreekdirectory.org/listing/aasmdfjzgnhkik';
         const listingId = '47';
-        const hoursData = {"friday":"9:00 AM - 6:00 PM","monday":"7:30 AM - 6:00 PM","sunday":"Closed","tuesday":"Open 24 Hours","saturday":"9:00 AM - 6:00 PM","thursday":"Closed","wednesday":"9:00 AM - 6:00 PM"};
+        const hoursData = {"friday":"09:00-18:00","monday":"07:30-18:00","sunday":"Closed","tuesday":"00:00-23:59","saturday":"09:00-18:00","thursday":"Closed","wednesday":"09:00-18:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"];
         let currentGalleryIndex = 0;
