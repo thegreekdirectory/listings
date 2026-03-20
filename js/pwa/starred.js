@@ -124,7 +124,7 @@ window.StarredManager = {
                 const listingUrl = `/listing/${listing.slug}`;
                 const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
                 const logoImage = listing.logo || '';
-                const checkmarkHtml = listing.verified || listing.tier === 'VERIFIED' || listing.tier === 'FEATURED' || listing.tier === 'PREMIUM'
+                const checkmarkHtml = listing.verified || listing.tier === 'VERIFIED' || listing.tier === 'FEATURED' || listing.tier === 'PREMIUM' || listing.is_claimed || listing.show_claim_button === false
                     ? '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
                     : '';
                 

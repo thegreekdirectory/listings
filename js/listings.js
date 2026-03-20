@@ -2695,10 +2695,7 @@ function initMap() {
         zoomControl: true,
         scrollWheelZoom: false,
         touchZoom: true,
-        doubleClickZoom: true,
-        fadeAnimation: false,
-        zoomAnimation: false,
-        markerZoomAnimation: false
+        doubleClickZoom: true
     });
     
     map.on('click', function() {
@@ -2726,8 +2723,8 @@ function initMap() {
         animate: true,
         animateAddingMarkers: false,
         chunkedLoading: true,
-        chunkInterval: 200,
-        chunkDelay: 50,
+        chunkInterval: 300,
+        chunkDelay: 0,
         iconCreateFunction: function(cluster) {
             const count = cluster.getChildCount();
             let size = 'small';
@@ -3297,10 +3294,7 @@ function initSplitMap() {
         zoomControl: true,
         scrollWheelZoom: false,
         touchZoom: true,
-        doubleClickZoom: true,
-        fadeAnimation: false,
-        zoomAnimation: false,
-        markerZoomAnimation: false
+        doubleClickZoom: true
     });
     
     splitMap.on('click', function() {
@@ -3327,8 +3321,8 @@ function initSplitMap() {
         animate: true,
         animateAddingMarkers: false,
         chunkedLoading: true,
-        chunkInterval: 200,
-        chunkDelay: 50,
+        chunkInterval: 300,
+        chunkDelay: 0,
         iconCreateFunction: function(cluster) {
             const count = cluster.getChildCount();
             let size = count >= 50 ? 'large' : count >= 10 ? 'medium' : 'small';

@@ -386,7 +386,12 @@ function renderListingCard(listing) {
     }
     
     const phoneDisplay = listing.phone ? formatPhoneDisplay(listing.phone) : '';
-    const showCheckmark = listing.verified || listing.tier === 'VERIFIED' || listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
+    const showCheckmark = listing.verified ||
+        listing.tier === 'VERIFIED' ||
+        listing.tier === 'FEATURED' ||
+        listing.tier === 'PREMIUM' ||
+        listing.is_claimed ||
+        listing.show_claim_button === false;
     
     return `
         <a href="${url}" class="listing-card">
