@@ -180,10 +180,7 @@ function toggleStar(listingId, event) {
 
     if (viewingStarredOnly) {
         console.log('Viewing starred only, re-filtering...');
-        filteredListings = allListings.filter(l => starredListings.includes(String(l.id)));
-        displayedListingsCount = filteredListings.length;
-        renderListings();
-        updateResultsCount();
+        applyFilters();
     }
 
     syncStarredListingToPWA(listingId, starredListings.includes(listingId));
@@ -250,110 +247,38 @@ function applySortToListings(listings, sortValue) {
     }
 }
 
-function toggleStarredView() {
-    console.log('[DEBUG] toggleStarredView called. Current viewingStarredOnly:', viewingStarredOnly);
-    
+function toggleStarredView(forceState = null, options = {}) {
+    const { suppressEmptyAlert = false } = options;
+
     loadStarredListings();
-    console.log('[DEBUG] Reloaded starredListings from cookie:', starredListings);
-    
-    viewingStarredOnly = !viewingStarredOnly;
+
+    const nextState = typeof forceState === 'boolean' ? forceState : !viewingStarredOnly;
+    if (nextState && starredListings.length === 0) {
+        viewingStarredOnly = false;
+        updateURL();
+        if (!suppressEmptyAlert) {
+            alert('You haven\'t starred any listings yet!');
+        }
+        return;
+    }
+
+    viewingStarredOnly = nextState;
+
     const headerStarBtn = document.getElementById('headerStarBtn');
     const hideStarredBtn = document.getElementById('hideStarredBtn');
-    
-    console.log('[DEBUG] After toggle, viewingStarredOnly:', viewingStarredOnly);
-    
-    if (viewingStarredOnly) {
-        if (starredListings.length === 0) {
-            console.log('[DEBUG] No starred listings found');
-            alert('You haven\'t starred any listings yet!');
-            viewingStarredOnly = false;
-            return;
-        }
-        
-        console.log('[DEBUG] Filtering', allListings.length, 'listings to', starredListings.length, 'starred');
-        
-        if (hideStarredBtn) hideStarredBtn.classList.remove('hidden');
-        
-        let starredLis = allListings.filter(l => starredListings.includes(String(l.id)));
-        
-        if (selectedCategory && selectedCategory !== 'All') {
-            starredLis = starredLis.filter(l => l.category === selectedCategory);
-        }
-        
-        if (selectedSubcategories.length > 0) {
-            starredLis = starredLis.filter(l => 
-                l.subcategories && l.subcategories.some(sub => selectedSubcategories.includes(sub))
-            );
-        }
-        
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput && searchInput.value.trim()) {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-            starredLis = starredLis.filter(l => 
-                l.business_name.toLowerCase().includes(searchTerm) ||
-                (l.description && l.description.toLowerCase().includes(searchTerm)) ||
-                (l.tagline && l.tagline.toLowerCase().includes(searchTerm)) ||
-                l.category.toLowerCase().includes(searchTerm) ||
-                (l.subcategories && l.subcategories.some(sub => sub.toLowerCase().includes(searchTerm)))
-            );
-        }
-        
-        if (openNowOnly) starredLis = starredLis.filter(l => isOpenNow(l));
-        if (closedNowOnly) starredLis = starredLis.filter(l => !isOpenNow(l));
-        if (openingSoonOnly) starredLis = starredLis.filter(l => isOpeningSoon(l));
-        if (closingSoonOnly) starredLis = starredLis.filter(l => isClosingSoon(l));
-        if (hoursUnknownOnly) starredLis = starredLis.filter(l => !l.hours || !l.hours.length);
-        if (onlineOnlyFilter) starredLis = starredLis.filter(l => l.online_only);
-        
-        if (selectedCountry && selectedCountry !== 'All') {
-            starredLis = starredLis.filter(l => l.country === selectedCountry);
-        }
-        if (selectedState && selectedState !== 'All') {
-            starredLis = starredLis.filter(l => l.state === selectedState);
-        }
-        if (selectedCity) {
-            starredLis = starredLis.filter(l => l.city && l.city.toLowerCase() === selectedCity.toLowerCase());
-        }
-        if (selectedZip) {
-            starredLis = starredLis.filter(l => l.zip === selectedZip);
-        }
-        
-        if (userLocation && selectedRadius > 0 && selectedRadius < 999) {
-            starredLis = starredLis.filter(l => {
-                if (!l.lat || !l.lng) return false;
-                const dist = getDistance(userLocation.lat, userLocation.lng, l.lat, l.lng);
-                return dist <= selectedRadius;
-            });
-        }
-        
-        const sortSelect = document.getElementById('sortSelect');
-        if (sortSelect) {
-            const sortValue = sortSelect.value;
-            applySortToListings(starredLis, sortValue);
-        }
-        
-        filteredListings = starredLis;
-        displayedListingsCount = filteredListings.length;
-        
-        document.getElementById('resultsCount').textContent = `${filteredListings.length} starred ${filteredListings.length === 1 ? 'listing' : 'listings'}`;
-        
-        if (headerStarBtn) {
-            headerStarBtn.style.backgroundColor = '#fbbf24';
-            headerStarBtn.style.color = '#78350f';
-        }
-    } else {
-        if (hideStarredBtn) hideStarredBtn.classList.add('hidden');
-        
-        displayedListingsCount = 25;
-        applyFilters();
-        
-        if (headerStarBtn) {
-            headerStarBtn.style.backgroundColor = '';
-            headerStarBtn.style.color = '';
-        }
+
+    if (hideStarredBtn) {
+        hideStarredBtn.classList.toggle('hidden', !viewingStarredOnly);
     }
-    renderListings();
-    updateResultsCount();
+
+    if (headerStarBtn) {
+        headerStarBtn.style.backgroundColor = viewingStarredOnly ? '#fbbf24' : '';
+        headerStarBtn.style.color = viewingStarredOnly ? '#78350f' : '';
+    }
+
+    displayedListingsCount = viewingStarredOnly ? Math.max(filteredListings.length, starredListings.length) : 25;
+    updateURL();
+    applyFilters();
 }
 
 /*
@@ -460,10 +385,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     setView(currentView, { skipRender: true });
     createCategoryButtons();
-    requestLocationOnLoad();
     estimateLocationByIP();
     loadFiltersFromURL();
-    initMap();
     syncFilters();
     checkFilterPosition();
 });
@@ -714,7 +637,10 @@ function updateURL() {
 function syncStarredViewFromUrl() {
     const shouldShowStarred = new URLSearchParams(window.location.search).get('starred') === '1';
     if (shouldShowStarred !== viewingStarredOnly) {
-        toggleStarredView();
+        toggleStarredView(shouldShowStarred, { suppressEmptyAlert: true });
+    } else {
+        updateURL();
+        applyFilters();
     }
     window.dispatchEvent(new CustomEvent('tgd:starred-state-changed'));
 }
@@ -730,7 +656,7 @@ window.applyUrlFilters = function applyUrlFilters() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-function requestLocationOnLoad() {
+function requestPreciseLocation(trigger = 'user-action') {
     if (!navigator.geolocation) {
         console.error('[L202] Geolocation not supported by this browser');
         return;
@@ -739,7 +665,7 @@ function requestLocationOnLoad() {
     navigator.geolocation.getCurrentPosition(
         position => {
             userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-            console.log('Location acquired:', userLocation);
+            console.log(`Precise location acquired via ${trigger}:`, userLocation);
             if (!viewingStarredOnly) applyFilters();
             if (map) {
                 estimatedLocationCircle = clearEstimatedLocationCircle(map, estimatedLocationCircle);
@@ -903,6 +829,7 @@ function applyFilters() {
     const sortOption = sortSelect ? sortSelect.value : 'default';
     
     filteredListings = allListings.filter(listing => {
+        const matchesStarred = !viewingStarredOnly || starredListings.includes(String(listing.id));
         const fullAddress = getFullAddress(listing);
         const normalizedName = normalizeString(listing.business_name);
         const normalizedTagline = normalizeString(listing.tagline || '');
@@ -959,7 +886,7 @@ function applyFilters() {
         
         return matchesSearch && matchesCategory && matchesSubcategory && matchesCountry && 
                matchesState && matchesCity && matchesZip && matchesRadius && matchesOpenNow && matchesClosedNow &&
-               matchesOpeningSoon && matchesClosingSoon && matchesHoursUnknown && matchesOnlineOnly;
+               matchesOpeningSoon && matchesClosingSoon && matchesHoursUnknown && matchesOnlineOnly && matchesStarred;
     });
     
     /*
@@ -1153,29 +1080,129 @@ function levenshteinDistance(a, b) {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-function isOpenNow(hours) {
-    if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) return null;
-    const hasAnyHours = Object.values(hours).some(h => h && h.trim() !== '');
-    if (!hasAnyHours) return null;
-    const now = new Date();
-    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const today = days[centralTime.getDay()];
-    const todayHours = hours[today];
-    if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
-    const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!match) return null;
-    const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
-    let start = parseInt(startHour);
-    let end = parseInt(endHour);
-    if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
-    if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
-    if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
-    if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
+function getCentralTimeNow() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+}
+
+function parseBusinessHoursRange(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    if (/^closed$/i.test(raw)) return { closed: true };
+    if (/24\s*hours|open\s*24/i.test(raw) || raw === '00:00-23:59' || raw === '00:00 - 23:59') {
+        return { allDay: true, startMinutes: 0, endMinutes: 1439, overnight: false, closed: false };
+    }
+
+    const rangeMatch = raw.match(/^(.*?)\s*-\s*(.*?)$/);
+    if (!rangeMatch) return null;
+
+    const parseTime = (part) => {
+        const trimmed = String(part || '').trim();
+        const match12 = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (match12) {
+            let hour = parseInt(match12[1], 10);
+            const minute = parseInt(match12[2], 10);
+            const meridiem = match12[3].toUpperCase();
+            if (meridiem === 'PM' && hour !== 12) hour += 12;
+            if (meridiem === 'AM' && hour === 12) hour = 0;
+            return hour * 60 + minute;
+        }
+
+        const match24 = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+        if (match24) {
+            const hour = parseInt(match24[1], 10);
+            const minute = parseInt(match24[2], 10);
+            if (hour > 23 || minute > 59) return null;
+            return hour * 60 + minute;
+        }
+
+        return null;
+    };
+
+    const startMinutes = parseTime(rangeMatch[1]);
+    const endMinutes = parseTime(rangeMatch[2]);
+    if (startMinutes === null || endMinutes === null) return null;
+
+    return {
+        startMinutes,
+        endMinutes,
+        overnight: endMinutes <= startMinutes,
+        allDay: false,
+        closed: false
+    };
+}
+
+function getHoursStatus(hours) {
+    if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) {
+        return { isOpen: null, isOpeningSoon: false, isClosingSoon: false };
+    }
+
+    const hasAnyHours = Object.values(hours).some(value => String(value || '').trim() !== '');
+    if (!hasAnyHours) {
+        return { isOpen: null, isOpeningSoon: false, isClosingSoon: false };
+    }
+
+    const centralTime = getCentralTimeNow();
     const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
-    const startMinutes = start * 60 + parseInt(startMin);
-    const endMinutes = end * 60 + parseInt(endMin);
-    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const todayIndex = centralTime.getDay();
+    const yesterdayIndex = (todayIndex + 6) % 7;
+    const todaySchedule = parseBusinessHoursRange(hours[days[todayIndex]]);
+    const yesterdaySchedule = parseBusinessHoursRange(hours[days[yesterdayIndex]]);
+
+    if (todaySchedule?.allDay) {
+        return { isOpen: true, isOpeningSoon: false, isClosingSoon: false };
+    }
+
+    if (yesterdaySchedule && !yesterdaySchedule.closed && !yesterdaySchedule.allDay && yesterdaySchedule.overnight && currentMinutes < yesterdaySchedule.endMinutes) {
+        return {
+            isOpen: true,
+            isOpeningSoon: false,
+            isClosingSoon: yesterdaySchedule.endMinutes - currentMinutes <= 60
+        };
+    }
+
+    if (!todaySchedule || todaySchedule.closed) {
+        return { isOpen: false, isOpeningSoon: false, isClosingSoon: false };
+    }
+
+    if (todaySchedule.overnight) {
+        if (currentMinutes >= todaySchedule.startMinutes || currentMinutes < todaySchedule.endMinutes) {
+            const remainingMinutes = currentMinutes >= todaySchedule.startMinutes
+                ? (1440 - currentMinutes) + todaySchedule.endMinutes
+                : todaySchedule.endMinutes - currentMinutes;
+            return {
+                isOpen: true,
+                isOpeningSoon: false,
+                isClosingSoon: remainingMinutes <= 60
+            };
+        }
+
+        const minutesUntilOpen = todaySchedule.startMinutes - currentMinutes;
+        return {
+            isOpen: false,
+            isOpeningSoon: minutesUntilOpen > 0 && minutesUntilOpen <= 60,
+            isClosingSoon: false
+        };
+    }
+
+    if (currentMinutes >= todaySchedule.startMinutes && currentMinutes < todaySchedule.endMinutes) {
+        return {
+            isOpen: true,
+            isOpeningSoon: false,
+            isClosingSoon: todaySchedule.endMinutes - currentMinutes <= 60
+        };
+    }
+
+    const minutesUntilOpen = todaySchedule.startMinutes - currentMinutes;
+    return {
+        isOpen: false,
+        isOpeningSoon: minutesUntilOpen > 0 && minutesUntilOpen <= 60,
+        isClosingSoon: false
+    };
+}
+
+function isOpenNow(hours) {
+    return getHoursStatus(hours).isOpen;
 }
 
 /*
@@ -1183,43 +1210,11 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 function isOpeningSoon(hours) {
-    if (!hours || typeof hours !== 'object') return false;
-    const now = new Date();
-    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const today = days[centralTime.getDay()];
-    const todayHours = hours[today];
-    if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
-    const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!match) return false;
-    const [, startHour, startMin, startPeriod] = match;
-    let start = parseInt(startHour);
-    if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
-    if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
-    const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
-    const startMinutes = start * 60 + parseInt(startMin);
-    const diff = startMinutes - currentMinutes;
-    return diff > 0 && diff <= 60;
+    return getHoursStatus(hours).isOpeningSoon;
 }
 
 function isClosingSoon(hours) {
-    if (!hours || typeof hours !== 'object') return false;
-    const now = new Date();
-    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const today = days[centralTime.getDay()];
-    const todayHours = hours[today];
-    if (!todayHours || todayHours.toLowerCase() === 'closed') return false;
-    const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!match) return false;
-    const [, , , , endHour, endMin, endPeriod] = match;
-    let end = parseInt(endHour);
-    if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
-    if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
-    const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
-    const endMinutes = end * 60 + parseInt(endMin);
-    const diff = endMinutes - currentMinutes;
-    return diff > 0 && diff <= 60;
+    return getHoursStatus(hours).isClosingSoon;
 }
 
 /*
@@ -1763,6 +1758,9 @@ function setupEventListeners() {
     const sortSelect = document.getElementById('sortSelect');
     if (sortSelect) {
         sortSelect.addEventListener('change', () => {
+            if (sortSelect.value === 'closest' && !userLocation) {
+                requestPreciseLocation('closest-sort');
+            }
             displayedListingsCount = 25;
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
@@ -1839,7 +1837,7 @@ function setupEventListeners() {
                     addUserLocationMarker();
                 }
             } else {
-                requestLocationOnLoad();
+                requestPreciseLocation('current-location-button');
             }
         });
     }
@@ -2019,6 +2017,9 @@ function toggleMap() {
     mapOpen = !mapOpen;
     if (mapOpen) {
         container.classList.remove('hidden');
+        if (!map) {
+            initMap();
+        }
         if (filtersOpen) toggleFilters();
         if (splitViewActive) toggleSplitView();
         closeDesktopFiltersOverlay();
@@ -2688,12 +2689,16 @@ function initMap() {
     showMapLoading();
     const preferred = getPreferredMapCenter();
     map = L.map('map', { 
+        preferCanvas: true,
         center: preferred ? [preferred.lat, preferred.lng] : defaultMapCenter, 
         zoom: preferred ? 13 : defaultMapZoom, 
         zoomControl: true,
         scrollWheelZoom: false,
         touchZoom: true,
-        doubleClickZoom: true
+        doubleClickZoom: true,
+        fadeAnimation: false,
+        zoomAnimation: false,
+        markerZoomAnimation: false
     });
     
     map.on('click', function() {
@@ -2708,7 +2713,7 @@ function initMap() {
         maxZoom: 19,
         updateWhenIdle: true,
         updateWhenZooming: false,
-        keepBuffer: 2,
+        keepBuffer: 1,
         reuseTiles: true
     }).addTo(map);
     
@@ -3100,6 +3105,9 @@ function toggleSplitView() {
         document.getElementById('splitSortSelect').value = document.getElementById('sortSelect').value;
         document.getElementById('splitSortSelect').addEventListener('change', (e) => {
             document.getElementById('sortSelect').value = e.target.value;
+            if (e.target.value === 'closest' && !userLocation) {
+                requestPreciseLocation('closest-sort');
+            }
             displayedListingsCount = 25;
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
@@ -3283,12 +3291,16 @@ function initSplitMap() {
     if (!splitMapDiv) return;
     const preferred = getPreferredMapCenter();
     window.splitMap = L.map('splitMap', { 
+        preferCanvas: true,
         center: preferred ? [preferred.lat, preferred.lng] : defaultMapCenter, 
         zoom: preferred ? 13 : defaultMapZoom, 
         zoomControl: true,
         scrollWheelZoom: false,
         touchZoom: true,
-        doubleClickZoom: true
+        doubleClickZoom: true,
+        fadeAnimation: false,
+        zoomAnimation: false,
+        markerZoomAnimation: false
     });
     
     splitMap.on('click', function() {
@@ -3303,7 +3315,7 @@ function initSplitMap() {
         maxZoom: 19,
         updateWhenIdle: true,
         updateWhenZooming: false,
-        keepBuffer: 2,
+        keepBuffer: 1,
         reuseTiles: true
     }).addTo(splitMap);
     window.splitMarkerClusterGroup = L.markerClusterGroup({
@@ -3365,6 +3377,8 @@ function initSplitMap() {
                     splitMap.off('movestart', resetOnce);
                 };
                 splitMap.on('movestart', resetOnce);
+            } else {
+                requestPreciseLocation('current-location-button');
             }
         });
     }

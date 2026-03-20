@@ -133,7 +133,8 @@ class SettingsManager {
                 
                 <!-- Language Section -->
                 <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Language</h2>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Language Preference</h2>
+                    <p class="text-sm text-gray-600 mb-4">Sync your app language with GTranslate across the PWA</p>
                     <div class="space-y-3">
                         <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${currentLanguage === 'en' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
                             <span class="text-gray-700 font-medium">English (US)</span>
@@ -382,7 +383,11 @@ class SettingsManager {
         document.querySelectorAll('input[name="language"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const language = e.target.value;
-                localStorage.setItem('tgd_language', language);
+                if (window.PWAApp && typeof window.PWAApp.setLanguage === 'function') {
+                    window.PWAApp.setLanguage(language, { persist: true, reload: false });
+                } else {
+                    localStorage.setItem('tgd_language', language);
+                }
                 
                 document.querySelectorAll('input[name="language"]').forEach(r => {
                     const label = r.closest('label');
@@ -394,7 +399,7 @@ class SettingsManager {
                 });
                 
                 if (window.PWAApp) {
-                    window.PWAApp.showToast('Language updated - Reload to apply');
+                    window.PWAApp.showToast(language === 'el' ? 'Greek enabled across the PWA' : 'English enabled across the PWA');
                 }
             });
         });
