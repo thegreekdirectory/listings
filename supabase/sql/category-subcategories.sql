@@ -1,11 +1,7 @@
 create table if not exists public.category_subcategories (
   category text primary key,
-  subcategories text[] not null default '{}'::text[],
-  schema_type_map jsonb not null default '{}'::jsonb
+  subcategories text[] not null default '{}'
 );
-
-alter table public.category_subcategories
-  add column if not exists schema_type_map jsonb not null default '{}'::jsonb;
 
 alter table public.category_subcategories enable row level security;
 
