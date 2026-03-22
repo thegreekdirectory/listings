@@ -192,6 +192,41 @@ function syncTabWithHash() {
 }
 
 const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
+const IMAGE_UPLOAD_SOURCE_CODES = Object.freeze({ admin: 'a', business: 'b', submission: 's' });
+
+function padImageDatePart(value) {
+    return String(value).padStart(2, '0');
+}
+
+function sanitizeImagePathPart(value) {
+    return String(value || '')
+        .trim()
+        .replace(/[^a-zA-Z0-9_-]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase();
+}
+
+function buildCloudflareImageId({ listingId, mediaKind, source, file }) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = padImageDatePart(now.getMonth() + 1);
+    const day = padImageDatePart(now.getDate());
+    const normalizedKind = mediaKind === 'logo' ? 'logo' : 'photo';
+    const sourceCode = IMAGE_UPLOAD_SOURCE_CODES[source] || IMAGE_UPLOAD_SOURCE_CODES.business;
+    const safeListingId = sanitizeImagePathPart(listingId);
+    const safeFileName = sanitizeImagePathPart((file?.name || '').replace(/\.[^.]+$/, '')) || 'upload';
+    return `${safeListingId}-${normalizedKind}-${year}-${month}-${day}-${sourceCode}-${safeFileName}`;
+}
+
+function getBusinessListingUploadId() {
+    const listingId = currentListing?.id;
+    if (!listingId && listingId !== 0) {
+        throw new Error('Listing ID is required before uploading images.');
+    }
+    return String(listingId);
+}
+
 
 function getStoredCloudflareConfig() {
     try {
@@ -257,11 +292,18 @@ function getCustomCtaIconOptions(selected = '') {
     return options.map((option) => `<option value="${option.value}" ${selected === option.value ? 'selected' : ''}>${option.value ? `${option.value} ${option.label}` : option.label}</option>`).join('');
 }
 
-async function uploadToCloudflareImages(file) {
+async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
     const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
+    const imageId = buildCloudflareImageId({
+        listingId: getBusinessListingUploadId(),
+        mediaKind,
+        source: 'business',
+        file
+    });
     if (uploadEndpoint) {
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('id', imageId);
         const response = await fetch(uploadEndpoint, {
             method: 'POST',
             body: formData
@@ -282,6 +324,7 @@ async function uploadToCloudflareImages(file) {
     
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('id', imageId);
     
     const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`, {
         method: 'POST',
@@ -323,7 +366,7 @@ async function handleLogoUpload(event) {
     if (!file) return;
     try {
         setMediaUploadStatus('Uploading logo...');
-        const url = await uploadToCloudflareImages(file);
+        const url = await uploadToCloudflareImages(file, { mediaKind: 'logo' });
         uploadedImages.logo = url;
         updateMediaPreview();
         setMediaUploadStatus('Logo uploaded successfully.');
@@ -348,7 +391,7 @@ async function handlePhotosUpload(event) {
         setMediaUploadStatus('Uploading photos...');
         const uploadFiles = files.slice(0, availableSlots);
         for (const file of uploadFiles) {
-            const url = await uploadToCloudflareImages(file);
+            const url = await uploadToCloudflareImages(file, { mediaKind: 'photo' });
             uploadedImages.photos.push(url);
         }
         updateMediaPreview();
@@ -364,7 +407,7 @@ async function handleVideoUpload(event) {
     if (!file) return;
     try {
         setMediaUploadStatus('Uploading video...');
-        const url = await uploadToCloudflareImages(file);
+        const url = await uploadToCloudflareImages(file, { mediaKind: 'photo' });
         uploadedImages.video = url;
         setMediaUploadStatus('Video uploaded successfully.');
     } catch (error) {

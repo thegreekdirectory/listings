@@ -1,6 +1,42 @@
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 const FORM_STORAGE_KEY = 'tgd_submit_form_draft_v4';
+const SUBMISSION_UPLOAD_ID_STORAGE_KEY = 'tgd_submit_upload_listing_id_v1';
+const IMAGE_UPLOAD_SOURCE_CODES = Object.freeze({ admin: 'a', business: 'b', submission: 's' });
+
+function padImageDatePart(value) {
+  return String(value).padStart(2, '0');
+}
+
+function sanitizeImagePathPart(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
+}
+
+function getSubmissionUploadListingId() {
+  let current = localStorage.getItem(SUBMISSION_UPLOAD_ID_STORAGE_KEY);
+  if (current) return current;
+  current = String(Date.now());
+  localStorage.setItem(SUBMISSION_UPLOAD_ID_STORAGE_KEY, current);
+  return current;
+}
+
+function buildCloudflareImageId({ listingId, mediaKind, source, file }) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = padImageDatePart(now.getMonth() + 1);
+  const day = padImageDatePart(now.getDate());
+  const normalizedKind = mediaKind === 'logo' ? 'logo' : 'photo';
+  const sourceCode = IMAGE_UPLOAD_SOURCE_CODES[source] || IMAGE_UPLOAD_SOURCE_CODES.submission;
+  const safeListingId = sanitizeImagePathPart(listingId);
+  const safeFileName = sanitizeImagePathPart((file?.name || '').replace(/\.[^.]+$/, '')) || 'upload';
+  return `${safeListingId}-${normalizedKind}-${year}-${month}-${day}-${sourceCode}-${safeFileName}`;
+}
+
 
 let SUBCATEGORY_MAP = {
   'Automotive & Transportation': ['Auto Detailer','Auto Repair Shop','Car Dealer','Taxi & Limo Service'],
@@ -403,8 +439,14 @@ function restoreDraft(){
   } catch (e) { console.warn('restore failed', e); }
 }
 
-async function uploadToCloudflare(file){
+async function uploadToCloudflare(file, { mediaKind = 'photo' } = {}){
   const fd = new FormData(); fd.append('file', file);
+  fd.append('id', buildCloudflareImageId({
+    listingId: getSubmissionUploadListingId(),
+    mediaKind,
+    source: 'submission',
+    file
+  }));
   const res = await fetch('https://tgd-images-upload.thegreekdirectory.org', { method:'POST', body: fd });
   if (!res.ok) throw new Error('Upload failed');
   const data = await res.json();
@@ -416,7 +458,7 @@ function attachUploaders(){
   document.getElementById('logo_upload').addEventListener('change', async (e) => {
     const f = e.target.files?.[0]; if (!f) return;
     const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading logo...';
-    try { const url = await uploadToCloudflare(f); if (!url) throw new Error('No URL returned from upload'); document.getElementById('logo').value = stripProtocol(String(url)); s.textContent = 'Logo uploaded.'; saveDraft(); }
+    try { const url = await uploadToCloudflare(f, { mediaKind: 'logo' }); if (!url) throw new Error('No URL returned from upload'); document.getElementById('logo').value = stripProtocol(String(url)); s.textContent = 'Logo uploaded.'; saveDraft(); }
     catch(err){ s.textContent = `Logo upload failed: ${err.message}`; }
   });
   document.getElementById('photos_upload').addEventListener('change', async (e) => {
@@ -424,7 +466,7 @@ function attachUploaders(){
     const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading photos...';
     try {
       const urls = [];
-      for (const f of files) { const u = await uploadToCloudflare(f); if (u) urls.push(u); }
+      for (const f of files) { const u = await uploadToCloudflare(f, { mediaKind: 'photo' }); if (u) urls.push(u); }
       const existing = [...document.querySelectorAll('.photo-url-input')].map(i => i.value).filter(Boolean);
       setupPhotoUrlRows([...existing, ...urls.map(u => stripProtocol(String(u)))]);
       s.textContent = 'Photos uploaded.';
@@ -453,6 +495,7 @@ async function submitListingRequest(event){
     status.textContent = '✅ Submitted successfully!';
     status.style.color = '#166534';
     localStorage.removeItem(FORM_STORAGE_KEY);
+    localStorage.removeItem(SUBMISSION_UPLOAD_ID_STORAGE_KEY);
     document.getElementById('submitForm').reset();
     renderSubcategories();
     setupAdditionalInfoRows();

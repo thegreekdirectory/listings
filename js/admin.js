@@ -1733,6 +1733,41 @@ function fillEditFormContinuation(listing, owner) {
 }
 
 const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
+const IMAGE_UPLOAD_SOURCE_CODES = Object.freeze({ admin: 'a', business: 'b', submission: 's' });
+
+function padImageDatePart(value) {
+    return String(value).padStart(2, '0');
+}
+
+function sanitizeImagePathPart(value) {
+    return String(value || '')
+        .trim()
+        .replace(/[^a-zA-Z0-9_-]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase();
+}
+
+function buildCloudflareImageId({ listingId, mediaKind, source, file }) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = padImageDatePart(now.getMonth() + 1);
+    const day = padImageDatePart(now.getDate());
+    const normalizedKind = mediaKind === 'logo' ? 'logo' : 'photo';
+    const sourceCode = IMAGE_UPLOAD_SOURCE_CODES[source] || IMAGE_UPLOAD_SOURCE_CODES.admin;
+    const safeListingId = sanitizeImagePathPart(listingId);
+    const safeFileName = sanitizeImagePathPart((file?.name || '').replace(/\.[^.]+$/, '')) || 'upload';
+    return `${safeListingId}-${normalizedKind}-${year}-${month}-${day}-${sourceCode}-${safeFileName}`;
+}
+
+function getAdminListingUploadId() {
+    const listingId = currentListing?.id;
+    if (!listingId && listingId !== 0) {
+        throw new Error('Listing ID is required before uploading images.');
+    }
+    return String(listingId);
+}
+
 
 function getStoredCloudflareConfig() {
     try {
@@ -1804,9 +1839,15 @@ function setMediaUploadStatus(message, isError = false) {
     statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
 }
 
-async function uploadToCloudflareImages(file) {
+async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("id", buildCloudflareImageId({
+    listingId: getAdminListingUploadId(),
+    mediaKind,
+    source: "admin",
+    file
+  }));
 
   const res = await fetch(
     "https://tgd-images-upload.thegreekdirectory.org",
@@ -1828,7 +1869,7 @@ async function handleLogoUpload(event) {
     if (!file) return;
     try {
         setMediaUploadStatus('Uploading logo...');
-        const url = await uploadToCloudflareImages(file);
+        const url = await uploadToCloudflareImages(file, { mediaKind: 'logo' });
         const logoInput = document.getElementById('editLogo');
         if (logoInput) logoInput.value = url;
         setMediaUploadStatus('Logo uploaded successfully.');
@@ -1847,7 +1888,7 @@ async function handlePhotosUpload(event) {
     try {
         setMediaUploadStatus('Uploading photos...');
         for (const file of files) {
-            const url = await uploadToCloudflareImages(file);
+            const url = await uploadToCloudflareImages(file, { mediaKind: 'photo' });
             photoInput.value = `${photoInput.value.trim() ? `${photoInput.value.trim()}\n` : ''}${url}`;
         }
         setMediaUploadStatus('Photos uploaded successfully.');
@@ -1862,7 +1903,7 @@ async function handleVideoUpload(event) {
     if (!file) return;
     try {
         setMediaUploadStatus('Uploading video...');
-        const url = await uploadToCloudflareImages(file);
+        const url = await uploadToCloudflareImages(file, { mediaKind: 'photo' });
         const videoInput = document.getElementById('editVideo');
         if (videoInput) videoInput.value = url;
         setMediaUploadStatus('Video uploaded successfully.');
