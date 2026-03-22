@@ -154,8 +154,23 @@ async function adminProxy(action, payload = {}) {
             body: JSON.stringify({ action, payload }),
         }
     );
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error || 'Admin proxy error');
+    const responseText = await res.text();
+    let json;
+    try {
+        json = responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+        throw new Error(`Admin proxy request failed (${res.status}): ${responseText || 'Invalid JSON response.'}`);
+    }
+    if (!res.ok || !json.success) {
+        const errorMessage = typeof json?.error === 'string'
+            ? json.error
+            : json?.error?.message
+                || (json?.error ? JSON.stringify(json.error) : '')
+                || json?.message
+                || responseText
+                || 'Admin proxy error';
+        throw new Error(`Admin proxy request failed (${res.status}): ${errorMessage}`);
+    }
     return json.data;
 }
 
@@ -221,6 +236,7 @@ function setupEventListeners() {
             document.getElementById('editModal').classList.add('hidden');
             document.getElementById('editModal').dataset.mode = '';
             document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('editModal').dataset.uploadListingId = '';
             document.getElementById('saveEdit')?.classList.remove('hidden');
         }
     });
@@ -229,6 +245,7 @@ function setupEventListeners() {
             document.getElementById('editModal').classList.add('hidden');
             document.getElementById('editModal').dataset.mode = '';
             document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('editModal').dataset.uploadListingId = '';
             document.getElementById('saveEdit')?.classList.remove('hidden');
         }
     });
@@ -760,6 +777,7 @@ async function openRequestInEditor(requestId, editable) {
 
     document.getElementById('editModal').dataset.requestId = String(request.id);
     document.getElementById('editModal').dataset.mode = editable ? 'request-edit' : 'request-view';
+    document.getElementById('editModal').dataset.uploadListingId = String(request.id);
     document.getElementById('editModal').classList.remove('hidden');
 }
 
@@ -1248,6 +1266,7 @@ window.editListing = async function(id) {
         
         document.getElementById('modalTitle').textContent = 'Edit Listing';
         fillEditForm(listing);
+        document.getElementById('editModal').dataset.uploadListingId = String(listing.id);
         document.getElementById('editModal').classList.remove('hidden');
         
     } catch (error) {
@@ -1285,6 +1304,7 @@ window.newListing = async function() {
         
         document.getElementById('modalTitle').textContent = 'New Listing';
         fillEditForm(editingListing);
+        document.getElementById('editModal').dataset.uploadListingId = '';
         document.getElementById('editModal').classList.remove('hidden');
         
     } catch (error) {
@@ -1733,6 +1753,114 @@ function fillEditFormContinuation(listing, owner) {
 }
 
 const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
+const IMAGE_UPLOAD_SOURCE_CODES = Object.freeze({ admin: 'a', business: 'b', submission: 's' });
+const CLOUDFLARE_IMAGE_DELIVERY_BASE_URL = 'https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ';
+const CLOUDFLARE_IMAGE_DELIVERY_VARIANT = 'public';
+
+function padImageDatePart(value) {
+    return String(value).padStart(2, '0');
+}
+
+function sanitizeImagePathPart(value) {
+    return String(value || '')
+        .trim()
+        .replace(/[^a-zA-Z0-9]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase();
+}
+
+function buildCloudflareImageId({ listingId, mediaKind, source }) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = padImageDatePart(now.getMonth() + 1);
+    const day = padImageDatePart(now.getDate());
+    const normalizedKind = mediaKind === 'logo' ? 'logo' : 'photo';
+    const sourceCode = IMAGE_UPLOAD_SOURCE_CODES[source] || IMAGE_UPLOAD_SOURCE_CODES.admin;
+    const safeListingId = sanitizeImagePathPart(listingId);
+    return `${safeListingId}-${normalizedKind}-${year}-${month}-${day}-${sourceCode}`;
+}
+
+function buildCloudflareDeliveryUrl(imageId) {
+    return `${CLOUDFLARE_IMAGE_DELIVERY_BASE_URL}/${encodeURIComponent(imageId)}/${CLOUDFLARE_IMAGE_DELIVERY_VARIANT}`;
+}
+
+function getWebpFileName(fileName = 'upload') {
+    const baseName = String(fileName || 'upload').replace(/\.[^.]+$/, '') || 'upload';
+    return `${baseName}.webp`;
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error('Failed to read file.'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImageElement(src) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Failed to load image for conversion.'));
+        image.src = src;
+    });
+}
+
+async function convertImageFileToWebp(file) {
+    if (!file?.type?.startsWith('image/') || file.type === 'image/webp') {
+        return file;
+    }
+
+    const imageSrc = await readFileAsDataUrl(file);
+    const image = await loadImageElement(imageSrc);
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth || image.width;
+    canvas.height = image.naturalHeight || image.height;
+    const context = canvas.getContext('2d');
+    if (!context) {
+        throw new Error('Image conversion is not supported in this browser.');
+    }
+    context.drawImage(image, 0, 0);
+
+    const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, 'image/webp', 0.92);
+    });
+
+    if (!blob) {
+        throw new Error('Image conversion failed.');
+    }
+
+    return new File([blob], getWebpFileName(file.name), {
+        type: 'image/webp',
+        lastModified: Date.now()
+    });
+}
+
+function getAdminListingUploadId() {
+    const requestId = document.getElementById('editModal')?.dataset?.requestId;
+    const existingListingId = editingListing?.id;
+    if (existingListingId || existingListingId === 0) {
+        return String(existingListingId);
+    }
+    if (requestId) {
+        return String(requestId);
+    }
+
+    const editModal = document.getElementById('editModal');
+    const fallbackUploadId = editModal?.dataset?.uploadListingId;
+    if (fallbackUploadId) {
+        return fallbackUploadId;
+    }
+
+    const generatedUploadId = String(Date.now());
+    if (editModal) {
+        editModal.dataset.uploadListingId = generatedUploadId;
+    }
+    return generatedUploadId;
+}
+
 
 function getStoredCloudflareConfig() {
     try {
@@ -1769,7 +1897,9 @@ function getCloudflareConfig() {
         });
     }
     return {
-    uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
+        accountId: stored.accountId || inputAccountId || config.accountId || '',
+        apiKey: stored.apiKey || inputApiKey || config.apiKey || '',
+        uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
     };
 }
 
@@ -1804,23 +1934,61 @@ function setMediaUploadStatus(message, isError = false) {
     statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
 }
 
-async function uploadToCloudflareImages(file) {
+async function parseUploadJsonResponse(response) {
+  const responseText = await response.text();
+  let result;
+  try {
+    result = responseText ? JSON.parse(responseText) : {};
+  } catch (error) {
+    throw new Error(`Upload failed (${response.status}): ${responseText || 'Invalid JSON response.'}`);
+  }
+
+  if (!response.ok || result?.success === false) {
+    const errorMessage = result?.errors?.[0]?.message || result?.error || result?.message || responseText || 'Upload failed';
+    throw new Error(`Upload failed (${response.status}): ${errorMessage}`);
+  }
+
+  return result;
+}
+
+async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
+  const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
+  const uploadFile = await convertImageFileToWebp(file);
+  const imageId = buildCloudflareImageId({
+    listingId: getAdminListingUploadId(),
+    mediaKind,
+    source: "admin"
+  });
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", uploadFile);
+  formData.append("id", imageId);
+
+  if (uploadEndpoint) {
+    const res = await fetch(uploadEndpoint, {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await parseUploadJsonResponse(res);
+    return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
+  }
+
+  if (!accountId || !apiKey) {
+    throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
+  }
 
   const res = await fetch(
-    "https://tgd-images-upload.thegreekdirectory.org",
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`,
     {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`
+      },
       body: formData,
     }
   );
-
-  if (!res.ok) {
-    throw new Error("Upload failed");
-  }
-
-  return await res.json();
+  const result = await parseUploadJsonResponse(res);
+  return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
 }
 
 async function handleLogoUpload(event) {
@@ -1828,7 +1996,7 @@ async function handleLogoUpload(event) {
     if (!file) return;
     try {
         setMediaUploadStatus('Uploading logo...');
-        const url = await uploadToCloudflareImages(file);
+        const url = await uploadToCloudflareImages(file, { mediaKind: 'logo' });
         const logoInput = document.getElementById('editLogo');
         if (logoInput) logoInput.value = url;
         setMediaUploadStatus('Logo uploaded successfully.');
@@ -1847,7 +2015,7 @@ async function handlePhotosUpload(event) {
     try {
         setMediaUploadStatus('Uploading photos...');
         for (const file of files) {
-            const url = await uploadToCloudflareImages(file);
+            const url = await uploadToCloudflareImages(file, { mediaKind: 'photo' });
             photoInput.value = `${photoInput.value.trim() ? `${photoInput.value.trim()}\n` : ''}${url}`;
         }
         setMediaUploadStatus('Photos uploaded successfully.');
@@ -1862,7 +2030,7 @@ async function handleVideoUpload(event) {
     if (!file) return;
     try {
         setMediaUploadStatus('Uploading video...');
-        const url = await uploadToCloudflareImages(file);
+        const url = await uploadToCloudflareImages(file, { mediaKind: 'photo' });
         const videoInput = document.getElementById('editVideo');
         if (videoInput) videoInput.value = url;
         setMediaUploadStatus('Video uploaded successfully.');
@@ -2380,6 +2548,7 @@ if (!slug) {
             document.getElementById('editModal').classList.add('hidden');
             document.getElementById('editModal').dataset.mode = '';
             document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('editModal').dataset.uploadListingId = '';
             document.getElementById('saveEdit')?.classList.remove('hidden');
             await loadRequests();
             alert('✅ Request updated successfully!');

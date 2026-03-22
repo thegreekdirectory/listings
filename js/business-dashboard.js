@@ -192,6 +192,99 @@ function syncTabWithHash() {
 }
 
 const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
+const IMAGE_UPLOAD_SOURCE_CODES = Object.freeze({ admin: 'a', business: 'b', submission: 's' });
+const CLOUDFLARE_IMAGE_DELIVERY_BASE_URL = 'https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ';
+const CLOUDFLARE_IMAGE_DELIVERY_VARIANT = 'public';
+
+function padImageDatePart(value) {
+    return String(value).padStart(2, '0');
+}
+
+function sanitizeImagePathPart(value) {
+    return String(value || '')
+        .trim()
+        .replace(/[^a-zA-Z0-9]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase();
+}
+
+function buildCloudflareImageId({ listingId, mediaKind, source }) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = padImageDatePart(now.getMonth() + 1);
+    const day = padImageDatePart(now.getDate());
+    const normalizedKind = mediaKind === 'logo' ? 'logo' : 'photo';
+    const sourceCode = IMAGE_UPLOAD_SOURCE_CODES[source] || IMAGE_UPLOAD_SOURCE_CODES.business;
+    const safeListingId = sanitizeImagePathPart(listingId);
+    return `${safeListingId}-${normalizedKind}-${year}-${month}-${day}-${sourceCode}`;
+}
+
+function buildCloudflareDeliveryUrl(imageId) {
+    return `${CLOUDFLARE_IMAGE_DELIVERY_BASE_URL}/${encodeURIComponent(imageId)}/${CLOUDFLARE_IMAGE_DELIVERY_VARIANT}`;
+}
+
+function getWebpFileName(fileName = 'upload') {
+    const baseName = String(fileName || 'upload').replace(/\.[^.]+$/, '') || 'upload';
+    return `${baseName}.webp`;
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error('Failed to read file.'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImageElement(src) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Failed to load image for conversion.'));
+        image.src = src;
+    });
+}
+
+async function convertImageFileToWebp(file) {
+    if (!file?.type?.startsWith('image/') || file.type === 'image/webp') {
+        return file;
+    }
+
+    const imageSrc = await readFileAsDataUrl(file);
+    const image = await loadImageElement(imageSrc);
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth || image.width;
+    canvas.height = image.naturalHeight || image.height;
+    const context = canvas.getContext('2d');
+    if (!context) {
+        throw new Error('Image conversion is not supported in this browser.');
+    }
+    context.drawImage(image, 0, 0);
+
+    const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, 'image/webp', 0.92);
+    });
+
+    if (!blob) {
+        throw new Error('Image conversion failed.');
+    }
+
+    return new File([blob], getWebpFileName(file.name), {
+        type: 'image/webp',
+        lastModified: Date.now()
+    });
+}
+
+function getBusinessListingUploadId() {
+    const listingId = currentListing?.id;
+    if (!listingId && listingId !== 0) {
+        throw new Error('Listing ID is required before uploading images.');
+    }
+    return String(listingId);
+}
+
 
 function getStoredCloudflareConfig() {
     try {
@@ -241,6 +334,23 @@ function setMediaUploadStatus(message, isError = false) {
     statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
 }
 
+async function parseUploadJsonResponse(response) {
+    const responseText = await response.text();
+    let result;
+    try {
+        result = responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+        throw new Error(`Upload failed (${response.status}): ${responseText || 'Invalid JSON response.'}`);
+    }
+
+    if (!response.ok || result?.success === false) {
+        const errorMessage = result?.errors?.[0]?.message || result?.error || result?.message || responseText || 'Upload failed';
+        throw new Error(`Upload failed (${response.status}): ${errorMessage}`);
+    }
+
+    return result;
+}
+
 function getCustomCtaIconOptions(selected = '') {
     const options = [
         { value: '', label: 'No icon' },
@@ -257,31 +367,33 @@ function getCustomCtaIconOptions(selected = '') {
     return options.map((option) => `<option value="${option.value}" ${selected === option.value ? 'selected' : ''}>${option.value ? `${option.value} ${option.label}` : option.label}</option>`).join('');
 }
 
-async function uploadToCloudflareImages(file) {
+async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
     const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
+    const uploadFile = await convertImageFileToWebp(file);
+    const imageId = buildCloudflareImageId({
+        listingId: getBusinessListingUploadId(),
+        mediaKind,
+        source: 'business'
+    });
     if (uploadEndpoint) {
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', uploadFile);
+        formData.append('id', imageId);
         const response = await fetch(uploadEndpoint, {
             method: 'POST',
             body: formData
         });
         
-        const result = await response.json();
-        if (!response.ok || !result.success) {
-            const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-            throw new Error(errorMessage);
-        }
-        
-        const variants = result?.result?.variants || [];
-        return (variants[0] || result?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
+        const result = await parseUploadJsonResponse(response);
+        return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
     }
     if (!accountId || !apiKey) {
         throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
     }
     
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', uploadFile);
+    formData.append('id', imageId);
     
     const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`, {
         method: 'POST',
@@ -291,14 +403,8 @@ async function uploadToCloudflareImages(file) {
         body: formData
     });
     
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-        const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-        throw new Error(errorMessage);
-    }
-    
-    const variants = result?.result?.variants || [];
-    return (variants[0] || result?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
+    const result = await parseUploadJsonResponse(response);
+    return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
 }
 
 function updateMediaPreview() {
@@ -323,7 +429,7 @@ async function handleLogoUpload(event) {
     if (!file) return;
     try {
         setMediaUploadStatus('Uploading logo...');
-        const url = await uploadToCloudflareImages(file);
+        const url = await uploadToCloudflareImages(file, { mediaKind: 'logo' });
         uploadedImages.logo = url;
         updateMediaPreview();
         setMediaUploadStatus('Logo uploaded successfully.');
@@ -348,7 +454,7 @@ async function handlePhotosUpload(event) {
         setMediaUploadStatus('Uploading photos...');
         const uploadFiles = files.slice(0, availableSlots);
         for (const file of uploadFiles) {
-            const url = await uploadToCloudflareImages(file);
+            const url = await uploadToCloudflareImages(file, { mediaKind: 'photo' });
             uploadedImages.photos.push(url);
         }
         updateMediaPreview();
@@ -364,7 +470,7 @@ async function handleVideoUpload(event) {
     if (!file) return;
     try {
         setMediaUploadStatus('Uploading video...');
-        const url = await uploadToCloudflareImages(file);
+        const url = await uploadToCloudflareImages(file, { mediaKind: 'photo' });
         uploadedImages.video = url;
         setMediaUploadStatus('Video uploaded successfully.');
     } catch (error) {
