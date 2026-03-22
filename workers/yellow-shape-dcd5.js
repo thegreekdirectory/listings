@@ -22,12 +22,14 @@ export default {
     const formData = await request.formData();
     const file = formData.get("file");
     const imageId = String(formData.get("id") || "").trim();
+    const accountId = env.CF_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || env.CF_IMAGES_ACCOUNT_ID;
+    const apiToken = env.CF_API_TOKEN || env.CLOUDFLARE_API_TOKEN || env.CF_IMAGES_API_TOKEN;
 
-    if (!env.CF_ACCOUNT_ID || !env.CF_API_TOKEN) {
+    if (!accountId || !apiToken) {
       return new Response(
         JSON.stringify({
           success: false,
-          errors: [{ message: "Worker is missing CF_ACCOUNT_ID or CF_API_TOKEN." }],
+          errors: [{ message: "Worker is missing a Cloudflare Images account ID or API token binding." }],
         }),
         {
           status: 500,
@@ -50,11 +52,11 @@ export default {
     }
 
     const cfResponse = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/images/v1`,
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${env.CF_API_TOKEN}`,
+          Authorization: `Bearer ${apiToken}`,
         },
         body: cfForm,
       }

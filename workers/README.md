@@ -9,6 +9,13 @@ The deployed worker must have these environment values configured:
 - `CF_ACCOUNT_ID`: the Cloudflare account that owns your Images setup.
 - `CF_API_TOKEN`: an API token with permission to upload/manage Cloudflare Images for that account.
 
+The worker also accepts these alternate binding names if that is what you already use in Cloudflare:
+
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CF_IMAGES_ACCOUNT_ID`
+- `CLOUDFLARE_API_TOKEN`
+- `CF_IMAGES_API_TOKEN`
+
 If either value is missing, the worker now returns:
 
 ```json

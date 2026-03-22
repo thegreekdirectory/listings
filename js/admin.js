@@ -164,7 +164,11 @@ async function adminProxy(action, payload = {}) {
     if (!res.ok || !json.success) {
         const errorMessage = typeof json?.error === 'string'
             ? json.error
-            : json?.error?.message || json?.message || responseText || 'Admin proxy error';
+            : json?.error?.message
+                || (json?.error ? JSON.stringify(json.error) : '')
+                || json?.message
+                || responseText
+                || 'Admin proxy error';
         throw new Error(`Admin proxy request failed (${res.status}): ${errorMessage}`);
     }
     return json.data;
@@ -1893,7 +1897,9 @@ function getCloudflareConfig() {
         });
     }
     return {
-    uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
+        accountId: stored.accountId || inputAccountId || config.accountId || '',
+        apiKey: stored.apiKey || inputApiKey || config.apiKey || '',
+        uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
     };
 }
 
@@ -1946,6 +1952,7 @@ async function parseUploadJsonResponse(response) {
 }
 
 async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
+  const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
   const uploadFile = await convertImageFileToWebp(file);
   const imageId = buildCloudflareImageId({
     listingId: getAdminListingUploadId(),
@@ -1956,14 +1963,30 @@ async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
   formData.append("file", uploadFile);
   formData.append("id", imageId);
 
+  if (uploadEndpoint) {
+    const res = await fetch(uploadEndpoint, {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await parseUploadJsonResponse(res);
+    return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
+  }
+
+  if (!accountId || !apiKey) {
+    throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
+  }
+
   const res = await fetch(
-    "https://tgd-images-upload.thegreekdirectory.org",
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`,
     {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`
+      },
       body: formData,
     }
   );
-
   const result = await parseUploadJsonResponse(res);
   return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
 }
