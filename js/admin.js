@@ -1734,6 +1734,8 @@ function fillEditFormContinuation(listing, owner) {
 
 const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
 const IMAGE_UPLOAD_SOURCE_CODES = Object.freeze({ admin: 'a', business: 'b', submission: 's' });
+const CLOUDFLARE_IMAGE_DELIVERY_BASE_URL = 'https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ';
+const CLOUDFLARE_IMAGE_DELIVERY_VARIANT = 'public';
 
 function padImageDatePart(value) {
     return String(value).padStart(2, '0');
@@ -1742,13 +1744,13 @@ function padImageDatePart(value) {
 function sanitizeImagePathPart(value) {
     return String(value || '')
         .trim()
-        .replace(/[^a-zA-Z0-9_-]+/g, '-')
+        .replace(/[^a-zA-Z0-9]+/g, '-')
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
         .toLowerCase();
 }
 
-function buildCloudflareImageId({ listingId, mediaKind, source, file }) {
+function buildCloudflareImageId({ listingId, mediaKind, source }) {
     const now = new Date();
     const year = now.getFullYear();
     const month = padImageDatePart(now.getMonth() + 1);
@@ -1756,8 +1758,64 @@ function buildCloudflareImageId({ listingId, mediaKind, source, file }) {
     const normalizedKind = mediaKind === 'logo' ? 'logo' : 'photo';
     const sourceCode = IMAGE_UPLOAD_SOURCE_CODES[source] || IMAGE_UPLOAD_SOURCE_CODES.admin;
     const safeListingId = sanitizeImagePathPart(listingId);
-    const safeFileName = sanitizeImagePathPart((file?.name || '').replace(/\.[^.]+$/, '')) || 'upload';
-    return `${safeListingId}-${normalizedKind}-${year}-${month}-${day}-${sourceCode}-${safeFileName}`;
+    return `${safeListingId}-${normalizedKind}-${year}-${month}-${day}-${sourceCode}`;
+}
+
+function buildCloudflareDeliveryUrl(imageId) {
+    return `${CLOUDFLARE_IMAGE_DELIVERY_BASE_URL}/${encodeURIComponent(imageId)}/${CLOUDFLARE_IMAGE_DELIVERY_VARIANT}`;
+}
+
+function getWebpFileName(fileName = 'upload') {
+    const baseName = String(fileName || 'upload').replace(/\.[^.]+$/, '') || 'upload';
+    return `${baseName}.webp`;
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error('Failed to read file.'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImageElement(src) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Failed to load image for conversion.'));
+        image.src = src;
+    });
+}
+
+async function convertImageFileToWebp(file) {
+    if (!file?.type?.startsWith('image/') || file.type === 'image/webp') {
+        return file;
+    }
+
+    const imageSrc = await readFileAsDataUrl(file);
+    const image = await loadImageElement(imageSrc);
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth || image.width;
+    canvas.height = image.naturalHeight || image.height;
+    const context = canvas.getContext('2d');
+    if (!context) {
+        throw new Error('Image conversion is not supported in this browser.');
+    }
+    context.drawImage(image, 0, 0);
+
+    const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, 'image/webp', 0.92);
+    });
+
+    if (!blob) {
+        throw new Error('Image conversion failed.');
+    }
+
+    return new File([blob], getWebpFileName(file.name), {
+        type: 'image/webp',
+        lastModified: Date.now()
+    });
 }
 
 function getAdminListingUploadId() {
@@ -1840,14 +1898,15 @@ function setMediaUploadStatus(message, isError = false) {
 }
 
 async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("id", buildCloudflareImageId({
+  const uploadFile = await convertImageFileToWebp(file);
+  const imageId = buildCloudflareImageId({
     listingId: getAdminListingUploadId(),
     mediaKind,
-    source: "admin",
-    file
-  }));
+    source: "admin"
+  });
+  const formData = new FormData();
+  formData.append("file", uploadFile);
+  formData.append("id", imageId);
 
   const res = await fetch(
     "https://tgd-images-upload.thegreekdirectory.org",
@@ -1861,7 +1920,13 @@ async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
     throw new Error("Upload failed");
   }
 
-  return await res.json();
+  const result = await res.json();
+  if (result?.success === false) {
+    const errorMessage = result?.errors?.[0]?.message || "Upload failed";
+    throw new Error(errorMessage);
+  }
+
+  return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
 }
 
 async function handleLogoUpload(event) {
