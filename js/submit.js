@@ -463,6 +463,23 @@ function validatePayload(p){
 }
 
 function saveDraft(){ localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(getFormData())); }
+async function parseUploadJsonResponse(response) {
+  const responseText = await response.text();
+  let result;
+  try {
+    result = responseText ? JSON.parse(responseText) : {};
+  } catch (error) {
+    throw new Error(`Upload failed (${response.status}): ${responseText || 'Invalid JSON response.'}`);
+  }
+
+  if (!response.ok || result?.success === false) {
+    const errorMessage = result?.errors?.[0]?.message || result?.error || result?.message || responseText || 'Upload failed';
+    throw new Error(`Upload failed (${response.status}): ${errorMessage}`);
+  }
+
+  return result;
+}
+
 function restoreDraft(){
   const raw = localStorage.getItem(FORM_STORAGE_KEY); if (!raw) return;
   try {
@@ -507,11 +524,7 @@ async function uploadToCloudflare(file, { mediaKind = 'photo' } = {}){
   const fd = new FormData(); fd.append('file', uploadFile);
   fd.append('id', imageId);
   const res = await fetch('https://tgd-images-upload.thegreekdirectory.org', { method:'POST', body: fd });
-  if (!res.ok) throw new Error('Upload failed');
-  const data = await res.json();
-  if (data?.success === false) {
-    throw new Error(data?.errors?.[0]?.message || 'Upload failed');
-  }
+  const data = await parseUploadJsonResponse(res);
   return buildCloudflareDeliveryUrl(data?.result?.id || imageId);
 }
 

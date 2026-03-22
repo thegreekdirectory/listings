@@ -23,6 +23,22 @@ export default {
     const file = formData.get("file");
     const imageId = String(formData.get("id") || "").trim();
 
+    if (!env.CF_ACCOUNT_ID || !env.CF_API_TOKEN) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          errors: [{ message: "Worker is missing CF_ACCOUNT_ID or CF_API_TOKEN." }],
+        }),
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        }
+      );
+    }
+
     if (!file) {
       return new Response("No file provided", { status: 400 });
     }
@@ -52,7 +68,7 @@ export default {
     } catch (error) {
       payload = {
         success: false,
-        errors: [{ message: "Cloudflare returned invalid JSON." }],
+        errors: [{ message: responseText || "Cloudflare returned invalid JSON." }],
         raw: responseText,
       };
     }

@@ -154,8 +154,19 @@ async function adminProxy(action, payload = {}) {
             body: JSON.stringify({ action, payload }),
         }
     );
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error || 'Admin proxy error');
+    const responseText = await res.text();
+    let json;
+    try {
+        json = responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+        throw new Error(`Admin proxy request failed (${res.status}): ${responseText || 'Invalid JSON response.'}`);
+    }
+    if (!res.ok || !json.success) {
+        const errorMessage = typeof json?.error === 'string'
+            ? json.error
+            : json?.error?.message || json?.message || responseText || 'Admin proxy error';
+        throw new Error(`Admin proxy request failed (${res.status}): ${errorMessage}`);
+    }
     return json.data;
 }
 
@@ -1917,6 +1928,23 @@ function setMediaUploadStatus(message, isError = false) {
     statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
 }
 
+async function parseUploadJsonResponse(response) {
+  const responseText = await response.text();
+  let result;
+  try {
+    result = responseText ? JSON.parse(responseText) : {};
+  } catch (error) {
+    throw new Error(`Upload failed (${response.status}): ${responseText || 'Invalid JSON response.'}`);
+  }
+
+  if (!response.ok || result?.success === false) {
+    const errorMessage = result?.errors?.[0]?.message || result?.error || result?.message || responseText || 'Upload failed';
+    throw new Error(`Upload failed (${response.status}): ${errorMessage}`);
+  }
+
+  return result;
+}
+
 async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
   const uploadFile = await convertImageFileToWebp(file);
   const imageId = buildCloudflareImageId({
@@ -1936,16 +1964,7 @@ async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
     }
   );
 
-  if (!res.ok) {
-    throw new Error("Upload failed");
-  }
-
-  const result = await res.json();
-  if (result?.success === false) {
-    const errorMessage = result?.errors?.[0]?.message || "Upload failed";
-    throw new Error(errorMessage);
-  }
-
+  const result = await parseUploadJsonResponse(res);
   return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
 }
 

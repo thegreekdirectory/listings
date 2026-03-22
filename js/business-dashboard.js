@@ -334,6 +334,23 @@ function setMediaUploadStatus(message, isError = false) {
     statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
 }
 
+async function parseUploadJsonResponse(response) {
+    const responseText = await response.text();
+    let result;
+    try {
+        result = responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+        throw new Error(`Upload failed (${response.status}): ${responseText || 'Invalid JSON response.'}`);
+    }
+
+    if (!response.ok || result?.success === false) {
+        const errorMessage = result?.errors?.[0]?.message || result?.error || result?.message || responseText || 'Upload failed';
+        throw new Error(`Upload failed (${response.status}): ${errorMessage}`);
+    }
+
+    return result;
+}
+
 function getCustomCtaIconOptions(selected = '') {
     const options = [
         { value: '', label: 'No icon' },
@@ -367,14 +384,8 @@ async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
             body: formData
         });
         
-        const result = await response.json();
-        if (!response.ok || !result.success) {
-            const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-            throw new Error(errorMessage);
-        }
-        
-        const variants = result?.result?.variants || [];
-        return buildCloudflareDeliveryUrl(result?.result?.id || imageId || variants[0] || result?.result?.url || '');
+        const result = await parseUploadJsonResponse(response);
+        return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
     }
     if (!accountId || !apiKey) {
         throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
@@ -392,12 +403,7 @@ async function uploadToCloudflareImages(file, { mediaKind = 'photo' } = {}) {
         body: formData
     });
     
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-        const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-        throw new Error(errorMessage);
-    }
-    
+    const result = await parseUploadJsonResponse(response);
     return buildCloudflareDeliveryUrl(result?.result?.id || imageId);
 }
 
