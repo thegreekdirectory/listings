@@ -221,6 +221,7 @@ function setupEventListeners() {
             document.getElementById('editModal').classList.add('hidden');
             document.getElementById('editModal').dataset.mode = '';
             document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('editModal').dataset.uploadListingId = '';
             document.getElementById('saveEdit')?.classList.remove('hidden');
         }
     });
@@ -229,6 +230,7 @@ function setupEventListeners() {
             document.getElementById('editModal').classList.add('hidden');
             document.getElementById('editModal').dataset.mode = '';
             document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('editModal').dataset.uploadListingId = '';
             document.getElementById('saveEdit')?.classList.remove('hidden');
         }
     });
@@ -760,6 +762,7 @@ async function openRequestInEditor(requestId, editable) {
 
     document.getElementById('editModal').dataset.requestId = String(request.id);
     document.getElementById('editModal').dataset.mode = editable ? 'request-edit' : 'request-view';
+    document.getElementById('editModal').dataset.uploadListingId = String(request.id);
     document.getElementById('editModal').classList.remove('hidden');
 }
 
@@ -1248,6 +1251,7 @@ window.editListing = async function(id) {
         
         document.getElementById('modalTitle').textContent = 'Edit Listing';
         fillEditForm(listing);
+        document.getElementById('editModal').dataset.uploadListingId = String(listing.id);
         document.getElementById('editModal').classList.remove('hidden');
         
     } catch (error) {
@@ -1285,6 +1289,7 @@ window.newListing = async function() {
         
         document.getElementById('modalTitle').textContent = 'New Listing';
         fillEditForm(editingListing);
+        document.getElementById('editModal').dataset.uploadListingId = '';
         document.getElementById('editModal').classList.remove('hidden');
         
     } catch (error) {
@@ -1819,11 +1824,26 @@ async function convertImageFileToWebp(file) {
 }
 
 function getAdminListingUploadId() {
-    const listingId = currentListing?.id;
-    if (!listingId && listingId !== 0) {
-        throw new Error('Listing ID is required before uploading images.');
+    const requestId = document.getElementById('editModal')?.dataset?.requestId;
+    const existingListingId = editingListing?.id;
+    if (existingListingId || existingListingId === 0) {
+        return String(existingListingId);
     }
-    return String(listingId);
+    if (requestId) {
+        return String(requestId);
+    }
+
+    const editModal = document.getElementById('editModal');
+    const fallbackUploadId = editModal?.dataset?.uploadListingId;
+    if (fallbackUploadId) {
+        return fallbackUploadId;
+    }
+
+    const generatedUploadId = String(Date.now());
+    if (editModal) {
+        editModal.dataset.uploadListingId = generatedUploadId;
+    }
+    return generatedUploadId;
 }
 
 
@@ -2486,6 +2506,7 @@ if (!slug) {
             document.getElementById('editModal').classList.add('hidden');
             document.getElementById('editModal').dataset.mode = '';
             document.getElementById('editModal').dataset.requestId = '';
+            document.getElementById('editModal').dataset.uploadListingId = '';
             document.getElementById('saveEdit')?.classList.remove('hidden');
             await loadRequests();
             alert('✅ Request updated successfully!');
