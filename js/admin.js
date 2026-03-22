@@ -60,31 +60,11 @@
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
-const CATEGORIES = [
-    'Automotive & Transportation', 'Beauty & Health', 'Church & Religious Organization',
-    'Cultural/Fraternal Organization', 'Education & Community', 'Entertainment, Arts & Recreation',
-    'Food & Hospitality', 'Grocery & Imports', 'Home & Construction', 'Industrial & Manufacturing',
-    'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
-];
+const { MAIN_CATEGORY_NAMES: CATEGORIES } = window.TGDCategoryMetadata;
 
-let CATEGORY_SCHEMA_TYPE_MAPS = {};
+let CATEGORY_SCHEMA_TYPE_MAPS = window.TGDCategoryMetadata.createEmptySchemaTypeMap();
 
-let SUBCATEGORIES = {
-    'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
-    'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
-    'Church & Religious Organization': ['Church'],
-    'Cultural/Fraternal Organization': ['Dance Troupe', 'Non-Profit', 'Philanthropic Group', 'Society', 'Youth Organization'],
-    'Education & Community': ['Childcare', 'Greek School', 'Senior Care', 'Tutor'],
-    'Entertainment, Arts & Recreation': ['Band', 'DJs', 'Entertainment Group', 'Photographer', 'Art'],
-    'Food & Hospitality': ['Banquet Hall', 'Catering Service', 'Event Venue', 'Bakeries', 'Deli', 'Pastry Shop', 'Bar', 'Breakfast', 'Coffee', 'Lunch', 'Dinner', 'Restaurant', 'Hotel', 'Airbnb'],
-    'Grocery & Imports': ['Butcher Shop', 'Liquor Shop', 'Market', 'Greek Alcohol', 'Honey', 'Olive Oil', 'Food Distribution', 'Food Manufacturer'],
-    'Home & Construction': ['Carpenter', 'Electrician', 'General Contractor', 'Handyman', 'HVAC', 'Landscaping', 'Painter', 'Plumber', 'Roofing', 'Tile & Stone Specialist'],
-    'Industrial & Manufacturing': ['Food Manufacturer'],
-    'Pets & Veterinary': ['Veterinarian', 'Pet Accessories Maker'],
-    'Professional & Business Services': ['Business Services', 'Consultant', 'CPA', 'Financial Advisor', 'Insurance Agent', 'IT Service & Repair', 'Lawyer', 'Marketing & Creative Agency', 'Notaries', 'Wedding Planner', 'Travel Agency'],
-    'Real Estate & Development': ['Appraiser', 'Broker', 'Developer', 'Lender', 'Property Management', 'Real Estate Agent'],
-    'Retail & Shopping': ['Boutique Shop', 'ECommerce', 'Jewelry', 'Souvenir Shop']
-};
+let SUBCATEGORIES = window.TGDCategoryMetadata.createEmptySubcategoryMap();
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
@@ -580,19 +560,13 @@ function generateSlugFromName(name = '') {
 
 async function loadSubcategories() {
     try {
-        const data = await adminProxy('subcategories:list');
-        if (Array.isArray(data) && data.length > 0) {
-            const next = {};
-            data.forEach((row) => {
-                if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
-                if (row.category && row.schema_type_map && typeof row.schema_type_map === 'object') {
-                    CATEGORY_SCHEMA_TYPE_MAPS[row.category] = row.schema_type_map;
-                }
-            });
-            if (Object.keys(next).length > 0) SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
-        }
+        const metadata = await window.TGDCategoryMetadata.loadPublicCategoryMetadata({ forceRefresh: true });
+        SUBCATEGORIES = metadata.subcategoryMap;
+        CATEGORY_SCHEMA_TYPE_MAPS = metadata.schemaTypeMap;
     } catch (error) {
         console.warn('Could not load dynamic subcategories', error);
+        SUBCATEGORIES = window.TGDCategoryMetadata.createEmptySubcategoryMap();
+        CATEGORY_SCHEMA_TYPE_MAPS = window.TGDCategoryMetadata.createEmptySchemaTypeMap();
     }
 }
 
@@ -605,7 +579,7 @@ window.manageSubcategories = async function() {
     const list = updated.split(',').map(v => v.trim()).filter(Boolean);
     try {
         await adminProxy('subcategories:insert', { category, subcategories: list });
-        SUBCATEGORIES[category] = list;
+        await loadSubcategories();
         updateSubcategoriesForCategory();
         alert('Subcategories updated.');
     } catch (error) {
@@ -2715,31 +2689,6 @@ function generateReviewSection(listing) {
 // ADMIN PORTAL - PART 10
 // Template Replacements Generation - Part 1
 // ============================================
-
-function getBusinessSchemaType(listing) {
-    const category = String(listing.category || '').toLowerCase();
-    const subcategories = Array.isArray(listing.subcategories)
-        ? listing.subcategories.map((sub) => String(sub || '').toLowerCase())
-        : [];
-    const primarySubcategory = String(listing.primary_subcategory || '').toLowerCase();
-    const terms = [category, primarySubcategory, ...subcategories].filter(Boolean).join(' ');
-
-    const keywordTypeMap = [
-        { keywords: ['restaurant', 'diner', 'taverna'], type: 'Restaurant' },
-        { keywords: ['church'], type: 'Church' },
-        { keywords: ['bakery'], type: 'Bakery' },
-        { keywords: ['travel', 'tour'], type: 'TravelAgency' },
-        { keywords: ['bar', 'pub', 'lounge'], type: 'BarOrPub' },
-        { keywords: ['hair', 'salon', 'beauty', 'spa'], type: 'HairSalon' },
-        { keywords: ['dentist', 'dental'], type: 'Dentist' },
-        { keywords: ['attorney', 'law', 'legal'], type: 'Attorney' },
-        { keywords: ['accounting', 'accountant', 'tax'], type: 'AccountingService' },
-        { keywords: ['auto', 'automotive', 'car repair', 'mechanic'], type: 'AutoRepair' }
-    ];
-
-    const match = keywordTypeMap.find((entry) => entry.keywords.some((keyword) => terms.includes(keyword)));
-    return match ? match.type : 'LocalBusiness';
-}
 
 function getSameAsLinks(listing) {
     const social = listing.social_media || {};

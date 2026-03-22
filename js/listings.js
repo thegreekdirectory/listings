@@ -10,15 +10,11 @@ or distribution of this code will result in legal action to the fullest extent p
 // Configuration & State Management
 // ============================================
 
-const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
-
-const CATEGORIES = [
-    'Automotive & Transportation', 'Beauty & Health', 'Church & Religious Organization',
-    'Cultural/Fraternal Organization', 'Education & Community', 'Entertainment, Arts & Recreation',
-    'Food & Hospitality', 'Grocery & Imports', 'Home & Construction', 'Industrial & Manufacturing',
-    'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
-];
+const {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    MAIN_CATEGORY_NAMES: CATEGORIES
+} = window.TGDCategoryMetadata;
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -38,7 +34,7 @@ const US_STATES = {
 };
 
 let listingsSupabase = null;
-let SUBCATEGORIES = {};
+let SUBCATEGORIES = window.TGDCategoryMetadata.createEmptySubcategoryMap();
 let allListings = [], filteredListings = [], currentView = 'grid', selectedCategory = 'All';
 let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '', selectedCity = '', selectedZip = '';
 let selectedRadius = 0, openNowOnly = false, closedNowOnly = false, openingSoonOnly = false;
@@ -348,26 +344,14 @@ async function estimateLocationByIP() {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-function extractSubcategoriesFromListings(listings) {
-    const subcatsByCategory = {};
-    
-    listings.forEach(listing => {
-        if (listing.category && listing.subcategories && Array.isArray(listing.subcategories)) {
-            if (!subcatsByCategory[listing.category]) {
-                subcatsByCategory[listing.category] = new Set();
-            }
-            listing.subcategories.forEach(sub => {
-                subcatsByCategory[listing.category].add(sub);
-            });
-        }
-    });
-    
-    const result = {};
-    Object.keys(subcatsByCategory).forEach(category => {
-        result[category] = Array.from(subcatsByCategory[category]).sort();
-    });
-    
-    return result;
+async function loadCategoryMetadata() {
+    try {
+        const metadata = await window.TGDCategoryMetadata.loadPublicCategoryMetadata();
+        SUBCATEGORIES = metadata.subcategoryMap;
+    } catch (error) {
+        console.warn('Could not load category metadata', error);
+        SUBCATEGORIES = window.TGDCategoryMetadata.createEmptySubcategoryMap();
+    }
 }
 
 /*
@@ -754,6 +738,7 @@ or distribution of this code will result in legal action to the fullest extent p
 async function loadListings() {
     try {
         listingsSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        await loadCategoryMetadata();
         
         const { data, error } = await listingsSupabase
             .from('listings')
@@ -766,8 +751,7 @@ async function loadListings() {
         allListings = data || [];
         filteredListings = [...allListings];
 
-        SUBCATEGORIES = extractSubcategoriesFromListings(allListings);
-        console.log('Loaded subcategories:', SUBCATEGORIES);
+        console.log('Loaded category metadata:', SUBCATEGORIES);
 
         await syncStarredListingsToPWA();
         

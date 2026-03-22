@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/category-metadata.js"></script>
     <link rel="stylesheet" href="/src/output.css">
 <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/listings.css">
@@ -190,15 +191,11 @@
     <script>
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
-        const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
-        
-        const CATEGORIES = [
-            'Automotive & Transportation', 'Beauty & Health', 'Church & Religious Organization',
-            'Cultural/Fraternal Organization', 'Education & Community', 'Entertainment, Arts & Recreation',
-            'Food & Hospitality', 'Grocery & Imports', 'Home & Construction', 'Industrial & Manufacturing',
-            'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
-        ];
+        const {
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY,
+            MAIN_CATEGORY_NAMES: CATEGORIES
+        } = window.TGDCategoryMetadata;
         
         const US_STATES = {
             'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
@@ -227,7 +224,7 @@
         let subcategoryMode = 'any';
         let selectedCountry = '';
         let selectedState = '';
-        let SUBCATEGORIES = {};
+        let SUBCATEGORIES = window.TGDCategoryMetadata.createEmptySubcategoryMap();
         let filtersOpen = false;
         
         function formatPhoneDisplay(phone) {
@@ -477,23 +474,14 @@
             `;
         }
         
-        function extractSubcategoriesFromListings(listings) {
-            const subcatsByCategory = {};
-            listings.forEach(listing => {
-                if (listing.category && listing.subcategories && Array.isArray(listing.subcategories)) {
-                    if (!subcatsByCategory[listing.category]) {
-                        subcatsByCategory[listing.category] = new Set();
-                    }
-                    listing.subcategories.forEach(sub => {
-                        subcatsByCategory[listing.category].add(sub);
-                    });
-                }
-            });
-            const result = {};
-            Object.keys(subcatsByCategory).forEach(category => {
-                result[category] = Array.from(subcatsByCategory[category]).sort();
-            });
-            return result;
+        async function loadCategoryMetadata() {
+            try {
+                const metadata = await window.TGDCategoryMetadata.loadPublicCategoryMetadata();
+                SUBCATEGORIES = metadata.subcategoryMap;
+            } catch (error) {
+                console.warn('Could not load category metadata', error);
+                SUBCATEGORIES = window.TGDCategoryMetadata.createEmptySubcategoryMap();
+            }
         }
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -503,6 +491,7 @@
                 document.getElementById('mapLoading').style.display = 'block';
                 
                 mapSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                await loadCategoryMetadata();
                 
                 const { data, error } = await mapSupabase
                     .from('listings')
@@ -515,7 +504,6 @@
                 allListings = data || [];
                 filteredListings = [...allListings];
                 
-                SUBCATEGORIES = extractSubcategoriesFromListings(allListings);
                 
                 populateCountryFilter();
                 createCategoryButtons();

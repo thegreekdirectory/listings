@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/category-metadata.js"></script>
     <link rel="stylesheet" href="/src/output.css">
 <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -686,7 +688,7 @@
             'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
         ];
 
-        let SUBCATEGORIES = {};
+        let SUBCATEGORIES = window.TGDCategoryMetadata.createEmptySubcategoryMap();
 
         const US_STATES = {
             'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
@@ -917,26 +919,14 @@
             return null;
         }
 
-        function extractSubcategoriesFromListings(listings) {
-            const subcatsByCategory = {};
-            
-            listings.forEach(listing => {
-                if (listing.category && listing.subcategories && Array.isArray(listing.subcategories)) {
-                    if (!subcatsByCategory[listing.category]) {
-                        subcatsByCategory[listing.category] = new Set();
-                    }
-                    listing.subcategories.forEach(sub => {
-                        subcatsByCategory[listing.category].add(sub);
-                    });
-                }
-            });
-            
-            const result = {};
-            Object.keys(subcatsByCategory).forEach(category => {
-                result[category] = Array.from(subcatsByCategory[category]).sort();
-            });
-            
-            return result;
+        async function loadCategoryMetadata() {
+            try {
+                const metadata = await window.TGDCategoryMetadata.loadPublicCategoryMetadata();
+                SUBCATEGORIES = metadata.subcategoryMap;
+            } catch (error) {
+                console.warn('Could not load category metadata', error);
+                SUBCATEGORIES = window.TGDCategoryMetadata.createEmptySubcategoryMap();
+            }
         }
         
         document.addEventListener('DOMContentLoaded', () => {
@@ -1135,13 +1125,13 @@
         };
         async function loadListings() {
             try {
+                await loadCategoryMetadata();
                 const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${DATABASE_PATH}`);
                 const data = await response.json();
                 allListings = data.listings.filter(l => l.visible !== false);
                 filteredListings = [...allListings];
                 
-                SUBCATEGORIES = extractSubcategoriesFromListings(allListings);
-                console.log('Loaded subcategories:', SUBCATEGORIES);
+                console.log('Loaded category metadata:', SUBCATEGORIES);
                 
                 populateCountryFilter();
                 updateLocationSubtitle();

@@ -1,25 +1,11 @@
 // js/index.js
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
-const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
-
-const CATEGORIES = [
-    { name: 'Automotive & Transportation', icon: '🚗', slug: 'automotive-transportation' },
-    { name: 'Beauty & Health', icon: '💅', slug: 'beauty-health' },
-    { name: 'Church & Religious Organization', icon: '⛪', slug: 'church-religious-organization' },
-    { name: 'Cultural/Fraternal Organization', icon: '🎭', slug: 'cultural-fraternal-organization' },
-    { name: 'Education & Community', icon: '📚', slug: 'education-community' },
-    { name: 'Entertainment, Arts & Recreation', icon: '🎨', slug: 'entertainment-arts-recreation' },
-    { name: 'Food & Hospitality', icon: '🍽️', slug: 'food-hospitality' },
-    { name: 'Grocery & Imports', icon: '🛒', slug: 'grocery-imports' },
-    { name: 'Home & Construction', icon: '🏠', slug: 'home-construction' },
-    { name: 'Industrial & Manufacturing', icon: '🏭', slug: 'industrial-manufacturing' },
-    { name: 'Pets & Veterinary', icon: '🐾', slug: 'pets-veterinary' },
-    { name: 'Professional & Business Services', icon: '💼', slug: 'professional-business-services' },
-    { name: 'Real Estate & Development', icon: '🏢', slug: 'real-estate-development' },
-    { name: 'Retail & Shopping', icon: '🛍️', slug: 'retail-shopping' }
-];
+const {
+    MAIN_CATEGORIES: CATEGORIES,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+} = window.TGDCategoryMetadata;
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
@@ -41,7 +27,7 @@ let allListings = [];
 let selectedCategory = '';
 let selectedSubcategories = [];
 let subcategoryMode = 'any';
-let subcategoriesByCategory = {};
+let subcategoriesByCategory = window.TGDCategoryMetadata.createEmptySubcategoryMap();
 const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
 const LOCATION_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
 const PHONE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>`;
@@ -65,6 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupSearch();
     populateCategorySelect();
     renderCategories();
+    await loadCategoryMetadata();
     await loadListings();
     renderSubcategoryFilter();
     renderFeaturedListings();
@@ -290,6 +277,17 @@ async function updateCategoryCounts() {
     }
 }
 
+
+async function loadCategoryMetadata() {
+    try {
+        const metadata = await window.TGDCategoryMetadata.loadPublicCategoryMetadata();
+        subcategoriesByCategory = metadata.subcategoryMap;
+    } catch (error) {
+        console.warn('Could not load category metadata', error);
+        subcategoriesByCategory = window.TGDCategoryMetadata.createEmptySubcategoryMap();
+    }
+}
+
 async function loadListings() {
     try {
         console.log('📥 Loading listings...');
@@ -305,29 +303,11 @@ async function loadListings() {
         
         allListings = listings || [];
         console.log(`✅ Loaded ${allListings.length} listings`);
-        subcategoriesByCategory = extractSubcategoriesFromListings(allListings);
         renderSubcategoryFilter();
         
     } catch (error) {
         console.error('❌ Error loading listings:', error);
     }
-}
-
-function extractSubcategoriesFromListings(listings) {
-    const byCategory = {};
-    listings.forEach(listing => {
-        if (listing.category && Array.isArray(listing.subcategories)) {
-            if (!byCategory[listing.category]) {
-                byCategory[listing.category] = new Set();
-            }
-            listing.subcategories.forEach(sub => byCategory[listing.category].add(sub));
-        }
-    });
-    const result = {};
-    Object.keys(byCategory).forEach(category => {
-        result[category] = Array.from(byCategory[category]).sort();
-    });
-    return result;
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
