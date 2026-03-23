@@ -363,10 +363,7 @@ function getTaglineMaxLength(city = '', state = '') {
 function normalizeImageCdnUrl(url = '') {
     const raw = String(url || '').trim();
     if (!raw) return '';
-    return raw
-        .replace('https://raw.githubusercontent.com/thegreekdirectory/listings/main/images', LISTING_IMAGE_CDN)
-        .replace('https://github.com/thegreekdirectory/listings/raw/main/images', LISTING_IMAGE_CDN)
-        .replace('/images/', `${LISTING_IMAGE_CDN}/`);
+    return raw;
 }
 
 function normalizePhoneE164(value, country = 'USA') {
