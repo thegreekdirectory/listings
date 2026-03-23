@@ -40,6 +40,23 @@ const PHONE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#
 const EMAIL_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.945a2 2 0 002.22 0L21 8"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>`;
 const WEBSITE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.6 9h16.8M3.6 15h16.8M10 3.4A15.4 15.4 0 0112.75 12 15.4 15.4 0 0110 20.6M14 3.4A15.4 15.4 0 0011.25 12 15.4 15.4 0 0014 20.6"></path></svg>`;
 const CHECK_ICON_SVG = `<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+const LISTING_IMAGE_CDN = 'https://images.thegreekdirectory.org';
+
+function normalizeImageCdnUrl(url = '') {
+    const value = String(url || '').trim();
+    if (!value) return '';
+
+    if (/^https?:\/\/images\.thegreekdirectory\.org\/cdn-cgi\/imagedelivery\/rheV007PEt08HUYXNuJLnQ\/.+\/public$/i.test(value)) {
+        return value;
+    }
+
+    return value
+        .replace('https://imagedelivery.net', LISTING_IMAGE_CDN)
+        .replace('https://raw.githubusercontent.com/thegreekdirectory/listings/main/images', LISTING_IMAGE_CDN)
+        .replace('https://github.com/thegreekdirectory/listings/raw/main/images', LISTING_IMAGE_CDN)
+        .replace('/images/', `${LISTING_IMAGE_CDN}/`);
+}
+
 
 function getTaglineMaxLength(city = '', state = '') {
     const suffixLength = META_DESCRIPTION_SUFFIX.replace('{city}', city || '').replace('{state}', state || '').length;
@@ -214,23 +231,13 @@ function setStoredCloudflareConfig(config) {
 function getCloudflareConfig() {
     const config = window.CLOUDFLARE_IMAGES_CONFIG || {};
     const stored = getStoredCloudflareConfig();
-    const accountInput = document.getElementById('cloudflareAccountId');
-    const apiKeyInput = document.getElementById('cloudflareApiKey');
     const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
-    const inputAccountId = accountInput?.value?.trim() || '';
-    const inputApiKey = apiKeyInput?.value?.trim() || '';
     const inputUploadEndpoint = uploadEndpointInput?.value?.trim() || '';
-    if ((inputAccountId || inputApiKey || inputUploadEndpoint) && (!stored.accountId || !stored.apiKey || !stored.uploadEndpoint)) {
-        setStoredCloudflareConfig({
-            accountId: inputAccountId,
-            apiKey: inputApiKey,
-            uploadEndpoint: inputUploadEndpoint
-        });
+    if (inputUploadEndpoint && stored.uploadEndpoint !== inputUploadEndpoint) {
+        setStoredCloudflareConfig({ uploadEndpoint: inputUploadEndpoint });
     }
     return {
-        accountId: stored.accountId || inputAccountId || config.accountId || '',
-        apiKey: stored.apiKey || inputApiKey || config.apiKey || '',
-        uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
+        uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || window.TGDCloudflareImages?.DEFAULT_UPLOAD_ENDPOINT || ''
     };
 }
 
@@ -257,74 +264,96 @@ function getCustomCtaIconOptions(selected = '') {
     return options.map((option) => `<option value="${option.value}" ${selected === option.value ? 'selected' : ''}>${option.value ? `${option.value} ${option.label}` : option.label}</option>`).join('');
 }
 
-async function uploadToCloudflareImages(file) {
-    const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
-    if (uploadEndpoint) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const response = await fetch(uploadEndpoint, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        if (!response.ok || !result.success) {
-            const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-            throw new Error(errorMessage);
-        }
-        
-        const variants = result?.result?.variants || [];
-        return (variants[0] || result?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
+function getMediaFormState() {
+    const logoInput = document.getElementById('editLogoUrl');
+    const photosInput = document.getElementById('editPhotoUrls');
+    const photoUrls = (photosInput?.value || '')
+        .split('\n')
+        .map((value) => normalizeImageCdnUrl(value.trim()))
+        .filter(Boolean)
+        .slice(0, currentMaxPhotos);
+
+    return {
+        logo: normalizeImageCdnUrl(logoInput?.value?.trim() || '') || null,
+        photos: photoUrls
+    };
+}
+
+function syncMediaInputsFromListing() {
+    const logoInput = document.getElementById('editLogoUrl');
+    const photosInput = document.getElementById('editPhotoUrls');
+    if (logoInput) {
+        logoInput.value = uploadedImages.logo || currentListing?.logo || '';
     }
-    if (!accountId || !apiKey) {
-        throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
+    if (photosInput) {
+        const allPhotos = [
+            ...(currentListing?.photos || []),
+            ...uploadedImages.photos
+        ].slice(0, currentMaxPhotos);
+        photosInput.value = allPhotos.join('\n');
     }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`, {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${apiKey}`
-        },
-        body: formData
-    });
-    
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-        const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-        throw new Error(errorMessage);
-    }
-    
-    const variants = result?.result?.variants || [];
-    return (variants[0] || result?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
 }
 
 function updateMediaPreview() {
+    const { logo, photos } = getMediaFormState();
     const logoPreview = document.getElementById('mediaLogoPreview');
     if (logoPreview) {
-        const logoUrl = uploadedImages.logo || currentListing?.logo || '';
-        logoPreview.src = logoUrl || '';
-        logoPreview.classList.toggle('hidden', !logoUrl);
+        logoPreview.src = logo || '';
+        logoPreview.classList.toggle('hidden', !logo);
     }
-    
+
     const photosPreview = document.getElementById('mediaPhotosPreview');
     if (photosPreview) {
-        const allPhotos = [...(currentListing?.photos || []), ...uploadedImages.photos];
-        photosPreview.innerHTML = allPhotos.map(url => `
+        photosPreview.innerHTML = photos.map(url => `
             <img src="${url}" alt="Listing photo" class="w-20 h-20 rounded-lg object-cover">
         `).join('');
     }
+}
+
+function attachBusinessMediaInputHandlers() {
+    const logoInput = document.getElementById('editLogoUrl');
+    const photosInput = document.getElementById('editPhotoUrls');
+    [logoInput, photosInput].forEach((input) => {
+        if (!input) return;
+        input.addEventListener('input', updateMediaPreview);
+    });
+}
+
+async function uploadListingImageFromBusiness(file, assetType) {
+    return window.TGDCloudflareImages.uploadListingImage({
+        file,
+        listingId: currentListing?.id,
+        assetType,
+        source: 'b',
+        endpoint: getCloudflareConfig().uploadEndpoint
+    });
+}
+
+async function uploadToCloudflareImages(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(getCloudflareConfig().uploadEndpoint || window.TGDCloudflareImages?.DEFAULT_UPLOAD_ENDPOINT, {
+        method: 'POST',
+        body: formData
+    });
+
+    const payload = await response.json();
+    if (!response.ok) {
+        throw new Error(payload?.error || 'Upload failed.');
+    }
+
+    return window.TGDCloudflareImages.normalizeCustomImageUploadResponse(payload).url || '';
 }
 
 async function handleLogoUpload(event) {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-        setMediaUploadStatus('Uploading logo...');
-        const url = await uploadToCloudflareImages(file);
+        setMediaUploadStatus('Uploading logo as WEBP...');
+        const { url } = await uploadListingImageFromBusiness(file, 'logo');
         uploadedImages.logo = url;
+        syncMediaInputsFromListing();
         updateMediaPreview();
         setMediaUploadStatus('Logo uploaded successfully.');
     } catch (error) {
@@ -336,21 +365,22 @@ async function handleLogoUpload(event) {
 async function handlePhotosUpload(event) {
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
-    
-    const existingCount = (currentListing?.photos || []).length + uploadedImages.photos.length;
+
+    const existingCount = getMediaFormState().photos.length;
     const availableSlots = currentMaxPhotos - existingCount;
     if (availableSlots <= 0) {
         setMediaUploadStatus(`Photo limit reached for your current plan (${currentMaxPhotos}).`, true);
         return;
     }
-    
+
     try {
-        setMediaUploadStatus('Uploading photos...');
+        setMediaUploadStatus('Uploading photos as WEBP...');
         const uploadFiles = files.slice(0, availableSlots);
         for (const file of uploadFiles) {
-            const url = await uploadToCloudflareImages(file);
+            const { url } = await uploadListingImageFromBusiness(file, 'photo');
             uploadedImages.photos.push(url);
         }
+        syncMediaInputsFromListing();
         updateMediaPreview();
         setMediaUploadStatus('Photos uploaded successfully.');
     } catch (error) {
@@ -385,27 +415,14 @@ function attachMediaUploadHandlers() {
 }
 
 function attachCloudflareConfigHandlers() {
-    const accountInput = document.getElementById('cloudflareAccountId');
-    const apiKeyInput = document.getElementById('cloudflareApiKey');
     const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
-    if (!accountInput || !apiKeyInput || !uploadEndpointInput) return;
-    
+    if (!uploadEndpointInput) return;
+
     const config = getCloudflareConfig();
-    accountInput.value = config.accountId || '';
-    apiKeyInput.value = config.apiKey || '';
-    uploadEndpointInput.value = config.uploadEndpoint || '';
-    
-    const saveConfig = () => {
-        setStoredCloudflareConfig({
-            accountId: accountInput.value.trim(),
-            apiKey: apiKeyInput.value.trim(),
-            uploadEndpoint: uploadEndpointInput.value.trim()
-        });
-    };
-    
-    accountInput.addEventListener('input', saveConfig);
-    apiKeyInput.addEventListener('input', saveConfig);
-    uploadEndpointInput.addEventListener('input', saveConfig);
+    uploadEndpointInput.value = config.uploadEndpoint || window.TGDCloudflareImages?.DEFAULT_UPLOAD_ENDPOINT || '';
+    uploadEndpointInput.addEventListener('input', () => {
+        setStoredCloudflareConfig({ uploadEndpoint: uploadEndpointInput.value.trim() });
+    });
 }
 
 /*
@@ -613,31 +630,25 @@ function renderEditForm() {
                     <div class="grid grid-cols-1 gap-4">
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="text-sm font-semibold text-gray-800">Cloudflare Images</div>
-                            <p class="text-xs text-gray-500 mt-1">Credentials and upload endpoint are stored locally in this browser.</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                            <p class="text-xs text-gray-500 mt-1">The upload endpoint is stored locally in this browser.</p>
+                            <div class="grid grid-cols-1 gap-3 mt-3">
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Account ID</label>
-                                    <input type="text" id="cloudflareAccountId" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Cloudflare account ID">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">API Key</label>
-                                    <input type="password" id="cloudflareApiKey" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Cloudflare API key">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Upload Endpoint (required for production)</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Upload Endpoint</label>
                                     <input type="url" id="cloudflareUploadEndpoint" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="https://your-domain.com/cloudflare-upload">
-                                    <p class="text-[11px] text-gray-500 mt-1">Must proxy to Cloudflare Images to avoid CORS errors.</p>
+                                    <p class="text-[11px] text-gray-500 mt-1">Use the upload worker so business uploads always get custom IDs, canonical URLs, and WEBP files.</p>
                                 </div>
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
                             <input type="file" id="editLogoUpload" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <input type="url" id="editLogoUrl" value="${currentListing.logo || ''}" class="w-full px-4 py-2 mt-2 border border-gray-300 rounded-lg" placeholder="Canonical logo URL">
                             <img id="mediaLogoPreview" src="${currentListing.logo || ''}" alt="Logo preview" class="mt-2 w-20 h-20 rounded-lg object-cover ${currentListing.logo ? '' : 'hidden'}">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Photos</label>
                             <input type="file" id="editPhotosUpload" accept="image/*" multiple class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <textarea id="editPhotoUrls" rows="4" class="w-full px-4 py-2 mt-2 border border-gray-300 rounded-lg" placeholder="One canonical photo URL per line">${(currentListing.photos || []).join('\n')}</textarea>
                             <div id="mediaPhotosPreview" class="mt-3 flex flex-wrap gap-2"></div>
                         </div>
                         <div>
@@ -850,8 +861,10 @@ function renderEditForm() {
     }
     
     renderSubcategories();
+    syncMediaInputsFromListing();
     updateMediaPreview();
     attachMediaUploadHandlers();
+    attachBusinessMediaInputHandlers();
     if (window.RichTextEditor) {
         businessDescriptionEditor = window.RichTextEditor.mount({ inputId: 'editDescription', onChange: () => updateCharCounter('description') });
     }
@@ -1052,11 +1065,9 @@ async function saveChanges() {
         return;
     }
     
-    const mergedPhotos = [
-        ...(currentListing.photos || []),
-        ...uploadedImages.photos
-    ].slice(0, currentMaxPhotos);
-    const updatedLogo = uploadedImages.logo || currentListing.logo || null;
+    const mediaState = getMediaFormState();
+    const mergedPhotos = mediaState.photos;
+    const updatedLogo = mediaState.logo;
     const updatedVideo = uploadedImages.video || currentListing.video || null;
 
     const changes = [];

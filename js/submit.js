@@ -29,6 +29,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 let map, marker;
 let selectedPrimarySubcategory = null;
 let descriptionEditor = null;
+let submissionRequestId = null;
 
 const onlyDigits = (v='') => v.replace(/\D/g, '');
 const stripProtocol = (v='') => v.trim().replace(/^https?:\/\//i, '').replace(/^\/+/, '');
@@ -368,11 +369,12 @@ function validatePayload(p){
   return errors;
 }
 
-function saveDraft(){ localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(getFormData())); }
+function saveDraft(){ localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify({ ...getFormData(), draftRequestId: submissionRequestId })); }
 function restoreDraft(){
   const raw = localStorage.getItem(FORM_STORAGE_KEY); if (!raw) return;
   try {
     const d = JSON.parse(raw);
+    submissionRequestId = d.draftRequestId || null;
     Object.entries(d).forEach(([k,v]) => {
       const el = document.getElementById(k);
       if (!el) return;
@@ -403,31 +405,72 @@ function restoreDraft(){
   } catch (e) { console.warn('restore failed', e); }
 }
 
-async function uploadToCloudflare(file){
-  const fd = new FormData(); fd.append('file', file);
-  const res = await fetch('https://tgd-images-upload.thegreekdirectory.org', { method:'POST', body: fd });
-  if (!res.ok) throw new Error('Upload failed');
-  const data = await res.json();
-  if (typeof data === 'string') return data;
-  return data.url || data.result?.variants?.[0] || data.result?.delivery_url || data.result?.url || '';
+async function ensureSubmissionRequestId() {
+  if (submissionRequestId) return submissionRequestId;
+
+  const payload = getFormData();
+  const missingRequiredFields = [];
+  if (!payload.business_name) missingRequiredFields.push('Business Name');
+  if (!payload.tagline) missingRequiredFields.push('Tagline');
+  const descriptionText = window.RichTextEditor ? window.RichTextEditor.stripHtml(payload.description || '') : String(payload.description || '').trim();
+  if (!descriptionText) missingRequiredFields.push('Description');
+  if (!payload.category) missingRequiredFields.push('Category');
+
+  if (missingRequiredFields.length) {
+    throw new Error(`Complete ${missingRequiredFields.join(', ')} before uploading images so a submission request ID can be reserved.`);
+  }
+
+  const { data, error } = await supabaseClient
+    .from('listing_requests')
+    .insert(payload)
+    .select('id')
+    .single();
+
+  if (error) {
+    throw new Error(`Unable to reserve a submission request ID: ${error.message}`);
+  }
+
+  submissionRequestId = data.id;
+  saveDraft();
+  return submissionRequestId;
+}
+
+async function uploadToCloudflare(file, assetType){
+  const listingId = await ensureSubmissionRequestId();
+  return window.TGDCloudflareImages.uploadListingImage({
+    file,
+    listingId,
+    assetType,
+    source: 's',
+    endpoint: window.TGDCloudflareImages?.DEFAULT_UPLOAD_ENDPOINT
+  });
 }
 
 function attachUploaders(){
   document.getElementById('logo_upload').addEventListener('change', async (e) => {
     const f = e.target.files?.[0]; if (!f) return;
-    const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading logo...';
-    try { const url = await uploadToCloudflare(f); if (!url) throw new Error('No URL returned from upload'); document.getElementById('logo').value = stripProtocol(String(url)); s.textContent = 'Logo uploaded.'; saveDraft(); }
+    const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading logo as WEBP...';
+    try {
+      const { url } = await uploadToCloudflare(f, 'logo');
+      if (!url) throw new Error('No URL returned from upload');
+      document.getElementById('logo').value = stripProtocol(String(url));
+      s.textContent = submissionRequestId ? `Logo uploaded. Submission request #${submissionRequestId} reserved.` : 'Logo uploaded.';
+      saveDraft();
+    }
     catch(err){ s.textContent = `Logo upload failed: ${err.message}`; }
   });
   document.getElementById('photos_upload').addEventListener('change', async (e) => {
     const files = [...(e.target.files || [])]; if (!files.length) return;
-    const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading photos...';
+    const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading photos as WEBP...';
     try {
       const urls = [];
-      for (const f of files) { const u = await uploadToCloudflare(f); if (u) urls.push(u); }
+      for (const f of files) {
+        const { url } = await uploadToCloudflare(f, 'photo');
+        if (url) urls.push(url);
+      }
       const existing = [...document.querySelectorAll('.photo-url-input')].map(i => i.value).filter(Boolean);
       setupPhotoUrlRows([...existing, ...urls.map(u => stripProtocol(String(u)))]);
-      s.textContent = 'Photos uploaded.';
+      s.textContent = submissionRequestId ? `Photos uploaded. Submission request #${submissionRequestId} reserved.` : 'Photos uploaded.';
       saveDraft();
     } catch(err){ s.textContent = `Photo upload failed: ${err.message}`; }
   });
@@ -442,16 +485,38 @@ async function submitListingRequest(event){
   if (errors.length) { status.textContent = errors[0]; status.style.color = '#b91c1c'; return; }
 
   submitBtn.disabled = true;
-  status.textContent = 'Submitting...';
+  status.textContent = submissionRequestId ? `Updating submission request #${submissionRequestId}...` : 'Submitting...';
   status.style.color = '#1f2937';
 
-  const { error } = await supabaseClient.from('listing_requests').insert(payload);
+  let error = null;
+  let savedId = submissionRequestId;
+
+  if (submissionRequestId) {
+    const response = await supabaseClient
+      .from('listing_requests')
+      .update(payload)
+      .eq('id', submissionRequestId)
+      .select('id')
+      .single();
+    error = response.error;
+    savedId = response.data?.id || submissionRequestId;
+  } else {
+    const response = await supabaseClient
+      .from('listing_requests')
+      .insert(payload)
+      .select('id')
+      .single();
+    error = response.error;
+    savedId = response.data?.id || null;
+  }
+
   if (error) {
     status.textContent = `Submission failed: ${error.message}`;
     status.style.color = '#b91c1c';
   } else {
-    status.textContent = '✅ Submitted successfully!';
+    status.textContent = savedId ? `✅ Submitted successfully! Request #${savedId} is ready for review.` : '✅ Submitted successfully!';
     status.style.color = '#166534';
+    submissionRequestId = null;
     localStorage.removeItem(FORM_STORAGE_KEY);
     document.getElementById('submitForm').reset();
     renderSubcategories();
