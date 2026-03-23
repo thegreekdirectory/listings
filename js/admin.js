@@ -1677,20 +1677,12 @@ function fillEditFormContinuation(listing, owner) {
                 <div class="grid grid-cols-1 gap-4">
                     <div class="border border-gray-200 rounded-lg p-4">
                         <div class="text-sm font-semibold text-gray-800">Cloudflare Images</div>
-                        <p class="text-xs text-gray-500 mt-1">Credentials and upload endpoint are stored locally in this browser.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                        <p class="text-xs text-gray-500 mt-1">The upload endpoint is stored locally in this browser.</p>
+                        <div class="grid grid-cols-1 gap-3 mt-3">
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Account ID</label>
-                                <input type="text" id="cloudflareAccountId" class="w-full px-3 py-2 border rounded-lg" placeholder="Cloudflare account ID">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">API Key</label>
-                                <input type="password" id="cloudflareApiKey" class="w-full px-3 py-2 border rounded-lg" placeholder="Cloudflare API key">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Upload Endpoint (required for production)</label>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Upload Endpoint</label>
                                 <input type="url" id="cloudflareUploadEndpoint" class="w-full px-3 py-2 border rounded-lg" placeholder="https://your-domain.com/cloudflare-upload">
-                                <p class="text-[11px] text-gray-500 mt-1">Must proxy to Cloudflare Images to avoid CORS errors.</p>
+                                <p class="text-[11px] text-gray-500 mt-1">Use the Cloudflare upload worker so uploads generate custom IDs, canonical URLs, and WEBP files.</p>
                             </div>
                         </div>
                     </div>
@@ -1755,46 +1747,32 @@ function setStoredCloudflareConfig(config) {
 function getCloudflareConfig() {
     const config = window.CLOUDFLARE_IMAGES_CONFIG || {};
     const stored = getStoredCloudflareConfig();
-    const accountInput = document.getElementById('cloudflareAccountId');
-    const apiKeyInput = document.getElementById('cloudflareApiKey');
     const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
-    const inputAccountId = accountInput?.value?.trim() || '';
-    const inputApiKey = apiKeyInput?.value?.trim() || '';
     const inputUploadEndpoint = uploadEndpointInput?.value?.trim() || '';
-    if ((inputAccountId || inputApiKey || inputUploadEndpoint) && (!stored.accountId || !stored.apiKey || !stored.uploadEndpoint)) {
-        setStoredCloudflareConfig({
-            accountId: inputAccountId,
-            apiKey: inputApiKey,
-            uploadEndpoint: inputUploadEndpoint
-        });
+
+    if (inputUploadEndpoint && stored.uploadEndpoint !== inputUploadEndpoint) {
+        setStoredCloudflareConfig({ uploadEndpoint: inputUploadEndpoint });
     }
+
     return {
-    uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
+        uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || window.TGDCloudflareImages?.DEFAULT_UPLOAD_ENDPOINT || ''
     };
 }
 
 function attachCloudflareConfigHandlers() {
-    const accountInput = document.getElementById('cloudflareAccountId');
-    const apiKeyInput = document.getElementById('cloudflareApiKey');
     const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
-    if (!accountInput || !apiKeyInput || !uploadEndpointInput) return;
-    
+    if (!uploadEndpointInput) return;
+
     const config = getCloudflareConfig();
-    accountInput.value = config.accountId || '';
-    apiKeyInput.value = config.apiKey || '';
-    uploadEndpointInput.value = config.uploadEndpoint || '';
-    
-    const saveConfig = () => {
-        setStoredCloudflareConfig({
-            accountId: accountInput.value.trim(),
-            apiKey: apiKeyInput.value.trim(),
-            uploadEndpoint: uploadEndpointInput.value.trim()
-        });
-    };
-    
-    accountInput.addEventListener('input', saveConfig);
-    apiKeyInput.addEventListener('input', saveConfig);
-    uploadEndpointInput.addEventListener('input', saveConfig);
+    uploadEndpointInput.value = config.uploadEndpoint || window.TGDCloudflareImages?.DEFAULT_UPLOAD_ENDPOINT || '';
+    uploadEndpointInput.addEventListener('input', () => {
+        setStoredCloudflareConfig({ uploadEndpoint: uploadEndpointInput.value.trim() });
+    });
+}
+
+function getAdminUploadListingId() {
+    const requestId = document.getElementById('editModal')?.dataset?.requestId || '';
+    return editingListing?.id || requestId || null;
 }
 
 function setMediaUploadStatus(message, isError = false) {
@@ -1804,31 +1782,27 @@ function setMediaUploadStatus(message, isError = false) {
     statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
 }
 
-async function uploadToCloudflareImages(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const res = await fetch(
-    "https://tgd-images-upload.thegreekdirectory.org",
-    {
-      method: "POST",
-      body: formData,
+async function uploadListingImageFromAdmin(file, assetType) {
+    const listingId = getAdminUploadListingId();
+    if (!listingId) {
+        throw new Error('Save the listing first or upload while editing an existing request so a numeric ID is available.');
     }
-  );
 
-  if (!res.ok) {
-    throw new Error("Upload failed");
-  }
-
-  return await res.json();
+    return window.TGDCloudflareImages.uploadListingImage({
+        file,
+        listingId,
+        assetType,
+        source: 'a',
+        endpoint: getCloudflareConfig().uploadEndpoint
+    });
 }
 
 async function handleLogoUpload(event) {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-        setMediaUploadStatus('Uploading logo...');
-        const url = await uploadToCloudflareImages(file);
+        setMediaUploadStatus('Uploading logo as WEBP...');
+        const { url } = await uploadListingImageFromAdmin(file, 'logo');
         const logoInput = document.getElementById('editLogo');
         if (logoInput) logoInput.value = url;
         setMediaUploadStatus('Logo uploaded successfully.');
@@ -1843,13 +1817,18 @@ async function handlePhotosUpload(event) {
     if (files.length === 0) return;
     const photoInput = document.getElementById('editPhotos');
     if (!photoInput) return;
-    
+
     try {
-        setMediaUploadStatus('Uploading photos...');
+        setMediaUploadStatus('Uploading photos as WEBP...');
+        const currentUrls = photoInput.value
+            .split('\n')
+            .map((value) => value.trim())
+            .filter(Boolean);
         for (const file of files) {
-            const url = await uploadToCloudflareImages(file);
-            photoInput.value = `${photoInput.value.trim() ? `${photoInput.value.trim()}\n` : ''}${url}`;
+            const { url } = await uploadListingImageFromAdmin(file, 'photo');
+            currentUrls.push(url);
         }
+        photoInput.value = currentUrls.join('\n');
         setMediaUploadStatus('Photos uploaded successfully.');
     } catch (error) {
         console.error('Photo upload failed:', error);
@@ -1870,6 +1849,23 @@ async function handleVideoUpload(event) {
         console.error('Video upload failed:', error);
         setMediaUploadStatus(`Video upload failed: ${error.message}`, true);
     }
+}
+
+async function uploadToCloudflareImages(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(getCloudflareConfig().uploadEndpoint || window.TGDCloudflareImages?.DEFAULT_UPLOAD_ENDPOINT, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!res.ok) {
+        throw new Error('Upload failed');
+    }
+
+    const payload = await res.json();
+    return window.TGDCloudflareImages.normalizeCustomImageUploadResponse(payload).url || '';
 }
 
 function attachMediaUploadHandlers() {
