@@ -346,12 +346,12 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
         .listing-description-wrap { margin: 0 0 1.5rem; }
-        .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #e5e7eb; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; }
+        .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
         .listing-description p { margin-bottom: 1rem; }
         .listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
         .listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
-        .description-divider { display: flex; align-items: center; }
-        .description-divider-line { flex: 1; border-top: 1px solid #e5e7eb; min-width: 0; }
+        .description-divider { display: flex; align-items: center; border: 1px solid #d1d5db; border-top: 0; border-radius: 0 0 10px 10px; padding: 10px; background: #ffffff; }
+        .description-divider-line { flex: 1; border-top: 1px solid #d1d5db; min-width: 0; }
         .read-more-btn { margin: 0 12px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
         .verified-checkmark-btn { border: 0; background: transparent; padding: 0; margin-left: 8px; cursor: pointer; position: relative; display: inline-flex; align-items: center; }
         .verified-checkmark-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; min-width: 230px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
@@ -362,7 +362,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         .hours-tooltip-wrap.open .hours-tooltip { display: block; }
         .desktop-listing-layout { display: block; }
         .desktop-main-column, .desktop-side-column { min-width: 0; }
-        .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
+        .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; max-height: calc(100vh - 96px); overflow:auto; }
+        .desktop-contact-card .flex.items-center.justify-center.gap-2.px-6.py-3 { padding-top: 10px; padding-bottom: 10px; }
         .mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
         .mobile-cta-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
         .additional-info-table { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
@@ -372,6 +373,13 @@ or distribution of this code can result in legal action to the fullest extent pe
         .map-fallback { display: none; margin-top: 12px; padding: 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 14px; }
         .map-fallback.visible { display: block; }
         .location-section.map-unavailable #listingMap { display: none; }
+
+        .related-listings-section { margin-top: 2rem; margin-bottom: 2rem; }
+        .related-listing-card { border: 2px solid #045093; border-radius: 10px; }
+        .claim-listing-section { margin-top: 1.5rem; }
+        .pricing-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:#eff6ff; color:#045093; font-weight:700; font-size:12px; }
+        .badge-coming-soon { background: #f97316; color: #fff; }
+
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
@@ -387,7 +395,15 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         @media (max-width: 767px) {
             .share-section { margin-bottom: 24px; }
-            .desktop-side-column { position: static; }
+            .desktop-listing-layout { display:flex; flex-direction:column; }
+            .desktop-main-column { display:flex; flex-direction:column; }
+            .listing-main-header { order: 2; }
+            .listing-description-wrap { order: 3; }
+            .desktop-side-column { position: static; order: 4; margin-top: 0; }
+            .owner-info-section { order: 5; }
+            .social-map-grid { order: 6; }
+            .related-listings-section { order: 7; }
+            .claim-listing-section { order: 8; }
         }
 
         #listingMap,
@@ -451,9 +467,9 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <button class="gallery-close" type="button" onclick="closeGallery()" aria-label="Close gallery">×</button>
                 <img id="galleryImage" class="gallery-image" alt="Avli Taverna in Chicago, IL">
                 <div class="gallery-controls">
-                    <button class="gallery-nav-btn" type="button" onclick="prevGallerySlide()">❮</button>
+                    <button class="gallery-nav-btn" type="button" onclick="prevGallerySlide()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
                     <div class="gallery-counter" id="galleryCounter">1 / 1</div>
-                    <button class="gallery-nav-btn" type="button" onclick="nextGallerySlide()">❯</button>
+                    <button class="gallery-nav-btn" type="button" onclick="nextGallerySlide()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
                 </div>
             </div>
         </div>
@@ -461,7 +477,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="bg-white rounded-lg p-6 mb-6 card-shadow">
             <div class="desktop-listing-layout">
                 <div class="desktop-main-column">
-                    <div class="flex justify-between items-start mb-4">
+                    <div class="flex justify-between items-start mb-4 listing-main-header">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-4 flex-wrap">
                                 <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
@@ -565,6 +581,12 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="desktop-contact-card">
                         <div class="space-y-3 mb-6">
                             
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.2 0-2 .8-2 1.8 0 2.4 4 1.4 4 3.8 0 1-.8 1.8-2 1.8m0-9v12m0-12c.9 0 1.8.3 2.4.8m-2.4-.8c-.9 0-1.8.3-2.4.8"/></svg>
+                <span class="pricing-chip">$</span>
+            </div>
+        
+                            
                 <div class="flex items-start gap-2">
                     <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="#045093" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -647,7 +669,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-        
+        <div class="related-listings-section">
             <div class="mt-8">
                 <h2 class="text-xl font-bold text-gray-900 mb-4">Related Listings</h2>
                 <div id="relatedListingsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -717,15 +739,15 @@ or distribution of this code can result in legal action to the fullest extent pe
             
             // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
             </script>
-        
+        </div>
 
-        
+        <div class="claim-listing-section">
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center" id="claimListingSection">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
                 <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Avli%20Taverna%20-%20Chicago%2C%20IL" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
             </div>
-        
+        </div>
     </div>
 
     <!-- Footer -->
@@ -735,7 +757,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/partials-loader.js"></script>
+    <script src="/js/pwa/directions.js"></script>
     <script src="/js/pwa/storage.js"></script>
+    <script src="/js/pwa/offline-translation.js"></script>
     <script src="/js/pwa/app.js"></script>
     <script src="/js/pwa/dock.js"></script>
     <script src="/js/pwa/starred.js"></script>
@@ -761,6 +785,15 @@ or distribution of this code can result in legal action to the fullest extent pe
         slug: 'avli-taverna'
     };
     
+    function openDirections(event) {
+        if (event) event.preventDefault();
+        const listing = window.currentListingData || {};
+        const directionsUrl = (window.TGDDirections && window.TGDDirections.getDirectionsUrl)
+            ? window.TGDDirections.getDirectionsUrl(listing)
+            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((listing.address || '') + ' ' + (listing.city || '') + ' ' + (listing.state || ''))}`;
+        window.open(directionsUrl, '_blank', 'noopener');
+    }
+
     // Update star button state on load
     document.addEventListener('DOMContentLoaded', async () => {
         if (window.PWAStorage) {
