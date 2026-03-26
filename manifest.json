@@ -10,25 +10,25 @@
   "scope": "/",
   "icons": [
     {
-      "src": "https://static.thegreekdirectory.org/img/logo/icon-192.png",
+      "src": "https://static.thegreekdirectory.org/img/logo/app1.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://static.thegreekdirectory.org/img/logo/icon-512.png",
+      "src": "https://static.thegreekdirectory.org/img/logo/app1.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://static.thegreekdirectory.org/img/logo/icon-maskable-192.png",
+      "src": "https://static.thegreekdirectory.org/img/logo/app1.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "https://static.thegreekdirectory.org/img/logo/icon-maskable-512.png",
+      "src": "https://static.thegreekdirectory.org/img/logo/app1.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
