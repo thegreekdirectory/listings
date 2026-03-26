@@ -393,18 +393,47 @@ or distribution of this code can result in legal action to the fullest extent pe
         @media (max-width: 1023px) {
             .desktop-side-column { margin-top: 24px; }
         }
-        @media (max-width: 767px) {
-            .share-section { margin-bottom: 24px; }
-            .desktop-listing-layout { display:flex; flex-direction:column; }
-            .desktop-main-column { display:flex; flex-direction:column; }
-            .listing-main-header { order: 2; }
-            .listing-description-wrap { order: 3; }
-            .desktop-side-column { position: static; order: 4; margin-top: 0; }
-            .owner-info-section { order: 5; }
-            .social-map-grid { order: 6; }
-            .related-listings-section { order: 7; }
-            .claim-listing-section { order: 8; }
-        }
+@media (max-width: 767px) {
+    .share-section { margin-bottom: 24px; }
+
+    .desktop-listing-layout { 
+        display: flex; 
+        flex-direction: column; 
+    }
+
+    .desktop-main-column { 
+        display: flex; 
+        flex-direction: column; 
+    }
+
+    .desktop-main-column > * {
+        width: 100%;
+    }
+
+    .listing-main-header { 
+        order: 1; 
+    }
+
+    .mobile-cta-wrap { 
+        order: 2;
+        display: block;
+    }
+
+    .listing-description-wrap { 
+        order: 3; 
+    }
+
+    .desktop-side-column { 
+        position: static; 
+        order: 4; 
+        margin-top: 0; 
+    }
+
+    .owner-info-section { order: 5; }
+    .social-map-grid { order: 6; }
+    .related-listings-section { order: 7; }
+    .claim-listing-section { order: 8; }
+}
 
         #listingMap,
         #listingMap .leaflet-pane,
@@ -496,7 +525,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                         <img src="https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/520e1378-7f33-458e-df84-0ebd344d9100/public" alt="Yaya Mas Greek Kuzina (Coming Soon) in Logan Square, IL" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
                     </div>
 
-                    <div class="md:hidden">
+                    <div class="md:hidden mobile-cta-wrap">
                         <div class="mobile-cta-bar">
                             
                             
