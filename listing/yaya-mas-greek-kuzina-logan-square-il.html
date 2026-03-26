@@ -471,7 +471,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                                     <span class="subcategory-tag">Restaurant</span><span class="subcategory-tag">Catering Service</span><span class="subcategory-tag">Dinner</span><span class="subcategory-tag">Lunch</span>
                                 </div>
                                 <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
-                                    <span class="badge" style="background:#9333ea;color:white;">Chain</span>
+                                    <span class="badge badge-coming-soon">Coming Soon</span><span class="badge" style="background:#9333ea;color:white;">Chain</span>
                                 </div>
                             </div>
                             <h1 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">Yaya Mas Greek Kuzina (Coming Soon)</h1>
@@ -633,14 +633,23 @@ or distribution of this code can result in legal action to the fullest extent pe
                         const listingUrl = '/listing/' + l.slug;
                         const location = (l.city && l.state) ? l.city + ', ' + l.state : (l.city || l.state || 'Location TBD');
                         
+                        const formatPhone = (phone) => {
+                            if (!phone) return '';
+                            const digits = String(phone).replace(/D/g, '');
+                            if (digits.length === 11 && digits.startsWith('1')) {
+                                return "(" + digits.slice(1,4) + ") " + digits.slice(4,7) + "-" + digits.slice(7,11);
+                            }
+                            return phone;
+                        };
+
                         return `
-                            <a href="${listingUrl}" class="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
+                            <a href="${listingUrl}" class="related-listing-card block bg-white p-4 hover:shadow-lg transition-shadow">
                                 <div class="flex items-start gap-3">
                                     ${l.logo ? `<img src="${l.logo}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : ''}
                                     <div class="flex-1 min-w-0">
                                         <h3 class="font-bold text-gray-900 mb-1">${l.business_name}</h3>
-                                        <p class="text-sm text-gray-600 mb-1">📍 ${location}</p>
-                                        ${l.phone ? `<p class="text-sm text-gray-600">📞 ${l.phone}</p>` : ''}
+                                        <p class="text-sm text-gray-600 mb-1" style="display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>${location}</span></p>
+                                        ${l.phone ? `<p class="text-sm text-gray-600" style="display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.3a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21L8 10.5a11 11 0 005.5 5.5l1.1-2.25a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.7.95V19a2 2 0 01-2 2h-1C9.7 21 3 14.3 3 6V5z"/></svg><span>${formatPhone(l.phone)}</span></p>` : ''}
                                     </div>
                                 </div>
                             </a>
