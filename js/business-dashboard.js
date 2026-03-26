@@ -561,6 +561,23 @@ function renderEditForm() {
                             <label class="block text-sm font-medium text-gray-700 mb-2">Subcategories</label>
                             <div id="subcategoriesGrid" class="grid grid-cols-2 gap-2"></div>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Pricing</label>
+                            <select id="editPricing" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                <option value="">Select pricing</option>
+                                <option value="1" ${Number(currentListing.pricing) === 1 ? 'selected' : ''}>$</option>
+                                <option value="2" ${Number(currentListing.pricing) === 2 ? 'selected' : ''}>$$</option>
+                                <option value="3" ${Number(currentListing.pricing) === 3 ? 'selected' : ''}>$$$</option>
+                                <option value="4" ${Number(currentListing.pricing) === 4 ? 'selected' : ''}>$$$$</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Coming Soon *</label>
+                            <select id="editComingSoon" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
+                                <option value="false" ${(currentListing.coming_soon ?? false) ? '' : 'selected'}>No</option>
+                                <option value="true" ${(currentListing.coming_soon ?? false) ? 'selected' : ''}>Yes</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -592,15 +609,15 @@ function renderEditForm() {
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">📞 Phone</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                             <div id="editPhoneContainer"></div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">✉️ Email</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                             <input type="email" id="editEmail" value="${currentListing.email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">🌐 Website</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
                             <input type="url" id="editWebsite" value="${currentListing.website || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
                     </div>
@@ -1109,6 +1126,8 @@ async function saveChanges() {
             phone: phone,
             email: document.getElementById('editEmail').value.trim() || null,
             website: document.getElementById('editWebsite').value.trim() || null,
+            pricing: document.getElementById('editPricing').value ? Number(document.getElementById('editPricing').value) : null,
+            coming_soon: document.getElementById('editComingSoon').value === 'true',
             logo: updatedLogo,
             photos: mergedPhotos,
             video: updatedVideo,

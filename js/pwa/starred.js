@@ -10,19 +10,25 @@
 
 window.StarredManager = {
     async toggleStar(listingId, listingData) {
+        const normalizedId = String(listingId);
         try {
             await window.PWAStorage.init();
-            const isStarred = await window.PWAStorage.isStarred(listingId);
+            const isStarred = await window.PWAStorage.isStarred(normalizedId);
             
             if (isStarred) {
                 // Unstar — use removeStarred (matches storage.js method name)
-                await window.PWAStorage.removeStarred(listingId);
-                this.updateStarButtons(listingId, false);
+                await window.PWAStorage.removeStarred(normalizedId);
+                this.updateStarButtons(normalizedId, false);
                 this.showToast('Removed from starred');
             } else {
                 // Star — use addStarred (matches storage.js method name)
+                if (!listingData) {
+                    this.showToast('Unable to star this listing right now');
+                    return false;
+                }
+                listingData.id = normalizedId;
                 await window.PWAStorage.addStarred(listingData);
-                this.updateStarButtons(listingId, true);
+                this.updateStarButtons(normalizedId, true);
                 this.showToast('Added to starred');
             }
             
@@ -31,11 +37,11 @@ window.StarredManager = {
             
             // Also update the cookie-based list so listings.js starredListings array stays in sync
             if (window.starredListings) {
-                const idx = window.starredListings.indexOf(listingId);
+                const idx = window.starredListings.indexOf(normalizedId);
                 if (isStarred && idx > -1) {
                     window.starredListings.splice(idx, 1);
                 } else if (!isStarred && idx === -1) {
-                    window.starredListings.push(listingId);
+                    window.starredListings.push(normalizedId);
                 }
             }
             
@@ -224,6 +230,24 @@ window.StarredManager = {
         }, 2000);
     },
     
+
+    listenForStarredChanges() {
+        const handle = async () => {
+            await this.updateStarredCount();
+            if (window.location.pathname.includes('starred')) {
+                this.renderStarredListings('starredListingsContainer');
+            }
+            this.initializeStarButtons();
+        };
+
+        window.addEventListener('tgd:starred-changed', handle);
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'tgd_starred_sync') {
+                handle();
+            }
+        });
+    },
+
     async initializeStarButtons() {
         try {
             await window.PWAStorage.init();
@@ -242,7 +266,7 @@ window.StarredManager = {
                 
                 if (!listingId) continue;
                 
-                const isStarred = await window.PWAStorage.isStarred(listingId);
+                const isStarred = await window.PWAStorage.isStarred(String(listingId));
                 if (isStarred) {
                     button.classList.add('starred');
                 } else {
@@ -277,3 +301,8 @@ window.handleStarClick = function(listingId, event) {
 };
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
+
+
+if (window.StarredManager) {
+    window.StarredManager.listenForStarredChanges();
+}

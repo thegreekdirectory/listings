@@ -1,8 +1,8 @@
 // service-worker.js
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
 
-const STATIC_CACHE_NAME = 'tgd-static-v3';
-const RUNTIME_CACHE_NAME = 'tgd-runtime-v3';
+const STATIC_CACHE_NAME = 'tgd-static-v4';
+const RUNTIME_CACHE_NAME = 'tgd-runtime-v4';
 const OFFLINE_PAGE = '/offline.html';
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -29,6 +29,8 @@ const CORE_ASSETS = [
   '/js/pwa/settings.js',
   '/js/pwa/starred.js',
   '/js/pwa/storage.js',
+  '/js/pwa/offline-translation.js',
+  '/js/pwa/directions.js',
   'https://static.thegreekdirectory.org/img/logo/blue.svg',
   'https://static.thegreekdirectory.org/img/logo/white.svg',
   'https://static.thegreekdirectory.org/img/logo/bluefavicon.png',
@@ -94,9 +96,9 @@ async function networkFirst(request, cacheName, isNavigation = false) {
   try {
     const response = await fetch(request, { cache: 'no-store' });
 
-    if (response && response.status === 200 && response.type !== 'error') {
+    if (response && response.status === 200 && response.type !== 'error' && !response.redirected) {
       const cache = await caches.open(cacheName);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
 
     return response;
@@ -121,8 +123,10 @@ self.addEventListener('message', (event) => {
     const imageUrl = event.data.url;
     caches.open(RUNTIME_CACHE_NAME).then((cache) => {
       fetch(imageUrl).then((response) => {
-        cache.put(imageUrl, response);
-      });
+        if (response && response.ok && !response.redirected) {
+          cache.put(imageUrl, response.clone());
+        }
+      }).catch(() => {});
     });
   }
   

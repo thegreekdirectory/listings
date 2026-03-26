@@ -16,6 +16,18 @@ class PWAStorage {
     constructor() {
         this.db = null;
     }
+
+    emitStarredChange(action, listingId) {
+        const normalizedId = String(listingId);
+        const payload = { action, listingId: normalizedId, timestamp: Date.now() };
+        try {
+            localStorage.setItem('tgd_starred_sync', JSON.stringify(payload));
+        } catch (error) {
+            console.warn('Unable to persist starred sync payload', error);
+        }
+
+        window.dispatchEvent(new CustomEvent('tgd:starred-changed', { detail: payload }));
+    }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
@@ -84,6 +96,7 @@ class PWAStorage {
             
             request.onsuccess = () => {
                 console.log('Listing starred:', listing.id);
+                this.emitStarredChange('added', listing.id);
                 
                 // Cache images for offline use
                 if (listing.logo) {
@@ -111,10 +124,11 @@ class PWAStorage {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([STORE_NAME], 'readwrite');
             const objectStore = transaction.objectStore(STORE_NAME);
-            const request = objectStore.delete(listingId);
+            const request = objectStore.delete(String(listingId));
             
             request.onsuccess = () => {
                 console.log('Listing unstarred:', listingId);
+                this.emitStarredChange('removed', listingId);
                 resolve(true);
             };
             
@@ -133,7 +147,7 @@ class PWAStorage {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([STORE_NAME], 'readonly');
             const objectStore = transaction.objectStore(STORE_NAME);
-            const request = objectStore.get(listingId);
+            const request = objectStore.get(String(listingId));
             
             request.onsuccess = () => {
                 resolve(!!request.result);
@@ -199,6 +213,7 @@ class PWAStorage {
             
             request.onsuccess = () => {
                 console.log('All starred listings cleared');
+                this.emitStarredChange('cleared', '*');
                 resolve(true);
             };
             
