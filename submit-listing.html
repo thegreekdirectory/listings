@@ -26,6 +26,23 @@
         <label>Description * <textarea id="description" rows="5" required></textarea></label>
         <label>Category * <select id="category" required></select></label>
 
+        <label>Pricing
+          <select id="pricing">
+            <option value="">Select pricing</option>
+            <option value="1">$</option>
+            <option value="2">$$</option>
+            <option value="3">$$$</option>
+            <option value="4">$$$$</option>
+          </select>
+        </label>
+        <label>Coming Soon *
+          <select id="coming_soon" required>
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </label>
+
+
         <div>
           <div class="field-title">Subcategories *</div>
           <div id="subcategoryCheckboxes" class="checks"></div>

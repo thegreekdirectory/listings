@@ -37,7 +37,7 @@ class SettingsManager {
                 
                 ${updateAvailable ? `
                 <div class="update-banner">
-                    <h2>🎉 New Update Available!</h2>
+                    <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-3px;margin-right:6px;"><path d="M12 2l2.5 5.5L20 10l-5.5 2.5L12 18l-2.5-5.5L4 10l5.5-2.5z"/></svg>New Update Available!</h2>
                     <p>Version ${this.app?.currentVersion || '1.0.1'} is ready to install. Update now to get the latest features and improvements.</p>
                     <button onclick="settingsManager.installUpdate()">Update Now</button>
                 </div>
@@ -54,21 +54,21 @@ class SettingsManager {
                         </label>
                         <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${defaultMapApp === 'apple' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
                             <div class="flex items-center gap-3">
-                                <span class="text-2xl">🗺️</span>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M9 4L3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg>
                                 <span class="text-gray-700 font-medium">Apple Maps</span>
                             </div>
                             <input type="radio" name="mapApp" value="apple" ${defaultMapApp === 'apple' ? 'checked' : ''} class="w-5 h-5 text-blue-600">
                         </label>
                         <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${defaultMapApp === 'google' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
                             <div class="flex items-center gap-3">
-                                <span class="text-2xl">🌍</span>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>
                                 <span class="text-gray-700 font-medium">Google Maps</span>
                             </div>
                             <input type="radio" name="mapApp" value="google" ${defaultMapApp === 'google' ? 'checked' : ''} class="w-5 h-5 text-blue-600">
                         </label>
                         <label class="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 ${defaultMapApp === 'waze' ? 'border-blue-500 bg-blue-50' : 'border-transparent'}">
                             <div class="flex items-center gap-3">
-                                <span class="text-2xl">🚗</span>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M3 13l2-5h14l2 5"></path><rect x="3" y="13" width="18" height="6" rx="2"></rect><circle cx="7" cy="19" r="1"></circle><circle cx="17" cy="19" r="1"></circle></svg>
                                 <span class="text-gray-700 font-medium">Waze</span>
                             </div>
                             <input type="radio" name="mapApp" value="waze" ${defaultMapApp === 'waze' ? 'checked' : ''} class="w-5 h-5 text-blue-600">

@@ -32,6 +32,9 @@ class PWAApp {
         this.setupExternalLinks();
         this.applyTheme();
         this.applyStoredLanguagePreference();
+        this.applyOfflineTranslationsIfNeeded();
+        window.addEventListener('offline', () => this.applyOfflineTranslationsIfNeeded());
+        window.addEventListener('online', () => { if (window.TGDOfflineTranslation) window.TGDOfflineTranslation.persistTranslations(); });
         this.setupInstallPrompt();
         this.preventLinkPreviews();
         document.addEventListener('tgd:partials-loaded', () => this.applyStoredLanguagePreference());
@@ -449,6 +452,12 @@ class PWAApp {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
+    applyOfflineTranslationsIfNeeded() {
+        if (window.TGDOfflineTranslation && typeof window.TGDOfflineTranslation.applyOfflineTranslations === 'function') {
+            window.TGDOfflineTranslation.applyOfflineTranslations();
+        }
+    }
+
     setupInstallPrompt() {
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();

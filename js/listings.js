@@ -42,7 +42,7 @@ let SUBCATEGORIES = {};
 let allListings = [], filteredListings = [], currentView = 'grid', selectedCategory = 'All';
 let selectedSubcategories = [], subcategoryMode = 'any', selectedCountry = '', selectedState = '', selectedCity = '', selectedZip = '';
 let selectedRadius = 0, openNowOnly = false, closedNowOnly = false, openingSoonOnly = false;
-let closingSoonOnly = false, hoursUnknownOnly = false, onlineOnly = false, userLocation = null;
+let closingSoonOnly = false, hoursUnknownOnly = false, onlineOnly = false, comingSoonOnly = false, selectedPricing = '', userLocation = null;
 let map = null, mapOpen = false, splitViewActive = false, filtersOpen = false;
 let markerClusterGroup = null, defaultMapCenter = [41.8781, -87.6298], defaultMapZoom = 10;
 let userLocationMarker = null, splitUserLocationMarker = null, mapReady = false, allListingsGeocoded = false;
@@ -84,24 +84,12 @@ function formatPhoneDisplay(phone) {
 }
 
 function getDirectionsUrl(listing) {
-    const fullAddr = getFullAddress(listing);
-    const encoded = encodeURIComponent(fullAddr);
-    const preferred = localStorage.getItem('tgd_default_map_app') || '';
-
-    if (isPwaMode() && preferred) {
-        if (preferred === 'apple') {
-            return `https://maps.apple.com/?daddr=${encoded}`;
-        }
-        if (preferred === 'waze') {
-            if (listing.coordinates) {
-                return `https://waze.com/ul?ll=${listing.coordinates.lat},${listing.coordinates.lng}&navigate=yes`;
-            }
-            return `https://waze.com/ul?q=${encoded}&navigate=yes`;
-        }
-        return `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
+    if (window.TGDDirections && typeof window.TGDDirections.getDirectionsUrl === 'function') {
+        return window.TGDDirections.getDirectionsUrl(listing);
     }
 
-    return `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
+    const fullAddr = getFullAddress(listing);
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddr)}`;
 }
 
 function loadStarredListings() {
@@ -895,10 +883,13 @@ function applyFilters() {
         const matchesClosingSoon = !closingSoonOnly || isClosingSoon(listing.hours);
         const matchesHoursUnknown = !hoursUnknownOnly || hasUnknownHours(listing);
         const matchesOnlineOnly = !onlineOnly || isBasedIn(listing);
-        
+        const matchesPricing = !selectedPricing || Number(listing.pricing) === Number(selectedPricing);
+        const matchesComingSoon = !comingSoonOnly || listing.coming_soon === true;
+
         return matchesSearch && matchesCategory && matchesSubcategory && matchesCountry && 
                matchesState && matchesCity && matchesZip && matchesRadius && matchesOpenNow && matchesClosedNow &&
-               matchesOpeningSoon && matchesClosingSoon && matchesHoursUnknown && matchesOnlineOnly && matchesStarred;
+               matchesOpeningSoon && matchesClosingSoon && matchesHoursUnknown && matchesOnlineOnly && matchesPricing &&
+               matchesComingSoon && matchesStarred;
     });
     
     /*
@@ -1503,6 +1494,16 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function populateCountryFilter() {
     const countries = [...new Set(allListings.map(l => l.country || 'USA'))].sort();
+    ['pricingFilter', 'pricingFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    ['comingSoonFilter', 'comingSoonFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+    });
+
     ['countryFilter', 'countryFilter2'].forEach(id => {
         const select = document.getElementById(id);
         if (select) {
@@ -1745,6 +1746,35 @@ function setupEventListeners() {
         }
     });
     
+
+    ['comingSoonFilter', 'comingSoonFilter2'].forEach(id => {
+        const cb = document.getElementById(id);
+        if (cb) {
+            cb.addEventListener('change', (e) => {
+                comingSoonOnly = e.target.checked;
+                const c1 = document.getElementById('comingSoonFilter');
+                const c2 = document.getElementById('comingSoonFilter2');
+                if (c1) c1.checked = comingSoonOnly;
+                if (c2) c2.checked = comingSoonOnly;
+                if (!viewingStarredOnly) applyFilters();
+            });
+        }
+    });
+
+    ['pricingFilter', 'pricingFilter2'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) {
+            sel.addEventListener('change', (e) => {
+                selectedPricing = e.target.value;
+                const p1 = document.getElementById('pricingFilter');
+                const p2 = document.getElementById('pricingFilter2');
+                if (p1) p1.value = selectedPricing;
+                if (p2) p2.value = selectedPricing;
+                if (!viewingStarredOnly) applyFilters();
+            });
+        }
+    });
+
     ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) {
@@ -1779,6 +1809,16 @@ function setupEventListeners() {
         });
     }
     
+    ['pricingFilter', 'pricingFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    ['comingSoonFilter', 'comingSoonFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+    });
+
     ['countryFilter', 'countryFilter2'].forEach(id => {
         const select = document.getElementById(id);
         if (select) {
@@ -2302,6 +2342,8 @@ function clearAllFilters() {
     closingSoonOnly = false;
     hoursUnknownOnly = false;
     onlineOnly = false;
+    comingSoonOnly = false;
+    selectedPricing = '';
     
     const searchInput = document.getElementById('searchInput');
     if (searchInput) searchInput.value = '';
@@ -2316,6 +2358,16 @@ function clearAllFilters() {
         if (elem) elem.value = '';
     });
     
+    ['pricingFilter', 'pricingFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    ['comingSoonFilter', 'comingSoonFilter2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+    });
+
     ['countryFilter', 'countryFilter2'].forEach(id => {
         const elem = document.getElementById(id);
         if (elem) elem.value = '';
@@ -2361,6 +2413,35 @@ function clearAllFilters() {
         if (elem) elem.checked = false;
     });
     
+
+    ['comingSoonFilter', 'comingSoonFilter2'].forEach(id => {
+        const cb = document.getElementById(id);
+        if (cb) {
+            cb.addEventListener('change', (e) => {
+                comingSoonOnly = e.target.checked;
+                const c1 = document.getElementById('comingSoonFilter');
+                const c2 = document.getElementById('comingSoonFilter2');
+                if (c1) c1.checked = comingSoonOnly;
+                if (c2) c2.checked = comingSoonOnly;
+                if (!viewingStarredOnly) applyFilters();
+            });
+        }
+    });
+
+    ['pricingFilter', 'pricingFilter2'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) {
+            sel.addEventListener('change', (e) => {
+                selectedPricing = e.target.value;
+                const p1 = document.getElementById('pricingFilter');
+                const p2 = document.getElementById('pricingFilter2');
+                if (p1) p1.value = selectedPricing;
+                if (p2) p2.value = selectedPricing;
+                if (!viewingStarredOnly) applyFilters();
+            });
+        }
+    });
+
     ['onlineOnlyFilter', 'onlineOnlyFilter2'].forEach(id => {
         const elem = document.getElementById(id);
         if (elem) elem.checked = false;

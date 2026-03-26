@@ -29,6 +29,8 @@ const CORE_ASSETS = [
   '/js/pwa/settings.js',
   '/js/pwa/starred.js',
   '/js/pwa/storage.js',
+  '/js/pwa/offline-translation.js',
+  '/js/pwa/directions.js',
   'https://static.thegreekdirectory.org/img/logo/blue.svg',
   'https://static.thegreekdirectory.org/img/logo/white.svg',
   'https://static.thegreekdirectory.org/img/logo/bluefavicon.png',

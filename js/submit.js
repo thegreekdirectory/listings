@@ -308,6 +308,8 @@ function getFormData(){
     tagline: document.getElementById('tagline').value.trim(),
     description: descriptionEditor ? descriptionEditor.getHtml() : document.getElementById('description').value.trim(),
     category: document.getElementById('category').value,
+    pricing: document.getElementById('pricing').value ? Number(document.getElementById('pricing').value) : null,
+    coming_soon: document.getElementById('coming_soon').value === 'true',
     subcategories,
     primary_subcategory: (selectedPrimarySubcategory && subcategories.includes(selectedPrimarySubcategory)) ? selectedPrimarySubcategory : (subcategories[0] || null),
     address: document.getElementById('address').value.trim() || null,
@@ -352,6 +354,7 @@ function getFormData(){
 function validatePayload(p){
   const errors = [];
   if (!p.business_name || !p.tagline || !p.description || (window.RichTextEditor && !window.RichTextEditor.stripHtml(p.description))) errors.push('Complete all required business fields.');
+  if (typeof p.coming_soon !== 'boolean') errors.push('Coming Soon selection is required.');
   if (!p.subcategories.length) errors.push('Select at least one subcategory.');
   if (p.subcategories.length && !p.primary_subcategory) errors.push('Select a primary subcategory.');
   if (!p.owner_name || !p.owner_title || !p.owner_email) errors.push('Owner name, title, and email are required.');
@@ -400,6 +403,8 @@ function restoreDraft(){
     }
     if (d.phone) document.getElementById('phone').value = formatUSPhoneNoCode(d.phone);
     if (d.owner_phone) document.getElementById('owner_phone').value = formatUSPhoneNoCode(d.owner_phone);
+    if (typeof d.pricing !== 'undefined' && d.pricing !== null) document.getElementById('pricing').value = String(d.pricing);
+    if (typeof d.coming_soon !== 'undefined') document.getElementById('coming_soon').value = d.coming_soon ? 'true' : 'false';
   } catch (e) { console.warn('restore failed', e); }
 }
 

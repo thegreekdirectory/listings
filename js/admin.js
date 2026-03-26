@@ -1331,6 +1331,23 @@ function fillEditForm(listing) {
                         </select>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium mb-2">Pricing</label>
+                        <select id="editPricing" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">Select pricing</option>
+                            <option value="1" ${Number(listing?.pricing) === 1 ? 'selected' : ''}>$</option>
+                            <option value="2" ${Number(listing?.pricing) === 2 ? 'selected' : ''}>$$</option>
+                            <option value="3" ${Number(listing?.pricing) === 3 ? 'selected' : ''}>$$$</option>
+                            <option value="4" ${Number(listing?.pricing) === 4 ? 'selected' : ''}>$$$$</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Coming Soon *</label>
+                        <select id="editComingSoon" class="w-full px-4 py-2 border rounded-lg" required>
+                            <option value="false" ${(listing?.coming_soon ?? false) ? '' : 'selected'}>No</option>
+                            <option value="true" ${(listing?.coming_soon ?? false) ? 'selected' : ''}>Yes</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium mb-2">Tier</label>
                         <select id="editTier" class="w-full px-4 py-2 border rounded-lg">
                             <option value="FREE" ${listing?.tier === 'FREE' ? 'selected' : ''}>FREE</option>
@@ -2277,6 +2294,8 @@ if (!slug) {
             primary_subcategory: primarySubcategory,
             tier: tierValue,
             verified: tierValue !== 'FREE',
+            pricing: document.getElementById('editPricing').value ? Number(document.getElementById('editPricing').value) : null,
+            coming_soon: document.getElementById('editComingSoon').value === 'true',
             is_chain: isChain,
             is_claimed: isClaimed,
             chain_name: isChain ? chainName : null,
@@ -2858,19 +2877,23 @@ function generateTemplateReplacements(listing) {
     const isClaimed = listing.is_claimed || (owner && owner.owner_user_id) || listing.show_claim_button === false;
     
     let statusBadges = '';
+    const hasBusinessHours = listing.hours && Object.values(listing.hours).some(value => typeof value === 'string' && value.trim().length > 0);
+    if (hasBusinessHours) {
+        statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed Now</span>';
+    }
+
+    if (listing.coming_soon === true) {
+        statusBadges += '<span class="badge badge-coming-soon">Coming Soon</span>';
+    }
+
     if (isFeatured) {
         statusBadges += '<span class="badge badge-featured">Featured</span>';
     } else if (isVerified) {
         statusBadges += '<span class="badge badge-verified">Verified</span>';
     }
-    
+
     if (listing.is_chain) {
         statusBadges += '<span class="badge" style="background:#9333ea;color:white;">Chain</span>';
-    }
-    
-    const hasBusinessHours = listing.hours && Object.values(listing.hours).some(value => typeof value === 'string' && value.trim().length > 0);
-    if (hasBusinessHours) {
-        statusBadges += '<span class="badge badge-closed" id="openClosedBadge">Closed Now</span>';
     }
     
     const taglineDisplay = listing.tagline ? `<h2 class="text-gray-600 italic text-xl font-semibold mb-2">${escapeHtml(listing.tagline)}</h2>` : '';
@@ -2916,6 +2939,17 @@ function generateTemplateReplacements(listing) {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
+
+    let pricingSection = '';
+    if (Number(listing.pricing) >= 1 && Number(listing.pricing) <= 4) {
+        pricingSection = `
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.2 0-2 .8-2 1.8 0 2.4 4 1.4 4 3.8 0 1-.8 1.8-2 1.8m0-9v12m0-12c.9 0 1.8.3 2.4.8m-2.4-.8c-.9 0-1.8.3-2.4.8"/></svg>
+                <span class="pricing-chip">${'$'.repeat(Number(listing.pricing))}</span>
+            </div>
+        `;
+    }
+
     let phoneSection = '';
     if (listing.phone) {
         phoneSection = `
@@ -3055,18 +3089,15 @@ function generateTemplateReplacements(listing) {
     let directionsButton = '';
     let directionsButtonMobile = '';
     if (hasStreetAddress && listing.city) {
-        const destination = `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code || ''}`.trim();
-        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
-        
         directionsButton = `
-            <a href="${mapsUrl}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="trackClick('directions')">
+            <a href="#" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="openDirections(event); trackClick('directions')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
                 Directions
             </a>
         `;
-        directionsButtonMobile = `<a href="${mapsUrl}" target="_blank" class="mobile-cta-button" style="background:#111827;" onclick="trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
+        directionsButtonMobile = `<a href="#" class="mobile-cta-button" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
     }
 
     const maxCtaButtons = 1;
@@ -3145,6 +3176,7 @@ function generateTemplateReplacements(listing) {
         'STATUS_BADGES': statusBadges,
         'TAGLINE_DISPLAY': taglineDisplay,
         'CLAIMED_CHECKMARK': claimedCheckmark,
+        'PRICING_SECTION': pricingSection,
         'ADDRESS_SECTION': addressSection,
         'PHONE_SECTION': phoneSection,
         'EMAIL_SECTION': emailSection,
@@ -3257,14 +3289,23 @@ function generateTemplateReplacementsPart2(listing) {
                         const listingUrl = '/listing/' + l.slug;
                         const location = (l.city && l.state) ? l.city + ', ' + l.state : (l.city || l.state || 'Location TBD');
                         
+                        const formatPhone = (phone) => {
+                            if (!phone) return '';
+                            const digits = String(phone).replace(/\D/g, '');
+                            if (digits.length === 11 && digits.startsWith('1')) {
+                                return "(" + digits.slice(1,4) + ") " + digits.slice(4,7) + "-" + digits.slice(7,11);
+                            }
+                            return phone;
+                        };
+
                         return \`
-                            <a href="\${listingUrl}" class="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
+                            <a href="\${listingUrl}" class="related-listing-card block bg-white p-4 hover:shadow-lg transition-shadow">
                                 <div class="flex items-start gap-3">
                                     \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">\` : ''}
                                     <div class="flex-1 min-w-0">
                                         <h3 class="font-bold text-gray-900 mb-1">\${l.business_name}</h3>
-                                        <p class="text-sm text-gray-600 mb-1">📍 \${location}</p>
-                                        \${l.phone ? \`<p class="text-sm text-gray-600">📞 \${l.phone}</p>\` : ''}
+                                        <p class="text-sm text-gray-600 mb-1" style="display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>\${location}</span></p>
+                                        \${l.phone ? \`<p class="text-sm text-gray-600" style="display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.3a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21L8 10.5a11 11 0 005.5 5.5l1.1-2.25a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.7.95V19a2 2 0 01-2 2h-1C9.7 21 3 14.3 3 6V5z"/></svg><span>\${formatPhone(l.phone)}</span></p>\` : ''}
                                     </div>
                                 </div>
                             </a>
