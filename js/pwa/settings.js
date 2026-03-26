@@ -233,7 +233,7 @@ class SettingsManager {
                             <button class="text-gray-400 hover:text-gray-600 ${index === 0 ? 'invisible' : ''}" onclick="settingsManager.moveDockApp('${app.id}', 'up')">▲</button>
                             <button class="text-gray-400 hover:text-gray-600 ${index === dockApps.length - 1 ? 'invisible' : ''}" onclick="settingsManager.moveDockApp('${app.id}', 'down')">▼</button>
                         </div>
-                        <div class="text-2xl">${app.icon}</div>
+                        <div class="w-6 h-6 flex items-center justify-center">${this.dockManager.getIconSvg(app.icon, false)}</div>
                         <div class="flex-1">
                             <div class="font-semibold text-gray-900">${app.label}</div>
                         </div>
@@ -254,7 +254,7 @@ class SettingsManager {
                     <div class="space-y-2">
                         ${availableApps.filter(app => !dockApps.find(d => d.id === app.id)).map(app => `
                             <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                <div class="text-2xl">${app.icon}</div>
+                                <div class="w-6 h-6 flex items-center justify-center">${this.dockManager.getIconSvg(app.icon, false)}</div>
                                 <div class="flex-1">
                                     <div class="font-semibold text-gray-900">${app.label}</div>
                                 </div>

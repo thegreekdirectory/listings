@@ -23,12 +23,12 @@ class PWADock {
         
         // All available apps
         this.availableApps = [
-            { id: 'home', label: 'Home', icon: '🏠', path: '/', required: true },
-            { id: 'categories', label: 'Categories', icon: '📋', path: '/categories', required: false },
-            { id: 'search', label: 'Search', icon: '🔍', path: '/listings', required: false },
-            { id: 'map', label: 'Map', icon: '🗺️', path: '/map', required: false },
-            { id: 'starred', label: 'Starred', icon: '⭐', path: '/starred', required: false },
-            { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings', required: true }
+            { id: 'home', label: 'Home', icon: 'home', path: '/', required: true },
+            { id: 'categories', label: 'Categories', icon: 'categories', path: '/categories', required: false },
+            { id: 'search', label: 'Search', icon: 'search', path: '/listings', required: false },
+            { id: 'map', label: 'Map', icon: 'map', path: '/map', required: false },
+            { id: 'starred', label: 'Starred', icon: 'starred', path: '/starred', required: false },
+            { id: 'settings', label: 'Settings', icon: 'settings', path: '/settings', required: true }
         ];
         
         // Default dock order with Categories
@@ -295,6 +295,24 @@ class PWADock {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
+
+    getIconSvg(iconName, isActive = false) {
+        const stroke = '#045093';
+        const fill = isActive ? '#045093' : 'transparent';
+        const common = 'width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"';
+        const icons = {
+            home: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1z"/></svg>`,
+            categories: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
+            search: `<svg ${common} fill="none" stroke="${stroke}" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>`,
+            map: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><path d="M9 4L3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg>`,
+            starred: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><path d="M12 3.5l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8L6.6 20l1-6L3.3 9.8l6-.9z"/></svg>`,
+            settings: `<svg ${common} fill="none" stroke="${stroke}" stroke-width="1.8"><circle cx="12" cy="12" r="3.2" fill="${fill}"/><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.7z"/></svg>`,
+            more: `<svg ${common} fill="none" stroke="${stroke}" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`
+        };
+
+        return icons[iconName] || icons.more;
+    }
+
     createDock() {
         const dock = document.createElement('nav');
         dock.className = 'pwa-dock';
@@ -333,7 +351,7 @@ class PWADock {
         
         item.innerHTML = `
             <div class="pwa-dock-icon">
-                ${app.icon}
+                ${this.getIconSvg(app.icon, this.isActive(app.path))}
                 ${hasUpdate ? '<span class="update-badge"></span>' : ''}
             </div>
             <div class="pwa-dock-label">${app.label}</div>
@@ -351,7 +369,7 @@ class PWADock {
         const button = document.createElement('button');
         button.className = 'pwa-dock-item';
         button.innerHTML = `
-            <div class="pwa-dock-icon">☰</div>
+            <div class="pwa-dock-icon">${this.getIconSvg('more', false)}</div>
             <div class="pwa-dock-label">More</div>
         `;
         
@@ -362,7 +380,7 @@ class PWADock {
             return `
                 <a href="${app.path}" class="pwa-dock-more-item ${this.isActive(app.path) ? 'active' : ''}">
                     <div class="pwa-dock-more-icon">
-                        ${app.icon}
+                        ${this.getIconSvg(app.icon, this.isActive(app.path))}
                         ${hasUpdate ? '<span class="update-badge" style="position: absolute; top: -4px; right: -4px;"></span>' : ''}
                     </div>
                     <div class="pwa-dock-more-label">${app.label}</div>

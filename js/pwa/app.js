@@ -125,6 +125,8 @@ class PWAApp {
     }
     
     notifyUpdate() {
+        if (!this.isStandalone) return;
+        if (localStorage.getItem('tgd_update_available') === 'true') return;
         localStorage.setItem('tgd_update_available', 'true');
         this.showToast('New update available! Check Settings to update.');
     }
@@ -132,10 +134,10 @@ class PWAApp {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     showSplashScreen() {
-        const splashSeen = localStorage.getItem('tgd_splash_seen');
-        
-        if (!splashSeen) {
-            const splash = document.createElement('div');
+        const existingSplash = document.querySelector('.pwa-splash');
+        if (existingSplash) existingSplash.remove();
+
+        const splash = document.createElement('div');
             splash.className = 'pwa-splash';
             splash.innerHTML = `
                 <picture>
@@ -152,8 +154,6 @@ class PWAApp {
                 }, 500);
             }, 1000);
             
-            localStorage.setItem('tgd_splash_seen', 'true');
-        }
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -269,8 +269,19 @@ class PWAApp {
         }
     }
 
+    isIndividualListingPage() {
+        const path = window.location.pathname;
+        return path.includes('/listing/') || /^\/listings\/.+\/.+\.html$/.test(path);
+    }
+
     injectUniversalBackButton() {
-        if (document.getElementById('pwaUniversalBackButton')) return;
+        const existingButton = document.getElementById('pwaUniversalBackButton');
+        if (!this.isIndividualListingPage()) {
+            if (existingButton) existingButton.remove();
+            return;
+        }
+
+        if (existingButton) return;
 
         const button = document.createElement('button');
         button.id = 'pwaUniversalBackButton';
@@ -346,7 +357,6 @@ class PWAApp {
         // Clear localStorage
         localStorage.removeItem('tgd_theme');
         localStorage.removeItem('tgd_language');
-        localStorage.removeItem('tgd_splash_seen');
         localStorage.removeItem('tgd_dock_apps');
         localStorage.removeItem('tgd_update_available');
         
@@ -411,9 +421,8 @@ class PWAApp {
             await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
         
-        // Clear localStorage (except backups)
-        localStorage.clear();
-        
+        // Preserve localStorage preferences while clearing cache assets only
+
         // Restore settings
         if (themeBackup) localStorage.setItem('tgd_theme', themeBackup);
         if (languageBackup) localStorage.setItem('tgd_language', languageBackup);

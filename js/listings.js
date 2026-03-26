@@ -163,6 +163,7 @@ function toggleStar(listingId, event) {
         console.log('Added to starred. New list:', starredListings);
     }
     saveStarredListings();
+    emitStarredSyncEvent(index > -1 ? 'removed' : 'added', listingId);
     console.log('saveStarredListings() called');
 
     const buttons = document.querySelectorAll('.star-button[data-listing-id="' + listingId + '"]');
@@ -213,6 +214,17 @@ async function syncStarredListingToPWA(listingId, shouldBeStarred) {
     } catch (error) {
         console.error('Error syncing starred listing to PWA storage:', error);
     }
+}
+
+
+function emitStarredSyncEvent(action, listingId) {
+    const payload = { action, listingId: String(listingId), timestamp: Date.now() };
+    try {
+        localStorage.setItem('tgd_starred_sync', JSON.stringify(payload));
+    } catch (error) {
+        console.warn('Unable to write starred sync payload', error);
+    }
+    window.dispatchEvent(new CustomEvent('tgd:starred-changed', { detail: payload }));
 }
 
 function updateStarredCount() {

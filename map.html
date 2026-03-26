@@ -64,27 +64,52 @@
         
         html, body {
             height: 100%;
+            margin: 0;
         }
 
         .map-page {
-            min-height: calc(100vh - 160px);
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            padding: 0;
+            margin: 0;
             display: flex;
             flex-direction: column;
         }
 
         .map-shell {
             flex: 1;
-            min-height: 320px;
+            width: 100vw;
+            height: 100vh;
+            border: 0;
+            border-radius: 0;
         }
 
         #map {
-            height: 100%;
-            width: 100%;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .map-page > .flex.items-center.justify-between.mb-4,
+        #filterPanel {
+            position: absolute;
+            z-index: 900;
+            left: 12px;
+            right: 12px;
+            top: 12px;
+        }
+
+        #filterPanel {
+            top: 84px;
+            max-height: calc(100vh - 96px);
+            overflow: auto;
+        }
+
+        body.pwa-mode [data-partial="header"],
+        body.pwa-mode [data-partial="footer"] {
+            display: none !important;
         }
         
-        body.pwa-mode .map-page {
-            min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px);
-        }
     </style>
 </head>
 <body class="bg-gray-50">
