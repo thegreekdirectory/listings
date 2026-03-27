@@ -31,13 +31,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/professional-business-services</loc>
+    <loc>https://thegreekdirectory.org/category/food-hospitality</loc>
     <lastmod>2026-03-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/food-hospitality</loc>
+    <loc>https://thegreekdirectory.org/category/professional-business-services</loc>
     <lastmod>2026-03-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -65,6 +65,12 @@
     <lastmod>2026-03-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://thegreekdirectory.org/listing/meli-cafe-greektown-chicago-il</loc>
+    <lastmod>2026-03-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/limani-designs</loc>
