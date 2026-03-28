@@ -599,6 +599,15 @@ function loadFiltersFromURL() {
         if (onlineFilter2) onlineFilter2.checked = true;
     }
 
+    const pricing = urlParams.get('pricing');
+    if (pricing) {
+        selectedPricing = pricing;
+        const pricingFilter = document.getElementById('pricingFilter');
+        const pricingFilter2 = document.getElementById('pricingFilter2');
+        if (pricingFilter) pricingFilter.value = pricing;
+        if (pricingFilter2) pricingFilter2.value = pricing;
+    }
+
     createCategoryButtons();
     updateSubcategoryDisplay();
 }
@@ -628,6 +637,7 @@ function updateURL() {
     if (closingSoonOnly) url.searchParams.set('closing', 'true');
     if (hoursUnknownOnly) url.searchParams.set('hours', 'unknown');
     if (onlineOnly) url.searchParams.set('online', 'true');
+    if (selectedPricing) url.searchParams.set('pricing', selectedPricing);
     if (searchTerm) url.searchParams.set('q', searchTerm);
     if (preserveStarred) url.searchParams.set('starred', '1');
     window.history.replaceState({}, '', url);
@@ -1270,13 +1280,17 @@ function buildBadges(listing) {
     const closingSoon = isClosingSoon(listing.hours);
 
     if (openingSoon) {
-        badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+        badges.push('<span class="badge badge-opening-soon">OPENING SOON</span>');
     } else if (closingSoon) {
-        badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+        badges.push('<span class="badge badge-closing-soon">CLOSING SOON</span>');
     } else if (openStatus === true) {
-        badges.push('<span class="badge badge-open">Open</span>');
+        badges.push('<span class="badge badge-open">OPEN</span>');
     } else if (openStatus === false) {
-        badges.push('<span class="badge badge-closed">Closed</span>');
+        badges.push('<span class="badge badge-closed">CLOSED</span>');
+    }
+
+    if (listing.coming_soon === true) {
+        badges.push('<span class="badge badge-coming-soon">COMING SOON!</span>');
     }
 
     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
@@ -1496,7 +1510,7 @@ function populateCountryFilter() {
     const countries = [...new Set(allListings.map(l => l.country || 'USA'))].sort();
     ['pricingFilter', 'pricingFilter2'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.value = '';
+        if (el) el.value = selectedPricing || '';
     });
 
     ['comingSoonFilter', 'comingSoonFilter2'].forEach(id => {
@@ -1648,6 +1662,9 @@ function setupEventListeners() {
                 if (radiusFilter2) radiusFilter2.value = selectedRadius;
                 updateRadiusValue();
                 updateURL();
+                if (selectedRadius > 0 && !userLocation) {
+                    requestPreciseLocation('radius-filter');
+                }
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1756,6 +1773,7 @@ function setupEventListeners() {
                 const c2 = document.getElementById('comingSoonFilter2');
                 if (c1) c1.checked = comingSoonOnly;
                 if (c2) c2.checked = comingSoonOnly;
+                updateURL();
                 if (!viewingStarredOnly) applyFilters();
             });
         }
@@ -1770,6 +1788,7 @@ function setupEventListeners() {
                 const p2 = document.getElementById('pricingFilter2');
                 if (p1) p1.value = selectedPricing;
                 if (p2) p2.value = selectedPricing;
+                updateURL();
                 if (!viewingStarredOnly) applyFilters();
             });
         }
@@ -1811,7 +1830,7 @@ function setupEventListeners() {
     
     ['pricingFilter', 'pricingFilter2'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.value = '';
+        if (el) el.value = selectedPricing || '';
     });
 
     ['comingSoonFilter', 'comingSoonFilter2'].forEach(id => {

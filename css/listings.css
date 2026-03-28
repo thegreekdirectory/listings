@@ -268,25 +268,26 @@ h3,
     border-radius: 4px;
     font-weight: 600;
     display: inline-block;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
 }
 
 .badge-open {
-    background: #10b981;
+    background: #0f8a63;
     color: white;
 }
 
 .badge-closed {
-    background: #ef4444;
+    background: #c53030;
     color: white;
 }
 
 .badge-opening-soon {
-    background: #fbbf24;
-    color: #78350f;
+    background: #ca8a04;
+    color: #fff;
 }
 
 .badge-closing-soon {
-    background: #f59e0b;
+    background: #b45309;
     color: white;
 }
 
@@ -298,6 +299,11 @@ h3,
 .badge-verified {
     background: #0000FF;
     color: white;
+}
+
+.badge-coming-soon {
+    background: #ea580c;
+    color: #fff;
 }
 
 .claimed-checkmark {
@@ -330,6 +336,23 @@ button,
 a {
     touch-action: pan-y;
     -webkit-tap-highlight-color: transparent;
+}
+
+button:not([type="range"]),
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+a,
+.share-button {
+    outline: none !important;
+    box-shadow: none;
+}
+
+#clearFiltersBtn,
+#clearFiltersBtn2,
+#typoSuggestion button,
+#toggleFilterPosition {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 /* Filter Panel Styles */
