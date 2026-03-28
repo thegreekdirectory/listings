@@ -1,3 +1,4 @@
+
 <!-- listings.html -->
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
 
@@ -19,19 +20,20 @@
     <link rel="apple-touch-startup-image" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg" type="image/x-icon">
     
-    <meta name="description" content="Browse Greek-owned businesses in Chicago, Chicagoland, and Illinois, including restaurants, shops, services, and professionals across the Greek-American community.">
+    <meta name="description" content="Browse listings for Greek-owned businesses in Chicago, Chicagoland, and Illinois. Discover Greek restaurants, shops, services, and professionals in one local directory.">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://thegreekdirectory.org/listings">
     <meta property="og:title" content="Listings | Greek Business Directory Chicago, Chicagoland & Illinois">
-    <meta property="og:description" content="Discover Greek-owned restaurants, shops, services, and professionals in Chicago, Chicagoland, and across Illinois.">
+    <meta property="og:description" content="Explore Greek-owned businesses across Chicago and Chicagoland, from restaurants and markets to professional services and community organizations.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://thegreekdirectory.org/listings">
-    <meta property="og:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
     <meta property="og:site_name" content="The Greek Directory">
     <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://thegreekdirectory.org/listings">
+    <meta property="og:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
+    <meta property="og:image:alt" content="Chicago skyline for Greek directory listings page">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Listings | Greek Business Directory Chicago, Chicagoland & Illinois">
-    <meta name="twitter:description" content="Discover Greek-owned restaurants, shops, services, and professionals in Chicago, Chicagoland, and across Illinois.">
+    <meta name="twitter:description" content="Find Greek-owned restaurants, shops, services, and professionals in Chicago, Chicagoland, and Illinois.">
     <meta name="twitter:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
@@ -199,6 +201,68 @@
     }</style>
 
 
+    <style>
+    .listings-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+        min-height: 220px;
+        display: flex;
+        align-items: flex-end;
+        margin-bottom: 1rem;
+        background-image:
+            linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.72) 100%),
+            url('https://raw.githubusercontent.com/thegreekdirectory/listings/refs/heads/codex/audit-and-optimize-listings-directory-for-seo/images/chicago.jpeg');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+    }
+
+    .listings-hero-content {
+        color: #fff;
+        padding: 1.5rem;
+        max-width: 56rem;
+    }
+
+    .listings-hero h1 {
+        font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+        line-height: 1.1;
+        margin: 0 0 0.5rem;
+        color: #fff;
+    }
+
+    .listings-hero h2 {
+        font-size: clamp(1rem, 1.9vw, 1.25rem);
+        line-height: 1.35;
+        font-weight: 500;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.94);
+    }
+
+    .listings-intro {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .listings-intro p {
+        margin: 0;
+        color: #374151;
+    }
+
+    @media (max-width: 640px) {
+        .listings-hero {
+            min-height: 185px;
+            border-radius: 0.75rem;
+        }
+        .listings-hero-content {
+            padding: 1rem;
+        }
+    }
+    </style>
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -213,11 +277,7 @@
             "https://www.facebook.com/thegreekdirectory",
             "https://www.instagram.com/thegreekdirectory",
             "https://www.youtube.com/@thegreekdirectory",
-            "https://x.com/greekdirectory",
-            "https://www.tiktok.com/@thegreekdirectory",
-            "https://www.snapchat.com/@greekdirectory",
-            "https://www.reddit.com/u/thegreekdirectory/",
-            "https://www.reddit.com/r/thegreekdirectory/"
+            "https://x.com/greekdirectory"
           ]
         },
         {
@@ -226,7 +286,9 @@
           "url": "https://thegreekdirectory.org",
           "name": "The Greek Directory",
           "inLanguage": "en-US",
-          "publisher": {"@id": "https://thegreekdirectory.org/#organization"},
+          "publisher": {
+            "@id": "https://thegreekdirectory.org/#organization"
+          },
           "potentialAction": {
             "@type": "SearchAction",
             "target": "https://thegreekdirectory.org/listings?q={search_term_string}",
@@ -238,42 +300,112 @@
           "@id": "https://thegreekdirectory.org/listings#webpage",
           "url": "https://thegreekdirectory.org/listings",
           "name": "Listings | Greek Business Directory Chicago, Chicagoland & Illinois",
-          "description": "Browse Greek-owned businesses in Chicago, Chicagoland, and Illinois.",
-          "isPartOf": {"@id": "https://thegreekdirectory.org/#website"},
-          "about": {"@id": "https://thegreekdirectory.org/#organization"},
-          "mainEntity": {"@id": "https://thegreekdirectory.org/listings#itemlist"},
-          "breadcrumb": {"@id": "https://thegreekdirectory.org/listings#breadcrumb"}
+          "description": "Browse Greek-owned businesses in Chicago, Chicagoland, and across Illinois, including restaurants, retail shops, professional services, and community organizations.",
+          "isPartOf": {
+            "@id": "https://thegreekdirectory.org/#website"
+          },
+          "about": {
+            "@id": "https://thegreekdirectory.org/#organization"
+          },
+          "inLanguage": "en-US",
+          "breadcrumb": {
+            "@id": "https://thegreekdirectory.org/listings#breadcrumb"
+          },
+          "mainEntity": {
+            "@id": "https://thegreekdirectory.org/listings#itemlist"
+          }
         },
         {
           "@type": "ItemList",
           "@id": "https://thegreekdirectory.org/listings#itemlist",
-          "name": "Greek business listings in Chicago and Illinois",
-          "itemListOrder": "https://schema.org/ItemListOrderAscending",
+          "name": "Greek business listings in Chicago and Chicagoland",
+          "itemListOrder": "https://schema.org/ItemListUnordered",
           "numberOfItems": 10,
           "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "Athena Restaurant", "url": "https://thegreekdirectory.org/listing/athena-restaurant"},
-            {"@type": "ListItem", "position": 2, "name": "Avli River North", "url": "https://thegreekdirectory.org/listing/avli-river-north"},
-            {"@type": "ListItem", "position": 3, "name": "Avli on the Park", "url": "https://thegreekdirectory.org/listing/avli-on-the-park"},
-            {"@type": "ListItem", "position": 4, "name": "Avli Taverna", "url": "https://thegreekdirectory.org/listing/avli-taverna"},
-            {"@type": "ListItem", "position": 5, "name": "Brillakis Import Foods", "url": "https://thegreekdirectory.org/listing/brillakis-import-foods"},
-            {"@type": "ListItem", "position": 6, "name": "Eagle Restaurant", "url": "https://thegreekdirectory.org/listing/eagle-restaurant"},
-            {"@type": "ListItem", "position": 7, "name": "Hellenic American Academy", "url": "https://thegreekdirectory.org/listing/hellenic-american-academy"},
-            {"@type": "ListItem", "position": 8, "name": "Meraki Events Chicago", "url": "https://thegreekdirectory.org/listing/meraki-events-chicago"},
-            {"@type": "ListItem", "position": 9, "name": "Mykonos Greek Restaurant", "url": "https://thegreekdirectory.org/listing/mykonos-greek-restaurant"},
-            {"@type": "ListItem", "position": 10, "name": "SKB Hair Salon", "url": "https://thegreekdirectory.org/listing/skb-hair-salon"}
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Athena Restaurant",
+              "url": "https://thegreekdirectory.org/listing/athena-restaurant.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Avli Taverna",
+              "url": "https://thegreekdirectory.org/listing/avli-taverna.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Brillakis Import Foods",
+              "url": "https://thegreekdirectory.org/listing/brillakis-import-foods.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "Eagle Restaurant",
+              "url": "https://thegreekdirectory.org/listing/eagle-restaurant.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 5,
+              "name": "Hellenic American Academy",
+              "url": "https://thegreekdirectory.org/listing/hellenic-american-academy.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 6,
+              "name": "Leka's Auto Construction",
+              "url": "https://thegreekdirectory.org/listing/lekas-auto-construction.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 7,
+              "name": "Meraki Events Chicago",
+              "url": "https://thegreekdirectory.org/listing/meraki-events-chicago.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 8,
+              "name": "SKB Hair Salon",
+              "url": "https://thegreekdirectory.org/listing/skb-hair-salon.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 9,
+              "name": "Filakia",
+              "url": "https://thegreekdirectory.org/listing/filakia.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 10,
+              "name": "Avli River North",
+              "url": "https://thegreekdirectory.org/listing/avli-river-north.html"
+            }
           ]
         },
         {
           "@type": "BreadcrumbList",
           "@id": "https://thegreekdirectory.org/listings#breadcrumb",
           "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://thegreekdirectory.org/"},
-            {"@type": "ListItem", "position": 2, "name": "Listings", "item": "https://thegreekdirectory.org/listings"}
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://thegreekdirectory.org/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Listings",
+              "item": "https://thegreekdirectory.org/listings"
+            }
           ]
         }
       ]
     }
     </script>
+
 </head>
 <body class="bg-gray-50">
     <!-- Header (loaded via partial) -->
@@ -613,5 +745,6 @@
 
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
 
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"c3e4a403e74b4e23b33164a17c46af38","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
