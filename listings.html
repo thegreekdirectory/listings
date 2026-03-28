@@ -264,70 +264,144 @@
 
     <script type="application/ld+json">
     {
-        "@context":"https://schema.org",
-        "@graph":[
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://thegreekdirectory.org/#organization",
+          "name": "The Greek Directory",
+          "url": "https://thegreekdirectory.org",
+          "logo": "https://static.thegreekdirectory.org/img/logo/blue.svg",
+          "sameAs": [
+            "https://www.facebook.com/thegreekdirectory",
+            "https://www.instagram.com/thegreekdirectory",
+            "https://www.youtube.com/@thegreekdirectory",
+            "https://x.com/greekdirectory"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://thegreekdirectory.org/#website",
+          "url": "https://thegreekdirectory.org",
+          "name": "The Greek Directory",
+          "inLanguage": "en-US",
+          "publisher": {
+            "@id": "https://thegreekdirectory.org/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://thegreekdirectory.org/listings?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "CollectionPage",
+          "@id": "https://thegreekdirectory.org/listings#webpage",
+          "url": "https://thegreekdirectory.org/listings",
+          "name": "Listings | Greek Business Directory Chicago, Chicagoland & Illinois",
+          "description": "Browse Greek-owned businesses in Chicago, Chicagoland, and across Illinois, including restaurants, retail shops, professional services, and community organizations.",
+          "isPartOf": {
+            "@id": "https://thegreekdirectory.org/#website"
+          },
+          "about": {
+            "@id": "https://thegreekdirectory.org/#organization"
+          },
+          "inLanguage": "en-US",
+          "breadcrumb": {
+            "@id": "https://thegreekdirectory.org/listings#breadcrumb"
+          },
+          "mainEntity": {
+            "@id": "https://thegreekdirectory.org/listings#itemlist"
+          }
+        },
+        {
+          "@type": "ItemList",
+          "@id": "https://thegreekdirectory.org/listings#itemlist",
+          "name": "Greek business listings in Chicago and Chicagoland",
+          "itemListOrder": "https://schema.org/ItemListUnordered",
+          "numberOfItems": 10,
+          "itemListElement": [
             {
-                "@type":"CollectionPage",
-                "@id":"https://thegreekdirectory.org/listings#webpage",
-                "url":"https://thegreekdirectory.org/listings",
-                "name":"Listings | Greek Business Directory Chicago, Chicagoland & Illinois",
-                "description":"Directory listings for Greek-owned businesses in Chicago, Chicagoland, and Illinois.",
-                "inLanguage":"en-US",
-                "isPartOf":{"@id":"https://thegreekdirectory.org/#website"},
-                "about":{"@id":"https://thegreekdirectory.org/#organization"},
-                "primaryImageOfPage":"https://thegreekdirectory.org/images/chicago.jpeg",
-                "breadcrumb":{"@id":"https://thegreekdirectory.org/listings#breadcrumb"},
-                "mainEntity":{"@id":"https://thegreekdirectory.org/listings#itemlist"}
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Athena Restaurant",
+              "url": "https://thegreekdirectory.org/listing/athena-restaurant.html"
             },
             {
-                "@type":"ItemList",
-                "@id":"https://thegreekdirectory.org/listings#itemlist",
-                "name":"Featured listings in Chicago and Chicagoland",
-                "itemListOrder":"https://schema.org/ItemListUnordered",
-                "numberOfItems":6,
-                "itemListElement":[
-                    {"@type":"ListItem","position":1,"url":"https://thegreekdirectory.org/listing/athena-restaurant"},
-                    {"@type":"ListItem","position":2,"url":"https://thegreekdirectory.org/listing/avli-river-north"},
-                    {"@type":"ListItem","position":3,"url":"https://thegreekdirectory.org/listing/brillakis-import-foods"},
-                    {"@type":"ListItem","position":4,"url":"https://thegreekdirectory.org/listing/eagle-restaurant"},
-                    {"@type":"ListItem","position":5,"url":"https://thegreekdirectory.org/listing/hellenic-american-academy"},
-                    {"@type":"ListItem","position":6,"url":"https://thegreekdirectory.org/listing/meraki-events-chicago"}
-                ]
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Avli Taverna",
+              "url": "https://thegreekdirectory.org/listing/avli-taverna.html"
             },
             {
-                "@type":"BreadcrumbList",
-                "@id":"https://thegreekdirectory.org/listings#breadcrumb",
-                "itemListElement":[
-                    {"@type":"ListItem","position":1,"name":"Home","item":"https://thegreekdirectory.org/"},
-                    {"@type":"ListItem","position":2,"name":"Listings","item":"https://thegreekdirectory.org/listings"}
-                ]
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Brillakis Import Foods",
+              "url": "https://thegreekdirectory.org/listing/brillakis-import-foods.html"
             },
             {
-                "@type":"WebSite",
-                "@id":"https://thegreekdirectory.org/#website",
-                "name":"The Greek Directory",
-                "url":"https://thegreekdirectory.org",
-                "inLanguage":"en-US",
-                "potentialAction":{
-                    "@type":"SearchAction",
-                    "target":"https://thegreekdirectory.org/listings?q={search_term_string}",
-                    "query-input":"required name=search_term_string"
-                }
+              "@type": "ListItem",
+              "position": 4,
+              "name": "Eagle Restaurant",
+              "url": "https://thegreekdirectory.org/listing/eagle-restaurant.html"
             },
             {
-                "@type":"Organization",
-                "@id":"https://thegreekdirectory.org/#organization",
-                "name":"The Greek Directory",
-                "url":"https://thegreekdirectory.org",
-                "logo":"https://static.thegreekdirectory.org/img/logo/blue.svg",
-                "sameAs":[
-                    "https://www.facebook.com/thegreekdirectory",
-                    "https://www.instagram.com/thegreekdirectory",
-                    "https://www.youtube.com/@thegreekdirectory",
-                    "https://x.com/greekdirectory"
-                ]
+              "@type": "ListItem",
+              "position": 5,
+              "name": "Hellenic American Academy",
+              "url": "https://thegreekdirectory.org/listing/hellenic-american-academy.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 6,
+              "name": "Leka's Auto Construction",
+              "url": "https://thegreekdirectory.org/listing/lekas-auto-construction.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 7,
+              "name": "Meraki Events Chicago",
+              "url": "https://thegreekdirectory.org/listing/meraki-events-chicago.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 8,
+              "name": "SKB Hair Salon",
+              "url": "https://thegreekdirectory.org/listing/skb-hair-salon.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 9,
+              "name": "Filakia",
+              "url": "https://thegreekdirectory.org/listing/filakia.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 10,
+              "name": "Avli River North",
+              "url": "https://thegreekdirectory.org/listing/avli-river-north.html"
             }
-        ]
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://thegreekdirectory.org/listings#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://thegreekdirectory.org/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Listings",
+              "item": "https://thegreekdirectory.org/listings"
+            }
+          ]
+        }
+      ]
     }
     </script>
 
