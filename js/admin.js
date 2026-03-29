@@ -2811,9 +2811,10 @@ function detectImageMimeType(url = '') {
 function generateTemplateReplacements(listing) {
     const pricingToSymbols = (value) => {
         if (value === null || value === undefined || value === '') return '';
-        const numeric = Number(value);
-        if (!Number.isNaN(numeric) && numeric >= 1 && numeric <= 4) {
-            return '$'.repeat(numeric);
+        const symbolMap = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
+        const numeric = parseInt(value, 10);
+        if (!Number.isNaN(numeric) && symbolMap[numeric]) {
+            return symbolMap[numeric];
         }
         const valueStr = String(value).trim();
         if (/^\${1,4}$/.test(valueStr)) {
@@ -3167,6 +3168,7 @@ function generateTemplateReplacements(listing) {
         'COUNTRY': 'US',
         'PHONE': listing.phone || '',
         'PHONE_SCHEMA': listing.phone || '',
+        'PRICE_RANGE': pricingSymbols || '',
         'META_DESCRIPTION': escapeHtml(buildMetaDescription(listing.tagline || '', listing.city || '', listing.state || '')),
         'EMAIL': listing.email || '',
         'WEBSITE': listing.website || '',
