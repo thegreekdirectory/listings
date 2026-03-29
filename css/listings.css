@@ -181,6 +181,13 @@ h3,
     stroke: #045093 !important;
 }
 
+.listing-image-gradient {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at top left, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 55%);
+}
+
 /* ============================================
    CURRENT LOCATION BUTTON — ACTIVE STATE
    ============================================ */
@@ -268,26 +275,25 @@ h3,
     border-radius: 4px;
     font-weight: 600;
     display: inline-block;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
 }
 
 .badge-open {
-    background: #0f8a63;
+    background: #10b981;
     color: white;
 }
 
 .badge-closed {
-    background: #c53030;
+    background: #ef4444;
     color: white;
 }
 
 .badge-opening-soon {
-    background: #ca8a04;
-    color: #fff;
+    background: #fbbf24;
+    color: #78350f;
 }
 
 .badge-closing-soon {
-    background: #b45309;
+    background: #f59e0b;
     color: white;
 }
 

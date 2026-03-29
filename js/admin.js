@@ -2894,7 +2894,7 @@ function generateTemplateReplacements(listing) {
 
     let pricingBadge = '';
     if (Number(listing.pricing) >= 1 && Number(listing.pricing) <= 4) {
-        pricingBadge = `<span class="pricing-chip"> • ${'$'.repeat(Number(listing.pricing))}</span>`;
+        pricingBadge = `<span class="pricing-chip">${'$'.repeat(Number(listing.pricing))}</span>`;
     }
     
     const taglineDisplay = listing.tagline ? `<h2 class="text-gray-600 italic text-xl font-semibold mb-2">${escapeHtml(listing.tagline)}</h2>` : '';
@@ -3285,14 +3285,39 @@ function generateTemplateReplacementsPart2(listing) {
                             if (digits.length === 11 && digits.startsWith('1')) {
                                 return "(" + digits.slice(1,4) + ") " + digits.slice(4,7) + "-" + digits.slice(7,11);
                             }
+                            if (digits.length === 10) {
+                                return "(" + digits.slice(0,3) + ") " + digits.slice(3,6) + "-" + digits.slice(6,10);
+                            }
                             return phone;
                         };
+
+                        const getHoursBadge = (hours) => {
+                            if (!hours || typeof hours !== 'object') return '';
+                            const dayKeys = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+                            const now = new Date();
+                            const day = dayKeys[now.getDay()];
+                            const todayHours = (hours[day] || '').toLowerCase();
+                            if (!todayHours) return '';
+                            if (todayHours.includes('closed')) return '<span class="badge badge-closed">CLOSED</span>';
+                            return '<span class="badge badge-open">OPEN</span>';
+                        };
+
+                        const getTierBadge = (tier) => {
+                            if (tier === 'FEATURED' || tier === 'PREMIUM') return '<span class="badge badge-featured">Featured</span>';
+                            if (tier === 'VERIFIED') return '<span class="badge badge-verified">Verified</span>';
+                            return '';
+                        };
+
+                        const getComingSoonBadge = (comingSoon) => comingSoon === true
+                            ? '<span class="badge badge-coming-soon">COMING SOON!</span>'
+                            : '';
 
                         return \`
                             <a href="\${listingUrl}" class="related-listing-card block bg-white p-3 hover:shadow-lg transition-shadow">
                                 <div class="flex items-start gap-2.5">
                                     \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">\` : ''}
                                     <div class="flex-1 min-w-0">
+                                        <div class="flex flex-wrap gap-1 mb-1">\${getHoursBadge(l.hours)}\${getTierBadge(l.tier)}\${getComingSoonBadge(l.coming_soon)}</div>
                                         <h3 class="font-bold text-gray-900 mb-1 leading-snug">\${l.business_name}</h3>
                                         <p class="text-sm text-gray-600 mb-0.5" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>\${location}</span></p>
                                         \${l.phone ? \`<p class="text-sm text-gray-600" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.3a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21L8 10.5a11 11 0 005.5 5.5l1.1-2.25a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.7.95V19a2 2 0 01-2 2h-1C9.7 21 3 14.3 3 6V5z"/></svg><span>\${formatPhone(l.phone)}</span></p>\` : ''}
@@ -3326,7 +3351,7 @@ function generateTemplateReplacementsPart2(listing) {
         const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
         
         claimButton = `
-            <div class="bg-amber-50 border border-amber-300 rounded-lg p-6 text-center" id="claimListingSection">
+            <div class="rounded-lg p-6 text-center" id="claimListingSection" style="background:#fef3c7;border:1px solid #fbbf24;">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
                 <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
