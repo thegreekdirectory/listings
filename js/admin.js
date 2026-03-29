@@ -3464,7 +3464,8 @@ window.generateListingPage = async function(listingId) {
         
         Object.keys(replacements).forEach(key => {
             const regex = new RegExp(`{{${key}}}`, 'g');
-            template = template.replace(regex, replacements[key]);
+            const replacementValue = replacements[key] == null ? '' : String(replacements[key]);
+            template = template.replace(regex, () => replacementValue);
         });
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
