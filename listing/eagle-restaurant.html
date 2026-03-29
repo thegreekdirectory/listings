@@ -378,12 +378,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         .related-listing-card { border: 2px solid #045093; border-radius: 10px; }
         .claim-listing-section { margin-top: 1.5rem; }
         .pricing-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:#eff6ff; color:#045093; font-weight:700; font-size:12px; }
-        .badge-coming-soon { background: #ea580c; color: #fff; }
-        .badge { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.28); }
-        .badge-open { background: #0f8a63; color: #fff; }
-        .badge-closed { background: #c53030; color: #fff; }
-        .badge-opening-soon { background: #ca8a04; color: #fff; }
-        .badge-closing-soon { background: #b45309; color: #fff; }
+        .badge-coming-soon { background: #f97316; color: #fff; }
         .share-button { border: none; outline: none; box-shadow: none; }
         .carousel-container { position: relative; }
         .star-button { position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,0.6); box-shadow:0 2px 8px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.04); cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3; transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease; }
@@ -437,10 +432,11 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     #locationSection { order: 4; }
     .desktop-side-column { position: static; order: 5; margin-top: 0; }
-    .owner-info-section { order: 6; }
-    .social-map-grid { order: 7; }
-    .related-listings-section { order: 8; }
-    .claim-listing-section { order: 9; }
+    #additionalInfoSectionWrap { order: 6; }
+    .owner-info-section { order: 7; }
+    .social-map-grid { order: 8; }
+    .related-listings-section { order: 9; }
+    .claim-listing-section { order: 10; }
 }
 
         #listingMap,
@@ -483,13 +479,32 @@ or distribution of this code can result in legal action to the fullest extent pe
     </style>
 </head>
 <body class="bg-gray-50">
+    <noscript>
+      <style>
+        .tgd-noscript-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:20px}
+        .tgd-noscript-card{max-width:400px;padding:30px;border-top:5px solid #045093;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,0.1);border-radius:8px}
+        .tgd-noscript-title{color:#045093;margin-top:0}
+        .tgd-noscript-copy{color:#444;line-height:1.5}
+        @media (prefers-color-scheme: dark){
+          .tgd-noscript-overlay{background:rgba(17,24,39,0.95)}
+          .tgd-noscript-card{background:#111827;box-shadow:0 10px 25px rgba(0,0,0,0.45)}
+          .tgd-noscript-copy{color:#e5e7eb}
+        }
+      </style>
+      <div class="tgd-noscript-overlay">
+        <div class="tgd-noscript-card">
+          <h2 class="tgd-noscript-title">JavaScript Required</h2>
+          <p class="tgd-noscript-copy">To experience the full functionality of <strong>TGD</strong>, please enable JavaScript in your browser settings.</p>
+        </div>
+      </div>
+    </noscript>
     <!-- Header -->
     <div data-partial="header"></div>
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
     <div class="max-w-6xl mx-auto px-4 py-8">
-        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
+        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow" id="carouselSection">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/80a363d0-42af-4a72-7aa9-20f27a292c00/public') center/cover;" role="img" aria-label="Eagle Restaurant in Downers Grove, IL"></div><div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/6f76e114-21e8-4e4a-54ca-005613f68300/public') center/cover;" role="img" aria-label="Eagle Restaurant in Downers Grove, IL"></div><div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/90a00761-ed25-40a8-3a71-0ab4b7768a00/public') center/cover;" role="img" aria-label="Eagle Restaurant in Downers Grove, IL"></div><div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/a2ed84d7-adee-41a4-79c9-106935cfb100/public') center/cover;" role="img" aria-label="Eagle Restaurant in Downers Grove, IL"></div>
@@ -521,7 +536,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="bg-white rounded-lg p-6 mb-6 card-shadow">
             <div class="desktop-listing-layout">
                 <div class="desktop-main-column">
-                    <div class="flex justify-between items-start mb-4 listing-main-header">
+                    <div class="flex justify-between items-start mb-4 listing-main-header" id="headerSection">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-4 flex-wrap">
                                 <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
@@ -551,7 +566,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                         </div>
                     </div>
 
-                    <div class="listing-description-wrap">
+                    <div class="listing-description-wrap" id="descriptionSection">
                         <div class="text-gray-700 listing-description" id="listingDescription"><h3>Family Owned &amp; Operated</h3><div>Established in 1981, we are famous for our delicious American-style cuisine located in Downers Grove, IL.&nbsp; Visit Eagle Restaurant today and enjoy our daily specials/value meals always destined to please not only your appetite, but your wallet too! Enjoy lunch &amp; dinner in our cozy dining room or outdoor patio. We also accommodate catering packages for office parties &amp; family gatherings.</div><div><br></div><h3>History of Eagle</h3><div>It all started back in 1981 when Lee Zografos, founder &amp; owner, realized that potential of an abandoned gas station on the corner of Maple &amp; Fairview in Downers Grove. He envisioned a Dine in / Carryout family operated restaurant that would be a neighborhood staple for generations to come.&nbsp; So in the fall of 1981, Lee, with his brother-in-law Tassos opened Eagle Restaurant.&nbsp; Over the years, with Lee mainly running his other restaurant, Town Kitchen in Clarendon Hills, both of their sons helped out working in the restaurant. In 2005, when Tassos retired, Lee's son John took over his partnership.</div></div>
                         <div class="description-divider">
                             <span class="description-divider-line"></span>
@@ -567,15 +582,15 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <div id="mapFallback" class="map-fallback" role="status" aria-live="polite"></div>
             </div>
         
-                    
-                    
+                    <div id="additionalInfoSectionWrap"></div>
+                    <div id="ownerInfoSection">
             <div class="owner-info-section">
                 <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
                 <div class="mb-4"><p><strong>Owner:</strong> John Zografos, Owner</p><p><strong>From:</strong> Xios, Greece</p></div>
             </div>
-        
+        </div>
 
-                    <div class="social-map-grid">
+                    <div class="social-map-grid" id="socialSection">
                 <div>
                     
         <div>
@@ -621,30 +636,9 @@ or distribution of this code can result in legal action to the fullest extent pe
                 </div>
                     </div>
                 </div>
-                <aside class="desktop-side-column">
+                <aside class="desktop-side-column" id="contactSection">
                     <div class="desktop-contact-card">
                         <div class="space-y-3 mb-6">
-                            
-            <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Hours
-                    <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
-                        <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
-                        <span class="hours-tooltip">Last updated at 2026-03-23 18:06 UTC by TGD Admin.</span>
-                    </span>
-                </h3>
-                <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>Closed</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>11:00 AM - 8:00 PM</span></div></div>
-                <div id="openStatusText" class="mt-2 text-sm"></div>
-                <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
-            </div>
-        
-                            
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                </svg>
-                <span>(630) 963-9161</span>
-            </div>
-        
                             
                 <div class="flex items-start gap-2">
                     <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="#045093" viewBox="0 0 24 24">
@@ -654,6 +648,14 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <span>406 Maple Ave, Downers Grove, IL 60515</span>
                 </div>
             
+                            
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                </svg>
+                <span>(630) 963-9161</span>
+            </div>
+        
                             
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
@@ -668,6 +670,19 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
                 <a href="https://eagledg.com" target="_blank" class="text-blue-600 hover:underline">eagledg.com</a>
+            </div>
+        
+                            
+            <div>
+                <h3 class="font-semibold text-gray-900 mb-2">Hours
+                    <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
+                        <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
+                        <span class="hours-tooltip">Last updated at 2026-03-23 18:06 UTC by TGD Admin.</span>
+                    </span>
+                </h3>
+                <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>Closed</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>11:00 AM - 8:00 PM</span></div></div>
+                <div id="openStatusText" class="mt-2 text-sm"></div>
+                <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
             </div>
         
                         </div>
@@ -721,10 +736,10 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-        <div class="related-listings-section"></div>
+        <div class="related-listings-section" id="relatedSection"></div>
 
-        <div class="claim-listing-section">
-            <div class="bg-amber-50 border border-amber-300 rounded-lg p-6 text-center" id="claimListingSection">
+        <div class="claim-listing-section" id="claimSection">
+            <div class="rounded-lg p-6 text-center" id="claimListingSection" style="background:#fef3c7;border:1px solid #fbbf24;">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
                 <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Eagle%20Restaurant%20-%20Downers%20Grove%2C%20IL" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
@@ -833,6 +848,29 @@ or distribution of this code can result in legal action to the fullest extent pe
             if (isStarred) starButton.classList.add('starred');
         }
     });
+
+    function handleListingHashRoute() {
+        const hash = (window.location.hash || '').toLowerCase();
+        const targets = {
+            '#carousel': 'carouselSection',
+            '#header': 'headerSection',
+            '#description': 'descriptionSection',
+            '#map': 'locationSection',
+            '#contact': 'contactSection',
+            '#additional': 'additionalInfoSectionWrap',
+            '#owner': 'ownerInfoSection',
+            '#social': 'socialSection',
+            '#related': 'relatedSection',
+            '#claim': 'claimSection'
+        };
+        const targetId = targets[hash];
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.addEventListener('DOMContentLoaded', handleListingHashRoute);
+    window.addEventListener('hashchange', handleListingHashRoute);
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     </script>
