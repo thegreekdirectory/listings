@@ -6,22 +6,44 @@ or distribution of this code can result in legal action to the fullest extent pe
 -->
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    
-    <title>Hello | The Greek Directory</title>
+    <title>Hello in , IL | Greek Businesses | The Greek Directory</title>
 
-    <meta name="description" content="asdfgsdfgh. View address, phone, hours, and photos.">
-    <meta property="og:title" content="Hello | The Greek Directory">
-    <meta property="og:description" content="asdfgsdfgh">
-    <meta property="og:type" content="business.business">
-    <meta property="og:url" content="https://thegreekdirectory.org/listings/entertainment-arts-recreation/hello">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&h=200&fit=crop&q=80">
+    <meta name="description" content="{{META_DESCRIPTION}}">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="author" content="The Greek Directory">
+    <meta http-equiv="content-language" content="en-US">
+
+    <meta property="og:title" content="Hello in , IL | Greek Businesses | The Greek Directory">
+    <meta property="og:description" content="{{META_DESCRIPTION}}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="The Greek Directory">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello">
+    <meta property="og:image" content="{{PRIMARY_IMAGE}}">
+    <meta property="og:image:alt" content="Hello in , IL">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="{{OG_IMAGE_TYPE}}">
+    <meta property="og:image:secure_url" content="{{PRIMARY_IMAGE}}">
+    <meta property="business:contact_data:street_address" content="">
+    <meta property="business:contact_data:locality" content="">
+    <meta property="business:contact_data:region" content="IL">
+    <meta property="business:contact_data:postal_code" content="">
+    <meta property="business:contact_data:country_name" content="United States">
+    <meta property="business:contact_data:phone_number" content="{{PHONE_SCHEMA}}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hello in , IL | Greek Businesses | The Greek Directory">
+    <meta name="twitter:site" content="@greekdirectory">
+    <meta name="twitter:description" content="{{META_DESCRIPTION}}">
+    <meta name="twitter:image" content="{{PRIMARY_IMAGE}}">
     <style>
     .pwa-splash {
         position: fixed;
@@ -58,38 +80,129 @@ or distribution of this code can result in legal action to the fullest extent pe
     <link rel="preconnect" href="https://images.thegreekdirectory.org">
     <link rel="dns-prefetch" href="https://images.thegreekdirectory.org">
     <link rel="stylesheet" href="/css/pwa.css">
-    <link rel="canonical" href="https://thegreekdirectory.org/listings/entertainment-arts-recreation/hello">
+    <link rel="canonical" href="https://thegreekdirectory.org/listing/{{SLUG}}">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="/src/output.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
     
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": ["LocalBusiness"],
-        "name": "Hello",
-        "description": "asdfgsdfgh",
-        "url": "https://thegreekdirectory.org/listings/entertainment-arts-recreation/hello",
-        "image": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&h=200&fit=crop&q=80",
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "",
-            "addressLocality": "",
-            "addressRegion": "",
-            "postalCode": "",
-            "addressCountry": "US"
-        },
-        "telephone": "",
-        "openingHoursSpecification": []
+        "@graph": [
+            {
+                "@type": {{SCHEMA_TYPES_JSON}},
+                "@id": "https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello#business",
+                "name": "Hello",
+                "description": "{{META_DESCRIPTION}}",
+                "url": "https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello",
+                "telephone": "{{PHONE_SCHEMA}}",
+                "image": ["{{PRIMARY_IMAGE}}"],
+                "logo": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&h=200&fit=crop&q=80",
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "",
+                    "addressLocality": "",
+                    "addressRegion": "IL",
+                    "postalCode": "",
+                    "addressCountry": "US"
+                },
+                "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": "{{LAT}}",
+                    "longitude": "{{LNG}}"
+                },
+                "hasMap": "{{HAS_MAP_URL}}",
+                "areaServed": {
+                    "@type": "AdministrativeArea",
+                    "name": "IL"
+                },
+                "openingHoursSpecification": [],
+                "sameAs": {{SAME_AS_SCHEMA}},
+                "mainEntityOfPage": {"@id": "https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello#page"},
+                "identifier": {
+                    "@type": "PropertyValue",
+                    "propertyID": "TGD Listing ID",
+                    "value": "hello"
+                }
+            },
+            {
+                "@type": "ItemPage",
+                "@id": "https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello#page",
+                "name": "Hello",
+                "url": "https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello",
+                "isPartOf": {
+                    "@type": "WebSite",
+                    "name": "The Greek Directory",
+                    "url": "https://thegreekdirectory.org"
+                }
+            },
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://thegreekdirectory.org"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Entertainment, Arts & Recreation",
+                        "item": "{{CATEGORY_URL}}"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": "Hello",
+                        "item": "https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello"
+                    }
+                ]
+            }
+        ]
     }
     </script>
 
+
+    <script type="application/ld+json">
+    {
+        "@context":"https://schema.org",
+        "@type":"WebSite",
+        "name":"The Greek Directory",
+        "url":"https://thegreekdirectory.org",
+        "inLanguage":"en-US",
+        "potentialAction":{
+            "@type":"SearchAction",
+            "target":"https://thegreekdirectory.org/listings?q={search_term_string}",
+            "query-input":"required name=search_term_string"
+        }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context":"https://schema.org",
+        "@type":"Organization",
+        "name":"The Greek Directory",
+        "url":"https://thegreekdirectory.org",
+        "logo":"https://images.thegreekdirectory.org/logo/blue.svg",
+        "sameAs":[
+            "https://www.facebook.com/thegreekdirectory",
+            "https://www.instagram.com/thegreekdirectory",
+            "https://www.youtube.com/@thegreekdirectory",
+            "https://x.com/greekdirectory",
+            "https://www.tiktok.com/@thegreekdirectory",
+            "https://www.snapchat.com/@greekdirectory",
+            "https://www.reddit.com/u/thegreekdirectory/",
+            "https://www.reddit.com/r/thegreekdirectory/"
+        ]
+    }
+    </script>
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
     
     <style>
@@ -200,9 +313,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         .social-youtube { background: #FF0000; color: white; }
         .social-tiktok { background: #000000; color: white; }
         .social-linkedin { background: #0077B5; color: white; }
-        .social-google { background: #4285F4; color: white; }
-        .social-yelp { background: #D32323; color: white; }
-        .social-tripadvisor { background: #00AF87; color: white; }
+        .social-google { background: #ffffff; color: #4285F4; border: 2px solid #4285F4; box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.18); }
+        .social-yelp { background: #ffffff; border: 2px solid #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.16); }
+        .social-tripadvisor { background: #ffffff; border: 2px solid #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.16); }
+        .social-yelp img, .social-tripadvisor img { width: 22px; height: 22px; display: block; }
         .social-other { background: #6B7280; color: white; }
         .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
         .share-button:hover { transform: scale(1.1); }
@@ -231,22 +345,106 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
-        .listing-description p { margin-bottom: 0.75rem; }
+        .listing-description-wrap { margin: 0 0 1.5rem; }
+        .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
+        .listing-description p { margin-bottom: 1rem; }
+        .listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
+        .listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
+        .description-divider { display: flex; align-items: center; border: 1px solid #d1d5db; border-top: 0; border-radius: 0 0 10px 10px; padding: 10px; background: #ffffff; }
+        .description-divider-line { flex: 1; border-top: 1px solid #d1d5db; min-width: 0; }
+        .read-more-btn { margin: 0 12px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+        .verified-checkmark-btn { border: 0; background: transparent; padding: 0; margin-left: 8px; cursor: pointer; position: relative; display: inline-flex; align-items: center; }
+        .verified-checkmark-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; min-width: 230px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .verified-checkmark-btn.open .verified-checkmark-tooltip { display: block; }
+        .hours-tooltip-wrap { position: relative; display: inline-flex; align-items: center; margin-left: 8px; }
+        .hours-tooltip-icon { width: 16px; height: 16px; color: #6b7280; cursor: pointer; }
+        .hours-tooltip { position: absolute; top: 20px; left: 0; z-index: 20; min-width: 220px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .hours-tooltip-wrap.open .hours-tooltip { display: block; }
         .desktop-listing-layout { display: block; }
         .desktop-main-column, .desktop-side-column { min-width: 0; }
         .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
+        .desktop-contact-card .flex.items-center.justify-center.gap-2.px-6.py-3 { padding-top: 10px; padding-bottom: 10px; }
+        .mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
+        .mobile-cta-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+        .additional-info-table { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+        .additional-info-row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr); gap: 16px; padding: 10px 14px; border-bottom: 1px solid #f3f4f6; }
+        .additional-info-row:last-child { border-bottom: none; }
+        .additional-info-row:nth-child(even) { background: #f9fafb; }
+        .map-fallback { display: none; margin-top: 12px; padding: 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 14px; }
+        .map-fallback.visible { display: block; }
+        .location-section.map-unavailable #listingMap { display: none; }
+
+        .related-listings-section { margin-top: 2rem; margin-bottom: 2rem; }
+        .related-listing-card { border: 2px solid #045093; border-radius: 10px; }
+        .claim-listing-section { margin-top: 1.5rem; }
+        .pricing-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:#eff6ff; color:#045093; font-weight:700; font-size:12px; }
+        .badge-coming-soon { background: #f97316; color: #fff; }
+        .share-button { border: none; outline: none; box-shadow: none; }
+        .carousel-container { position: relative; }
+        .star-button { position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,0.6); box-shadow:0 2px 8px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.04); cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3; transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease; }
+        .star-button:hover { transform:scale(1.15); box-shadow:0 4px 14px rgba(0,0,0,.30),0 0 0 1px rgba(0,0,0,0.06); background:#fff; }
+        .star-button.starred { background:rgba(255,253,235,.97); border-color:rgba(234,179,8,.5); box-shadow:0 2px 10px rgba(202,138,4,.30),0 0 0 1px rgba(234,179,8,0.15); }
+        .star-icon { width:17px; height:17px; fill:#d1d5db; stroke:#9ca3af; stroke-width:1.8; }
+        .star-button.starred .star-icon { fill:#facc15; stroke:#ca8a04; }
+
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
         @media (min-width: 768px) {
-            .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
+            .social-map-grid { display: block; }
         }
         @media (min-width: 1024px) {
             .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-            .desktop-side-column { position: sticky; top: 24px; }
+            .desktop-side-column { position: sticky; top: 72px; margin-top: 0; }
         }
-        @media (max-width: 767px) {
-            .share-section { margin-bottom: 24px; }
+        @media (max-width: 1023px) {
+            .desktop-side-column { margin-top: 24px; }
+        }
+@media (max-width: 767px) {
+    .share-section { margin-bottom: 24px; }
+
+    .desktop-listing-layout { 
+        display: flex; 
+        flex-direction: column; 
+    }
+
+    .desktop-main-column { 
+        display: flex; 
+        flex-direction: column; 
+    }
+
+    .desktop-main-column > * {
+        width: 100%;
+    }
+
+    .listing-main-header { 
+        order: 1; 
+    }
+
+    .mobile-cta-wrap { 
+        order: 2;
+        display: block;
+    }
+
+    .listing-description-wrap { 
+        order: 3; 
+    }
+
+    #locationSection { order: 4; }
+    .desktop-side-column { position: static; order: 5; margin-top: 0; }
+    #additionalInfoSectionWrap { order: 6; }
+    #ownerInfoSection { order: 7; }
+    .social-map-grid { order: 8; }
+    .related-listings-section { order: 9; }
+    .claim-listing-section { order: 10; }
+}
+
+        #listingMap,
+        #listingMap .leaflet-pane,
+        #listingMap .leaflet-top,
+        #listingMap .leaflet-bottom,
+        #listingMap .leaflet-control {
+            z-index: 1 !important;
         }
         
         @media (prefers-color-scheme: dark) {
@@ -270,59 +468,51 @@ or distribution of this code can result in legal action to the fullest extent pe
             .leaflet-popup-tip { background: #2a2a2a !important; }
             .subcategory-tag { background: #404040; color: #e5e5e5; }
             .owner-info-section { background: #2a2a2a; border-color: #404040; }
+            .listing-description { background: #2a2a2a; border-color: #404040; }
+            .listing-description.collapsed::after { background: linear-gradient(to bottom, rgba(42,42,42,0), rgba(42,42,42,1)); }
+            .description-divider-line, .additional-info-table, .additional-info-row { border-color: #404040; }
+            .additional-info-row:nth-child(even), .map-fallback, .read-more-btn, .desktop-contact-card { background: #1f1f1f; color: #e5e7eb; border-color: #404040; }
+            .social-google, .social-yelp, .social-tripadvisor { background: #ffffff; }
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
     </style>
-
-    <script type="application/ld+json">
-    {
-        "@context":"https://schema.org",
-        "@type":"WebSite",
-        "name":"The Greek Directory",
-        "url":"https://thegreekdirectory.org",
-        "potentialAction":{
-            "@type":"SearchAction",
-            "target":"https://thegreekdirectory.org/listings?q={search_term_string}",
-            "query-input":"required name=search_term_string"
-        }
-    }
-    </script>
-
-    <script type="application/ld+json">
-    {
-        "@context":"https://schema.org",
-        "@type":"Organization",
-        "name":"The Greek Directory",
-        "url":"https://thegreekdirectory.org",
-        "logo":"https://images.thegreekdirectory.org/logo/blue.svg",
-        "sameAs":[
-            "https://www.facebook.com/thegreekdirectory",
-            "https://www.instagram.com/thegreekdirectory",
-            "https://www.youtube.com/@thegreekdirectory",
-            "https://x.com/greekdirectory",
-            "https://www.tiktok.com/@thegreekdirectory",
-            "https://www.snapchat.com/@greekdirectory",
-            "https://www.reddit.com/u/thegreekdirectory/",
-            "https://www.reddit.com/r/thegreekdirectory/"
-        ]
-    }
-    </script>
-
 </head>
 <body class="bg-gray-50">
+    <noscript>
+      <style>
+        .tgd-noscript-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:20px}
+        .tgd-noscript-card{max-width:400px;padding:30px;border-top:5px solid #045093;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,0.1);border-radius:8px}
+        .tgd-noscript-title{color:#045093;margin-top:0}
+        .tgd-noscript-copy{color:#444;line-height:1.5}
+        @media (prefers-color-scheme: dark){
+          .tgd-noscript-overlay{background:rgba(17,24,39,0.95)}
+          .tgd-noscript-card{background:#111827;box-shadow:0 10px 25px rgba(0,0,0,0.45)}
+          .tgd-noscript-copy{color:#e5e7eb}
+        }
+      </style>
+      <div class="tgd-noscript-overlay">
+        <div class="tgd-noscript-card">
+          <h2 class="tgd-noscript-title">JavaScript Required</h2>
+          <p class="tgd-noscript-copy">To experience the full functionality of <strong>TGD</strong>, please enable JavaScript in your browser settings.</p>
+        </div>
+      </div>
+    </noscript>
     <!-- Header -->
     <div data-partial="header"></div>
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
     <div class="max-w-6xl mx-auto px-4 py-8">
-        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
+        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow" id="carouselSection">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
                     <div class="carousel-slide h-full"><img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80" alt="Hello" class="w-full h-full object-cover"></div>
                 </div>
                 
+                <button class="star-button" type="button" data-listing-id="hello" onclick="toggleListingStar(event)" aria-label="Star listing">
+                    <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
+                </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
             </div>
         </div>
@@ -330,11 +520,11 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="gallery-modal" id="galleryModal" aria-hidden="true">
             <div class="gallery-content">
                 <button class="gallery-close" type="button" onclick="closeGallery()" aria-label="Close gallery">×</button>
-                <img id="galleryImage" class="gallery-image" alt="Hello photo">
+                <img id="galleryImage" class="gallery-image" alt="Hello in , IL">
                 <div class="gallery-controls">
-                    <button class="gallery-nav-btn" type="button" onclick="prevGallerySlide()">❮</button>
+                    <button class="gallery-nav-btn" type="button" onclick="prevGallerySlide()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
                     <div class="gallery-counter" id="galleryCounter">1 / 1</div>
-                    <button class="gallery-nav-btn" type="button" onclick="nextGallerySlide()">❯</button>
+                    <button class="gallery-nav-btn" type="button" onclick="nextGallerySlide()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
                 </div>
             </div>
         </div>
@@ -342,7 +532,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="bg-white rounded-lg p-6 mb-6 card-shadow">
             <div class="desktop-listing-layout">
                 <div class="desktop-main-column">
-                    <div class="flex justify-between items-start mb-4">
+                    <div class="flex justify-between items-start mb-4 listing-main-header" id="headerSection">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-4 flex-wrap">
                                 <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
@@ -353,39 +543,60 @@ or distribution of this code can result in legal action to the fullest extent pe
                                 </div>
                                 <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
                                     <span class="badge badge-claimed">Claimed</span>
+                                    {{PRICING_BADGE}}
                                 </div>
                             </div>
-                            <h2 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">Hello{{CLAIMED_CHECKMARK}}</h2>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">Hello{{CLAIMED_CHECKMARK}}</h1>
                             <p class="text-gray-600 italic mb-2">"asdfgsdfgh"</p>
                         </div>
-                        <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&h=200&fit=crop&q=80" alt="Hello logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
+                        <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&h=200&fit=crop&q=80" alt="Hello in , IL" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
                     </div>
 
-                    <div class="text-gray-700 mb-6 listing-description">dfghjmhgfd</div>
+                    <div class="md:hidden mobile-cta-wrap">
+                        <div class="mobile-cta-bar">
+                            {{PHONE_BUTTON_MOBILE}}
+                            {{EMAIL_BUTTON_MOBILE}}
+                            {{WEBSITE_BUTTON_MOBILE}}
+                            {{DIRECTIONS_BUTTON_MOBILE}}
+                            {{CUSTOM_CTA_BUTTONS_MOBILE}}
+                        </div>
+                    </div>
 
-                    {{ADDITIONAL_INFO_SECTION}}
+                    <div class="listing-description-wrap" id="descriptionSection">
+                        <div class="text-gray-700 listing-description" id="listingDescription">dfghjmhgfd</div>
+                        <div class="description-divider">
+                            <span class="description-divider-line"></span>
+                            <button type="button" class="read-more-btn hidden" id="listingReadMoreBtn">Read more</button>
+                            <span class="description-divider-line"></span>
+                        </div>
+                    </div>
+
                     
+                    <div id="additionalInfoSectionWrap">{{ADDITIONAL_INFO_SECTION}}</div>
+                    <div id="ownerInfoSection"></div>
 
-                    <div class="social-map-grid">
+                    <div class="social-map-grid" id="socialSection">
                 <div>
                     
+                    <br>
                     
+                    <br>
                     <div class="share-section">
                         <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                         <div class="flex flex-wrap gap-2">
-                            <a href="https://www.facebook.com/sharer/sharer.php?u=https://thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Dfacebook%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-facebook" title="Share on Facebook" onclick="trackClick('share', 'facebook')">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Dfacebook%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-facebook" title="Share on Facebook" onclick="trackClick('share', 'facebook')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                             </a>
-                            <a href="https://twitter.com/intent/tweet?text=Check%20out%20Hello%20on%20The%20Greek%20Directory!&url=https://thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Dtwitter%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-twitter" title="Share on X" onclick="trackClick('share', 'twitter')">
+                            <a href="https://twitter.com/intent/tweet?text=Check%20out%20Hello%20on%20The%20Greek%20Directory!&url=https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Dtwitter%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-twitter" title="Share on X" onclick="trackClick('share', 'twitter')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                             </a>
-                            <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Dlinkedin%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-linkedin" title="Share on LinkedIn" onclick="trackClick('share', 'linkedin')">
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Dlinkedin%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-linkedin" title="Share on LinkedIn" onclick="trackClick('share', 'linkedin')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                             </a>
-                            <a href="sms:?&body=Check%20out%20Hello%20on%20The%20Greek%20Directory!%20https://thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Dsms%26utm_medium%3Dsocial%26utm_campaign%3Dshare" class="share-button share-sms" title="Share via SMS" onclick="trackClick('share', 'sms')">
+                            <a href="sms:?&body=Check%20out%20Hello%20on%20The%20Greek%20Directory!%20https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Dsms%26utm_medium%3Dsocial%26utm_campaign%3Dshare" class="share-button share-sms" title="Share via SMS" onclick="trackClick('share', 'sms')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
                             </a>
-                            <a href="mailto:?subject=Hello%20on%20The%20Greek%20Directory&body=Check%20out%20Hello%20on%20The%20Greek%20Directory!%0Ahttps://thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Demail%26utm_medium%3Dsocial%26utm_campaign%3Dshare" class="share-button share-email" title="Share via Email" onclick="trackClick('share', 'email')">
+                            <a href="mailto:?subject=Hello%20on%20The%20Greek%20Directory&body=Check%20out%20Hello%20on%20The%20Greek%20Directory!%0Ahttps://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello%3Futm_source%3Demail%26utm_medium%3Dsocial%26utm_campaign%3Dshare" class="share-button share-email" title="Share via Email" onclick="trackClick('share', 'email')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
                             </a>
                             <button onclick="shareNative()" class="share-button social-other" title="Share">
@@ -394,11 +605,9 @@ or distribution of this code can result in legal action to the fullest extent pe
                         </div>
                     </div>
                 </div>
-                
-                
                     </div>
                 </div>
-                <aside class="desktop-side-column">
+                <aside class="desktop-side-column" id="contactSection">
                     <div class="desktop-contact-card">
                         <div class="space-y-3 mb-6">
                             
@@ -422,9 +631,9 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-        {{RELATED_LISTINGS_SECTION}}
+        <div class="related-listings-section" id="relatedSection">{{RELATED_LISTINGS_SECTION}}</div>
 
-        
+        <div class="claim-listing-section" id="claimSection"></div>
     </div>
 
     <!-- Footer -->
@@ -434,7 +643,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/partials-loader.js"></script>
+    <script src="/js/pwa/directions.js"></script>
     <script src="/js/pwa/storage.js"></script>
+    <script src="/js/pwa/offline-translation.js"></script>
     <script src="/js/pwa/app.js"></script>
     <script src="/js/pwa/dock.js"></script>
     <script src="/js/pwa/starred.js"></script>
@@ -450,7 +661,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         description: '{{DESCRIPTION_JS}}',
         category: 'Entertainment, Arts & Recreation',
         city: '',
-        state: '',
+        state: 'IL',
         address: '',
         phone: '',
         email: '',
@@ -460,17 +671,95 @@ or distribution of this code can result in legal action to the fullest extent pe
         slug: '{{SLUG}}'
     };
     
-    // Update star button state on load
-    document.addEventListener('DOMContentLoaded', async () => {
+    function openDirections(event) {
+        if (event) event.preventDefault();
+        const listing = window.currentListingData || {};
+        const directionsUrl = (window.TGDDirections && window.TGDDirections.getDirectionsUrl)
+            ? window.TGDDirections.getDirectionsUrl(listing)
+            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((listing.address || '') + ' ' + (listing.city || '') + ' ' + (listing.state || ''))}`;
+        window.open(directionsUrl, '_blank', 'noopener');
+    }
+
+    function getStarredListingIds() {
+        const cookieEntry = document.cookie.split('; ').find((item) => item.startsWith('starredListings='));
+        if (!cookieEntry) return [];
+        try {
+            const parsed = JSON.parse(decodeURIComponent(cookieEntry.split('=')[1]));
+            return Array.isArray(parsed) ? parsed.map(String) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function setStarredListingIds(ids) {
+        const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
+        document.cookie = `starredListings=${encodeURIComponent(JSON.stringify(ids))}; expires=${expires}; path=/; SameSite=Lax`;
+    }
+
+    async function toggleListingStar(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const starButton = document.querySelector('.star-button[data-listing-id="hello"]');
+        if (!starButton) return;
+
+        const listingId = String('hello');
+        const starredIds = getStarredListingIds();
+        const existingIndex = starredIds.indexOf(listingId);
+        const shouldStar = existingIndex === -1;
+
+        if (shouldStar) starredIds.push(listingId);
+        else starredIds.splice(existingIndex, 1);
+
+        setStarredListingIds(starredIds);
+        starButton.classList.toggle('starred', shouldStar);
+        window.dispatchEvent(new CustomEvent('tgd:starred-changed', {
+            detail: { action: shouldStar ? 'added' : 'removed', listingId, timestamp: Date.now() }
+        }));
+
         if (window.PWAStorage) {
             await window.PWAStorage.init();
-            const isStarred = await window.PWAStorage.isStarred('hello');
-            const starButton = document.querySelector('.star-button');
-            if (starButton && isStarred) {
-                starButton.classList.add('starred');
-            }
+            if (shouldStar) await window.PWAStorage.addStarred(window.currentListingData);
+            else await window.PWAStorage.removeStarred(listingId);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const starButton = document.querySelector('.star-button[data-listing-id="hello"]');
+        if (!starButton) return;
+        const listingId = String('hello');
+        const isStarredByCookie = getStarredListingIds().includes(listingId);
+        if (isStarredByCookie) starButton.classList.add('starred');
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            const isStarred = await window.PWAStorage.isStarred(listingId);
+            if (isStarred) starButton.classList.add('starred');
         }
     });
+
+    function handleListingHashRoute() {
+        const hash = (window.location.hash || '').toLowerCase();
+        const targets = {
+            '#carousel': 'carouselSection',
+            '#header': 'headerSection',
+            '#description': 'descriptionSection',
+            '#map': 'locationSection',
+            '#contact': 'contactSection',
+            '#additional': 'additionalInfoSectionWrap',
+            '#owner': 'ownerInfoSection',
+            '#social': 'socialSection',
+            '#related': 'relatedSection',
+            '#claim': 'claimSection'
+        };
+        const targetId = targets[hash];
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.addEventListener('DOMContentLoaded', handleListingHashRoute);
+    window.addEventListener('hashchange', handleListingHashRoute);
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     </script>
@@ -486,9 +775,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         
         const totalSlides = 1;
         const businessName = 'Hello';
-        const listingUrl = 'https://thegreekdirectory.org/listings/entertainment-arts-recreation/hello';
+        const listingUrl = 'https://listings.thegreekdirectory.org/listings/entertainment-arts-recreation/hello';
         const listingId = 'hello';
         const hoursData = {"monday":null,"tuesday":null,"wednesday":null,"thursday":null,"friday":null,"saturday":null,"sunday":null};
+        const businessTimezone = '{{BUSINESS_TIMEZONE}}' || 'America/Chicago';
         const galleryPhotos = {{PHOTOS_JSON}};
         let currentGalleryIndex = 0;
         
@@ -569,7 +859,37 @@ or distribution of this code can result in legal action to the fullest extent pe
             });
             
             checkAdminRedirect();
+            initializeReadMore();
+            initializeTooltipToggle('verifiedCheckmarkButton');
+            initializeTooltipToggle('hoursTooltipButton');
         });
+
+        function initializeTooltipToggle(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                button.classList.toggle('open');
+            });
+            document.addEventListener('click', () => button.classList.remove('open'));
+        }
+
+        function initializeReadMore() {
+            const description = document.getElementById('listingDescription');
+            const readMoreButton = document.getElementById('listingReadMoreBtn');
+            if (!description || !readMoreButton) return;
+            if (description.scrollHeight <= 300) return;
+
+            let expanded = false;
+            description.classList.add('collapsed');
+            readMoreButton.classList.remove('hidden');
+
+            readMoreButton.addEventListener('click', () => {
+                expanded = !expanded;
+                description.classList.toggle('collapsed', !expanded);
+                readMoreButton.textContent = expanded ? 'Read less' : 'Read more';
+            });
+        }
         
         function checkAdminRedirect() {
             const path = window.location.pathname;
@@ -581,20 +901,52 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
+        function parseHoursToMinutes(hoursText) {
+            if (!hoursText || typeof hoursText !== 'string') return null;
+            const value = hoursText.trim();
+            if (!value || value.toLowerCase() === 'closed') return null;
+            if (/24/.test(value.toLowerCase())) return { startMinutes: 0, endMinutes: 1439, overnight: false };
+
+            const h24 = value.match(/^(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})$/);
+            if (h24) {
+                const startMinutes = parseInt(h24[1], 10) * 60 + parseInt(h24[2], 10);
+                const endMinutes = parseInt(h24[3], 10) * 60 + parseInt(h24[4], 10);
+                return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
+            }
+
+            const h12 = value.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!h12) return null;
+            let [, sh, sm, sp, eh, em, ep] = h12;
+            let start = parseInt(sh, 10);
+            let end = parseInt(eh, 10);
+            if (sp.toUpperCase() === 'PM' && start !== 12) start += 12;
+            if (sp.toUpperCase() === 'AM' && start === 12) start = 0;
+            if (ep.toUpperCase() === 'PM' && end !== 12) end += 12;
+            if (ep.toUpperCase() === 'AM' && end === 12) end = 0;
+            const startMinutes = start * 60 + parseInt(sm, 10);
+            const endMinutes = end * 60 + parseInt(em, 10);
+            return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
+        }
+
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
-            if (!hoursData) return;
+            const hasHours = hoursData && Object.values(hoursData).some(value => typeof value === 'string' && value.trim().length > 0);
+            if (!hasHours) {
+                if (badge) badge.style.display = 'none';
+                if (statusText) statusText.style.display = 'none';
+                return;
+            }
             
             const now = new Date();
-            const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+            const localNow = new Date(now.toLocaleString('en-US', { timeZone: businessTimezone }));
             const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-            const today = days[centralTime.getDay()];
+            const today = days[localNow.getDay()];
             const todayHours = hoursData[today];
             
             if (!todayHours || todayHours.toLowerCase() === 'closed') {
                 if (badge) {
-                    badge.textContent = 'Closed Now';
+                    badge.textContent = 'CLOSED';
                     badge.className = 'badge badge-closed';
                 }
                 if (statusText) {
@@ -606,7 +958,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             
             if (todayHours.toLowerCase().includes('24') || todayHours.toLowerCase().includes('open 24')) {
                 if (badge) {
-                    badge.textContent = 'Open Now';
+                    badge.textContent = 'OPEN';
                     badge.className = 'badge badge-open';
                 }
                 if (statusText) {
@@ -618,27 +970,16 @@ or distribution of this code can result in legal action to the fullest extent pe
             
             /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
             
-            const match = todayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-            if (!match) {
+            const parsed = parseHoursToMinutes(todayHours);
+            if (!parsed) {
                 if (badge) badge.style.display = 'none';
                 if (statusText) statusText.style.display = 'none';
                 return;
             }
-            
-            const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = match;
-            let start = parseInt(startHour);
-            let end = parseInt(endHour);
-            
-            if (startPeriod.toUpperCase() === 'PM' && start !== 12) start += 12;
-            if (startPeriod.toUpperCase() === 'AM' && start === 12) start = 0;
-            if (endPeriod.toUpperCase() === 'PM' && end !== 12) end += 12;
-            if (endPeriod.toUpperCase() === 'AM' && end === 12) end = 0;
-            
-            const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
-            const startMinutes = start * 60 + parseInt(startMin);
-            let endMinutes = end * 60 + parseInt(endMin);
-            
-            const isOvernight = endMinutes < startMinutes;
+
+            const currentMinutes = localNow.getHours() * 60 + localNow.getMinutes();
+            const { startMinutes, endMinutes, overnight: isOvernight } = parsed;
+
             const isOpen = isOvernight
                 ? (currentMinutes >= startMinutes || currentMinutes <= endMinutes)
                 : (currentMinutes >= startMinutes && currentMinutes <= endMinutes);
@@ -649,7 +990,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
             if (!isOpen && minutesToOpen > 0 && minutesToOpen <= 60) {
                 if (badge) {
-                    badge.textContent = 'Opening Soon';
+                    badge.textContent = 'OPENING SOON';
                     badge.className = 'badge badge-opening-soon';
                 }
                 if (statusText) {
@@ -661,7 +1002,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
             if (isOpen && minutesToClose > 0 && minutesToClose <= 60) {
                 if (badge) {
-                    badge.textContent = 'Closing Soon';
+                    badge.textContent = 'CLOSING SOON';
                     badge.className = 'badge badge-closing-soon';
                 }
                 if (statusText) {
@@ -673,7 +1014,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
             if (isOpen) {
                 if (badge) {
-                    badge.textContent = 'Open Now';
+                    badge.textContent = 'OPEN';
                     badge.className = 'badge badge-open';
                 }
                 if (statusText) {
@@ -682,7 +1023,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 }
             } else {
                 if (badge) {
-                    badge.textContent = 'Closed Now';
+                    badge.textContent = 'CLOSED';
                     badge.className = 'badge badge-closed';
                 }
                 if (statusText) {
@@ -816,11 +1157,18 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         
         async function initializeMap() {
-            if (!fullAddress || fullAddress === '') {
-                const mapSection = document.querySelector('#listingMap');
-                if (mapSection && mapSection.parentElement) {
-                    mapSection.parentElement.style.display = 'none';
+            const mapFallback = document.getElementById('mapFallback');
+            const showMapFallback = (message) => {
+                if (mapFallback) {
+                    mapFallback.textContent = message || 'Map is currently unavailable for this listing.';
+                    mapFallback.classList.add('visible');
                 }
+                const locationSection = document.getElementById('locationSection');
+                if (locationSection) locationSection.classList.add('map-unavailable');
+            };
+
+            if (!fullAddress || fullAddress === '') {
+                showMapFallback('Map is unavailable because this listing does not include a mappable address.');
                 return;
             }
             
@@ -842,9 +1190,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 if (isNaN(lat) || isNaN(lng)) {
                     const geocoded = await geocodeAddress(fullAddress);
                     if (!geocoded) {
-                        if (mapElement.parentElement) {
-                            mapElement.parentElement.style.display = 'none';
-                        }
+                        showMapFallback('We could not load this map right now. Please use Directions for navigation.');
                         return;
                     }
                     [lat, lng] = geocoded;
@@ -863,7 +1209,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 });
                 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors',
+                    attribution: '',
                     maxZoom: 19
                 }).addTo(map);
                 
@@ -886,9 +1232,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 });
             } catch (e) {
                 console.error('Map error:', e);
-                if (mapElement && mapElement.parentElement) {
-                    mapElement.parentElement.style.display = 'none';
-                }
+                showMapFallback('Map failed to load. Please try again later.');
             }
         }
         
@@ -905,6 +1249,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
     </script>
+    <script>window.gtranslateSettings = {"default_language":"en","native_language_names":true,"detect_browser_language":true,"languages":["en","el"],"globe_color":"#66aaff","wrapper_selector":".gtranslate_wrapper","alt_flags":{"en":"usa"}}</script>
+    <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
 </body>
 </html>
 
