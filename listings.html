@@ -338,6 +338,25 @@
 
 </head>
 <body class="bg-gray-50">
+    <noscript>
+      <style>
+        .tgd-noscript-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:20px}
+        .tgd-noscript-card{max-width:400px;padding:30px;border-top:5px solid #045093;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,0.1);border-radius:8px}
+        .tgd-noscript-title{color:#045093;margin-top:0}
+        .tgd-noscript-copy{color:#444;line-height:1.5}
+        @media (prefers-color-scheme: dark){
+          .tgd-noscript-overlay{background:rgba(17,24,39,0.95)}
+          .tgd-noscript-card{background:#111827;box-shadow:0 10px 25px rgba(0,0,0,0.45)}
+          .tgd-noscript-copy{color:#e5e7eb}
+        }
+      </style>
+      <div class="tgd-noscript-overlay">
+        <div class="tgd-noscript-card">
+          <h2 class="tgd-noscript-title">JavaScript Required</h2>
+          <p class="tgd-noscript-copy">To experience the full functionality of <strong>TGD</strong>, please enable JavaScript in your browser settings.</p>
+        </div>
+      </div>
+    </noscript>
     <!-- Header (loaded via partial) -->
     <div data-partial="header"></div>
 
@@ -396,7 +415,7 @@
             <div class="flex items-center justify-between mb-3">
                 <h3 class="font-semibold text-gray-900">Filters</h3>
                 <div class="flex gap-2">
-                    <button id="clearFiltersBtn" class="text-sm text-blue-600 hover:text-blue-800">Clear All</button>
+                    <button id="clearFiltersBtn" class="text-sm text-blue-600 hover:text-blue-800 px-0 py-0">Clear All</button>
                     <button id="closeFilterBtn" class="text-gray-500">✕</button>
                 </div>
             </div>
@@ -524,9 +543,9 @@
                 <div id="desktopFilterPanel" class="desktop-sidebar">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-semibold text-gray-900">Filters</h3>
-                        <button id="toggleFilterPosition" class="text-xs px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" title="Toggle filter position">⇄</button>
+                        <button id="toggleFilterPosition" class="text-xs p-0 leading-none" title="Toggle filter position" aria-label="Toggle filter position">⇄</button>
                     </div>
-                    <button id="clearFiltersBtn2" class="text-sm text-blue-600 hover:text-blue-800 mb-4 block">Clear All</button>
+                    <button id="clearFiltersBtn2" class="text-sm text-blue-600 hover:text-blue-800 mb-4 block px-0 py-0">Clear All</button>
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>

@@ -389,6 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFiltersFromURL();
     syncFilters();
     checkFilterPosition();
+    handleListingsHashRoute();
+    window.addEventListener('hashchange', handleListingsHashRoute);
 });
 
 
@@ -599,6 +601,15 @@ function loadFiltersFromURL() {
         if (onlineFilter2) onlineFilter2.checked = true;
     }
 
+    const pricing = urlParams.get('pricing');
+    if (pricing) {
+        selectedPricing = pricing;
+        const pricingFilter = document.getElementById('pricingFilter');
+        const pricingFilter2 = document.getElementById('pricingFilter2');
+        if (pricingFilter) pricingFilter.value = pricing;
+        if (pricingFilter2) pricingFilter2.value = pricing;
+    }
+
     createCategoryButtons();
     updateSubcategoryDisplay();
 }
@@ -628,6 +639,7 @@ function updateURL() {
     if (closingSoonOnly) url.searchParams.set('closing', 'true');
     if (hoursUnknownOnly) url.searchParams.set('hours', 'unknown');
     if (onlineOnly) url.searchParams.set('online', 'true');
+    if (selectedPricing) url.searchParams.set('pricing', selectedPricing);
     if (searchTerm) url.searchParams.set('q', searchTerm);
     if (preserveStarred) url.searchParams.set('starred', '1');
     window.history.replaceState({}, '', url);
@@ -662,34 +674,54 @@ function requestPreciseLocation(trigger = 'user-action') {
         return;
     }
     
+    const onSuccess = (position) => {
+        userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+        console.log(`Precise location acquired via ${trigger}:`, userLocation);
+        if (!viewingStarredOnly) applyFilters();
+        if (map) {
+            estimatedLocationCircle = clearEstimatedLocationCircle(map, estimatedLocationCircle);
+            map._hasCenteredOnUser = false;
+            centerMapOnPreferredLocation(map, 13);
+            if (mapOpen) addUserLocationMarker();
+        }
+        if (window.splitMap) {
+            splitEstimatedLocationCircle = clearEstimatedLocationCircle(splitMap, splitEstimatedLocationCircle);
+            centerMapOnPreferredLocation(splitMap, 13);
+            if (userLocation) addSplitUserLocationMarker();
+        }
+    };
+
+    const onError = (error) => {
+        if ((error.code === 2 || error.code === 3) && trigger === 'radius-filter') {
+            navigator.geolocation.getCurrentPosition(onSuccess, () => {}, { enableHighAccuracy: false, timeout: 20000, maximumAge: 300000 });
+            return;
+        }
+        if (error.code === 1) {
+            console.log('[L201] Geolocation permission denied');
+        } else if (error.code === 3) {
+            console.log('[L203] Geolocation timeout');
+        } else {
+            console.log('Location error:', error.message);
+        }
+    };
+
     navigator.geolocation.getCurrentPosition(
-        position => {
-            userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-            console.log(`Precise location acquired via ${trigger}:`, userLocation);
-            if (!viewingStarredOnly) applyFilters();
-            if (map) {
-                estimatedLocationCircle = clearEstimatedLocationCircle(map, estimatedLocationCircle);
-                map._hasCenteredOnUser = false;
-                centerMapOnPreferredLocation(map, 13);
-                if (mapOpen) addUserLocationMarker();
-            }
-            if (window.splitMap) {
-                splitEstimatedLocationCircle = clearEstimatedLocationCircle(splitMap, splitEstimatedLocationCircle);
-                centerMapOnPreferredLocation(splitMap, 13);
-                if (userLocation) addSplitUserLocationMarker();
-            }
-        },
-        (error) => {
-            if (error.code === 1) {
-                console.log('[L201] Geolocation permission denied');
-            } else if (error.code === 3) {
-                console.log('[L203] Geolocation timeout');
-            } else {
-                console.log('Location error:', error.message);
-            }
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        onSuccess,
+        onError,
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
+}
+
+function handleListingsHashRoute() {
+    const hash = (window.location.hash || '').toLowerCase();
+    if (hash === '#map') {
+        if (!mapOpen) toggleMap();
+    } else if (hash === '#splitmap') {
+        if (!mapOpen) toggleMap();
+        if (!splitViewActive) toggleSplitView();
+    } else if (hash === '#filters') {
+        if (!filtersOpen) toggleFilters();
+    }
 }
 
 function addUserLocationMarker() {
@@ -789,9 +821,11 @@ async function loadListings() {
     } catch (error) {
         console.error('[L101] Error loading listings:', error);
         const listingsContainer = document.getElementById('listingsContainer');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
         if (listingsContainer) {
             listingsContainer.innerHTML = '<div class="text-center py-12"><p class="text-red-600 font-semibold mb-2">Error Code: L101</p><p class="text-gray-600">Failed to load listings. Please try refreshing the page.</p></div>';
         }
+        if (loadMoreBtn) loadMoreBtn.classList.add('hidden');
     }
 }
 
@@ -1270,13 +1304,17 @@ function buildBadges(listing) {
     const closingSoon = isClosingSoon(listing.hours);
 
     if (openingSoon) {
-        badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+        badges.push('<span class="badge badge-opening-soon">OPENING SOON</span>');
     } else if (closingSoon) {
-        badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+        badges.push('<span class="badge badge-closing-soon">CLOSING SOON</span>');
     } else if (openStatus === true) {
-        badges.push('<span class="badge badge-open">Open</span>');
+        badges.push('<span class="badge badge-open">OPEN</span>');
     } else if (openStatus === false) {
-        badges.push('<span class="badge badge-closed">Closed</span>');
+        badges.push('<span class="badge badge-closed">CLOSED</span>');
+    }
+
+    if (listing.coming_soon === true) {
+        badges.push('<span class="badge badge-coming-soon">COMING SOON!</span>');
     }
 
     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
@@ -1358,6 +1396,7 @@ function renderListings() {
                     <a href="${listingUrl}" class="block">
                         <div class="h-48 bg-gray-200 relative">
                             ${firstPhoto ? `<img src="${firstPhoto}" alt="${l.business_name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400">No image</div>'}
+                            <div class="listing-image-gradient"></div>
                             ${badges.length > 0 ? `<div class="absolute top-2 left-2 flex gap-2 flex-wrap">${badges.join('')}</div>` : ''}
                         </div>
                         <div class="p-4">
@@ -1365,7 +1404,7 @@ function renderListings() {
                                 ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                                 <div class="flex-1 min-w-0">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
-                                    <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
+                                    <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
                                 </div>
                             </div>
                             <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
@@ -1406,7 +1445,7 @@ function renderListings() {
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
                                 ${badges.join('')}
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
                             <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                             <div class="flex flex-col gap-1 text-sm text-gray-600">
                                 <div class="flex items-center gap-1">
@@ -1496,7 +1535,7 @@ function populateCountryFilter() {
     const countries = [...new Set(allListings.map(l => l.country || 'USA'))].sort();
     ['pricingFilter', 'pricingFilter2'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.value = '';
+        if (el) el.value = selectedPricing || '';
     });
 
     ['comingSoonFilter', 'comingSoonFilter2'].forEach(id => {
@@ -1648,6 +1687,9 @@ function setupEventListeners() {
                 if (radiusFilter2) radiusFilter2.value = selectedRadius;
                 updateRadiusValue();
                 updateURL();
+                if (selectedRadius > 0 && !userLocation) {
+                    requestPreciseLocation('radius-filter');
+                }
                 if (!viewingStarredOnly) {
                     displayedListingsCount = 25;
                     applyFilters();
@@ -1756,6 +1798,7 @@ function setupEventListeners() {
                 const c2 = document.getElementById('comingSoonFilter2');
                 if (c1) c1.checked = comingSoonOnly;
                 if (c2) c2.checked = comingSoonOnly;
+                updateURL();
                 if (!viewingStarredOnly) applyFilters();
             });
         }
@@ -1770,6 +1813,7 @@ function setupEventListeners() {
                 const p2 = document.getElementById('pricingFilter2');
                 if (p1) p1.value = selectedPricing;
                 if (p2) p2.value = selectedPricing;
+                updateURL();
                 if (!viewingStarredOnly) applyFilters();
             });
         }
@@ -1811,7 +1855,7 @@ function setupEventListeners() {
     
     ['pricingFilter', 'pricingFilter2'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.value = '';
+        if (el) el.value = selectedPricing || '';
     });
 
     ['comingSoonFilter', 'comingSoonFilter2'].forEach(id => {
@@ -3277,7 +3321,7 @@ function renderSplitViewListings() {
                                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style="background-color:#055193;">${categoryLabel}</span>
                                 ${badges.join('')}
                             </div>
-                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
+                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
                             <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
                             <div class="text-xs text-gray-600">
                                 <div class="flex items-center gap-1 truncate">
@@ -3295,7 +3339,7 @@ function renderSplitViewListings() {
                             <div class="flex gap-1 mb-1 flex-wrap">
                                 ${badges.join('')}
                             </div>
-                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name} ${checkmarkHtml}</h3>
+                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
                             <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
                             <div class="text-xs text-gray-600">
                                 <div class="flex items-center gap-1 truncate">

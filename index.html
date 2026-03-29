@@ -61,6 +61,25 @@
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 </head>
 <body>
+    <noscript>
+      <style>
+        .tgd-noscript-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:20px}
+        .tgd-noscript-card{max-width:400px;padding:30px;border-top:5px solid #045093;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,0.1);border-radius:8px}
+        .tgd-noscript-title{color:#045093;margin-top:0}
+        .tgd-noscript-copy{color:#444;line-height:1.5}
+        @media (prefers-color-scheme: dark){
+          .tgd-noscript-overlay{background:rgba(17,24,39,0.95)}
+          .tgd-noscript-card{background:#111827;box-shadow:0 10px 25px rgba(0,0,0,0.45)}
+          .tgd-noscript-copy{color:#e5e7eb}
+        }
+      </style>
+      <div class="tgd-noscript-overlay">
+        <div class="tgd-noscript-card">
+          <h2 class="tgd-noscript-title">JavaScript Required</h2>
+          <p class="tgd-noscript-copy">To experience the full functionality of <strong>TGD</strong>, please enable JavaScript in your browser settings.</p>
+        </div>
+      </div>
+    </noscript>
     <!-- Header -->
     <div data-partial="header"></div>
 

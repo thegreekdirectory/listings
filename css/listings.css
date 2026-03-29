@@ -181,6 +181,13 @@ h3,
     stroke: #045093 !important;
 }
 
+.listing-image-gradient {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at top left, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 55%);
+}
+
 /* ============================================
    CURRENT LOCATION BUTTON — ACTIVE STATE
    ============================================ */
@@ -300,6 +307,11 @@ h3,
     color: white;
 }
 
+.badge-coming-soon {
+    background: #ea580c;
+    color: #fff;
+}
+
 .claimed-checkmark {
     display: inline-flex;
     align-items: center;
@@ -330,6 +342,23 @@ button,
 a {
     touch-action: pan-y;
     -webkit-tap-highlight-color: transparent;
+}
+
+button:not([type="range"]),
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+a,
+.share-button {
+    outline: none !important;
+    box-shadow: none;
+}
+
+#clearFiltersBtn,
+#clearFiltersBtn2,
+#typoSuggestion button,
+#toggleFilterPosition {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 /* Filter Panel Styles */

@@ -32,6 +32,13 @@ body {
     background: white;
 }
 
+button:not([type="range"]),
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+a {
+    outline: none !important;
+    box-shadow: none;
+}
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
