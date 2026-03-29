@@ -378,12 +378,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         .related-listing-card { border: 2px solid #045093; border-radius: 10px; }
         .claim-listing-section { margin-top: 1.5rem; }
         .pricing-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:#eff6ff; color:#045093; font-weight:700; font-size:12px; }
-        .badge-coming-soon { background: #ea580c; color: #fff; }
-        .badge { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.28); }
-        .badge-open { background: #0f8a63; color: #fff; }
-        .badge-closed { background: #c53030; color: #fff; }
-        .badge-opening-soon { background: #ca8a04; color: #fff; }
-        .badge-closing-soon { background: #b45309; color: #fff; }
+        .badge-coming-soon { background: #f97316; color: #fff; }
         .share-button { border: none; outline: none; box-shadow: none; }
         .carousel-container { position: relative; }
         .star-button { position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,0.6); box-shadow:0 2px 8px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.04); cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3; transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease; }
@@ -437,10 +432,11 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     #locationSection { order: 4; }
     .desktop-side-column { position: static; order: 5; margin-top: 0; }
-    .owner-info-section { order: 6; }
-    .social-map-grid { order: 7; }
-    .related-listings-section { order: 8; }
-    .claim-listing-section { order: 9; }
+    #additionalInfoSectionWrap { order: 6; }
+    .owner-info-section { order: 7; }
+    .social-map-grid { order: 8; }
+    .related-listings-section { order: 9; }
+    .claim-listing-section { order: 10; }
 }
 
         #listingMap,
@@ -483,13 +479,32 @@ or distribution of this code can result in legal action to the fullest extent pe
     </style>
 </head>
 <body class="bg-gray-50">
+    <noscript>
+      <style>
+        .tgd-noscript-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:20px}
+        .tgd-noscript-card{max-width:400px;padding:30px;border-top:5px solid #045093;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,0.1);border-radius:8px}
+        .tgd-noscript-title{color:#045093;margin-top:0}
+        .tgd-noscript-copy{color:#444;line-height:1.5}
+        @media (prefers-color-scheme: dark){
+          .tgd-noscript-overlay{background:rgba(17,24,39,0.95)}
+          .tgd-noscript-card{background:#111827;box-shadow:0 10px 25px rgba(0,0,0,0.45)}
+          .tgd-noscript-copy{color:#e5e7eb}
+        }
+      </style>
+      <div class="tgd-noscript-overlay">
+        <div class="tgd-noscript-card">
+          <h2 class="tgd-noscript-title">JavaScript Required</h2>
+          <p class="tgd-noscript-copy">To experience the full functionality of <strong>TGD</strong>, please enable JavaScript in your browser settings.</p>
+        </div>
+      </div>
+    </noscript>
     <!-- Header -->
     <div data-partial="header"></div>
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
     <div class="max-w-6xl mx-auto px-4 py-8">
-        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
+        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow" id="carouselSection">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
                     <div class="carousel-slide" style="background: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80') center/cover;" role="img" aria-label="Meraki Events Chicago in Niles, IL"></div>
@@ -517,7 +532,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="bg-white rounded-lg p-6 mb-6 card-shadow">
             <div class="desktop-listing-layout">
                 <div class="desktop-main-column">
-                    <div class="flex justify-between items-start mb-4 listing-main-header">
+                    <div class="flex justify-between items-start mb-4 listing-main-header" id="headerSection">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-4 flex-wrap">
                                 <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
@@ -547,7 +562,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                         </div>
                     </div>
 
-                    <div class="listing-description-wrap">
+                    <div class="listing-description-wrap" id="descriptionSection">
                         <div class="text-gray-700 listing-description" id="listingDescription">At Meraki Event Designs &amp; Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.
 We provide for each of our clients a courteous and professional environment from set up to service breakdown.&nbsp;<div>Meraki Event Designs &amp; Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs &amp; Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.</div></div>
                         <div class="description-divider">
@@ -564,10 +579,10 @@ We provide for each of our clients a courteous and professional environment from
                 <div id="mapFallback" class="map-fallback" role="status" aria-live="polite"></div>
             </div>
         
-                    
-                    
+                    <div id="additionalInfoSectionWrap"></div>
+                    <div id="ownerInfoSection"></div>
 
-                    <div class="social-map-grid">
+                    <div class="social-map-grid" id="socialSection">
                 <div>
                     
                     <br>
@@ -599,18 +614,9 @@ We provide for each of our clients a courteous and professional environment from
                 </div>
                     </div>
                 </div>
-                <aside class="desktop-side-column">
+                <aside class="desktop-side-column" id="contactSection">
                     <div class="desktop-contact-card">
                         <div class="space-y-3 mb-6">
-                            
-                            
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                </svg>
-                <span>(847) 779-3056</span>
-            </div>
-        
                             
                 <div class="flex items-start gap-2">
                     <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="#045093" viewBox="0 0 24 24">
@@ -620,6 +626,14 @@ We provide for each of our clients a courteous and professional environment from
                     <span>9073 Courtland Dr, Niles, IL 60714</span>
                 </div>
             
+                            
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                </svg>
+                <span>(847) 779-3056</span>
+            </div>
+        
                             
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
@@ -636,6 +650,7 @@ We provide for each of our clients a courteous and professional environment from
                 <a href="https://merakieventschicago.com/" target="_blank" class="text-blue-600 hover:underline">merakieventschicago.com</a>
             </div>
         
+                            
                         </div>
 
                         <div class="flex flex-wrap gap-3 mb-2">
@@ -680,10 +695,10 @@ We provide for each of our clients a courteous and professional environment from
 
         <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-        <div class="related-listings-section"></div>
+        <div class="related-listings-section" id="relatedSection"></div>
 
-        <div class="claim-listing-section">
-            <div class="bg-amber-50 border border-amber-300 rounded-lg p-6 text-center" id="claimListingSection">
+        <div class="claim-listing-section" id="claimSection">
+            <div class="rounded-lg p-6 text-center" id="claimListingSection" style="background:#fef3c7;border:1px solid #fbbf24;">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
                 <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Meraki%20Events%20Chicago%20-%20Niles%2C%20IL" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
@@ -792,6 +807,29 @@ We provide for each of our clients a courteous and professional environment from
             if (isStarred) starButton.classList.add('starred');
         }
     });
+
+    function handleListingHashRoute() {
+        const hash = (window.location.hash || '').toLowerCase();
+        const targets = {
+            '#carousel': 'carouselSection',
+            '#header': 'headerSection',
+            '#description': 'descriptionSection',
+            '#map': 'locationSection',
+            '#contact': 'contactSection',
+            '#additional': 'additionalInfoSectionWrap',
+            '#owner': 'ownerInfoSection',
+            '#social': 'socialSection',
+            '#related': 'relatedSection',
+            '#claim': 'claimSection'
+        };
+        const targetId = targets[hash];
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.addEventListener('DOMContentLoaded', handleListingHashRoute);
+    window.addEventListener('hashchange', handleListingHashRoute);
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     </script>
