@@ -2809,6 +2809,19 @@ function detectImageMimeType(url = '') {
 }
 
 function generateTemplateReplacements(listing) {
+    const pricingToSymbols = (value) => {
+        if (value === null || value === undefined || value === '') return '';
+        const numeric = Number(value);
+        if (!Number.isNaN(numeric) && numeric >= 1 && numeric <= 4) {
+            return '$'.repeat(numeric);
+        }
+        const valueStr = String(value).trim();
+        if (/^\${1,4}$/.test(valueStr)) {
+            return valueStr;
+        }
+        return '';
+    };
+
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const listingUrl = `https://thegreekdirectory.org/listing/${listing.slug}`;
     const categoryUrl = `https://thegreekdirectory.org/${categorySlug}`;
@@ -2893,8 +2906,9 @@ function generateTemplateReplacements(listing) {
     }
 
     let pricingBadge = '';
-    if (Number(listing.pricing) >= 1 && Number(listing.pricing) <= 4) {
-        pricingBadge = `<span class="pricing-chip">${'$'.repeat(Number(listing.pricing))}</span>`;
+    const pricingSymbols = pricingToSymbols(listing.pricing);
+    if (pricingSymbols) {
+        pricingBadge = `<span class="pricing-chip">${pricingSymbols}</span>`;
     }
     
     const taglineDisplay = listing.tagline ? `<h2 class="text-gray-600 italic text-xl font-semibold mb-2">${escapeHtml(listing.tagline)}</h2>` : '';
