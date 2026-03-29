@@ -1,6 +1,100 @@
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 const FORM_STORAGE_KEY = 'tgd_submit_form_draft_v4';
+const SUBMISSION_UPLOAD_ID_STORAGE_KEY = 'tgd_submit_upload_listing_id_v1';
+const IMAGE_UPLOAD_SOURCE_CODES = Object.freeze({ admin: 'a', business: 'b', submission: 's' });
+const CLOUDFLARE_IMAGE_DELIVERY_BASE_URL = 'https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ';
+const CLOUDFLARE_IMAGE_DELIVERY_VARIANT = 'public';
+
+function padImageDatePart(value) {
+  return String(value).padStart(2, '0');
+}
+
+function sanitizeImagePathPart(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
+}
+
+function getSubmissionUploadListingId() {
+  let current = localStorage.getItem(SUBMISSION_UPLOAD_ID_STORAGE_KEY);
+  if (current) return current;
+  current = String(Date.now());
+  localStorage.setItem(SUBMISSION_UPLOAD_ID_STORAGE_KEY, current);
+  return current;
+}
+
+function buildCloudflareImageId({ listingId, mediaKind, source }) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = padImageDatePart(now.getMonth() + 1);
+  const day = padImageDatePart(now.getDate());
+  const normalizedKind = mediaKind === 'logo' ? 'logo' : 'photo';
+  const sourceCode = IMAGE_UPLOAD_SOURCE_CODES[source] || IMAGE_UPLOAD_SOURCE_CODES.submission;
+  const safeListingId = sanitizeImagePathPart(listingId);
+  return `${safeListingId}-${normalizedKind}-${year}-${month}-${day}-${sourceCode}`;
+}
+
+function buildCloudflareDeliveryUrl(imageId) {
+  return `${CLOUDFLARE_IMAGE_DELIVERY_BASE_URL}/${encodeURIComponent(imageId)}/${CLOUDFLARE_IMAGE_DELIVERY_VARIANT}`;
+}
+
+function getWebpFileName(fileName = 'upload') {
+  const baseName = String(fileName || 'upload').replace(/\.[^.]+$/, '') || 'upload';
+  return `${baseName}.webp`;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error('Failed to read file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImageElement(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Failed to load image for conversion.'));
+    image.src = src;
+  });
+}
+
+async function convertImageFileToWebp(file) {
+  if (!file?.type?.startsWith('image/') || file.type === 'image/webp') {
+    return file;
+  }
+
+  const imageSrc = await readFileAsDataUrl(file);
+  const image = await loadImageElement(imageSrc);
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth || image.width;
+  canvas.height = image.naturalHeight || image.height;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Image conversion is not supported in this browser.');
+  }
+  context.drawImage(image, 0, 0);
+
+  const blob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, 'image/webp', 0.92);
+  });
+
+  if (!blob) {
+    throw new Error('Image conversion failed.');
+  }
+
+  return new File([blob], getWebpFileName(file.name), {
+    type: 'image/webp',
+    lastModified: Date.now()
+  });
+}
+
 
 let SUBCATEGORY_MAP = {
   'Automotive & Transportation': ['Auto Detailer','Auto Repair Shop','Car Dealer','Taxi & Limo Service'],
@@ -372,6 +466,23 @@ function validatePayload(p){
 }
 
 function saveDraft(){ localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(getFormData())); }
+async function parseUploadJsonResponse(response) {
+  const responseText = await response.text();
+  let result;
+  try {
+    result = responseText ? JSON.parse(responseText) : {};
+  } catch (error) {
+    throw new Error(`Upload failed (${response.status}): ${responseText || 'Invalid JSON response.'}`);
+  }
+
+  if (!response.ok || result?.success === false) {
+    const errorMessage = result?.errors?.[0]?.message || result?.error || result?.message || responseText || 'Upload failed';
+    throw new Error(`Upload failed (${response.status}): ${errorMessage}`);
+  }
+
+  return result;
+}
+
 function restoreDraft(){
   const raw = localStorage.getItem(FORM_STORAGE_KEY); if (!raw) return;
   try {
@@ -408,20 +519,25 @@ function restoreDraft(){
   } catch (e) { console.warn('restore failed', e); }
 }
 
-async function uploadToCloudflare(file){
-  const fd = new FormData(); fd.append('file', file);
+async function uploadToCloudflare(file, { mediaKind = 'photo' } = {}){
+  const uploadFile = await convertImageFileToWebp(file);
+  const imageId = buildCloudflareImageId({
+    listingId: getSubmissionUploadListingId(),
+    mediaKind,
+    source: 'submission'
+  });
+  const fd = new FormData(); fd.append('file', uploadFile);
+  fd.append('id', imageId);
   const res = await fetch('https://tgd-images-upload.thegreekdirectory.org', { method:'POST', body: fd });
-  if (!res.ok) throw new Error('Upload failed');
-  const data = await res.json();
-  if (typeof data === 'string') return data;
-  return data.url || data.result?.variants?.[0] || data.result?.delivery_url || data.result?.url || '';
+  const data = await parseUploadJsonResponse(res);
+  return buildCloudflareDeliveryUrl(data?.result?.id || imageId);
 }
 
 function attachUploaders(){
   document.getElementById('logo_upload').addEventListener('change', async (e) => {
     const f = e.target.files?.[0]; if (!f) return;
     const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading logo...';
-    try { const url = await uploadToCloudflare(f); if (!url) throw new Error('No URL returned from upload'); document.getElementById('logo').value = stripProtocol(String(url)); s.textContent = 'Logo uploaded.'; saveDraft(); }
+    try { const url = await uploadToCloudflare(f, { mediaKind: 'logo' }); if (!url) throw new Error('No URL returned from upload'); document.getElementById('logo').value = stripProtocol(String(url)); s.textContent = 'Logo uploaded.'; saveDraft(); }
     catch(err){ s.textContent = `Logo upload failed: ${err.message}`; }
   });
   document.getElementById('photos_upload').addEventListener('change', async (e) => {
@@ -429,7 +545,7 @@ function attachUploaders(){
     const s = document.getElementById('uploadStatus'); s.textContent = 'Uploading photos...';
     try {
       const urls = [];
-      for (const f of files) { const u = await uploadToCloudflare(f); if (u) urls.push(u); }
+      for (const f of files) { const u = await uploadToCloudflare(f, { mediaKind: 'photo' }); if (u) urls.push(u); }
       const existing = [...document.querySelectorAll('.photo-url-input')].map(i => i.value).filter(Boolean);
       setupPhotoUrlRows([...existing, ...urls.map(u => stripProtocol(String(u)))]);
       s.textContent = 'Photos uploaded.';
@@ -458,6 +574,7 @@ async function submitListingRequest(event){
     status.textContent = '✅ Submitted successfully!';
     status.style.color = '#166534';
     localStorage.removeItem(FORM_STORAGE_KEY);
+    localStorage.removeItem(SUBMISSION_UPLOAD_ID_STORAGE_KEY);
     document.getElementById('submitForm').reset();
     renderSubcategories();
     setupAdditionalInfoRows();
