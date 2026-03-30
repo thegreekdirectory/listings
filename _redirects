@@ -1,0 +1,4 @@
+/listings/map /listings#map 302
+/listings/filters /listings#filters 302
+/listings/splitmap /listings#splitmap 302
+/*.html  /:splat  301
