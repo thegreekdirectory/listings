@@ -101,6 +101,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "description": "Wedding planning service in Niles, IL. Greek business in Niles, IL. View address, phone, hours, and photos.",
                 "url": "https://thegreekdirectory.org/listing/meraki-events-chicago",
                 "telephone": "+18477793056",
+                "priceRange": "",
                 "image": ["https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80"],
                 "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/refs/heads/main/images/professional-business-services/meraki-events-chicago/logo/logo/logo.jpeg",
                 "address": {
@@ -362,7 +363,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         .hours-tooltip-wrap.open .hours-tooltip { display: block; }
         .desktop-listing-layout { display: block; }
         .desktop-main-column, .desktop-side-column { min-width: 0; }
-        .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; max-height: calc(100vh - 96px); overflow:auto; }
+        .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
         .desktop-contact-card .flex.items-center.justify-center.gap-2.px-6.py-3 { padding-top: 10px; padding-bottom: 10px; }
         .mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
         .mobile-cta-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
@@ -379,12 +380,19 @@ or distribution of this code can result in legal action to the fullest extent pe
         .claim-listing-section { margin-top: 1.5rem; }
         .pricing-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:#eff6ff; color:#045093; font-weight:700; font-size:12px; }
         .badge-coming-soon { background: #f97316; color: #fff; }
+        .share-button { border: none; outline: none; box-shadow: none; }
+        .carousel-container { position: relative; }
+        .star-button { position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,0.6); box-shadow:0 2px 8px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.04); cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3; transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease; }
+        .star-button:hover { transform:scale(1.15); box-shadow:0 4px 14px rgba(0,0,0,.30),0 0 0 1px rgba(0,0,0,0.06); background:#fff; }
+        .star-button.starred { background:rgba(255,253,235,.97); border-color:rgba(234,179,8,.5); box-shadow:0 2px 10px rgba(202,138,4,.30),0 0 0 1px rgba(234,179,8,0.15); }
+        .star-icon { width:17px; height:17px; fill:#d1d5db; stroke:#9ca3af; stroke-width:1.8; }
+        .star-button.starred .star-icon { fill:#facc15; stroke:#ca8a04; }
 
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
         @media (min-width: 768px) {
-            .social-map-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
+            .social-map-grid { display: block; }
         }
         @media (min-width: 1024px) {
             .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
@@ -423,16 +431,13 @@ or distribution of this code can result in legal action to the fullest extent pe
         order: 3; 
     }
 
-    .desktop-side-column { 
-        position: static; 
-        order: 4; 
-        margin-top: 0; 
-    }
-
-    .owner-info-section { order: 5; }
-    .social-map-grid { order: 6; }
-    .related-listings-section { order: 7; }
-    .claim-listing-section { order: 8; }
+    #locationSection { order: 4; }
+    .desktop-side-column { position: static; order: 5; margin-top: 0; }
+    #additionalInfoSectionWrap { order: 6; }
+    #ownerInfoSection { order: 7; }
+    .social-map-grid { order: 8; }
+    .related-listings-section { order: 9; }
+    .claim-listing-section { order: 10; }
 }
 
         #listingMap,
@@ -475,18 +480,40 @@ or distribution of this code can result in legal action to the fullest extent pe
     </style>
 </head>
 <body class="bg-gray-50">
+    <noscript>
+      <style>
+        .tgd-noscript-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:20px}
+        .tgd-noscript-card{max-width:400px;padding:30px;border-top:5px solid #045093;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,0.1);border-radius:8px}
+        .tgd-noscript-title{color:#045093;margin-top:0}
+        .tgd-noscript-copy{color:#444;line-height:1.5}
+        @media (prefers-color-scheme: dark){
+          .tgd-noscript-overlay{background:rgba(17,24,39,0.95)}
+          .tgd-noscript-card{background:#111827;box-shadow:0 10px 25px rgba(0,0,0,0.45)}
+          .tgd-noscript-copy{color:#e5e7eb}
+        }
+      </style>
+      <div class="tgd-noscript-overlay">
+        <div class="tgd-noscript-card">
+          <h2 class="tgd-noscript-title">JavaScript Required</h2>
+          <p class="tgd-noscript-copy">To experience the full functionality of <strong>TGD</strong>, please enable JavaScript in your browser settings.</p>
+        </div>
+      </div>
+    </noscript>
     <!-- Header -->
     <div data-partial="header"></div>
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
     <div class="max-w-6xl mx-auto px-4 py-8">
-        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow">
+        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow" id="carouselSection">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
                     <div class="carousel-slide" style="background: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80') center/cover;" role="img" aria-label="Meraki Events Chicago in Niles, IL"></div>
                 </div>
                 
+                <button class="star-button" type="button" data-listing-id="5" onclick="toggleListingStar(event)" aria-label="Star listing">
+                    <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
+                </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
             </div>
         </div>
@@ -506,7 +533,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="bg-white rounded-lg p-6 mb-6 card-shadow">
             <div class="desktop-listing-layout">
                 <div class="desktop-main-column">
-                    <div class="flex justify-between items-start mb-4 listing-main-header">
+                    <div class="flex justify-between items-start mb-4 listing-main-header" id="headerSection">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-4 flex-wrap">
                                 <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#055193;" onclick="toggleSubcategories()">
@@ -516,6 +543,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                                     <span class="subcategory-tag">Wedding Planner</span>
                                 </div>
                                 <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
+                                    
                                     
                                 </div>
                             </div>
@@ -535,7 +563,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                         </div>
                     </div>
 
-                    <div class="listing-description-wrap">
+                    <div class="listing-description-wrap" id="descriptionSection">
                         <div class="text-gray-700 listing-description" id="listingDescription">At Meraki Event Designs &amp; Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.
 We provide for each of our clients a courteous and professional environment from set up to service breakdown.&nbsp;<div>Meraki Event Designs &amp; Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs &amp; Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.</div></div>
                         <div class="description-divider">
@@ -546,9 +574,16 @@ We provide for each of our clients a courteous and professional environment from
                     </div>
 
                     
-                    
+            <div id="locationSection" class="location-section">
+                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
+                <div id="listingMap"></div>
+                <div id="mapFallback" class="map-fallback" role="status" aria-live="polite"></div>
+            </div>
+        
+                    <div id="additionalInfoSectionWrap"></div>
+                    <div id="ownerInfoSection"></div>
 
-                    <div class="social-map-grid">
+                    <div class="social-map-grid" id="socialSection">
                 <div>
                     
                     <br>
@@ -578,20 +613,11 @@ We provide for each of our clients a courteous and professional environment from
                         </div>
                     </div>
                 </div>
-                
-                
-            <div id="locationSection" class="location-section">
-                <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
-                <div id="listingMap"></div>
-                <div id="mapFallback" class="map-fallback" role="status" aria-live="polite"></div>
-            </div>
-        
                     </div>
                 </div>
-                <aside class="desktop-side-column">
+                <aside class="desktop-side-column" id="contactSection">
                     <div class="desktop-contact-card">
                         <div class="space-y-3 mb-6">
-                            
                             
                 <div class="flex items-start gap-2">
                     <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="#045093" viewBox="0 0 24 24">
@@ -670,10 +696,10 @@ We provide for each of our clients a courteous and professional environment from
 
         <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
-        <div class="related-listings-section"></div>
+        <div class="related-listings-section" id="relatedSection"></div>
 
-        <div class="claim-listing-section">
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center" id="claimListingSection">
+        <div class="claim-listing-section" id="claimSection">
+            <div class="rounded-lg p-6 text-center" id="claimListingSection" style="background:#fef3c7;border:1px solid #fbbf24;">
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
                 <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
                 <a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Meraki%20Events%20Chicago%20-%20Niles%2C%20IL" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
@@ -725,17 +751,86 @@ We provide for each of our clients a courteous and professional environment from
         window.open(directionsUrl, '_blank', 'noopener');
     }
 
-    // Update star button state on load
-    document.addEventListener('DOMContentLoaded', async () => {
+    function getStarredListingIds() {
+        const cookieEntry = document.cookie.split('; ').find((item) => item.startsWith('starredListings='));
+        if (!cookieEntry) return [];
+        try {
+            const parsed = JSON.parse(decodeURIComponent(cookieEntry.split('=')[1]));
+            return Array.isArray(parsed) ? parsed.map(String) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function setStarredListingIds(ids) {
+        const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
+        document.cookie = `starredListings=${encodeURIComponent(JSON.stringify(ids))}; expires=${expires}; path=/; SameSite=Lax`;
+    }
+
+    async function toggleListingStar(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const starButton = document.querySelector('.star-button[data-listing-id="5"]');
+        if (!starButton) return;
+
+        const listingId = String('5');
+        const starredIds = getStarredListingIds();
+        const existingIndex = starredIds.indexOf(listingId);
+        const shouldStar = existingIndex === -1;
+
+        if (shouldStar) starredIds.push(listingId);
+        else starredIds.splice(existingIndex, 1);
+
+        setStarredListingIds(starredIds);
+        starButton.classList.toggle('starred', shouldStar);
+        window.dispatchEvent(new CustomEvent('tgd:starred-changed', {
+            detail: { action: shouldStar ? 'added' : 'removed', listingId, timestamp: Date.now() }
+        }));
+
         if (window.PWAStorage) {
             await window.PWAStorage.init();
-            const isStarred = await window.PWAStorage.isStarred('5');
-            const starButton = document.querySelector('.star-button');
-            if (starButton && isStarred) {
-                starButton.classList.add('starred');
-            }
+            if (shouldStar) await window.PWAStorage.addStarred(window.currentListingData);
+            else await window.PWAStorage.removeStarred(listingId);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const starButton = document.querySelector('.star-button[data-listing-id="5"]');
+        if (!starButton) return;
+        const listingId = String('5');
+        const isStarredByCookie = getStarredListingIds().includes(listingId);
+        if (isStarredByCookie) starButton.classList.add('starred');
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            const isStarred = await window.PWAStorage.isStarred(listingId);
+            if (isStarred) starButton.classList.add('starred');
         }
     });
+
+    function handleListingHashRoute() {
+        const hash = (window.location.hash || '').toLowerCase();
+        const targets = {
+            '#carousel': 'carouselSection',
+            '#header': 'headerSection',
+            '#description': 'descriptionSection',
+            '#map': 'locationSection',
+            '#contact': 'contactSection',
+            '#additional': 'additionalInfoSectionWrap',
+            '#owner': 'ownerInfoSection',
+            '#social': 'socialSection',
+            '#related': 'relatedSection',
+            '#claim': 'claimSection'
+        };
+        const targetId = targets[hash];
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.addEventListener('DOMContentLoaded', handleListingHashRoute);
+    window.addEventListener('hashchange', handleListingHashRoute);
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     </script>
@@ -922,7 +1017,7 @@ We provide for each of our clients a courteous and professional environment from
             
             if (!todayHours || todayHours.toLowerCase() === 'closed') {
                 if (badge) {
-                    badge.textContent = 'Closed Now';
+                    badge.textContent = 'CLOSED';
                     badge.className = 'badge badge-closed';
                 }
                 if (statusText) {
@@ -934,7 +1029,7 @@ We provide for each of our clients a courteous and professional environment from
             
             if (todayHours.toLowerCase().includes('24') || todayHours.toLowerCase().includes('open 24')) {
                 if (badge) {
-                    badge.textContent = 'Open Now';
+                    badge.textContent = 'OPEN';
                     badge.className = 'badge badge-open';
                 }
                 if (statusText) {
@@ -966,7 +1061,7 @@ We provide for each of our clients a courteous and professional environment from
 
             if (!isOpen && minutesToOpen > 0 && minutesToOpen <= 60) {
                 if (badge) {
-                    badge.textContent = 'Opening Soon';
+                    badge.textContent = 'OPENING SOON';
                     badge.className = 'badge badge-opening-soon';
                 }
                 if (statusText) {
@@ -978,7 +1073,7 @@ We provide for each of our clients a courteous and professional environment from
 
             if (isOpen && minutesToClose > 0 && minutesToClose <= 60) {
                 if (badge) {
-                    badge.textContent = 'Closing Soon';
+                    badge.textContent = 'CLOSING SOON';
                     badge.className = 'badge badge-closing-soon';
                 }
                 if (statusText) {
@@ -990,7 +1085,7 @@ We provide for each of our clients a courteous and professional environment from
 
             if (isOpen) {
                 if (badge) {
-                    badge.textContent = 'Open Now';
+                    badge.textContent = 'OPEN';
                     badge.className = 'badge badge-open';
                 }
                 if (statusText) {
@@ -999,7 +1094,7 @@ We provide for each of our clients a courteous and professional environment from
                 }
             } else {
                 if (badge) {
-                    badge.textContent = 'Closed Now';
+                    badge.textContent = 'CLOSED';
                     badge.className = 'badge badge-closed';
                 }
                 if (statusText) {
