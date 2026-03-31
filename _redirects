@@ -7,7 +7,6 @@
 /*.php  /:splat  301
 /*.asp  /:splat  301
 /*.aspx  /:splat  301
-/reserved / 301
 
 # =====================
 # ===LISTINGS HASHES===
@@ -48,6 +47,8 @@
 # Post
 /post/* /reserved?n=post 307
 /post /reserved?n=post 307
+/posts/* /reserved?n=post 307
+/posts /reserved?n=post 307
 
 # Resource
 /resources /reserved?n=resources 307
