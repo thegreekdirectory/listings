@@ -85,13 +85,12 @@
     </div>
   </div>
 <script>
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+    const urlParams = new URLSearchParams(window.location.search);
     const firstKey = urlParams.keys().next().value;
     const paramValue = urlParams.get(firstKey);
     const urlElement = document.getElementById('requested-url');
     if (urlElement) {
-       urlElement.textContent = paramValue || "None";
+        urlElement.textContent = paramValue ? "/" + paramValue : "None";
     }
 </script>
 </body>
