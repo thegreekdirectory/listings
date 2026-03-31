@@ -105,7 +105,8 @@
     const urlElement = document.getElementById('requested-url');
     if (urlElement) {
         urlElement.textContent = "/" + displayName;
-    } else {
+    }
+    if (displayName === "Unknown Link") {
     window.location.replace("https://thegreekdirectory.org");
     }
 </script>
