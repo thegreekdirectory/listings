@@ -8,7 +8,6 @@
 /*.asp  /:splat  301
 /*.aspx  /:splat  301
 /reserved / 301
-/reserved/* / 301
 
 # =====================
 # ===LISTINGS HASHES===
