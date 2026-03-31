@@ -1,4 +1,8 @@
 /*.html  /:splat  301
+/*.htm  /:splat  301
+/*.php  /:splat  301
+/*.asp  /:splat  301
+/*.aspx  /:splat  301
 /listings/map /listings#map 302
 /listings/filters /listings#filters 302
 /listings/splitmap /listings#splitmap 302
