@@ -1,9 +1,55 @@
+# =====================
+# =====FILE ENDINGS====
+# =====================
+
 /*.html  /:splat  301
 /*.htm  /:splat  301
 /*.php  /:splat  301
 /*.asp  /:splat  301
 /*.aspx  /:splat  301
-/listings/map /listings#map 302
-/listings/filters /listings#filters 302
-/listings/splitmap /listings#splitmap 302
-/claim/*  /claim?id=:splat  301
+
+# =====================
+# ===LISTINGS HASHES===
+# =====================
+
+/listings/map /listings#map 307
+/listings/filters /listings#filters 307
+/listings/splitmap /listings#splitmap 307
+
+# =====================
+# ===RESERVED PAGES====
+# =====================
+
+# Claim
+/claim  /reserved  307
+/claim/*  /reserved  307
+
+# Place
+/place/* /reserved 307
+/places /reserved 307
+/place /reserved 307
+/places/* /reserved 307
+
+# Event
+/events /reserved 307
+/events/* /reserved 307
+/event/* /reserved 307
+/event /reserved 307
+
+# News
+/news /reserved 307
+/news/* /reserved 307
+
+# Blog
+/blog/* /reserved 307
+/blog /reserved 307
+
+# Post
+/post/* /reserved 307
+/post /reserved 307
+
+# Resource
+/resources /reserved 307
+/resources/* /reserved 307
+/resource/* /reserved 307
+/resource /reserved 307
