@@ -21,35 +21,35 @@
 # =====================
 
 # Claim
-/claim  /reserved  307
-/claim/*  /reserved  307
+/claim  /reserved?n=claim  307
+/claim/*  /reserved?n=claim  307
 
 # Place
-/place/* /reserved 307
-/places /reserved 307
-/place /reserved 307
-/places/* /reserved 307
+/place/* /reserved?n=place 307
+/places /reserved?n=places 307
+/place /reserved?n=place 307
+/places/* /reserved?n=places 307
 
 # Event
-/events /reserved 307
-/events/* /reserved 307
-/event/* /reserved 307
-/event /reserved 307
+/events /reserved?n=events 307
+/events/* /reserved?n=events 307
+/event/* /reserved?n=event 307
+/event /reserved?n=event 307
 
 # News
-/news /reserved 307
-/news/* /reserved 307
+/news /reserved?n=news 307
+/news/* /reserved?n=news 307
 
 # Blog
-/blog/* /reserved 307
-/blog /reserved 307
+/blog/* /reserved?n=blog 307
+/blog /reserved?n=blog 307
 
 # Post
-/post/* /reserved 307
-/post /reserved 307
+/post/* /reserved?n=post 307
+/post /reserved?n=post 307
 
 # Resource
-/resources /reserved 307
-/resources/* /reserved 307
-/resource/* /reserved 307
-/resource /reserved 307
+/resources /reserved?n=resources 307
+/resources/* /reserved?n=resources 307
+/resource/* /reserved?n=resource 307
+/resource /reserved?n=resource 307
