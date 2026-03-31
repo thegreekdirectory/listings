@@ -47,8 +47,8 @@
 # Post
 /post/* /reserved?n=post 307
 /post /reserved?n=post 307
-/posts/* /reserved?n=post 307
-/posts /reserved?n=post 307
+/posts/* /reserved?n=posts 307
+/posts /reserved?n=posts 307
 
 # Resource
 /resources /reserved?n=resources 307
