@@ -103,11 +103,11 @@
     const queryValue = urlParams.get(firstKey);
     const displayName = urlMap[queryValue] || "Unknown Link";
     const urlElement = document.getElementById('requested-url');
-    if (urlElement) {
-        urlElement.textContent = "/" + displayName;
-    }
     if (displayName === "Unknown Link") {
     window.location.replace("https://thegreekdirectory.org");
+    }
+    if (urlElement) {
+        urlElement.textContent = "/" + displayName;
     }
 </script>
 </body>
