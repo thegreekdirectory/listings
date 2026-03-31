@@ -85,7 +85,6 @@
     </div>
   </div>
 <script>
-    // 1. Create your "variable array" (Mapping IDs to Display Names)
     const urlMap = {
         "e1": "event",
         "e2": "events",
@@ -99,20 +98,15 @@
         "pl2": "places",
         "cl": "claim"
     };
-
-    // 2. Get the query parameter value (e.g., from ?id=1)
     const urlParams = new URLSearchParams(window.location.search);
     const firstKey = urlParams.keys().next().value;
     const queryValue = urlParams.get(firstKey);
-
-    // 3. Look up the value in your map
-    // If the value exists in the map, use it. If not, show "Unknown"
     const displayName = urlMap[queryValue] || "Unknown Link";
-
-    // 4. Inject "/" + the mapped name
     const urlElement = document.getElementById('requested-url');
     if (urlElement) {
         urlElement.textContent = "/" + displayName;
+    } else {
+    window.location.replace("https://thegreekdirectory.org");
     }
 </script>
 </body>
