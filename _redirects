@@ -1,4 +1,5 @@
+/*.html  /:splat  301
 /listings/map /listings#map 302
 /listings/filters /listings#filters 302
 /listings/splitmap /listings#splitmap 302
-/*.html  /:splat  301
+/claim/*  /claim?id=:splat  301
