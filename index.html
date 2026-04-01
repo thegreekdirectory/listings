@@ -5,73 +5,131 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Greek Directory - Discover Greek-Owned Businesses Across America</title>
-    <meta name="description" content="The Greek Directory is the premier online directory of Greek-owned businesses across the United States. Find restaurants, services, shops, and more.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>The Greek Directory — Discover Greek-Owned Businesses Across America</title>
+    <meta name="description" content="The Greek Directory is America's premier online directory of Greek-owned businesses. Find Greek restaurants, shops, services, and professionals near you.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://thegreekdirectory.org/">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="The Greek Directory — Discover Greek-Owned Businesses Across America">
+    <meta property="og:description" content="Find Greek-owned restaurants, shops, services, and professionals across the United States. The premier directory for the Greek-American business community.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="The Greek Directory">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://thegreekdirectory.org/">
+    <meta property="og:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
+    <meta property="og:image:alt" content="Chicago skyline — home of the Greek-American business community">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="The Greek Directory — Discover Greek-Owned Businesses Across America">
+    <meta name="twitter:description" content="Find Greek-owned restaurants, shops, services, and professionals across the United States.">
+    <meta name="twitter:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
+
+    <!-- PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Greek Directory">
 
+    <!-- Resources -->
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/app1.png">
 
-    <style>
-    .pwa-splash {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        transition: opacity 0.5s ease, visibility 0.5s ease;
-    }
-    
-    .pwa-splash.fade-out {
-        opacity: 0;
-        visibility: hidden;
-    }
-    
-    .pwa-splash-logo {
-        width: 120px;
-        height: auto;
-    }
-    
-    @media (prefers-color-scheme: dark) {
-        .pwa-splash {
-            background: #000000;
-        }
-    }
-    /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-</style>
+    <!-- Preconnect for speed -->
+    <link rel="preconnect" href="https://luetekzqrrgdxtopzvqw.supabase.co">
+    <link rel="preconnect" href="https://static.thegreekdirectory.org">
+    <link rel="preload" as="image" href="https://thegreekdirectory.pages.dev/images/chicago.jpeg">
 
-<!-- Add PWA CSS -->
-<link rel="stylesheet" href="css/pwa.css">
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Schema Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://thegreekdirectory.org/#organization",
+          "name": "The Greek Directory",
+          "url": "https://thegreekdirectory.org",
+          "logo": "https://static.thegreekdirectory.org/img/logo/blue.svg",
+          "sameAs": [
+            "https://www.facebook.com/thegreekdirectory",
+            "https://www.instagram.com/thegreekdirectory",
+            "https://www.youtube.com/@thegreekdirectory",
+            "https://x.com/greekdirectory"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://thegreekdirectory.org/#website",
+          "url": "https://thegreekdirectory.org",
+          "name": "The Greek Directory",
+          "inLanguage": "en-US",
+          "publisher": {
+            "@id": "https://thegreekdirectory.org/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://thegreekdirectory.org/listings?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://thegreekdirectory.org/#webpage",
+          "url": "https://thegreekdirectory.org/",
+          "name": "The Greek Directory — Discover Greek-Owned Businesses Across America",
+          "description": "America's premier directory of Greek-owned businesses. Find Greek restaurants, shops, professional services, and community organizations near you.",
+          "isPartOf": {
+            "@id": "https://thegreekdirectory.org/#website"
+          },
+          "about": {
+            "@id": "https://thegreekdirectory.org/#organization"
+          },
+          "inLanguage": "en-US",
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://thegreekdirectory.org/"
+              }
+            ]
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- PWA splash inline (avoids FOUC) -->
+    <style>
+    .pwa-splash{position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s ease,visibility .5s ease}
+    .pwa-splash.fade-out{opacity:0;visibility:hidden}
+    .pwa-splash-logo{width:120px;height:auto}
+    @media(prefers-color-scheme:dark){.pwa-splash{background:#000}}
+    </style>
+
+    <link rel="stylesheet" href="css/pwa.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <link rel="stylesheet" href="/src/output.css">
-<link rel="stylesheet" href="css/index.css">
-    
+    <link rel="stylesheet" href="css/index.css">
+
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 </head>
 <body>
     <noscript>
       <style>
-        .tgd-noscript-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:20px}
-        .tgd-noscript-card{max-width:400px;padding:30px;border-top:5px solid #045093;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,0.1);border-radius:8px}
+        .tgd-noscript-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,.95);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:20px}
+        .tgd-noscript-card{max-width:400px;padding:30px;border-top:5px solid #045093;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,.1);border-radius:8px}
         .tgd-noscript-title{color:#045093;margin-top:0}
         .tgd-noscript-copy{color:#444;line-height:1.5}
-        @media (prefers-color-scheme: dark){
-          .tgd-noscript-overlay{background:rgba(17,24,39,0.95)}
-          .tgd-noscript-card{background:#111827;box-shadow:0 10px 25px rgba(0,0,0,0.45)}
-          .tgd-noscript-copy{color:#e5e7eb}
-        }
+        @media(prefers-color-scheme:dark){.tgd-noscript-overlay{background:rgba(17,24,39,.95)}.tgd-noscript-card{background:#111827;box-shadow:0 10px 25px rgba(0,0,0,.45)}.tgd-noscript-copy{color:#e5e7eb}}
       </style>
       <div class="tgd-noscript-overlay">
         <div class="tgd-noscript-card">
@@ -80,68 +138,51 @@
         </div>
       </div>
     </noscript>
+
     <!-- Header -->
     <div data-partial="header"></div>
 
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1 class="hero-title">The Greek Directory</h1>
-            <p class="hero-subtitle">Discover Greek-owned businesses across America</p>
-            
-            <div class="search-container">
-                <select id="mainCategorySelect" class="search-category">
-                    <option value="">All Categories</option>
-                </select>
-                <input type="search" id="mainSearch" class="search-input" placeholder="Search businesses, categories, or locations...">
-                <button onclick="performSearch()" class="search-button">Search</button>
-            </div>
+    <section class="hero" aria-label="Search Greek-owned businesses">
+        <div class="hero-inner">
+            <div class="hero-content">
+                <div class="hero-eyebrow">The Greek Directory</div>
+                <h1 class="hero-title">Discover Greek-Owned<br>Businesses Across America</h1>
+                <p class="hero-subtitle">From family restaurants to professional services — find the Greek business community near you.</p>
 
-            <div id="subcategoryFilter" class="subcategory-filter hidden">
-                <div class="subcategory-header">
-                    <span class="subcategory-title">Subcategories</span>
-                    <div class="toggle-group">
-                        <button class="toggle-option active" data-mode="any" onclick="setSubcategoryMode('any')">Any</button>
-                        <button class="toggle-option" data-mode="all" onclick="setSubcategoryMode('all')">All</button>
+                <div class="search-wrapper" role="search">
+                    <div class="search-bar-container">
+                        <svg class="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7"/>
+                            <path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+                        </svg>
+                        <input
+                            type="search"
+                            id="mainSearch"
+                            class="search-bar-input"
+                            placeholder="Search businesses, categories, or locations…"
+                            autocomplete="off"
+                            autocorrect="off"
+                            spellcheck="false"
+                            aria-label="Search Greek-owned businesses"
+                        >
+                        <button onclick="performSearch()" class="search-bar-btn" aria-label="Search">
+                            <span class="search-btn-text">Search</span>
+                            <svg class="search-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                                <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
                     </div>
+                    <div id="searchDropdown" class="search-dropdown hidden" role="listbox" aria-label="Search suggestions"></div>
                 </div>
-                <div id="subcategoryButtons" class="subcategory-buttons"></div>
-            </div>
-            
-            <div class="mt-6 flex flex-wrap gap-3 justify-center">
-                <button onclick="searchByCategory('Food & Hospitality')" class="px-4 py-2 bg-white text-gray-800 rounded-lg hover:bg-gray-100 text-sm font-medium">
-                    🍽️ Restaurants
-                </button>
-                <button onclick="searchByCategory('Beauty & Health')" class="px-4 py-2 bg-white text-gray-800 rounded-lg hover:bg-gray-100 text-sm font-medium">
-                    💅 Beauty & Health
-                </button>
-                <button onclick="searchByCategory('Professional & Business Services')" class="px-4 py-2 bg-white text-gray-800 rounded-lg hover:bg-gray-100 text-sm font-medium">
-                    💼 Services
-                </button>
-                <button onclick="searchByCategory('Retail & Shopping')" class="px-4 py-2 bg-white text-gray-800 rounded-lg hover:bg-gray-100 text-sm font-medium">
-                    🛍️ Shopping
-                </button>
-            </div>
-            
-            <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
-            
-            <div class="mt-4">
-                <div class="relative max-w-md mx-auto">
-                    <input type="text" id="heroLocationSearch" placeholder="Search by city or state..." 
-                        class="w-full px-4 py-2 rounded-lg border-2 border-white/30 bg-white/10 text-white placeholder-white/70 focus:outline-none focus:border-white/50"
-                        oninput="handleHeroLocationSearch(this.value)">
-                    <div id="heroLocationResults" class="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg max-h-60 overflow-y-auto hidden z-10"></div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Categories Section -->
-    <section class="categories-section">
-        <div class="container">
-            <h2 class="section-title">Browse Categories</h2>
-            <div class="categories-grid" id="categoriesGrid">
-                <!-- Populated by JavaScript -->
+                <div class="hero-chips" aria-label="Browse by category">
+                    <button onclick="searchByCategory('Food &amp; Hospitality')" class="hero-chip">🍽️ Restaurants</button>
+                    <button onclick="searchByCategory('Beauty &amp; Health')" class="hero-chip">💅 Beauty</button>
+                    <button onclick="searchByCategory('Professional &amp; Business Services')" class="hero-chip">💼 Services</button>
+                    <button onclick="searchByCategory('Retail &amp; Shopping')" class="hero-chip">🛍️ Shopping</button>
+                    <button onclick="searchByCategory('Church &amp; Religious Organization')" class="hero-chip">⛪ Churches</button>
+                </div>
             </div>
         </div>
     </section>
@@ -149,22 +190,24 @@
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
     <!-- Featured Businesses -->
-    <section class="featured-section">
+    <section class="featured-section" id="featuredSection">
         <div class="container">
-            <h2 class="section-title">Featured Businesses</h2>
-            <div class="listings-grid" id="featuredListings">
-                <!-- Populated by JavaScript -->
+            <div class="section-header">
+                <h2 class="section-title">Featured Businesses</h2>
+                <a href="/listings" class="section-link">View all listings →</a>
             </div>
+            <div class="listings-grid" id="featuredListings"></div>
         </div>
     </section>
 
     <!-- Recent Businesses -->
-    <section class="recent-section">
+    <section class="recent-section" id="recentSection">
         <div class="container">
-            <h2 class="section-title">Recently Added</h2>
-            <div class="listings-grid" id="recentListings">
-                <!-- Populated by JavaScript -->
+            <div class="section-header">
+                <h2 class="section-title">Recently Added</h2>
+                <a href="/listings" class="section-link">View all listings →</a>
             </div>
+            <div class="listings-grid" id="recentListings"></div>
         </div>
     </section>
 
