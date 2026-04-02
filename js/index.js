@@ -277,7 +277,7 @@ async function loadListings() {
 
         const { data, error } = await indexSupabase
             .from('listings')
-            .select('id, business_name, tagline, description, category, city, state, slug, logo, photos, tier, verified, is_claimed, show_claim_button, phone')
+            .select('id, business_name, tagline, description, category, city, state, slug, logo, photos, tier, verified, is_claimed, phone')
             .eq('visible', true)
             .order('created_at', { ascending: false })
             .limit(100);
@@ -353,8 +353,7 @@ function renderListingCard(listing) {
         listing.tier === 'VERIFIED' ||
         listing.tier === 'FEATURED' ||
         listing.tier === 'PREMIUM' ||
-        listing.is_claimed ||
-        listing.show_claim_button === false;
+        listing.is_claimed;
 
     return `
         <a href="${url}" class="listing-card">
