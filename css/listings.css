@@ -382,12 +382,8 @@ a,
    Higher tier = higher z-index
    ============================================ */
 .custom-marker {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 3px solid var(--primary-blue);
-    overflow: hidden;
-    background: white;
+    width: 36px;
+    height: 36px;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
@@ -407,13 +403,11 @@ a,
 
 .custom-marker.tier-featured {
     z-index: 300 !important;
-    border-color: #fbbf24;
     box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
 }
 
 .custom-marker.tier-premium {
     z-index: 400 !important;
-    border-color: #fbbf24;
     box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
 }
 
@@ -422,15 +416,7 @@ a,
     z-index: 1000 !important;
 }
 
-.custom-marker img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    pointer-events: none;
-    user-select: none;
-    -webkit-user-drag: none;
-}
+.custom-marker svg { display: block; pointer-events: none; }
 
 /* Marker Cluster Styles */
 .marker-cluster {
@@ -715,6 +701,14 @@ input[type="range"]::-moz-range-thumb {
     box-shadow: 0 4px 16px rgba(202, 138, 4, 0.40), 0 0 0 1px rgba(234,179,8,0.2);
 }
 
+.bouncy-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bouncy-hover:hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
 /* ============================================
    SPLIT VIEW STYLES
    ============================================ */
@@ -842,6 +836,11 @@ input[type="range"]::-moz-range-thumb {
     .desktop-filters {
         width: 280px;
         flex-shrink: 0;
+        position: sticky;
+        top: 80px;
+        align-self: flex-start;
+        max-height: calc(100vh - 90px);
+        overflow-y: auto;
     }
     
     .desktop-content {

@@ -2,3 +2,28 @@
 
 /* Only scan files where you write class names */
 @source "../**/*.{html,js}"; 
+
+::selection {
+  background: #045093;
+  color: #ffffff;
+}
+
+a,
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+select,
+.bouncy-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+a:hover,
+button:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+select:hover,
+.bouncy-hover:hover {
+  transform: translateY(-1px) scale(1.02);
+}

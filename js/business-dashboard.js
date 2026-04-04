@@ -40,6 +40,10 @@ const PHONE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#
 const EMAIL_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.945a2 2 0 002.22 0L21 8"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>`;
 const WEBSITE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.6 9h16.8M3.6 15h16.8M10 3.4A15.4 15.4 0 0112.75 12 15.4 15.4 0 0110 20.6M14 3.4A15.4 15.4 0 0011.25 12 15.4 15.4 0 0014 20.6"></path></svg>`;
 const CHECK_ICON_SVG = `<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+function escapeForStorage(value) {
+    if (typeof value !== 'string') return value;
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
 
 function getTaglineMaxLength(city = '', state = '') {
     const suffixLength = META_DESCRIPTION_SUFFIX.replace('{city}', city || '').replace('{state}', state || '').length;
@@ -1115,8 +1119,8 @@ async function saveChanges() {
     
     try {
         const updates = {
-            tagline: tagline,
-            description: description,
+            tagline: escapeForStorage(tagline),
+            description: escapeForStorage(description),
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
             address: document.getElementById('editAddress').value.trim() || null,
@@ -1166,7 +1170,7 @@ async function saveChanges() {
                 other3_name: document.getElementById('editOtherReview3Name').value.trim() || null,
                 other3: document.getElementById('editOtherReview3').value.trim() || null
             },
-            additional_info: additionalInfo,
+            additional_info: additionalInfo.map((item) => ({ ...item, label: escapeForStorage(item.label || ''), value: escapeForStorage(item.value || '') })),
             custom_ctas: customCtas.slice(0, currentMaxCtas)
         };
         

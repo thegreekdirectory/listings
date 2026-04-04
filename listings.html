@@ -237,19 +237,6 @@
         color: rgba(255, 255, 255, 0.94);
     }
 
-    .listings-intro {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.75rem;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .listings-intro p {
-        margin: 0;
-        color: #374151;
-    }
-
     @media (max-width: 640px) {
         .listings-hero {
             min-height: 185px;
@@ -369,11 +356,6 @@
                 <h2>Discover Greek-owned businesses across Chicago and Chicagoland!</h2>
             </div>
         </section>
-        <section class="listings-intro" aria-labelledby="listings-intro-heading">
-            <h2 id="listings-intro-heading" class="text-lg font-semibold text-gray-900 mb-2">Explore the Chicago Greek business directory</h2>
-            <p>Search and filter restaurants, shops, services, and professionals serving the Greek-American community. Use the directory map, categories, and business pages below to find trusted local options in Chicago and across Illinois.</p>
-        </section>
-
         <div class="relative mb-4 max-w-2xl mx-auto">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
             <input type="text" id="searchInput" placeholder="Search businesses, categories, or locations..." 
@@ -425,8 +407,8 @@
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                    <div id="categoryFilters" class="grid grid-cols-2 gap-2"></div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="categoryDropdown">Category</label>
+                    <select id="categoryDropdown" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></select>
                 </div>
                 <div id="subcategoryContainer" class="hidden">
                     <div class="flex items-center justify-between mb-2">
@@ -552,8 +534,8 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                            <div id="categoryFilters2" class="grid grid-cols-2 gap-2"></div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" for="categoryDropdown2">Category</label>
+                            <select id="categoryDropdown2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></select>
                         </div>
                         <div id="subcategoryContainer2" class="hidden">
                             <div class="flex items-center justify-between mb-2">
