@@ -2,3 +2,46 @@
 
 /* Only scan files where you write class names */
 @source "../**/*.{html,js}"; 
+
+:root {
+  --tgd-bouncy-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+::selection {
+  background: #045093;
+  color: #ffffff;
+}
+
+@media (hover: hover) {
+  :where(
+    button,
+    a[role="button"],
+    input[type="button"],
+    input[type="submit"],
+    .listing-card,
+    .share-button,
+    .social-icon,
+    .mobile-cta-button,
+    .map-control-btn,
+    #listingsContainer > div,
+    .related-listing-card
+  ) {
+    transition: transform 0.2s var(--tgd-bouncy-ease), box-shadow 0.2s ease;
+  }
+
+  :where(
+    button,
+    a[role="button"],
+    input[type="button"],
+    input[type="submit"],
+    .listing-card,
+    .share-button,
+    .social-icon,
+    .mobile-cta-button,
+    .map-control-btn,
+    #listingsContainer > div,
+    .related-listing-card
+  ):hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+}

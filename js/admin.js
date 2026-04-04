@@ -2604,6 +2604,20 @@ function generateHoursSchema(listing) {
     return JSON.stringify(schemaHours);
 }
 
+function decodeEscapedSequences(value) {
+    if (typeof value !== 'string' || value.indexOf('\\') === -1) return value;
+    try {
+        return JSON.parse(`"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+    } catch (error) {
+        return value
+            .replace(/\\n/g, '\n')
+            .replace(/\\t/g, '\t')
+            .replace(/\\"/g, '"')
+            .replace(/\\'/g, "'")
+            .replace(/\\\\/g, '\\');
+    }
+}
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function generateSocialMediaSection(listing) {
@@ -3094,15 +3108,16 @@ function generateTemplateReplacements(listing) {
     let directionsButton = '';
     let directionsButtonMobile = '';
     if (hasStreetAddress && listing.city) {
+        const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent([listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', '))}`;
         directionsButton = `
-            <a href="#" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="openDirections(event); trackClick('directions')">
+            <a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="openDirections(event); trackClick('directions')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
                 Directions
             </a>
         `;
-        directionsButtonMobile = `<a href="#" class="mobile-cta-button" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
+        directionsButtonMobile = `<a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
     }
 
     const maxCtaButtons = 1;
@@ -3139,13 +3154,13 @@ function generateTemplateReplacements(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     return {
-        'BUSINESS_NAME': escapeHtml(listing.business_name),
-        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
+        'BUSINESS_NAME': escapeHtml(decodeEscapedSequences(listing.business_name || '')),
+        'BUSINESS_NAME_ENCODED': encodeURIComponent(decodeEscapedSequences(listing.business_name || '')),
         'CITY_STATE': cityState,
         'IN_CITY': inCity,
-        'TAGLINE': escapeHtml(normalizeTagline(listing.tagline || '')),
-        'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
-        'DESCRIPTION_JS': JSON.stringify(listing.description || '').slice(1, -1),
+        'TAGLINE': escapeHtml(normalizeTagline(decodeEscapedSequences(listing.tagline || ''))),
+        'DESCRIPTION': sanitizeListingDescription(decodeEscapedSequences(listing.description || '')),
+        'DESCRIPTION_JS': JSON.stringify(decodeEscapedSequences(listing.description || '')).slice(1, -1),
         'CATEGORY': escapeHtml(listing.category),
         'PRIMARY_SUBCATEGORY': escapeHtml(listing.primary_subcategory || 'business'),
         'CATEGORY_URL': categoryUrl,
@@ -3169,7 +3184,7 @@ function generateTemplateReplacements(listing) {
         'PHONE': listing.phone || '',
         'PHONE_SCHEMA': listing.phone || '',
         'PRICE_RANGE': pricingSymbols || '',
-        'META_DESCRIPTION': escapeHtml(buildMetaDescription(listing.tagline || '', listing.city || '', listing.state || '')),
+        'META_DESCRIPTION': escapeHtml(buildMetaDescription(decodeEscapedSequences(listing.tagline || ''), listing.city || '', listing.state || '')),
         'EMAIL': listing.email || '',
         'WEBSITE': listing.website || '',
         'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
@@ -3357,7 +3372,7 @@ function generateTemplateReplacementsPart2(listing) {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    let claimButton = '';
+    let claimActions = '<div class="rounded-lg p-4 border border-gray-200 bg-white flex flex-wrap gap-3 items-center justify-center">';
     const firstOwner = owners.length > 0 ? owners[0] : null;
     const isClaimed = listing.is_claimed || (firstOwner && firstOwner.owner_user_id);
     if (!isClaimed && listing.show_claim_button !== false) {
@@ -3366,14 +3381,10 @@ function generateTemplateReplacementsPart2(listing) {
         const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
         const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
         
-        claimButton = `
-            <div class="rounded-lg p-6 text-center" id="claimListingSection" style="background:#fef3c7;border:1px solid #fbbf24;">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
-            </div>
-        `;
+        claimActions += `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-flex px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>`;
     }
+    const suggestEditSubject = encodeURIComponent(`Suggest an Edit - ${listing.business_name || ''} - ${listing.city || ''}, ${listing.state || ''}`);
+    claimActions += `<a href="mailto:contact@thegreekdirectory.org?subject=${suggestEditSubject}" class="inline-flex px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#045093;">Suggest Edit</a></div>`;
     
     const hoursSchema = generateHoursSchema(listing);
     const hasStreetAddress2 = listing.address && /\d/.test(listing.address);
@@ -3389,7 +3400,7 @@ function generateTemplateReplacementsPart2(listing) {
         'REVIEW_SECTION': reviewSection,
         'MAP_SECTION': mapSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
-        'CLAIM_BUTTON': claimButton,
+        'CLAIM_ACTIONS': claimActions,
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,

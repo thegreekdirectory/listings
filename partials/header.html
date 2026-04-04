@@ -1,5 +1,18 @@
 <!-- partials/header.html -->
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+<style>
+.language-switch{--switch-width:90px;--switch-height:32px;--slider-size:24px;--us-blue:#192f5d;--gr-blue:#0d5eaf;display:inline-block}
+.lang-input{display:none}
+.lang-label{width:var(--switch-width);height:var(--switch-height);background-color:var(--us-blue);display:flex;align-items:center;justify-content:space-between;padding:0 8px;border-radius:50px;cursor:pointer;position:relative;transition:background-color .3s ease;box-sizing:border-box}
+.toggle-slider{position:absolute;width:var(--slider-size);height:var(--slider-size);background:#fff;border-radius:50%;left:4px;display:flex;align-items:center;justify-content:center;transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:2}
+.toggle-slider svg{width:14px;height:14px;fill:var(--us-blue)}
+.flag-icon{width:24px;height:18px;display:flex;align-items:center;justify-content:center;z-index:1;opacity:.35;color:#fff;font-size:11px;font-weight:700}
+.lang-en{opacity:1}
+.lang-input:checked + .lang-label{background-color:var(--gr-blue)}
+.lang-input:checked + .lang-label .toggle-slider{transform:translateX(calc(var(--switch-width) - var(--slider-size) - 8px))}
+.lang-input:checked + .lang-label .lang-en{opacity:.35}
+.lang-input:checked + .lang-label .lang-gr{opacity:1}
+</style>
 
 <header id="listingsHeader" class="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
     <div class="max-w-7xl mx-auto px-4">
@@ -25,6 +38,16 @@
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </a>
+                <div class="language-switch" id="headerLanguageSwitch">
+                    <input type="checkbox" id="lang-toggle" class="lang-input" aria-label="Toggle language">
+                    <label for="lang-toggle" class="lang-label" title="Switch Language">
+                        <div class="flag-icon lang-en">EN</div>
+                        <div class="toggle-slider">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path></svg>
+                        </div>
+                        <div class="flag-icon lang-gr">GR</div>
+                    </label>
+                </div>
             </nav>
 
             <!-- Hamburger mode: star icon stays in header, hamburger opens dropdown -->
@@ -38,6 +61,14 @@
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </a>
+                <div class="language-switch">
+                    <input type="checkbox" id="lang-toggle-mobile" class="lang-input" aria-label="Toggle language">
+                    <label for="lang-toggle-mobile" class="lang-label" title="Switch Language">
+                        <div class="flag-icon lang-en">EN</div>
+                        <div class="toggle-slider"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path></svg></div>
+                        <div class="flag-icon lang-gr">GR</div>
+                    </label>
+                </div>
                 <button id="hamburgerBtn" class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;" aria-label="Menu">
                     <svg id="hamburgerIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     <svg id="hamburgerCloseIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -52,6 +83,16 @@
             <a href="/" id="dropHome" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
             <a href="/listings" id="dropListings" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
             <a href="/about" id="dropAbout" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
+            <div class="px-3 py-2">
+                <div class="language-switch">
+                    <input type="checkbox" id="lang-toggle-drop" class="lang-input" aria-label="Toggle language">
+                    <label for="lang-toggle-drop" class="lang-label" title="Switch Language">
+                        <div class="flag-icon lang-en">EN</div>
+                        <div class="toggle-slider"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path></svg></div>
+                        <div class="flag-icon lang-gr">GR</div>
+                    </label>
+                </div>
+            </div>
         </div>
     </div>
 </header>
@@ -193,6 +234,29 @@
     });
 
     updateStarredButtonState();
+
+    function setLanguage(lang) {
+        localStorage.setItem('tgd_language', lang);
+        if (window.PWAApp && typeof window.PWAApp.setLanguage === 'function') {
+            window.PWAApp.setLanguage(lang, { persist: true, reload: false });
+        }
+        window.location.reload();
+    }
+
+    function bindLanguageToggle(id) {
+        var toggle = document.getElementById(id);
+        if (!toggle) return;
+        var currentLanguage = localStorage.getItem('tgd_language') || 'en';
+        toggle.checked = currentLanguage === 'el';
+        toggle.addEventListener('change', function(e) {
+            setLanguage(e.target.checked ? 'el' : 'en');
+        });
+    }
+
+    bindLanguageToggle('lang-toggle');
+    bindLanguageToggle('lang-toggle-mobile');
+    bindLanguageToggle('lang-toggle-drop');
+
     window.addEventListener('popstate',                  updateStarredButtonState);
     window.addEventListener('tgd:starred-state-changed', updateStarredButtonState);
 })();
