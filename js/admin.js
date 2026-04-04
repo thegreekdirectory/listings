@@ -391,8 +391,25 @@ function formatPhoneNumber(phone) {
 }
 
 function sanitizeListingDescription(value) {
-    if (window.RichTextEditor) return window.RichTextEditor.sanitizeRichTextHtml(value || '');
-    return escapeHtml(value || '');
+    const sanitized = window.RichTextEditor
+        ? window.RichTextEditor.sanitizeRichTextHtml(value || '')
+        : escapeHtml(value || '');
+    return sanitized.replace(/<a\b[^>]*>(.*?)<\/a>/gi, '$1');
+}
+
+function normalizeEscapedText(value) {
+    if (value === null || value === undefined) return '';
+    const input = String(value);
+    try {
+        return JSON.parse(`"${input.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+    } catch (_) {
+        return input
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\t/g, '\t')
+            .replace(/\\"/g, '"')
+            .replace(/\\'/g, "'");
+    }
 }
 
 function toDisplayHourLabel(hoursValue) {
@@ -2809,6 +2826,9 @@ function detectImageMimeType(url = '') {
 }
 
 function generateTemplateReplacements(listing) {
+    const normalizedName = normalizeEscapedText(listing.business_name);
+    const normalizedTagline = normalizeEscapedText(normalizeTagline(listing.tagline || ''));
+    const normalizedDescription = normalizeEscapedText(listing.description || '');
     const pricingToSymbols = (value) => {
         if (value === null || value === undefined || value === '') return '';
         const symbolMap = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
@@ -2943,9 +2963,8 @@ function generateTemplateReplacements(listing) {
         if (addressParts.length > 0) {
             addressSection = `
                 <div class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="#045093" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mt-0.5" viewBox="0 0 24 24" fill="none">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M11.3856 23.789L11.3831 23.7871L11.3769 23.7822L11.355 23.765C11.3362 23.7501 11.3091 23.7287 11.2742 23.7008C11.2046 23.6451 11.1039 23.5637 10.9767 23.4587C10.7224 23.2488 10.3615 22.944 9.92939 22.5599C9.06662 21.793 7.91329 20.7041 6.75671 19.419C5.60303 18.1371 4.42693 16.639 3.53467 15.0528C2.64762 13.4758 2 11.7393 2 10C2 7.34784 3.05357 4.8043 4.92893 2.92893C6.8043 1.05357 9.34784 0 12 0C14.6522 0 17.1957 1.05357 19.0711 2.92893C20.9464 4.8043 22 7.34784 22 10C22 11.7393 21.3524 13.4758 20.4653 15.0528C19.5731 16.639 18.397 18.1371 17.2433 19.419C16.0867 20.7041 14.9334 21.793 14.0706 22.5599C13.6385 22.944 13.2776 23.2488 13.0233 23.4587C12.8961 23.5637 12.7954 23.6451 12.7258 23.7008C12.6909 23.7287 12.6638 23.7501 12.645 23.765L12.6231 23.7822L12.6169 23.7871L12.615 23.7885C12.615 23.7885 12.6139 23.7894 12 23L12.6139 23.7894C12.2528 24.0702 11.7467 24.0699 11.3856 23.789ZM12 23L11.3856 23.789C11.3856 23.789 11.3861 23.7894 12 23ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="#045093"/>
                     </svg>
                     <span>${addressParts.join(', ')}</span>
                 </div>
@@ -2989,7 +3008,7 @@ function generateTemplateReplacements(listing) {
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
-                <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
+                <span>${escapeHtml(displayUrl)}</span>
             </div>
         `;
     }
@@ -3050,28 +3069,28 @@ function generateTemplateReplacements(listing) {
     let phoneButtonMobile = '';
     if (listing.phone) {
         phoneButton = `
-            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
+            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium bouncy-hover" onclick="trackClick('call')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                 </svg>
                 Call
             </a>
         `;
-        phoneButtonMobile = `<a href="tel:${listing.phone}" class="mobile-cta-button" style="background:#16a34a;" onclick="trackClick('call')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg><span>Call</span></a>`;
+        phoneButtonMobile = `<a href="tel:${listing.phone}" class="mobile-cta-button bouncy-hover" style="background:#16a34a;" onclick="trackClick('call')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg><span>Call</span></a>`;
     }
 
     let emailButton = '';
     let emailButtonMobile = '';
     if (listing.email) {
         emailButton = `
-            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium">
+            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium bouncy-hover">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 Email
             </a>
         `;
-        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button" style="background:#6b7280;"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
+        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button bouncy-hover" style="background:#6b7280;"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -3080,29 +3099,30 @@ function generateTemplateReplacements(listing) {
     let websiteButtonMobile = '';
     if (listing.website) {
         websiteButton = `
-            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
+            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium bouncy-hover" onclick="trackClick('website')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
                 Website
             </a>
         `;
-        websiteButtonMobile = `<a href="${listing.website}" target="_blank" class="mobile-cta-button" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>`;
+        websiteButtonMobile = `<a href="${listing.website}" target="_blank" class="mobile-cta-button bouncy-hover" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>`;
     }
     
     // Only show directions if has street address with number
     let directionsButton = '';
     let directionsButtonMobile = '';
     if (hasStreetAddress && listing.city) {
+        const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent([listing.address || '', listing.city || '', listing.state || '', listing.zip_code || ''].filter(Boolean).join(', '))}`;
         directionsButton = `
-            <a href="#" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="openDirections(event); trackClick('directions')">
+            <a href="${directionsHref}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium bouncy-hover" onclick="openDirections(event); trackClick('directions')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
                 Directions
             </a>
         `;
-        directionsButtonMobile = `<a href="#" class="mobile-cta-button" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
+        directionsButtonMobile = `<a href="${directionsHref}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button bouncy-hover" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
     }
 
     const maxCtaButtons = 1;
@@ -3118,7 +3138,7 @@ function generateTemplateReplacements(listing) {
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-5 h-5') || '';
                 return `
                     <a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer"
-                        class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90"
+                        class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 bouncy-hover"
                         style="background-color:${color};" data-cta-name="${escapeHtml(label)}">
                         ${icon}
                         <span>${escapeHtml(label)}</span>
@@ -3139,13 +3159,13 @@ function generateTemplateReplacements(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     return {
-        'BUSINESS_NAME': escapeHtml(listing.business_name),
-        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
+        'BUSINESS_NAME': escapeHtml(normalizedName),
+        'BUSINESS_NAME_ENCODED': encodeURIComponent(normalizedName),
         'CITY_STATE': cityState,
         'IN_CITY': inCity,
-        'TAGLINE': escapeHtml(normalizeTagline(listing.tagline || '')),
-        'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
-        'DESCRIPTION_JS': JSON.stringify(listing.description || '').slice(1, -1),
+        'TAGLINE': escapeHtml(normalizedTagline),
+        'DESCRIPTION': sanitizeListingDescription(normalizedDescription),
+        'DESCRIPTION_JS': JSON.stringify(normalizedDescription || '').slice(1, -1),
         'CATEGORY': escapeHtml(listing.category),
         'PRIMARY_SUBCATEGORY': escapeHtml(listing.primary_subcategory || 'business'),
         'CATEGORY_URL': categoryUrl,
@@ -3169,7 +3189,7 @@ function generateTemplateReplacements(listing) {
         'PHONE': listing.phone || '',
         'PHONE_SCHEMA': listing.phone || '',
         'PRICE_RANGE': pricingSymbols || '',
-        'META_DESCRIPTION': escapeHtml(buildMetaDescription(listing.tagline || '', listing.city || '', listing.state || '')),
+        'META_DESCRIPTION': escapeHtml(buildMetaDescription(normalizedTagline || '', listing.city || '', listing.state || '')),
         'EMAIL': listing.email || '',
         'WEBSITE': listing.website || '',
         'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
@@ -3366,13 +3386,7 @@ function generateTemplateReplacementsPart2(listing) {
         const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
         const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
         
-        claimButton = `
-            <div class="rounded-lg p-6 text-center" id="claimListingSection" style="background:#fef3c7;border:1px solid #fbbf24;">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
-            </div>
-        `;
+        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#045093] text-white rounded-lg font-medium bouncy-hover">Claim This Listing</a>`;
     }
     
     const hoursSchema = generateHoursSchema(listing);
