@@ -318,7 +318,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         .social-yelp { background: #ffffff; border: 2px solid #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.16); }
         .social-tripadvisor { background: #ffffff; border: 2px solid #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.16); }
         .social-yelp img, .social-tripadvisor img { width: 22px; height: 22px; display: block; }
-        .social-other { background: #045093; color: white; }
+        .social-other { background: #6B7280; color: white; }
         .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
         .share-button:hover { transform: scale(1.1); }
         .share-sms { background: #10b981; color: white; }
@@ -345,8 +345,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display { display: none; margin-top: 8px; }
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
-        .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; line-height: 1.35; }
-        .owner-info-section p { margin-bottom: 4px; }
+        .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
         .listing-description-wrap { margin: 0 0 1.5rem; }
         .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
         .listing-description p { margin-bottom: 1rem; }
@@ -382,13 +381,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         .pricing-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:#eff6ff; color:#045093; font-weight:700; font-size:12px; }
         .badge-coming-soon { background: #f97316; color: #fff; }
         .share-button { border: none; outline: none; box-shadow: none; }
-        .share-lightbox-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 220; }
-        .share-lightbox-backdrop.active { display: flex; }
-        .share-lightbox { background: #fff; width: min(92vw, 560px); border-radius: 14px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-        .share-link-wrap { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-        .bouncy-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .bouncy-hover:hover { transform: translateY(-1px) scale(1.02); }
-        ::selection { background: #045093; color: #fff; }
         .carousel-container { position: relative; }
         .star-button { position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,0.6); box-shadow:0 2px 8px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.04); cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3; transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease; }
         .star-button:hover { transform:scale(1.15); box-shadow:0 4px 14px rgba(0,0,0,.30),0 0 0 1px rgba(0,0,0,0.06); background:#fff; }
@@ -587,27 +579,16 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="social-map-grid" id="socialSection">
                 <div>
                     {{SOCIAL_MEDIA_SECTION}}
+                    <br>
                     {{REVIEW_SECTION}}
+                    <br>
                     <div class="share-section">
                         <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
                         <div class="flex flex-wrap gap-2">
-                            <button type="button" class="share-button social-other bouncy-hover" title="Share" onclick="openShareLightbox()">
-                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
-                            </button>
-                        </div>
-                        <div class="flex flex-wrap gap-3 mt-4">
-                            {{CLAIM_BUTTON}}
-                            <a href="{{SUGGEST_EDIT_URL}}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-700 text-white rounded-lg font-medium bouncy-hover">Suggest Edit</a>
-                        </div>
-                    </div>
-                    <div class="share-lightbox-backdrop" id="shareLightbox" onclick="closeShareLightbox(event)">
-                        <div class="share-lightbox" onclick="event.stopPropagation()">
-                            <h3 class="text-lg font-bold text-gray-900 mb-3">Share this listing</h3>
-                            <div class="flex flex-wrap gap-2 mb-4">
-                            <a href="https://www.facebook.com/sharer/sharer.php?u={{LISTING_URL}}%3Futm_source%3Dfacebook%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-facebook bouncy-hover" title="Share on Facebook" onclick="trackClick('share', 'facebook')">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{LISTING_URL}}%3Futm_source%3Dfacebook%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-facebook" title="Share on Facebook" onclick="trackClick('share', 'facebook')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                             </a>
-                            <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{BUSINESS_NAME_ENCODED}}%20on%20The%20Greek%20Directory!&url={{LISTING_URL}}%3Futm_source%3Dtwitter%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-twitter bouncy-hover" title="Share on X" onclick="trackClick('share', 'twitter')">
+                            <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{BUSINESS_NAME_ENCODED}}%20on%20The%20Greek%20Directory!&url={{LISTING_URL}}%3Futm_source%3Dtwitter%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-twitter" title="Share on X" onclick="trackClick('share', 'twitter')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                             </a>
                             <a href="https://www.linkedin.com/sharing/share-offsite/?url={{LISTING_URL}}%3Futm_source%3Dlinkedin%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-linkedin" title="Share on LinkedIn" onclick="trackClick('share', 'linkedin')">
@@ -619,12 +600,9 @@ or distribution of this code can result in legal action to the fullest extent pe
                             <a href="mailto:?subject={{BUSINESS_NAME_ENCODED}}%20on%20The%20Greek%20Directory&body=Check%20out%20{{BUSINESS_NAME_ENCODED}}%20on%20The%20Greek%20Directory!%0A{{LISTING_URL}}%3Futm_source%3Demail%26utm_medium%3Dsocial%26utm_campaign%3Dshare" class="share-button share-email" title="Share via Email" onclick="trackClick('share', 'email')">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
                             </a>
-                            <button onclick="shareNative()" class="share-button social-other bouncy-hover" title="Share">
+                            <button onclick="shareNative()" class="share-button social-other" title="Share">
                                 <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
                             </button>
-                        </div>
-                        <div class="share-link-wrap mb-3"><span id="shareListingLink">{{LISTING_URL}}</span><button type="button" class="px-3 py-1 rounded bg-gray-100 bouncy-hover" onclick="copyShareLink()">Click to Copy</button></div>
-                        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" id="shareShortUrlToggle" onchange="toggleShareUrl(this.checked)"> Shorten URL</label>
                         </div>
                     </div>
                 </div>
@@ -656,6 +634,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         <div class="related-listings-section" id="relatedSection">{{RELATED_LISTINGS_SECTION}}</div>
 
+        <div class="claim-listing-section" id="claimSection">{{CLAIM_BUTTON}}</div>
     </div>
 
     <!-- Footer -->
@@ -692,47 +671,14 @@ or distribution of this code can result in legal action to the fullest extent pe
         photos: {{PHOTOS_JSON}},
         slug: '{{SLUG}}'
     };
-    const shareLinks = {
-        canonical: 'https://thegreekdirectory.org/listing/{{SLUG}}',
-        short: 'https://tgd.gr/{{SLUG}}'
-    };
     
     function openDirections(event) {
-        try {
-            if (event) event.preventDefault();
-            const listing = window.currentListingData || {};
-            const directionsUrl = (window.TGDDirections && window.TGDDirections.getDirectionsUrl)
-                ? window.TGDDirections.getDirectionsUrl(listing)
-                : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((listing.address || '') + ' ' + (listing.city || '') + ' ' + (listing.state || ''))}`;
-            window.open(directionsUrl, '_blank', 'noopener');
-        } catch (error) {
-            // If JS fails for any reason, CTA href remains a direct Google Maps fallback.
-            console.error('Directions fallback used:', error);
-        }
-    }
-
-    function openShareLightbox() {
-        const box = document.getElementById('shareLightbox');
-        if (box) box.classList.add('active');
-    }
-
-    function closeShareLightbox(event) {
-        if (event && event.target !== event.currentTarget) return;
-        const box = document.getElementById('shareLightbox');
-        if (box) box.classList.remove('active');
-    }
-
-    function toggleShareUrl(useShort) {
-        const linkEl = document.getElementById('shareListingLink');
-        if (!linkEl) return;
-        linkEl.textContent = useShort ? shareLinks.short : shareLinks.canonical;
-    }
-
-    async function copyShareLink() {
-        const link = document.getElementById('shareListingLink')?.textContent || shareLinks.canonical;
-        try {
-            await navigator.clipboard.writeText(link);
-        } catch (_) {}
+        if (event) event.preventDefault();
+        const listing = window.currentListingData || {};
+        const directionsUrl = (window.TGDDirections && window.TGDDirections.getDirectionsUrl)
+            ? window.TGDDirections.getDirectionsUrl(listing)
+            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((listing.address || '') + ' ' + (listing.city || '') + ' ' + (listing.state || ''))}`;
+        window.open(directionsUrl, '_blank', 'noopener');
     }
 
     function getStarredListingIds() {
@@ -1268,13 +1214,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     maxZoom: 19
                 }).addTo(map);
                 
-                const markerIcon = L.divIcon({
-                    className: '',
-                    html: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3856 23.789L11.3831 23.7871L11.3769 23.7822L11.355 23.765C11.3362 23.7501 11.3091 23.7287 11.2742 23.7008C11.2046 23.6451 11.1039 23.5637 10.9767 23.4587C10.7224 23.2488 10.3615 22.944 9.92939 22.5599C9.06662 21.793 7.91329 20.7041 6.75671 19.419C5.60303 18.1371 4.42693 16.639 3.53467 15.0528C2.64762 13.4758 2 11.7393 2 10C2 7.34784 3.05357 4.8043 4.92893 2.92893C6.8043 1.05357 9.34784 0 12 0C14.6522 0 17.1957 1.05357 19.0711 2.92893C20.9464 4.8043 22 7.34784 22 10C22 11.7393 21.3524 13.4758 20.4653 15.0528C19.5731 16.639 18.397 18.1371 17.2433 19.419C16.0867 20.7041 14.9334 21.793 14.0706 22.5599C13.6385 22.944 13.2776 23.2488 13.0233 23.4587C12.8961 23.5637 12.7954 23.6451 12.7258 23.7008C12.6909 23.7287 12.6638 23.7501 12.645 23.765L12.6231 23.7822L12.6169 23.7871L12.615 23.7885C12.615 23.7885 12.6139 23.7894 12 23L12.6139 23.7894C12.2528 24.0702 11.7467 24.0699 11.3856 23.789ZM12 23L11.3856 23.789C11.3856 23.789 11.3861 23.7894 12 23ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="#045093"/></svg>`,
-                    iconSize: [36, 36],
-                    iconAnchor: [18, 36]
-                });
-                L.marker([lat, lng], { icon: markerIcon }).addTo(map)
+                L.marker([lat, lng]).addTo(map)
                     .bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}')
                     .openPopup();
                 
