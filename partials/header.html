@@ -2,6 +2,27 @@
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
 <header id="listingsHeader" class="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
+    <style>
+        ::selection { background: #045093; color: #fff; }
+        .bouncy-hover { transition: transform .2s ease, box-shadow .2s ease; }
+        .bouncy-hover:hover { transform: translateY(-1px) scale(1.02); }
+        a[href], button, .listing-card, .bg-white.rounded-lg.shadow {
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        a[href]:hover, button:hover, .listing-card:hover, .bg-white.rounded-lg.shadow:hover {
+            transform: translateY(-1px) scale(1.02);
+        }
+        .language-switch { --switch-width:120px; --switch-height:40px; --slider-size:32px; --us-blue:#192f5d; --gr-blue:#0d5eaf; display:inline-block; }
+        .lang-input { display:none; }
+        .lang-label { width:var(--switch-width); height:var(--switch-height); background-color:var(--us-blue); display:flex; align-items:center; justify-content:space-between; padding:0 10px; border-radius:50px; cursor:pointer; position:relative; transition:background-color .4s ease; box-sizing:border-box; }
+        .toggle-slider { position:absolute; width:var(--slider-size); height:var(--slider-size); background:#fff; border-radius:50%; left:4px; display:flex; align-items:center; justify-content:center; transition:transform .4s cubic-bezier(.4,0,.2,1); box-shadow:0 2px 4px rgba(0,0,0,.3); z-index:5; }
+        .flag-emoji { z-index:2; font-size:18px; opacity:.3; transition:opacity .3s; }
+        .lang-en { opacity:1; }
+        .lang-input:checked + .lang-label { background-color:var(--gr-blue); }
+        .lang-input:checked + .lang-label .toggle-slider { transform:translateX(calc(var(--switch-width) - var(--slider-size) - 8px)); }
+        .lang-input:checked + .lang-label .lang-en { opacity:.3; }
+        .lang-input:checked + .lang-label .lang-gr { opacity:1; }
+    </style>
     <div class="max-w-7xl mx-auto px-4">
         <div class="flex items-center justify-between h-14">
             <!-- Logo -->
@@ -25,6 +46,14 @@
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </a>
+                <div class="language-switch ml-1">
+                    <input type="checkbox" id="lang-toggle" class="lang-input">
+                    <label for="lang-toggle" class="lang-label">
+                        <span class="flag-emoji lang-en">🇺🇸</span>
+                        <div class="toggle-slider">🌐</div>
+                        <span class="flag-emoji lang-gr">🇬🇷</span>
+                    </label>
+                </div>
             </nav>
 
             <!-- Hamburger mode: star icon stays in header, hamburger opens dropdown -->
@@ -38,6 +67,14 @@
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </a>
+                <div class="language-switch">
+                    <input type="checkbox" id="lang-toggle-mobile" class="lang-input">
+                    <label for="lang-toggle-mobile" class="lang-label">
+                        <span class="flag-emoji lang-en">🇺🇸</span>
+                        <div class="toggle-slider">🌐</div>
+                        <span class="flag-emoji lang-gr">🇬🇷</span>
+                    </label>
+                </div>
                 <button id="hamburgerBtn" class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;" aria-label="Menu">
                     <svg id="hamburgerIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     <svg id="hamburgerCloseIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -195,5 +232,28 @@
     updateStarredButtonState();
     window.addEventListener('popstate',                  updateStarredButtonState);
     window.addEventListener('tgd:starred-state-changed', updateStarredButtonState);
+
+    var desktopLangToggle = document.getElementById('lang-toggle');
+    var mobileLangToggle = document.getElementById('lang-toggle-mobile');
+    var currentLang = localStorage.getItem('tgd_language') === 'el' ? 'el' : 'en';
+    function syncLanguageToggleState() {
+        var checked = currentLang === 'el';
+        if (desktopLangToggle) desktopLangToggle.checked = checked;
+        if (mobileLangToggle) mobileLangToggle.checked = checked;
+        document.documentElement.lang = checked ? 'el' : 'en';
+    }
+    function setLanguage(nextLang) {
+        currentLang = nextLang === 'el' ? 'el' : 'en';
+        localStorage.setItem('tgd_language', currentLang);
+        syncLanguageToggleState();
+        window.dispatchEvent(new CustomEvent('tgd:language-changed', { detail: { language: currentLang } }));
+    }
+    [desktopLangToggle, mobileLangToggle].forEach(function(toggle) {
+        if (!toggle) return;
+        toggle.addEventListener('change', function(e) {
+            setLanguage(e.target.checked ? 'el' : 'en');
+        });
+    });
+    syncLanguageToggleState();
 })();
 </script>
