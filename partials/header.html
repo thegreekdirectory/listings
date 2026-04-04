@@ -1,6 +1,23 @@
 <!-- partials/header.html -->
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
+<style>
+::selection { background: #045093; color: #fff; }
+.language-switch{--switch-width:120px;--switch-height:40px;--slider-size:32px;--us-blue:#192f5d;--gr-blue:#0d5eaf;display:inline-block;}
+.lang-input{display:none;}
+.lang-label{width:var(--switch-width);height:var(--switch-height);background-color:var(--us-blue);display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:50px;cursor:pointer;position:relative;transition:background-color .4s ease;box-sizing:border-box;}
+.toggle-slider{position:absolute;width:var(--slider-size);height:var(--slider-size);background:#fff;border-radius:50%;left:4px;display:flex;align-items:center;justify-content:center;transition:transform .4s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 4px rgba(0,0,0,.3);z-index:5;}
+.toggle-slider svg{width:18px;height:18px;fill:var(--us-blue);transition:fill .4s ease;}
+.flag-icon{width:24px;height:18px;display:flex;align-items:center;z-index:2;transition:opacity .3s;}
+.lang-gr{opacity:.3;}.lang-en{opacity:1;}
+.lang-input:checked + .lang-label{background-color:var(--gr-blue);}
+.lang-input:checked + .lang-label .toggle-slider{transform:translateX(calc(var(--switch-width) - var(--slider-size) - 8px));}
+.lang-input:checked + .lang-label .toggle-slider svg{fill:var(--gr-blue);} 
+.lang-input:checked + .lang-label .lang-en{opacity:.3;} .lang-input:checked + .lang-label .lang-gr{opacity:1;}
+.tgd-bouncy{transition:transform .28s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;}
+.tgd-bouncy:hover{transform:translateY(-2px) scale(1.03);} .tgd-bouncy:active{transform:scale(.97);}
+</style>
+
 <header id="listingsHeader" class="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
     <div class="max-w-7xl mx-auto px-4">
         <div class="flex items-center justify-between h-14">
@@ -12,33 +29,45 @@
 
             <!-- Full nav (shown when everything fits) -->
             <nav id="headerFullNav" class="flex items-center gap-1">
-                <a href="/" id="navHome" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
-                <a href="/listings" id="navListings" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
-                <a href="/about" id="navAbout" class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
+                <a href="/" id="navHome" class="tgd-bouncy px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
+                <a href="/listings" id="navListings" class="tgd-bouncy px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
+                <a href="/about" id="navAbout" class="tgd-bouncy px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
                 <a href="/listings?starred=1"
                    id="headerStarBtn"
                    onclick="return window.tgdNavigateToStarred(event)"
-                   class="px-2 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+                   class="tgd-bouncy px-2 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                    title="View Starred"
                    style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#facc15" stroke="#ca8a04" stroke-width="1.5">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </a>
+                <div class="language-switch tgd-bouncy" title="Language">
+                    <input type="checkbox" id="lang-toggle-header" class="lang-input">
+                    <label for="lang-toggle-header" class="lang-label">
+                        <div class="flag-icon lang-en">🇺🇸</div>
+                        <div class="toggle-slider"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04z"/></svg></div>
+                        <div class="flag-icon lang-gr">🇬🇷</div>
+                    </label>
+                </div>
             </nav>
 
             <!-- Hamburger mode: star icon stays in header, hamburger opens dropdown -->
             <div id="headerHamburgerRow" class="hidden items-center gap-2">
                 <a href="/listings?starred=1"
                    onclick="return window.tgdNavigateToStarred(event)"
-                   class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+                   class="tgd-bouncy p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                    title="View Starred"
                    style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#facc15" stroke="#ca8a04" stroke-width="1.5">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </a>
-                <button id="hamburgerBtn" class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;" aria-label="Menu">
+                <div class="language-switch tgd-bouncy" title="Language">
+                    <input type="checkbox" id="lang-toggle-header-mobile" class="lang-input">
+                    <label for="lang-toggle-header-mobile" class="lang-label"><div class="flag-icon lang-en">🇺🇸</div><div class="toggle-slider"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04z"/></svg></div><div class="flag-icon lang-gr">🇬🇷</div></label>
+                </div>
+                <button id="hamburgerBtn" class="tgd-bouncy p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;" aria-label="Menu">
                     <svg id="hamburgerIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     <svg id="hamburgerCloseIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -49,9 +78,9 @@
     <!-- Hamburger dropdown panel -->
     <div id="hamburgerDropdown" class="hidden border-t border-gray-100 bg-white">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
-            <a href="/" id="dropHome" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
-            <a href="/listings" id="dropListings" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
-            <a href="/about" id="dropAbout" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
+            <a href="/" id="dropHome" class="tgd-bouncy px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
+            <a href="/listings" id="dropListings" class="tgd-bouncy px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
+            <a href="/about" id="dropAbout" class="tgd-bouncy px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
         </div>
     </div>
 </header>
@@ -195,5 +224,39 @@
     updateStarredButtonState();
     window.addEventListener('popstate',                  updateStarredButtonState);
     window.addEventListener('tgd:starred-state-changed', updateStarredButtonState);
+
+
+    function setHeaderLanguage(language, options) {
+        options = options || {};
+        var target = language === 'el' ? 'el' : 'en';
+        var toggles = [document.getElementById('lang-toggle-header'), document.getElementById('lang-toggle-header-mobile')];
+        toggles.forEach(function(toggle){ if (toggle) toggle.checked = target === 'el'; });
+        localStorage.setItem('tgd_language', target);
+        if (window.PWAApp && typeof window.PWAApp.setLanguage === 'function') {
+            window.PWAApp.setLanguage(target, { persist: true, reload: false, silent: true });
+        }
+        var cookieValue = target === 'el' ? '/en/el' : '/en/en';
+        document.cookie = 'googtrans=' + cookieValue + '; path=/; SameSite=Lax';
+        if (window.doGTranslate) {
+            window.doGTranslate('en|' + target);
+        } else if (options.reloadFallback) {
+            window.location.reload();
+        }
+    }
+
+    function bindLangToggle(id) {
+        var toggle = document.getElementById(id);
+        if (!toggle) return;
+        toggle.addEventListener('change', function(e) {
+            setHeaderLanguage(e.target.checked ? 'el' : 'en', { reloadFallback: true });
+        });
+    }
+
+    bindLangToggle('lang-toggle-header');
+    bindLangToggle('lang-toggle-header-mobile');
+    setHeaderLanguage(localStorage.getItem('tgd_language') || 'en', { reloadFallback: false });
 })();
 </script>
+<script>window.gtranslateSettings={"default_language":"en","native_language_names":true,"detect_browser_language":true,"languages":["en","el"],"wrapper_selector":".gtranslate_wrapper","alt_flags":{"en":"usa"}}</script>
+<script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+

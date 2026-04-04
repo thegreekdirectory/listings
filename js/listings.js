@@ -51,7 +51,8 @@ let splitEstimatedLocationCircle = null;
 let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
 let filterPosition = 'top';
 let searchDebounceTimer = null;
-let displayedListingsCount = 25;
+const LISTINGS_PAGE_SIZE = 15;
+let displayedListingsCount = LISTINGS_PAGE_SIZE;
 let estimatedUserLocation = null;
 let selectedSplitListingId = null;
 let desktopFiltersOverlay = false;
@@ -276,7 +277,7 @@ function toggleStarredView(forceState = null, options = {}) {
         headerStarBtn.style.color = viewingStarredOnly ? '#78350f' : '';
     }
 
-    displayedListingsCount = viewingStarredOnly ? Math.max(filteredListings.length, starredListings.length) : 25;
+    displayedListingsCount = viewingStarredOnly ? Math.max(filteredListings.length, starredListings.length) : LISTINGS_PAGE_SIZE;
     updateURL();
     applyFilters();
 }
@@ -826,6 +827,7 @@ async function loadListings() {
             listingsContainer.innerHTML = '<div class="text-center py-12"><p class="text-red-600 font-semibold mb-2">Error Code: L101</p><p class="text-gray-600">Failed to load listings. Please try refreshing the page.</p></div>';
         }
         if (loadMoreBtn) loadMoreBtn.classList.add('hidden');
+            loadMoreBtn.style.display = 'none';
     }
 }
 
@@ -1024,7 +1026,7 @@ function applyFilters() {
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
     
-    displayedListingsCount = 25;
+    displayedListingsCount = LISTINGS_PAGE_SIZE;
     renderListings();
     updateResultsCount();
     if (map) updateMapMarkers();
@@ -1035,7 +1037,7 @@ function applyFilters() {
 }
 
 function loadMoreListings() {
-    displayedListingsCount += 25;
+    displayedListingsCount += LISTINGS_PAGE_SIZE;
     renderListings();
 }
 
@@ -1360,6 +1362,7 @@ function renderListings() {
     if (filteredListings.length === 0) {
         container.innerHTML = '<p class="text-center text-gray-600 py-12">No listings found.</p>';
         if (loadMoreBtn) loadMoreBtn.classList.add('hidden');
+            loadMoreBtn.style.display = 'none';
         return;
     }
 
@@ -1464,10 +1467,12 @@ function renderListings() {
     if (loadMoreBtn) {
         if (hasMore) {
             loadMoreBtn.classList.remove('hidden');
+            loadMoreBtn.style.display = '';
             loadMoreBtn.textContent = `Load More Listings (${filteredListings.length - displayedListingsCount} remaining)`;
             loadMoreBtn.onclick = loadMoreListings;
         } else {
             loadMoreBtn.classList.add('hidden');
+            loadMoreBtn.style.display = 'none';
         }
     }
 
@@ -1599,7 +1604,7 @@ function setupEventListeners() {
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             }, 100); // 100ms debounce for smooth typing
@@ -1691,7 +1696,7 @@ function setupEventListeners() {
                     requestPreciseLocation('radius-filter');
                 }
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             });
@@ -1709,7 +1714,7 @@ function setupEventListeners() {
                 if (openFilter2) openFilter2.checked = openNowOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             });
@@ -1727,7 +1732,7 @@ function setupEventListeners() {
                 if (closedFilter2) closedFilter2.checked = closedNowOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             });
@@ -1745,7 +1750,7 @@ function setupEventListeners() {
                 if (openingSoonFilter2) openingSoonFilter2.checked = openingSoonOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             });
@@ -1763,7 +1768,7 @@ function setupEventListeners() {
                 if (closingSoonFilter2) closingSoonFilter2.checked = closingSoonOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             });
@@ -1781,7 +1786,7 @@ function setupEventListeners() {
                 if (hoursUnknownFilter2) hoursUnknownFilter2.checked = hoursUnknownOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             });
@@ -1830,7 +1835,7 @@ function setupEventListeners() {
                 if (onlineFilter2) onlineFilter2.checked = onlineOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             });
@@ -1847,7 +1852,7 @@ function setupEventListeners() {
             if (sortSelect.value === 'closest' && !userLocation) {
                 requestPreciseLocation('closest-sort');
             }
-            displayedListingsCount = 25;
+            displayedListingsCount = LISTINGS_PAGE_SIZE;
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
         });
@@ -1888,7 +1893,7 @@ function setupEventListeners() {
                 }
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             });
@@ -1906,7 +1911,7 @@ function setupEventListeners() {
                 if (stateFilter2) stateFilter2.value = selectedState;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = LISTINGS_PAGE_SIZE;
                     applyFilters();
                 }
             });
@@ -2199,35 +2204,28 @@ or distribution of this code will result in legal action to the fullest extent p
 
 function createCategoryButtons(filteredCategories) {
     const categoriesToShow = filteredCategories && filteredCategories.length > 0 ? filteredCategories : CATEGORIES;
-    
-    ['categoryFilters', 'categoryFilters2'].forEach(containerId => {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        
-        const isTopView = containerId === 'categoryFilters';
-        const compactClass = isTopView ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm';
-        
-        container.innerHTML = '';
-        
-        const allButton = document.createElement('button');
-        allButton.className = selectedCategory === 'All' ? 
-            `${compactClass} rounded-lg font-medium text-white` : 
-            `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300`;
-        if (selectedCategory === 'All') allButton.style.backgroundColor = '#055193';
-        allButton.textContent = 'All';
-        allButton.onclick = () => filterByCategory('All');
-        container.appendChild(allButton);
-        
-        categoriesToShow.forEach(cat => {
-            const button = document.createElement('button');
-            button.className = selectedCategory === cat ? 
-                `${compactClass} rounded-lg font-medium text-white` : 
-                `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300 text-left`;
-            if (selectedCategory === cat) button.style.backgroundColor = '#055193';
-            button.textContent = cat;
-            button.onclick = () => filterByCategory(cat);
-            container.appendChild(button);
+
+    ['categoryFilters', 'categoryFilters2'].forEach((containerId) => {
+        const select = document.getElementById(containerId);
+        if (!select) return;
+
+        const previousValue = selectedCategory || 'All';
+        select.innerHTML = '';
+
+        const allOption = document.createElement('option');
+        allOption.value = 'All';
+        allOption.textContent = 'All Categories';
+        select.appendChild(allOption);
+
+        categoriesToShow.forEach((cat) => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            select.appendChild(option);
         });
+
+        select.value = categoriesToShow.includes(previousValue) || previousValue === 'All' ? previousValue : 'All';
+        select.onchange = (event) => filterByCategory(event.target.value);
     });
 }
 
@@ -2242,7 +2240,7 @@ function filterByCategory(category) {
     createCategoryButtons();
     updateSubcategoryDisplay();
     updateURL();
-    displayedListingsCount = 25;
+    displayedListingsCount = LISTINGS_PAGE_SIZE;
     if (!viewingStarredOnly) applyFilters();
 }
 
@@ -2312,7 +2310,7 @@ function toggleSubcategory(subcategory) {
     
     updateSubcategoryDisplay();
     updateURL();
-    displayedListingsCount = 25;
+    displayedListingsCount = LISTINGS_PAGE_SIZE;
     if (!viewingStarredOnly) applyFilters();
 }
 
@@ -2329,7 +2327,7 @@ function filterCategoriesAndSubcategories(searchTerm) {
         updateSubcategoryDisplay();
         createCategoryButtons();
         if (!viewingStarredOnly) {
-            displayedListingsCount = 25;
+            displayedListingsCount = LISTINGS_PAGE_SIZE;
             applyFilters();
         }
         return;
@@ -2363,7 +2361,7 @@ function filterCategoriesAndSubcategories(searchTerm) {
     
     updateURL();
     if (!viewingStarredOnly) {
-        displayedListingsCount = 25;
+        displayedListingsCount = LISTINGS_PAGE_SIZE;
         applyFilters();
     }
 }
@@ -2499,7 +2497,7 @@ function clearAllFilters() {
     updateRadiusValue();
     updateURL();
     createCategoryButtons();
-    displayedListingsCount = 25;
+    displayedListingsCount = LISTINGS_PAGE_SIZE;
     if (viewingStarredOnly) {
         toggleStarredView();
         toggleStarredView();
@@ -2674,7 +2672,7 @@ function setupLocationSearch() {
 
                         updateURL();
                         if (!viewingStarredOnly) {
-                            displayedListingsCount = 25;
+                            displayedListingsCount = LISTINGS_PAGE_SIZE;
                             applyFilters();
                         }
                     });
@@ -3242,7 +3240,7 @@ function toggleSplitView() {
             if (e.target.value === 'closest' && !userLocation) {
                 requestPreciseLocation('closest-sort');
             }
-            displayedListingsCount = 25;
+            displayedListingsCount = LISTINGS_PAGE_SIZE;
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
         });

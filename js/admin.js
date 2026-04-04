@@ -391,8 +391,12 @@ function formatPhoneNumber(phone) {
 }
 
 function sanitizeListingDescription(value) {
-    if (window.RichTextEditor) return window.RichTextEditor.sanitizeRichTextHtml(value || '');
-    return escapeHtml(value || '');
+    const decoded = decodeEscapedText(value || '');
+    if (window.RichTextEditor) {
+        const sanitized = window.RichTextEditor.sanitizeRichTextHtml(decoded);
+        return sanitized.replace(/<a\b[^>]*>(.*?)<\/a>/gi, '$1');
+    }
+    return escapeHtml(decoded);
 }
 
 function toDisplayHourLabel(hoursValue) {
@@ -2575,6 +2579,19 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function decodeEscapedText(text) {
+    if (text == null) return '';
+    try {
+        return JSON.parse(`"${String(text).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+    } catch (error) {
+        return String(text)
+            .replace(/\\"/g, '"')
+            .replace(/\\n/g, '\n')
+            .replace(/\\t/g, '\t')
+            .replace(/\\\\/g, '\\');
+    }
+}
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function generateHoursSchema(listing) {
@@ -2809,6 +2826,16 @@ function detectImageMimeType(url = '') {
 }
 
 function generateTemplateReplacements(listing) {
+    listing.business_name = decodeEscapedText(listing.business_name);
+    listing.tagline = decodeEscapedText(listing.tagline || '');
+    listing.description = decodeEscapedText(listing.description || '');
+    if (Array.isArray(listing.additional_info)) {
+        listing.additional_info = listing.additional_info.map((item) => ({
+            ...item,
+            label: decodeEscapedText(item?.label || ''),
+            value: decodeEscapedText(item?.value || '')
+        }));
+    }
     const pricingToSymbols = (value) => {
         if (value === null || value === undefined || value === '') return '';
         const symbolMap = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
@@ -2943,9 +2970,8 @@ function generateTemplateReplacements(listing) {
         if (addressParts.length > 0) {
             addressSection = `
                 <div class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="#045093" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <svg class="w-5 h-5 text-gray-600 mt-0.5" viewBox="0 0 24 24" fill="none">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M11.3856 23.789L11.3831 23.7871L11.3769 23.7822L11.355 23.765C11.3362 23.7501 11.3091 23.7287 11.2742 23.7008C11.2046 23.6451 11.1039 23.5637 10.9767 23.4587C10.7224 23.2488 10.3615 22.944 9.92939 22.5599C9.06662 21.793 7.91329 20.7041 6.75671 19.419C5.60303 18.1371 4.42693 16.639 3.53467 15.0528C2.64762 13.4758 2 11.7393 2 10C2 7.34784 3.05357 4.8043 4.92893 2.92893C6.8043 1.05357 9.34784 0 12 0C14.6522 0 17.1957 1.05357 19.0711 2.92893C20.9464 4.8043 22 7.34784 22 10C22 11.7393 21.3524 13.4758 20.4653 15.0528C19.5731 16.639 18.397 18.1371 17.2433 19.419C16.0867 20.7041 14.9334 21.793 14.0706 22.5599C13.6385 22.944 13.2776 23.2488 13.0233 23.4587C12.8961 23.5637 12.7954 23.6451 12.7258 23.7008C12.6909 23.7287 12.6638 23.7501 12.645 23.765L12.6231 23.7822L12.6169 23.7871L12.615 23.7885C12.615 23.7885 12.6139 23.7894 12 23L12.6139 23.7894C12.2528 24.0702 11.7467 24.0699 11.3856 23.789ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="#045093"/>
                     </svg>
                     <span>${addressParts.join(', ')}</span>
                 </div>
@@ -3094,15 +3120,16 @@ function generateTemplateReplacements(listing) {
     let directionsButton = '';
     let directionsButtonMobile = '';
     if (hasStreetAddress && listing.city) {
+        const fallbackDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent([listing.address, listing.city, listing.state].filter(Boolean).join(' '))}`;
         directionsButton = `
-            <a href="#" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="openDirections(event); trackClick('directions')">
+            <a href="${fallbackDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="return openDirections(event);">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
                 Directions
             </a>
         `;
-        directionsButtonMobile = `<a href="#" class="mobile-cta-button" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
+        directionsButtonMobile = `<a href="${fallbackDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button" style="background:#111827;" onclick="return openDirections(event);"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
     }
 
     const maxCtaButtons = 1;
@@ -3216,11 +3243,14 @@ function generateTemplateReplacementsPart2(listing) {
     const owners = Array.isArray(listing.owner) ? listing.owner : [];
     const ownerCards = owners.map((owner) => {
         let ownerDetails = '';
-        if (owner.name_title_visible !== false && owner.full_name) {
-            const ownerName = owner.title ? `${owner.full_name}, ${owner.title}` : owner.full_name;
+        const ownerFullName = decodeEscapedText(owner.full_name || '');
+        const ownerTitle = decodeEscapedText(owner.title || '');
+        const ownerFrom = decodeEscapedText(owner.from_greece || '');
+        if (owner.name_title_visible !== false && ownerFullName) {
+            const ownerName = ownerTitle ? `${ownerFullName}, ${ownerTitle}` : ownerFullName;
             ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(ownerName)}</p>`;
         }
-        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
+        if (ownerFrom) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(ownerFrom)}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
         if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
         return ownerDetails ? `<div class="mb-4">${ownerDetails}</div>` : '';
@@ -3238,6 +3268,8 @@ function generateTemplateReplacementsPart2(listing) {
     
     const socialMediaSection = generateSocialMediaSection(listing);
     const reviewSection = generateReviewSection(listing);
+    const socialSpacer = socialMediaSection && reviewSection ? '<br>' : '';
+    const reviewSpacer = (socialMediaSection || reviewSection) ? '<br>' : '';
     
     // Only show map if has street address with number
     let mapSection = '';
@@ -3335,7 +3367,7 @@ function generateTemplateReplacementsPart2(listing) {
                                     <div class="flex-1 min-w-0">
                                         <div class="flex flex-wrap gap-1 mb-1">\${getHoursBadge(l.hours)}\${getTierBadge(l.tier)}\${getComingSoonBadge(l.coming_soon)}</div>
                                         <h3 class="font-bold text-gray-900 mb-1 leading-snug">\${l.business_name}</h3>
-                                        <p class="text-sm text-gray-600 mb-0.5" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>\${location}</span></p>
+                                        <p class="text-sm text-gray-600 mb-0.5" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3856 23.789L11.3831 23.7871L11.3769 23.7822L11.355 23.765C11.3362 23.7501 11.3091 23.7287 11.2742 23.7008C11.2046 23.6451 11.1039 23.5637 10.9767 23.4587C10.7224 23.2488 10.3615 22.944 9.92939 22.5599C9.06662 21.793 7.91329 20.7041 6.75671 19.419C5.60303 18.1371 4.42693 16.639 3.53467 15.0528C2.64762 13.4758 2 11.7393 2 10C2 7.34784 3.05357 4.8043 4.92893 2.92893C6.8043 1.05357 9.34784 0 12 0C14.6522 0 17.1957 1.05357 19.0711 2.92893C20.9464 4.8043 22 7.34784 22 10C22 11.7393 21.3524 13.4758 20.4653 15.0528C19.5731 16.639 18.397 18.1371 17.2433 19.419C16.0867 20.7041 14.9334 21.793 14.0706 22.5599C13.6385 22.944 13.2776 23.2488 13.0233 23.4587C12.8961 23.5637 12.7954 23.6451 12.7258 23.7008C12.6909 23.7287 12.6638 23.7501 12.645 23.765L12.6231 23.7822L12.6169 23.7871L12.615 23.7885C12.615 23.7885 12.6139 23.7894 12 23L12.6139 23.7894C12.2528 24.0702 11.7467 24.0699 11.3856 23.789ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="#045093"/></svg><span>\${location}</span></p>
                                         \${l.phone ? \`<p class="text-sm text-gray-600" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.3a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21L8 10.5a11 11 0 005.5 5.5l1.1-2.25a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.7.95V19a2 2 0 01-2 2h-1C9.7 21 3 14.3 3 6V5z"/></svg><span>\${formatPhone(l.phone)}</span></p>\` : ''}
                                     </div>
                                 </div>
@@ -3358,6 +3390,8 @@ function generateTemplateReplacementsPart2(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     let claimButton = '';
+    let suggestEditButton = '';
+    let shareLinkUrl = `https://thegreekdirectory.org/listing/${listing.slug || ''}`;
     const firstOwner = owners.length > 0 ? owners[0] : null;
     const isClaimed = listing.is_claimed || (firstOwner && firstOwner.owner_user_id);
     if (!isClaimed && listing.show_claim_button !== false) {
@@ -3366,14 +3400,10 @@ function generateTemplateReplacementsPart2(listing) {
         const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
         const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
         
-        claimButton = `
-            <div class="rounded-lg p-6 text-center" id="claimListingSection" style="background:#fef3c7;border:1px solid #fbbf24;">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
-            </div>
-        `;
+        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="action-button">Claim This Listing</a>`;
     }
+    const suggestSubject = encodeURIComponent(`Suggest an Edit - ${listing.business_name || ''} - ${listing.city || ''}, ${listing.state || ''}`);
+    suggestEditButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${suggestSubject}" class="action-button">Suggest Edit</a>`;
     
     const hoursSchema = generateHoursSchema(listing);
     const hasStreetAddress2 = listing.address && /\d/.test(listing.address);
@@ -3386,10 +3416,14 @@ function generateTemplateReplacementsPart2(listing) {
     return {
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
+        'SOCIAL_SECTION_SPACER': socialSpacer,
         'REVIEW_SECTION': reviewSection,
+        'REVIEW_SECTION_SPACER': reviewSpacer,
         'MAP_SECTION': mapSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
+        'SUGGEST_EDIT_BUTTON': suggestEditButton,
+        'SHARE_LINK_URL': shareLinkUrl,
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,
