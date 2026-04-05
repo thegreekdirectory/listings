@@ -2575,6 +2575,10 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function escapeJsonForTemplate(value) {
+    return JSON.stringify(value === undefined || value === null ? '' : String(value)).slice(1, -1);
+}
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function generateHoursSchema(listing) {
@@ -2989,7 +2993,7 @@ function generateTemplateReplacements(listing) {
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
-                <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
+                <span>${escapeHtml(displayUrl)}</span>
             </div>
         `;
     }
@@ -3094,15 +3098,16 @@ function generateTemplateReplacements(listing) {
     let directionsButton = '';
     let directionsButtonMobile = '';
     if (hasStreetAddress && listing.city) {
+        const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent([listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', '))}`;
         directionsButton = `
-            <a href="#" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="openDirections(event); trackClick('directions')">
+            <a href="${directionsHref}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium hover-bounce" onclick="openDirections(event); trackClick('directions')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
                 Directions
             </a>
         `;
-        directionsButtonMobile = `<a href="#" class="mobile-cta-button" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
+        directionsButtonMobile = `<a href="${directionsHref}" class="mobile-cta-button hover-bounce" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
     }
 
     const maxCtaButtons = 1;
@@ -3145,7 +3150,7 @@ function generateTemplateReplacements(listing) {
         'IN_CITY': inCity,
         'TAGLINE': escapeHtml(normalizeTagline(listing.tagline || '')),
         'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
-        'DESCRIPTION_JS': JSON.stringify(listing.description || '').slice(1, -1),
+        'DESCRIPTION_JS': escapeJsonForTemplate(listing.description || ''),
         'CATEGORY': escapeHtml(listing.category),
         'PRIMARY_SUBCATEGORY': escapeHtml(listing.primary_subcategory || 'business'),
         'CATEGORY_URL': categoryUrl,
@@ -3238,6 +3243,8 @@ function generateTemplateReplacementsPart2(listing) {
     
     const socialMediaSection = generateSocialMediaSection(listing);
     const reviewSection = generateReviewSection(listing);
+    const socialBreak = socialMediaSection && reviewSection ? '<br>' : '';
+    const reviewBreak = (socialMediaSection || reviewSection) ? '<br>' : '';
     
     // Only show map if has street address with number
     let mapSection = '';
@@ -3366,13 +3373,7 @@ function generateTemplateReplacementsPart2(listing) {
         const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
         const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
         
-        claimButton = `
-            <div class="rounded-lg p-6 text-center" id="claimListingSection" style="background:#fef3c7;border:1px solid #fbbf24;">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
-            </div>
-        `;
+        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a>`;
     }
     
     const hoursSchema = generateHoursSchema(listing);
@@ -3386,14 +3387,24 @@ function generateTemplateReplacementsPart2(listing) {
     return {
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
+        'SOCIAL_BREAK': socialBreak,
         'REVIEW_SECTION': reviewSection,
+        'REVIEW_BREAK': reviewBreak,
         'MAP_SECTION': mapSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
+        'SHARE_TRIGGER_BUTTON': `<button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button>`,
+        'CLAIM_SUGGEST_SECTION': `
+            <div class="flex flex-wrap gap-3 mt-4">
+                ${claimButton || ''}
+                <a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${listing.business_name} - ${listing.city || ''}, ${listing.state || ''}`)}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a>
+            </div>
+        `,
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,
         'HOURS_JSON': hoursJson,
+        'SUGGEST_EDIT_MAILTO': `mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${listing.business_name} - ${listing.city || ''}, ${listing.state || ''}`)}`,
         'BUSINESS_TIMEZONE': escapeHtml(listing.timezone || 'America/Chicago')
     };
 }

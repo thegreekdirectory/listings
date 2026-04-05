@@ -839,10 +839,17 @@ input[type="range"]::-moz-range-thumb {
         gap: 24px;
     }
     
-    .desktop-filters {
-        width: 280px;
-        flex-shrink: 0;
-    }
+.desktop-filters {
+    width: 280px;
+    flex-shrink: 0;
+}
+
+#desktopFilterPanel.desktop-sidebar {
+    position: sticky;
+    top: 76px;
+    max-height: calc(100vh - 92px);
+    overflow-y: auto;
+}
     
     .desktop-content {
         flex: 1;
