@@ -51,7 +51,7 @@ let splitEstimatedLocationCircle = null;
 let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
 let filterPosition = 'top';
 let searchDebounceTimer = null;
-let displayedListingsCount = 25;
+let displayedListingsCount = 15;
 let estimatedUserLocation = null;
 let selectedSplitListingId = null;
 let desktopFiltersOverlay = false;
@@ -61,6 +61,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+const MAP_MARKER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3856 23.789L11.3831 23.7871L11.3769 23.7822L11.355 23.765C11.3362 23.7501 11.3091 23.7287 11.2742 23.7008C11.2046 23.6451 11.1039 23.5637 10.9767 23.4587C10.7224 23.2488 10.3615 22.944 9.92939 22.5599C9.06662 21.793 7.91329 20.7041 6.75671 19.419C5.60303 18.1371 4.42693 16.639 3.53467 15.0528C2.64762 13.4758 2 11.7393 2 10C2 7.34784 3.05357 4.8043 4.92893 2.92893C6.8043 1.05357 9.34784 0 12 0C14.6522 0 17.1957 1.05357 19.0711 2.92893C20.9464 4.8043 22 7.34784 22 10C22 11.7393 21.3524 13.4758 20.4653 15.0528C19.5731 16.639 18.397 18.1371 17.2433 19.419C16.0867 20.7041 14.9334 21.793 14.0706 22.5599C13.6385 22.944 13.2776 23.2488 13.0233 23.4587C12.8961 23.5637 12.7954 23.6451 12.7258 23.7008C12.6909 23.7287 12.6638 23.7501 12.645 23.765L12.6231 23.7822L12.6169 23.7871L12.615 23.7885C12.615 23.7885 12.6139 23.7894 12 23L12.6139 23.7894C12.2528 24.0702 11.7467 24.0699 11.3856 23.789ZM12 23L11.3856 23.789C11.3856 23.789 11.3861 23.7894 12 23ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="#045093"/></svg>`;
 
 function isPwaMode() {
     return (window.PWAApp && window.PWAApp.isStandalone) ||
@@ -1024,7 +1025,7 @@ function applyFilters() {
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
     
-    displayedListingsCount = 25;
+    displayedListingsCount = 15;
     renderListings();
     updateResultsCount();
     if (map) updateMapMarkers();
@@ -1387,7 +1388,7 @@ function renderListings() {
             const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative bouncy-hover">
                     <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}">
                         <svg class="star-icon" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -1432,7 +1433,7 @@ function renderListings() {
             const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 relative">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 relative bouncy-hover">
                     <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 12px; right: 12px;">
                         <svg class="star-icon" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -1599,7 +1600,7 @@ function setupEventListeners() {
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             }, 100); // 100ms debounce for smooth typing
@@ -1691,7 +1692,7 @@ function setupEventListeners() {
                     requestPreciseLocation('radius-filter');
                 }
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             });
@@ -1709,7 +1710,7 @@ function setupEventListeners() {
                 if (openFilter2) openFilter2.checked = openNowOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             });
@@ -1727,7 +1728,7 @@ function setupEventListeners() {
                 if (closedFilter2) closedFilter2.checked = closedNowOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             });
@@ -1745,7 +1746,7 @@ function setupEventListeners() {
                 if (openingSoonFilter2) openingSoonFilter2.checked = openingSoonOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             });
@@ -1763,7 +1764,7 @@ function setupEventListeners() {
                 if (closingSoonFilter2) closingSoonFilter2.checked = closingSoonOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             });
@@ -1781,7 +1782,7 @@ function setupEventListeners() {
                 if (hoursUnknownFilter2) hoursUnknownFilter2.checked = hoursUnknownOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             });
@@ -1830,7 +1831,7 @@ function setupEventListeners() {
                 if (onlineFilter2) onlineFilter2.checked = onlineOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             });
@@ -1847,7 +1848,7 @@ function setupEventListeners() {
             if (sortSelect.value === 'closest' && !userLocation) {
                 requestPreciseLocation('closest-sort');
             }
-            displayedListingsCount = 25;
+            displayedListingsCount = 15;
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
         });
@@ -1888,7 +1889,7 @@ function setupEventListeners() {
                 }
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             });
@@ -1906,7 +1907,7 @@ function setupEventListeners() {
                 if (stateFilter2) stateFilter2.value = selectedState;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 25;
+                    displayedListingsCount = 15;
                     applyFilters();
                 }
             });
@@ -2199,35 +2200,14 @@ or distribution of this code will result in legal action to the fullest extent p
 
 function createCategoryButtons(filteredCategories) {
     const categoriesToShow = filteredCategories && filteredCategories.length > 0 ? filteredCategories : CATEGORIES;
-    
-    ['categoryFilters', 'categoryFilters2'].forEach(containerId => {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        
-        const isTopView = containerId === 'categoryFilters';
-        const compactClass = isTopView ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm';
-        
-        container.innerHTML = '';
-        
-        const allButton = document.createElement('button');
-        allButton.className = selectedCategory === 'All' ? 
-            `${compactClass} rounded-lg font-medium text-white` : 
-            `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300`;
-        if (selectedCategory === 'All') allButton.style.backgroundColor = '#055193';
-        allButton.textContent = 'All';
-        allButton.onclick = () => filterByCategory('All');
-        container.appendChild(allButton);
-        
-        categoriesToShow.forEach(cat => {
-            const button = document.createElement('button');
-            button.className = selectedCategory === cat ? 
-                `${compactClass} rounded-lg font-medium text-white` : 
-                `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300 text-left`;
-            if (selectedCategory === cat) button.style.backgroundColor = '#055193';
-            button.textContent = cat;
-            button.onclick = () => filterByCategory(cat);
-            container.appendChild(button);
-        });
+
+    ['categoryDropdown', 'categoryDropdown2'].forEach((selectId) => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        const options = ['All', ...categoriesToShow];
+        select.innerHTML = options.map((cat) => `<option value="${cat}">${cat}</option>`).join('');
+        select.value = options.includes(selectedCategory) ? selectedCategory : 'All';
+        select.onchange = () => filterByCategory(select.value);
     });
 }
 
@@ -2242,7 +2222,7 @@ function filterByCategory(category) {
     createCategoryButtons();
     updateSubcategoryDisplay();
     updateURL();
-    displayedListingsCount = 25;
+    displayedListingsCount = 15;
     if (!viewingStarredOnly) applyFilters();
 }
 
@@ -2312,7 +2292,7 @@ function toggleSubcategory(subcategory) {
     
     updateSubcategoryDisplay();
     updateURL();
-    displayedListingsCount = 25;
+    displayedListingsCount = 15;
     if (!viewingStarredOnly) applyFilters();
 }
 
@@ -2329,7 +2309,7 @@ function filterCategoriesAndSubcategories(searchTerm) {
         updateSubcategoryDisplay();
         createCategoryButtons();
         if (!viewingStarredOnly) {
-            displayedListingsCount = 25;
+            displayedListingsCount = 15;
             applyFilters();
         }
         return;
@@ -2363,7 +2343,7 @@ function filterCategoriesAndSubcategories(searchTerm) {
     
     updateURL();
     if (!viewingStarredOnly) {
-        displayedListingsCount = 25;
+        displayedListingsCount = 15;
         applyFilters();
     }
 }
@@ -2499,7 +2479,7 @@ function clearAllFilters() {
     updateRadiusValue();
     updateURL();
     createCategoryButtons();
-    displayedListingsCount = 25;
+    displayedListingsCount = 15;
     if (viewingStarredOnly) {
         toggleStarredView();
         toggleStarredView();
@@ -2674,7 +2654,7 @@ function setupLocationSearch() {
 
                         updateURL();
                         if (!viewingStarredOnly) {
-                            displayedListingsCount = 25;
+                            displayedListingsCount = 15;
                             applyFilters();
                         }
                     });
@@ -3127,12 +3107,9 @@ function updateMapMarkers() {
                 if (dist > mapRadiusLimit) return;
             }
 
-            const logoImage = listing.logo || '';
             const tierMarker = getTierMarkerStyles(listing);
             const iconClass = `custom-marker ${tierMarker.className}`;
-            const iconHtml = logoImage ? 
-                `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
-                `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
+            const iconHtml = `<div class="${iconClass}">${MAP_MARKER_SVG}</div>`;
             const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
             const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { 
                 icon: customIcon, 
@@ -3242,7 +3219,7 @@ function toggleSplitView() {
             if (e.target.value === 'closest' && !userLocation) {
                 requestPreciseLocation('closest-sort');
             }
-            displayedListingsCount = 25;
+            displayedListingsCount = 15;
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
         });
@@ -3384,12 +3361,9 @@ function updateSplitMapMarkers() {
             if (dist > mapRadiusLimit) return;
         }
 
-        const logoImage = listing.logo || '';
         const tierMarker = getTierMarkerStyles(listing);
         const iconClass = `custom-marker ${tierMarker.className}`;
-        const iconHtml = logoImage ?
-            `<div class="${iconClass}"><img src="${logoImage}" alt="${listing.business_name}"></div>` :
-            `<div class="${iconClass}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">No logo</div></div>`;
+        const iconHtml = `<div class="${iconClass}">${MAP_MARKER_SVG}</div>`;
         const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
         const marker = L.marker([listing.coordinates.lat, listing.coordinates.lng], { icon: customIcon, riseOnHover: true, listingId: listing.id, zIndexOffset: tierMarker.zIndex });
         const popupContent = buildMapPopupContent(listing);

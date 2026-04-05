@@ -2285,10 +2285,10 @@ if (!slug) {
         
 
         const listingData = {
-            business_name: businessName,
+            business_name: escapeForStorage(businessName),
             slug: slug,
-            tagline: tagline,
-            description: sanitizeListingDescription(adminDescriptionEditor ? adminDescriptionEditor.getHtml() : document.getElementById('editDescription').value.trim()),
+            tagline: escapeForStorage(tagline),
+            description: escapeForStorage(sanitizeListingDescription(adminDescriptionEditor ? adminDescriptionEditor.getHtml() : document.getElementById('editDescription').value.trim())),
             category: document.getElementById('editCategory').value,
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
@@ -2312,7 +2312,7 @@ if (!slug) {
             logo: normalizeImageCdnUrl(document.getElementById('editLogo').value.trim()) || null,
             photos: photos.map((photo) => normalizeImageCdnUrl(photo)).filter(Boolean),
             video: normalizeImageCdnUrl(document.getElementById('editVideo').value.trim()) || null,
-            additional_info: additionalInfo,
+            additional_info: additionalInfo.map((item) => ({ ...item, label: escapeForStorage(item.label || ''), value: escapeForStorage(item.value || '') })),
             custom_ctas: customCtas.slice(0, maxCtas),
             visible: editingListing?.visible !== false,
             hours: {
@@ -2573,6 +2573,16 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+const ESCAPED_TEXT_FIELDS = ['business_name', 'tagline', 'description', 'owner_information'];
+function escapeForStorage(value) {
+    if (typeof value !== 'string') return value;
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+function unescapeFromStorage(value) {
+    if (typeof value !== 'string') return value;
+    return value.replace(/\\(["\\])/g, '$1');
 }
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -2989,7 +2999,7 @@ function generateTemplateReplacements(listing) {
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
-                <a href="${listing.website}" target="_blank" class="text-blue-600 hover:underline">${escapeHtml(displayUrl)}</a>
+                <span>${escapeHtml(displayUrl)}</span>
             </div>
         `;
     }
@@ -3031,8 +3041,8 @@ function generateTemplateReplacements(listing) {
             .filter(info => info && info.label && info.value)
             .map(info => `
                 <div class="additional-info-row text-sm">
-                    <span class="font-medium text-gray-900">${escapeHtml(info.label)}</span>
-                    <span class="text-gray-700">${escapeHtml(info.value)}</span>
+                    <span class="font-medium text-gray-900">${escapeHtml(unescapeFromStorage(info.label))}</span>
+                    <span class="text-gray-700">${escapeHtml(unescapeFromStorage(info.value))}</span>
                 </div>
             `).join('');
         
@@ -3050,28 +3060,28 @@ function generateTemplateReplacements(listing) {
     let phoneButtonMobile = '';
     if (listing.phone) {
         phoneButton = `
-            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
+            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium bouncy-hover" onclick="trackClick('call')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                 </svg>
                 Call
             </a>
         `;
-        phoneButtonMobile = `<a href="tel:${listing.phone}" class="mobile-cta-button" style="background:#16a34a;" onclick="trackClick('call')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg><span>Call</span></a>`;
+        phoneButtonMobile = `<a href="tel:${listing.phone}" class="mobile-cta-button bouncy-hover" style="background:#16a34a;" onclick="trackClick('call')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg><span>Call</span></a>`;
     }
 
     let emailButton = '';
     let emailButtonMobile = '';
     if (listing.email) {
         emailButton = `
-            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium">
+            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium bouncy-hover">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 Email
             </a>
         `;
-        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button" style="background:#6b7280;"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
+        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button bouncy-hover" style="background:#6b7280;"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -3080,14 +3090,14 @@ function generateTemplateReplacements(listing) {
     let websiteButtonMobile = '';
     if (listing.website) {
         websiteButton = `
-            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
+            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium bouncy-hover" onclick="trackClick('website')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
                 Website
             </a>
         `;
-        websiteButtonMobile = `<a href="${listing.website}" target="_blank" class="mobile-cta-button" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>`;
+        websiteButtonMobile = `<a href="${listing.website}" target="_blank" class="mobile-cta-button bouncy-hover" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>`;
     }
     
     // Only show directions if has street address with number
@@ -3095,14 +3105,14 @@ function generateTemplateReplacements(listing) {
     let directionsButtonMobile = '';
     if (hasStreetAddress && listing.city) {
         directionsButton = `
-            <a href="#" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium" onclick="openDirections(event); trackClick('directions')">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent([listing.address || '', listing.city || '', listing.state || ''].join(' ').trim())}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium bouncy-hover" onclick="openDirections(event); trackClick('directions')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
                 Directions
             </a>
         `;
-        directionsButtonMobile = `<a href="#" class="mobile-cta-button" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
+        directionsButtonMobile = `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent([listing.address || '', listing.city || '', listing.state || ''].join(' ').trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button bouncy-hover" style="background:#111827;" onclick="openDirections(event); trackClick('directions')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg><span>Directions</span></a>`;
     }
 
     const maxCtaButtons = 1;
@@ -3139,13 +3149,13 @@ function generateTemplateReplacements(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     return {
-        'BUSINESS_NAME': escapeHtml(listing.business_name),
-        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
+        'BUSINESS_NAME': escapeHtml(unescapeFromStorage(listing.business_name)),
+        'BUSINESS_NAME_ENCODED': encodeURIComponent(unescapeFromStorage(listing.business_name)),
         'CITY_STATE': cityState,
         'IN_CITY': inCity,
-        'TAGLINE': escapeHtml(normalizeTagline(listing.tagline || '')),
-        'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
-        'DESCRIPTION_JS': JSON.stringify(listing.description || '').slice(1, -1),
+        'TAGLINE': escapeHtml(normalizeTagline(unescapeFromStorage(listing.tagline || ''))),
+        'DESCRIPTION': sanitizeListingDescription(unescapeFromStorage(listing.description || '')),
+        'DESCRIPTION_JS': JSON.stringify(unescapeFromStorage(listing.description || '')).slice(1, -1),
         'CATEGORY': escapeHtml(listing.category),
         'PRIMARY_SUBCATEGORY': escapeHtml(listing.primary_subcategory || 'business'),
         'CATEGORY_URL': categoryUrl,
@@ -3169,7 +3179,7 @@ function generateTemplateReplacements(listing) {
         'PHONE': listing.phone || '',
         'PHONE_SCHEMA': listing.phone || '',
         'PRICE_RANGE': pricingSymbols || '',
-        'META_DESCRIPTION': escapeHtml(buildMetaDescription(listing.tagline || '', listing.city || '', listing.state || '')),
+        'META_DESCRIPTION': escapeHtml(buildMetaDescription(unescapeFromStorage(listing.tagline || ''), listing.city || '', listing.state || '')),
         'EMAIL': listing.email || '',
         'WEBSITE': listing.website || '',
         'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
@@ -3358,6 +3368,8 @@ function generateTemplateReplacementsPart2(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     let claimButton = '';
+    const businessNameForEmail = encodeURIComponent(unescapeFromStorage(listing.business_name || 'Business'));
+    const suggestEditUrl = `mailto:contact@thegreekdirectory.org?subject=Suggest%20an%20Edit%20-%20${businessNameForEmail}%20-%20${encodeURIComponent(`${listing.city || ''}, ${listing.state || ''}`.trim())}`;
     const firstOwner = owners.length > 0 ? owners[0] : null;
     const isClaimed = listing.is_claimed || (firstOwner && firstOwner.owner_user_id);
     if (!isClaimed && listing.show_claim_button !== false) {
@@ -3366,13 +3378,7 @@ function generateTemplateReplacementsPart2(listing) {
         const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
         const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
         
-        claimButton = `
-            <div class="rounded-lg p-6 text-center" id="claimListingSection" style="background:#fef3c7;border:1px solid #fbbf24;">
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Is this your business?</h3>
-                <p class="text-gray-700 mb-4">Claim this listing to manage your information and connect with customers.</p>
-                <a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-block px-6 py-3 text-white rounded-lg font-semibold" style="background-color:#055193;">Claim This Listing</a>
-            </div>
-        `;
+        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold bouncy-hover" style="background-color:#055193;">Claim This Listing</a>`;
     }
     
     const hoursSchema = generateHoursSchema(listing);
@@ -3390,6 +3396,7 @@ function generateTemplateReplacementsPart2(listing) {
         'MAP_SECTION': mapSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
+        'SUGGEST_EDIT_URL': suggestEditUrl,
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,
