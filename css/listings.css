@@ -31,6 +31,31 @@ body {
     background: white;
 }
 
+
+::selection {
+    background: #045093;
+    color: #ffffff;
+}
+
+:where(button, a, .listing-card, .map-control-btn, .subcategory-tag, .social-icon, .share-button, .mobile-cta-button, select):not(.no-bounce) {
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+}
+
+:where(button, a, .listing-card, .map-control-btn, .subcategory-tag, .social-icon, .share-button, .mobile-cta-button, select):not(.no-bounce):hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
+:where(button, a, .listing-card, .map-control-btn, .subcategory-tag, .social-icon, .share-button, .mobile-cta-button, select):not(.no-bounce):active {
+    transform: scale(0.97);
+}
+
+#desktopFilterToggleBtn {
+    position: sticky;
+    left: 0;
+    top: 72px;
+    z-index: 20;
+}
+
 /* ============================================
    CRITICAL TOUCHSCREEN FIXES - COMPLETE
    Ensures ALL interactive elements respond to taps
