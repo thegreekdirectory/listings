@@ -16,6 +16,12 @@ or distribution of this code will result in legal action to the fullest extent p
     --text-light: #666;
     --border-color: #e5e7eb;
     --bg-light: #f9fafb;
+    --tgd-bounce-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+::selection {
+    background: #045093;
+    color: #ffffff;
 }
 
 * {
@@ -848,6 +854,13 @@ input[type="range"]::-moz-range-thumb {
         flex: 1;
         min-width: 0;
     }
+
+    #desktopFilterToggleBtn {
+        position: sticky;
+        top: 78px;
+        left: 0;
+        z-index: 32;
+    }
     
     #filterPanel.desktop-sidebar {
         display: block !important;
@@ -922,6 +935,24 @@ input[type="range"]::-moz-range-thumb {
 
     #filterPanel.desktop-topbar-compact input[type="range"] {
         height: 6px;
+    }
+}
+
+@media (hover: hover) {
+    button,
+    .load-more-btn,
+    .map-control-btn,
+    .subcategory-tag,
+    .listing-card-box {
+        transition: transform 0.2s var(--tgd-bounce-ease), box-shadow 0.2s ease !important;
+    }
+
+    button:hover,
+    .load-more-btn:hover,
+    .map-control-btn:hover,
+    .subcategory-tag:hover,
+    .listing-card-box:hover {
+        transform: translateY(-2px) scale(1.02);
     }
 }
 
