@@ -2579,6 +2579,26 @@ function escapeJsonForTemplate(value) {
     return JSON.stringify(value === undefined || value === null ? '' : String(value)).slice(1, -1);
 }
 
+function decodeEscapedText(value) {
+    if (value === undefined || value === null) return '';
+    const str = String(value);
+    if (!/\\[\\'"nrtbf]/.test(str)) return str;
+    try {
+        return JSON.parse(`"${str
+            .replace(/\\/g, '\\\\')
+            .replace(/"/g, '\\"')
+            .replace(/\r/g, '\\r')
+            .replace(/\n/g, '\\n')
+            .replace(/\t/g, '\\t')}"`);
+    } catch (_) {
+        return str
+            .replace(/\\"/g, '"')
+            .replace(/\\'/g, "'")
+            .replace(/\\\\/g, '\\')
+            .replace(/\\n/g, '\n');
+    }
+}
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 function generateHoursSchema(listing) {
@@ -2827,12 +2847,18 @@ function generateTemplateReplacements(listing) {
         return '';
     };
 
+    const decodedBusinessName = decodeEscapedText(listing.business_name || '');
+    const decodedTagline = decodeEscapedText(listing.tagline || '');
+    const decodedDescription = decodeEscapedText(listing.description || '');
+    const decodedCity = decodeEscapedText(listing.city || '');
+    const decodedState = decodeEscapedText(listing.state || '');
+    const decodedAddress = decodeEscapedText(listing.address || '');
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const listingUrl = `https://thegreekdirectory.org/listing/${listing.slug}`;
     const categoryUrl = `https://thegreekdirectory.org/${categorySlug}`;
     
-    const cityState = listing.city && listing.state ? ` in ${listing.city}, ${listing.state}` : '';
-    const inCity = listing.city ? ` in ${listing.city}` : '';
+    const cityState = decodedCity && decodedState ? ` in ${decodedCity}, ${decodedState}` : '';
+    const inCity = decodedCity ? ` in ${decodedCity}` : '';
     const schemaTypes = getListingSchemaTypes(listing);
     const hasCoordinates = listing.coordinates && listing.coordinates.lat && listing.coordinates.lng;
     const latitude = hasCoordinates ? String(listing.coordinates.lat) : '';
@@ -2849,7 +2875,7 @@ function generateTemplateReplacements(listing) {
     let photosSlides = '';
     if (photoList.length > 0) {
         photosSlides = photoList.map((photo, index) => 
-            `<div class="carousel-slide" style="background: url('${photo}') center/cover;" role="img" aria-label="${escapeHtml(listing.business_name)} in ${escapeHtml(listing.city || '')}, ${escapeHtml(listing.state || '')}"></div>`
+            `<div class="carousel-slide" style="background: url('${photo}') center/cover;" role="img" aria-label="${escapeHtml(decodedBusinessName)} in ${escapeHtml(decodedCity)}, ${escapeHtml(decodedState)}"></div>`
         ).join('');
     } else if (listing.logo) {
         photosSlides = `<div class="carousel-slide" style="background: url('${listing.logo}') center/cover;"></div>`;
@@ -2916,7 +2942,7 @@ function generateTemplateReplacements(listing) {
         pricingBadge = `<span class="pricing-chip">${pricingSymbols}</span>`;
     }
     
-    const taglineDisplay = listing.tagline ? `<h2 class="text-gray-600 italic text-xl font-semibold mb-2">${escapeHtml(listing.tagline)}</h2>` : '';
+    const taglineDisplay = decodedTagline ? `<h2 class="text-gray-600 italic text-xl font-semibold mb-2">${escapeHtml(decodedTagline)}</h2>` : '';
 
     let claimedCheckmark = '';
     if (isFeatured || isVerified || isClaimed) {
@@ -2938,10 +2964,10 @@ function generateTemplateReplacements(listing) {
     if (hasStreetAddress || (listing.city && listing.state)) {
         const addressParts = [];
         if (hasStreetAddress) {
-            addressParts.push(escapeHtml(listing.address));
+            addressParts.push(escapeHtml(decodedAddress));
         }
         if (listing.city && listing.state) {
-            addressParts.push(`${escapeHtml(listing.city)}, ${escapeHtml(listing.state)}${listing.zip_code ? ' ' + escapeHtml(listing.zip_code) : ''}`);
+            addressParts.push(`${escapeHtml(decodedCity)}, ${escapeHtml(decodedState)}${listing.zip_code ? ' ' + escapeHtml(listing.zip_code) : ''}`);
         }
         
         if (addressParts.length > 0) {
@@ -2987,7 +3013,7 @@ function generateTemplateReplacements(listing) {
     
     let websiteSection = '';
     if (listing.website) {
-        const displayUrl = listing.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const displayUrl = decodeEscapedText(listing.website).replace(/^https?:\/\//, '').replace(/\/$/, '');
         websiteSection = `
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
@@ -3035,8 +3061,8 @@ function generateTemplateReplacements(listing) {
             .filter(info => info && info.label && info.value)
             .map(info => `
                 <div class="additional-info-row text-sm">
-                    <span class="font-medium text-gray-900">${escapeHtml(info.label)}</span>
-                    <span class="text-gray-700">${escapeHtml(info.value)}</span>
+                    <span class="font-medium text-gray-900">${escapeHtml(decodeEscapedText(info.label))}</span>
+                    <span class="text-gray-700">${escapeHtml(decodeEscapedText(info.value))}</span>
                 </div>
             `).join('');
         
@@ -3144,13 +3170,13 @@ function generateTemplateReplacements(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     return {
-        'BUSINESS_NAME': escapeHtml(listing.business_name),
-        'BUSINESS_NAME_ENCODED': encodeURIComponent(listing.business_name),
+        'BUSINESS_NAME': escapeHtml(decodedBusinessName),
+        'BUSINESS_NAME_ENCODED': encodeURIComponent(decodedBusinessName),
         'CITY_STATE': cityState,
         'IN_CITY': inCity,
-        'TAGLINE': escapeHtml(normalizeTagline(listing.tagline || '')),
-        'DESCRIPTION': sanitizeListingDescription(listing.description || ''),
-        'DESCRIPTION_JS': escapeJsonForTemplate(listing.description || ''),
+        'TAGLINE': escapeHtml(normalizeTagline(decodedTagline)),
+        'DESCRIPTION': sanitizeListingDescription(decodedDescription),
+        'DESCRIPTION_JS': escapeJsonForTemplate(decodedDescription),
         'CATEGORY': escapeHtml(listing.category),
         'PRIMARY_SUBCATEGORY': escapeHtml(listing.primary_subcategory || 'business'),
         'CATEGORY_URL': categoryUrl,
@@ -3159,11 +3185,11 @@ function generateTemplateReplacements(listing) {
         'SLUG': listing.slug || '',
         'LOGO': listing.logo || '',
         'PRIMARY_IMAGE': photoList[0] || listing.logo || '',
-        'LOGO_ALT': `${escapeHtml(listing.business_name)} in ${escapeHtml(listing.city || '')}, ${escapeHtml(listing.state || '')}`,
+        'LOGO_ALT': `${escapeHtml(decodedBusinessName)} in ${escapeHtml(decodedCity)}, ${escapeHtml(decodedState)}`,
         'OG_IMAGE_TYPE': detectImageMimeType(photoList[0] || listing.logo || ''),
-        'ADDRESS': escapeHtml(listing.address || ''),
-        'CITY': escapeHtml(listing.city || ''),
-        'STATE': escapeHtml(listing.state || ''),
+        'ADDRESS': escapeHtml(decodedAddress),
+        'CITY': escapeHtml(decodedCity),
+        'STATE': escapeHtml(decodedState),
         'LAT': latitude,
         'LNG': longitude,
         'HAS_MAP_URL': hasMapUrl,
@@ -3174,7 +3200,7 @@ function generateTemplateReplacements(listing) {
         'PHONE': listing.phone || '',
         'PHONE_SCHEMA': listing.phone || '',
         'PRICE_RANGE': pricingSymbols || '',
-        'META_DESCRIPTION': escapeHtml(buildMetaDescription(listing.tagline || '', listing.city || '', listing.state || '')),
+        'META_DESCRIPTION': escapeHtml(buildMetaDescription(decodedTagline, decodedCity, decodedState)),
         'EMAIL': listing.email || '',
         'WEBSITE': listing.website || '',
         'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
@@ -3222,10 +3248,12 @@ function generateTemplateReplacementsPart2(listing) {
     const ownerCards = owners.map((owner) => {
         let ownerDetails = '';
         if (owner.name_title_visible !== false && owner.full_name) {
-            const ownerName = owner.title ? `${owner.full_name}, ${owner.title}` : owner.full_name;
+            const safeFullName = decodeEscapedText(owner.full_name);
+            const safeTitle = decodeEscapedText(owner.title || '');
+            const ownerName = safeTitle ? `${safeFullName}, ${safeTitle}` : safeFullName;
             ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(ownerName)}</p>`;
         }
-        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(owner.from_greece)}, Greece</p>`;
+        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(decodeEscapedText(owner.from_greece))}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
         if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
         return ownerDetails ? `<div class="mb-4">${ownerDetails}</div>` : '';
@@ -3368,10 +3396,10 @@ function generateTemplateReplacementsPart2(listing) {
     const firstOwner = owners.length > 0 ? owners[0] : null;
     const isClaimed = listing.is_claimed || (firstOwner && firstOwner.owner_user_id);
     if (!isClaimed && listing.show_claim_button !== false) {
-        const cityState = listing.city && listing.state ? `${listing.city}, ${listing.state}` : '';
+        const cityState = listing.city && listing.state ? `${decodeEscapedText(listing.city)}, ${decodeEscapedText(listing.state)}` : '';
         const country = listing.country && listing.country !== 'USA' ? `, ${listing.country}` : '';
         const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
-        const subject = encodeURIComponent(`Claim My Listing: ${listing.business_name}${locationInfo ? ' - ' + locationInfo : ''}`);
+        const subject = encodeURIComponent(`Claim My Listing: ${decodeEscapedText(listing.business_name)}${locationInfo ? ' - ' + locationInfo : ''}`);
         
         claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a>`;
     }
@@ -3384,6 +3412,8 @@ function generateTemplateReplacementsPart2(listing) {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
+    const suggestEditButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${decodeEscapedText(listing.business_name)} - ${decodeEscapedText(listing.city || '')}, ${decodeEscapedText(listing.state || '')}`)}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a>`;
+
     return {
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
@@ -3394,17 +3424,12 @@ function generateTemplateReplacementsPart2(listing) {
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
         'SHARE_TRIGGER_BUTTON': `<button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button>`,
-        'CLAIM_SUGGEST_SECTION': `
-            <div class="flex flex-wrap gap-3 mt-4">
-                ${claimButton || ''}
-                <a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${listing.business_name} - ${listing.city || ''}, ${listing.state || ''}`)}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a>
-            </div>
-        `,
+        'SUGGEST_EDIT_BUTTON': suggestEditButton,
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,
         'HOURS_JSON': hoursJson,
-        'SUGGEST_EDIT_MAILTO': `mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${listing.business_name} - ${listing.city || ''}, ${listing.state || ''}`)}`,
+        'SUGGEST_EDIT_MAILTO': `mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${decodeEscapedText(listing.business_name)} - ${decodeEscapedText(listing.city || '')}, ${decodeEscapedText(listing.state || '')}`)}`,
         'BUSINESS_TIMEZONE': escapeHtml(listing.timezone || 'America/Chicago')
     };
 }

@@ -25,6 +25,18 @@
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </a>
+                <div class="language-switch" id="headerLanguageSwitch">
+                    <input type="checkbox" id="lang-toggle-header" class="lang-input">
+                    <label for="lang-toggle-header" class="lang-label">
+                      <div class="flag-icon lang-en"><span style="font-size:16px;">🇺🇸</span></div>
+                      <div class="toggle-slider">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                          <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path>
+                        </svg>
+                      </div>
+                      <div class="flag-icon lang-gr"><span style="font-size:16px;">🇬🇷</span></div>
+                    </label>
+                </div>
             </nav>
 
             <!-- Hamburger mode: star icon stays in header, hamburger opens dropdown -->
@@ -52,6 +64,20 @@
             <a href="/" id="dropHome" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Home</a>
             <a href="/listings" id="dropListings" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Listings</a>
             <a href="/about" id="dropAbout" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">About</a>
+            <div class="pt-2 border-t border-gray-100 mt-1">
+                <div class="language-switch" id="hamburgerLanguageSwitch">
+                    <input type="checkbox" id="lang-toggle-menu" class="lang-input">
+                    <label for="lang-toggle-menu" class="lang-label">
+                      <div class="flag-icon lang-en"><span style="font-size:16px;">🇺🇸</span></div>
+                      <div class="toggle-slider">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                          <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path>
+                        </svg>
+                      </div>
+                      <div class="flag-icon lang-gr"><span style="font-size:16px;">🇬🇷</span></div>
+                    </label>
+                </div>
+            </div>
         </div>
     </div>
 </header>
@@ -195,5 +221,37 @@
     updateStarredButtonState();
     window.addEventListener('popstate',                  updateStarredButtonState);
     window.addEventListener('tgd:starred-state-changed', updateStarredButtonState);
+
+    function applyLanguage(language) {
+        var targetLanguage = language === 'el' ? 'el' : 'en';
+        if (window.PWAApp && typeof window.PWAApp.setLanguage === 'function') {
+            window.PWAApp.setLanguage(targetLanguage, { persist: true, reload: false, silent: true });
+        } else {
+            localStorage.setItem('tgd_language', targetLanguage);
+            var value = targetLanguage === 'el' ? '/en/el' : '/en/en';
+            document.cookie = 'googtrans=' + value + '; path=/; SameSite=Lax';
+            var combo = document.querySelector('.goog-te-combo');
+            if (combo) {
+                combo.value = targetLanguage;
+                combo.dispatchEvent(new Event('change'));
+            }
+        }
+    }
+
+    function initLanguageToggles() {
+        var toggles = [document.getElementById('lang-toggle-header'), document.getElementById('lang-toggle-menu')].filter(Boolean);
+        if (!toggles.length) return;
+        var lang = localStorage.getItem('tgd_language') || 'en';
+        var checked = lang === 'el';
+        toggles.forEach(function(t){ t.checked = checked; });
+        toggles.forEach(function(toggle) {
+            toggle.addEventListener('change', function(e) {
+                toggles.forEach(function(t){ t.checked = e.target.checked; });
+                applyLanguage(e.target.checked ? 'el' : 'en');
+            });
+        });
+    }
+
+    initLanguageToggles();
 })();
 </script>

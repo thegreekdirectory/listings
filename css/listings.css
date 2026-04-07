@@ -751,6 +751,14 @@ input[type="range"]::-moz-range-thumb {
     align-items: stretch;
 }
 
+.listing-card-hover {
+    transition: transform 0.22s ease, box-shadow 0.22s ease !important;
+}
+
+.listing-card-hover:hover {
+    transform: translateY(-2px) scale(1.015) !important;
+}
+
 .split-listing-item.selected-listing {
     border-left: 4px solid #045093 !important;
     background-color: #eff6ff !important;
