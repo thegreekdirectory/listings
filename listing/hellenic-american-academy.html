@@ -388,6 +388,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         #shareModal.active .share-modal-panel {
             transform: scale(1);
         }
+        #shareModalButtons { margin-top: -4px; }
 
         .related-listings-section { margin-top: 2rem; margin-bottom: 2rem; }
         .related-listing-card { border: 2px solid #045093; border-radius: 10px; }
@@ -1293,9 +1294,14 @@ or distribution of this code can result in legal action to the fullest extent pe
                 });
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => {
-                    alert('Link copied to clipboard!');
+                    const button = document.getElementById('copyShareLinkBtn');
+                    if (button) {
+                        const original = button.textContent;
+                        button.textContent = 'Link copied to clipboard';
+                        setTimeout(() => { button.textContent = original; }, 1800);
+                    }
                 }).catch(() => {
-                    alert('Unable to share. Please copy the URL from your browser.');
+                    console.log('Unable to share. Please copy the URL from your browser.');
                 });
             }
         }
