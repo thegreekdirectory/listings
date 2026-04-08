@@ -3080,28 +3080,28 @@ function generateTemplateReplacements(listing) {
     let phoneButtonMobile = '';
     if (listing.phone) {
         phoneButton = `
-            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium" onclick="trackClick('call')">
+            <a href="tel:${listing.phone}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium hover-bounce" onclick="trackClick('call')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                 </svg>
                 Call
             </a>
         `;
-        phoneButtonMobile = `<a href="tel:${listing.phone}" class="mobile-cta-button" style="background:#16a34a;" onclick="trackClick('call')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg><span>Call</span></a>`;
+        phoneButtonMobile = `<a href="tel:${listing.phone}" class="mobile-cta-button hover-bounce" style="background:#16a34a;" onclick="trackClick('call')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg><span>Call</span></a>`;
     }
 
     let emailButton = '';
     let emailButtonMobile = '';
     if (listing.email) {
         emailButton = `
-            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium">
+            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium hover-bounce">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 Email
             </a>
         `;
-        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button" style="background:#6b7280;"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
+        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button hover-bounce" style="background:#6b7280;"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -3110,14 +3110,14 @@ function generateTemplateReplacements(listing) {
     let websiteButtonMobile = '';
     if (listing.website) {
         websiteButton = `
-            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" onclick="trackClick('website')">
+            <a href="${listing.website}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium hover-bounce" onclick="trackClick('website')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
                 Website
             </a>
         `;
-        websiteButtonMobile = `<a href="${listing.website}" target="_blank" class="mobile-cta-button" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>`;
+        websiteButtonMobile = `<a href="${listing.website}" target="_blank" class="mobile-cta-button hover-bounce" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>`;
     }
     
     // Only show directions if has street address with number
@@ -3149,7 +3149,7 @@ function generateTemplateReplacements(listing) {
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-5 h-5') || '';
                 return `
                     <a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer"
-                        class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90"
+                        class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 hover-bounce"
                         style="background-color:${color};" data-cta-name="${escapeHtml(label)}">
                         ${icon}
                         <span>${escapeHtml(label)}</span>
@@ -3163,7 +3163,7 @@ function generateTemplateReplacements(listing) {
                 const label = String(cta.name).trim().slice(0, 15);
                 const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#055193';
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-4 h-4') || '';
-                return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button" style="background:${color};" data-cta-name="${escapeHtml(label)}">${icon}<span>${escapeHtml(label)}</span></a>`;
+                return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:${color};" data-cta-name="${escapeHtml(label)}">${icon}<span>${escapeHtml(label)}</span></a>`;
             }).join('');
     }
     
@@ -3171,10 +3171,12 @@ function generateTemplateReplacements(listing) {
     
     return {
         'BUSINESS_NAME': escapeHtml(decodedBusinessName),
+        'BUSINESS_NAME_JS': escapeJsonForTemplate(decodedBusinessName),
         'BUSINESS_NAME_ENCODED': encodeURIComponent(decodedBusinessName),
         'CITY_STATE': cityState,
         'IN_CITY': inCity,
         'TAGLINE': escapeHtml(normalizeTagline(decodedTagline)),
+        'TAGLINE_JS': escapeJsonForTemplate(decodedTagline),
         'DESCRIPTION': sanitizeListingDescription(decodedDescription),
         'DESCRIPTION_JS': escapeJsonForTemplate(decodedDescription),
         'CATEGORY': escapeHtml(listing.category),
@@ -3188,8 +3190,11 @@ function generateTemplateReplacements(listing) {
         'LOGO_ALT': `${escapeHtml(decodedBusinessName)} in ${escapeHtml(decodedCity)}, ${escapeHtml(decodedState)}`,
         'OG_IMAGE_TYPE': detectImageMimeType(photoList[0] || listing.logo || ''),
         'ADDRESS': escapeHtml(decodedAddress),
+        'ADDRESS_JS': escapeJsonForTemplate(decodedAddress),
         'CITY': escapeHtml(decodedCity),
+        'CITY_JS': escapeJsonForTemplate(decodedCity),
         'STATE': escapeHtml(decodedState),
+        'STATE_JS': escapeJsonForTemplate(decodedState),
         'LAT': latitude,
         'LNG': longitude,
         'HAS_MAP_URL': hasMapUrl,
@@ -3202,7 +3207,9 @@ function generateTemplateReplacements(listing) {
         'PRICE_RANGE': pricingSymbols || '',
         'META_DESCRIPTION': escapeHtml(buildMetaDescription(decodedTagline, decodedCity, decodedState)),
         'EMAIL': listing.email || '',
+        'EMAIL_JS': escapeJsonForTemplate(decodeEscapedText(listing.email || '')),
         'WEBSITE': listing.website || '',
+        'WEBSITE_JS': escapeJsonForTemplate(decodeEscapedText(listing.website || '')),
         'WEBSITE_DOMAIN': listing.website ? new URL(listing.website).hostname : '',
         'TOTAL_PHOTOS': totalPhotos,
         'PHOTOS_SLIDES': photosSlides,
@@ -3401,7 +3408,7 @@ function generateTemplateReplacementsPart2(listing) {
         const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
         const subject = encodeURIComponent(`Claim My Listing: ${decodeEscapedText(listing.business_name)}${locationInfo ? ' - ' + locationInfo : ''}`);
         
-        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a>`;
+        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a>`;
     }
     
     const hoursSchema = generateHoursSchema(listing);
@@ -3412,7 +3419,7 @@ function generateTemplateReplacementsPart2(listing) {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    const suggestEditButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${decodeEscapedText(listing.business_name)} - ${decodeEscapedText(listing.city || '')}, ${decodeEscapedText(listing.state || '')}`)}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a>`;
+    const suggestEditButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${decodeEscapedText(listing.business_name)} - ${decodeEscapedText(listing.city || '')}, ${decodeEscapedText(listing.state || '')}`)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a>`;
 
     return {
         'OWNER_INFO_SECTION': ownerInfoSection,

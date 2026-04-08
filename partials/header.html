@@ -28,13 +28,13 @@
                 <div class="language-switch" id="headerLanguageSwitch">
                     <input type="checkbox" id="lang-toggle-header" class="lang-input">
                     <label for="lang-toggle-header" class="lang-label">
-                      <div class="flag-icon lang-en"><span style="font-size:16px;">🇺🇸</span></div>
+                      <div class="flag-icon lang-en"></div>
                       <div class="toggle-slider">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                           <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path>
                         </svg>
                       </div>
-                      <div class="flag-icon lang-gr"><span style="font-size:16px;">🇬🇷</span></div>
+                      <div class="flag-icon lang-gr"></div>
                     </label>
                 </div>
             </nav>
@@ -68,13 +68,13 @@
                 <div class="language-switch" id="hamburgerLanguageSwitch">
                     <input type="checkbox" id="lang-toggle-menu" class="lang-input">
                     <label for="lang-toggle-menu" class="lang-label">
-                      <div class="flag-icon lang-en"><span style="font-size:16px;">🇺🇸</span></div>
+                      <div class="flag-icon lang-en"></div>
                       <div class="toggle-slider">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                           <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path>
                         </svg>
                       </div>
-                      <div class="flag-icon lang-gr"><span style="font-size:16px;">🇬🇷</span></div>
+                      <div class="flag-icon lang-gr"></div>
                     </label>
                 </div>
             </div>
@@ -239,10 +239,15 @@
     }
 
     function initLanguageToggles() {
+        var enFlagSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480"><defs><clipPath id="a"><path fill-opacity=".67" d="M0 0h682.67v512H0z"></path></clipPath></defs><g fill-rule="evenodd" clip-path="url(#a)" transform="scale(.9375)"><g stroke-width="1pt"><path d="M0 0h972.81v39.385H0zm0 78.77h972.81v39.385H0zm0 78.77h972.81v39.385H0zm0 78.77h972.81v39.385H0zm0 78.77h972.81v39.385H0zm0 78.77h972.81v39.385H0zm0 78.77h972.81v39.385H0z" fill="#bd3d44"></path><path d="M0 39.385h972.81V78.77H0zm0 78.77h972.81v39.385H0zm0 78.77h972.81v39.385H0zm0 78.77h972.81v39.385H0zm0 78.77h972.81v39.385H0zm0 78.77h972.81v39.385H0z" fill="#fff"></path></g><path fill="#192f5d" d="M0 0h389.12v275.69H0z"></path><g fill="#fff"><circle cx="45" cy="35" r="8"/><circle cx="95" cy="35" r="8"/><circle cx="145" cy="35" r="8"/><circle cx="195" cy="35" r="8"/><circle cx="245" cy="35" r="8"/><circle cx="295" cy="35" r="8"/><circle cx="345" cy="35" r="8"/></g></g></svg>`;
+        var grFlagSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480"><defs><clipPath id="a"><path fill-opacity=".67" d="M0 0h120v90H0z"></path></clipPath></defs><g fill-rule="evenodd" clip-path="url(#a)" transform="scale(5.33)" stroke-width="1pt"><path fill="#0d5eaf" d="M0 0h135v10H0z"></path><path fill="#fff" d="M0 10h135v10H0z"></path><path fill="#0d5eaf" d="M0 20h135v10H0z"></path><path fill="#fff" d="M0 30h135v10H0z"></path><path fill="#0d5eaf" d="M0 40h135v10H0z"></path><path fill="#fff" d="M0 50h135v10H0z"></path><path fill="#0d5eaf" d="M0 60h135v10H0z"></path><path fill="#fff" d="M0 70h135v10H0z"></path><path fill="#0d5eaf" d="M0 80h135v10H0zM0 0h50v50H0z"></path><g fill="#fff"><path d="M20 0h10v50H20z"></path><path d="M0 20h50v10H0z"></path></g></g></svg>`;
+        document.querySelectorAll('.flag-icon.lang-en').forEach(function(el){ el.innerHTML = enFlagSvg; });
+        document.querySelectorAll('.flag-icon.lang-gr').forEach(function(el){ el.innerHTML = grFlagSvg; });
         var toggles = [document.getElementById('lang-toggle-header'), document.getElementById('lang-toggle-menu')].filter(Boolean);
         if (!toggles.length) return;
         var lang = localStorage.getItem('tgd_language') || 'en';
         var checked = lang === 'el';
+        applyLanguage(lang);
         toggles.forEach(function(t){ t.checked = checked; });
         toggles.forEach(function(toggle) {
             toggle.addEventListener('change', function(e) {
