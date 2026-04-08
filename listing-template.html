@@ -374,6 +374,20 @@ or distribution of this code can result in legal action to the fullest extent pe
         .map-fallback { display: none; margin-top: 12px; padding: 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 14px; }
         .map-fallback.visible { display: block; }
         .location-section.map-unavailable #listingMap { display: none; }
+        #shareModal {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        #shareModal .share-modal-panel {
+            transform: scale(0.96);
+            transition: transform 0.2s ease;
+        }
+        #shareModal.active {
+            opacity: 1;
+        }
+        #shareModal.active .share-modal-panel {
+            transform: scale(1);
+        }
 
         .related-listings-section { margin-top: 2rem; margin-bottom: 2rem; }
         .related-listing-card { border: 2px solid #045093; border-radius: 10px; }
@@ -643,8 +657,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         </div>
     </div>
 
-    <div id="shareModal" class="hidden fixed inset-0 z-50 items-center justify-center p-4" style="background:rgba(0,0,0,0.45);">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+        <div id="shareModal" class="hidden fixed inset-0 z-50 items-center justify-center p-4" style="background:rgba(0,0,0,0.45);">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md share-modal-panel">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-gray-900">Share</h3>
                 <button type="button" onclick="closeShareModal()" class="text-gray-500">✕</button>
@@ -654,7 +668,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <label class="block text-sm font-medium text-gray-700 mb-2">Copy link</label>
                 <div class="flex gap-2">
                     <input id="shareLinkInput" readonly class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" value="{{LISTING_URL}}">
-                    <button type="button" class="px-4 py-2 rounded-lg text-white font-semibold hover-bounce" style="background:#045093;" onclick="copyShareLink()">Copy Link</button>
+                    <button id="copyShareLinkBtn" type="button" class="px-4 py-2 rounded-lg text-white font-semibold hover-bounce" style="background:#045093;" onclick="copyShareLink()">Copy Link</button>
                 </div>
             </div>
             <label class="flex items-center gap-2 text-sm text-gray-700">
@@ -684,16 +698,16 @@ or distribution of this code can result in legal action to the fullest extent pe
     // Store current listing data for starring
     window.currentListingData = {
         id: '{{LISTING_ID}}',
-        business_name: '{{BUSINESS_NAME}}',
-        tagline: '{{TAGLINE}}',
-        description: '{{DESCRIPTION_JS}}',
+        business_name: "{{BUSINESS_NAME_JS}}",
+        tagline: "{{TAGLINE_JS}}",
+        description: "{{DESCRIPTION_JS}}",
         category: '{{CATEGORY}}',
-        city: '{{CITY}}',
-        state: '{{STATE}}',
-        address: '{{ADDRESS}}',
+        city: "{{CITY_JS}}",
+        state: "{{STATE_JS}}",
+        address: "{{ADDRESS_JS}}",
         phone: '{{PHONE}}',
-        email: '{{EMAIL}}',
-        website: '{{WEBSITE}}',
+        email: "{{EMAIL_JS}}",
+        website: "{{WEBSITE_JS}}",
         logo: '{{LOGO}}',
         photos: {{PHOTOS_JSON}},
         slug: '{{SLUG}}'
@@ -1174,23 +1188,39 @@ or distribution of this code can result in legal action to the fullest extent pe
             target.innerHTML = source.querySelector('.flex') ? source.querySelector('.flex').innerHTML : '';
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            requestAnimationFrame(() => modal.classList.add('active'));
         }
 
         function closeShareModal() {
             const modal = document.getElementById('shareModal');
             if (!modal) return;
+            modal.classList.remove('active');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
 
         function copyShareLink() {
             const input = document.getElementById('shareLinkInput');
+            const button = document.getElementById('copyShareLinkBtn');
             if (!input) return;
             navigator.clipboard.writeText(input.value).then(() => {
-                alert('Link copied to clipboard!');
+                if (button) {
+                    const original = button.textContent;
+                    button.textContent = 'Link copied to clipboard';
+                    setTimeout(() => {
+                        button.textContent = original;
+                    }, 1800);
+                }
             }).catch(() => {
                 input.select();
                 document.execCommand('copy');
+                if (button) {
+                    const original = button.textContent;
+                    button.textContent = 'Link copied to clipboard';
+                    setTimeout(() => {
+                        button.textContent = original;
+                    }, 1800);
+                }
             });
         }
 
@@ -1281,10 +1311,10 @@ or distribution of this code can result in legal action to the fullest extent pe
                 
                 const listingMapPinIcon = L.divIcon({
                     className: 'listing-map-pin',
-                    html: `<svg xmlns="http://www.w3.org/2000/svg" width="800px" height="800px" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3856 23.789L11.3831 23.7871L11.3769 23.7822L11.355 23.765C11.3362 23.7501 11.3091 23.7287 11.2742 23.7008C11.2046 23.6451 11.1039 23.5637 10.9767 23.4587C10.7224 23.2488 10.3615 22.944 9.92939 22.5599C9.06662 21.793 7.91329 20.7041 6.75671 19.419C5.60303 18.1371 4.42693 16.639 3.53467 15.0528C2.64762 13.4758 2 11.7393 2 10C2 7.34784 3.05357 4.8043 4.92893 2.92893C6.8043 1.05357 9.34784 0 12 0C14.6522 0 17.1957 1.05357 19.0711 2.92893C20.9464 4.8043 22 7.34784 22 10C22 11.7393 21.3524 13.4758 20.4653 15.0528C19.5731 16.639 18.397 18.1371 17.2433 19.419C16.0867 20.7041 14.9334 21.793 14.0706 22.5599C13.6385 22.944 13.2776 23.2488 13.0233 23.4587C12.8961 23.5637 12.7954 23.6451 12.7258 23.7008C12.6909 23.7287 12.6638 23.7501 12.645 23.765L12.6231 23.7822L12.6169 23.7871L12.615 23.7885C12.615 23.7885 12.6139 23.7894 12 23L12.6139 23.7894C12.2528 24.0702 11.7467 24.0699 11.3856 23.789ZM12 23L11.3856 23.789C11.3856 23.789 11.3861 23.7894 12 23ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="#045093"/></svg>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 30],
-                    popupAnchor: [0, -26]
+                    html: `<div style="width:25px;height:41px;display:flex;align-items:flex-end;justify-content:center;"><svg xmlns="http://www.w3.org/2000/svg" width="800px" height="800px" viewBox="0 0 24 24" fill="none" style="width:25px;height:41px;display:block;"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3856 23.789L11.3831 23.7871L11.3769 23.7822L11.355 23.765C11.3362 23.7501 11.3091 23.7287 11.2742 23.7008C11.2046 23.6451 11.1039 23.5637 10.9767 23.4587C10.7224 23.2488 10.3615 22.944 9.92939 22.5599C9.06662 21.793 7.91329 20.7041 6.75671 19.419C5.60303 18.1371 4.42693 16.639 3.53467 15.0528C2.64762 13.4758 2 11.7393 2 10C2 7.34784 3.05357 4.8043 4.92893 2.92893C6.8043 1.05357 9.34784 0 12 0C14.6522 0 17.1957 1.05357 19.0711 2.92893C20.9464 4.8043 22 7.34784 22 10C22 11.7393 21.3524 13.4758 20.4653 15.0528C19.5731 16.639 18.397 18.1371 17.2433 19.419C16.0867 20.7041 14.9334 21.793 14.0706 22.5599C13.6385 22.944 13.2776 23.2488 13.0233 23.4587C12.8961 23.5637 12.7954 23.6451 12.7258 23.7008C12.6909 23.7287 12.6638 23.7501 12.645 23.765L12.6231 23.7822L12.6169 23.7871L12.615 23.7885C12.615 23.7885 12.6139 23.7894 12 23L12.6139 23.7894C12.2528 24.0702 11.7467 24.0699 11.3856 23.789ZM12 23L11.3856 23.789C11.3856 23.789 11.3861 23.7894 12 23ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="#045093"/></svg></div>`,
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34]
                 });
                 L.marker([lat, lng], { icon: listingMapPinIcon }).addTo(map)
                     .bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}')
