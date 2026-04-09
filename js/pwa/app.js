@@ -502,4 +502,6 @@ window.TGDLanguage = {
     }
 };
 
+window.dispatchEvent(new Event('tgd-language-ready'));
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.

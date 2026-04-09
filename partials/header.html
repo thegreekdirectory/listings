@@ -229,6 +229,12 @@
             return;
         }
         localStorage.setItem('tgd_language', targetLanguage);
+        window.addEventListener('tgd-language-ready', function onReady() {
+            window.removeEventListener('tgd-language-ready', onReady);
+            if (window.TGDLanguage && typeof window.TGDLanguage.setLanguage === 'function') {
+                window.TGDLanguage.setLanguage(targetLanguage, { persist: true, reload: false, silent: true });
+            }
+        });
     }
 
     function initLanguageToggles() {

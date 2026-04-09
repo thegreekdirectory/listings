@@ -135,6 +135,12 @@ a.hover-bounce:active {
     transition: opacity 0.3s;
 }
 
+.flag-icon svg {
+    width: 24px;
+    height: 18px;
+    display: block;
+}
+
 .lang-gr { opacity: 0.3; }
 .lang-en { opacity: 1; }
 
