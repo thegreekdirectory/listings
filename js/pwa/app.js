@@ -492,4 +492,14 @@ if (document.readyState === 'loading') {
 
 window.PWAApp = pwaApp;
 
+window.TGDLanguage = {
+    setLanguage(language, options = {}) {
+        return pwaApp.setLanguage(language, options);
+    },
+    applyStoredLanguage(options = {}) {
+        const lang = localStorage.getItem('tgd_language') || 'en';
+        return pwaApp.setLanguage(lang, { persist: false, reload: false, silent: true, ...options });
+    }
+};
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.

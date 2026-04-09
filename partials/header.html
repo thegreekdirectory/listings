@@ -224,18 +224,11 @@
 
     function applyLanguage(language) {
         var targetLanguage = language === 'el' ? 'el' : 'en';
-        if (window.PWAApp && typeof window.PWAApp.setLanguage === 'function') {
-            window.PWAApp.setLanguage(targetLanguage, { persist: true, reload: false, silent: true });
-        } else {
-            localStorage.setItem('tgd_language', targetLanguage);
-            var value = targetLanguage === 'el' ? '/en/el' : '/en/en';
-            document.cookie = 'googtrans=' + value + '; path=/; SameSite=Lax';
-            var combo = document.querySelector('.goog-te-combo');
-            if (combo) {
-                combo.value = targetLanguage;
-                combo.dispatchEvent(new Event('change'));
-            }
+        if (window.TGDLanguage && typeof window.TGDLanguage.setLanguage === 'function') {
+            window.TGDLanguage.setLanguage(targetLanguage, { persist: true, reload: false, silent: true });
+            return;
         }
+        localStorage.setItem('tgd_language', targetLanguage);
     }
 
     function initLanguageToggles() {

@@ -375,6 +375,9 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.TGDLanguage && typeof window.TGDLanguage.applyStoredLanguage === 'function') {
+        window.TGDLanguage.applyStoredLanguage();
+    }
     if (isIOSWebApp()) {
         const refreshBtn = document.getElementById('refreshBtn');
         if (refreshBtn) refreshBtn.style.display = 'flex';
