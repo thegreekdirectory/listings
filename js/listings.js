@@ -51,7 +51,7 @@ let splitEstimatedLocationCircle = null;
 let starredListings = [], viewingStarredOnly = false, mapMoved = false, locationButtonActive = false;
 let filterPosition = 'top';
 let searchDebounceTimer = null;
-let displayedListingsCount = 15;
+let displayedListingsCount = 25;
 let estimatedUserLocation = null;
 let selectedSplitListingId = null;
 let desktopFiltersOverlay = false;
@@ -276,7 +276,7 @@ function toggleStarredView(forceState = null, options = {}) {
         headerStarBtn.style.color = viewingStarredOnly ? '#78350f' : '';
     }
 
-    displayedListingsCount = viewingStarredOnly ? Math.max(filteredListings.length, starredListings.length) : 15;
+    displayedListingsCount = viewingStarredOnly ? Math.max(filteredListings.length, starredListings.length) : 25;
     updateURL();
     applyFilters();
 }
@@ -375,9 +375,6 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.TGDLanguage && typeof window.TGDLanguage.applyStoredLanguage === 'function') {
-        window.TGDLanguage.applyStoredLanguage();
-    }
     if (isIOSWebApp()) {
         const refreshBtn = document.getElementById('refreshBtn');
         if (refreshBtn) refreshBtn.style.display = 'flex';
@@ -1027,7 +1024,7 @@ function applyFilters() {
     Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     */
     
-    displayedListingsCount = 15;
+    displayedListingsCount = 25;
     renderListings();
     updateResultsCount();
     if (map) updateMapMarkers();
@@ -1038,7 +1035,7 @@ function applyFilters() {
 }
 
 function loadMoreListings() {
-    displayedListingsCount += 15;
+    displayedListingsCount += 25;
     renderListings();
 }
 
@@ -1390,7 +1387,7 @@ function renderListings() {
             const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative hover-bounce listing-card-hover">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative">
                     <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}">
                         <svg class="star-icon" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -1435,7 +1432,7 @@ function renderListings() {
             const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
             
             return `
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 relative hover-bounce listing-card-hover">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 relative">
                     <button class="star-button ${isStarred ? 'starred' : ''}" data-listing-id="${l.id}" style="top: 12px; right: 12px;">
                         <svg class="star-icon" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -1602,7 +1599,7 @@ function setupEventListeners() {
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             }, 100); // 100ms debounce for smooth typing
@@ -1694,7 +1691,7 @@ function setupEventListeners() {
                     requestPreciseLocation('radius-filter');
                 }
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             });
@@ -1712,7 +1709,7 @@ function setupEventListeners() {
                 if (openFilter2) openFilter2.checked = openNowOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             });
@@ -1730,7 +1727,7 @@ function setupEventListeners() {
                 if (closedFilter2) closedFilter2.checked = closedNowOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             });
@@ -1748,7 +1745,7 @@ function setupEventListeners() {
                 if (openingSoonFilter2) openingSoonFilter2.checked = openingSoonOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             });
@@ -1766,7 +1763,7 @@ function setupEventListeners() {
                 if (closingSoonFilter2) closingSoonFilter2.checked = closingSoonOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             });
@@ -1784,7 +1781,7 @@ function setupEventListeners() {
                 if (hoursUnknownFilter2) hoursUnknownFilter2.checked = hoursUnknownOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             });
@@ -1833,7 +1830,7 @@ function setupEventListeners() {
                 if (onlineFilter2) onlineFilter2.checked = onlineOnly;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             });
@@ -1850,7 +1847,7 @@ function setupEventListeners() {
             if (sortSelect.value === 'closest' && !userLocation) {
                 requestPreciseLocation('closest-sort');
             }
-            displayedListingsCount = 15;
+            displayedListingsCount = 25;
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
         });
@@ -1891,7 +1888,7 @@ function setupEventListeners() {
                 }
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             });
@@ -1909,7 +1906,7 @@ function setupEventListeners() {
                 if (stateFilter2) stateFilter2.value = selectedState;
                 updateURL();
                 if (!viewingStarredOnly) {
-                    displayedListingsCount = 15;
+                    displayedListingsCount = 25;
                     applyFilters();
                 }
             });
@@ -2202,25 +2199,35 @@ or distribution of this code will result in legal action to the fullest extent p
 
 function createCategoryButtons(filteredCategories) {
     const categoriesToShow = filteredCategories && filteredCategories.length > 0 ? filteredCategories : CATEGORIES;
-
+    
     ['categoryFilters', 'categoryFilters2'].forEach(containerId => {
         const container = document.getElementById(containerId);
         if (!container) return;
-
-        const selectId = containerId === 'categoryFilters' ? 'categorySelect' : 'categorySelectDesktop';
-        const textSize = containerId === 'categoryFilters' ? 'text-sm' : 'text-sm';
-
-        container.innerHTML = `
-            <select id="${selectId}" class="category-select ${textSize}">
-                <option value="All">All</option>
-                ${categoriesToShow.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
-            </select>
-        `;
-
-        const select = container.querySelector('select');
-        if (!select) return;
-        select.value = selectedCategory || 'All';
-        select.addEventListener('change', (event) => filterByCategory(event.target.value));
+        
+        const isTopView = containerId === 'categoryFilters';
+        const compactClass = isTopView ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm';
+        
+        container.innerHTML = '';
+        
+        const allButton = document.createElement('button');
+        allButton.className = selectedCategory === 'All' ? 
+            `${compactClass} rounded-lg font-medium text-white` : 
+            `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300`;
+        if (selectedCategory === 'All') allButton.style.backgroundColor = '#055193';
+        allButton.textContent = 'All';
+        allButton.onclick = () => filterByCategory('All');
+        container.appendChild(allButton);
+        
+        categoriesToShow.forEach(cat => {
+            const button = document.createElement('button');
+            button.className = selectedCategory === cat ? 
+                `${compactClass} rounded-lg font-medium text-white` : 
+                `${compactClass} rounded-lg font-medium bg-white text-gray-700 border border-gray-300 text-left`;
+            if (selectedCategory === cat) button.style.backgroundColor = '#055193';
+            button.textContent = cat;
+            button.onclick = () => filterByCategory(cat);
+            container.appendChild(button);
+        });
     });
 }
 
@@ -2235,7 +2242,7 @@ function filterByCategory(category) {
     createCategoryButtons();
     updateSubcategoryDisplay();
     updateURL();
-    displayedListingsCount = 15;
+    displayedListingsCount = 25;
     if (!viewingStarredOnly) applyFilters();
 }
 
@@ -2305,7 +2312,7 @@ function toggleSubcategory(subcategory) {
     
     updateSubcategoryDisplay();
     updateURL();
-    displayedListingsCount = 15;
+    displayedListingsCount = 25;
     if (!viewingStarredOnly) applyFilters();
 }
 
@@ -2322,7 +2329,7 @@ function filterCategoriesAndSubcategories(searchTerm) {
         updateSubcategoryDisplay();
         createCategoryButtons();
         if (!viewingStarredOnly) {
-            displayedListingsCount = 15;
+            displayedListingsCount = 25;
             applyFilters();
         }
         return;
@@ -2356,7 +2363,7 @@ function filterCategoriesAndSubcategories(searchTerm) {
     
     updateURL();
     if (!viewingStarredOnly) {
-        displayedListingsCount = 15;
+        displayedListingsCount = 25;
         applyFilters();
     }
 }
@@ -2492,7 +2499,7 @@ function clearAllFilters() {
     updateRadiusValue();
     updateURL();
     createCategoryButtons();
-    displayedListingsCount = 15;
+    displayedListingsCount = 25;
     if (viewingStarredOnly) {
         toggleStarredView();
         toggleStarredView();
@@ -2667,7 +2674,7 @@ function setupLocationSearch() {
 
                         updateURL();
                         if (!viewingStarredOnly) {
-                            displayedListingsCount = 15;
+                            displayedListingsCount = 25;
                             applyFilters();
                         }
                     });
@@ -3235,7 +3242,7 @@ function toggleSplitView() {
             if (e.target.value === 'closest' && !userLocation) {
                 requestPreciseLocation('closest-sort');
             }
-            displayedListingsCount = 15;
+            displayedListingsCount = 25;
             if (!viewingStarredOnly) applyFilters();
             else renderListings();
         });
