@@ -87,7 +87,8 @@ or distribution of this code can result in legal action to the fullest extent pe
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="/src/output.css">
+        <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/src/output.css">
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
     
     <script type="application/ld+json">
@@ -770,10 +771,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="related-listings-section" id="relatedSection"></div>
 
         <div class="claim-listing-section" id="claimSection">
-            <div class="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-5">
-                <div class="md:w-1/3 md:flex md:justify-end"><a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Hellenic%20American%20Academy%20-%20Deerfield%2C%20IL" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a></div>
-                <div class="md:w-1/3 md:flex md:justify-center"><button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button></div>
-                <div class="md:w-1/3 md:flex md:justify-start"><a href="mailto:contact@thegreekdirectory.org?subject=Suggest%20an%20Edit%20-%20Hellenic%20American%20Academy%20-%20Deerfield%2C%20IL" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a></div>
+            <div class="flex items-center justify-between gap-3">
+                <div class="w-1/3 flex justify-start"><a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Hellenic%20American%20Academy%20-%20Deerfield%2C%20IL" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a></div>
+                <div class="w-1/3 flex justify-center"><button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button></div>
+                <div class="w-1/3 flex justify-end"><a href="mailto:contact@thegreekdirectory.org?subject=Suggest%20an%20Edit%20-%20Hellenic%20American%20Academy%20-%20Deerfield%2C%20IL" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a></div>
             </div>
         </div>
     </div>
@@ -786,7 +787,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             </div>
             <div id="shareModalButtons" class="flex flex-wrap gap-2 mb-5"></div>
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Copy link</label>
+                <label id="shareCopyLabel" class="block text-sm font-medium text-gray-700 mb-2">Copy link</label>
                 <div class="flex gap-2">
                     <input id="shareLinkInput" readonly class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" value="https://thegreekdirectory.org/listing/hellenic-american-academy">
                     <button id="copyShareLinkBtn" type="button" class="px-4 py-2 rounded-lg text-white font-semibold hover-bounce" style="background:#045093;" onclick="copyShareLink()">Copy Link</button>
@@ -965,6 +966,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
         
         document.addEventListener('DOMContentLoaded', () => {
+            if (window.TGDLanguage && typeof window.TGDLanguage.applyStoredLanguage === 'function') {
+                window.TGDLanguage.applyStoredLanguage();
+            }
             document.querySelectorAll('.text-gray-600, .text-gray-700').forEach(el => {
                 const phone = el.textContent.match(/\b1?\d{10}\b/);
                 if (phone) {
@@ -1294,11 +1298,11 @@ or distribution of this code can result in legal action to the fullest extent pe
                 });
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => {
-                    const button = document.getElementById('copyShareLinkBtn');
-                    if (button) {
-                        const original = button.textContent;
-                        button.textContent = 'Link copied to clipboard';
-                        setTimeout(() => { button.textContent = original; }, 1800);
+                    const label = document.getElementById('shareCopyLabel');
+                    if (label) {
+                        const original = label.textContent;
+                        label.textContent = 'Link copied to clipboard!';
+                        setTimeout(() => { label.textContent = original; }, 1800);
                     }
                 }).catch(() => {
                     console.log('Unable to share. Please copy the URL from your browser.');
@@ -1327,24 +1331,24 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         function copyShareLink() {
             const input = document.getElementById('shareLinkInput');
-            const button = document.getElementById('copyShareLinkBtn');
+            const label = document.getElementById('shareCopyLabel');
             if (!input) return;
             navigator.clipboard.writeText(input.value).then(() => {
-                if (button) {
-                    const original = button.textContent;
-                    button.textContent = 'Link copied to clipboard';
+                if (label) {
+                    const original = label.textContent;
+                    label.textContent = 'Link copied to clipboard!';
                     setTimeout(() => {
-                        button.textContent = original;
+                        label.textContent = original;
                     }, 1800);
                 }
             }).catch(() => {
                 input.select();
                 document.execCommand('copy');
-                if (button) {
-                    const original = button.textContent;
-                    button.textContent = 'Link copied to clipboard';
+                if (label) {
+                    const original = label.textContent;
+                    label.textContent = 'Link copied to clipboard!';
                     setTimeout(() => {
-                        button.textContent = original;
+                        label.textContent = original;
                     }, 1800);
                 }
             });
