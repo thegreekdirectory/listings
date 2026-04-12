@@ -3408,7 +3408,7 @@ function generateTemplateReplacementsPart2(listing) {
         const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
         const subject = encodeURIComponent(`Claim My Listing: ${decodeEscapedText(listing.business_name)}${locationInfo ? ' - ' + locationInfo : ''}`);
         
-        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a>`;
+        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" target="_blank" rel="noopener noreferrer" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a>`;
     }
     
     const hoursSchema = generateHoursSchema(listing);
@@ -3419,7 +3419,7 @@ function generateTemplateReplacementsPart2(listing) {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    const suggestEditButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${decodeEscapedText(listing.business_name)} - ${decodeEscapedText(listing.city || '')}, ${decodeEscapedText(listing.state || '')}`)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a>`;
+    const suggestEditButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${decodeEscapedText(listing.business_name)} - ${decodeEscapedText(listing.city || '')}, ${decodeEscapedText(listing.state || '')}`)}" target="_blank" rel="noopener noreferrer" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a>`;
 
     return {
         'OWNER_INFO_SECTION': ownerInfoSection,
@@ -3430,7 +3430,7 @@ function generateTemplateReplacementsPart2(listing) {
         'MAP_SECTION': mapSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
-        'SHARE_TRIGGER_BUTTON': `<button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button>`,
+        'SHARE_TRIGGER_BUTTON': `<button type="button" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button>`,
         'SUGGEST_EDIT_BUTTON': suggestEditButton,
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,
