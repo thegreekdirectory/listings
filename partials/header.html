@@ -225,14 +225,14 @@
     function applyLanguage(language) {
         var targetLanguage = language === 'el' ? 'el' : 'en';
         if (window.TGDLanguage && typeof window.TGDLanguage.setLanguage === 'function') {
-            window.TGDLanguage.setLanguage(targetLanguage, { persist: true, reload: true, silent: true });
+            window.TGDLanguage.setLanguage(targetLanguage, { persist: true, reload: false, silent: true });
             return;
         }
         localStorage.setItem('tgd_language', targetLanguage);
         window.addEventListener('tgd-language-ready', function onReady() {
             window.removeEventListener('tgd-language-ready', onReady);
             if (window.TGDLanguage && typeof window.TGDLanguage.setLanguage === 'function') {
-                window.TGDLanguage.setLanguage(targetLanguage, { persist: true, reload: true, silent: true });
+                window.TGDLanguage.setLanguage(targetLanguage, { persist: true, reload: false, silent: true });
             }
         });
     }
@@ -248,10 +248,14 @@
         var checked = lang === 'el';
         applyLanguage(lang);
         toggles.forEach(function(t){ t.checked = checked; });
+        var languageToggleReloading = false;
         toggles.forEach(function(toggle) {
             toggle.addEventListener('change', function(e) {
+                if (languageToggleReloading) return;
                 toggles.forEach(function(t){ t.checked = e.target.checked; });
                 applyLanguage(e.target.checked ? 'el' : 'en');
+                languageToggleReloading = true;
+                window.location.reload();
             });
         });
         window.addEventListener('storage', function(event) {

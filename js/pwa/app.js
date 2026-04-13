@@ -232,19 +232,8 @@ class PWAApp {
         document.cookie = `googtrans=${value}; domain=.thegreekdirectory.org; path=/; SameSite=Lax${secure}`;
     }
 
-    applyStoredLanguagePreference() {
-        const language = this.getStoredLanguage();
-        this.setLanguage(language, { persist: false, reload: false, silent: true });
-    }
-
-    setLanguage(language, options = {}) {
-        const { persist = true, reload = false, silent = false } = options;
+    applyLanguageToPage(language) {
         const targetLanguage = language === 'el' ? 'el' : 'en';
-
-        if (persist) {
-            localStorage.setItem('tgd_language', targetLanguage);
-        }
-
         this.persistGoogTransCookie(targetLanguage);
         document.documentElement.lang = targetLanguage;
 
@@ -262,6 +251,22 @@ class PWAApp {
             window.setTimeout(syncWidget, 500);
             window.setTimeout(syncWidget, 1500);
         }
+    }
+
+    applyStoredLanguagePreference() {
+        const language = this.getStoredLanguage();
+        this.applyLanguageToPage(language);
+    }
+
+    setLanguage(language, options = {}) {
+        const { persist = true, reload = false, silent = false } = options;
+        const targetLanguage = language === 'el' ? 'el' : 'en';
+
+        if (persist) {
+            localStorage.setItem('tgd_language', targetLanguage);
+        }
+
+        this.applyLanguageToPage(targetLanguage);
 
         if (!silent && this.isStandalone) {
             this.showToast(targetLanguage === 'el' ? 'Greek enabled' : 'English enabled');
@@ -496,9 +501,8 @@ window.TGDLanguage = {
     setLanguage(language, options = {}) {
         return pwaApp.setLanguage(language, options);
     },
-    applyStoredLanguage(options = {}) {
-        const lang = localStorage.getItem('tgd_language') || 'en';
-        return pwaApp.setLanguage(lang, { persist: false, reload: false, silent: true, ...options });
+    applyStoredLanguage() {
+        return pwaApp.applyStoredLanguagePreference();
     }
 };
 
