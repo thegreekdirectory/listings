@@ -383,7 +383,9 @@ class SettingsManager {
         document.querySelectorAll('input[name="language"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const language = e.target.value;
-                if (window.PWAApp && typeof window.PWAApp.setLanguage === 'function') {
+                if (window.TGDLanguage && typeof window.TGDLanguage.setLanguage === 'function') {
+                    window.TGDLanguage.setLanguage(language, { persist: true, reload: false });
+                } else if (window.PWAApp && typeof window.PWAApp.setLanguage === 'function') {
                     window.PWAApp.setLanguage(language, { persist: true, reload: false });
                 } else {
                     localStorage.setItem('tgd_language', language);

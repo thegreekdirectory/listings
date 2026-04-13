@@ -232,19 +232,8 @@ class PWAApp {
         document.cookie = `googtrans=${value}; domain=.thegreekdirectory.org; path=/; SameSite=Lax${secure}`;
     }
 
-    applyStoredLanguagePreference() {
-        const language = this.getStoredLanguage();
-        this.setLanguage(language, { persist: false, reload: false, silent: true });
-    }
-
-    setLanguage(language, options = {}) {
-        const { persist = true, reload = false, silent = false } = options;
+    applyLanguageToPage(language) {
         const targetLanguage = language === 'el' ? 'el' : 'en';
-
-        if (persist) {
-            localStorage.setItem('tgd_language', targetLanguage);
-        }
-
         this.persistGoogTransCookie(targetLanguage);
         document.documentElement.lang = targetLanguage;
 
@@ -262,6 +251,22 @@ class PWAApp {
             window.setTimeout(syncWidget, 500);
             window.setTimeout(syncWidget, 1500);
         }
+    }
+
+    applyStoredLanguagePreference() {
+        const language = this.getStoredLanguage();
+        this.applyLanguageToPage(language);
+    }
+
+    setLanguage(language, options = {}) {
+        const { persist = true, reload = false, silent = false } = options;
+        const targetLanguage = language === 'el' ? 'el' : 'en';
+
+        if (persist) {
+            localStorage.setItem('tgd_language', targetLanguage);
+        }
+
+        this.applyLanguageToPage(targetLanguage);
 
         if (!silent && this.isStandalone) {
             this.showToast(targetLanguage === 'el' ? 'Greek enabled' : 'English enabled');
@@ -491,5 +496,16 @@ if (document.readyState === 'loading') {
 }
 
 window.PWAApp = pwaApp;
+
+window.TGDLanguage = {
+    setLanguage(language, options = {}) {
+        return pwaApp.setLanguage(language, options);
+    },
+    applyStoredLanguage() {
+        return pwaApp.applyStoredLanguagePreference();
+    }
+};
+
+window.dispatchEvent(new Event('tgd-language-ready'));
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal.
