@@ -7,6 +7,8 @@
 /*.php  /:splat  301
 /*.asp  /:splat  301
 /*.aspx  /:splat  301
+/search?q=* /listings?q=:splat 307
+/search /listings 307
 
 # =====================
 # ===LISTINGS HASHES===
