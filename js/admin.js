@@ -3069,6 +3069,7 @@ function generateTemplateReplacements(listing) {
         if (infoRows) {
             additionalInfoSection = `
                 <div class="mb-6">
+                    <br>
                     <h3 class="font-semibold text-gray-900 mb-2">Additional Information</h3>
                     <div class="additional-info-table">${infoRows}</div>
                 </div>
