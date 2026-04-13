@@ -7,7 +7,6 @@
 /*.php  /:splat  301
 /*.asp  /:splat  301
 /*.aspx  /:splat  301
-/search?q=:query /listings?q=:query 307
 /search /listings 307
 
 # =====================
