@@ -255,7 +255,9 @@
                 toggles.forEach(function(t){ t.checked = e.target.checked; });
                 applyLanguage(e.target.checked ? 'el' : 'en');
                 languageToggleReloading = true;
-                window.location.reload();
+                setTimeout(function () {
+        			window.location.reload();
+    			}, 500);
             });
         });
         window.addEventListener('storage', function(event) {
