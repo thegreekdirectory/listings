@@ -463,7 +463,7 @@ All database operations from the admin portal go through the `admin-proxy` Supab
 ---
 
 ## Listing Tiers & Features
-
+### Note: Tier info is subject to change, and tiers are currently not being used but they will be in the near future. The logic has been kept for the future.
 | Feature | FREE | VERIFIED | FEATURED | PREMIUM |
 |---|---|---|---|---|
 | Basic info (name, address, contact) | ✅ | ✅ | ✅ | ✅ |
