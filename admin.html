@@ -61,6 +61,7 @@
             <div class="mb-6 flex gap-3 flex-wrap">
                 <button id="listingsViewBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">Listings</button>
                 <button id="requestsViewBtn" class="px-4 py-2 bg-orange-100 text-orange-800 rounded-lg font-medium">Requests</button>
+                <button id="tab-btn-suggestions" onclick="showTab('suggestions')" class="px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100 relative">Suggestions<span id="suggestionsPendingBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"></span></button>
                 <button id="newListingBtn" class="px-4 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">+ New Listing</button>
                 <input type="text" id="adminSearch" placeholder="Search listings..." 
                     class="px-4 py-2 border border-gray-300 rounded-lg flex-1 min-w-[200px]">
@@ -109,6 +110,63 @@
                     </table>
                 </div>
             </div>
+            <div id="tab-suggestions" class="hidden">
+ 
+  <!-- Header row -->
+  <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="text-xl font-bold text-gray-800">Listing Suggestions</h2>
+      <p class="text-sm text-gray-500 mt-0.5">User-submitted suggestions to edit existing listings.</p>
+    </div>
+    <div class="flex items-center gap-3 flex-wrap">
+      <!-- Status filter -->
+      <select
+        id="suggestionsStatusFilter"
+        onchange="loadSuggestions()"
+        class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+      >
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="denied">Denied</option>
+        <option value="">All</option>
+      </select>
+      <button
+        onclick="loadSuggestions()"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+      >
+        ↻ Refresh
+      </button>
+    </div>
+  </div>
+ 
+  <!-- Loading / empty states -->
+  <div id="suggestionsLoading" class="text-center py-12 text-gray-500 hidden">
+    <div class="text-3xl mb-3">⏳</div>
+    <p>Loading suggestions…</p>
+  </div>
+  <div id="suggestionsEmpty" class="text-center py-12 text-gray-400 hidden">
+    <div class="text-3xl mb-3">📭</div>
+    <p class="font-medium">No suggestions found.</p>
+  </div>
+ 
+  <!-- Table -->
+  <div id="suggestionsTableWrap" class="overflow-x-auto hidden">
+    <table class="w-full text-sm border-collapse">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-200">
+          <th class="text-left px-3 py-2 font-semibold text-gray-600">Listing</th>
+          <th class="text-left px-3 py-2 font-semibold text-gray-600">Suggester</th>
+          <th class="text-left px-3 py-2 font-semibold text-gray-600">Email</th>
+          <th class="text-left px-3 py-2 font-semibold text-gray-600">Status</th>
+          <th class="text-left px-3 py-2 font-semibold text-gray-600">Date</th>
+          <th class="text-left px-3 py-2 font-semibold text-gray-600">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="suggestionsTableBody"></tbody>
+    </table>
+  </div>
+ 
+</div><!-- /tab-suggestions -->
         </div>
     </div>
 
@@ -141,7 +199,86 @@
             </div>
         </div>
     </div>
-
+<div
+  id="suggestionModal"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-8 px-4"
+  onclick="if(event.target===this) closeSuggestionModal()"
+>
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[85vh] flex flex-col">
+ 
+    <!-- Modal header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+      <div>
+        <h3 class="text-lg font-bold text-gray-800" id="suggestionModalTitle">Suggestion Details</h3>
+        <p class="text-sm text-gray-500" id="suggestionModalSubtitle"></p>
+      </div>
+      <button onclick="closeSuggestionModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    </div>
+ 
+    <!-- Scrollable body -->
+    <div class="overflow-y-auto flex-1 p-6 space-y-6">
+ 
+      <!-- Suggester info card -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 grid grid-cols-2 gap-3 text-sm">
+        <div><span class="font-semibold text-blue-800">Name:</span> <span id="smSuggesterName" class="text-blue-900"></span></div>
+        <div><span class="font-semibold text-blue-800">Email:</span> <span id="smSuggesterEmail" class="text-blue-900"></span></div>
+        <div><span class="font-semibold text-blue-800">Phone:</span> <span id="smSuggesterPhone" class="text-blue-900"></span></div>
+        <div><span class="font-semibold text-blue-800">Submitted:</span> <span id="smSuggesterDate" class="text-blue-900"></span></div>
+        <div class="col-span-full">
+          <span class="font-semibold text-blue-800">Message:</span>
+          <span id="smSuggesterMessage" class="text-blue-900 italic"></span>
+        </div>
+      </div>
+ 
+      <!-- Diff table (current vs suggested) -->
+      <div>
+        <h4 class="font-semibold text-gray-700 mb-2">Suggested Changes</h4>
+        <div id="suggestionDiffLoading" class="text-center py-6 text-gray-500 text-sm hidden">Loading comparison…</div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border-collapse" id="suggestionDiffTable">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="text-left px-3 py-2 font-semibold text-gray-600 w-36">Field</th>
+                <th class="text-left px-3 py-2 font-semibold text-gray-600">Current Value</th>
+                <th class="text-left px-3 py-2 font-semibold text-blue-700">Suggested Value</th>
+              </tr>
+            </thead>
+            <tbody id="suggestionDiffBody"></tbody>
+          </table>
+        </div>
+      </div>
+ 
+    </div><!-- /scrollable body -->
+ 
+    <!-- Modal footer with actions -->
+    <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 flex-shrink-0 bg-gray-50 rounded-b-xl">
+      <button
+        onclick="closeSuggestionModal()"
+        class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100"
+      >
+        Close
+      </button>
+      <div class="flex gap-3">
+        <button
+          id="smDenyBtn"
+          onclick="denySuggestion(currentViewingSuggestionId)"
+          class="px-5 py-2 bg-red-100 text-red-700 border border-red-200 rounded-lg text-sm font-semibold hover:bg-red-200"
+        >
+          ✕ Deny
+        </button>
+        <button
+          id="smApproveBtn"
+          onclick="approveSuggestion(currentViewingSuggestionId)"
+          class="px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700"
+        >
+          ✓ Approve &amp; Merge
+        </button>
+      </div>
+    </div>
+ 
+  </div>
+</div><!-- /suggestionModal -->
+ 
     <script>
         window.CLOUDFLARE_IMAGES_CONFIG = {
             accountId: document.querySelector('meta[name="cloudflare-account-id"]')?.content || '',
