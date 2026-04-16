@@ -2437,6 +2437,425 @@ if (!slug) {
     }
 }
 
+// ==============================================================================
+// ADMIN PORTAL — SUGGESTIONS TAB — JS SNIPPET
+// Add this entire block to admin.js.
+// Recommended location: paste it right after the submissions/requests section.
+//
+// IMPORTANT: This code calls the admin-proxy Supabase edge function for all
+// database operations (SELECT, UPDATE on listing_suggestions + UPDATE listings).
+// The proxy call format below (adminProxySuggest) uses the same headers pattern
+// as the rest of your admin.js.  Rename / adapt "adminProxySuggest" to match
+// your existing admin proxy helper if you already have one.
+// ==============================================================================
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentSuggestions       = [];
+let currentViewingSuggestionId = null;
+
+// ─── Proxy helper (adapt to match your existing admin proxy call pattern) ──────
+async function adminProxySuggest(body) {
+  // Uses the SUPABASE_URL and SUPABASE_ANON_KEY constants already in admin.js.
+  // The admin-proxy edge function uses the service-role key server-side.
+  const githubToken = localStorage.getItem('tgd_admin_token') || '';
+  const resp = await fetch(`${SUPABASE_URL}/functions/v1/admin-proxy`, {
+    method: 'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'x-github-token': githubToken
+    },
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`Admin proxy error ${resp.status}: ${text}`);
+  }
+  return resp.json();
+}
+
+// ─── Load & render suggestions ────────────────────────────────────────────────
+async function loadSuggestions() {
+  const filter      = document.getElementById('suggestionsStatusFilter')?.value;
+  const loadingEl   = document.getElementById('suggestionsLoading');
+  const emptyEl     = document.getElementById('suggestionsEmpty');
+  const tableWrap   = document.getElementById('suggestionsTableWrap');
+  const tbody       = document.getElementById('suggestionsTableBody');
+
+  loadingEl.classList.remove('hidden');
+  emptyEl.classList.add('hidden');
+  tableWrap.classList.add('hidden');
+  tbody.innerHTML = '';
+
+  try {
+    // Build query filters
+    const filters = {};
+    if (filter) filters.status = filter;
+
+    const result = await adminProxySuggest({
+      action:  'select',
+      table:   'listing_suggestions',
+      filters,
+      order:   { column: 'created_at', ascending: false },
+      limit:   200
+    });
+
+    const rows = result.data || result || [];
+    currentSuggestions = rows;
+    loadingEl.classList.add('hidden');
+
+    // Update pending badge
+    const pendingCount = rows.filter(r => r.status === 'pending').length;
+    const badge = document.getElementById('suggestionsPendingBadge');
+    if (badge) {
+      badge.textContent = pendingCount || '';
+      badge.classList.toggle('hidden', !pendingCount);
+    }
+
+    if (!rows.length) {
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+
+    tbody.innerHTML = rows.map(s => {
+      const statusClasses = {
+        pending:  'bg-yellow-100 text-yellow-800',
+        approved: 'bg-green-100 text-green-700',
+        denied:   'bg-red-100 text-red-700'
+      };
+      const sc   = statusClasses[s.status] || 'bg-gray-100 text-gray-600';
+      const date = s.created_at ? new Date(s.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
+
+      return `<tr class="border-b border-gray-100 hover:bg-gray-50">
+        <td class="px-3 py-2">
+          <div class="font-medium text-gray-800">${escHtml(s.listing_name || '—')}</div>
+          <div class="text-xs text-gray-400">ID: ${escHtml(String(s.listing_id))}</div>
+        </td>
+        <td class="px-3 py-2 text-gray-700">${escHtml(s.suggester_name || '—')}</td>
+        <td class="px-3 py-2 text-gray-500 text-xs">${escHtml(s.suggester_email || '—')}</td>
+        <td class="px-3 py-2">
+          <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${sc}">${escHtml(s.status)}</span>
+        </td>
+        <td class="px-3 py-2 text-gray-500 text-xs whitespace-nowrap">${date}</td>
+        <td class="px-3 py-2">
+          <div class="flex gap-2 flex-wrap">
+            <button onclick="viewSuggestion(${s.id})"
+              class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-200">
+              View
+            </button>
+            ${s.status === 'pending' ? `
+            <button onclick="approveSuggestion(${s.id})"
+              class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-200">
+              Approve
+            </button>
+            <button onclick="denySuggestion(${s.id})"
+              class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-200">
+              Deny
+            </button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    tableWrap.classList.remove('hidden');
+  } catch (err) {
+    loadingEl.classList.add('hidden');
+    console.error('loadSuggestions error:', err);
+    alert(`Failed to load suggestions: ${err.message}`);
+  }
+}
+
+// ─── Diff helpers ──────────────────────────────────────────────────────────────
+// Fields to compare side-by-side (label, key path)
+const SUGGESTION_DIFF_FIELDS = [
+  ['Business Name',    'business_name'],
+  ['Tagline',          'tagline'],
+  ['Description',      'description'],
+  ['Category',         'category'],
+  ['Pricing',          'pricing'],
+  ['Coming Soon',      'coming_soon'],
+  ['Subcategories',    'subcategories'],
+  ['Primary Subcat.',  'primary_subcategory'],
+  ['Address',          'address'],
+  ['City',             'city'],
+  ['State',            'state'],
+  ['ZIP',              'zip_code'],
+  ['Country',          'country'],
+  ['Phone',            'phone'],
+  ['Email',            'email'],
+  ['Website',          'website'],
+  ['Logo',             'logo'],
+  ['Photos',           'photos'],
+  ['Video',            'video'],
+  ['Hours',            'hours'],
+  ['Social Media',     'social_media'],
+  ['Reviews',          'reviews'],
+  ['Additional Info',  'additional_info'],
+  ['Custom CTAs',      'custom_ctas'],
+  ['Owner Name',       'owner_name'],
+  ['Owner Title',      'owner_title'],
+  ['From Greece',      'from_greece'],
+  ['Owner Email',      'owner_email'],
+  ['Owner Phone',      'owner_phone'],
+  ['Name+Title Vis.',  'owner_name_title_visible'],
+  ['Email Visible',    'owner_email_visible'],
+  ['Phone Visible',    'owner_phone_visible'],
+];
+
+function diffVal(v) {
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (Array.isArray(v))  return v.length ? v.map(item => typeof item === 'object' ? JSON.stringify(item) : String(item)).join(', ') : '(empty)';
+  if (typeof v === 'object') return JSON.stringify(v, null, 2);
+  return String(v).trim() || '—';
+}
+
+function valuesAreDifferent(a, b) {
+  return JSON.stringify(a) !== JSON.stringify(b);
+}
+
+function buildDiffRows(suggestion, currentListing) {
+  const diffBody = document.getElementById('suggestionDiffBody');
+  diffBody.innerHTML = '';
+
+  let changedCount = 0;
+  SUGGESTION_DIFF_FIELDS.forEach(([label, key]) => {
+    const suggested = suggestion[key];
+    // Only show rows where the suggestion has a value (non-null/non-empty)
+    const hasValue = suggested !== null && suggested !== undefined &&
+                     !(typeof suggested === 'string' && suggested.trim() === '') &&
+                     !(Array.isArray(suggested) && suggested.length === 0);
+    if (!hasValue) return;
+
+    const current   = currentListing ? currentListing[key] : undefined;
+    const isDiff    = valuesAreDifferent(current, suggested);
+    if (isDiff) changedCount++;
+
+    const rowClass  = isDiff ? 'bg-blue-50' : '';
+    const diffBadge = isDiff ? '<span class="ml-1 text-xs bg-blue-200 text-blue-800 rounded px-1">changed</span>' : '';
+    const curHtml   = `<span class="text-gray-600 whitespace-pre-wrap break-all">${escHtml(diffVal(current))}</span>`;
+    const sugHtml   = isDiff
+      ? `<span class="text-blue-800 font-semibold whitespace-pre-wrap break-all">${escHtml(diffVal(suggested))}</span>`
+      : `<span class="text-gray-500 whitespace-pre-wrap break-all">${escHtml(diffVal(suggested))}</span>`;
+
+    diffBody.insertAdjacentHTML('beforeend', `
+      <tr class="border-b border-gray-100 ${rowClass}">
+        <td class="px-3 py-2 font-medium text-gray-700 align-top whitespace-nowrap">
+          ${escHtml(label)}${diffBadge}
+        </td>
+        <td class="px-3 py-2 align-top text-sm">${curHtml}</td>
+        <td class="px-3 py-2 align-top text-sm">${sugHtml}</td>
+      </tr>`);
+  });
+
+  if (!changedCount) {
+    diffBody.insertAdjacentHTML('beforeend', `
+      <tr><td colspan="3" class="px-3 py-4 text-center text-gray-400 text-sm">
+        No detectable differences from current listing values.
+      </td></tr>`);
+  }
+}
+
+// ─── View suggestion (opens modal) ────────────────────────────────────────────
+async function viewSuggestion(id) {
+  const s = currentSuggestions.find(x => x.id === id);
+  if (!s) return;
+
+  currentViewingSuggestionId = id;
+
+  // Populate header
+  document.getElementById('suggestionModalTitle').textContent =
+    `Suggestion for: ${s.listing_name || s.listing_id}`;
+  document.getElementById('suggestionModalSubtitle').textContent =
+    `Submitted by ${s.suggester_name} — Status: ${s.status}`;
+
+  // Populate suggester card
+  document.getElementById('smSuggesterName').textContent    = s.suggester_name  || '—';
+  document.getElementById('smSuggesterEmail').textContent   = s.suggester_email || '—';
+  document.getElementById('smSuggesterPhone').textContent   = s.suggester_phone || '—';
+  document.getElementById('smSuggesterMessage').textContent = s.suggester_message || '(no message)';
+  document.getElementById('smSuggesterDate').textContent    = s.created_at
+    ? new Date(s.created_at).toLocaleString('en-US') : '—';
+
+  // Show/hide approve & deny buttons based on status
+  const isPending = s.status === 'pending';
+  document.getElementById('smApproveBtn').classList.toggle('hidden', !isPending);
+  document.getElementById('smDenyBtn').classList.toggle('hidden', !isPending);
+
+  // Open modal
+  document.getElementById('suggestionModal').classList.remove('hidden');
+
+  // Load current listing for comparison
+  const diffLoading = document.getElementById('suggestionDiffLoading');
+  const diffBody    = document.getElementById('suggestionDiffBody');
+  diffLoading.classList.remove('hidden');
+  diffBody.innerHTML = '';
+
+  try {
+    const result = await adminProxySuggest({
+      action:  'select',
+      table:   'listings',
+      filters: { id: s.listing_id },
+      limit:   1
+    });
+    const rows   = result.data || result || [];
+    const current = rows[0] || null;
+    diffLoading.classList.add('hidden');
+    buildDiffRows(s, current);
+  } catch (err) {
+    diffLoading.classList.add('hidden');
+    diffBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-red-500 text-sm">
+      Failed to load current listing for comparison: ${escHtml(err.message)}
+    </td></tr>`;
+  }
+}
+
+function closeSuggestionModal() {
+  document.getElementById('suggestionModal').classList.add('hidden');
+  currentViewingSuggestionId = null;
+}
+
+// ─── Approve suggestion (merge into listing) ───────────────────────────────────
+async function approveSuggestion(id) {
+  const s = currentSuggestions.find(x => x.id === id);
+  if (!s) return;
+
+  const confirmed = confirm(
+    `Approve this suggestion from ${s.suggester_name}?\n\n` +
+    `This will MERGE the suggested fields into "${s.listing_name || s.listing_id}".\n` +
+    `Only non-empty suggested fields will overwrite existing values.`
+  );
+  if (!confirmed) return;
+
+  // Build merge payload — only non-null / non-empty fields from the suggestion
+  const MERGE_FIELDS = [
+    'business_name','tagline','description','category','subcategories','primary_subcategory',
+    'pricing','coming_soon',
+    'address','city','state','zip_code','country',
+    'phone','email','website',
+    'logo','photos','video',
+    'hours','social_media','reviews','additional_info','custom_ctas',
+    'owner_name','owner_title','from_greece','owner_email','owner_phone',
+    'owner_name_title_visible','owner_email_visible','owner_phone_visible','owner_contacts'
+  ];
+
+  const mergePayload = {};
+  MERGE_FIELDS.forEach(field => {
+    const val = s[field];
+    if (val === null || val === undefined) return;
+    if (typeof val === 'string' && val.trim() === '') return;
+    if (Array.isArray(val) && val.length === 0) return;
+    mergePayload[field] = val;
+  });
+
+  if (!Object.keys(mergePayload).length) {
+    alert('No non-empty fields found in this suggestion to merge.');
+    return;
+  }
+
+  try {
+    // 1. Update the listing
+    await adminProxySuggest({
+      action:  'update',
+      table:   'listings',
+      id:      s.listing_id,
+      data:    mergePayload
+    });
+
+    // 2. Mark suggestion as approved
+    await adminProxySuggest({
+      action:  'update',
+      table:   'listing_suggestions',
+      id:      String(s.id),
+      data:    { status: 'approved' }
+    });
+
+    alert(`✅ Suggestion approved! "${s.listing_name || s.listing_id}" has been updated.`);
+    closeSuggestionModal();
+    loadSuggestions();
+
+    // Refresh listings table if function exists
+    if (typeof loadListings === 'function') loadListings();
+
+  } catch (err) {
+    console.error('approveSuggestion error:', err);
+    alert(`Failed to approve suggestion: ${err.message}`);
+  }
+}
+
+// ─── Deny suggestion ──────────────────────────────────────────────────────────
+async function denySuggestion(id) {
+  const s = currentSuggestions.find(x => x.id === id);
+  if (!s) return;
+
+  const confirmed = confirm(
+    `Deny this suggestion from ${s.suggester_name}?\n\nThe listing will NOT be changed.`
+  );
+  if (!confirmed) return;
+
+  try {
+    await adminProxySuggest({
+      action: 'update',
+      table:  'listing_suggestions',
+      id:     String(s.id),
+      data:   { status: 'denied' }
+    });
+
+    alert('Suggestion denied.');
+    closeSuggestionModal();
+    loadSuggestions();
+
+  } catch (err) {
+    console.error('denySuggestion error:', err);
+    alert(`Failed to deny suggestion: ${err.message}`);
+  }
+}
+
+// ─── Hook into your existing showTab() function ────────────────────────────────
+// If your showTab function looks like the common pattern below, add the
+// 'suggestions' case to it.  If it's structured differently, just make sure
+// loadSuggestions() is called when the Suggestions tab becomes active.
+//
+// EXAMPLE — find your showTab function and add this case:
+//
+//   case 'suggestions':
+//     loadSuggestions();
+//     break;
+//
+// OR, if your tab system fires a custom event, listen for it:
+//
+// document.addEventListener('tgd:tab-changed', (e) => {
+//   if (e.detail?.tab === 'suggestions') loadSuggestions();
+// });
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── Keyboard: Escape closes modal ────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !document.getElementById('suggestionModal').classList.contains('hidden')) {
+    closeSuggestionModal();
+  }
+});
+
+// ─── escHtml helper (only add if not already defined in admin.js) ──────────────
+// If admin.js already has an escHtml / escapeHtml / he.encode function, delete
+// this block and rename the calls above to match yours.
+if (typeof escHtml === 'undefined') {
+  window.escHtml = function escHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+}
+
+
+
+
+
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 async function saveOwnerInfo(listingId, isClaimed) {
