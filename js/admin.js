@@ -647,33 +647,38 @@ async function loadRequests() {
 
 function switchAdminView(view) {
     currentAdminView = view;
-    const listingsBtn = document.getElementById('listingsViewBtn');
-    const requestsBtn = document.getElementById('requestsViewBtn');
-    const listingsSection = document.getElementById('listingsSection');
-    const requestsSection = document.getElementById('requestsSection');
-    const newListingBtn = document.getElementById('newListingBtn');
+    const listingsBtn    = document.getElementById('listingsViewBtn');
+    const requestsBtn    = document.getElementById('requestsViewBtn');
+    const suggestionsBtn = document.getElementById('tab-btn-suggestions');
+    const listingsSection    = document.getElementById('listingsSection');
+    const requestsSection    = document.getElementById('requestsSection');
+    const suggestionsSection = document.getElementById('tab-suggestions');
+    const newListingBtn  = document.getElementById('newListingBtn');
+
+    // Hide all sections first
+    listingsSection?.classList.add('hidden');
+    requestsSection?.classList.add('hidden');
+    suggestionsSection?.classList.add('hidden');
+    newListingBtn?.classList.add('hidden');
+
+    // Reset all tab button styles
+    if (listingsBtn)    listingsBtn.className    = 'px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-medium';
+    if (requestsBtn)    requestsBtn.className    = 'px-4 py-2 bg-orange-100 text-orange-800 rounded-lg font-medium';
+    if (suggestionsBtn) suggestionsBtn.className = 'px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100 relative';
 
     if (view === 'requests') {
-        listingsSection?.classList.add('hidden');
         requestsSection?.classList.remove('hidden');
-        if (newListingBtn) newListingBtn.classList.add('hidden');
-        if (listingsBtn) {
-            listingsBtn.className = 'px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-medium';
-        }
-        if (requestsBtn) {
-            requestsBtn.className = 'px-4 py-2 bg-orange-600 text-white rounded-lg font-medium';
-        }
+        if (requestsBtn) requestsBtn.className = 'px-4 py-2 bg-orange-600 text-white rounded-lg font-medium';
         loadRequests();
+    } else if (view === 'suggestions') {
+        suggestionsSection?.classList.remove('hidden');
+        if (suggestionsBtn) suggestionsBtn.className = 'px-4 py-2 bg-purple-600 text-white rounded-lg font-medium text-sm relative';
+        loadSuggestions();
     } else {
-        requestsSection?.classList.add('hidden');
+        // default: listings
         listingsSection?.classList.remove('hidden');
-        if (newListingBtn) newListingBtn.classList.remove('hidden');
-        if (listingsBtn) {
-            listingsBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg font-medium';
-        }
-        if (requestsBtn) {
-            requestsBtn.className = 'px-4 py-2 bg-orange-100 text-orange-800 rounded-lg font-medium';
-        }
+        newListingBtn?.classList.remove('hidden');
+        if (listingsBtn) listingsBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg font-medium';
         renderTable();
     }
 }
