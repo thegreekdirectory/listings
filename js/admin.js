@@ -131,6 +131,7 @@ const CATEGORY_DEFAULT_IMAGES = {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/admin-proxy';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 let currentAdminUser = null;
 let adminGithubToken = null;
 let allListings = [];
