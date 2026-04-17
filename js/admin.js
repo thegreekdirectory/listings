@@ -617,7 +617,12 @@ async function loadListings() {
 
         const listings = await adminProxy('listings:list');
         allListings = Array.isArray(listings)
-            ? listings.slice().sort((a, b) => Number(a.id || 0) - Number(b.id || 0))
+            ? listings.slice().sort((a, b) => {
+                const aTime = new Date(a.created_at || 0).getTime();
+                const bTime = new Date(b.created_at || 0).getTime();
+                if (aTime !== bTime) return bTime - aTime;
+                return String(a.business_name || '').localeCompare(String(b.business_name || ''));
+            })
             : [];
         console.log(`✅ Loaded ${allListings.length} listings`);
         
@@ -946,7 +951,7 @@ function renderTable() {
         
         return `
         <tr class="border-b hover:bg-gray-50">
-            <td class="py-4 px-4 text-sm font-mono text-gray-600">#${l.id}</td>
+            <td class="py-4 px-4 text-sm font-mono text-gray-600">${l.id}</td>
             <td class="py-4 px-4">
                 <label class="inline-flex items-center cursor-pointer">
                     <input type="checkbox" ${l.visible ? 'checked' : ''} onchange="toggleVisibility('${l.id}')" class="w-4 h-4">
@@ -1263,12 +1268,10 @@ window.editListing = async function(id) {
 
 window.newListing = async function() {
     try {
-        const listings = await adminProxy('listings:list');
-        const maxId = Array.isArray(listings)
-            ? listings.reduce((acc, row) => Math.max(acc, Number(row.id) || 0), 0)
-            : 0;
-        const nextId = maxId + 1;
-        
+        const nextId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+            ? window.crypto.randomUUID()
+            : `listing-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+
         editingListing = {
             id: nextId,
             business_name: '',
@@ -2409,7 +2412,7 @@ if (!slug) {
         }
 
         let savedListing;
-        const isExisting = editingListing && editingListing.id && allListings.find(l => l.id === editingListing.id);
+        const isExisting = editingListing && editingListing.id && allListings.find(l => String(l.id) === String(editingListing.id));
         
         if (isExisting) {
             savedListing = await adminProxy('listings:update', {
@@ -2535,7 +2538,7 @@ async function loadSuggestions() {
       return `<tr class="border-b border-gray-100 hover:bg-gray-50">
         <td class="px-3 py-2">
           <div class="font-medium text-gray-800">${escHtml(s.listing_name || '—')}</div>
-          <div class="text-xs text-gray-400">ID: ${escHtml(String(s.listing_id))}</div>
+          <div class="text-xs text-gray-400">Listing ID: ${escHtml(String(s.listing_id))}</div>
         </td>
         <td class="px-3 py-2 text-gray-700">${escHtml(s.suggester_name || '—')}</td>
         <td class="px-3 py-2 text-gray-500 text-xs">${escHtml(s.suggester_email || '—')}</td>
