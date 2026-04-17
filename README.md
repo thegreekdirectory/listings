@@ -675,6 +675,7 @@ Each listing gets a dedicated pre-rendered HTML page at `/listing/[slug].html`. 
 - `{{SOCIAL_MEDIA_SECTION}}`, `{{REVIEW_SECTION}}`
 - `{{MAP_SECTION}}`, `{{RELATED_LISTINGS_SECTION}}`
 - `{{OWNER_INFO_SECTION}}`, `{{CLAIM_BUTTON}}`, `{{SUGGEST_EDIT_BUTTON}}`
+- `{{SUGGEST_EDIT_BUTTON}}` now links to `/suggest-edit?id={listing.id}` so edits are submitted in-app instead of email.
 - `{{SCHEMA_TYPES_JSON}}`, `{{HOURS_SCHEMA}}`, `{{SAME_AS_SCHEMA}}`
 - `{{META_DESCRIPTION}}`, `{{PRIMARY_IMAGE}}`, `{{LISTING_URL}}`
 - `{{COORDINATES}}`, `{{FULL_ADDRESS}}`, `{{HOURS_JSON}}`

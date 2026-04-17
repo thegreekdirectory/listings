@@ -3848,7 +3848,8 @@ function generateTemplateReplacementsPart2(listing) {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    const suggestEditButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${decodeEscapedText(listing.business_name)} - ${decodeEscapedText(listing.city || '')}, ${decodeEscapedText(listing.state || '')}`)}" target="_blank" rel="noopener noreferrer" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a>`;
+    const suggestEditHref = `/suggest-edit?id=${encodeURIComponent(String(listing.id || ''))}`;
+    const suggestEditButton = `<a href="${suggestEditHref}" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a>`;
 
     return {
         'OWNER_INFO_SECTION': ownerInfoSection,
@@ -3865,7 +3866,7 @@ function generateTemplateReplacementsPart2(listing) {
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,
         'HOURS_JSON': hoursJson,
-        'SUGGEST_EDIT_MAILTO': `mailto:contact@thegreekdirectory.org?subject=${encodeURIComponent(`Suggest an Edit - ${decodeEscapedText(listing.business_name)} - ${decodeEscapedText(listing.city || '')}, ${decodeEscapedText(listing.state || '')}`)}`,
+        'SUGGEST_EDIT_MAILTO': suggestEditHref,
         'BUSINESS_TIMEZONE': escapeHtml(listing.timezone || 'America/Chicago')
     };
 }

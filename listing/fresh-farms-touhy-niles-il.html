@@ -803,7 +803,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
                         return `
                             <a href="${listingUrl}" class="related-listing-card block bg-white p-3 hover:shadow-lg transition-shadow">
-                                <div class="flex items-start gap-2.5">
+                <div class="action-cta-slot"><a href="/suggest-edit?id=82" target="_blank" rel="noopener noreferrer" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a></div>
                                     ${l.logo ? `<img src="${l.logo}" alt="${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">` : ''}
                                     <div class="flex-1 min-w-0">
                                         <div class="flex flex-wrap gap-1 mb-1">${getHoursBadge(l.hours)}${getTierBadge(l.tier)}${getComingSoonBadge(l.coming_soon)}</div>
