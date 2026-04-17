@@ -130,7 +130,7 @@ const CATEGORY_DEFAULT_IMAGES = {
 };
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-
+const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/admin-proxy';
 let currentAdminUser = null;
 let adminGithubToken = null;
 let allListings = [];
@@ -2935,7 +2935,7 @@ window.sendMagicLink = async function(listingId) {
             },
             body: JSON.stringify({
                 email: owner.owner_email,
-                redirectTo: `${window.location.origin}/business.html`
+                redirectTo: `${window.location.origin}/business`
             })
         });
         const result = await response.json();
