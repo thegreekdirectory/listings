@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "3"
+                    "value": "7928f740-b099-4a75-875c-54ec9d29e8ae"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80') center/cover;" role="img" aria-label="Filakia in Oakbrook Terrace, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="3" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="7928f740-b099-4a75-875c-54ec9d29e8ae" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -753,7 +753,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '3',
+        id: '7928f740-b099-4a75-875c-54ec9d29e8ae',
         business_name: "Filakia",
         tagline: "Kiss toxins goodbye!",
         description: "<div>Welcome to Filakia, where we focus on small-batch, handmade beauty products. Everything is thoughtfully developed with clean ingredients that support your natural glow without compromise, toxins, or unnecessary ingredients.&nbsp;</div><div><br></div><div>I was inspired to start Filakia because my son suffered from severe eczema when he was a baby. For a while, I thought we finally had it under control, but a few years later it came back even worse than before. This time, not only did the eczema return, but he also suddenly developed multiple allergies. I realized it wasn’t just about what I put into his body-it was equally important to pay attention to what I put onto his skin. That realization fueled my determination to find safer, more nourishing options and ultimately sparked the passion behind my business.&nbsp;</div><div><br></div><div>Our mission is simple - to create everyday essentials that make you feel good inside and out. From our ultra-hydrating lip balms to our delicately crafted whipped tallow balm, each homemade product is made with intention, purity, and care.</div><div><br></div><div>Filakia is derived from the Greek root philia (φιλια) meaning \"friendship\" or \"affectionate regard\". Filakia also means little kisses!</div><div><br></div><div>&nbsp;We appreciate you visiting us and hope you love our products!</div>",
@@ -799,10 +799,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="3"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="7928f740-b099-4a75-875c-54ec9d29e8ae"]');
         if (!starButton) return;
 
-        const listingId = String('3');
+        const listingId = String('7928f740-b099-4a75-875c-54ec9d29e8ae');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -824,9 +824,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="3"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="7928f740-b099-4a75-875c-54ec9d29e8ae"]');
         if (!starButton) return;
-        const listingId = String('3');
+        const listingId = String('7928f740-b099-4a75-875c-54ec9d29e8ae');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -874,7 +874,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Filakia';
         const listingUrl = 'https://thegreekdirectory.org/listing/filakia';
-        const listingId = '3';
+        const listingId = '7928f740-b099-4a75-875c-54ec9d29e8ae';
         const hoursData = {"friday":null,"monday":null,"sunday":null,"tuesday":null,"saturday":null,"thursday":null,"wednesday":null};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80"];
