@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "58"
+                    "value": "bd18e6a7-5f00-4f07-9b3f-18568c27f1d3"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80') center/cover;" role="img" aria-label="2nd Street Barbers in Highland Park, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="58" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="bd18e6a7-5f00-4f07-9b3f-18568c27f1d3" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -788,7 +788,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '58',
+        id: 'bd18e6a7-5f00-4f07-9b3f-18568c27f1d3',
         business_name: "2nd Street Barbers",
         tagline: "A Modern Cut with Classic Craftsmanship",
         description: "<h3>20+ Years of Barbering Experience You Can Trust</h3><div>Though newly launched, our barbers bring over 10 years of experience serving clients in Highland Park—delivering clean cuts, sharp fades, and classic grooming with precision and care.</div><div>Our barbers combine long practiced techniques with today’s styles, creating a space where everyone can feel confident, fresh, and taken care of. From precision fades to traditional hot lather shaves, every service is delivered with skill, passion, and attention to detail.</div><div><br></div><div><h3>Why Choose Us</h3><div>We’re not just cutting hair — we’re creating an experience. From the moment you walk through our doors, you’re treated to a welcoming, professional environment where every detail matters. Our skilled barbers are artists in their craft, trained to deliver precision and style with every cut. From classic cuts to luxury grooming, our services are designed to elevate your look and experience.</div></div>",
@@ -834,10 +834,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="58"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="bd18e6a7-5f00-4f07-9b3f-18568c27f1d3"]');
         if (!starButton) return;
 
-        const listingId = String('58');
+        const listingId = String('bd18e6a7-5f00-4f07-9b3f-18568c27f1d3');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -859,9 +859,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="58"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="bd18e6a7-5f00-4f07-9b3f-18568c27f1d3"]');
         if (!starButton) return;
-        const listingId = String('58');
+        const listingId = String('bd18e6a7-5f00-4f07-9b3f-18568c27f1d3');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -909,7 +909,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = '2nd Street Barbers';
         const listingUrl = 'https://thegreekdirectory.org/listing/2nd-street-barbers';
-        const listingId = '58';
+        const listingId = 'bd18e6a7-5f00-4f07-9b3f-18568c27f1d3';
         const hoursData = {"friday":null,"monday":null,"sunday":null,"tuesday":null,"saturday":null,"thursday":null,"wednesday":null};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80"];
