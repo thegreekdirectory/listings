@@ -85,7 +85,7 @@ async function signUpBusinessOwner(email, password, listingId, confirmationKey, 
         */
         
         const emailUsername = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase();
-        const ownerUserId = `${emailUsername}${listingId}`;
+        const ownerUserId = `${emailUsername}-${listingId}`;
         
         const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
             email: email,

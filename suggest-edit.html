@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
   <title>Suggest an Edit - The Greek Directory</title>
   <link rel="icon" href="https://social.thegreekdirectory.org/Logo2.png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -45,6 +46,21 @@
     .field-changed > input,
     .field-changed > textarea,
     .field-changed > select { border-color: #2563eb; background: #eff6ff; }
+    @media (prefers-color-scheme: dark) {
+      .suggest-banner {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+        border-color: #60a5fa;
+      }
+      .suggest-banner-text h3, .suggest-banner-text p { color: #eff6ff; }
+      .state-box { background: #111827; border-color: #334155; }
+      .state-box p { color: #cbd5e1; }
+      .state-box a { color: #93c5fd; }
+      .suggester-section { border-left-color: #60a5fa; }
+      .form-note { color: #94a3b8; }
+      .field-changed > input,
+      .field-changed > textarea,
+      .field-changed > select { border-color: #60a5fa; background: #1e3a8a; }
+    }
   </style>
 </head>
 <body>
