@@ -136,7 +136,7 @@ function renderDashboard() {
     if (!currentListing) return;
     
     document.getElementById('businessName').textContent = currentListing.business_name;
-    document.getElementById('listingIdDisplay').textContent = `#${currentListing.id}`;
+    document.getElementById('listingIdDisplay').textContent = `${currentListing.id}`;
     
     const tier = currentListing.tier || 'FREE';
     const previewCheckmark = currentListing.verified || tier === 'VERIFIED' || tier === 'FEATURED' || tier === 'PREMIUM' || currentListing.is_claimed || currentListing.show_claim_button === false
@@ -488,7 +488,7 @@ function renderOverview() {
                         ${currentListing.logo ? `<img id="previewLogo" src="${currentListing.logo}" alt="Logo" class="preview-logo ml-4">` : ''}
                     </div>
                     <div id="previewDetails" class="text-sm text-gray-700 space-y-1">
-                        <div><span class="font-semibold">Listing ID:</span> #${currentListing.id}</div>
+                        <div><span class="font-semibold">Listing ID:</span> ${currentListing.id}</div>
                         ${currentListing.subcategories && currentListing.subcategories.length > 0 ? 
                             `<div><span class="font-semibold">Subcategories:</span> ${currentListing.subcategories.join(', ')}</div>` : ''}
                         ${currentListing.city && currentListing.state ? 

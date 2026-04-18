@@ -281,9 +281,11 @@ The project uses a **custom Tailwind output** instead of the CDN to avoid extern
 #### `listings`
 The core table. Each row is one business listing.
 
+Listing IDs are UUIDs generated via `gen_random_uuid()` (instead of incrementing integers).
+
 | Column | Type | Notes |
 |---|---|---|
-| `id` | `text` or `bigint` | Primary key |
+| `id` | `uuid` | Primary key (random UUID) |
 | `business_name` | `text` | Required |
 | `slug` | `text` | URL-safe unique identifier |
 | `tagline` | `text` | Max ~75 chars (SEO-constrained) |
@@ -332,7 +334,7 @@ Linked to `listings` via `listing_id`. Stores owner contact and auth info.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `bigint` | Primary key |
-| `listing_id` | `text/bigint` | FK to `listings.id` |
+| `listing_id` | `uuid` | FK to `listings.id` |
 | `full_name` | `text` | |
 | `title` | `text` | e.g. `Owner`, `CEO` |
 | `from_greece` | `text` | Region of Greece |
@@ -350,7 +352,7 @@ Event-level analytics tracking.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `bigint` | |
-| `listing_id` | `text/bigint` | FK to `listings.id` |
+| `listing_id` | `uuid` | FK to `listings.id` |
 | `action` | `text` | `view`, `call`, `website`, `directions`, `share`, `video` |
 | `platform` | `text` | Share platform (e.g. `facebook`, `sms`) |
 | `timestamp` | `timestamptz` | |
