@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "72"
+                    "value": "59dfdf89-f9d0-465c-ae6c-e0badaf335a1"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/1bbda837-0ce0-41ff-d9fd-c371ab350800/public') center/cover;" role="img" aria-label="Avli Taverna in Chicago, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="72" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="59dfdf89-f9d0-465c-ae6c-e0badaf335a1" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -756,7 +756,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             (async function() {
                 try {
                     const chainId = 'avli';
-                    const currentListingId = '72';
+                    const currentListingId = '59dfdf89-f9d0-465c-ae6c-e0badaf335a1';
                     
                     const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?chain_id=eq.' + chainId + '&visible=eq.true&select=*', {
                         headers: {
@@ -888,7 +888,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '72',
+        id: '59dfdf89-f9d0-465c-ae6c-e0badaf335a1',
         business_name: "Avli Taverna",
         tagline: "Serving contemporary Greek cuisine and craft cocktails in a chic atmosphere",
         description: "<div>Located on a tree-lined street in Chicago’s Lincoln Park, Avli Taverna is an accessible and sophisticated neighborhood restaurant serving contemporary Greek cuisine and craft cocktails in a chic atmosphere. Recognized as a Michelin Bib Gourmand in 2020 &amp; 2021, the 50-seat space divided among front and back dining rooms, is comfortable and cozy.</div><div><br></div><div>Open since 2018, Avli Taverna is the perfect spot to pop-in at the bar, grab a bite to eat on the seasonal patio, plan a date night, family night, or enjoy bottomless mimosas during weekend brunch.&nbsp;</div><div><br></div><h3><u>About Avli</u></h3><div><p><b>Our Core Mission</b></p><div>Creative Greek restaurants in Chicago &amp; Milwaukee where tradition meets&nbsp; contemporary elegance and guests experience our core philosophies of Philoxenia (hospitality), Kefi (joy), and Meraki (passion).&nbsp;</div><div><br></div><div>We welcome you in to live and enjoy life through our classic and contemporary Greek dishes, lively beverage program,&nbsp; and an ambiance that reflects life in Greece.</div><div><br></div><p><b>A Quick History Lesson</b></p><div>Louie Alexakis, the managing partner of Avli–founded in 2009 in Winnetka, grew up in the hospitality industry working for his parents, who fun fact–owned a chain of hot dog stands in the Chicago Park District for over 50 years. After decades of travel and finding success at Avli Winnetka, Louie teamed up with partner and Chicago sportscaster Lou Canellis to bring contemporary Greek cuisine to Chicago with the opening of Avli Taverna in 2018.&nbsp;</div><div><br></div><div>Four years, three Chicago concepts, and one Milwaukee restaurant later, the group is excited to continue expanding their vision of contemporary Greek.</div></div>",
@@ -934,10 +934,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="72"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="59dfdf89-f9d0-465c-ae6c-e0badaf335a1"]');
         if (!starButton) return;
 
-        const listingId = String('72');
+        const listingId = String('59dfdf89-f9d0-465c-ae6c-e0badaf335a1');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -959,9 +959,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="72"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="59dfdf89-f9d0-465c-ae6c-e0badaf335a1"]');
         if (!starButton) return;
-        const listingId = String('72');
+        const listingId = String('59dfdf89-f9d0-465c-ae6c-e0badaf335a1');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -1009,7 +1009,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Avli Taverna';
         const listingUrl = 'https://thegreekdirectory.org/listing/avli-taverna';
-        const listingId = '72';
+        const listingId = '59dfdf89-f9d0-465c-ae6c-e0badaf335a1';
         const hoursData = {"friday":"11:00-22:00","monday":"11:00-21:00","sunday":"10:30-21:00","tuesday":"11:00-21:00","saturday":"10:30-22:00","thursday":"11:00-21:00","wednesday":"11:00-21:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/1bbda837-0ce0-41ff-d9fd-c371ab350800/public"];
