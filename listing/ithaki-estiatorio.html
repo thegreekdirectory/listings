@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "70"
+                    "value": "7bab988d-dbc3-456a-a147-388dd36e87b4"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/63f0419e-bb7a-4c3b-3f49-3b8a59604a00/public') center/cover;" role="img" aria-label="Ithaki Estiatorio in Chicago, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="70" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="7bab988d-dbc3-456a-a147-388dd36e87b4" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -802,7 +802,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '70',
+        id: '7bab988d-dbc3-456a-a147-388dd36e87b4',
         business_name: "Ithaki Estiatorio",
         tagline: "Taste the Breeze of the Ionian",
         description: "At Ithaki, we honor the ancient tradition of Xenia, the sacred Greek custom of hospitality, which dictates that you must treat your guests as if they were gods themselves. The belief was that, in welcoming others with warmth and generosity, you might unknowingly be hosting Zeus in disguise. This ancient practice not only reflects the heart of Hellenic culture but also inspires us to provide every guest with an unforgettable experience, one rooted in respect, hospitality, and the spirit of divine welcome. At Ithaki, every meal is an invitation, and every guest is treated as though they are the most honored in the room.",
@@ -848,10 +848,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="70"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="7bab988d-dbc3-456a-a147-388dd36e87b4"]');
         if (!starButton) return;
 
-        const listingId = String('70');
+        const listingId = String('7bab988d-dbc3-456a-a147-388dd36e87b4');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -873,9 +873,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="70"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="7bab988d-dbc3-456a-a147-388dd36e87b4"]');
         if (!starButton) return;
-        const listingId = String('70');
+        const listingId = String('7bab988d-dbc3-456a-a147-388dd36e87b4');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -923,7 +923,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Ithaki Estiatorio';
         const listingUrl = 'https://thegreekdirectory.org/listing/ithaki-estiatorio';
-        const listingId = '70';
+        const listingId = '7bab988d-dbc3-456a-a147-388dd36e87b4';
         const hoursData = {"friday":"16:00-00:00","monday":"16:00-21:00","sunday":"16:00-21:00","tuesday":"16:00-21:00","saturday":"16:00-00:00","thursday":"16:00-22:00","wednesday":"16:00-21:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/63f0419e-bb7a-4c3b-3f49-3b8a59604a00/public"];
