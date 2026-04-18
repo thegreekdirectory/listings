@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "4"
+                    "value": "67fb3b36-dae2-45ae-a91d-730a5a7b7091"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/brillakis-import-foods/photos/photos/photo-1.jpeg') center/cover;" role="img" aria-label="Brillakis Import Foods in Niles, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="4" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="67fb3b36-dae2-45ae-a91d-730a5a7b7091" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -758,7 +758,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '4',
+        id: '67fb3b36-dae2-45ae-a91d-730a5a7b7091',
         business_name: "Brillakis Import Foods",
         tagline: "Family-owned grocery store with Greek imports.",
         description: "Brillakis Import Foods is a family-owned grocery store in Niles, Illinois, specializing in authentic Greek and imported foods, including cheeses, olive oil, pastries, and meats. It is known for its high-quality products, friendly service, and a wide selection of Greek groceries, imported beers, and other specialty items.",
@@ -804,10 +804,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="4"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="67fb3b36-dae2-45ae-a91d-730a5a7b7091"]');
         if (!starButton) return;
 
-        const listingId = String('4');
+        const listingId = String('67fb3b36-dae2-45ae-a91d-730a5a7b7091');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -829,9 +829,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="4"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="67fb3b36-dae2-45ae-a91d-730a5a7b7091"]');
         if (!starButton) return;
-        const listingId = String('4');
+        const listingId = String('67fb3b36-dae2-45ae-a91d-730a5a7b7091');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -879,7 +879,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Brillakis Import Foods';
         const listingUrl = 'https://thegreekdirectory.org/listing/brillakis-import-foods';
-        const listingId = '4';
+        const listingId = '67fb3b36-dae2-45ae-a91d-730a5a7b7091';
         const hoursData = {"friday":"9:00 AM - 6:00 PM","monday":"9:00 AM - 6:00 PM","sunday":"9:00 AM - 4:00 PM","tuesday":"9:00 AM - 6:00 PM","saturday":"9:00 AM - 6:00 PM","thursday":"9:00 AM - 6:00 PM","wednesday":"9:00 AM - 6:00 PM"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/brillakis-import-foods/photos/photos/photo-1.jpeg"];
