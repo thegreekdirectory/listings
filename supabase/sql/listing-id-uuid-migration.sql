@@ -57,8 +57,9 @@ end$$;
 
 alter table public.listings drop constraint if exists listings_pkey;
 
-alter table public.listings drop column if exists id;
-alter table public.listings rename column id_uuid to id;
+alter table public.listings
+  drop column if exists id,
+  rename column id_uuid to id;
 
 alter table public.listings
   alter column id set default gen_random_uuid(),
@@ -66,8 +67,9 @@ alter table public.listings
 
 alter table public.listings add primary key (id);
 
-alter table public.business_owners drop column if exists listing_id;
-alter table public.business_owners rename column listing_id_uuid to listing_id;
+alter table public.business_owners
+  drop column if exists listing_id,
+  rename column listing_id_uuid to listing_id;
 
 alter table public.business_owners
   alter column listing_id set not null,
@@ -75,8 +77,9 @@ alter table public.business_owners
     foreign key (listing_id) references public.listings(id)
     on delete cascade;
 
-alter table public.listing_analytics drop column if exists listing_id;
-alter table public.listing_analytics rename column listing_id_uuid to listing_id;
+alter table public.listing_analytics
+  drop column if exists listing_id,
+  rename column listing_id_uuid to listing_id;
 
 alter table public.listing_analytics
   alter column listing_id set not null,
@@ -87,8 +90,9 @@ alter table public.listing_analytics
 do $$
 begin
   if to_regclass('public.listing_suggestions') is not null then
-    alter table public.listing_suggestions drop column if exists listing_id;
-    alter table public.listing_suggestions rename column listing_id_uuid to listing_id;
+    alter table public.listing_suggestions
+      drop column if exists listing_id,
+      rename column listing_id_uuid to listing_id;
 
     alter table public.listing_suggestions
       alter column listing_id set not null,
