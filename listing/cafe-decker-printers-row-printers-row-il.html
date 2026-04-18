@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "69"
+                    "value": "bf04b1ed-2387-4690-adfa-8c1a3f95eea3"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/96629a61-5e2f-4886-fb4d-d4600c2d3a00/public') center/cover;" role="img" aria-label="Cafe Deko in Chicago, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="69" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="bf04b1ed-2387-4690-adfa-8c1a3f95eea3" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -765,7 +765,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             (async function() {
                 try {
                     const chainId = 'cafe-deko';
-                    const currentListingId = '69';
+                    const currentListingId = 'bf04b1ed-2387-4690-adfa-8c1a3f95eea3';
                     
                     const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?chain_id=eq.' + chainId + '&visible=eq.true&select=*', {
                         headers: {
@@ -897,7 +897,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '69',
+        id: 'bf04b1ed-2387-4690-adfa-8c1a3f95eea3',
         business_name: "Cafe Deko",
         tagline: "A coffee shop where you can relax, connect and enjoy great coffee and tea.",
         description: "<div>Our Victorian-inspired cafe offers you a warm welcome and creates an inviting atmosphere that blends harmoniously with the aroma of freshly brewed coffee and pleasant music — all nestled within the historic Donohue Building, built in the late 1800s.</div><div><br></div><div>Our hope for this coffee shop is to inspire our customers to relax, connect and brew over new ideas and old memories.</div><div><br></div><div>Dedication, passion and love goes into every cup of our premium espresso and drip options, which are served in a variety of sizes and flavors</div>",
@@ -943,10 +943,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="69"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="bf04b1ed-2387-4690-adfa-8c1a3f95eea3"]');
         if (!starButton) return;
 
-        const listingId = String('69');
+        const listingId = String('bf04b1ed-2387-4690-adfa-8c1a3f95eea3');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -968,9 +968,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="69"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="bf04b1ed-2387-4690-adfa-8c1a3f95eea3"]');
         if (!starButton) return;
-        const listingId = String('69');
+        const listingId = String('bf04b1ed-2387-4690-adfa-8c1a3f95eea3');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -1018,7 +1018,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Cafe Deko';
         const listingUrl = 'https://thegreekdirectory.org/listing/cafe-decker-printers-row-printers-row-il';
-        const listingId = '69';
+        const listingId = 'bf04b1ed-2387-4690-adfa-8c1a3f95eea3';
         const hoursData = {"friday":"07:00-18:00","monday":"07:00-18:00","sunday":"08:00-18:00","tuesday":"07:00-18:00","saturday":"08:00-18:00","thursday":"07:00-18:00","wednesday":"07:00-18:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/96629a61-5e2f-4886-fb4d-d4600c2d3a00/public"];
