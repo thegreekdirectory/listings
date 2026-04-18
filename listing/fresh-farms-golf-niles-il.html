@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "81"
+                    "value": "06811e05-e5a5-4738-bccc-b4483ea45d1a"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/3066fc33-4e88-4327-9d4d-ea88b05e9e00/public') center/cover;" role="img" aria-label="Fresh Farms (Golf Rd.) in Niles, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="81" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="06811e05-e5a5-4738-bccc-b4483ea45d1a" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -744,7 +744,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             (async function() {
                 try {
                     const chainId = 'fresh-farms';
-                    const currentListingId = '81';
+                    const currentListingId = '06811e05-e5a5-4738-bccc-b4483ea45d1a';
                     
                     const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?chain_id=eq.' + chainId + '&visible=eq.true&select=*', {
                         headers: {
@@ -876,7 +876,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '81',
+        id: '06811e05-e5a5-4738-bccc-b4483ea45d1a',
         business_name: "Fresh Farms (Golf Rd.)",
         tagline: "We bring the world to your table!",
         description: "<h3>Our Story</h3><div>In 1968, Svigos family immigrates from Greece to United States in 1968 and begins their Fresh Market journey!</div><div>In 1980, Originally, we began as North Water Market, but our name quickly transitioned into Fresh Farms International Market to better reflect our business model. Our first location, situated on the corner of Devon Ave. and Talman Ave., is currently still in operation.  </div><div>In 1995, After years of hard work, it was time to expand. Fresh Farms International Market opened a second location on the corner of Milwaukee Ave. and E. Dundee Rd., in Wheeling, IL. For many years this location served as one of the most diverse grocery stores in the Midwest, catering to ethnicities and religions from all around the world.</div><div>In 2008, With years of experience servicing the surrounding communities with which we had established relationships, we were given the opportunity to expand once again. Only this time on grand scale; Located in Niles, IL, our next Fresh Farms International Market location set out to serve our customers as Chicago’s largest international grocery store.</div><div>In 2011, After working with the city of Wheeling for many years, we believed it was time to re-invest into the city that has worked in concert with us for so long; it was time for a face-lift. After demolishing the existing building, Fresh Farms International Market completed its first major, ground up development. This marked a big step in the company’s future.</div><div>In 2015, When Jewel (a local Chicago-land grocery store chain) went out of business, Fresh Farms International Market was in a unique position to expand. After much planning and negotiation, we were presented with an opportunity to open another location in the city of Niles. This was our second ground-up development, located at 8203 W Golf Rd.</div><div><br></div><div><h3>Fresh Farms Future</h3><div>Fresh Farms International Market is a family-owned and operated business. Although we greatly appreciate the positive feedback and requests to open new locations, our first priority is to bring the absolute greatest value to our customers through well maintained, fresh, and affordable international food-stuffs.</div></div>",
@@ -922,10 +922,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="81"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="06811e05-e5a5-4738-bccc-b4483ea45d1a"]');
         if (!starButton) return;
 
-        const listingId = String('81');
+        const listingId = String('06811e05-e5a5-4738-bccc-b4483ea45d1a');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -947,9 +947,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="81"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="06811e05-e5a5-4738-bccc-b4483ea45d1a"]');
         if (!starButton) return;
-        const listingId = String('81');
+        const listingId = String('06811e05-e5a5-4738-bccc-b4483ea45d1a');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -997,7 +997,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Fresh Farms (Golf Rd.)';
         const listingUrl = 'https://thegreekdirectory.org/listing/fresh-farms-golf-niles-il';
-        const listingId = '81';
+        const listingId = '06811e05-e5a5-4738-bccc-b4483ea45d1a';
         const hoursData = {"friday":"08:00-21:00","monday":"08:00-21:00","sunday":"08:00-21:00","tuesday":"08:00-21:00","saturday":"08:00-21:00","thursday":"08:00-21:00","wednesday":"08:00-21:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/3066fc33-4e88-4327-9d4d-ea88b05e9e00/public"];
