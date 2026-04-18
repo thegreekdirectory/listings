@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "1"
+                    "value": "a2f11f6b-a2a9-460d-807d-4ff7fd029bd4"
                 }
             },
             {
@@ -538,7 +538,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             <button class="carousel-nav carousel-next" onclick="nextSlide()">❯</button>
             <div class="carousel-dots"><span class="carousel-dot active" onclick="goToSlide(0)"></span><span class="carousel-dot " onclick="goToSlide(1)"></span></div>
         
-                <button class="star-button" type="button" data-listing-id="1" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="a2f11f6b-a2a9-460d-807d-4ff7fd029bd4" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -781,7 +781,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="claim-listing-section" id="claimSection">
             <div class="action-cta-row">
                 <div class="action-cta-slot"><a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Hellenic%20American%20Academy%20-%20Deerfield%2C%20IL" target="_blank" rel="noopener noreferrer" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a></div>
-                <div class="action-cta-slot"><a href="mailto:contact@thegreekdirectory.org?subject=Suggest%20an%20Edit%20-%20Hellenic%20American%20Academy%20-%20Deerfield%2C%20IL" target="_blank" rel="noopener noreferrer" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a></div>
+                <div class="action-cta-slot"><a href="/suggest-edit?id=a2f11f6b-a2a9-460d-807d-4ff7fd029bd4" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a></div>
                 <div class="action-cta-slot"><button type="button" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button></div>
             </div>
         </div>
@@ -827,7 +827,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '1',
+        id: 'a2f11f6b-a2a9-460d-807d-4ff7fd029bd4',
         business_name: "Hellenic American Academy",
         tagline: "Private dual-language day school & examination center for Ellinomatheia.",
         description: "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy's problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.<div><br></div><div><div>Hellenic American Academy has been recognized by Education Insider Magazine as Top Language Private Day School, a distinguished honor that underscores the Academy’s ongoing commitment to academic excellence, cultural heritage, and strong community values. <u><a href=\"https://www.educationinsidermagazine.com/hellenic-american-academy-2026\">Read full feature here.</a></u> This recognition reflects the collective dedication of the Academy’s students, faculty, staff, and families, whose shared efforts continue to advance high-quality education and cultural enrichment. Hellenic American Academy extends its sincere appreciation to its entire community for being an integral part of this journey. Together, the Academy continues to celebrate education, culture, and achievement while shaping future generations of global citizens.</div></div>",
@@ -873,10 +873,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="1"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="a2f11f6b-a2a9-460d-807d-4ff7fd029bd4"]');
         if (!starButton) return;
 
-        const listingId = String('1');
+        const listingId = String('a2f11f6b-a2a9-460d-807d-4ff7fd029bd4');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -898,9 +898,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="1"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="a2f11f6b-a2a9-460d-807d-4ff7fd029bd4"]');
         if (!starButton) return;
-        const listingId = String('1');
+        const listingId = String('a2f11f6b-a2a9-460d-807d-4ff7fd029bd4');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -948,7 +948,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 2;
         const businessName = 'Hellenic American Academy';
         const listingUrl = 'https://thegreekdirectory.org/listing/hellenic-american-academy';
-        const listingId = '1';
+        const listingId = 'a2f11f6b-a2a9-460d-807d-4ff7fd029bd4';
         const hoursData = {"friday":"08:00-17:30","monday":"08:00-17:30","sunday":"Closed","tuesday":"08:00-17:30","saturday":"09:00-13:00","thursday":"08:00-17:30","wednesday":"08:00-17:30"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/85c20ada-1e1f-4013-d412-856c6046c500/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/e7dc4485-b55b-4228-e390-63aeb1a2ed00/public"];
