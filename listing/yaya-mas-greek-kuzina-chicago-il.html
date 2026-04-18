@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "65"
+                    "value": "9f9ebb5b-47cd-43be-98e8-5f2ce98f4cbb"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/8519c445-8178-4926-7c6f-0b27c319a500/public') center/cover;" role="img" aria-label="Yaya Mas Greek Kuzina in Chicago, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="65" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="9f9ebb5b-47cd-43be-98e8-5f2ce98f4cbb" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -751,7 +751,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             (async function() {
                 try {
                     const chainId = 'yaya-mas-greek-kuzina';
-                    const currentListingId = '65';
+                    const currentListingId = '9f9ebb5b-47cd-43be-98e8-5f2ce98f4cbb';
                     
                     const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?chain_id=eq.' + chainId + '&visible=eq.true&select=*', {
                         headers: {
@@ -883,7 +883,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '65',
+        id: '9f9ebb5b-47cd-43be-98e8-5f2ce98f4cbb',
         business_name: "Yaya Mas Greek Kuzina",
         tagline: "Dishes telling stories of Greece’s rich culinary heritage.",
         description: "<div>Yaya Mas Greek Kuzina serves Chicago’s most authentic Greek food — hand-carved gyros, fresh baked bougatsa, avgolemono soup, spanakopita, tiropita, moussaka, pastitsio, Greek Pinsa and baklava. All ingredients imported directly from Greece. Available for pickup and delivery in Lincoln Park and across Chicago. Open until 5AM Wednesday through Saturday.</div><div><br></div><div>The Yaya Mas Greek Kuzina menu features authentic Greek food made fresh daily with imported Greek ingredients. Our menu includes hand-carved gyros and souvlaki, fresh baked bougatsa (vanilla custard pastry), spanakopita and tiropita, avgolemono egg-lemon soup, Greek Pinsa flatbreads, moussaka, pastitsio, Greek salads, baklava and our famous Freddo cappuccino. We also offer a full late night menu open until 5AM Wednesday through Saturday.</div>",
@@ -929,10 +929,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="65"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="9f9ebb5b-47cd-43be-98e8-5f2ce98f4cbb"]');
         if (!starButton) return;
 
-        const listingId = String('65');
+        const listingId = String('9f9ebb5b-47cd-43be-98e8-5f2ce98f4cbb');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -954,9 +954,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="65"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="9f9ebb5b-47cd-43be-98e8-5f2ce98f4cbb"]');
         if (!starButton) return;
-        const listingId = String('65');
+        const listingId = String('9f9ebb5b-47cd-43be-98e8-5f2ce98f4cbb');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -1004,7 +1004,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Yaya Mas Greek Kuzina';
         const listingUrl = 'https://thegreekdirectory.org/listing/yaya-mas-greek-kuzina-chicago-il';
-        const listingId = '65';
+        const listingId = '9f9ebb5b-47cd-43be-98e8-5f2ce98f4cbb';
         const hoursData = {"friday":"09:30-05:00","monday":"09:30-00:00","sunday":"09:30-00:00","tuesday":"09:30-00:00","saturday":"09:30-05:00","thursday":"09:30-05:00","wednesday":"09:30-05:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/8519c445-8178-4926-7c6f-0b27c319a500/public"];
