@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "67"
+                    "value": "9081180f-c4d1-4ac4-96e1-c1b25d962dc4"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/8519c445-8178-4926-7c6f-0b27c319a500/public') center/cover;" role="img" aria-label="Yaya Mas Greek Kuzina in River North, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="67" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="9081180f-c4d1-4ac4-96e1-c1b25d962dc4" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -704,7 +704,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             (async function() {
                 try {
                     const chainId = 'yaya-mas-greek-kuzina';
-                    const currentListingId = '67';
+                    const currentListingId = '9081180f-c4d1-4ac4-96e1-c1b25d962dc4';
                     
                     const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?chain_id=eq.' + chainId + '&visible=eq.true&select=*', {
                         headers: {
@@ -836,7 +836,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '67',
+        id: '9081180f-c4d1-4ac4-96e1-c1b25d962dc4',
         business_name: "Yaya Mas Greek Kuzina",
         tagline: "Dishes telling stories of Greece’s rich culinary heritage.",
         description: "<h3>Authentic Greek Food Coming to River North!</h3><div>Yaya Mas Greek Kuzina has become one of Chicago’s most celebrated Greek restaurants since opening in Lincoln Park in January 2024. Now we’re bringing the same authentic Greek experience to River North in 2026.</div><div><br></div><div>Every dish is made with ingredients imported directly from Greece — the same olive oils, spices, cheeses and phyllo dough used in family kitchens across Athens and Thessaloniki.</div><div><br></div><div>River North’s vibrant restaurant culture and creative community makes it the perfect home for a real Greek kitchen.</div><div><br></div><div><ol><li>Authentic Greek recipes from Thessaloniki &amp; Athens</li><li>Ingredients imported directly from Greece — no shortcuts</li><li>Open until 5AM Wednesday through Saturday</li><li>Full menu — breakfast, lunch, dinner &amp; late night</li><li>Greek catering for corporate &amp; private events</li><li>Pickup, delivery &amp; dine-in available</li></ol></div>",
@@ -882,10 +882,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="67"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="9081180f-c4d1-4ac4-96e1-c1b25d962dc4"]');
         if (!starButton) return;
 
-        const listingId = String('67');
+        const listingId = String('9081180f-c4d1-4ac4-96e1-c1b25d962dc4');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -907,9 +907,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="67"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="9081180f-c4d1-4ac4-96e1-c1b25d962dc4"]');
         if (!starButton) return;
-        const listingId = String('67');
+        const listingId = String('9081180f-c4d1-4ac4-96e1-c1b25d962dc4');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -957,7 +957,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Yaya Mas Greek Kuzina';
         const listingUrl = 'https://thegreekdirectory.org/listing/yaya-mas-greek-kuzina-river-north-il';
-        const listingId = '67';
+        const listingId = '9081180f-c4d1-4ac4-96e1-c1b25d962dc4';
         const hoursData = {"friday":null,"monday":null,"sunday":null,"tuesday":null,"saturday":null,"thursday":null,"wednesday":null};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/8519c445-8178-4926-7c6f-0b27c319a500/public"];
