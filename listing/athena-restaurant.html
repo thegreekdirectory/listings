@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "71"
+                    "value": "e38b23c9-14c5-4da4-bae0-ee51176097f2"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/ed5488d9-4447-4541-5d95-3050f7108800/public') center/cover;" role="img" aria-label="Athena Restaurant in Chicago, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="71" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="e38b23c9-14c5-4da4-bae0-ee51176097f2" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -788,7 +788,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '71',
+        id: 'e38b23c9-14c5-4da4-bae0-ee51176097f2',
         business_name: "Athena Restaurant",
         tagline: "A beacon of authentic Greek culture in Chicago's Greektown.",
         description: "<h3>Come and savor the spirit of Greece right here in Chicago's Greektown at Athena Restaurant. Kalós órises! (Welcome!)</h3><div>Nestled in the vibrant heart of Chicago’s Greektown neighborhood, Athena Restaurant stands as a beacon of authentic Greek culture and culinary excellence.&nbsp; Our establishment offers a captivating journey to Greece, allowing guests to immerse themselves in the rich flavors of traditional Greek cuisine.&nbsp;&nbsp;</div><div><br></div><div>At Athena, we pride ourselves on more than just being a restaurant; we are a testament to the warmth and hospitality intrinsic to Greek culture.&nbsp; From the moment you step through our doors, you’ll be transported to the idyllic islands of Greece, surrounded by the ambiance that echoes the spirit and charm of the Mediterranean.&nbsp;&nbsp;</div><div><br></div><div>Indulge in the flavors of Greece with our hand-crafted menu, featuring an array of traditional Greek dishes prepared with authentic recipes passed down through generations.&nbsp; From classical moussaka to succulent souvlaki and irresistible baklava, every bite tells a story of Greece’s culinary legacy.&nbsp;&nbsp;</div><div><br></div><div>Experience the best of both worlds at Athena with our beautiful retractable roof that allows you to bask in the sunshine during the warmer days and dine under the stars when the weather calls for it.&nbsp; Our patio, complete with a soothing waterfall, offers a serene and picturesque setting for your dining pleasure.&nbsp;&nbsp;</div><div><br></div><div>Our commitment goes beyond just serving delectable food; it’s about fostering an atmosphere of warmth and conviviality.&nbsp; Our attentive staff is dedicated to ensuring your visit is nothing short of exceptional.&nbsp; &nbsp;</div><div><br></div><div>Athena Restaurant in Greektown Chicago is more than just a dining destination; it’s a cultural experience, a culinary journey, and a haven for those seeking a taste of Greece in the heart of the Windy City.&nbsp; Join us and let the flavors and ambiance of Greece elevate your dining experience to new heights.&nbsp;&nbsp;</div>",
@@ -834,10 +834,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="71"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="e38b23c9-14c5-4da4-bae0-ee51176097f2"]');
         if (!starButton) return;
 
-        const listingId = String('71');
+        const listingId = String('e38b23c9-14c5-4da4-bae0-ee51176097f2');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -859,9 +859,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="71"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="e38b23c9-14c5-4da4-bae0-ee51176097f2"]');
         if (!starButton) return;
-        const listingId = String('71');
+        const listingId = String('e38b23c9-14c5-4da4-bae0-ee51176097f2');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -909,7 +909,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Athena Restaurant';
         const listingUrl = 'https://thegreekdirectory.org/listing/athena-restaurant';
-        const listingId = '71';
+        const listingId = 'e38b23c9-14c5-4da4-bae0-ee51176097f2';
         const hoursData = {"friday":"11:00-22:00","monday":"11:00-21:00","sunday":"11:00-22:00","tuesday":"11:00-21:00","saturday":"11:00-22:00","thursday":"11:00-21:00","wednesday":"11:00-21:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/ed5488d9-4447-4541-5d95-3050f7108800/public"];

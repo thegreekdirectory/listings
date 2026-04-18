@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "7"
+                    "value": "19303250-695c-4faa-8fc9-5aa0f6e0681c"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80') center/cover;" role="img" aria-label="SKB Hair Salon in Niles, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="7" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="19303250-695c-4faa-8fc9-5aa0f6e0681c" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -775,7 +775,7 @@ Over the years, our expert team has had one mission-to make our devoted customer
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '7',
+        id: '19303250-695c-4faa-8fc9-5aa0f6e0681c',
         business_name: "SKB Hair Salon",
         tagline: "Full-service hair salon in Niles, IL.",
         description: "From the day we opened our doors in Niles in 2000, we've earned our spot as a top Salon. We offer unparalleled beauty pampering, but also respect our clients' busy schedules and will get you looking fabulous and on your way as soon as possible.\nOver the years, our expert team has had one mission-to make our devoted customers look stunning and feel their best. Contact us and see what our team of qualified professionals can do for you today.",
@@ -821,10 +821,10 @@ Over the years, our expert team has had one mission-to make our devoted customer
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="7"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="19303250-695c-4faa-8fc9-5aa0f6e0681c"]');
         if (!starButton) return;
 
-        const listingId = String('7');
+        const listingId = String('19303250-695c-4faa-8fc9-5aa0f6e0681c');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -846,9 +846,9 @@ Over the years, our expert team has had one mission-to make our devoted customer
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="7"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="19303250-695c-4faa-8fc9-5aa0f6e0681c"]');
         if (!starButton) return;
-        const listingId = String('7');
+        const listingId = String('19303250-695c-4faa-8fc9-5aa0f6e0681c');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -896,7 +896,7 @@ Over the years, our expert team has had one mission-to make our devoted customer
         const totalSlides = 1;
         const businessName = 'SKB Hair Salon';
         const listingUrl = 'https://thegreekdirectory.org/listing/skb-hair-salon';
-        const listingId = '7';
+        const listingId = '19303250-695c-4faa-8fc9-5aa0f6e0681c';
         const hoursData = {"friday":null,"monday":null,"sunday":null,"tuesday":null,"saturday":null,"thursday":null,"wednesday":null};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80"];

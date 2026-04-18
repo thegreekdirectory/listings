@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "57"
+                    "value": "13597b95-7bf4-4aab-8872-11da37b04bc3"
                 }
             },
             {
@@ -538,7 +538,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             <button class="carousel-nav carousel-next" onclick="nextSlide()">❯</button>
             <div class="carousel-dots"><span class="carousel-dot active" onclick="goToSlide(0)"></span><span class="carousel-dot " onclick="goToSlide(1)"></span><span class="carousel-dot " onclick="goToSlide(2)"></span><span class="carousel-dot " onclick="goToSlide(3)"></span></div>
         
-                <button class="star-button" type="button" data-listing-id="57" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="13597b95-7bf4-4aab-8872-11da37b04bc3" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -806,7 +806,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '57',
+        id: '13597b95-7bf4-4aab-8872-11da37b04bc3',
         business_name: "Prasino",
         tagline: "A Neighborhood Gem In La Grange For 15 Years",
         description: "<div class=\"xdj266r x14z9mp xat24cr x1lziwak x1vvkbs\" style=\"overflow-wrap: break-word; margin-inline: 0px; font-family: \" segoe=\"\" ui=\"\" historic\",=\"\" \"segoe=\"\" ui\",=\"\" helvetica,=\"\" arial,=\"\" sans-serif;=\"\" color:=\"\" rgb(8,=\"\" 8,=\"\" 9);=\"\" font-size:=\"\" 15px;\"=\"\"><div dir=\"auto\" style=\"font-family: inherit;\">Conceived with seasonality in mind the menu is focused on local, organic and sustainably sourced ingredients whenever possible. The culinary team's award winning creations are complimented by a farm-to-bar beverage program of artisan cocktails featuring small batch spirits, craft beer, and outstanding sustainable wines that come together to create an exciting dining experience.</div></div><div class=\"x14z9mp xat24cr x1lziwak x1vvkbs xtlvy1s\" style=\"overflow-wrap: break-word; margin-top: 0.5em; margin-inline: 0px; font-family: \" segoe=\"\" ui=\"\" historic\",=\"\" \"segoe=\"\" ui\",=\"\" helvetica,=\"\" arial,=\"\" sans-serif;=\"\" color:=\"\" rgb(8,=\"\" 8,=\"\" 9);=\"\" font-size:=\"\" 15px;\"=\"\"><div dir=\"auto\" style=\"font-family: inherit;\"><i>Prasino</i>, the Greek word for green, was inspired by a Mediterranean lifestyle which incorporates fresh, local and seasonal food, wines produced by family-owned vineyards, and artisan spirits enjoyed in a simple yet beautiful setting. The restaurants reflect modern interpretation of that lifestyle. We are proud to present our contemporary American menu in a refreshing, comfortable atmosphere that celebrates the love of great food, good conversation and community.</div></div>",
@@ -852,10 +852,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="57"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="13597b95-7bf4-4aab-8872-11da37b04bc3"]');
         if (!starButton) return;
 
-        const listingId = String('57');
+        const listingId = String('13597b95-7bf4-4aab-8872-11da37b04bc3');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -877,9 +877,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="57"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="13597b95-7bf4-4aab-8872-11da37b04bc3"]');
         if (!starButton) return;
-        const listingId = String('57');
+        const listingId = String('13597b95-7bf4-4aab-8872-11da37b04bc3');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -927,7 +927,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 4;
         const businessName = 'Prasino';
         const listingUrl = 'https://thegreekdirectory.org/listing/prasino-la-grange';
-        const listingId = '57';
+        const listingId = '13597b95-7bf4-4aab-8872-11da37b04bc3';
         const hoursData = {"friday":"08:00-20:00","monday":"08:00-20:00","sunday":"08:00-21:00","tuesday":"08:00-20:00","saturday":"08:00-21:00","thursday":"08:00-20:00","wednesday":"08:00-15:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/52cdd112-f704-4b5d-9a38-3ea7f2fdf800/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/e96bb9bb-6d82-4f26-35fb-6f0fa1b79c00/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/370408de-c971-4992-0d3e-8eaa2132ec00/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/9aa9e4bc-c55f-437a-b120-237ddfec9800/public"];

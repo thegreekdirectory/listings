@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "63"
+                    "value": "2430a188-02e6-4d87-9c14-48aa245d4b49"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/0ba1eab6-ee24-44a3-79bd-3264f7c0b400/public') center/cover;" role="img" aria-label="Valley Lodge Tavern in Wilmette, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="63" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="2430a188-02e6-4d87-9c14-48aa245d4b49" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -756,7 +756,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             (async function() {
                 try {
                     const chainId = 'valley-lodge-tavern';
-                    const currentListingId = '63';
+                    const currentListingId = '2430a188-02e6-4d87-9c14-48aa245d4b49';
                     
                     const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?chain_id=eq.' + chainId + '&visible=eq.true&select=*', {
                         headers: {
@@ -888,7 +888,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '63',
+        id: '2430a188-02e6-4d87-9c14-48aa245d4b49',
         business_name: "Valley Lodge Tavern",
         tagline: "Your neighborhood tavern since 1969.",
         description: "<div>A cornerstone of Wilmette, the Valley Lodge is a friendly place where neighbors can gather – where our guests can bring a date, take the team after a game, or meet with friends in the bar to watch their favorite games on our five big screen TVs.</div><div><br></div><div>Our vision has always been to create a true family restaurant, one where our guests can be comfortable, relax, and take the whole family to enjoy high quality dining in a relaxed atmosphere, at a reasonable price. Call for reservations</div>",
@@ -934,10 +934,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="63"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="2430a188-02e6-4d87-9c14-48aa245d4b49"]');
         if (!starButton) return;
 
-        const listingId = String('63');
+        const listingId = String('2430a188-02e6-4d87-9c14-48aa245d4b49');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -959,9 +959,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="63"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="2430a188-02e6-4d87-9c14-48aa245d4b49"]');
         if (!starButton) return;
-        const listingId = String('63');
+        const listingId = String('2430a188-02e6-4d87-9c14-48aa245d4b49');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -1009,7 +1009,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Valley Lodge Tavern';
         const listingUrl = 'https://thegreekdirectory.org/listing/valley-lodge-tavern-wilmette-il';
-        const listingId = '63';
+        const listingId = '2430a188-02e6-4d87-9c14-48aa245d4b49';
         const hoursData = {"friday":"11:30-23:00","monday":"11:30-22:00","sunday":"11:30-22:00","tuesday":"11:30-22:00","saturday":"11:30-23:00","thursday":"11:30-22:00","wednesday":"11:30-22:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/0ba1eab6-ee24-44a3-79bd-3264f7c0b400/public"];

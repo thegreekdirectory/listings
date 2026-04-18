@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "75"
+                    "value": "814a6148-6afb-4d68-ab06-917d6ff5d06f"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/1f53ca93-6103-4d5e-b816-4f82a4fd1700/public') center/cover;" role="img" aria-label="Avli Estiatorio in Winnetka, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="75" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="814a6148-6afb-4d68-ab06-917d6ff5d06f" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -756,7 +756,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             (async function() {
                 try {
                     const chainId = 'avli';
-                    const currentListingId = '75';
+                    const currentListingId = '814a6148-6afb-4d68-ab06-917d6ff5d06f';
                     
                     const response = await fetch('https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?chain_id=eq.' + chainId + '&visible=eq.true&select=*', {
                         headers: {
@@ -888,7 +888,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '75',
+        id: '814a6148-6afb-4d68-ab06-917d6ff5d06f',
         business_name: "Avli Estiatorio",
         tagline: "Casual Greek Dining",
         description: "<div>At Avli Winnetka, dinner feels more like stepping into a friend’s home than heading out to a restaurant. You’re greeted with warmth, poured a glass of wine, and invited to settle in and enjoy yourself. Chef Jorge Angulo keeps that spirit at the center of our menu, with shareable mezes, saganaki that arrives with a crackle and flame, and Greek flavors that feel both comforting and fresh.</div><div>A restaurant bar and lounge with warm lighting, wooden furniture, white table settings, and potted plants, with a blurred figure of a person preparing a drink at the bar.</div><div><span style=\"-webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%;\">The space is lively yet relaxed, whether you’re on the patio, tucked in a dining room, or lingering a little longer at the bar. It’s all about good food, good company, and the kind of hospitality that makes you feel like you belong. Around here, casual Greek dining isn’t just about the meal, it’s about the moments shared at the table.</span><span style=\"-webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%;\">&nbsp;</span><br></div><div><br></div><h3><u>About Avli</u></h3><div><p><b>Our Core Mission</b></p><div>Creative Greek restaurants in Chicago &amp; Milwaukee where tradition meets&nbsp; contemporary elegance and guests experience our core philosophies of Philoxenia (hospitality), Kefi (joy), and Meraki (passion).&nbsp;</div><div><br></div><div>We welcome you in to live and enjoy life through our classic and contemporary Greek dishes, lively beverage program,&nbsp; and an ambiance that reflects life in Greece.</div><div><br></div><p><b>A Quick History Lesson</b></p><div>Louie Alexakis, the managing partner of Avli–founded in 2009 in Winnetka, grew up in the hospitality industry working for his parents, who fun fact–owned a chain of hot dog stands in the Chicago Park District for over 50 years. After decades of travel and finding success at Avli Winnetka, Louie teamed up with partner and Chicago sportscaster Lou Canellis to bring contemporary Greek cuisine to Chicago with the opening of Avli Taverna in 2018.&nbsp;</div><div><br></div><div>Four years, three Chicago concepts, and one Milwaukee restaurant later, the group is excited to continue expanding their vision of contemporary Greek.</div></div>",
@@ -934,10 +934,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="75"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="814a6148-6afb-4d68-ab06-917d6ff5d06f"]');
         if (!starButton) return;
 
-        const listingId = String('75');
+        const listingId = String('814a6148-6afb-4d68-ab06-917d6ff5d06f');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -959,9 +959,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="75"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="814a6148-6afb-4d68-ab06-917d6ff5d06f"]');
         if (!starButton) return;
-        const listingId = String('75');
+        const listingId = String('814a6148-6afb-4d68-ab06-917d6ff5d06f');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -1009,7 +1009,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Avli Estiatorio';
         const listingUrl = 'https://thegreekdirectory.org/listing/avli-estiatorio';
-        const listingId = '75';
+        const listingId = '814a6148-6afb-4d68-ab06-917d6ff5d06f';
         const hoursData = {"friday":"11:00-22:00","monday":"11:00-21:00","sunday":"10:30-21:00","tuesday":"11:00-21:00","saturday":"10:30-22:00","thursday":"11:00-21:00","wednesday":"11:00-21:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/1f53ca93-6103-4d5e-b816-4f82a4fd1700/public"];

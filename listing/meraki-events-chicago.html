@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "5"
+                    "value": "84b68290-e174-4951-bea2-8d193fa4733d"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80') center/cover;" role="img" aria-label="Meraki Events Chicago in Niles, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="5" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="84b68290-e174-4951-bea2-8d193fa4733d" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -770,7 +770,7 @@ We provide for each of our clients a courteous and professional environment from
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '5',
+        id: '84b68290-e174-4951-bea2-8d193fa4733d',
         business_name: "Meraki Events Chicago",
         tagline: "Wedding planning service in Niles, IL.",
         description: "At Meraki Event Designs &amp; Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.\nWe provide for each of our clients a courteous and professional environment from set up to service breakdown.&nbsp;<div>Meraki Event Designs &amp; Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs &amp; Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.</div>",
@@ -816,10 +816,10 @@ We provide for each of our clients a courteous and professional environment from
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="5"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="84b68290-e174-4951-bea2-8d193fa4733d"]');
         if (!starButton) return;
 
-        const listingId = String('5');
+        const listingId = String('84b68290-e174-4951-bea2-8d193fa4733d');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -841,9 +841,9 @@ We provide for each of our clients a courteous and professional environment from
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="5"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="84b68290-e174-4951-bea2-8d193fa4733d"]');
         if (!starButton) return;
-        const listingId = String('5');
+        const listingId = String('84b68290-e174-4951-bea2-8d193fa4733d');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -891,7 +891,7 @@ We provide for each of our clients a courteous and professional environment from
         const totalSlides = 1;
         const businessName = 'Meraki Events Chicago';
         const listingUrl = 'https://thegreekdirectory.org/listing/meraki-events-chicago';
-        const listingId = '5';
+        const listingId = '84b68290-e174-4951-bea2-8d193fa4733d';
         const hoursData = {"friday":null,"monday":null,"sunday":null,"tuesday":null,"saturday":null,"thursday":null,"wednesday":null};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80"];

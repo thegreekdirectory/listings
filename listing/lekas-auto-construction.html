@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "6"
+                    "value": "cc1f6412-73a0-4e8d-a910-bc92840ccf55"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80') center/cover;" role="img" aria-label="Lekas Auto Construction in Glenview, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="6" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="cc1f6412-73a0-4e8d-a910-bc92840ccf55" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -772,7 +772,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '6',
+        id: 'cc1f6412-73a0-4e8d-a910-bc92840ccf55',
         business_name: "Lekas Auto Construction",
         tagline: "Auto body shop offering repairs and installations, including mirrors.",
         description: "Lekas Auto Construction in Glenview, IL comes highly recommended for its reliable and quality car repair services. The body shop is known for its expertise in collision repair and full restore/rebuild services. Whether it's a minor bumper fix or a major hood repair, Lekas Auto Construction is trusted by locals for their auto body needs. The shop's reputation for reliability and quality workmanship makes it a top choice for those seeking a dependable body shop. Remember, it's not about finding the cheapest option, but rather a place that will provide excellent service and ensure your car is safely back on the road.",
@@ -818,10 +818,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="6"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="cc1f6412-73a0-4e8d-a910-bc92840ccf55"]');
         if (!starButton) return;
 
-        const listingId = String('6');
+        const listingId = String('cc1f6412-73a0-4e8d-a910-bc92840ccf55');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -843,9 +843,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="6"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="cc1f6412-73a0-4e8d-a910-bc92840ccf55"]');
         if (!starButton) return;
-        const listingId = String('6');
+        const listingId = String('cc1f6412-73a0-4e8d-a910-bc92840ccf55');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -893,7 +893,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Lekas Auto Construction';
         const listingUrl = 'https://thegreekdirectory.org/listing/lekas-auto-construction';
-        const listingId = '6';
+        const listingId = 'cc1f6412-73a0-4e8d-a910-bc92840ccf55';
         const hoursData = {"friday":"07:30-18:00","monday":"07:30-18:00","sunday":"Closed","tuesday":"07:30-18:00","saturday":"08:00-13:00","thursday":"07:30-18:00","wednesday":"07:30-18:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"];

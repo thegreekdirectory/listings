@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "56"
+                    "value": "50411fa4-f4ec-4800-b77c-471f40807409"
                 }
             },
             {
@@ -534,7 +534,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/2ca20657-e2c6-4ff4-53b3-5d188d577f00/public') center/cover;" role="img" aria-label="Psistaria Greek Taverna in Lincolnwood, IL"></div>
                 </div>
                 
-                <button class="star-button" type="button" data-listing-id="56" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="50411fa4-f4ec-4800-b77c-471f40807409" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -807,7 +807,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '56',
+        id: '50411fa4-f4ec-4800-b77c-471f40807409',
         business_name: "Psistaria Greek Taverna",
         tagline: "Traditional Greek Cuisine in Chicago",
         description: "<p style=\"font-size: 16px; margin-bottom: 1rem; caret-color: rgb(120, 120, 120); color: rgb(120, 120, 120); font-family: Manrope, sans-serif; -webkit-tap-highlight-color: rgba(22, 28, 38, 0); -webkit-text-size-adjust: 100%;\">Started by the Bournas family in 2005 with Chef George who creates an authentic menu with local fresh ingredients featuring traditional Greek cuisine.</p><p style=\"font-size: 16px; margin-bottom: 1rem; caret-color: rgb(120, 120, 120); color: rgb(120, 120, 120); font-family: Manrope, sans-serif; -webkit-tap-highlight-color: rgba(22, 28, 38, 0); -webkit-text-size-adjust: 100%;\">At Psistaria Greek Taverna, we invite you to embark on a sensory journey through Greece without ever leaving your table. Our dine-in experience is a celebration of tradition and taste, where we merge the warmth of Greek hospitality with the tantalizing flavors of the Mediterranean.</p><p style=\"font-size: 16px; margin-bottom: 1rem; caret-color: rgb(120, 120, 120); color: rgb(120, 120, 120); font-family: Manrope, sans-serif; -webkit-tap-highlight-color: rgba(22, 28, 38, 0); -webkit-text-size-adjust: 100%;\">Step into our inviting restaurant, where the charming ambiance sets the stage for an extraordinary dining adventure. The moment you cross our threshold, you’re greeted with the aroma of authentic Greek dishes prepared with care and precision. Our commitment to quality is unwavering, as we source local, fresh ingredients to create a menu that pays homage to Greece’s rich culinary heritage.</p>",
@@ -853,10 +853,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="56"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="50411fa4-f4ec-4800-b77c-471f40807409"]');
         if (!starButton) return;
 
-        const listingId = String('56');
+        const listingId = String('50411fa4-f4ec-4800-b77c-471f40807409');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -878,9 +878,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="56"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="50411fa4-f4ec-4800-b77c-471f40807409"]');
         if (!starButton) return;
-        const listingId = String('56');
+        const listingId = String('50411fa4-f4ec-4800-b77c-471f40807409');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -928,7 +928,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 1;
         const businessName = 'Psistaria Greek Taverna';
         const listingUrl = 'https://thegreekdirectory.org/listing/psistaria-greek-taverna';
-        const listingId = '56';
+        const listingId = '50411fa4-f4ec-4800-b77c-471f40807409';
         const hoursData = {"friday":"11:00-22:00","monday":"Closed","sunday":"11:00-21:00","tuesday":"11:00-21:00","saturday":"11:00-22:00","thursday":"11:00-21:00","wednesday":"11:00-21:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/2ca20657-e2c6-4ff4-53b3-5d188d577f00/public"];

@@ -129,7 +129,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "identifier": {
                     "@type": "PropertyValue",
                     "propertyID": "TGD Listing ID",
-                    "value": "2"
+                    "value": "462d94f3-a1fc-45bc-8b5c-b1a35bdaae05"
                 }
             },
             {
@@ -538,7 +538,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             <button class="carousel-nav carousel-next" onclick="nextSlide()">❯</button>
             <div class="carousel-dots"><span class="carousel-dot active" onclick="goToSlide(0)"></span><span class="carousel-dot " onclick="goToSlide(1)"></span><span class="carousel-dot " onclick="goToSlide(2)"></span><span class="carousel-dot " onclick="goToSlide(3)"></span></div>
         
-                <button class="star-button" type="button" data-listing-id="2" onclick="toggleListingStar(event)" aria-label="Star listing">
+                <button class="star-button" type="button" data-listing-id="462d94f3-a1fc-45bc-8b5c-b1a35bdaae05" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
                 <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
@@ -567,7 +567,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                                     Food &amp; Hospitality
                                 </span>
                                 <div class="subcategories-display" id="subcategoriesDisplay">
-                                    <span class="subcategory-tag">Restaurant</span><span class="subcategory-tag">Catering Service</span><span class="subcategory-tag">Lunch</span>
+                                    <span class="subcategory-tag">Restaurant</span><span class="subcategory-tag">Catering Service</span><span class="subcategory-tag">Dinner</span><span class="subcategory-tag">Lunch</span>
                                 </div>
                                 <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
                                     <span class="badge badge-closed" id="openClosedBadge">CLOSED</span>
@@ -701,7 +701,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <h3 class="font-semibold text-gray-900 mb-2">Hours
                     <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
                         <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
-                        <span class="hours-tooltip">Last updated at 2026-04-01 21:57 UTC by TGD Admin.</span>
+                        <span class="hours-tooltip">Last updated at 2026-04-18 05:59 UTC by TGD Admin.</span>
                     </span>
                 </h3>
                 <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>Closed</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>10:30 AM - 8:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>11:00 AM - 8:00 PM</span></div></div>
@@ -811,7 +811,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Store current listing data for starring
     window.currentListingData = {
-        id: '2',
+        id: '462d94f3-a1fc-45bc-8b5c-b1a35bdaae05',
         business_name: "Eagle Restaurant",
         tagline: "Family-owned dining staple in Downers Grove since 1981.",
         description: "<h3>Family Owned &amp; Operated</h3><div>Established in 1981, we are famous for our delicious American-style cuisine located in Downers Grove, IL.&nbsp; Visit Eagle Restaurant today and enjoy our daily specials/value meals always destined to please not only your appetite, but your wallet too! Enjoy lunch &amp; dinner in our cozy dining room or outdoor patio. We also accommodate catering packages for office parties &amp; family gatherings.</div><div><br></div><h3>History of Eagle</h3><div>It all started back in 1981 when Lee Zografos, founder &amp; owner, realized that potential of an abandoned gas station on the corner of Maple &amp; Fairview in Downers Grove. He envisioned a Dine in / Carryout family operated restaurant that would be a neighborhood staple for generations to come.&nbsp; So in the fall of 1981, Lee, with his brother-in-law Tassos opened Eagle Restaurant.&nbsp; Over the years, with Lee mainly running his other restaurant, Town Kitchen in Clarendon Hills, both of their sons helped out working in the restaurant. In 2005, when Tassos retired, Lee's son John took over his partnership.</div>",
@@ -857,10 +857,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="2"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="462d94f3-a1fc-45bc-8b5c-b1a35bdaae05"]');
         if (!starButton) return;
 
-        const listingId = String('2');
+        const listingId = String('462d94f3-a1fc-45bc-8b5c-b1a35bdaae05');
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -882,9 +882,9 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="2"]');
+        const starButton = document.querySelector('.star-button[data-listing-id="462d94f3-a1fc-45bc-8b5c-b1a35bdaae05"]');
         if (!starButton) return;
-        const listingId = String('2');
+        const listingId = String('462d94f3-a1fc-45bc-8b5c-b1a35bdaae05');
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -932,7 +932,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const totalSlides = 4;
         const businessName = 'Eagle Restaurant';
         const listingUrl = 'https://thegreekdirectory.org/listing/eagle-restaurant';
-        const listingId = '2';
+        const listingId = '462d94f3-a1fc-45bc-8b5c-b1a35bdaae05';
         const hoursData = {"friday":"10:30-20:00","monday":"Closed","sunday":"11:00-20:00","tuesday":"10:30-20:00","saturday":"10:30-20:00","thursday":"10:30-20:00","wednesday":"10:30-20:00"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/80a363d0-42af-4a72-7aa9-20f27a292c00/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/6f76e114-21e8-4e4a-54ca-005613f68300/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/90a00761-ed25-40a8-3a71-0ab4b7768a00/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/a2ed84d7-adee-41a4-79c9-106935cfb100/public"];
