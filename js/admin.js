@@ -3385,9 +3385,9 @@ function generateTemplateReplacements(listing) {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    // Address section - only show if has street address with number
+    // Address section - only show if listing has any address value
     let addressSection = '';
-    const hasStreetAddress = listing.address && /\d/.test(listing.address);
+    const hasStreetAddress = typeof listing.address === 'string' && listing.address.trim().length > 0;
     
     if (hasStreetAddress || (listing.city && listing.state)) {
         const addressParts = [];
@@ -3549,7 +3549,7 @@ function generateTemplateReplacements(listing) {
         websiteButtonMobile = `<a href="${listing.website}" target="_blank" class="mobile-cta-button hover-bounce" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>`;
     }
     
-    // Only show directions if has street address with number
+    // Only show directions if listing has an address string
     let directionsButton = '';
     let directionsButtonMobile = '';
     if (hasStreetAddress && listing.city) {
@@ -3707,13 +3707,14 @@ function generateTemplateReplacementsPart2(listing) {
     
     const socialMediaSection = generateSocialMediaSection(listing);
     const reviewSection = generateReviewSection(listing);
+    const socialMediaPreBreak = socialMediaSection ? '<br>' : '';
     const socialBreak = socialMediaSection && reviewSection ? '<br>' : '';
     const reviewBreak = (socialMediaSection || reviewSection) ? '<br>' : '';
     
-    // Only show map if has street address with number
+    // Only show map if listing has an address string
     let mapSection = '';
-    const hasStreetAddress = listing.address && /\d/.test(listing.address);
-    if (hasStreetAddress || (listing.city && listing.state)) {
+    const hasStreetAddress = typeof listing.address === 'string' && listing.address.trim().length > 0;
+    if (hasStreetAddress) {
         mapSection = `
             <div id="locationSection" class="location-section">
                 <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
@@ -3800,7 +3801,7 @@ function generateTemplateReplacementsPart2(listing) {
                             : '';
 
                         return \`
-                            <a href="\${listingUrl}" class="related-listing-card block bg-white p-3 hover:shadow-lg transition-shadow">
+                            <a href="\${listingUrl}" class="related-listing-card related-listing-hover block bg-white p-3">
                                 <div class="flex items-start gap-2.5">
                                     \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">\` : ''}
                                     <div class="flex-1 min-w-0">
@@ -3841,7 +3842,7 @@ function generateTemplateReplacementsPart2(listing) {
     }
     
     const hoursSchema = generateHoursSchema(listing);
-    const hasStreetAddress2 = listing.address && /\d/.test(listing.address);
+    const hasStreetAddress2 = typeof listing.address === 'string' && listing.address.trim().length > 0;
     const coordinates = (hasStreetAddress2 && listing.coordinates) ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
     const fullAddress = hasStreetAddress2 ? [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ') : '';
     const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
@@ -3854,6 +3855,7 @@ function generateTemplateReplacementsPart2(listing) {
     return {
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
+        'SOCIAL_MEDIA_PRE_BREAK': socialMediaPreBreak,
         'SOCIAL_BREAK': socialBreak,
         'REVIEW_SECTION': reviewSection,
         'REVIEW_BREAK': reviewBreak,

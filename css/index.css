@@ -54,7 +54,6 @@ button,
 .mobile-cta-button,
 .load-more-btn,
 .listing-card,
-.related-listing-card,
 .bg-white.rounded-lg.shadow,
 .share-button,
 .social-icon {
@@ -66,11 +65,20 @@ button:hover,
 .mobile-cta-button:hover,
 .load-more-btn:hover,
 .listing-card:hover,
-.related-listing-card:hover,
 .bg-white.rounded-lg.shadow:hover,
 .share-button:hover,
 .social-icon:hover {
     transform: scale(1.1);
+}
+
+.related-listing-hover {
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.related-listing-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(4, 80, 147, 0.16);
+    border-color: #0b67ba;
 }
 
 button.hover-bounce:active,

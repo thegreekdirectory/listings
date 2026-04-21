@@ -301,6 +301,19 @@ function getCookie(name) {
     return '';
 }
 
+const LOCATION_PERMISSION_COOKIE = 'tgd_location_permission';
+
+function getStoredLocationPermission() {
+    const stored = getCookie(LOCATION_PERMISSION_COOKIE);
+    if (stored === 'true') return true;
+    if (stored === 'false') return false;
+    return null;
+}
+
+function storeLocationPermission(granted) {
+    setCookie(LOCATION_PERMISSION_COOKIE, granted ? 'true' : 'false', 365);
+}
+
 function isIOSWebApp() {
     return ('standalone' in window.navigator) && window.navigator.standalone;
 }
@@ -394,6 +407,10 @@ document.addEventListener('DOMContentLoaded', () => {
     checkFilterPosition();
     handleListingsHashRoute();
     window.addEventListener('hashchange', handleListingsHashRoute);
+
+    if (getStoredLocationPermission() === true) {
+        requestPreciseLocation('auto-on-load');
+    }
 });
 
 
@@ -678,6 +695,7 @@ function requestPreciseLocation(trigger = 'user-action') {
     }
     
     const onSuccess = (position) => {
+        storeLocationPermission(true);
         userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
         console.log(`Precise location acquired via ${trigger}:`, userLocation);
         if (!viewingStarredOnly) applyFilters();
@@ -701,6 +719,7 @@ function requestPreciseLocation(trigger = 'user-action') {
         }
         if (error.code === 1) {
             console.log('[L201] Geolocation permission denied');
+            storeLocationPermission(false);
         } else if (error.code === 3) {
             console.log('[L203] Geolocation timeout');
         } else {

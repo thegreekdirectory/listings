@@ -601,6 +601,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
                     <div class="social-map-grid" id="socialSection">
                 <div>
+                    {{SOCIAL_MEDIA_PRE_BREAK}}
                     {{SOCIAL_MEDIA_SECTION}}
                     {{SOCIAL_BREAK}}
                     {{REVIEW_SECTION}}
@@ -660,8 +661,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="claim-listing-section" id="claimSection">
             <div class="action-cta-row">
                 <div class="action-cta-slot">{{CLAIM_BUTTON}}</div>
-                <div class="action-cta-slot">{{SUGGEST_EDIT_BUTTON}}</div>
                 <div class="action-cta-slot">{{SHARE_TRIGGER_BUTTON}}</div>
+                <div class="action-cta-slot">{{SUGGEST_EDIT_BUTTON}}</div>
             </div>
         </div>
     </div>
@@ -1242,6 +1243,27 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            const claimSection = document.getElementById('claimSection');
+            if (claimSection) {
+                const targetSelectors = [
+                    '#socialSection h2',
+                    '#ownerInfoSection .owner-info-section',
+                    '#additionalInfoSectionWrap > div',
+                    '#locationSection',
+                    '#descriptionSection'
+                ];
+                const reviewHeading = Array.from(document.querySelectorAll('#socialSection h2'))
+                    .find((heading) => heading.textContent.trim().toLowerCase() === 'reviews');
+                const target = reviewHeading
+                    ? reviewHeading.closest('div')
+                    : targetSelectors
+                        .map((selector) => document.querySelector(selector))
+                        .find((element) => element);
+                if (target && target.parentNode) {
+                    target.insertAdjacentElement('afterend', claimSection);
+                }
+            }
+
             const input = document.getElementById('shareLinkInput');
             const toggle = document.getElementById('shortenUrlToggle');
             if (toggle && input) {
@@ -1280,8 +1302,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                 if (locationSection) locationSection.classList.add('map-unavailable');
             };
 
-            if (!fullAddress || fullAddress === '') {
-                showMapFallback('Map is unavailable because this listing does not include a mappable address.');
+            const locationSection = document.getElementById('locationSection');
+            if (!locationSection) {
                 return;
             }
             
