@@ -612,6 +612,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
                     <div class="social-map-grid" id="socialSection">
                 <div>
+                    {{SOCIAL_MEDIA_PRE_BREAK}}
                     
         <div>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
@@ -842,8 +843,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="claim-listing-section" id="claimSection">
             <div class="action-cta-row">
                 <div class="action-cta-slot"><a href="mailto:contact@thegreekdirectory.org?subject=Claim%20My%20Listing%3A%20Valley%20Lodge%20Tavern%20-%20Glenview%2C%20IL" target="_blank" rel="noopener noreferrer" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a></div>
-                <div class="action-cta-slot"><a href="/suggest-edit?id=f98344ac-97e2-4c78-9002-d71d74fc555c" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a></div>
                 <div class="action-cta-slot"><button type="button" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button></div>
+                <div class="action-cta-slot"><a href="/suggest-edit?id=f98344ac-97e2-4c78-9002-d71d74fc555c" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a></div>
             </div>
         </div>
     </div>
@@ -1424,6 +1425,27 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            const claimSection = document.getElementById('claimSection');
+            if (claimSection) {
+                const targetSelectors = [
+                    '#socialSection h2',
+                    '#ownerInfoSection .owner-info-section',
+                    '#additionalInfoSectionWrap > div',
+                    '#locationSection',
+                    '#descriptionSection'
+                ];
+                const reviewHeading = Array.from(document.querySelectorAll('#socialSection h2'))
+                    .find((heading) => heading.textContent.trim().toLowerCase() === 'reviews');
+                const target = reviewHeading
+                    ? reviewHeading.closest('div')
+                    : targetSelectors
+                        .map((selector) => document.querySelector(selector))
+                        .find((element) => element);
+                if (target && target.parentNode) {
+                    target.insertAdjacentElement('afterend', claimSection);
+                }
+            }
+
             const input = document.getElementById('shareLinkInput');
             const toggle = document.getElementById('shortenUrlToggle');
             if (toggle && input) {
@@ -1462,8 +1484,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                 if (locationSection) locationSection.classList.add('map-unavailable');
             };
 
-            if (!fullAddress || fullAddress === '') {
-                showMapFallback('Map is unavailable because this listing does not include a mappable address.');
+            const locationSection = document.getElementById('locationSection');
+            if (!locationSection) {
                 return;
             }
             
