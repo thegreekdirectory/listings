@@ -398,8 +398,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         .action-cta-row { display: flex; gap: 0.5rem; }
         .action-cta-slot { flex: 1 1 0; display: flex; }
         .action-cta-slot > * { width: 100%; min-height: 44px; }
+        .action-cta-slot-wide { max-width: 620px; margin: 0 auto; }
         @media (max-width: 767px) {
             .action-cta-row { flex-direction: column; }
+            .action-cta-slot-wide { max-width: none; margin: 0; }
         }
         .pricing-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:#eff6ff; color:#045093; font-weight:700; font-size:12px; }
         .badge-coming-soon { background: #f97316; color: #fff; }
@@ -632,7 +634,6 @@ or distribution of this code can result in legal action to the fullest extent pe
 
                     <div class="social-map-grid" id="socialSection">
                 <div>
-                    {{SOCIAL_MEDIA_PRE_BREAK}}
                     
         <div>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
@@ -781,9 +782,13 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         <div class="claim-listing-section" id="claimSection">
             <div class="action-cta-row">
-                <div class="action-cta-slot"></div>
-                <div class="action-cta-slot"><button type="button" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button></div>
                 <div class="action-cta-slot"><a href="/suggest-edit?id=a2f11f6b-a2a9-460d-807d-4ff7fd029bd4" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Suggest Edit</a></div>
+                <div class="action-cta-slot"></div>
+            </div>
+        </div>
+        <div class="claim-listing-section" id="shareBottomSection">
+            <div class="action-cta-row">
+                <div class="action-cta-slot action-cta-slot-wide"><button type="button" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button></div>
             </div>
         </div>
     </div>
@@ -1425,6 +1430,11 @@ or distribution of this code can result in legal action to the fullest extent pe
 
             const locationSection = document.getElementById('locationSection');
             if (!locationSection) {
+                return;
+            }
+
+            if (!fullAddress || fullAddress === '') {
+                locationSection.remove();
                 return;
             }
             
