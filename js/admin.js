@@ -3114,6 +3114,7 @@ function generateSocialMediaSection(listing) {
     
     return `
         <div>
+            <br>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
             <div class="flex flex-wrap gap-2">
                 ${socialIcons}
@@ -3707,7 +3708,6 @@ function generateTemplateReplacementsPart2(listing) {
     
     const socialMediaSection = generateSocialMediaSection(listing);
     const reviewSection = generateReviewSection(listing);
-    const socialMediaPreBreak = socialMediaSection ? '<br>' : '';
     const socialBreak = socialMediaSection && reviewSection ? '<br>' : '';
     const reviewBreak = (socialMediaSection || reviewSection) ? '<br>' : '';
     
@@ -3801,7 +3801,7 @@ function generateTemplateReplacementsPart2(listing) {
                             : '';
 
                         return \`
-                            <a href="\${listingUrl}" class="related-listing-card related-listing-hover block bg-white p-3">
+                            <a href="\${listingUrl}" class="related-listing-card block bg-white p-3 hover:shadow-lg transition-shadow">
                                 <div class="flex items-start gap-2.5">
                                     \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">\` : ''}
                                     <div class="flex-1 min-w-0">
@@ -3855,7 +3855,6 @@ function generateTemplateReplacementsPart2(listing) {
     return {
         'OWNER_INFO_SECTION': ownerInfoSection,
         'SOCIAL_MEDIA_SECTION': socialMediaSection,
-        'SOCIAL_MEDIA_PRE_BREAK': socialMediaPreBreak,
         'SOCIAL_BREAK': socialBreak,
         'REVIEW_SECTION': reviewSection,
         'REVIEW_BREAK': reviewBreak,

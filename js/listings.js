@@ -314,6 +314,24 @@ function storeLocationPermission(granted) {
     setCookie(LOCATION_PERMISSION_COOKIE, granted ? 'true' : 'false', 365);
 }
 
+async function syncLocationPermissionFromBrowser() {
+    if (!navigator.permissions || typeof navigator.permissions.query !== 'function') return null;
+    try {
+        const status = await navigator.permissions.query({ name: 'geolocation' });
+        if (status.state === 'granted') {
+            storeLocationPermission(true);
+            return true;
+        }
+        if (status.state === 'denied') {
+            storeLocationPermission(false);
+            return false;
+        }
+    } catch (_) {
+        return null;
+    }
+    return null;
+}
+
 function isIOSWebApp() {
     return ('standalone' in window.navigator) && window.navigator.standalone;
 }
@@ -387,7 +405,7 @@ function extractSubcategoriesFromListings(listings) {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (window.TGDLanguage && typeof window.TGDLanguage.applyStoredLanguage === 'function') {
         window.TGDLanguage.applyStoredLanguage();
     }
@@ -408,7 +426,13 @@ document.addEventListener('DOMContentLoaded', () => {
     handleListingsHashRoute();
     window.addEventListener('hashchange', handleListingsHashRoute);
 
-    if (getStoredLocationPermission() === true) {
+    let shouldAutoRequest = getStoredLocationPermission() === true;
+    if (!shouldAutoRequest) {
+        const browserPermission = await syncLocationPermissionFromBrowser();
+        shouldAutoRequest = browserPermission === true || getStoredLocationPermission() === true;
+    }
+
+    if (shouldAutoRequest) {
         requestPreciseLocation('auto-on-load');
     }
 });
