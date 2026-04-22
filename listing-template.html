@@ -398,8 +398,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         .action-cta-row { display: flex; gap: 0.5rem; }
         .action-cta-slot { flex: 1 1 0; display: flex; }
         .action-cta-slot > * { width: 100%; min-height: 44px; }
+        .action-cta-slot-wide { max-width: 620px; margin: 0 auto; }
         @media (max-width: 767px) {
             .action-cta-row { flex-direction: column; }
+            .action-cta-slot-wide { max-width: none; margin: 0; }
         }
         .pricing-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:#eff6ff; color:#045093; font-weight:700; font-size:12px; }
         .badge-coming-soon { background: #f97316; color: #fff; }
@@ -601,7 +603,6 @@ or distribution of this code can result in legal action to the fullest extent pe
 
                     <div class="social-map-grid" id="socialSection">
                 <div>
-                    {{SOCIAL_MEDIA_PRE_BREAK}}
                     {{SOCIAL_MEDIA_SECTION}}
                     {{SOCIAL_BREAK}}
                     {{REVIEW_SECTION}}
@@ -660,9 +661,13 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         <div class="claim-listing-section" id="claimSection">
             <div class="action-cta-row">
-                <div class="action-cta-slot">{{CLAIM_BUTTON}}</div>
-                <div class="action-cta-slot">{{SHARE_TRIGGER_BUTTON}}</div>
                 <div class="action-cta-slot">{{SUGGEST_EDIT_BUTTON}}</div>
+                <div class="action-cta-slot">{{CLAIM_BUTTON}}</div>
+            </div>
+        </div>
+        <div class="claim-listing-section" id="shareBottomSection">
+            <div class="action-cta-row">
+                <div class="action-cta-slot action-cta-slot-wide">{{SHARE_TRIGGER_BUTTON}}</div>
             </div>
         </div>
     </div>
@@ -1304,6 +1309,11 @@ or distribution of this code can result in legal action to the fullest extent pe
 
             const locationSection = document.getElementById('locationSection');
             if (!locationSection) {
+                return;
+            }
+
+            if (!fullAddress || fullAddress === '') {
+                locationSection.remove();
                 return;
             }
             
