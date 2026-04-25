@@ -302,16 +302,31 @@ function getCookie(name) {
 }
 
 const LOCATION_PERMISSION_COOKIE = 'tgd_location_permission';
+const LOCATION_PERMISSION_STORAGE_KEY = 'tgd_location_permission';
 
 function getStoredLocationPermission() {
     const stored = getCookie(LOCATION_PERMISSION_COOKIE);
     if (stored === 'true') return true;
     if (stored === 'false') return false;
+
+    try {
+        const localStored = localStorage.getItem(LOCATION_PERMISSION_STORAGE_KEY);
+        if (localStored === 'true') return true;
+        if (localStored === 'false') return false;
+    } catch (_) {
+        // no-op
+    }
+
     return null;
 }
 
 function storeLocationPermission(granted) {
     setCookie(LOCATION_PERMISSION_COOKIE, granted ? 'true' : 'false', 365);
+    try {
+        localStorage.setItem(LOCATION_PERMISSION_STORAGE_KEY, granted ? 'true' : 'false');
+    } catch (_) {
+        // no-op
+    }
 }
 
 async function syncLocationPermissionFromBrowser() {
@@ -427,8 +442,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('hashchange', handleListingsHashRoute);
 
     let shouldAutoRequest = getStoredLocationPermission() === true;
+    const browserPermission = await syncLocationPermissionFromBrowser();
     if (!shouldAutoRequest) {
-        const browserPermission = await syncLocationPermissionFromBrowser();
         shouldAutoRequest = browserPermission === true || getStoredLocationPermission() === true;
     }
 
