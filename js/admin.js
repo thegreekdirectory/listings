@@ -3168,6 +3168,7 @@ function generateReviewSection(listing) {
     
     return `
         <div>
+            <br>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
             <div class="flex flex-wrap gap-2">
                 ${reviewLinks}
@@ -3708,8 +3709,8 @@ function generateTemplateReplacementsPart2(listing) {
     
     const socialMediaSection = generateSocialMediaSection(listing);
     const reviewSection = generateReviewSection(listing);
-    const socialBreak = socialMediaSection && reviewSection ? '<br>' : '';
-    const reviewBreak = (socialMediaSection || reviewSection) ? '<br>' : '';
+    const socialBreak = '';
+    const reviewBreak = '';
     
     // Only show map if listing has an address string
     let mapSection = '';
@@ -3801,7 +3802,7 @@ function generateTemplateReplacementsPart2(listing) {
                             : '';
 
                         return \`
-                            <a href="\${listingUrl}" class="related-listing-card block bg-white p-3 hover:shadow-lg transition-shadow">
+                            <a href="\${listingUrl}" class="related-listing-card block bg-white p-3">
                                 <div class="flex items-start gap-2.5">
                                     \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">\` : ''}
                                     <div class="flex-1 min-w-0">
