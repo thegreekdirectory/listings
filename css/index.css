@@ -49,6 +49,10 @@ body {
     transform: scale(1.1);
 }
 
+.action-cta-btn.hover-bounce:hover {
+    transform: scale(1.04);
+}
+
 button,
 [role="button"],
 .mobile-cta-button,
