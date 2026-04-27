@@ -395,7 +395,6 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         .related-listings-section { margin-top: 2rem; margin-bottom: 2rem; }
         .related-listing-card { border: 2px solid #045093; border-radius: 10px; }
-        .related-listing-card:hover { transform: scale(1.03); }
         .claim-listing-section { margin-top: 1.5rem; }
 
         .action-cta-row { display: flex; gap: 0.5rem; }
@@ -795,7 +794,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <label id="shareCopyLabel" class="block text-sm font-medium text-gray-700 mb-2">Copy link</label>
                 <div class="flex gap-2">
                     <input id="shareLinkInput" readonly class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" value="https://thegreekdirectory.org/listing/eagle-restaurant">
-                    <button id="copyShareLinkBtn" type="button" class="px-4 py-2 rounded-lg text-white font-semibold hover-bounce" style="background:#045093;" onclick="copyShareLink()">Copy Link</button>
+                    <a id="copyShareLinkBtn" type="button" class="px-4 py-2 rounded-lg text-white font-semibold hover-bounce" style="background:#045093;" onclick="copyShareLink()">Copy Link</a>
                 </div>
             </div>
             <label class="flex items-center gap-2 text-sm text-gray-700">
