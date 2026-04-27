@@ -789,7 +789,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                             return phone;
                         };
 
-                                        <div class="flex flex-wrap gap-1 mb-1 ml-1">${getHoursBadge(l.hours)}${getTierBadge(l.tier)}${getComingSoonBadge(l.coming_soon)}</div>
+                                        <div class="flex flex-wrap gap-1 mb-1 ml-3">${getHoursBadge(l.hours)}${getTierBadge(l.tier)}${getComingSoonBadge(l.coming_soon)}</div>
                             if (!hours || typeof hours !== 'object') return '';
                             const dayKeys = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
                             const now = new Date();
