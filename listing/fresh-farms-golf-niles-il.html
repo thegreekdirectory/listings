@@ -382,6 +382,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         #shareModal .share-modal-panel {
             transform: scale(0.96);
             transition: transform 0.2s ease;
+            border-radius: 1rem;
+            overflow: hidden;
         }
         #shareModal.active {
             opacity: 1;
@@ -1312,8 +1314,11 @@ or distribution of this code can result in legal action to the fullest extent pe
                 carousel.dataset.current = index;
             }
 
-            function nextSlide() {
-                const carousel = document.getElementById('photoCarousel');
+            if (event.key !== 'Escape') return;
+            closeGallery();
+            const shareModal = document.getElementById('shareModal');
+            if (shareModal && shareModal.classList.contains('active')) {
+                closeShareModal();
                 if (!carousel) return;
                 const current = parseInt(carousel.dataset.current || 0);
                 goToSlide((current + 1) % totalSlides);
