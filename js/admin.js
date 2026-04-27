@@ -3114,6 +3114,7 @@ function generateSocialMediaSection(listing) {
     
     return `
         <div>
+            <br>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
             <div class="flex flex-wrap gap-2">
                 ${socialIcons}
@@ -3167,6 +3168,7 @@ function generateReviewSection(listing) {
     
     return `
         <div>
+            <br>
             <h2 class="text-xl font-bold text-gray-900 mb-3">Reviews</h2>
             <div class="flex flex-wrap gap-2">
                 ${reviewLinks}
@@ -3385,9 +3387,9 @@ function generateTemplateReplacements(listing) {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    // Address section - only show if has street address with number
+    // Address section - only show if listing has any address value
     let addressSection = '';
-    const hasStreetAddress = listing.address && /\d/.test(listing.address);
+    const hasStreetAddress = typeof listing.address === 'string' && listing.address.trim().length > 0;
     
     if (hasStreetAddress || (listing.city && listing.state)) {
         const addressParts = [];
@@ -3549,7 +3551,7 @@ function generateTemplateReplacements(listing) {
         websiteButtonMobile = `<a href="${listing.website}" target="_blank" class="mobile-cta-button hover-bounce" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>`;
     }
     
-    // Only show directions if has street address with number
+    // Only show directions if listing has an address string
     let directionsButton = '';
     let directionsButtonMobile = '';
     if (hasStreetAddress && listing.city) {
@@ -3707,13 +3709,13 @@ function generateTemplateReplacementsPart2(listing) {
     
     const socialMediaSection = generateSocialMediaSection(listing);
     const reviewSection = generateReviewSection(listing);
-    const socialBreak = socialMediaSection && reviewSection ? '<br>' : '';
-    const reviewBreak = (socialMediaSection || reviewSection) ? '<br>' : '';
+    const socialBreak = '';
+    const reviewBreak = '';
     
-    // Only show map if has street address with number
+    // Only show map if listing has an address string
     let mapSection = '';
-    const hasStreetAddress = listing.address && /\d/.test(listing.address);
-    if (hasStreetAddress || (listing.city && listing.state)) {
+    const hasStreetAddress = typeof listing.address === 'string' && listing.address.trim().length > 0;
+    if (hasStreetAddress) {
         mapSection = `
             <div id="locationSection" class="location-section">
                 <h2 class="text-xl font-bold text-gray-900 mb-3">Location</h2>
@@ -3800,7 +3802,7 @@ function generateTemplateReplacementsPart2(listing) {
                             : '';
 
                         return \`
-                            <a href="\${listingUrl}" class="related-listing-card block bg-white p-3 hover:shadow-lg transition-shadow">
+                            <a href="\${listingUrl}" class="related-listing-card block bg-white p-3">
                                 <div class="flex items-start gap-2.5">
                                     \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">\` : ''}
                                     <div class="flex-1 min-w-0">
@@ -3841,7 +3843,7 @@ function generateTemplateReplacementsPart2(listing) {
     }
     
     const hoursSchema = generateHoursSchema(listing);
-    const hasStreetAddress2 = listing.address && /\d/.test(listing.address);
+    const hasStreetAddress2 = typeof listing.address === 'string' && listing.address.trim().length > 0;
     const coordinates = (hasStreetAddress2 && listing.coordinates) ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
     const fullAddress = hasStreetAddress2 ? [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ') : '';
     const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
@@ -3860,7 +3862,7 @@ function generateTemplateReplacementsPart2(listing) {
         'MAP_SECTION': mapSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
-        'SHARE_TRIGGER_BUTTON': `<button type="button" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()">Share</button>`,
+        'SHARE_TRIGGER_BUTTON': `<button type="button" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;" onclick="openShareModal()"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.6495 0.799565C18.4834 -0.72981 16.0093 0.081426 16.0093 1.99313V3.91272C12.2371 3.86807 9.65665 5.16473 7.9378 6.97554C6.10034 8.9113 5.34458 11.3314 5.02788 12.9862C4.86954 13.8135 5.41223 14.4138 5.98257 14.6211C6.52743 14.8191 7.25549 14.7343 7.74136 14.1789C9.12036 12.6027 11.7995 10.4028 16.0093 10.5464V13.0069C16.0093 14.9186 18.4834 15.7298 19.6495 14.2004L23.3933 9.29034C24.2022 8.2294 24.2022 6.7706 23.3933 5.70966L19.6495 0.799565ZM7.48201 11.6095C9.28721 10.0341 11.8785 8.55568 16.0093 8.55568H17.0207C17.5792 8.55568 18.0319 9.00103 18.0319 9.55037L18.0317 13.0069L21.7754 8.09678C22.0451 7.74313 22.0451 7.25687 21.7754 6.90322L18.0317 1.99313V4.90738C18.0317 5.4567 17.579 5.90201 17.0205 5.90201H16.0093C11.4593 5.90201 9.41596 8.33314 9.41596 8.33314C8.47524 9.32418 7.86984 10.502 7.48201 11.6095Z" fill="#FFFFFF"/><path d="M7 1.00391H4C2.34315 1.00391 1 2.34705 1 4.00391V20.0039C1 21.6608 2.34315 23.0039 4 23.0039H20C21.6569 23.0039 23 21.6608 23 20.0039V17.0039C23 16.4516 22.5523 16.0039 22 16.0039C21.4477 16.0039 21 16.4516 21 17.0039V20.0039C21 20.5562 20.5523 21.0039 20 21.0039H4C3.44772 21.0039 3 20.5562 3 20.0039V4.00391C3 3.45162 3.44772 3.00391 4 3.00391H7C7.55228 3.00391 8 2.55619 8 2.00391C8 1.45162 7.55228 1.00391 7 1.00391Z" fill="#FFFFFF"/></svg><span>Share</span></button>`,
         'SUGGEST_EDIT_BUTTON': suggestEditButton,
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,

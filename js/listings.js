@@ -301,6 +301,52 @@ function getCookie(name) {
     return '';
 }
 
+const LOCATION_PERMISSION_COOKIE = 'tgd_location_permission';
+const LOCATION_PERMISSION_STORAGE_KEY = 'tgd_location_permission';
+
+function getStoredLocationPermission() {
+    const stored = getCookie(LOCATION_PERMISSION_COOKIE);
+    if (stored === 'true') return true;
+    if (stored === 'false') return false;
+
+    try {
+        const localStored = localStorage.getItem(LOCATION_PERMISSION_STORAGE_KEY);
+        if (localStored === 'true') return true;
+        if (localStored === 'false') return false;
+    } catch (_) {
+        // no-op
+    }
+
+    return null;
+}
+
+function storeLocationPermission(granted) {
+    setCookie(LOCATION_PERMISSION_COOKIE, granted ? 'true' : 'false', 365);
+    try {
+        localStorage.setItem(LOCATION_PERMISSION_STORAGE_KEY, granted ? 'true' : 'false');
+    } catch (_) {
+        // no-op
+    }
+}
+
+async function syncLocationPermissionFromBrowser() {
+    if (!navigator.permissions || typeof navigator.permissions.query !== 'function') return null;
+    try {
+        const status = await navigator.permissions.query({ name: 'geolocation' });
+        if (status.state === 'granted') {
+            storeLocationPermission(true);
+            return true;
+        }
+        if (status.state === 'denied') {
+            storeLocationPermission(false);
+            return false;
+        }
+    } catch (_) {
+        return null;
+    }
+    return null;
+}
+
 function isIOSWebApp() {
     return ('standalone' in window.navigator) && window.navigator.standalone;
 }
@@ -374,7 +420,7 @@ function extractSubcategoriesFromListings(listings) {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (window.TGDLanguage && typeof window.TGDLanguage.applyStoredLanguage === 'function') {
         window.TGDLanguage.applyStoredLanguage();
     }
@@ -394,6 +440,16 @@ document.addEventListener('DOMContentLoaded', () => {
     checkFilterPosition();
     handleListingsHashRoute();
     window.addEventListener('hashchange', handleListingsHashRoute);
+
+    let shouldAutoRequest = getStoredLocationPermission() === true;
+    const browserPermission = await syncLocationPermissionFromBrowser();
+    if (!shouldAutoRequest) {
+        shouldAutoRequest = browserPermission === true || getStoredLocationPermission() === true;
+    }
+
+    if (shouldAutoRequest) {
+        requestPreciseLocation('auto-on-load');
+    }
 });
 
 
@@ -678,6 +734,7 @@ function requestPreciseLocation(trigger = 'user-action') {
     }
     
     const onSuccess = (position) => {
+        storeLocationPermission(true);
         userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
         console.log(`Precise location acquired via ${trigger}:`, userLocation);
         if (!viewingStarredOnly) applyFilters();
@@ -701,6 +758,7 @@ function requestPreciseLocation(trigger = 'user-action') {
         }
         if (error.code === 1) {
             console.log('[L201] Geolocation permission denied');
+            storeLocationPermission(false);
         } else if (error.code === 3) {
             console.log('[L203] Geolocation timeout');
         } else {
