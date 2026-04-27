@@ -382,6 +382,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         #shareModal .share-modal-panel {
             transform: scale(0.96);
             transition: transform 0.2s ease;
+            border-radius: 1rem;
+            overflow: hidden;
         }
         #shareModal.active {
             opacity: 1;
@@ -459,6 +461,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     #locationSection { order: 4; }
     .desktop-side-column { position: static; order: 5; margin-top: 0; }
+    #claimSection { margin-bottom: 12px; }
     #additionalInfoSectionWrap { order: 6; }
     #ownerInfoSection { order: 7; }
     .social-map-grid { order: 8; }
@@ -904,7 +907,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="bg-white rounded-2xl p-6 w-full max-w-md share-modal-panel">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-gray-900">Share</h3>
-                <button type="button" onclick="closeShareModal()" class="text-gray-500 bg-transparent border-0 shadow-none">✕</button>
+                <a onclick="closeShareModal()" style="cursor: pointer">✕</a>
             </div>
             <div id="shareModalButtons" class="flex flex-wrap gap-2 mb-5"></div>
             <div class="mb-4">
@@ -1400,8 +1403,11 @@ or distribution of this code can result in legal action to the fullest extent pe
         window.prevGallerySlide = prevGallerySlide;
 
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
-                closeGallery();
+            if (event.key !== 'Escape') return;
+            closeGallery();
+            const shareModal = document.getElementById('shareModal');
+            if (shareModal && shareModal.classList.contains('active')) {
+                closeShareModal();
             }
         });
 
