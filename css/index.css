@@ -77,6 +77,10 @@ button:hover,
     transform: scale(1.1);
 }
 
+.related-listing-card:hover {
+    transform: scale(1.03);
+}
+
 button.hover-bounce:active,
 a.hover-bounce:active {
     transform: scale(0.98);
