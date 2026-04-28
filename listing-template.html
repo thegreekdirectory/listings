@@ -676,8 +676,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         </div>
     </div>
 
-        <div id="shareModal" class="hidden fixed inset-0 z-50 items-center justify-center p-4" style="background:rgba(0,0,0,0.45);">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-md share-modal-panel">
+        <div id="shareModal" class="hidden fixed inset-0 z-50 items-center justify-center p-4" style="background:rgba(0,0,0,0.45);" onclick="closeShareModal()">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md share-modal-panel" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-gray-900">Share</h3>
                 <a onclick="closeShareModal()" style="cursor: pointer">✕</a>
