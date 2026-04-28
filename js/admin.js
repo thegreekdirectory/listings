@@ -478,6 +478,9 @@ function normalizeCustomCtaIcon(icon = '') {
 
 function getCustomCtaIconSvg(icon = '', className = 'w-5 h-5') {
     const normalized = normalizeCustomCtaIcon(icon);
+    if (normalized === 'food') {
+        return `<svg class="${className}" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><g><path d="M207.103,23.875v109.219c0,7-5.656,12.641-12.625,12.641h-3.375c-6.969,0-12.641-5.641-12.641-12.641V23.375c0-18-12.109-23.375-23.719-23.375s-23.719,5.375-23.719,23.375v109.719c0,7-5.672,12.641-12.641,12.641h-3.375c-6.969,0-12.625-5.641-12.625-12.641V23.875c0-32.219-45.938-31.125-45.938,0.359c0,37.703,0,104.297,0,104.297c-0.219,57.906,13.625,72.953,36.469,91c18.422,14.531,34.156,22.859,34.156,58.953v232.188h55.344V278.484c0-36.094,15.734-44.422,34.156-58.953c22.859-18.047,36.688-33.094,36.469-91c0,0,0-66.594,0-104.297C253.04-7.25,207.103-8.344,207.103,23.875z"/><path d="M385.228,34.75c-11.75,32.953-45.578,110.156-47.719,178.344c-3.313,105.844,61.547,90.188,62.703,159.531v138.688h55.078l0.266,0.688c0,0,0-0.281,0-0.688c0-9.266,0-119.625,0-232.203c0-111.359,0-224.797,0-244.359C455.556-5.438,403.524-16.531,385.228,34.75z"/></g></svg>`;
+    }
     const iconPaths = {
         star: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321 1.012l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.386a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0l-4.725 2.885a.562.562 0 01-.84-.61l1.285-5.386a.563.563 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-1.012l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />',
         shop: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7.5h18M6 7.5l1.2 12h9.6L18 7.5M9.75 11.25v4.5m4.5-4.5v4.5M9 4.5h6"/>',
@@ -3058,7 +3061,7 @@ function generateHoursSchema(listing) {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
-function generateSocialMediaSection(listing) {
+function generateSocialMediaSection(listing, options = {}) {
     const socialMedia = listing.social_media || {};
     const hasSocial = Object.values(socialMedia).some(v => v);
     
@@ -3112,9 +3115,11 @@ function generateSocialMediaSection(listing) {
     
     if (!socialIcons) return '';
     
+    const shouldAddBreak = !(options.hasOwnerInfoSection || options.hasAdditionalInfoSection);
+
     return `
         <div>
-            <br>
+            ${shouldAddBreak ? '<br>' : ''}
             <h2 class="text-xl font-bold text-gray-900 mb-3">Social Media</h2>
             <div class="flex flex-wrap gap-2">
                 ${socialIcons}
@@ -3707,7 +3712,14 @@ function generateTemplateReplacementsPart2(listing) {
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
-    const socialMediaSection = generateSocialMediaSection(listing);
+    const hasOwnerInfoSection = Boolean(ownerCards);
+    const hasAdditionalInfoSection = Array.isArray(listing.additional_info)
+        && listing.additional_info.some(info => info && info.label && info.value);
+
+    const socialMediaSection = generateSocialMediaSection(listing, {
+        hasOwnerInfoSection,
+        hasAdditionalInfoSection
+    });
     const reviewSection = generateReviewSection(listing);
     const socialBreak = '';
     const reviewBreak = '';
