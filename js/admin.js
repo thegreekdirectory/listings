@@ -3115,7 +3115,7 @@ function generateSocialMediaSection(listing, options = {}) {
     
     if (!socialIcons) return '';
     
-    const shouldAddBreak = !(options.hasOwnerInfoSection || options.hasAdditionalInfoSection);
+    const shouldAddBreak = Boolean(options.hasMapSection) && !(options.hasOwnerInfoSection || options.hasAdditionalInfoSection);
 
     return `
         <div>
@@ -3715,10 +3715,12 @@ function generateTemplateReplacementsPart2(listing) {
     const hasOwnerInfoSection = Boolean(ownerCards);
     const hasAdditionalInfoSection = Array.isArray(listing.additional_info)
         && listing.additional_info.some(info => info && info.label && info.value);
+    const hasStreetAddress = typeof listing.address === 'string' && listing.address.trim().length > 0;
 
     const socialMediaSection = generateSocialMediaSection(listing, {
         hasOwnerInfoSection,
-        hasAdditionalInfoSection
+        hasAdditionalInfoSection,
+        hasMapSection: hasStreetAddress
     });
     const reviewSection = generateReviewSection(listing);
     const socialBreak = '';
@@ -3726,7 +3728,6 @@ function generateTemplateReplacementsPart2(listing) {
     
     // Only show map if listing has an address string
     let mapSection = '';
-    const hasStreetAddress = typeof listing.address === 'string' && listing.address.trim().length > 0;
     if (hasStreetAddress) {
         mapSection = `
             <div id="locationSection" class="location-section">
