@@ -3882,38 +3882,37 @@ function generateTemplateReplacementsPart2(listing) {
 // Generate Listing Page & Analytics Tracking
 // ============================================
 
-window.generateListingPage = async function(listingId) {
-    try {
-        const listings = await adminProxy('listings:list');
-        const listing = Array.isArray(listings)
-            ? listings.find((row) => String(row.id) === String(listingId))
-            : null;
-        if (!listing) {
-            console.error('Listing not found');
-            return;
-        }
+async function prepareListingPageGeneration(listingId, options = {}) {
+    const { skipAnalytics = false } = options;
+    
+    const listings = await adminProxy('listings:list');
+    const listing = Array.isArray(listings)
+        ? listings.find((row) => String(row.id) === String(listingId))
+        : null;
+    if (!listing) {
+        throw new Error('Listing not found');
+    }
+    
+    console.log('📄 Generating page for:', listing.business_name);
+    
+    // Apply default images if needed
+    const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
+    
+    if (!listing.logo && defaultImage) {
+        listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
         
-        console.log('📄 Generating page for:', listing.business_name);
+        // Update in database
+        await adminProxy('listings:update', { id: listingId, logo: listing.logo });
+    }
+    
+    if (!listing.photos || listing.photos.length === 0) {
+        listing.photos = [`${defaultImage}?w=800&q=80`];
         
-        // Apply default images if needed
-        const defaultImage = CATEGORY_DEFAULT_IMAGES[listing.category];
-        
-        if (!listing.logo && defaultImage) {
-            listing.logo = `${defaultImage}?w=200&h=200&fit=crop&q=80`;
-            
-            // Update in database
-            await adminProxy('listings:update', { id: listingId, logo: listing.logo });
-        }
-        
-        if (!listing.photos || listing.photos.length === 0) {
-            listing.photos = [`${defaultImage}?w=800&q=80`];
-            
-            // Update in database
-            await adminProxy('listings:update', { id: listingId, photos: listing.photos });
-        }
-        
-        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        
+        // Update in database
+        await adminProxy('listings:update', { id: listingId, photos: listing.photos });
+    }
+    
+    if (!skipAnalytics) {
         console.log('Creating analytics entry for listing:', listingId);
         await adminProxy('analytics:upsert', {
             listing_id: listingId,
@@ -3925,31 +3924,41 @@ window.generateListingPage = async function(listingId) {
             video_plays: 0,
             last_viewed: new Date().toISOString()
         });
+    }
+    
+    const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
+    if (!templateResponse.ok) {
+        throw new Error('Failed to fetch template');
+    }
+    
+    let template = await templateResponse.text();
+    
+    const replacements1 = generateTemplateReplacements(listing);
+    const replacements2 = generateTemplateReplacementsPart2(listing);
+    const replacements = { ...replacements1, ...replacements2 };
+    
+    Object.keys(replacements).forEach(key => {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        const replacementValue = replacements[key] == null ? '' : String(replacements[key]);
+        template = template.replace(regex, () => replacementValue);
+    });
+    
+    return {
+        businessName: listing.business_name,
+        filePath: `listing/${listing.slug}.html`,
+        content: template
+    };
+}
+
+window.generateListingPage = async function(listingId, options = {}) {
+    const { skipSitemap = false, skipAnalytics = false } = options;
+    try {
+        const generatedFile = await prepareListingPageGeneration(listingId, { skipAnalytics });
+        await saveToGitHub(generatedFile.filePath, generatedFile.content, generatedFile.businessName);
         
-        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
-        if (!templateResponse.ok) {
-            throw new Error('Failed to fetch template');
+        if (!skipSitemap) {
+            await updateSitemap();
         }
-        
-        let template = await templateResponse.text();
-        
-        const replacements1 = generateTemplateReplacements(listing);
-        const replacements2 = generateTemplateReplacementsPart2(listing);
-        const replacements = { ...replacements1, ...replacements2 };
-        
-        Object.keys(replacements).forEach(key => {
-            const regex = new RegExp(`{{${key}}}`, 'g');
-            const replacementValue = replacements[key] == null ? '' : String(replacements[key]);
-            template = template.replace(regex, () => replacementValue);
-        });
-        
-        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        
-        const filePath = `listing/${listing.slug}.html`;
-        
-        await saveToGitHub(filePath, template, listing.business_name);
-        
-        await updateSitemap();
         
         console.log('✅ Page generated successfully');
         return true;
@@ -4184,6 +4193,111 @@ async function saveToGitHub(filePath, content, businessName) {
     }
 }
 
+async function saveMultipleFilesToGitHub(files, commitMessage) {
+    if (!Array.isArray(files) || files.length === 0) {
+        return;
+    }
+    
+    const headers = {
+        'Authorization': `token ${adminGithubToken}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+    };
+    
+    const branchResponse = await fetch(
+        'https://api.github.com/repos/thegreekdirectory/listings/git/ref/heads/main',
+        { headers }
+    );
+    
+    if (!branchResponse.ok) {
+        const errorData = await branchResponse.json();
+        throw new Error(`Failed to fetch branch reference: ${errorData.message}`);
+    }
+    
+    const branchData = await branchResponse.json();
+    const latestCommitSha = branchData.object.sha;
+    
+    const commitResponse = await fetch(
+        `https://api.github.com/repos/thegreekdirectory/listings/git/commits/${latestCommitSha}`,
+        { headers }
+    );
+    
+    if (!commitResponse.ok) {
+        const errorData = await commitResponse.json();
+        throw new Error(`Failed to fetch latest commit: ${errorData.message}`);
+    }
+    
+    const commitData = await commitResponse.json();
+    const baseTreeSha = commitData.tree.sha;
+    
+    const treeEntries = files.map(file => ({
+        path: file.filePath,
+        mode: '100644',
+        type: 'blob',
+        content: file.content
+    }));
+    
+    const treeResponse = await fetch(
+        'https://api.github.com/repos/thegreekdirectory/listings/git/trees',
+        {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                base_tree: baseTreeSha,
+                tree: treeEntries
+            })
+        }
+    );
+    
+    if (!treeResponse.ok) {
+        const errorData = await treeResponse.json();
+        throw new Error(`Failed to create tree: ${errorData.message}`);
+    }
+    
+    const treeData = await treeResponse.json();
+    
+    const createCommitResponse = await fetch(
+        'https://api.github.com/repos/thegreekdirectory/listings/git/commits',
+        {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                message: commitMessage,
+                tree: treeData.sha,
+                parents: [latestCommitSha],
+                committer: {
+                    name: 'TGD Admin',
+                    email: 'admin@thegreekdirectory.org'
+                }
+            })
+        }
+    );
+    
+    if (!createCommitResponse.ok) {
+        const errorData = await createCommitResponse.json();
+        throw new Error(`Failed to create commit: ${errorData.message}`);
+    }
+    
+    const newCommit = await createCommitResponse.json();
+    
+    const updateRefResponse = await fetch(
+        'https://api.github.com/repos/thegreekdirectory/listings/git/refs/heads/main',
+        {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify({
+                sha: newCommit.sha,
+                force: false
+            })
+        }
+    );
+    
+    if (!updateRefResponse.ok) {
+        const errorData = await updateRefResponse.json();
+        throw new Error(`Failed to update branch reference: ${errorData.message}`);
+    }
+}
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. For more information, visit https://thegreekdirectory.org/legal.
 // js/admin.js - PART 13
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. Unauthorized use, copying, modification, or distribution of this code will result in legal action to the fullest extent permitted by law. For more information, visit https://thegreekdirectory.org/legal.
@@ -4205,20 +4319,30 @@ window.generateAllListingPages = async function() {
     let successful = 0;
     let failed = 0;
     const failedListings = [];
+    const filesToCommit = [];
     
     for (const listing of visibleListings) {
         try {
-            await generateListingPage(listing.id);
+            const generatedFile = await prepareListingPageGeneration(listing.id, { skipAnalytics: true });
+            filesToCommit.push(generatedFile);
             successful++;
             console.log(`✅ Generated: ${listing.business_name}`);
             
-            // Rate limit: wait 1 second between GitHub API calls
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Rate limit: wait to reduce API pressure for listings fetch/template generation
+            await new Promise(resolve => setTimeout(resolve, 250));
         } catch (error) {
             console.error(`❌ Failed: ${listing.business_name}`, error);
             failed++;
             failedListings.push(listing.business_name);
         }
+    }
+    
+    if (filesToCommit.length > 0) {
+        await saveMultipleFilesToGitHub(
+            filesToCommit,
+            `Generate all listing pages (${filesToCommit.length} files)`
+        );
+        console.log(`✅ Committed ${filesToCommit.length} listing pages in a single commit`);
     }
     
     console.log('📊 Generation Summary:');
