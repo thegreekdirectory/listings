@@ -60,7 +60,7 @@ let desktopFiltersOverlay = false;
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
 
 function isPwaMode() {
     return (window.PWAApp && window.PWAApp.isStandalone) ||
@@ -3352,7 +3352,7 @@ function renderSplitViewListings() {
         const categoryLabel = (l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category;
         const isStarred = starredListings.includes(String(l.id));
         const logoImage = l.logo || '';
-        const checkmarkHtml = showsVerifiedCheckmark(l) ? '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' : '';
+        const checkmarkHtml = showsVerifiedCheckmark(l) ? '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' : '';
         const isSelected = String(selectedSplitListingId) === String(l.id);
         const hasCoordinates = l.coordinates && l.coordinates.lat && l.coordinates.lng;
         
