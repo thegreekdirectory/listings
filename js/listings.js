@@ -1464,7 +1464,7 @@ function renderListings() {
                             <div class="flex gap-3 mb-3">
                                 ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                                 <div class="flex-1 min-w-0">
-                                    <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
+                                    <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#045093;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
                                     <h3 class="text-lg font-bold text-gray-900 line-clamp-1 flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
                                 </div>
                             </div>
@@ -1503,7 +1503,7 @@ function renderListings() {
                         ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">` : '<div class="w-24 h-24 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                         <div class="flex-1 min-w-0 overflow-hidden pr-12">
                             <div class="flex gap-2 mb-2 flex-wrap">
-                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#045093;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
                                 ${badges.join('')}
                             </div>
                             <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
@@ -2826,7 +2826,7 @@ function attachClusterClickHandler(targetMap, clusterGroup) {
             const logoImage = listing.logo || '';
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const checkmarkHtml = showsVerifiedCheckmark(listing) ? 
-                '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+                '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#045093"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
             
             return `
                 <div class="map-popup" style="width: 280px; margin-bottom: ${listings.length > 1 ? '16px' : '0'}; border-bottom: ${listings.length > 1 ? '1px solid #e5e7eb; padding-bottom: 16px' : '0'};">
@@ -3068,7 +3068,7 @@ function getTierMarkerStyles(listing) {
 function buildMapPopupContent(listing) {
     const badges = buildBadges(listing);
     const checkmarkHtml = showsVerifiedCheckmark(listing)
-        ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#045093"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         : '';
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
@@ -3369,7 +3369,7 @@ function renderSplitViewListings() {
                         ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                         <div class="flex-1 min-w-0 overflow-hidden ${isSelected ? 'pr-2' : 'pr-8'}">
                             <div class="flex gap-1 mb-1 flex-wrap">
-                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style="background-color:#055193;">${categoryLabel}</span>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style="background-color:#045093;">${categoryLabel}</span>
                                 ${badges.join('')}
                             </div>
                             <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
