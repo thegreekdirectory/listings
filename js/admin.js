@@ -3483,7 +3483,7 @@ function generateTemplateReplacements(listing) {
                 </h3>
                 <div class="space-y-1">${hoursRows}</div>
                 <div id="openStatusText" class="mt-2 text-sm"></div>
-                <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
+                <div class="hours-disclaimer">Hours may vary — call to confirm.</div>
             </div>
         `;
     }
