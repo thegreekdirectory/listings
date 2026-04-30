@@ -703,7 +703,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                         <span class="hours-tooltip">Last updated at 2026-03-27 19:43 UTC by TGD Admin.</span>
                     </span>
                 </h3>
-                <div class="space-y-1"><div class="flex justify-between text-sm"><span class="font-medium">Monday:</span><span>7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Tuesday:</span><span>7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Wednesday:</span><span>7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Thursday:</span><span>7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Friday:</span><span>7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Saturday:</span><span>7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm"><span class="font-medium">Sunday:</span><span>7:00 AM - 3:00 PM</span></div></div>
+                <div class="space-y-1"><div class="flex justify-between text-sm" data-hours-day="monday"><span class="font-medium hours-day-label">Monday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="tuesday"><span class="font-medium hours-day-label">Tuesday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="wednesday"><span class="font-medium hours-day-label">Wednesday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="thursday"><span class="font-medium hours-day-label">Thursday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="friday"><span class="font-medium hours-day-label">Friday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="saturday"><span class="font-medium hours-day-label">Saturday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="sunday"><span class="font-medium hours-day-label">Sunday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div></div>
                 <div id="openStatusText" class="mt-2 text-sm"></div>
                 <div class="hours-disclaimer">Hours may not be accurate. Please call to confirm.</div>
             </div>
@@ -1185,6 +1185,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
         }
 
+
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
@@ -1199,6 +1200,22 @@ or distribution of this code can result in legal action to the fullest extent pe
             const localNow = new Date(now.toLocaleString('en-US', { timeZone: businessTimezone }));
             const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             const today = days[localNow.getDay()];
+
+            document.querySelectorAll('[data-hours-day]').forEach((row) => {
+                const dayLabel = row.querySelector('.hours-day-label');
+                const dayValue = row.querySelector('.hours-day-value');
+                if (dayLabel) dayLabel.classList.remove('font-bold');
+                if (dayValue) dayValue.classList.remove('font-bold');
+            });
+
+            const todayRow = document.querySelector(`[data-hours-day="${today}"]`);
+            if (todayRow) {
+                const dayLabel = todayRow.querySelector('.hours-day-label');
+                const dayValue = todayRow.querySelector('.hours-day-value');
+                if (dayLabel) dayLabel.classList.add('font-bold');
+                if (dayValue) dayValue.classList.add('font-bold');
+            }
+
             const todayHours = hoursData[today];
             
             if (!todayHours || todayHours.toLowerCase() === 'closed') {

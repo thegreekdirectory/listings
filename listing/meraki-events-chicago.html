@@ -1056,6 +1056,7 @@ We provide for each of our clients a courteous and professional environment from
             return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
         }
 
+
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
@@ -1070,6 +1071,22 @@ We provide for each of our clients a courteous and professional environment from
             const localNow = new Date(now.toLocaleString('en-US', { timeZone: businessTimezone }));
             const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             const today = days[localNow.getDay()];
+
+            document.querySelectorAll('[data-hours-day]').forEach((row) => {
+                const dayLabel = row.querySelector('.hours-day-label');
+                const dayValue = row.querySelector('.hours-day-value');
+                if (dayLabel) dayLabel.classList.remove('font-bold');
+                if (dayValue) dayValue.classList.remove('font-bold');
+            });
+
+            const todayRow = document.querySelector(`[data-hours-day="${today}"]`);
+            if (todayRow) {
+                const dayLabel = todayRow.querySelector('.hours-day-label');
+                const dayValue = todayRow.querySelector('.hours-day-value');
+                if (dayLabel) dayLabel.classList.add('font-bold');
+                if (dayValue) dayValue.classList.add('font-bold');
+            }
+
             const todayHours = hoursData[today];
             
             if (!todayHours || todayHours.toLowerCase() === 'closed') {
