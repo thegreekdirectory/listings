@@ -468,7 +468,7 @@ function getFormData() {
     custom_ctas.push({
       name:  ctaName || 'Custom Button',
       url:   normalizeHttpsUrl(ctaUrl),
-      color: document.getElementById('cta_color_0').value.trim() || '#055193',
+      color: document.getElementById('cta_color_0').value.trim() || '#045093',
       icon:  document.getElementById('cta_icon_0').value.trim()
     });
   }

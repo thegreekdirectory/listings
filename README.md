@@ -1011,6 +1011,8 @@ These are hardcoded in client-side JS files (intentional — anon key is safe to
 
 ## CSS Architecture
 
+The canonical primary brand blue used across templates, generated listing pages, admin/business portals, and CTA defaults is `#045093` (replacing the previous primary blue shade).
+
 All CSS is written in plain CSS with no preprocessor. Tailwind utility classes from `src/output.css` are used for layout and spacing throughout HTML files.
 
 | File | Scope | Key Contents |
