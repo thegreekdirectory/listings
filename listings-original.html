@@ -55,7 +55,7 @@
         
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #055193;
+            border-top: 4px solid #045093;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -72,7 +72,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            border: 3px solid #055193;
+            border: 3px solid #045093;
             overflow: hidden;
             background: white;
             cursor: pointer;
@@ -95,7 +95,7 @@
         
         .marker-cluster {
             background: rgba(5, 81, 147, 0.6);
-            border: 3px solid #055193;
+            border: 3px solid #045093;
             border-radius: 50%;
             color: white;
             display: flex;
@@ -133,9 +133,9 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.3);
             white-space: nowrap;
         }
-        .map-control-btn:hover { background: #f5f5f5; border-color: #055193; }
+        .map-control-btn:hover { background: #f5f5f5; border-color: #045093; }
         .map-control-btn img { width: 20px; height: 20px; pointer-events: none; }
-        .map-control-btn.active { background: #055193; border-color: #055193; color: white; }
+        .map-control-btn.active { background: #045093; border-color: #045093; color: white; }
         
         .radius-value { font-size: 14px; color: #666; font-weight: 600; }
         input[type="range"] {
@@ -152,14 +152,14 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #055193;
+            background: #045093;
             cursor: pointer;
         }
         input[type="range"]::-moz-range-thumb {
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #055193;
+            background: #045093;
             cursor: pointer;
             border: none;
         }
@@ -174,7 +174,7 @@
         .map-popup-title {
             font-weight: bold;
             font-size: 16px;
-            color: #055193;
+            color: #045093;
             margin-bottom: 4px;
             text-decoration: none;
             display: block;
@@ -220,7 +220,7 @@
             user-select: none;
         }
         .subcategory-tag:hover { background: #d1d5db; }
-        .subcategory-tag.selected { background: #055193; color: white; }
+        .subcategory-tag.selected { background: #045093; color: white; }
         
         .star-button {
             position: absolute;
@@ -271,7 +271,7 @@
         }
         .toggle-option:not(:last-child) { border-right: 1px solid #d1d5db; }
         .toggle-option:hover { background: #f3f4f6; }
-        .toggle-option.active { background: #055193; color: white; }
+        .toggle-option.active { background: #045093; color: white; }
         
         @media (min-width: 1024px) {
             .desktop-layout.with-left-filters { display: flex; gap: 24px; }
@@ -323,7 +323,7 @@
             .map-loading { background: #2a2a2a; color: #e5e5e5; }
             .subcategory-tag { background: #404040; color: #e5e5e5; }
             .subcategory-tag:hover { background: #4a4a4a; }
-            .subcategory-tag.selected { background: #055193; color: white; }
+            .subcategory-tag.selected { background: #045093; color: white; }
             .star-button { background: rgba(42, 42, 42, 0.9); }
             .split-view-listings { border-right-color: #404040; border-bottom-color: #404040; }
             .leaflet-tile { filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7); }
@@ -353,7 +353,7 @@
             background: #f3f4f6;
         }
         .location-search-result.active {
-            background: #055193;
+            background: #045093;
             color: white;
         }
         
@@ -363,7 +363,7 @@
             max-width: 400px;
             margin: 24px auto;
             padding: 12px 24px;
-            background: #055193;
+            background: #045093;
             color: white;
             border: none;
             border-radius: 8px;
@@ -416,7 +416,7 @@
                 <div class="flex items-center gap-3">
                     <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
                     <div>
-                        <h1 class="text-xl font-bold" style="color: #055193;">The Greek Directory</h1>
+                        <h1 class="text-xl font-bold" style="color: #045093;">The Greek Directory</h1>
                         <p class="text-xs text-gray-600" id="locationSubtitle">Loading...</p>
                     </div>
                 </div>
@@ -438,7 +438,7 @@
             <div class="relative mb-4">
                 <input type="text" id="searchInput" placeholder="Search businesses, churches, schools..." 
                     class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2" 
-                    style="--tw-ring-color: #055193;" data-i18n-placeholder="searchPlaceholder">
+                    style="--tw-ring-color: #045093;" data-i18n-placeholder="searchPlaceholder">
             </div>
 
             <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:hidden" id="mobileControls">
@@ -1448,7 +1448,7 @@
                                 <div class="flex gap-3 mb-3">
                                     <img src="${l.logo}" alt="${l.businessName} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">
                                     <div class="flex-1 min-w-0">
-                                        <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${l.category}</span>
+                                        <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#045093;">${l.category}</span>
                                         <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${l.businessName}</h3>
                                     </div>
                                 </div>
@@ -1495,7 +1495,7 @@
                             <img src="${l.logo}" alt="${l.businessName}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
                             <div class="flex-1 min-w-0 overflow-hidden pr-12">
                                 <div class="flex gap-2 mb-2 flex-wrap">
-                                    <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#055193;">${l.category}</span>
+                                    <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#045093;">${l.category}</span>
                                     ${badges.join('')}
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1 truncate">${l.businessName}</h3>
@@ -2115,7 +2115,7 @@
                 allButton.className = selectedCategory === 'All' ? 
                     'px-3 py-2 rounded-lg text-sm font-medium text-white' : 
                     'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300';
-                if (selectedCategory === 'All') allButton.style.backgroundColor = '#055193';
+                if (selectedCategory === 'All') allButton.style.backgroundColor = '#045093';
                 allButton.textContent = 'All';
                 allButton.onclick = () => filterByCategory('All');
                 container.appendChild(allButton);
@@ -2125,7 +2125,7 @@
                     button.className = selectedCategory === cat ? 
                         'px-3 py-2 rounded-lg text-sm font-medium text-white' : 
                         'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 text-left';
-                    if (selectedCategory === cat) button.style.backgroundColor = '#055193';
+                    if (selectedCategory === cat) button.style.backgroundColor = '#045093';
                     button.textContent = cat;
                     button.onclick = () => filterByCategory(cat);
                     container.appendChild(button);

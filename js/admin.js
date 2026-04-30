@@ -1637,7 +1637,7 @@ function fillEditFormContinuation(listing, owner) {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium mb-2">Button Color</label>
-                                    <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-full h-10 border rounded-lg">
+                                    <input type="color" id="editCtaColor${index}" value="${cta.color || '#045093'}" class="w-full h-10 border rounded-lg">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium mb-2">Icon</label>
@@ -2290,7 +2290,7 @@ if (!slug) {
             customCtas.push({
                 name,
                 url,
-                color: color || '#055193',
+                color: color || '#045093',
                 icon: icon || ''
             });
         }
@@ -3581,7 +3581,7 @@ function generateTemplateReplacements(listing) {
             .slice(0, maxCtaButtons)
             .map(cta => {
                 const label = String(cta.name).trim().slice(0, 15);
-                const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#055193';
+                const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#045093';
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-5 h-5') || '';
                 return `
                     <a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer"
@@ -3597,7 +3597,7 @@ function generateTemplateReplacements(listing) {
             .filter(cta => cta && cta.name && cta.url)
             .map(cta => {
                 const label = String(cta.name).trim().slice(0, 15);
-                const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#055193';
+                const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#045093';
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-4 h-4') || '';
                 return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:${color};" data-cta-name="${escapeHtml(label)}">${icon}<span>${escapeHtml(label)}</span></a>`;
             }).join('');
@@ -3852,7 +3852,7 @@ function generateTemplateReplacementsPart2(listing) {
         const locationInfo = listing.state ? cityState + country : (listing.city ? listing.city + country : '');
         const subject = encodeURIComponent(`Claim My Listing: ${decodeEscapedText(listing.business_name)}${locationInfo ? ' - ' + locationInfo : ''}`);
         
-        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" target="_blank" rel="noopener noreferrer" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#055193;">Claim This Listing</a>`;
+        claimButton = `<a href="mailto:contact@thegreekdirectory.org?subject=${subject}" target="_blank" rel="noopener noreferrer" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;">Claim This Listing</a>`;
     }
     
     const hoursSchema = generateHoursSchema(listing);
@@ -3875,7 +3875,7 @@ function generateTemplateReplacementsPart2(listing) {
         'MAP_SECTION': mapSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
-        'SHARE_TRIGGER_BUTTON': `<a class="hero-chip justify-center gap-2 px-4 py-3 text-white" onclick="openShareModal()" style="background-color:#055193; font-size: 16px; cursor: pointer;" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.6495 0.799565C18.4834 -0.72981 16.0093 0.081426 16.0093 1.99313V3.91272C12.2371 3.86807 9.65665 5.16473 7.9378 6.97554C6.10034 8.9113 5.34458 11.3314 5.02788 12.9862C4.86954 13.8135 5.41223 14.4138 5.98257 14.6211C6.52743 14.8191 7.25549 14.7343 7.74136 14.1789C9.12036 12.6027 11.7995 10.4028 16.0093 10.5464V13.0069C16.0093 14.9186 18.4834 15.7298 19.6495 14.2004L23.3933 9.29034C24.2022 8.2294 24.2022 6.7706 23.3933 5.70966L19.6495 0.799565ZM7.48201 11.6095C9.28721 10.0341 11.8785 8.55568 16.0093 8.55568H17.0207C17.5792 8.55568 18.0319 9.00103 18.0319 9.55037L18.0317 13.0069L21.7754 8.09678C22.0451 7.74313 22.0451 7.25687 21.7754 6.90322L18.0317 1.99313V4.90738C18.0317 5.4567 17.579 5.90201 17.0205 5.90201H16.0093C11.4593 5.90201 9.41596 8.33314 9.41596 8.33314C8.47524 9.32418 7.86984 10.502 7.48201 11.6095Z" fill="#FFFFFF"/><path d="M7 1.00391H4C2.34315 1.00391 1 2.34705 1 4.00391V20.0039C1 21.6608 2.34315 23.0039 4 23.0039H20C21.6569 23.0039 23 21.6608 23 20.0039V17.0039C23 16.4516 22.5523 16.0039 22 16.0039C21.4477 16.0039 21 16.4516 21 17.0039V20.0039C21 20.5562 20.5523 21.0039 20 21.0039H4C3.44772 21.0039 3 20.5562 3 20.0039V4.00391C3 3.45162 3.44772 3.00391 4 3.00391H7C7.55228 3.00391 8 2.55619 8 2.00391C8 1.45162 7.55228 1.00391 7 1.00391Z" fill="#FFFFFF"/></svg><span>Share</span></a>`,
+        'SHARE_TRIGGER_BUTTON': `<a class="hero-chip justify-center gap-2 px-4 py-3 text-white" onclick="openShareModal()" style="background-color:#045093; font-size: 16px; cursor: pointer;" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.6495 0.799565C18.4834 -0.72981 16.0093 0.081426 16.0093 1.99313V3.91272C12.2371 3.86807 9.65665 5.16473 7.9378 6.97554C6.10034 8.9113 5.34458 11.3314 5.02788 12.9862C4.86954 13.8135 5.41223 14.4138 5.98257 14.6211C6.52743 14.8191 7.25549 14.7343 7.74136 14.1789C9.12036 12.6027 11.7995 10.4028 16.0093 10.5464V13.0069C16.0093 14.9186 18.4834 15.7298 19.6495 14.2004L23.3933 9.29034C24.2022 8.2294 24.2022 6.7706 23.3933 5.70966L19.6495 0.799565ZM7.48201 11.6095C9.28721 10.0341 11.8785 8.55568 16.0093 8.55568H17.0207C17.5792 8.55568 18.0319 9.00103 18.0319 9.55037L18.0317 13.0069L21.7754 8.09678C22.0451 7.74313 22.0451 7.25687 21.7754 6.90322L18.0317 1.99313V4.90738C18.0317 5.4567 17.579 5.90201 17.0205 5.90201H16.0093C11.4593 5.90201 9.41596 8.33314 9.41596 8.33314C8.47524 9.32418 7.86984 10.502 7.48201 11.6095Z" fill="#FFFFFF"/><path d="M7 1.00391H4C2.34315 1.00391 1 2.34705 1 4.00391V20.0039C1 21.6608 2.34315 23.0039 4 23.0039H20C21.6569 23.0039 23 21.6608 23 20.0039V17.0039C23 16.4516 22.5523 16.0039 22 16.0039C21.4477 16.0039 21 16.4516 21 17.0039V20.0039C21 20.5562 20.5523 21.0039 20 21.0039H4C3.44772 21.0039 3 20.5562 3 20.0039V4.00391C3 3.45162 3.44772 3.00391 4 3.00391H7C7.55228 3.00391 8 2.55619 8 2.00391C8 1.45162 7.55228 1.00391 7 1.00391Z" fill="#FFFFFF"/></svg><span>Share</span></a>`,
         'SUGGEST_EDIT_BUTTON': suggestEditButton,
         'HOURS_SCHEMA': hoursSchema,
         'COORDINATES': coordinates,

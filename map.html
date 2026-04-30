@@ -424,7 +424,7 @@
         function buildMapPopupContent(listing) {
             const badges = buildBadges(listing);
             const checkmarkHtml = showsVerifiedCheckmark(listing)
-                ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#055193"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#045093"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
                 : '';
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : (listing.logo || '');
@@ -746,7 +746,7 @@
             allButton.className = selectedCategory === 'All' ? 
                 'px-3 py-2 rounded-lg text-sm font-medium text-white' : 
                 'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300';
-            if (selectedCategory === 'All') allButton.style.backgroundColor = '#055193';
+            if (selectedCategory === 'All') allButton.style.backgroundColor = '#045093';
             allButton.textContent = 'All';
             allButton.onclick = () => filterByCategory('All');
             container.appendChild(allButton);
@@ -756,7 +756,7 @@
                 button.className = selectedCategory === cat ? 
                     'px-3 py-2 rounded-lg text-sm font-medium text-white' : 
                     'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300';
-                if (selectedCategory === cat) button.style.backgroundColor = '#055193';
+                if (selectedCategory === cat) button.style.backgroundColor = '#045093';
                 button.textContent = cat;
                 button.onclick = () => filterByCategory(cat);
                 container.appendChild(button);
@@ -905,7 +905,7 @@
                     button.className = selectedCategory === cat ? 
                         'px-3 py-2 rounded-lg text-sm font-medium text-white' : 
                         'px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300';
-                    if (selectedCategory === cat) button.style.backgroundColor = '#055193';
+                    if (selectedCategory === cat) button.style.backgroundColor = '#045093';
                     button.textContent = cat;
                     button.onclick = () => filterByCategory(cat);
                     container.appendChild(button);

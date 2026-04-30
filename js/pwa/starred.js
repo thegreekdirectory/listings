@@ -148,7 +148,7 @@ window.StarredManager = {
                             <div class="flex gap-3 mb-3">
                                 ${logoImage ? `<img src="${logoImage}" alt="${listing.business_name} logo" class="listing-logo w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                                 <div class="flex-1 min-w-0">
-                                    <span class="listing-category text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#055193;">${listing.category || 'General'}</span>
+                                    <span class="listing-category text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#045093;">${listing.category || 'General'}</span>
                                     <h3 class="listing-name text-lg font-bold text-gray-900 line-clamp-1" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${listing.business_name}${checkmarkHtml}</h3>
                                 </div>
                             </div>

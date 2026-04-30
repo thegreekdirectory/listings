@@ -483,7 +483,7 @@ function renderOverview() {
                         <div class="flex-1">
                             <h4 id="previewBusinessName" class="text-2xl font-bold text-gray-900 mb-1" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${currentListing.business_name}${previewCheckmark}</h4>
                             <p id="previewTagline" class="text-gray-600 italic text-sm mb-2">${currentListing.tagline || ''}</p>
-                            <div id="previewCategory" class="inline-block px-3 py-1 text-sm font-semibold text-white rounded-full mb-2" style="background-color:#055193;">${currentListing.category}</div>
+                            <div id="previewCategory" class="inline-block px-3 py-1 text-sm font-semibold text-white rounded-full mb-2" style="background-color:#045093;">${currentListing.category}</div>
                         </div>
                         ${currentListing.logo ? `<img id="previewLogo" src="${currentListing.logo}" alt="Logo" class="preview-logo ml-4">` : ''}
                     </div>
@@ -529,7 +529,7 @@ function renderEditForm() {
         <div class="bg-white rounded-lg p-6 shadow-sm">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-900">Edit Your Listing</h2>
-                <button onclick="saveChanges()" class="px-6 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">Save Changes</button>
+                <button onclick="saveChanges()" class="px-6 py-2 text-white rounded-lg font-medium" style="background-color: #045093;">Save Changes</button>
             </div>
             
             <div class="space-y-6">
@@ -843,7 +843,7 @@ function renderEditForm() {
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Button Color</label>
-                                        <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-full h-10 border border-gray-300 rounded-lg">
+                                        <input type="color" id="editCtaColor${index}" value="${cta.color || '#045093'}" class="w-full h-10 border border-gray-300 rounded-lg">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Icon</label>
@@ -1059,7 +1059,7 @@ async function saveChanges() {
         customCtas.push({
             name,
             url,
-            color: color || '#055193',
+            color: color || '#045093',
             icon: icon || ''
         });
     }
@@ -1377,7 +1377,7 @@ function renderSettings() {
                 </div>
                 
                 <div class="border-t pt-6">
-                    <button onclick="saveSettings()" class="px-6 py-3 text-white rounded-lg font-medium" style="background-color: #055193;">Save Settings</button>
+                    <button onclick="saveSettings()" class="px-6 py-3 text-white rounded-lg font-medium" style="background-color: #045093;">Save Settings</button>
                 </div>
             </div>
         </div>

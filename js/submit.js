@@ -299,7 +299,7 @@ function getFormData(){
   const custom_ctas = [];
   const ctaName = document.getElementById('cta_name_0').value.trim();
   const ctaUrl = document.getElementById('cta_url_0').value.trim();
-  if (ctaName || ctaUrl) custom_ctas.push({name: ctaName || 'Custom Button', url: normalizeHttpsUrl(ctaUrl), color: document.getElementById('cta_color_0').value.trim() || '#055193', icon: document.getElementById('cta_icon_0').value.trim()});
+  if (ctaName || ctaUrl) custom_ctas.push({name: ctaName || 'Custom Button', url: normalizeHttpsUrl(ctaUrl), color: document.getElementById('cta_color_0').value.trim() || '#045093', icon: document.getElementById('cta_icon_0').value.trim()});
 
   const photoUrls = [...document.querySelectorAll('.photo-url-input')].map(i => normalizeHttpsUrl(i.value)).filter(Boolean);
 
