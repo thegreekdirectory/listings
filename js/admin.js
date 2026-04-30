@@ -3470,7 +3470,7 @@ function generateTemplateReplacements(listing) {
         
         const hoursRows = dayKeys.map((key, index) => {
             const hours = listing.hours[key] || 'Closed';
-            return `<div class="flex justify-between text-sm"><span class="font-medium">${days[index]}:</span><span>${escapeHtml(toDisplayHourLabel(hours))}</span></div>`;
+            return `<div class="flex justify-between text-sm" data-hours-day="${key}"><span class="font-medium hours-day-label">${days[index]}:</span><span class="hours-day-value">${escapeHtml(toDisplayHourLabel(hours))}</span></div>`;
         }).join('');
         
         hoursSection = `

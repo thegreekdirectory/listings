@@ -992,6 +992,24 @@ or distribution of this code can result in legal action to the fullest extent pe
             return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
         }
 
+
+        function highlightCurrentDayHours() {
+            const hasHours = hoursData && Object.values(hoursData).some(value => typeof value === 'string' && value.trim().length > 0);
+            if (!hasHours) return;
+
+            const now = new Date();
+            const localNow = new Date(now.toLocaleString('en-US', { timeZone: businessTimezone }));
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = days[localNow.getDay()];
+            const todayRow = document.querySelector(`[data-hours-day="${today}"]`);
+            if (!todayRow) return;
+
+            const dayLabel = todayRow.querySelector('.hours-day-label');
+            const dayValue = todayRow.querySelector('.hours-day-value');
+            if (dayLabel) dayLabel.classList.add('font-bold');
+            if (dayValue) dayValue.classList.add('font-bold');
+        }
+
         function updateOpenClosedBadge() {
             const badge = document.getElementById('openClosedBadge');
             const statusText = document.getElementById('openStatusText');
@@ -1402,6 +1420,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             setTimeout(initializeMap, 1000);
         }
         
+        highlightCurrentDayHours();
         updateOpenClosedBadge();
         setInterval(updateOpenClosedBadge, 60000);
         
