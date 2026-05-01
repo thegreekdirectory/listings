@@ -19,22 +19,16 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/places/usa/il/chicagoland</loc>
-    <lastmod>2026-05-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://thegreekdirectory.org/places/usa/il/chicago</loc>
     <lastmod>2026-05-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/automotive-transportation</loc>
+    <loc>https://thegreekdirectory.org/places/usa/il/chicagoland</loc>
     <lastmod>2026-05-01</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://thegreekdirectory.org/category/food-hospitality</loc>
@@ -73,13 +67,19 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://thegreekdirectory.org/category/automotive-transportation</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://thegreekdirectory.org/category/education-community</loc>
     <lastmod>2026-05-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/listing/l-ra-estiatorio</loc>
+    <loc>https://thegreekdirectory.org/listing/lyra-estiatorio</loc>
     <lastmod>2026-05-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -104,7 +104,7 @@
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/angelos-computer-repair</loc>
-    <lastmod>2026-04-29</lastmod>
+    <lastmod>2026-05-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
