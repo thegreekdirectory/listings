@@ -142,7 +142,6 @@ let primarySubcategory = null;
 let userCountry = 'USA';
 let allRequests = [];
 let currentAdminView = 'listings';
-let customShortlinkCheckTimer = null;
 
 async function adminProxy(action, payload = {}) {
     const res = await fetch(
@@ -159,29 +158,6 @@ async function adminProxy(action, payload = {}) {
     const json = await res.json();
     if (!json.success) throw new Error(json.error || 'Admin proxy error');
     return json.data;
-}
-
-const SYSTEM_SHORTLINK_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-
-function isValidSystemShortlink(path) {
-    return typeof path === 'string'
-        && /^\/l\/[ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789]{6}$/.test(path)
-        && !/[A-Za-z]{4}/.test(path);
-}
-
-function isValidCustomShortlink(path) {
-    return typeof path === 'string'
-        && /^\/[A-Za-z0-9/_-]+$/.test(path)
-        && !path.endsWith('/')
-        && !path.includes('//');
-}
-
-function generateSystemShortlinkCandidate() {
-    let suffix = '';
-    for (let i = 0; i < 6; i += 1) {
-        suffix += SYSTEM_SHORTLINK_ALPHABET[Math.floor(Math.random() * SYSTEM_SHORTLINK_ALPHABET.length)];
-    }
-    return `/l/${suffix}`;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1351,11 +1327,6 @@ function fillEditForm(listing) {
                         <p class="text-xs text-gray-500 mt-1" id="slugStatus"></p>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Custom Shortlink</label>
-                        <input type="text" id="editCustomShortlink" value="" class="w-full px-4 py-2 border rounded-lg" placeholder="/your-custom-path">
-                        <p class="text-xs mt-1" id="editCustomShortlinkStatus"></p>
-                    </div>
-                    <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-2">Tagline (max 75) *</label>
                         <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">
                         <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span>/75</p>
@@ -1777,7 +1748,6 @@ function fillEditFormContinuation(listing, owner) {
     if (ownerPhoneContainer) {
         ownerPhoneContainer.innerHTML = createPhoneInput(owner?.owner_phone || '', userCountry);
     }
-    initializeCustomShortlinkField(listing);
     
     updateSubcategoriesForCategory();
     if (window.RichTextEditor) {
@@ -1786,45 +1756,6 @@ function fillEditFormContinuation(listing, owner) {
     updateCharCounters();
     attachMediaUploadHandlers();
     attachCloudflareConfigHandlers();
-}
-
-async function initializeCustomShortlinkField(listing) {
-    const input = document.getElementById('editCustomShortlink');
-    const status = document.getElementById('editCustomShortlinkStatus');
-    if (!input || !status) return;
-    status.textContent = '';
-    try {
-        if (listing?.id) {
-            const rows = await adminProxy('shortlinks:get', { listing_id: listing.id });
-            const custom = (Array.isArray(rows) ? rows : []).find((row) => row.listing_custom === true && isValidCustomShortlink(row.path));
-            input.value = custom?.path || '';
-        }
-    } catch (error) {
-        console.warn('Failed to load custom shortlink:', error);
-        status.textContent = '⚠️ Could not load existing custom shortlink.';
-        status.className = 'text-xs mt-1 text-yellow-700';
-    }
-    input.addEventListener('input', () => {
-        const path = input.value.trim();
-        status.textContent = '';
-        if (customShortlinkCheckTimer) clearTimeout(customShortlinkCheckTimer);
-        customShortlinkCheckTimer = setTimeout(async () => {
-            if (!path) return;
-            if (!isValidCustomShortlink(path)) {
-                status.textContent = '❌ Invalid format.';
-                status.className = 'text-xs mt-1 text-red-600';
-                return;
-            }
-            try {
-                const exists = await adminProxy('shortlinks:check', { path });
-                status.textContent = exists ? '❌ Taken' : '✅ Available';
-                status.className = `text-xs mt-1 ${exists ? 'text-red-600' : 'text-green-600'}`;
-            } catch (err) {
-                status.textContent = '⚠️ Could not verify uniqueness right now.';
-                status.className = 'text-xs mt-1 text-yellow-700';
-            }
-        }, 300);
-    });
 }
 
 const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
@@ -2431,7 +2362,6 @@ if (!slug) {
                 other3: document.getElementById('editOtherReview3').value.trim() || null
             }
         };
-        listingData.custom_shortlink = document.getElementById('editCustomShortlink')?.value.trim() || null;
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
@@ -2494,53 +2424,6 @@ if (!slug) {
             });
         } else {
             savedListing = await adminProxy('listings:insert', listingData);
-        }
-
-        const customPath = listingData.custom_shortlink;
-        if (!isExisting) {
-            let systemPath;
-            for (;;) {
-                const candidate = generateSystemShortlinkCandidate();
-                if (!isValidSystemShortlink(candidate)) continue;
-                const exists = await adminProxy('shortlinks:check', { path: candidate });
-                if (exists) continue;
-                try {
-                    await adminProxy('shortlinks:insert', {
-                        title: listingData.business_name,
-                        path: candidate,
-                        redirect_to: `https://thegreekdirectory.org/listing/${savedListing.slug || listingData.slug}`,
-                        listing_refer_id: savedListing.id,
-                        listing_custom: false
-                    });
-                    systemPath = candidate;
-                    break;
-                } catch (err) {
-                    if (err?.message && err.message.includes('path_conflict')) continue;
-                    throw err;
-                }
-            }
-            if (customPath && isValidCustomShortlink(customPath)) {
-                const customExists = await adminProxy('shortlinks:check', { path: customPath });
-                if (customExists) {
-                    alert('⚠️ Custom shortlink already exists. Listing was saved and system shortlink was created.');
-                } else {
-                    try {
-                        await adminProxy('shortlinks:insert', {
-                            title: listingData.business_name,
-                            path: customPath,
-                            redirect_to: `https://thegreekdirectory.org/listing/${savedListing.slug || listingData.slug}`,
-                            listing_refer_id: savedListing.id,
-                            listing_custom: true
-                        });
-                    } catch (err) {
-                        if (err?.message && err.message.includes('Custom shortlink already exists for this listing')) {
-                            alert('⚠️ A custom shortlink already exists for this listing. Delete the existing one first.');
-                        } else {
-                            throw err;
-                        }
-                    }
-                }
-            }
         }
         
         await saveOwnerInfo(savedListing.id, isClaimed);
@@ -3089,7 +2972,6 @@ window.deleteListing = async function(listingId) {
     
     try {
         await adminProxy('owners:delete', { listing_id: listingId });
-        await adminProxy('shortlinks:delete', { listing_refer_id: listingId });
         await adminProxy('listings:delete', { id: listingId });
         
         alert('✅ Listing deleted successfully');
@@ -3737,7 +3619,6 @@ function generateTemplateReplacements(listing) {
         'PRIMARY_SUBCATEGORY': escapeHtml(listing.primary_subcategory || 'business'),
         'CATEGORY_URL': categoryUrl,
         'LISTING_URL': listingUrl,
-        'SHORTLINK_URL': listing.shortlink_url || listingUrl,
         'LISTING_ID': listing.id,
         'SLUG': listing.slug || '',
         'LOGO': listing.logo || '',
@@ -4065,13 +3946,6 @@ async function prepareListingPageGeneration(listingId, options = {}) {
     
     let template = await templateResponse.text();
     
-    const shortlinkRows = await adminProxy('shortlinks:get', { listing_id: listingId });
-    const validRows = Array.isArray(shortlinkRows) ? shortlinkRows : [];
-    const preferredCustom = validRows.find((row) => row.listing_custom === true && isValidCustomShortlink(row.path));
-    const systemShortlink = validRows.find((row) => row.listing_custom === false && isValidSystemShortlink(row.path));
-    const resolvedShortlinkPath = preferredCustom?.path || systemShortlink?.path || '';
-    listing.shortlink_url = resolvedShortlinkPath ? `https://tgd.gr${resolvedShortlinkPath}` : '';
-
     const replacements1 = generateTemplateReplacements(listing);
     const replacements2 = generateTemplateReplacementsPart2(listing);
     const replacements = { ...replacements1, ...replacements2 };
@@ -4085,8 +3959,7 @@ async function prepareListingPageGeneration(listingId, options = {}) {
     return {
         businessName: listing.business_name,
         filePath: `listing/${listing.slug}.html`,
-        content: template,
-        shortlinksFound: validRows.length > 0
+        content: template
     };
 }
 
@@ -4095,9 +3968,6 @@ window.generateListingPage = async function(listingId, options = {}) {
     try {
         const generatedFile = await prepareListingPageGeneration(listingId, { skipAnalytics });
         await saveToGitHub(generatedFile.filePath, generatedFile.content, generatedFile.businessName);
-        if (!generatedFile.shortlinksFound) {
-            alert('Page generated, but shortlink integrity must be checked in Supabase.');
-        }
         
         if (!skipSitemap) {
             await updateSitemap();
