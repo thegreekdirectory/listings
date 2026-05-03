@@ -2431,7 +2431,7 @@ if (!slug) {
                 other3: document.getElementById('editOtherReview3').value.trim() || null
             }
         };
-        listingData.custom_shortlink = document.getElementById('editCustomShortlink')?.value.trim() || null;
+        const customShortlinkPath = document.getElementById('editCustomShortlink')?.value.trim() || null;
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
@@ -2496,7 +2496,7 @@ if (!slug) {
             savedListing = await adminProxy('listings:insert', listingData);
         }
 
-        const customPath = listingData.custom_shortlink;
+        const customPath = customShortlinkPath;
         if (!isExisting) {
             let systemPath;
             for (;;) {
