@@ -31,12 +31,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/automotive-transportation</loc>
-    <lastmod>2026-05-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://thegreekdirectory.org/category/food-hospitality</loc>
     <lastmod>2026-05-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -73,16 +67,16 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/education-community</loc>
+    <loc>https://thegreekdirectory.org/category/automotive-transportation</loc>
     <lastmod>2026-05-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/listing/sdfg</loc>
+    <loc>https://thegreekdirectory.org/category/education-community</loc>
     <lastmod>2026-05-03</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/m-na</loc>
@@ -331,7 +325,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/listing/hellenic-american-academy</loc>
+    <loc>https://thegreekdirectory.org/listing/hellenic-american-academy-deerfield-il</loc>
     <lastmod>2026-05-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
