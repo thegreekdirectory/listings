@@ -2498,50 +2498,61 @@ if (!slug) {
 
         const customPath = customShortlinkPath;
         if (!isExisting) {
-            let systemPath;
-            for (;;) {
-                const candidate = generateSystemShortlinkCandidate();
-                if (!isValidSystemShortlink(candidate)) continue;
-                const exists = await adminProxy('shortlinks:check', { path: candidate });
-                if (exists) continue;
-                try {
-                    await adminProxy('shortlinks:insert', {
-                        title: listingData.business_name,
-                        path: candidate,
-                        redirect_to: `https://thegreekdirectory.org/listing/${savedListing.slug || listingData.slug}`,
-                        listing_refer_id: savedListing.id,
-                        listing_custom: false
-                    });
-                    systemPath = candidate;
-                    break;
-                } catch (err) {
-                    if (err?.message && err.message.includes('path_conflict')) continue;
+    // System shortlink — only for new listings
+    let systemPath;
+    for (;;) {
+        const candidate = generateSystemShortlinkCandidate();
+        if (!isValidSystemShortlink(candidate)) continue;
+        const exists = await adminProxy('shortlinks:check', { path: candidate });
+        if (exists) continue;
+        try {
+            await adminProxy('shortlinks:insert', {
+                title: listingData.business_name,
+                path: candidate,
+                redirect_to: `https://thegreekdirectory.org/listing/${savedListing.slug || listingData.slug}`,
+                listing_refer_id: savedListing.id,
+                listing_custom: false
+            });
+            systemPath = candidate;
+            break;
+        } catch (err) {
+            if (err?.message && err.message.includes('path_conflict')) continue;
+            throw err;
+        }
+    }
+}
+
+// Custom shortlink — runs for both new and existing listings
+if (customShortlinkPath && isValidCustomShortlink(customShortlinkPath)) {
+    const existingRows = await adminProxy('shortlinks:get', { listing_id: savedListing.id });
+    const existingCustom = (Array.isArray(existingRows) ? existingRows : [])
+        .find(row => row.listing_custom === true);
+
+    if (!existingCustom) {
+        const pathTaken = await adminProxy('shortlinks:check', { path: customShortlinkPath });
+        if (pathTaken) {
+            alert('⚠️ That custom shortlink path is already taken. Listing saved, but custom shortlink was not created.');
+        } else {
+            try {
+                await adminProxy('shortlinks:insert', {
+                    title: listingData.business_name,
+                    path: customShortlinkPath,
+                    redirect_to: `https://thegreekdirectory.org/listing/${savedListing.slug || listingData.slug}`,
+                    listing_refer_id: savedListing.id,
+                    listing_custom: true
+                });
+            } catch (err) {
+                if (err?.message && err.message.includes('path_conflict')) {
+                    alert('⚠️ Custom shortlink path conflict. Listing saved without custom shortlink.');
+                } else {
                     throw err;
                 }
             }
-            if (customPath && isValidCustomShortlink(customPath)) {
-                const customExists = await adminProxy('shortlinks:check', { path: customPath });
-                if (customExists) {
-                    alert('⚠️ Custom shortlink already exists. Listing was saved and system shortlink was created.');
-                } else {
-                    try {
-                        await adminProxy('shortlinks:insert', {
-                            title: listingData.business_name,
-                            path: customPath,
-                            redirect_to: `https://thegreekdirectory.org/listing/${savedListing.slug || listingData.slug}`,
-                            listing_refer_id: savedListing.id,
-                            listing_custom: true
-                        });
-                    } catch (err) {
-                        if (err?.message && err.message.includes('Custom shortlink already exists for this listing')) {
-                            alert('⚠️ A custom shortlink already exists for this listing. Delete the existing one first.');
-                        } else {
-                            throw err;
-                        }
-                    }
-                }
-            }
         }
+    } else if (existingCustom.path !== customShortlinkPath) {
+        alert('⚠️ A custom shortlink already exists for this listing. To change it, delete the existing row from Supabase first.');
+    }
+}
         
         await saveOwnerInfo(savedListing.id, isClaimed);
         
