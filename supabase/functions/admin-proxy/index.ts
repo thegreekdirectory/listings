@@ -358,14 +358,14 @@ serve(async (req: Request) => {
           throw new Error('shortlinks:insert requires path, listing_refer_id, listing_custom')
         }
 
-        const { data: existing, error: existingError } = await supabase
+        const { data: existingRows, error: existingError } = await supabase
           .from('shortlinks')
           .select('id')
           .eq('listing_refer_id', listing_refer_id)
           .eq('listing_custom', listing_custom)
-          .maybeSingle()
+          .limit(1)
         if (existingError) throw existingError
-        if (existing) {
+        if (existingRows && existingRows.length) {
           return new Response(
             JSON.stringify({
               success: false,
