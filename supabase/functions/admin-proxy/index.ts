@@ -321,6 +321,98 @@ serve(async (req: Request) => {
         break
       }
 
+
+      case 'shortlinks:get': {
+        const listingReferId = payload?.listing_id || payload?.listing_refer_id
+        if (!listingReferId) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'listing_id is required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          )
+        }
+        const { data, error } = await supabase
+          .from('shortlinks')
+          .select('*')
+          .eq('listing_refer_id', listingReferId)
+        if (error) throw error
+        result = data || []
+        break
+      }
+
+      case 'shortlinks:check': {
+        const { path } = payload
+        if (!path) throw new Error('shortlinks:check requires path')
+        const { data, error } = await supabase
+          .from('shortlinks')
+          .select('path')
+          .eq('path', path)
+          .limit(1)
+        if (error) throw error
+        result = !!(data && data.length)
+        break
+      }
+
+      case 'shortlinks:insert': {
+        const { title, path, redirect_to, listing_refer_id, listing_custom } = payload
+        if (!path || !listing_refer_id || typeof listing_custom !== 'boolean') {
+          throw new Error('shortlinks:insert requires path, listing_refer_id, listing_custom')
+        }
+
+        const { data: existingRows, error: existingError } = await supabase
+          .from('shortlinks')
+          .select('id')
+          .eq('listing_refer_id', listing_refer_id)
+          .eq('listing_custom', listing_custom)
+          .limit(1)
+        if (existingError) throw existingError
+        if (existingRows && existingRows.length) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: listing_custom
+                ? 'Custom shortlink already exists for this listing'
+                : 'System shortlink already exists for this listing',
+            }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          )
+        }
+
+        const { data, error } = await supabase
+          .from('shortlinks')
+          .insert({ title, path, redirect_to, listing_refer_id, listing_custom })
+          .select()
+          .single()
+        if (error) {
+          if ((error as { code?: string }).code === '23505') {
+            return new Response(
+              JSON.stringify({ success: false, error: 'path_conflict', code: 23505 }),
+              { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+            )
+          }
+          throw error
+        }
+        result = data
+        break
+      }
+
+      case 'shortlinks:delete': {
+        const { listing_refer_id } = payload
+        if (!listing_refer_id) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'listing_refer_id is required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          )
+        }
+        const { error } = await supabase
+          .from('shortlinks')
+          .delete()
+          .eq('listing_refer_id', listing_refer_id)
+        if (error) throw error
+        result = true
+        break
+      }
+
+
       default:
         return new Response(
           JSON.stringify({ success: false, error: `Unknown action: ${action}` }),
