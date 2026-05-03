@@ -690,7 +690,7 @@
       "listingId": 1,
       "metadata": {
         "createdAt": "2026-01-13T08:51:41.440Z",
-        "updatedAt": "2026-05-03T18:16:34.982Z"
+        "updatedAt": "2026-05-03T18:16:39.288Z"
       },
       "analytics": {
         "views": 0,
@@ -703,7 +703,7 @@
         "lastViewed": "2026-01-13T08:51:41.440Z",
         "detailedViews": []
       },
-      "visible": false
+      "visible": true
     },
     {
       "businessName": "B",
