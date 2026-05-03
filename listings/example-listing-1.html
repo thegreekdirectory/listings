@@ -1,0 +1,1437 @@
+<!--
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+-->
+
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>Example Listing 1 in {{CITY}}, {{STATE}} | Greek Businesses | The Greek Directory</title>
+
+    <meta name="description" content="{{META_DESCRIPTION}}">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="author" content="The Greek Directory">
+    <meta http-equiv="content-language" content="en-US">
+
+    <meta property="og:title" content="Example Listing 1 in {{CITY}}, {{STATE}} | Greek Businesses | The Greek Directory">
+    <meta property="og:description" content="{{META_DESCRIPTION}}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="The Greek Directory">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="{{LISTING_URL}}">
+    <meta property="og:image" content="{{PRIMARY_IMAGE}}">
+    <meta property="og:image:alt" content="Example Listing 1 in {{CITY}}, {{STATE}}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="{{OG_IMAGE_TYPE}}">
+    <meta property="og:image:secure_url" content="{{PRIMARY_IMAGE}}">
+    <meta property="business:contact_data:street_address" content="365 DuSable Lake Shore Dr, Chicago IL">
+    <meta property="business:contact_data:locality" content="{{CITY}}">
+    <meta property="business:contact_data:region" content="{{STATE}}">
+    <meta property="business:contact_data:postal_code" content="{{ZIP_CODE}}">
+    <meta property="business:contact_data:country_name" content="United States">
+    <meta property="business:contact_data:phone_number" content="{{PHONE_SCHEMA}}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Example Listing 1 in {{CITY}}, {{STATE}} | Greek Businesses | The Greek Directory">
+    <meta name="twitter:site" content="@greekdirectory">
+    <meta name="twitter:description" content="{{META_DESCRIPTION}}">
+    <meta name="twitter:image" content="{{PRIMARY_IMAGE}}">
+    <style>
+    .pwa-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .pwa-splash.fade-out {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .pwa-splash-logo {
+        width: 120px;
+        height: auto;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .pwa-splash {
+            background: #000000;
+        }
+    }
+    /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+</style>
+
+    <link rel="preconnect" href="https://images.thegreekdirectory.org">
+    <link rel="dns-prefetch" href="https://images.thegreekdirectory.org">
+    <link rel="stylesheet" href="/css/pwa.css">
+    <link rel="canonical" href="https://thegreekdirectory.org/listing/{{SLUG}}">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/src/output.css">
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": {{SCHEMA_TYPES_JSON}},
+                "@id": "{{LISTING_URL}}#business",
+                "name": "Example Listing 1",
+                "description": "{{META_DESCRIPTION}}",
+                "url": "{{LISTING_URL}}",
+                "telephone": "{{PHONE_SCHEMA}}",
+                "priceRange": "{{PRICE_RANGE}}",
+                "image": ["{{PRIMARY_IMAGE}}"],
+                "logo": "{{LOGO}}",
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "365 DuSable Lake Shore Dr, Chicago IL",
+                    "addressLocality": "{{CITY}}",
+                    "addressRegion": "{{STATE}}",
+                    "postalCode": "{{ZIP_CODE}}",
+                    "addressCountry": "US"
+                },
+                "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": "{{LAT}}",
+                    "longitude": "{{LNG}}"
+                },
+                "hasMap": "{{HAS_MAP_URL}}",
+                "areaServed": {
+                    "@type": "AdministrativeArea",
+                    "name": "{{STATE}}"
+                },
+                "openingHoursSpecification": {{HOURS_SCHEMA}},
+                "sameAs": {{SAME_AS_SCHEMA}},
+                "mainEntityOfPage": {"@id": "{{LISTING_URL}}#page"},
+                "identifier": {
+                    "@type": "PropertyValue",
+                    "propertyID": "TGD Listing ID",
+                    "value": "{{LISTING_ID}}"
+                }
+            },
+            {
+                "@type": "ItemPage",
+                "@id": "{{LISTING_URL}}#page",
+                "name": "Example Listing 1",
+                "url": "{{LISTING_URL}}",
+                "isPartOf": {
+                    "@type": "WebSite",
+                    "name": "The Greek Directory",
+                    "url": "https://thegreekdirectory.org"
+                }
+            },
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://thegreekdirectory.org"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Greek School/Cultural Center",
+                        "item": "{{CATEGORY_URL}}"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": "Example Listing 1",
+                        "item": "{{LISTING_URL}}"
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+
+
+    <script type="application/ld+json">
+    {
+        "@context":"https://schema.org",
+        "@type":"WebSite",
+        "name":"The Greek Directory",
+        "url":"https://thegreekdirectory.org",
+        "inLanguage":"en-US",
+        "potentialAction":{
+            "@type":"SearchAction",
+            "target":"https://thegreekdirectory.org/listings?q={search_term_string}",
+            "query-input":"required name=search_term_string"
+        }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context":"https://schema.org",
+        "@type":"Organization",
+        "name":"The Greek Directory",
+        "url":"https://thegreekdirectory.org",
+        "logo":"https://images.thegreekdirectory.org/logo/blue.svg",
+        "sameAs":[
+            "https://www.facebook.com/thegreekdirectory",
+            "https://www.instagram.com/thegreekdirectory",
+            "https://www.youtube.com/@thegreekdirectory",
+            "https://x.com/greekdirectory",
+            "https://www.tiktok.com/@thegreekdirectory",
+            "https://www.snapchat.com/@greekdirectory",
+            "https://www.reddit.com/u/thegreekdirectory/",
+            "https://www.reddit.com/r/thegreekdirectory/"
+        ]
+    }
+    </script>
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
+    <style>
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .carousel-container { position: relative; width: 100%; overflow: hidden; }
+        .carousel-track { display: flex; transition: transform 0.5s ease; }
+        .carousel-slide { min-width: 100%; height: 100%; }
+        .carousel-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
+        .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s; }
+        .carousel-dot.active { background: white; width: 24px; border-radius: 4px; }
+        .carousel-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; padding: 10px 15px; cursor: pointer; z-index: 10; border-radius: 4px; font-size: 20px; user-select: none; }
+        .carousel-nav:hover { background: rgba(0,0,0,0.7); transform: translateY(-50%); }
+        .carousel-prev { left: 10px; }
+        .carousel-next { right: 10px; }
+        .carousel-fullsize-btn {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            background: rgba(0,0,0,0.65);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            z-index: 12;
+            transition: all 0.2s ease;
+        }
+        .carousel-fullsize-btn:hover { background: rgba(0,0,0,0.8); }
+        .gallery-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 24px;
+        }
+        .gallery-modal.active { display: flex; }
+        .gallery-content {
+            position: relative;
+            max-width: 1000px;
+            width: 100%;
+            max-height: 90vh;
+            background: #111827;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .gallery-image {
+            max-height: 70vh;
+            width: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #111827;
+        }
+        .gallery-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 36px;
+            height: 36px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .gallery-nav-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 40px;
+            height: 40px;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        .gallery-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+        .gallery-counter {
+            color: #d1d5db;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        .social-icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; }
+        .social-icon:hover { transform: scale(1.1); }
+        .social-facebook { background: #1877F2; color: white; }
+        .social-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; }
+        .social-twitter { background: #000000; color: white; }
+        .social-youtube { background: #FF0000; color: white; }
+        .social-tiktok { background: #000000; color: white; }
+        .social-linkedin { background: #0077B5; color: white; }
+        .social-google { background: #ffffff; color: #4285F4; border: 2px solid #4285F4; box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.18); }
+        .social-yelp { background: #ffffff; border: 2px solid #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.16); }
+        .social-tripadvisor { background: #ffffff; border: 2px solid #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.16); }
+        .social-yelp img, .social-tripadvisor img { width: 22px; height: 22px; display: block; }
+        .social-other { background: #045093; color: white; }
+        .share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; }
+        .share-button:hover { transform: scale(1.1); }
+        .share-sms { background: #10b981; color: white; }
+        .share-email { background: #ea580c; color: white; }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        #listingMap { width: 100%; height: 400px; border-radius: 8px; pointer-events: none; }
+        #listingMap.active { pointer-events: auto; }
+        .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
+        .badge-open { background: #10b981; color: white; }
+        .badge-closed { background: #ef4444; color: white; }
+        .badge-opening-soon { background: #fbbf24; color: #78350f; }
+        .badge-closing-soon { background: #f59e0b; color: white; }
+        .badge-featured { background: #fbbf24; color: #78350f; }
+        .badge-verified { background: #0000FF; color: white; }
+        .badge-claimed { background: #6B7280; color: white; }
+        .hours-disclaimer { background: #fef3c7; border: 1px solid #fbbf24; color: #78350f; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 8px; }
+        .card-shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); }
+        .open-now { color: #10b981; font-weight: 600; font-size: 14px; }
+        .closed-now { color: #ef4444; font-weight: 600; font-size: 14px; }
+        .category-pill { cursor: pointer; transition: all 0.2s; position: relative; }
+        .category-pill:hover { opacity: 0.8; }
+        .subcategories-display { display: none; margin-top: 8px; }
+        .subcategories-display.active { display: block; }
+        .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
+        .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; line-height: 1.35; }
+        .listing-description-wrap { margin: 0 0 1.5rem; }
+        .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
+        .listing-description p { margin-bottom: 1rem; }
+        .listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
+        .listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
+        .description-divider { display: flex; align-items: center; border: 1px solid #d1d5db; border-top: 0; border-radius: 0 0 10px 10px; padding: 10px; background: #ffffff; }
+        .description-divider-line { flex: 1; border-top: 1px solid #d1d5db; min-width: 0; }
+        .read-more-btn { margin: 0 12px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+        .verified-checkmark-btn { border: 0; background: transparent; padding: 0; margin-left: 8px; cursor: pointer; position: relative; display: inline-flex; align-items: center; }
+        .verified-checkmark-tooltip { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; min-width: 230px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .verified-checkmark-btn.open .verified-checkmark-tooltip { display: block; }
+        .hours-tooltip-wrap { position: relative; display: inline-flex; align-items: center; margin-left: 8px; }
+        .hours-tooltip-icon { width: 16px; height: 16px; color: #6b7280; cursor: pointer; }
+        .hours-tooltip { position: absolute; top: 20px; left: 0; z-index: 20; min-width: 220px; max-width: 280px; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: none; }
+        .hours-tooltip-wrap.open .hours-tooltip { display: block; }
+        .desktop-listing-layout { display: block; }
+        .desktop-main-column, .desktop-side-column { min-width: 0; }
+        .desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
+        .desktop-contact-card .flex.items-center.justify-center.gap-2.px-6.py-3 { padding-top: 10px; padding-bottom: 10px; }
+        .mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
+        .mobile-cta-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+        .additional-info-table { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+        .additional-info-row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr); gap: 16px; padding: 10px 14px; border-bottom: 1px solid #f3f4f6; }
+        .additional-info-row:last-child { border-bottom: none; }
+        .additional-info-row:nth-child(even) { background: #f9fafb; }
+        .map-fallback { display: none; margin-top: 12px; padding: 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 14px; }
+        .map-fallback.visible { display: block; }
+        .location-section.map-unavailable #listingMap { display: none; }
+        #shareModal {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        #shareModal .share-modal-panel {
+            transform: scale(0.96);
+            transition: transform 0.2s ease;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        #shareModal.active {
+            opacity: 1;
+        }
+        #shareModal.active .share-modal-panel {
+            transform: scale(1);
+        }
+        #shareModalButtons { margin-top: -4px; }
+
+        .related-listings-section { margin-top: 2rem; margin-bottom: 2rem; }
+        .related-listing-card { border: 2px solid #045093; border-radius: 10px; }
+        .claim-listing-section { margin-top: 1.5rem; }
+
+        .action-cta-row { display: flex; gap: 0.5rem; }
+        .action-cta-slot { flex: 1 1 0; display: flex; }
+        .action-cta-slot > * { width: 100%; min-height: 44px; }
+        .action-cta-slot-wide { max-width: 620px; margin: 0 auto; }
+        .action-cta-btn.hover-bounce:hover { transform: scale(1.04); }
+        @media (max-width: 767px) {
+            .action-cta-row { flex-direction: column; }
+            .action-cta-slot-wide { max-width: none; margin: 0; }
+        }
+        .pricing-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:#eff6ff; color:#045093; font-weight:700; font-size:12px; }
+        .badge-coming-soon { background: #f97316; color: #fff; }
+        .share-button { border: none; outline: none; box-shadow: none; }
+        .carousel-container { position: relative; }
+        .star-button { position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,0.6); box-shadow:0 2px 8px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.04); cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3; transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease; }
+        .star-button:hover { transform:scale(1.15); box-shadow:0 4px 14px rgba(0,0,0,.30),0 0 0 1px rgba(0,0,0,0.06); background:#fff; }
+        .star-button.starred { background:rgba(255,253,235,.97); border-color:rgba(234,179,8,.5); box-shadow:0 2px 10px rgba(202,138,4,.30),0 0 0 1px rgba(234,179,8,0.15); }
+        .star-icon { width:17px; height:17px; fill:#d1d5db; stroke:#9ca3af; stroke-width:1.8; }
+        .star-button.starred .star-icon { fill:#facc15; stroke:#ca8a04; }
+
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        @media (min-width: 768px) {
+            .social-map-grid { display: block; }
+        }
+        @media (min-width: 1024px) {
+            .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
+            .desktop-side-column { position: sticky; top: 72px; margin-top: 0; }
+        }
+        @media (max-width: 1023px) {
+            .desktop-side-column { margin-top: 24px; }
+        }
+@media (max-width: 767px) {
+    .share-section { margin-bottom: 24px; }
+
+    .desktop-listing-layout { 
+        display: flex; 
+        flex-direction: column; 
+    }
+
+    .desktop-main-column { 
+        display: flex; 
+        flex-direction: column; 
+    }
+
+    .desktop-main-column > * {
+        width: 100%;
+    }
+
+    .listing-main-header { 
+        order: 1; 
+    }
+
+    .mobile-cta-wrap { 
+        order: 2;
+        display: block;
+    }
+
+    .listing-description-wrap { 
+        order: 3; 
+    }
+
+    #locationSection { order: 4; }
+    .desktop-side-column { position: static; order: 5; margin-top: 0; }
+    #claimSection { margin-bottom: 12px; }
+    #additionalInfoSectionWrap { order: 6; }
+    #ownerInfoSection { order: 7; }
+    .social-map-grid { order: 8; }
+    .related-listings-section { order: 9; }
+    .claim-listing-section { order: 10; }
+}
+
+        #listingMap,
+        #listingMap .leaflet-pane,
+        #listingMap .leaflet-top,
+        #listingMap .leaflet-bottom,
+        #listingMap .leaflet-control {
+            z-index: 1 !important;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body { background: #1a1a1a; color: #e5e7eb; }
+            header { background: #2a2a2a !important; border-color: #3a3a3a; }
+            .bg-white { background: #2a2a2a !important; }
+            .bg-gray-50 { background: #1a1a1a !important; }
+            .bg-gray-100 { background: #3a3a3a !important; }
+            .bg-gray-200 { background: #404040 !important; }
+            .text-gray-900 { color: #e5e7eb !important; }
+            .text-gray-700 { color: #b0b0b0 !important; }
+            .text-gray-600 { color: #999 !important; }
+            .border-gray-300 { border-color: #404040 !important; }
+            .shadow-sm, .shadow, .shadow-lg, .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
+            .hover\:text-gray-900:hover { color: #e5e7eb !important; }
+            img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
+            .social-icon svg { pointer-events: none; user-select: none; }
+            .hours-disclaimer { background: #3a3a00; border-color: #8a7a00; color: #ffd700; }
+            .leaflet-container { background: #1a1a1a; }
+            .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
+            .leaflet-popup-tip { background: #2a2a2a !important; }
+            .subcategory-tag { background: #404040; color: #e5e5e5; }
+            .owner-info-section { background: #2a2a2a; border-color: #404040; }
+            .listing-description { background: #2a2a2a; border-color: #404040; }
+            .listing-description.collapsed::after { background: linear-gradient(to bottom, rgba(42,42,42,0), rgba(42,42,42,1)); }
+            .description-divider-line, .additional-info-table, .additional-info-row { border-color: #404040; }
+            .additional-info-row:nth-child(even), .map-fallback, .read-more-btn, .desktop-contact-card { background: #1f1f1f; color: #e5e7eb; border-color: #404040; }
+            .social-google, .social-yelp, .social-tripadvisor { background: #ffffff; }
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+    </style>
+</head>
+<body class="bg-gray-50">
+    <noscript>
+      <style>
+        .tgd-noscript-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:20px}
+        .tgd-noscript-card{max-width:400px;padding:30px;border-top:5px solid #045093;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,0.1);border-radius:8px}
+        .tgd-noscript-title{color:#045093;margin-top:0}
+        .tgd-noscript-copy{color:#444;line-height:1.5}
+        @media (prefers-color-scheme: dark){
+          .tgd-noscript-overlay{background:rgba(17,24,39,0.95)}
+          .tgd-noscript-card{background:#111827;box-shadow:0 10px 25px rgba(0,0,0,0.45)}
+          .tgd-noscript-copy{color:#e5e7eb}
+        }
+      </style>
+      <div class="tgd-noscript-overlay">
+        <div class="tgd-noscript-card">
+          <h2 class="tgd-noscript-title">JavaScript Required</h2>
+          <p class="tgd-noscript-copy">To experience the full functionality of <strong>TGD</strong>, please enable JavaScript in your browser settings.</p>
+        </div>
+      </div>
+    </noscript>
+    <!-- Header -->
+    <div data-partial="header"></div>
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow" id="carouselSection">
+            <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
+                <div class="carousel-track h-full">
+                    <div class="carousel-slide"><img src="" alt="Example Listing 1" class="w-full h-full object-cover"></div>
+                </div>
+                
+                <button class="star-button" type="button" data-listing-id="{{LISTING_ID}}" onclick="toggleListingStar(event)" aria-label="Star listing">
+                    <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
+                </button>
+                <button class="carousel-fullsize-btn" type="button" onclick="openGallery()">View Photos</button>
+            </div>
+        </div>
+
+        <div class="gallery-modal" id="galleryModal" aria-hidden="true">
+            <div class="gallery-content">
+                <button class="gallery-close" type="button" onclick="closeGallery()" aria-label="Close gallery">×</button>
+                <img id="galleryImage" class="gallery-image" alt="Example Listing 1 in {{CITY}}, {{STATE}}">
+                <div class="gallery-controls">
+                    <button class="gallery-nav-btn" type="button" onclick="prevGallerySlide()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                    <div class="gallery-counter" id="galleryCounter">1 / 1</div>
+                    <button class="gallery-nav-btn" type="button" onclick="nextGallerySlide()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg p-6 mb-6 card-shadow">
+            <div class="desktop-listing-layout">
+                <div class="desktop-main-column">
+                    <div class="flex justify-between items-start mb-4 listing-main-header" id="headerSection">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-4 flex-wrap">
+                                <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#045093;" onclick="toggleSubcategories()">
+                                    Greek School/Cultural Center
+                                </span>
+                                <div class="subcategories-display" id="subcategoriesDisplay">
+                                    {{SUBCATEGORIES_TAGS}}
+                                </div>
+                                <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
+                                    {{STATUS_BADGES}}
+                                    {{PRICING_BADGE}}
+                                </div>
+                            </div>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2" id="listingTitle">Example Listing 1{{CLAIMED_CHECKMARK}}</h1>
+                            {{TAGLINE_DISPLAY}}
+                        </div>
+                        <img src="{{LOGO}}" alt="Example Listing 1 in {{CITY}}, {{STATE}}" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover ml-4 flex-shrink-0 card-shadow">
+                    </div>
+
+                    <div class="md:hidden mobile-cta-wrap">
+                        <div class="mobile-cta-bar">
+                            {{PHONE_BUTTON_MOBILE}}
+                            {{EMAIL_BUTTON_MOBILE}}
+                            {{WEBSITE_BUTTON_MOBILE}}
+                            {{DIRECTIONS_BUTTON_MOBILE}}
+                            {{CUSTOM_CTA_BUTTONS_MOBILE}}
+                        </div>
+                    </div>
+
+                    <div class="listing-description-wrap" id="descriptionSection">
+                        <div class="text-gray-700 listing-description" id="listingDescription">Hi</div>
+                        <div class="description-divider">
+                            <span class="description-divider-line"></span>
+                            <button type="button" class="read-more-btn hidden" id="listingReadMoreBtn" style="cursor: pointer">Read more</button>
+                            <span class="description-divider-line"></span>
+                        </div>
+                    </div>
+
+                    {{MAP_SECTION}}
+                    <div id="additionalInfoSectionWrap">{{ADDITIONAL_INFO_SECTION}}</div>
+                    <div id="ownerInfoSection"></div>
+
+                    <div class="social-map-grid" id="socialSection">
+                <div>
+                    
+                    {{SOCIAL_BREAK}}
+                    {{REVIEW_SECTION}}
+                    {{REVIEW_BREAK}}
+                    <div class="share-section hidden" id="shareButtonsSection">
+                        <h2 class="text-xl font-bold text-gray-900 mb-3">Share</h2>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{LISTING_URL}}%3Futm_source%3Dfacebook%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-facebook" title="Share on Facebook" onclick="trackClick('share', 'facebook')">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{BUSINESS_NAME_ENCODED}}%20on%20The%20Greek%20Directory!&url={{LISTING_URL}}%3Futm_source%3Dtwitter%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-twitter" title="Share on X" onclick="trackClick('share', 'twitter')">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            </a>
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{LISTING_URL}}%3Futm_source%3Dlinkedin%26utm_medium%3Dsocial%26utm_campaign%3Dshare" target="_blank" rel="noopener noreferrer" class="share-button social-linkedin" title="Share on LinkedIn" onclick="trackClick('share', 'linkedin')">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                            </a>
+                            <a href="sms:?&body=Check%20out%20{{BUSINESS_NAME_ENCODED}}%20on%20The%20Greek%20Directory!%20{{LISTING_URL}}%3Futm_source%3Dsms%26utm_medium%3Dsocial%26utm_campaign%3Dshare" class="share-button share-sms" title="Share via SMS" onclick="trackClick('share', 'sms')">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+                            </a>
+                            <a href="mailto:?subject={{BUSINESS_NAME_ENCODED}}%20on%20The%20Greek%20Directory&body=Check%20out%20{{BUSINESS_NAME_ENCODED}}%20on%20The%20Greek%20Directory!%0A{{LISTING_URL}}%3Futm_source%3Demail%26utm_medium%3Dsocial%26utm_campaign%3Dshare" class="share-button share-email" title="Share via Email" onclick="trackClick('share', 'email')">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            </a>
+                            <button onclick="shareNative()" class="share-button social-other" title="Share">
+                                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                </div>
+                <aside class="desktop-side-column" id="contactSection">
+                    <div class="desktop-contact-card">
+                        <div class="space-y-3 mb-6">
+                            {{ADDRESS_SECTION}}
+                            {{PHONE_SECTION}}
+                            <div class="flex items-start gap-3"><span class="mt-1">📧</span><div><p class="font-semibold text-gray-900">Email</p><a href="mailto:example@example.com" class="text-blue-600 hover:underline">example@example.com</a></div></div>
+                            <div class="flex items-start gap-3"><span class="mt-1">🌐</span><div><p class="font-semibold text-gray-900">Website</p><a href="https://example.com" target="_blank" class="text-blue-600 hover:underline break-all">https://example.com</a></div></div>
+                            <div class="flex items-start gap-3"><span class="mt-1">🕒</span><div><p class="font-semibold text-gray-900">Hours</p><p class="text-gray-700">Mon-Sat: 11am-10pm, Sun: 12pm-9pm</p></div></div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 mb-2">
+                            {{PHONE_BUTTON}}
+                            <a href="mailto:example@example.com" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>📧</span><span>Email</span></a>
+                            <a href="https://example.com" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg font-medium"><span>🌐</span><span>Visit Website</span></a>
+                            {{DIRECTIONS_BUTTON}}
+                            {{CUSTOM_CTA_BUTTONS}}
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+        <div class="related-listings-section" id="relatedSection">{{RELATED_LISTINGS_SECTION}}</div>
+
+        <div class="claim-listing-section" id="claimSection">
+            <div class="action-cta-row">
+                <div class="action-cta-slot">{{SUGGEST_EDIT_BUTTON}}</div>
+                <div class="action-cta-slot">{{CLAIM_BUTTON}}</div>
+            </div>
+        </div>
+        <div class="claim-listing-section" id="shareBottomSection">
+            <div class="action-cta-row">
+                <div class="action-cta-slot action-cta-slot-wide">{{SHARE_TRIGGER_BUTTON}}</div>
+            </div>
+        </div>
+    </div>
+
+        <div id="shareModal" class="hidden fixed inset-0 z-50 items-center justify-center p-4" style="background:rgba(0,0,0,0.45);" onclick="closeShareModal()">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md share-modal-panel" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Share</h3>
+                <a onclick="closeShareModal()" style="cursor: pointer">✕</a>
+            </div>
+            <div id="shareModalButtons" class="flex flex-wrap gap-2 mb-3"></div>
+            <div class="mb-4">
+                <label id="shareCopyLabel" class="block text-sm font-medium text-gray-700 mb-2">Copy link</label>
+                <div class="flex gap-2">
+                    <input id="shareLinkInput" readonly class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" value="{{LISTING_URL}}">
+                    <a id="copyShareLinkBtn" type="button" class="px-4 py-2 rounded-lg text-white font-semibold hover-bounce" style="background:#045093; cursor: pointer;" onclick="copyShareLink()">Copy Link</a>
+                </div>
+            </div>
+            <label class="flex items-center gap-2 text-sm text-gray-700">
+                <input id="shortenUrlToggle" type="checkbox">
+                <span>Shorten URL</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div data-partial="footer"></div>
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/js/partials-loader.js"></script>
+    <script src="/js/pwa/directions.js"></script>
+    <script src="/js/pwa/storage.js"></script>
+    <script src="/js/pwa/offline-translation.js"></script>
+    <script src="/js/pwa/app.js"></script>
+    <script src="/js/pwa/dock.js"></script>
+    <script src="/js/pwa/starred.js"></script>
+
+    <script>
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    // Store current listing data for starring
+    window.currentListingData = {
+        id: '{{LISTING_ID}}',
+        business_name: "{{BUSINESS_NAME_JS}}",
+        tagline: "{{TAGLINE_JS}}",
+        description: "{{DESCRIPTION_JS}}",
+        category: 'Greek School/Cultural Center',
+        city: "{{CITY_JS}}",
+        state: "{{STATE_JS}}",
+        address: "{{ADDRESS_JS}}",
+        phone: '(847) 999-1034',
+        email: "{{EMAIL_JS}}",
+        website: "{{WEBSITE_JS}}",
+        logo: '{{LOGO}}',
+        photos: {{PHOTOS_JSON}},
+        slug: '{{SLUG}}'
+    };
+    
+    function openDirections(event) {
+        if (event) event.preventDefault();
+        const listing = window.currentListingData || {};
+        const directionsUrl = (window.TGDDirections && window.TGDDirections.getDirectionsUrl)
+            ? window.TGDDirections.getDirectionsUrl(listing)
+            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((listing.address || '') + ' ' + (listing.city || '') + ' ' + (listing.state || ''))}`;
+        window.open(directionsUrl, '_blank', 'noopener');
+    }
+
+    function getStarredListingIds() {
+        const cookieEntry = document.cookie.split('; ').find((item) => item.startsWith('starredListings='));
+        if (!cookieEntry) return [];
+        try {
+            const parsed = JSON.parse(decodeURIComponent(cookieEntry.split('=')[1]));
+            return Array.isArray(parsed) ? parsed.map(String) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function setStarredListingIds(ids) {
+        const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
+        document.cookie = `starredListings=${encodeURIComponent(JSON.stringify(ids))}; expires=${expires}; path=/; SameSite=Lax`;
+    }
+
+    async function toggleListingStar(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const starButton = document.querySelector('.star-button[data-listing-id="{{LISTING_ID}}"]');
+        if (!starButton) return;
+
+        const listingId = String('{{LISTING_ID}}');
+        const starredIds = getStarredListingIds();
+        const existingIndex = starredIds.indexOf(listingId);
+        const shouldStar = existingIndex === -1;
+
+        if (shouldStar) starredIds.push(listingId);
+        else starredIds.splice(existingIndex, 1);
+
+        setStarredListingIds(starredIds);
+        starButton.classList.toggle('starred', shouldStar);
+        window.dispatchEvent(new CustomEvent('tgd:starred-changed', {
+            detail: { action: shouldStar ? 'added' : 'removed', listingId, timestamp: Date.now() }
+        }));
+
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            if (shouldStar) await window.PWAStorage.addStarred(window.currentListingData);
+            else await window.PWAStorage.removeStarred(listingId);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const starButton = document.querySelector('.star-button[data-listing-id="{{LISTING_ID}}"]');
+        if (!starButton) return;
+        const listingId = String('{{LISTING_ID}}');
+        const isStarredByCookie = getStarredListingIds().includes(listingId);
+        if (isStarredByCookie) starButton.classList.add('starred');
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            const isStarred = await window.PWAStorage.isStarred(listingId);
+            if (isStarred) starButton.classList.add('starred');
+        }
+    });
+
+    function handleListingHashRoute() {
+        const hash = (window.location.hash || '').toLowerCase();
+        const targets = {
+            '#carousel': 'carouselSection',
+            '#header': 'headerSection',
+            '#description': 'descriptionSection',
+            '#map': 'locationSection',
+            '#contact': 'contactSection',
+            '#additional': 'additionalInfoSectionWrap',
+            '#owner': 'ownerInfoSection',
+            '#social': 'socialSection',
+            '#related': 'relatedSection',
+            '#claim': 'claimSection'
+        };
+        const targetId = targets[hash];
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.addEventListener('DOMContentLoaded', handleListingHashRoute);
+    window.addEventListener('hashchange', handleListingHashRoute);
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    </script>
+    <script>
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const totalSlides = 1;
+        const businessName = 'Example Listing 1';
+        const listingUrl = '{{LISTING_URL}}';
+        const listingId = '{{LISTING_ID}}';
+        const hoursData = {{HOURS_JSON}};
+        const businessTimezone = '{{BUSINESS_TIMEZONE}}' || 'America/Chicago';
+        const galleryPhotos = {{PHOTOS_JSON}};
+        let currentGalleryIndex = 0;
+        
+        function toggleSubcategories() {
+            const display = document.getElementById('subcategoriesDisplay');
+            display.classList.toggle('active');
+        }
+        
+        function formatPhoneDisplay(phone) {
+            if (!phone) return '';
+            const digits = phone.replace(/\D/g, '');
+            if (digits.length === 11 && digits.startsWith('1')) {
+                return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
+            }
+            if (digits.length === 10) {
+                return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+            }
+            return phone;
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.TGDLanguage && typeof window.TGDLanguage.applyStoredLanguage === 'function') {
+                window.TGDLanguage.applyStoredLanguage();
+            }
+            document.querySelectorAll('.text-gray-600, .text-gray-700').forEach(el => {
+                const phone = el.textContent.match(/\b1?\d{10}\b/);
+                if (phone) {
+                    el.textContent = el.textContent.replace(phone[0], formatPhoneDisplay(phone[0]));
+                }
+            });
+        });
+        
+        async function trackAnalytics(action, platform) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('listing_analytics')
+                    .insert({
+                        listing_id: listingId,
+                        action: action,
+                        platform: platform || null,
+                        timestamp: new Date().toISOString(),
+                        user_agent: navigator.userAgent
+                    });
+                
+                if (error) throw error;
+            } catch (e) {
+                console.log('Analytics tracking error:', e.message);
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            trackAnalytics('view');
+        });
+        
+        function trackClick(action, platform) {
+            trackAnalytics(action, platform);
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a[href^="tel:"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('call'));
+            });
+            
+            document.querySelectorAll('a[href*="maps"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('directions'));
+            });
+            
+            const websiteDomain = '{{WEBSITE_DOMAIN}}';
+            if (websiteDomain) {
+                document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
+                    el.addEventListener('click', () => trackClick('website'));
+                });
+            }
+
+            document.querySelectorAll('[data-cta-name]').forEach(el => {
+                el.addEventListener('click', () => trackClick('custom_cta', el.dataset.ctaName || 'custom'));
+            });
+            
+            checkAdminRedirect();
+            initializeReadMore();
+            initializeTooltipToggle('verifiedCheckmarkButton');
+            initializeTooltipToggle('hoursTooltipButton');
+        });
+
+        function initializeTooltipToggle(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                button.classList.toggle('open');
+            });
+            document.addEventListener('click', () => button.classList.remove('open'));
+        }
+
+        function initializeReadMore() {
+            const description = document.getElementById('listingDescription');
+            const readMoreButton = document.getElementById('listingReadMoreBtn');
+            if (!description || !readMoreButton) return;
+            if (description.scrollHeight <= 300) return;
+
+            let expanded = false;
+            description.classList.add('collapsed');
+            readMoreButton.classList.remove('hidden');
+
+            readMoreButton.addEventListener('click', () => {
+                expanded = !expanded;
+                description.classList.toggle('collapsed', !expanded);
+                readMoreButton.textContent = expanded ? 'Read less' : 'Read more';
+            });
+        }
+        
+        function checkAdminRedirect() {
+            const path = window.location.pathname;
+            if (path.endsWith('/admin')) {
+                const slug = listingId;
+                window.location.href = `/business.html?slug=${slug}`;
+            }
+        }
+
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+        function parseHoursToMinutes(hoursText) {
+            if (!hoursText || typeof hoursText !== 'string') return null;
+            const value = hoursText.trim();
+            if (!value || value.toLowerCase() === 'closed') return null;
+            if (/24/.test(value.toLowerCase())) return { startMinutes: 0, endMinutes: 1439, overnight: false };
+
+            const h24 = value.match(/^(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})$/);
+            if (h24) {
+                const startMinutes = parseInt(h24[1], 10) * 60 + parseInt(h24[2], 10);
+                const endMinutes = parseInt(h24[3], 10) * 60 + parseInt(h24[4], 10);
+                return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
+            }
+
+            const h12 = value.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!h12) return null;
+            let [, sh, sm, sp, eh, em, ep] = h12;
+            let start = parseInt(sh, 10);
+            let end = parseInt(eh, 10);
+            if (sp.toUpperCase() === 'PM' && start !== 12) start += 12;
+            if (sp.toUpperCase() === 'AM' && start === 12) start = 0;
+            if (ep.toUpperCase() === 'PM' && end !== 12) end += 12;
+            if (ep.toUpperCase() === 'AM' && end === 12) end = 0;
+            const startMinutes = start * 60 + parseInt(sm, 10);
+            const endMinutes = end * 60 + parseInt(em, 10);
+            return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
+        }
+
+
+        function updateOpenClosedBadge() {
+            const badge = document.getElementById('openClosedBadge');
+            const statusText = document.getElementById('openStatusText');
+            const hasHours = hoursData && Object.values(hoursData).some(value => typeof value === 'string' && value.trim().length > 0);
+            if (!hasHours) {
+                if (badge) badge.style.display = 'none';
+                if (statusText) statusText.style.display = 'none';
+                return;
+            }
+            
+            const now = new Date();
+            const localNow = new Date(now.toLocaleString('en-US', { timeZone: businessTimezone }));
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const today = days[localNow.getDay()];
+
+            document.querySelectorAll('[data-hours-day]').forEach((row) => {
+                const dayLabel = row.querySelector('.hours-day-label');
+                const dayValue = row.querySelector('.hours-day-value');
+                if (dayLabel) dayLabel.classList.remove('font-bold');
+                if (dayValue) dayValue.classList.remove('font-bold');
+            });
+
+            const todayRow = document.querySelector(`[data-hours-day="${today}"]`);
+            if (todayRow) {
+                const dayLabel = todayRow.querySelector('.hours-day-label');
+                const dayValue = todayRow.querySelector('.hours-day-value');
+                if (dayLabel) dayLabel.classList.add('font-bold');
+                if (dayValue) dayValue.classList.add('font-bold');
+            }
+
+            const todayHours = hoursData[today];
+            
+            if (!todayHours || todayHours.toLowerCase() === 'closed') {
+                if (badge) {
+                    badge.textContent = 'CLOSED';
+                    badge.className = 'badge badge-closed';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Closed Now';
+                    statusText.className = 'closed-now';
+                }
+                return;
+            }
+            
+            if (todayHours.toLowerCase().includes('24') || todayHours.toLowerCase().includes('open 24')) {
+                if (badge) {
+                    badge.textContent = 'OPEN';
+                    badge.className = 'badge badge-open';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Open 24 Hours';
+                    statusText.className = 'open-now';
+                }
+                return;
+            }
+            
+            /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+            
+            const parsed = parseHoursToMinutes(todayHours);
+            if (!parsed) {
+                if (badge) badge.style.display = 'none';
+                if (statusText) statusText.style.display = 'none';
+                return;
+            }
+
+            const currentMinutes = localNow.getHours() * 60 + localNow.getMinutes();
+            const { startMinutes, endMinutes, overnight: isOvernight } = parsed;
+
+            const isOpen = isOvernight
+                ? (currentMinutes >= startMinutes || currentMinutes <= endMinutes)
+                : (currentMinutes >= startMinutes && currentMinutes <= endMinutes);
+            const minutesToOpen = startMinutes - currentMinutes;
+            const minutesToClose = (isOvernight && currentMinutes <= endMinutes)
+                ? endMinutes - currentMinutes
+                : (isOvernight ? (24 * 60 - currentMinutes) + endMinutes : endMinutes - currentMinutes);
+
+            if (!isOpen && minutesToOpen > 0 && minutesToOpen <= 60) {
+                if (badge) {
+                    badge.textContent = 'OPENING SOON';
+                    badge.className = 'badge badge-opening-soon';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Opening Soon';
+                    statusText.className = 'open-now';
+                }
+                return;
+            }
+
+            if (isOpen && minutesToClose > 0 && minutesToClose <= 60) {
+                if (badge) {
+                    badge.textContent = 'CLOSING SOON';
+                    badge.className = 'badge badge-closing-soon';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Closing Soon';
+                    statusText.className = 'open-now';
+                }
+                return;
+            }
+
+            if (isOpen) {
+                if (badge) {
+                    badge.textContent = 'OPEN';
+                    badge.className = 'badge badge-open';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Open Now';
+                    statusText.className = 'open-now';
+                }
+            } else {
+                if (badge) {
+                    badge.textContent = 'CLOSED';
+                    badge.className = 'badge badge-closed';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Closed Now';
+                    statusText.className = 'closed-now';
+                }
+            }
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        function openGallery(index = 0) {
+            const modal = document.getElementById('galleryModal');
+            if (!modal || !galleryPhotos || galleryPhotos.length === 0) return;
+            modal.classList.add('active');
+            currentGalleryIndex = index;
+            updateGallerySlide();
+        }
+
+        function closeGallery() {
+            const modal = document.getElementById('galleryModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+        }
+
+        function updateGallerySlide() {
+            const image = document.getElementById('galleryImage');
+            const counter = document.getElementById('galleryCounter');
+            if (!image || !galleryPhotos || galleryPhotos.length === 0) return;
+            image.src = galleryPhotos[currentGalleryIndex];
+            if (counter) {
+                counter.textContent = `${currentGalleryIndex + 1} / ${galleryPhotos.length}`;
+            }
+        }
+
+        function nextGallerySlide() {
+            if (!galleryPhotos || galleryPhotos.length === 0) return;
+            currentGalleryIndex = (currentGalleryIndex + 1) % galleryPhotos.length;
+            updateGallerySlide();
+        }
+
+        function prevGallerySlide() {
+            if (!galleryPhotos || galleryPhotos.length === 0) return;
+            currentGalleryIndex = (currentGalleryIndex - 1 + galleryPhotos.length) % galleryPhotos.length;
+            updateGallerySlide();
+        }
+
+        if (totalSlides > 1) {
+            function goToSlide(index) {
+                const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
+                const track = carousel.querySelector('.carousel-track');
+                const dots = carousel.querySelectorAll('.carousel-dot');
+                
+                track.style.transform = `translateX(-${index * 100}%)`;
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+                carousel.dataset.current = index;
+            }
+
+            function nextSlide() {
+                const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
+                const current = parseInt(carousel.dataset.current || 0);
+                goToSlide((current + 1) % totalSlides);
+            }
+
+            function prevSlide() {
+                const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
+                const current = parseInt(carousel.dataset.current || 0);
+                goToSlide((current - 1 + totalSlides) % totalSlides);
+            }
+
+            setInterval(nextSlide, 5000);
+            
+            window.goToSlide = goToSlide;
+            window.nextSlide = nextSlide;
+            window.prevSlide = prevSlide;
+        }
+
+        window.openGallery = openGallery;
+        window.closeGallery = closeGallery;
+        window.nextGallerySlide = nextGallerySlide;
+        window.prevGallerySlide = prevGallerySlide;
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            closeGallery();
+            const shareModal = document.getElementById('shareModal');
+            if (shareModal && shareModal.classList.contains('active')) {
+                closeShareModal();
+            }
+        });
+
+        function shareNative() {
+            trackClick('share', 'native');
+            if (navigator.share) {
+                navigator.share({
+                    title: businessName + ' | The Greek Directory',
+                    text: 'Check out ' + businessName + ' on The Greek Directory!',
+                    url: window.location.href.split('?')[0] + '?utm_source=native&utm_medium=share&utm_campaign=listing'
+                }).catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.log('Share failed:', err);
+                    }
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    const label = document.getElementById('shareCopyLabel');
+                    if (label) {
+                        const original = label.textContent;
+                        label.textContent = 'Link copied to clipboard!';
+                        setTimeout(() => { label.textContent = original; }, 1800);
+                    }
+                }).catch(() => {
+                    console.log('Unable to share. Please copy the URL from your browser.');
+                });
+            }
+        }
+
+        function openShareModal() {
+            const modal = document.getElementById('shareModal');
+            const source = document.getElementById('shareButtonsSection');
+            const target = document.getElementById('shareModalButtons');
+            if (!modal || !source || !target) return;
+            target.innerHTML = source.querySelector('.flex') ? source.querySelector('.flex').innerHTML : '';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            requestAnimationFrame(() => modal.classList.add('active'));
+        }
+
+        function closeShareModal() {
+            const modal = document.getElementById('shareModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function copyShareLink() {
+            const input = document.getElementById('shareLinkInput');
+            const label = document.getElementById('shareCopyLabel');
+            if (!input) return;
+            navigator.clipboard.writeText(input.value).then(() => {
+                if (label) {
+                    const original = label.textContent;
+                    label.textContent = 'Link copied to clipboard!';
+                    setTimeout(() => {
+                        label.textContent = original;
+                    }, 1800);
+                }
+            }).catch(() => {
+                input.select();
+                document.execCommand('copy');
+                if (label) {
+                    const original = label.textContent;
+                    label.textContent = 'Link copied to clipboard!';
+                    setTimeout(() => {
+                        label.textContent = original;
+                    }, 1800);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const claimSection = document.getElementById('claimSection');
+            if (claimSection) {
+                const socialSection = document.getElementById('socialSection');
+                const hasSocialOrReviews = !!document.querySelector('#socialSection h2');
+                const targetSelectors = [
+                    '#ownerInfoSection .owner-info-section',
+                    '#additionalInfoSectionWrap > div',
+                    '#locationSection',
+                    '#descriptionSection'
+                ];
+                const target = (socialSection && hasSocialOrReviews)
+                    ? socialSection
+                    : targetSelectors
+                        .map((selector) => document.querySelector(selector))
+                        .find((element) => element);
+                if (target && target.parentNode) {
+                    target.insertAdjacentElement('afterend', claimSection);
+                }
+            }
+
+            const input = document.getElementById('shareLinkInput');
+            const toggle = document.getElementById('shortenUrlToggle');
+            if (toggle && input) {
+                toggle.addEventListener('change', (event) => {
+                    input.value = event.target.checked ? `{{SHORTLINK_URL}}` : `https://thegreekdirectory.org/listing/{{SLUG}}`;
+                });
+            }
+        });
+
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+        const coordinatesStr = '{{COORDINATES}}';
+        const fullAddress = '{{FULL_ADDRESS}}';
+
+        async function geocodeAddress(address) {
+            try {
+                const endpoint = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+                const response = await fetch(endpoint, { headers: { 'Accept': 'application/json' } });
+                if (!response.ok) return null;
+                const data = await response.json();
+                if (!Array.isArray(data) || !data.length) return null;
+                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            } catch (_) {
+                return null;
+            }
+        }
+        
+        async function initializeMap() {
+            const mapFallback = document.getElementById('mapFallback');
+            const showMapFallback = (message) => {
+                if (mapFallback) {
+                    mapFallback.textContent = message || 'Map is currently unavailable for this listing.';
+                    mapFallback.classList.add('visible');
+                }
+                const locationSection = document.getElementById('locationSection');
+                if (locationSection) locationSection.classList.add('map-unavailable');
+            };
+
+            const locationSection = document.getElementById('locationSection');
+            if (!locationSection) {
+                return;
+            }
+
+            if (!fullAddress || fullAddress === '') {
+                locationSection.remove();
+                return;
+            }
+            
+            const mapElement = document.getElementById('listingMap');
+            if (!mapElement) {
+                return;
+            }
+            
+            try {
+                let lat;
+                let lng;
+
+                if (coordinatesStr && coordinatesStr.includes(',')) {
+                    const coords = coordinatesStr.split(',');
+                    lat = parseFloat(coords[0].trim());
+                    lng = parseFloat(coords[1].trim());
+                }
+
+                if (isNaN(lat) || isNaN(lng)) {
+                    const geocoded = await geocodeAddress(fullAddress);
+                    if (!geocoded) {
+                        showMapFallback('We could not load this map right now. Please use Directions for navigation.');
+                        return;
+                    }
+                    [lat, lng] = geocoded;
+                }
+                
+                if (typeof L === 'undefined') {
+                    setTimeout(initializeMap, 500);
+                    return;
+                }
+                
+                const map = L.map('listingMap', {
+                    center: [lat, lng],
+                    zoom: 15,
+                    zoomControl: true,
+                    scrollWheelZoom: false
+                });
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '',
+                    maxZoom: 19
+                }).addTo(map);
+                
+                const listingMapPinIcon = L.divIcon({
+                    className: 'listing-map-pin',
+                    html: `<div style="width:25px;height:41px;display:flex;align-items:flex-end;justify-content:center;"><svg xmlns="http://www.w3.org/2000/svg" width="800px" height="800px" viewBox="0 0 24 24" fill="none" style="width:25px;height:41px;display:block;"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3856 23.789L11.3831 23.7871L11.3769 23.7822L11.355 23.765C11.3362 23.7501 11.3091 23.7287 11.2742 23.7008C11.2046 23.6451 11.1039 23.5637 10.9767 23.4587C10.7224 23.2488 10.3615 22.944 9.92939 22.5599C9.06662 21.793 7.91329 20.7041 6.75671 19.419C5.60303 18.1371 4.42693 16.639 3.53467 15.0528C2.64762 13.4758 2 11.7393 2 10C2 7.34784 3.05357 4.8043 4.92893 2.92893C6.8043 1.05357 9.34784 0 12 0C14.6522 0 17.1957 1.05357 19.0711 2.92893C20.9464 4.8043 22 7.34784 22 10C22 11.7393 21.3524 13.4758 20.4653 15.0528C19.5731 16.639 18.397 18.1371 17.2433 19.419C16.0867 20.7041 14.9334 21.793 14.0706 22.5599C13.6385 22.944 13.2776 23.2488 13.0233 23.4587C12.8961 23.5637 12.7954 23.6451 12.7258 23.7008C12.6909 23.7287 12.6638 23.7501 12.645 23.765L12.6231 23.7822L12.6169 23.7871L12.615 23.7885C12.615 23.7885 12.6139 23.7894 12 23L12.6139 23.7894C12.2528 24.0702 11.7467 24.0699 11.3856 23.789ZM12 23L11.3856 23.789C11.3856 23.789 11.3861 23.7894 12 23ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="#045093"/></svg></div>`,
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                });
+                L.marker([lat, lng], { icon: listingMapPinIcon }).addTo(map)
+                    .bindPopup('<strong>Example Listing 1</strong><br>{{FULL_ADDRESS}}')
+                    .openPopup();
+                
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 250);
+                
+                mapElement.addEventListener('click', function() {
+                    this.classList.add('active');
+                    map.scrollWheelZoom.enable();
+                });
+
+                mapElement.addEventListener('mouseleave', function() {
+                    this.classList.remove('active');
+                    map.scrollWheelZoom.disable();
+                });
+            } catch (e) {
+                console.error('Map error:', e);
+                showMapFallback('Map failed to load. Please try again later.');
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initializeMap, 1000);
+            });
+        } else {
+            setTimeout(initializeMap, 1000);
+        }
+        
+        updateOpenClosedBadge();
+        setInterval(updateOpenClosedBadge, 60000);
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+    </script>
+    <script>window.gtranslateSettings = {"default_language":"en","native_language_names":true,"detect_browser_language":true,"languages":["en","el"],"globe_color":"#66aaff","wrapper_selector":".gtranslate_wrapper","alt_flags":{"en":"usa"}}</script>
+    <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
+</body>
+</html>
+
+<!--
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed 
+without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+-->
