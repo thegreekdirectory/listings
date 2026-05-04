@@ -388,12 +388,11 @@
             }
 
             const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-            const isVerified = listing.verified || listing.tier === 'VERIFIED';
+            const isVerified = listing.verified ;
 
             if (isFeatured) {
                 badges.push('<span class="badge badge-featured">Featured</span>');
             } else if (isVerified) {
-                badges.push('<span class="badge badge-verified">Verified</span>');
             }
 
             return badges;
@@ -401,8 +400,7 @@
 
         function showsVerifiedCheckmark(listing) {
             const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-            const isVerified = listing.verified || listing.tier === 'VERIFIED';
-            return isFeatured || isVerified || listing.show_claim_button === false;
+            return isFeatured || listing.show_claim_button === false;
         }
 
         function generateCallButton(listing) {

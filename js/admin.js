@@ -948,7 +948,6 @@ function renderTable() {
         const tier = l.tier || 'FREE';
         const tierColors = {
             FREE: 'bg-gray-100 text-gray-700',
-            VERIFIED: 'bg-blue-100 text-blue-700',
             FEATURED: 'bg-yellow-100 text-yellow-700',
             PREMIUM: 'bg-purple-100 text-purple-700'
         };
@@ -959,11 +958,9 @@ function renderTable() {
         let badges = '';
         if (tier === 'PREMIUM') {
             badges = '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700">⭐ Featured</span>';
-            badges += '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">✓ Verified</span>';
+            badges += '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">👑 Premium</span>';
         } else if (tier === 'FEATURED') {
             badges = '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700">⭐ Featured</span>';
-        } else if (tier === 'VERIFIED') {
-            badges += '<span class="ml-2 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">✓ Verified</span>';
         }
         
         if (isClaimed) {
@@ -1392,7 +1389,6 @@ function fillEditForm(listing) {
                         <label class="block text-sm font-medium mb-2">Tier</label>
                         <select id="editTier" class="w-full px-4 py-2 border rounded-lg">
                             <option value="FREE" ${listing?.tier === 'FREE' ? 'selected' : ''}>FREE</option>
-                            <option value="VERIFIED" ${listing?.tier === 'VERIFIED' ? 'selected' : ''}>VERIFIED</option>
                             <option value="FEATURED" ${listing?.tier === 'FEATURED' ? 'selected' : ''}>FEATURED</option>
                             <option value="PREMIUM" ${listing?.tier === 'PREMIUM' ? 'selected' : ''}>PREMIUM</option>
                         </select>
@@ -3481,7 +3477,7 @@ function generateTemplateReplacements(listing) {
     // Generate status badges
     const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-    const isVerified = listing.verified || listing.tier === 'VERIFIED';
+    const isVerified = listing.verified ;
     const isClaimed = listing.is_claimed || (owner && owner.owner_user_id) || listing.show_claim_button === false;
     
     let statusBadges = '';
@@ -3492,8 +3488,6 @@ function generateTemplateReplacements(listing) {
 
     if (isFeatured) {
         statusBadges += '<span class="badge badge-featured">Featured</span>';
-    } else if (isVerified) {
-        statusBadges += '<span class="badge badge-verified">Verified</span>';
     }
 
     if (listing.coming_soon === true) {
@@ -3509,7 +3503,7 @@ function generateTemplateReplacements(listing) {
     const taglineDisplay = decodedTagline ? `<h2 class="text-gray-600 italic text-xl font-semibold mb-2">${escapeHtml(decodedTagline)}</h2>` : '';
 
     let claimedCheckmark = '';
-    if (isFeatured || isVerified || isClaimed) {
+    if (isFeatured || isClaimed) {
         claimedCheckmark = '<button type="button" id="verifiedCheckmarkButton" class="verified-checkmark-btn" aria-label="Listing verification info">' +
             '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
             '<circle cx="12" cy="12" r="12" fill="#045093"></circle>' +
@@ -3936,7 +3930,6 @@ function generateTemplateReplacementsPart2(listing) {
 
                         const getTierBadge = (tier) => {
                             if (tier === 'FEATURED' || tier === 'PREMIUM') return '<span class="badge badge-featured">Featured</span>';
-                            if (tier === 'VERIFIED') return '<span class="badge badge-verified">Verified</span>';
                             return '';
                         };
 

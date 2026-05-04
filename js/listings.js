@@ -1028,7 +1028,7 @@ function applyFilters() {
         } else if (sortOption === 'default') {
             const aTier = a.tier || 'FREE';
             const bTier = b.tier || 'FREE';
-            const tierPriority = { PREMIUM: 100, FEATURED: 50, VERIFIED: 20, FREE: 0 };
+            const tierPriority = { PREMIUM: 100, FEATURED: 50, FREE: 0 };
             
             const effectiveUserLocation = userLocation || estimatedUserLocation;
             
@@ -1379,12 +1379,8 @@ function buildBadges(listing) {
     }
 
     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
-
     if (isFeatured) {
         badges.push('<span class="badge badge-featured">Featured</span>');
-    } else if (isVerified) {
-        badges.push('<span class="badge badge-verified">Verified</span>');
     }
 
     return badges;
@@ -1392,8 +1388,7 @@ function buildBadges(listing) {
 
 function showsVerifiedCheckmark(listing) {
     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
-    return isFeatured || isVerified || listing.is_claimed || listing.show_claim_button === false;
+    return isFeatured || listing.is_claimed || listing.show_claim_button === false;
 }
 
 
@@ -2813,7 +2808,7 @@ function attachClusterClickHandler(targetMap, clusterGroup) {
         
         if (listings.length === 0) return;
         
-        const tierPriority = { PREMIUM: 4, FEATURED: 3, VERIFIED: 2, FREE: 1 };
+        const tierPriority = { PREMIUM: 4, FEATURED: 3, FREE: 1 };
         listings.sort((a, b) => {
             const aTier = a.tier || 'FREE';
             const bTier = b.tier || 'FREE';
@@ -3061,9 +3056,7 @@ function getTierMarkerStyles(listing) {
             return { className: 'tier-premium', zIndex: 400 };
         case 'FEATURED':
             return { className: 'tier-featured', zIndex: 300 };
-        case 'VERIFIED':
-            return { className: 'tier-verified', zIndex: 200 };
-        default:
+                default:
             return { className: 'tier-free', zIndex: 100 };
     }
 }

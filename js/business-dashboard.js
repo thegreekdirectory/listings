@@ -139,15 +139,14 @@ function renderDashboard() {
     document.getElementById('listingIdDisplay').textContent = `${currentListing.id}`;
     
     const tier = currentListing.tier || 'FREE';
-    const previewCheckmark = currentListing.verified || tier === 'VERIFIED' || tier === 'FEATURED' || tier === 'PREMIUM' || currentListing.is_claimed || currentListing.show_claim_button === false
+    const previewCheckmark = tier === 'FEATURED' || tier === 'PREMIUM' || currentListing.is_claimed || currentListing.show_claim_button === false
         ? VERIFIED_CHECKMARK_SVG
         : '';
     const planBadge = document.getElementById('planBadge');
     if (planBadge) {
         const badges = {
             FREE: 'Standard Profile',
-            VERIFIED: 'Verified Profile',
-            FEATURED: 'Featured Profile',
+                        FEATURED: 'Featured Profile',
             PREMIUM: 'Premium Profile'
         };
         planBadge.textContent = badges[tier] || 'Business Profile';
@@ -427,15 +426,14 @@ function renderOverview() {
             '✅ Description (max 1000 characters)',
             '✅ Basic analytics (total views and engagement)'
         ],
-        'VERIFIED': [
-            '✅ Includes all Standard Profile features',
-            '✅ Verified badge',
+                    '✅ Includes all Standard Profile features',
+            '✅ Featured badge',
             '✅ Extended description (max 2000 characters)',
             '✅ Enhanced analytics (website, call, and direction clicks)',
             '✅ Monthly analytics totals'
         ],
         'FEATURED': [
-            '✅ Includes all Verified Profile features',
+            '✅ Everything in Featured',
             '✅ Featured badge and priority placement',
             '✅ Photo gallery (up to 5 photos)',
             '✅ Advanced analytics (click breakdown and trends)',
@@ -1233,7 +1231,7 @@ function renderAnalytics() {
                 </div>
             </div>
         `;
-    } else if (tier === 'VERIFIED') {
+    } else if (tier === 'FEATURED') {
         html = `
             <div class="bg-white rounded-lg p-6 shadow-sm">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>

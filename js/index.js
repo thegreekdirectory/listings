@@ -342,15 +342,12 @@ function renderListingCard(listing) {
     const badges = [];
     if (listing.tier === 'PREMIUM') {
         badges.push('<span class="badge badge-featured">Featured</span>');
-        badges.push('<span class="badge badge-verified">Verified</span>');
     } else {
         if (listing.tier === 'FEATURED') badges.push('<span class="badge badge-featured">Featured</span>');
-        if (listing.verified || listing.tier === 'VERIFIED') badges.push('<span class="badge badge-verified">Verified</span>');
     }
 
     const phoneDisplay = listing.phone ? formatPhoneDisplay(listing.phone) : '';
-    const showCheckmark = listing.verified ||
-        listing.tier === 'VERIFIED' ||
+    const showCheckmark =
         listing.tier === 'FEATURED' ||
         listing.tier === 'PREMIUM' ||
         listing.is_claimed;
