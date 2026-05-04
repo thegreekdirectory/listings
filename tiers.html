@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listing Tiers — The Greek Directory</title>
+<style>
+  :root {
+    --blue: #045093;
+    --blue-dark: #033d74;
+    --blue-light: #eff6ff;
+    --gold: #D4AF37;
+    --gold-dark: #b8962e;
+    --gold-light: #fef9e7;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --text: #1a1a1a;
+    --text-light: #6b7280;
+    --border: #e5e7eb;
+    --bg: #f9fafb;
+    --white: #ffffff;
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--white);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: var(--blue);
+    font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em;
+  }
+  .nav-logo-mark {
+    width: 36px; height: 36px;
+    background: var(--blue);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-logo-mark svg { width: 20px; height: 20px; }
+  .nav-links { display: flex; align-items: center; gap: 2rem; }
+  .nav-links a {
+    text-decoration: none; color: var(--text-light);
+    font-size: 0.9rem; font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--blue); }
+  .nav-cta {
+    background: var(--blue); color: white !important;
+    padding: 0.5rem 1.25rem; border-radius: 8px;
+    font-weight: 600 !important; font-size: 0.875rem !important;
+    transition: background 0.2s, transform 0.15s !important;
+  }
+  .nav-cta:hover { background: var(--blue-dark) !important; transform: translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(160deg, #041e4b 0%, #031234 100%);
+    color: white;
+    padding: 5rem 1.5rem 4rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 20% 50%, rgba(212,175,55,0.08) 0%, transparent 60%),
+                      radial-gradient(circle at 80% 20%, rgba(4,80,147,0.3) 0%, transparent 50%);
+  }
+  /* decorative Greek key pattern strip */
+  .hero::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--gold) 50%, var(--blue) 100%);
+  }
+  .hero-inner { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(212,175,55,0.12);
+    border: 1px solid rgba(212,175,55,0.35);
+    color: var(--gold);
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.35rem 1rem; border-radius: 999px;
+    margin-bottom: 1.25rem;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-weight: 800; line-height: 1.15;
+    letter-spacing: -0.025em; margin-bottom: 1rem;
+  }
+  .hero h1 span { color: var(--gold); }
+  .hero p {
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    color: rgba(255,255,255,0.75);
+    max-width: 560px; margin: 0 auto 2.5rem;
+  }
+
+  /* ── BILLING TOGGLE ── */
+  .billing-toggle {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 4px;
+    backdrop-filter: blur(4px);
+  }
+  .billing-btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    border: none;
+    font-size: 0.875rem; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: transparent; color: rgba(255,255,255,0.7);
+  }
+  .billing-btn.active {
+    background: white; color: var(--blue);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .save-badge {
+    display: inline-block;
+    background: #10b981; color: white;
+    font-size: 0.65rem; font-weight: 700;
+    padding: 0.15rem 0.5rem; border-radius: 999px;
+    margin-left: 0.4rem; vertical-align: middle;
+  }
+
+  /* ── PRICING SECTION ── */
+  .pricing-section {
+    padding: 5rem 1.5rem;
+    background: var(--bg);
+    position: relative;
+  }
+  .pricing-grid {
+    max-width: 1100px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  /* ── TIER CARD ── */
+  .tier-card {
+    background: white;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .tier-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+  }
+  .tier-card.featured-card {
+    border-color: var(--gold);
+    transform: scale(1.03);
+    box-shadow: 0 12px 40px rgba(212,175,55,0.2);
+    z-index: 1;
+  }
+  .tier-card.featured-card:hover {
+    transform: scale(1.03) translateY(-6px);
+    box-shadow: 0 24px 60px rgba(212,175,55,0.28);
+  }
+  .tier-card.premium-card {
+    border-color: #c4b5fd;
+  }
+  .tier-card.premium-card:hover {
+    box-shadow: 0 20px 50px rgba(124,58,237,0.12);
+  }
+
+  .popular-ribbon {
+    position: absolute; top: -1px; right: 24px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: white; font-size: 0.68rem; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.35rem 0.85rem 0.5rem;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 12px rgba(212,175,55,0.35);
+  }
+
+  .tier-header {
+    padding: 2rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .tier-marker {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .marker-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 3px solid transparent;
+    flex-shrink: 0;
+  }
+  .marker-free { background: white; border-color: var(--blue); }
+  .marker-featured { background: white; border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(212,175,55,0.5); }
+  .marker-premium { background: white; border-color: var(--purple);
+    box-shadow: 0 0 8px rgba(124,58,237,0.4); }
+
+  .marker-label {
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .label-free { color: var(--text-light); }
+  .label-featured { color: #92400e; }
+  .label-premium { color: var(--purple); }
+
+  .tier-name {
+    font-size: 1.5rem; font-weight: 800;
+    letter-spacing: -0.02em; margin-bottom: 0.35rem;
+  }
+  .tier-tagline {
+    font-size: 0.875rem; color: var(--text-light);
+    margin-bottom: 1.5rem;
+  }
+  .tier-price { display: flex; align-items: baseline; gap: 4px; }
+  .price-amount {
+    font-size: 2.75rem; font-weight: 800;
+    letter-spacing: -0.03em; line-height: 1;
+  }
+  .price-free { color: var(--text); }
+  .price-featured { color: #92400e; }
+  .price-premium { color: var(--purple); }
+  .price-period { font-size: 0.875rem; color: var(--text-light); font-weight: 500; }
+  .price-annual {
+    margin-top: 0.35rem;
+    font-size: 0.8rem; color: #10b981; font-weight: 600;
+  }
+  .price-annual.hidden { visibility: hidden; }
+
+  .tier-cta {
+    display: block; width: 100%;
+    margin-top: 1.5rem;
+    padding: 0.875rem;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; text-align: center;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .cta-free {
+    background: transparent; color: var(--blue);
+    border-color: var(--blue);
+  }
+  .cta-free:hover { background: var(--blue-light); }
+  .cta-featured {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: white; border-color: transparent;
+    box-shadow: 0 4px 16px rgba(212,175,55,0.35);
+  }
+  .cta-featured:hover {
+    box-shadow: 0 6px 24px rgba(212,175,55,0.5);
+    transform: translateY(-1px);
+  }
+  .cta-premium {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: white; border-color: transparent;
+    box-shadow: 0 4px 16px rgba(124,58,237,0.3);
+  }
+  .cta-premium:hover {
+    box-shadow: 0 6px 24px rgba(124,58,237,0.45);
+    transform: translateY(-1px);
+  }
+
+  /* ── FEATURES LIST ── */
+  .tier-features { padding: 1.75rem 2rem 2rem; }
+  .feature-group { margin-bottom: 1.5rem; }
+  .feature-group-title {
+    font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-light); margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+  }
+  .feature-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 0.4rem 0; font-size: 0.875rem;
+  }
+  .feature-icon {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+    font-size: 0.65rem;
+  }
+  .fi-check-free { background: #d1fae5; color: #059669; }
+  .fi-check-featured { background: #fef3c7; color: #d97706; }
+  .fi-check-premium { background: var(--purple-light); color: var(--purple); }
+  .fi-x { background: #f3f4f6; color: #9ca3af; }
+  .feature-text { flex: 1; color: var(--text); line-height: 1.4; }
+  .feature-highlight {
+    display: inline-block;
+    background: var(--purple-light); color: var(--purple);
+    font-size: 0.68rem; font-weight: 700;
+    padding: 0.1rem 0.45rem; border-radius: 4px;
+    margin-left: 4px; vertical-align: middle;
+  }
+  .feature-highlight.gold {
+    background: var(--gold-light); color: #92400e;
+  }
+
+  /* ── MAP MARKERS LEGEND ── */
+  .markers-legend {
+    max-width: 1100px; margin: 0 auto 2.5rem;
+    display: flex; align-items: center; justify-content: center; gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.8rem; color: var(--text-light); font-weight: 500;
+  }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 3px solid;
+  }
+  .ld-blue { border-color: var(--blue); background: white; }
+  .ld-yellow { border-color: var(--gold); background: white; box-shadow: 0 0 6px rgba(212,175,55,0.5); }
+  .ld-purple { border-color: var(--purple); background: white; box-shadow: 0 0 6px rgba(124,58,237,0.4); }
+
+  /* ── COMPARISON TABLE ── */
+  .comparison-section {
+    padding: 5rem 1.5rem;
+    background: white;
+  }
+  .section-heading {
+    text-align: center;
+    max-width: 600px; margin: 0 auto 3rem;
+  }
+  .section-heading h2 {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 800; letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+  .section-heading p { color: var(--text-light); font-size: 1rem; }
+
+  .compare-table {
+    max-width: 900px; margin: 0 auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .compare-table table {
+    width: 100%; border-collapse: collapse;
+  }
+  .compare-table thead th {
+    padding: 1.25rem 1rem;
+    background: var(--bg);
+    text-align: center;
+    font-size: 0.8rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .compare-table thead th:first-child { text-align: left; }
+  .th-featured { background: var(--gold-light) !important; color: #92400e; }
+  .th-premium { background: var(--purple-light) !important; color: var(--purple); }
+  .compare-table tbody tr { border-top: 1px solid var(--border); }
+  .compare-table tbody tr:hover { background: var(--bg); }
+  .compare-table tbody td {
+    padding: 1rem;
+    font-size: 0.875rem; text-align: center;
+  }
+  .compare-table tbody td:first-child {
+    text-align: left; font-weight: 500; color: var(--text);
+    padding-left: 1.5rem;
+  }
+  .compare-table .row-group td {
+    background: var(--bg); font-weight: 700;
+    font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-light);
+    padding: 0.6rem 1rem 0.6rem 1.5rem;
+    text-align: left;
+  }
+  .check-icon { color: #10b981; font-size: 1rem; }
+  .x-icon { color: #d1d5db; font-size: 1rem; }
+  .val-text { font-weight: 600; color: var(--text); }
+  .val-gold { color: #92400e; font-weight: 700; }
+  .val-purple { color: var(--purple); font-weight: 700; }
+
+  /* ── ROI SECTION ── */
+  .roi-section {
+    padding: 5rem 1.5rem;
+    background: linear-gradient(160deg, #041e4b 0%, #031234 100%);
+    color: white; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .roi-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 70% 30%, rgba(212,175,55,0.08), transparent 55%);
+  }
+  .roi-inner { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+  .roi-section h2 {
+    font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+    font-weight: 800; letter-spacing: -0.025em; margin-bottom: 1rem;
+  }
+  .roi-section h2 span { color: var(--gold); }
+  .roi-section > .roi-inner > p {
+    color: rgba(255,255,255,0.72); font-size: 1.05rem;
+    max-width: 560px; margin: 0 auto 3rem;
+  }
+  .roi-cards {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem; margin-bottom: 3rem;
+  }
+  .roi-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 1.75rem 1.5rem;
+    backdrop-filter: blur(4px);
+    transition: background 0.3s;
+  }
+  .roi-card:hover { background: rgba(255,255,255,0.1); }
+  .roi-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: rgba(212,175,55,0.15);
+    border: 1px solid rgba(212,175,55,0.3);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem; font-size: 1.4rem;
+  }
+  .roi-card h3 {
+    font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem;
+  }
+  .roi-card p {
+    font-size: 0.82rem; color: rgba(255,255,255,0.65); line-height: 1.6;
+  }
+  .roi-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--gold);
+    color: #1a0a00; font-weight: 700; font-size: 1rem;
+    padding: 1rem 2.5rem; border-radius: 10px;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(212,175,55,0.35);
+  }
+  .roi-cta:hover {
+    background: var(--gold-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(212,175,55,0.5);
+  }
+
+  /* ── FAQ ── */
+  .faq-section {
+    padding: 5rem 1.5rem;
+    background: var(--bg);
+  }
+  .faq-grid {
+    max-width: 800px; margin: 0 auto;
+    display: grid; gap: 1rem;
+  }
+  .faq-item {
+    background: white; border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .faq-q {
+    width: 100%; padding: 1.25rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; cursor: pointer;
+    background: none; border: none;
+    text-align: left; font-size: 0.95rem; font-weight: 600;
+    color: var(--text); transition: background 0.2s;
+    font-family: inherit;
+  }
+  .faq-q:hover { background: var(--bg); }
+  .faq-chevron {
+    flex-shrink: 0; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--blue-light);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.3s;
+    color: var(--blue);
+  }
+  .faq-item.open .faq-chevron { transform: rotate(180deg); }
+  .faq-a {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+    padding: 0 1.5rem;
+    font-size: 0.875rem; color: var(--text-light); line-height: 1.7;
+  }
+  .faq-item.open .faq-a { max-height: 300px; padding: 0 1.5rem 1.25rem; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: white; border-top: 1px solid var(--border);
+    padding: 2rem 1.5rem; text-align: center;
+    font-size: 0.82rem; color: var(--text-light);
+  }
+  footer a { color: var(--blue); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-in {
+    animation: fadeUp 0.55s ease both;
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .pricing-grid { grid-template-columns: 1fr; max-width: 440px; }
+    .tier-card.featured-card { transform: none; }
+    .tier-card.featured-card:hover { transform: translateY(-6px); }
+    .roi-cards { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+  @media (max-width: 640px) {
+    .compare-table { overflow-x: auto; }
+    .markers-legend { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-mark">
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 5h14M3 10h14M3 15h9" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      The Greek Directory
+    </a>
+    <div class="nav-links">
+      <a href="/listings">Browse Listings</a>
+      <a href="/about">About</a>
+      <a href="/submit-listing">Add Your Business</a>
+      <a href="/business" class="nav-cta">Business Portal</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge animate-in">Listing Plans</div>
+    <h1 class="animate-in delay-1">Grow Your <span>Greek Business</span><br>With the Right Plan</h1>
+    <p class="animate-in delay-2">From free baseline presence to premium domination — every tier is built to drive real results for Greek-owned businesses across America.</p>
+
+    <div class="billing-toggle animate-in delay-3" id="billingToggle">
+      <button class="billing-btn active" id="btnMonthly" onclick="setBilling('monthly')">Monthly</button>
+      <button class="billing-btn" id="btnAnnual" onclick="setBilling('annual')">
+        Annual <span class="save-badge">Save 17%</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section">
+
+  <!-- Map legend -->
+  <div class="markers-legend">
+    <div class="legend-item">
+      <div class="legend-dot ld-blue"></div>
+      Free — Blue map marker
+    </div>
+    <div class="legend-dot" style="width:1px;height:16px;background:var(--border);border-radius:0;border:none;"></div>
+    <div class="legend-item">
+      <div class="legend-dot ld-yellow"></div>
+      Featured — Yellow map marker
+    </div>
+    <div class="legend-dot" style="width:1px;height:16px;background:var(--border);border-radius:0;border:none;"></div>
+    <div class="legend-item">
+      <div class="legend-dot ld-purple"></div>
+      Premium — Purple map marker
+    </div>
+  </div>
+
+  <div class="pricing-grid">
+
+    <!-- FREE -->
+    <div class="tier-card animate-in delay-1">
+      <div class="tier-header">
+        <div class="tier-marker">
+          <div class="marker-dot marker-free"></div>
+          <span class="marker-label label-free">Free</span>
+        </div>
+        <div class="tier-name">Free</div>
+        <div class="tier-tagline">Baseline presence in the directory</div>
+        <div class="tier-price">
+          <span class="price-amount price-free">$0</span>
+          <span class="price-period">/ forever</span>
+        </div>
+        <div class="price-annual hidden">—</div>
+        <a href="/submit-listing" class="tier-cta cta-free">Get Listed Free</a>
+      </div>
+      <div class="tier-features">
+        <div class="feature-group">
+          <div class="feature-group-title">Visibility</div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-free">✓</div>
+            <span class="feature-text">Included in search results</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-x">—</div>
+            <span class="feature-text" style="color:var(--text-light)">Standard blue marker · lowest ranking</span>
+          </div>
+        </div>
+        <div class="feature-group">
+          <div class="feature-group-title">Listing Content</div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-free">✓</div>
+            <span class="feature-text">Name, address, phone, email, website</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-free">✓</div>
+            <span class="feature-text">Logo + up to 2 photos</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-free">✓</div>
+            <span class="feature-text">Basic description + categories</span>
+          </div>
+        </div>
+        <div class="feature-group">
+          <div class="feature-group-title">Tools & Analytics</div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-free">✓</div>
+            <span class="feature-text">Default CTA buttons (Call, Email, Web, Directions)</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-free">✓</div>
+            <span class="feature-text">Total views & clicks · 7d / 1m / 3m</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-x">—</div>
+            <span class="feature-text" style="color:var(--text-light)">No custom CTAs · no advanced analytics</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURED -->
+    <div class="tier-card featured-card animate-in delay-2" style="position:relative;">
+      <div class="popular-ribbon">Most Popular</div>
+      <div class="tier-header">
+        <div class="tier-marker">
+          <div class="marker-dot marker-featured"></div>
+          <span class="marker-label label-featured">Featured</span>
+        </div>
+        <div class="tier-name">Featured</div>
+        <div class="tier-tagline">Visibility boost + conversion tools</div>
+        <div class="tier-price">
+          <span class="price-amount price-featured" id="featuredPrice">$29</span>
+          <span class="price-period" id="featuredPeriod">/ month</span>
+        </div>
+        <div class="price-annual" id="featuredAnnual" style="visibility:hidden;">$448 billed annually</div>
+        <a href="/business" class="tier-cta cta-featured">Get Featured</a>
+      </div>
+      <div class="tier-features">
+        <div class="feature-group">
+          <div class="feature-group-title">Visibility</div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-featured">✓</div>
+            <span class="feature-text">Priority above Free listings</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-featured">✓</div>
+            <span class="feature-text">Featured placement slots on home, category & related pages <span class="feature-highlight gold">Up to 12</span></span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-featured">✓</div>
+            <span class="feature-text">Yellow map marker</span>
+          </div>
+        </div>
+        <div class="feature-group">
+          <div class="feature-group-title">Listing Content</div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-featured">✓</div>
+            <span class="feature-text">Everything in Free</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-featured">✓</div>
+            <span class="feature-text">Up to 5 photos + expanded description</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-featured">✓</div>
+            <span class="feature-text">Structured info (services, menu items, etc.)</span>
+          </div>
+        </div>
+        <div class="feature-group">
+          <div class="feature-group-title">Tools & Analytics</div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-featured">✓</div>
+            <span class="feature-text">1 custom CTA button (name + URL + icon)</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-featured">✓</div>
+            <span class="feature-text">Breakdown by calls, website, directions, email</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-featured">✓</div>
+            <span class="feature-text">Analytics up to 1 year history</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREMIUM -->
+    <div class="tier-card premium-card animate-in delay-3">
+      <div class="tier-header">
+        <div class="tier-marker">
+          <div class="marker-dot marker-premium"></div>
+          <span class="marker-label label-premium">Premium</span>
+        </div>
+        <div class="tier-name">Premium</div>
+        <div class="tier-tagline">Maximum exposure + full conversion control</div>
+        <div class="tier-price">
+          <span class="price-amount price-premium" id="premiumPrice">$79</span>
+          <span class="price-period" id="premiumPeriod">/ month</span>
+        </div>
+        <div class="price-annual" id="premiumAnnual" style="visibility:hidden;">$986 billed annually</div>
+        <a href="/business" class="tier-cta cta-premium">Go Premium</a>
+      </div>
+      <div class="tier-features">
+        <div class="feature-group">
+          <div class="feature-group-title">Visibility</div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-premium">✓</div>
+            <span class="feature-text">Highest ranking — always above Featured & Free</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-premium">✓</div>
+            <span class="feature-text">Appears on <em>all</em> relevant listings (same subcategory) <span class="feature-highlight">Everywhere</span></span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-premium">✓</div>
+            <span class="feature-text">Purple map marker · dominates clusters</span>
+          </div>
+        </div>
+        <div class="feature-group">
+          <div class="feature-group-title">Listing Content</div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-premium">✓</div>
+            <span class="feature-text">Everything in Featured</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-premium">✓</div>
+            <span class="feature-text">Up to 20 photos + full structured sections</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-premium">✓</div>
+            <span class="feature-text">FAQs, additional info blocks, branded background</span>
+          </div>
+        </div>
+        <div class="feature-group">
+          <div class="feature-group-title">Tools & Analytics</div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-premium">✓</div>
+            <span class="feature-text">2 custom CTAs · reorderable · highlight primary</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-premium">✓</div>
+            <span class="feature-text">Full analytics breakdown + conversion rate</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon fi-check-premium">✓</div>
+            <span class="feature-text">Top-performing CTA insights · all time ranges</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- COMPARISON TABLE -->
+<section class="comparison-section">
+  <div class="section-heading">
+    <h2>Feature Comparison</h2>
+    <p>Everything side-by-side so you can pick with confidence.</p>
+  </div>
+
+  <div class="compare-table">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Free</th>
+          <th class="th-featured">Featured</th>
+          <th class="th-premium">Premium</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-group"><td colspan="4">Visibility & Placement</td></tr>
+        <tr>
+          <td>Search result inclusion</td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+        </tr>
+        <tr>
+          <td>Ranking priority</td>
+          <td><span class="val-text">Standard</span></td>
+          <td><span class="val-gold">Priority</span></td>
+          <td><span class="val-purple">Highest</span></td>
+        </tr>
+        <tr>
+          <td>Featured placement slots</td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="val-gold">Up to 12</span></td>
+          <td><span class="val-purple">All relevant</span></td>
+        </tr>
+        <tr>
+          <td>Map marker</td>
+          <td><span class="val-text">🔵 Blue</span></td>
+          <td><span class="val-gold">🟡 Yellow</span></td>
+          <td><span class="val-purple">🟣 Purple</span></td>
+        </tr>
+
+        <tr class="row-group"><td colspan="4">Listing Content</td></tr>
+        <tr>
+          <td>Business info + logo</td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+        </tr>
+        <tr>
+          <td>Max photos</td>
+          <td><span class="val-text">2</span></td>
+          <td><span class="val-gold">5</span></td>
+          <td><span class="val-purple">20</span></td>
+        </tr>
+        <tr>
+          <td>Expanded description</td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+        </tr>
+        <tr>
+          <td>Structured info sections</td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="val-gold">Basic</span></td>
+          <td><span class="val-purple">Full (FAQs + more)</span></td>
+        </tr>
+        <tr>
+          <td>Branded background</td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="check-icon">✓</span></td>
+        </tr>
+
+        <tr class="row-group"><td colspan="4">Conversion Tools</td></tr>
+        <tr>
+          <td>Default CTA buttons</td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+        </tr>
+        <tr>
+          <td>Custom CTA buttons</td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="val-gold">1</span></td>
+          <td><span class="val-purple">2 (reorderable)</span></td>
+        </tr>
+        <tr>
+          <td>Highlight primary CTA</td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="check-icon">✓</span></td>
+        </tr>
+
+        <tr class="row-group"><td colspan="4">Analytics</td></tr>
+        <tr>
+          <td>Total views & clicks</td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+        </tr>
+        <tr>
+          <td>Per-action breakdown</td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="check-icon">✓</span></td>
+          <td><span class="check-icon">✓</span></td>
+        </tr>
+        <tr>
+          <td>Conversion rate</td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="x-icon">—</span></td>
+          <td><span class="check-icon">✓</span></td>
+        </tr>
+        <tr>
+          <td>History range</td>
+          <td><span class="val-text">Up to 3 months</span></td>
+          <td><span class="val-gold">Up to 1 year</span></td>
+          <td><span class="val-purple">All time</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ROI SECTION -->
+<section class="roi-section">
+  <div class="roi-inner">
+    <h2>Built for <span>Measurable ROI</span></h2>
+    <p>Every upgrade is designed around real actions that grow your business — calls, clicks, and foot traffic.</p>
+
+    <div class="roi-cards">
+      <div class="roi-card">
+        <div class="roi-icon">📞</div>
+        <h3>More Phone Calls</h3>
+        <p>Your phone number sits above the fold on every listing. Premium listings see priority placement across all related searches.</p>
+      </div>
+      <div class="roi-card">
+        <div class="roi-icon">📍</div>
+        <h3>More Foot Traffic</h3>
+        <p>A prominent map marker and "Get Directions" CTA make it effortless for nearby customers to find your door.</p>
+      </div>
+      <div class="roi-card">
+        <div class="roi-icon">📊</div>
+        <h3>Data-Backed Decisions</h3>
+        <p>See exactly which CTAs convert, when your listing gets the most views, and where your visitors are coming from.</p>
+      </div>
+    </div>
+
+    <a href="/submit-listing" class="roi-cta">
+      List Your Business Today
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="section-heading">
+    <h2>Frequently Asked Questions</h2>
+    <p>Everything you need to know about listing plans.</p>
+  </div>
+  <div class="faq-grid">
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        Can I start free and upgrade later?
+        <span class="faq-chevron">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="faq-a">Absolutely. Claim your free listing at any time — no credit card required. When you're ready to upgrade, you can do so from your Business Portal with no data loss. Your listing history, photos, and contact info all carry over.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        Are Featured placement slots guaranteed?
+        <span class="faq-chevron">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="faq-a">Featured placement rotates among Featured and Premium businesses within a given context (city, category, etc.), with a maximum of 12 slots. Premium listings always appear first in related sections. While exact position isn't guaranteed, Featured and Premium businesses consistently outperform Free in both visibility and click-through.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        What does the branded background look like?
+        <span class="faq-chevron">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="faq-a">Premium listings can display a subtle auto-generated gradient derived from your brand color. It's applied only to the outer background of your listing page — all content cards remain clean white. You control the intensity (Subtle, Medium, or Strong) from your Business Portal.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        Will competitors be removed from my listing page?
+        <span class="faq-chevron">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="faq-a">No tier removes competitor listings — this maintains the integrity of the directory and user trust. What Premium does is ensure your business always appears <em>first</em> in related listing sections and map clusters, giving you a decisive head start.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        How does annual billing work?
+        <span class="faq-chevron">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="faq-a">Annual billing gives you 2 months free — roughly 17% off. Featured is $448/year (vs $348 at monthly) and Premium is $986/year (vs $948 at monthly). Your plan renews automatically each year, and you can cancel at any time.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        Do I need to be a Greek business owner to list?
+        <span class="faq-chevron">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="faq-a">The Greek Directory is specifically for Greek-owned businesses across America — restaurants, churches, schools, professional services, and more. If your business is owned or operated by someone of Greek heritage, you're welcome to list and become part of the community.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    <a href="/">The Greek Directory</a> — America's premier directory of Greek-owned businesses. &nbsp;·&nbsp;
+    <a href="/about">About</a> &nbsp;·&nbsp;
+    <a href="/listings">Browse</a> &nbsp;·&nbsp;
+    <a href="/business">Business Portal</a>
+  </p>
+  <p style="margin-top:0.5rem;">© 2025 The Greek Directory. All rights reserved.</p>
+</footer>
+
+<script>
+  // ── BILLING TOGGLE ──
+  let billing = 'monthly';
+
+  function setBilling(mode) {
+    billing = mode;
+    document.getElementById('btnMonthly').classList.toggle('active', mode === 'monthly');
+    document.getElementById('btnAnnual').classList.toggle('active', mode === 'annual');
+
+    if (mode === 'annual') {
+      document.getElementById('featuredPrice').textContent = '$37';
+      document.getElementById('featuredPeriod').textContent = '/ month';
+      document.getElementById('featuredAnnual').textContent = '$448 billed annually — 2 months free';
+      document.getElementById('featuredAnnual').style.visibility = 'visible';
+
+      document.getElementById('premiumPrice').textContent = '$82';
+      document.getElementById('premiumPeriod').textContent = '/ month';
+      document.getElementById('premiumAnnual').textContent = '$986 billed annually — 2 months free';
+      document.getElementById('premiumAnnual').style.visibility = 'visible';
+    } else {
+      document.getElementById('featuredPrice').textContent = '$29';
+      document.getElementById('featuredPeriod').textContent = '/ month';
+      document.getElementById('featuredAnnual').style.visibility = 'hidden';
+
+      document.getElementById('premiumPrice').textContent = '$79';
+      document.getElementById('premiumPeriod').textContent = '/ month';
+      document.getElementById('premiumAnnual').style.visibility = 'hidden';
+    }
+  }
+
+  // ── FAQ ACCORDION ──
+  function toggleFAQ(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+    // Open clicked (if it was closed)
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // ── SCROLL ANIMATION ──
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.tier-card, .roi-card, .compare-table, .faq-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>
