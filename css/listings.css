@@ -302,6 +302,11 @@ h3,
     color: #78350f;
 }
 
+.badge-premium {
+    background: #7c3aed;
+    color: #ffffff;
+}
+
 .badge-verified {
     background: #0000FF;
     color: white;

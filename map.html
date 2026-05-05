@@ -387,12 +387,10 @@
                 badges.push('<span class="badge badge-closed">Closed</span>');
             }
 
-            const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-            const isVerified = listing.verified ;
-
-            if (isFeatured) {
+            if (listing.tier === 'PREMIUM') {
+                badges.push('<span class="badge badge-premium">Premium</span>');
+            } else if (listing.tier === 'FEATURED') {
                 badges.push('<span class="badge badge-featured">Featured</span>');
-            } else if (isVerified) {
             }
 
             return badges;

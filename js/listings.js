@@ -1378,8 +1378,9 @@ function buildBadges(listing) {
         badges.push('<span class="badge badge-coming-soon">COMING SOON!</span>');
     }
 
-    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-    if (isFeatured) {
+    if (listing.tier === 'PREMIUM') {
+        badges.push('<span class="badge badge-premium">Premium</span>');
+    } else if (listing.tier === 'FEATURED') {
         badges.push('<span class="badge badge-featured">Featured</span>');
     }
 

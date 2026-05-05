@@ -3476,8 +3476,8 @@ function generateTemplateReplacements(listing) {
     
     // Generate status badges
     const owner = listing.owner && listing.owner.length > 0 ? listing.owner[0] : null;
-    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-    const isVerified = listing.verified ;
+    const isFeatured = listing.tier === 'FEATURED';
+    const isPremium = listing.tier === 'PREMIUM';
     const isClaimed = listing.is_claimed || (owner && owner.owner_user_id) || listing.show_claim_button === false;
     
     let statusBadges = '';
@@ -3486,7 +3486,9 @@ function generateTemplateReplacements(listing) {
         statusBadges += '<span class="badge badge-closed" id="openClosedBadge">CLOSED</span>';
     }
 
-    if (isFeatured) {
+    if (isPremium) {
+        statusBadges += '<span class="badge badge-premium">Premium</span>';
+    } else if (isFeatured) {
         statusBadges += '<span class="badge badge-featured">Featured</span>';
     }
 
@@ -3929,7 +3931,8 @@ function generateTemplateReplacementsPart2(listing) {
                         };
 
                         const getTierBadge = (tier) => {
-                            if (tier === 'FEATURED' || tier === 'PREMIUM') return '<span class="badge badge-featured">Featured</span>';
+                            if (tier === 'PREMIUM') return '<span class="badge badge-premium">Premium</span>';
+                            if (tier === 'FEATURED') return '<span class="badge badge-featured">Featured</span>';
                             return '';
                         };
 

@@ -341,9 +341,9 @@ function renderListingCard(listing) {
     // Badges
     const badges = [];
     if (listing.tier === 'PREMIUM') {
+        badges.push('<span class="badge badge-premium">Premium</span>');
+    } else if (listing.tier === 'FEATURED') {
         badges.push('<span class="badge badge-featured">Featured</span>');
-    } else {
-        if (listing.tier === 'FEATURED') badges.push('<span class="badge badge-featured">Featured</span>');
     }
 
     const phoneDisplay = listing.phone ? formatPhoneDisplay(listing.phone) : '';
