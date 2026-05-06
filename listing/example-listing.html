@@ -572,7 +572,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                                     <span class="subcategory-tag">Primary Subcategory</span><span class="subcategory-tag">Other Subcategory 1</span><span class="subcategory-tag">Other Subcategory 2</span>
                                 </div>
                                 <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
-                                    <span class="badge badge-closed" id="openClosedBadge">CLOSED</span><span class="badge badge-featured">Featured</span><span class="badge badge-coming-soon">COMING SOON!</span>
+                                    <span class="badge badge-closed" id="openClosedBadge">CLOSED</span><span class="badge badge-premium">Premium</span><span class="badge badge-coming-soon">COMING SOON!</span>
                                     
                                 </div>
                             </div>
@@ -857,8 +857,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                         };
 
                         const getTierBadge = (tier) => {
-                            if (tier === 'FEATURED' || tier === 'PREMIUM') return '<span class="badge badge-featured">Featured</span>';
-                            if (tier === 'VERIFIED') return '<span class="badge badge-verified">Verified</span>';
+                            if (tier === 'PREMIUM') return '<span class="badge badge-premium">Premium</span>';
+                            if (tier === 'FEATURED') return '<span class="badge badge-featured">Featured</span>';
                             return '';
                         };
 
