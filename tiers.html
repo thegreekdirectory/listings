@@ -1,0 +1,1600 @@
+<!-- tiers.html -->
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>Listing Tiers — The Greek Directory</title>
+    <meta name="description" content="Compare Free, Featured, and Premium listing tiers on The Greek Directory. Get seen first by the Greek-American community.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://thegreekdirectory.org/tiers">
+
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/src/output.css">
+    <link rel="stylesheet" href="css/index.css">
+
+    <style>
+        /* ============================================================
+           TIERS PAGE — COMPLETE STYLES
+           ============================================================ */
+
+        :root {
+            --blue:        #045093;
+            --blue-dark:   #033d74;
+            --blue-deeper: #022850;
+            --gold:        #D4AF37;
+            --gold-dark:   #b8962e;
+            --gold-light:  #f0d060;
+            --purple:      #7c3aed;
+            --purple-dark: #5b21b6;
+            --purple-glow: rgba(124,58,237,0.35);
+            --gold-glow:   rgba(212,175,55,0.35);
+            --blue-glow:   rgba(4,80,147,0.25);
+            --text-dark:   #1a1a1a;
+            --text-mid:    #374151;
+            --text-light:  #6b7280;
+            --border:      #e5e7eb;
+            --bg-light:    #f9fafb;
+            --radius-card: 20px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #fff;
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        ::selection { background: var(--blue); color: #fff; }
+
+        /* ── HERO ─────────────────────────────────────────────────── */
+        .tiers-hero {
+            position: relative;
+            background: linear-gradient(160deg, #020f22 0%, var(--blue-deeper) 50%, #031935 100%);
+            color: #fff;
+            text-align: center;
+            padding: 6rem 1.5rem 5rem;
+            overflow: hidden;
+        }
+
+        .tiers-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 20% 50%, rgba(212,175,55,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 60% at 80% 40%, rgba(4,80,147,0.18) 0%, transparent 55%);
+            pointer-events: none;
+        }
+
+        /* Greek key decorative border at bottom of hero */
+        .tiers-hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        /* Floating Greek letter decorations */
+        .hero-deco {
+            position: absolute;
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            opacity: 0.04;
+            color: var(--gold);
+            pointer-events: none;
+            user-select: none;
+        }
+        .hero-deco-1 { font-size: 22rem; top: -6rem; left: -3rem; }
+        .hero-deco-2 { font-size: 18rem; bottom: -5rem; right: -2rem; }
+
+        .tiers-hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold);
+            padding: 0.35rem 1.1rem;
+            border: 1px solid rgba(212,175,55,0.35);
+            border-radius: 999px;
+            background: rgba(212,175,55,0.07);
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tiers-hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.4rem, 5.5vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: #fff;
+            margin-bottom: 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tiers-hero-title .gold-word {
+            color: var(--gold);
+            display: inline-block;
+        }
+
+        .tiers-hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: rgba(255,255,255,0.72);
+            max-width: 560px;
+            margin: 0 auto 2.5rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+        }
+
+        /* Billing toggle */
+        .billing-toggle-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 999px;
+            padding: 0.4rem 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .billing-toggle-wrap span {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.65);
+            transition: color 0.2s;
+            cursor: pointer;
+            padding: 0.25rem 0;
+        }
+
+        .billing-toggle-wrap span.active {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .billing-pill {
+            background: var(--gold);
+            color: #1a1a1a;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+        }
+
+        /* Toggle switch */
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .toggle-switch input { display: none; }
+
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            transition: background 0.25s;
+        }
+
+        .toggle-switch input:checked ~ .toggle-track {
+            background: var(--gold);
+        }
+
+        .toggle-knob {
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 0.25s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .toggle-switch input:checked ~ .toggle-knob {
+            transform: translateX(20px);
+        }
+
+        /* ── SECTION WRAPPER ──────────────────────────────────────── */
+        .tiers-section {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 5rem 1.5rem;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: 0.75rem;
+        }
+
+        .section-title-lg {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-dark);
+            line-height: 1.2;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-desc {
+            font-size: 1rem;
+            color: var(--text-light);
+            max-width: 540px;
+            font-weight: 300;
+        }
+
+        /* ── TIER CARDS ───────────────────────────────────────────── */
+        .tier-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 3.5rem;
+        }
+
+        .tier-card {
+            border-radius: var(--radius-card);
+            padding: 2.25rem 2rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-6px);
+        }
+
+        /* FREE */
+        .tier-card-free {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .tier-card-free:hover {
+            box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+        }
+
+        /* FEATURED */
+        .tier-card-featured {
+            background: linear-gradient(145deg, #fff9e6 0%, #fffdf5 100%);
+            border: 1.5px solid rgba(212,175,55,0.5);
+            box-shadow: 0 4px 24px var(--gold-glow);
+        }
+
+        .tier-card-featured:hover {
+            box-shadow: 0 18px 50px rgba(212,175,55,0.28);
+        }
+
+        /* PREMIUM */
+        .tier-card-premium {
+            background: linear-gradient(145deg, #0f0525 0%, #1a0840 55%, #0a1635 100%);
+            border: 1.5px solid rgba(124,58,237,0.5);
+            box-shadow: 0 8px 40px var(--purple-glow);
+            color: #fff;
+        }
+
+        .tier-card-premium:hover {
+            box-shadow: 0 20px 60px rgba(124,58,237,0.4);
+        }
+
+        /* Premium shimmer overlay */
+        .tier-card-premium::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            left: -20%;
+            width: 60%;
+            height: 200%;
+            background: linear-gradient(105deg, transparent 40%, rgba(124,58,237,0.12) 50%, transparent 60%);
+            transform: skewX(-15deg);
+            animation: shimmer 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 0; transform: skewX(-15deg) translateX(-100%); }
+            50% { opacity: 1; transform: skewX(-15deg) translateX(300%); }
+        }
+
+        /* Best value badge */
+        .tier-badge-wrap {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+        }
+
+        .tier-badge {
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.3rem 0.8rem;
+            border-radius: 999px;
+        }
+
+        .badge-featured-label {
+            background: rgba(212,175,55,0.18);
+            color: var(--gold-dark);
+            border: 1px solid rgba(212,175,55,0.4);
+        }
+
+        .badge-premium-label {
+            background: rgba(124,58,237,0.2);
+            color: #c4b5fd;
+            border: 1px solid rgba(124,58,237,0.4);
+        }
+
+        /* Map marker icon */
+        .tier-marker {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .marker-free {
+            background: #eff6ff;
+            border: 3px solid var(--blue);
+        }
+
+        .marker-featured {
+            background: rgba(212,175,55,0.12);
+            border: 3px solid var(--gold);
+            box-shadow: 0 0 16px var(--gold-glow);
+        }
+
+        .marker-premium {
+            background: rgba(124,58,237,0.15);
+            border: 3px solid var(--purple);
+            box-shadow: 0 0 24px var(--purple-glow);
+        }
+
+        .marker-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+        }
+
+        .dot-free     { background: var(--blue); }
+        .dot-featured { background: var(--gold); }
+        .dot-premium  { background: var(--purple); }
+
+        /* Tier name */
+        .tier-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .tier-name-free     { color: var(--blue); }
+        .tier-name-featured { color: var(--gold-dark); }
+        .tier-name-premium  { color: #e9d5ff; }
+
+        .tier-tagline {
+            font-size: 0.82rem;
+            font-weight: 400;
+            margin-bottom: 1.75rem;
+        }
+
+        .tagline-free     { color: var(--text-light); }
+        .tagline-featured { color: #92713a; }
+        .tagline-premium  { color: rgba(255,255,255,0.55); }
+
+        /* Pricing */
+        .tier-price-wrap {
+            margin-bottom: 2rem;
+            min-height: 90px;
+        }
+
+        .tier-price-free-label {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1;
+        }
+
+        .tier-price-amount {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.15rem;
+        }
+
+        .price-currency {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 0.35rem;
+        }
+
+        .price-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .price-period {
+            font-size: 0.8rem;
+            font-weight: 400;
+            align-self: flex-end;
+            margin-bottom: 0.25rem;
+        }
+
+        .featured-price .price-currency,
+        .featured-price .price-num { color: var(--gold-dark); }
+        .featured-price .price-period { color: #92713a; }
+
+        .premium-price .price-currency,
+        .premium-price .price-num { color: #e9d5ff; }
+        .premium-price .price-period { color: rgba(255,255,255,0.45); }
+
+        .price-annual-note {
+            font-size: 0.75rem;
+            margin-top: 0.4rem;
+            font-weight: 500;
+        }
+
+        .featured-price .price-annual-note { color: #92713a; }
+        .premium-price  .price-annual-note { color: rgba(255,255,255,0.45); }
+
+        /* CTA button */
+        .tier-cta {
+            display: block;
+            text-align: center;
+            padding: 0.85rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+        }
+
+        .cta-free {
+            background: var(--bg-light);
+            color: var(--blue);
+            border: 1.5px solid var(--border);
+        }
+
+        .cta-free:hover {
+            background: #eff6ff;
+            border-color: var(--blue);
+        }
+
+        .cta-featured {
+            background: var(--gold);
+            color: #1a1a1a;
+            box-shadow: 0 4px 16px rgba(212,175,55,0.35);
+        }
+
+        .cta-featured:hover {
+            background: var(--gold-dark);
+            box-shadow: 0 6px 22px rgba(212,175,55,0.5);
+            transform: translateY(-1px);
+        }
+
+        .cta-premium {
+            background: linear-gradient(135deg, var(--purple) 0%, #9333ea 100%);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(124,58,237,0.45);
+        }
+
+        .cta-premium:hover {
+            box-shadow: 0 8px 28px rgba(124,58,237,0.6);
+            transform: translateY(-1px);
+        }
+
+        /* Feature list */
+        .tier-features-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            flex: 1;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            font-size: 0.875rem;
+        }
+
+        .feature-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .icon-check-free     { background: #d1fae5; }
+        .icon-check-featured { background: rgba(212,175,55,0.18); }
+        .icon-check-premium  { background: rgba(124,58,237,0.25); }
+        .icon-cross          { background: #f3f4f6; }
+
+        .feature-text-free     { color: var(--text-mid); }
+        .feature-text-featured { color: #4a3820; }
+        .feature-text-premium  { color: rgba(255,255,255,0.82); }
+        .feature-text-muted    { color: var(--text-light); }
+        .feature-text-muted-dark { color: rgba(255,255,255,0.35); }
+
+        .feature-divider {
+            height: 1px;
+            margin: 0.4rem 0;
+        }
+
+        .divider-free     { background: var(--border); }
+        .divider-featured { background: rgba(212,175,55,0.2); }
+        .divider-premium  { background: rgba(255,255,255,0.1); }
+
+        /* ── COMPARISON TABLE ─────────────────────────────────────── */
+        .compare-section {
+            background: var(--bg-light);
+            padding: 5rem 0;
+        }
+
+        .compare-section .tiers-section {
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .compare-header-wrap {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .compare-table-wrap {
+            overflow-x: auto;
+            border-radius: 16px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+        }
+
+        table.compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            min-width: 640px;
+        }
+
+        .compare-table thead tr {
+            background: #fff;
+        }
+
+        .compare-table th {
+            padding: 1.5rem 1.25rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 2;
+        }
+
+        .compare-table th:first-child {
+            text-align: left;
+            width: 38%;
+        }
+
+        .th-free     { color: var(--blue); }
+        .th-featured { color: var(--gold-dark); }
+        .th-premium  { color: var(--purple); }
+
+        .th-marker {
+            display: inline-block;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .compare-table td {
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.855rem;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .compare-table td:first-child {
+            text-align: left;
+            color: var(--text-mid);
+            font-weight: 500;
+        }
+
+        .compare-table tbody tr:hover td {
+            background: #fafafa;
+        }
+
+        .compare-table .group-row td {
+            background: #f0f5ff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--blue);
+            padding: 0.55rem 1.25rem;
+            border-bottom: 1px solid #e0eaff;
+        }
+
+        .compare-table .group-row td:first-child { text-align: left; }
+
+        .compare-table tbody tr:last-child td { border-bottom: none; }
+
+        .check-yes {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            margin: 0 auto;
+        }
+
+        .check-yes-free     { background: #d1fae5; }
+        .check-yes-featured { background: rgba(212,175,55,0.18); }
+        .check-yes-premium  { background: rgba(124,58,237,0.15); }
+
+        .check-no {
+            color: #d1d5db;
+            font-size: 1.1rem;
+            display: block;
+            text-align: center;
+        }
+
+        .cell-val {
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .cell-free     { color: var(--blue); }
+        .cell-featured { color: var(--gold-dark); }
+        .cell-premium  { color: var(--purple); }
+
+        /* ── VISUAL HIERARCHY STRIP ───────────────────────────────── */
+        .hierarchy-section {
+            padding: 5rem 1.5rem;
+            background: linear-gradient(160deg, #020f22 0%, var(--blue-deeper) 100%);
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hierarchy-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(212,175,55,0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hierarchy-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hierarchy-subtitle {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95rem;
+            font-weight: 300;
+            margin-bottom: 3.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hierarchy-markers {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        .h-marker-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .h-marker-circle {
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .h-marker-free {
+            width: 64px; height: 64px;
+            border: 3px solid var(--blue);
+            background: rgba(4,80,147,0.1);
+            box-shadow: 0 0 0 0 transparent;
+        }
+
+        .h-marker-featured {
+            width: 74px; height: 74px;
+            border: 3px solid var(--gold);
+            background: rgba(212,175,55,0.1);
+            box-shadow: 0 0 24px var(--gold-glow);
+        }
+
+        .h-marker-premium {
+            width: 84px; height: 84px;
+            border: 3px solid var(--purple);
+            background: rgba(124,58,237,0.15);
+            box-shadow: 0 0 40px var(--purple-glow);
+        }
+
+        .h-marker-inner {
+            border-radius: 50%;
+        }
+
+        .h-marker-free     .h-marker-inner { width: 20px; height: 20px; background: var(--blue); }
+        .h-marker-featured .h-marker-inner { width: 24px; height: 24px; background: var(--gold); }
+        .h-marker-premium  .h-marker-inner { width: 28px; height: 28px; background: var(--purple); }
+
+        .h-marker-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .label-free     { color: rgba(255,255,255,0.6); }
+        .label-featured { color: var(--gold); }
+        .label-premium  { color: #c4b5fd; }
+
+        .h-marker-desc {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            text-align: center;
+            max-width: 120px;
+        }
+
+        /* Arrow between markers */
+        .h-arrow {
+            color: rgba(255,255,255,0.2);
+            font-size: 1.5rem;
+            align-self: center;
+            margin-top: -2.5rem;
+        }
+
+        /* ── FAQ / NOTES ──────────────────────────────────────────── */
+        .notes-section {
+            padding: 5rem 1.5rem;
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        .notes-section .section-label { display: block; text-align: center; margin-bottom: 0.75rem; }
+        .notes-section .section-title-lg { text-align: center; margin-bottom: 3rem; }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 0;
+        }
+
+        .faq-q {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .faq-q-icon {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: #eff6ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .faq-a {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.7;
+            padding-left: 2.15rem;
+            font-weight: 300;
+        }
+
+        /* ── BOTTOM CTA ───────────────────────────────────────────── */
+        .bottom-cta {
+            background: #fff;
+            padding: 5rem 1.5rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .bottom-cta-inner {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .bottom-cta-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.9rem;
+            letter-spacing: -0.02em;
+        }
+
+        .bottom-cta-sub {
+            color: var(--text-light);
+            font-size: 1rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+
+        .bottom-cta-btns {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.9rem 2rem;
+            background: var(--blue);
+            color: #fff;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--blue-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(4,80,147,0.3);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.9rem 2rem;
+            background: transparent;
+            color: var(--text-mid);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--blue);
+            color: var(--blue);
+            transform: translateY(-2px);
+        }
+
+        /* ── ANNUAL SAVINGS STRIPE ────────────────────────────────── */
+        .annual-prices { display: none; }
+        .monthly-prices { display: block; }
+
+        body.annual .annual-prices { display: block; }
+        body.annual .monthly-prices { display: none; }
+
+        /* ── RESPONSIVE ───────────────────────────────────────────── */
+        @media (max-width: 900px) {
+            .tier-cards-grid { grid-template-columns: 1fr; max-width: 460px; margin-left: auto; margin-right: auto; }
+            .tier-card-premium { order: -1; }
+            .h-arrow { display: none; }
+            .hierarchy-markers { gap: 2rem; }
+        }
+
+        @media (max-width: 600px) {
+            .tiers-hero { padding: 4.5rem 1.25rem 4rem; }
+            .hierarchy-markers { flex-direction: column; align-items: center; }
+            .bottom-cta-btns { flex-direction: column; align-items: center; }
+        }
+
+        /* ── DARK MODE ────────────────────────────────────────────── */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --text-dark: #f3f4f6;
+                --text-mid:  #d1d5db;
+                --text-light: #9ca3af;
+                --border:    #374151;
+                --bg-light:  #111827;
+            }
+
+            body { background: #0f1117; color: #f3f4f6; }
+
+            .tier-card-free {
+                background: #1f2937;
+                border-color: #374151;
+            }
+
+            .tier-card-featured {
+                background: linear-gradient(145deg, #1c1600 0%, #211b00 100%);
+            }
+
+            .compare-table thead tr,
+            .compare-table th { background: #1f2937; }
+            .compare-table { background: #1f2937; }
+            .compare-table td { border-bottom-color: #374151; }
+            .compare-table tbody tr:hover td { background: #283141; }
+            .compare-table .group-row td { background: #172038; border-bottom-color: #1e3a6e; }
+
+            .compare-table-wrap { border-color: #374151; }
+            .compare-section { background: #111827; }
+
+            .tier-price-free-label { color: #f3f4f6; }
+
+            .cta-free {
+                background: #374151;
+                color: #93c5fd;
+                border-color: #4b5563;
+            }
+            .cta-free:hover { background: #1e3a5f; border-color: var(--blue); }
+
+            .notes-section, .bottom-cta { background: #0f1117; }
+            .bottom-cta { border-top-color: #374151; }
+            .bottom-cta-title { color: #f3f4f6; }
+            .faq-item { border-bottom-color: #374151; }
+            .faq-q { color: #f3f4f6; }
+            .faq-q-icon { background: #1e3a5f; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div data-partial="header"></div>
+
+    <!-- ── HERO ─────────────────────────────────────────────────────── -->
+    <section class="tiers-hero">
+        <span class="hero-deco hero-deco-1">Σ</span>
+        <span class="hero-deco hero-deco-2">Δ</span>
+
+        <div style="position:relative;z-index:1;">
+            <div class="tiers-hero-eyebrow">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Listing Plans
+            </div>
+
+            <h1 class="tiers-hero-title">
+                High-Converting<br>
+                <span class="gold-word">Business Pages</span>
+            </h1>
+            <p class="tiers-hero-subtitle">
+                Not just a directory entry — a full listing designed to drive calls, visits, and customers.
+            </p>
+
+            <!-- Billing toggle -->
+            <div class="billing-toggle-wrap">
+                <span id="monthlyLabel" class="active" onclick="setBilling('monthly')">Monthly</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="billingToggle" onchange="toggleBilling()">
+                    <div class="toggle-track"></div>
+                    <div class="toggle-knob"></div>
+                </label>
+                <span id="annualLabel" onclick="setBilling('annual')">Annual</span>
+                <span class="billing-pill">2 months free</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── TIER CARDS ────────────────────────────────────────────────── -->
+    <div style="background:#fff;">
+        <div class="tiers-section">
+            <div class="tier-cards-grid">
+
+                <!-- FREE -->
+                <div class="tier-card tier-card-free">
+                    <div class="tier-marker marker-free">
+                        <div class="marker-dot dot-free"></div>
+                    </div>
+                    <div class="tier-name tier-name-free">Free</div>
+                    <div class="tier-tagline tagline-free">Be present in the community</div>
+                    <div class="tier-price-wrap">
+                        <div class="tier-price-free-label">$0</div>
+                        <div style="font-size:0.82rem;color:var(--text-light);margin-top:0.25rem;">Always free</div>
+                    </div>
+                    <a href="/business" class="tier-cta cta-free">Claim Your Free Listing</a>
+                    <ul class="tier-features-list">
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-free">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-free">Basic info, address &amp; contact</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-free">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-free">Logo + 2 photos</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-free">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-free">Call, Directions, Website buttons</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-free">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-free">Map visibility (blue marker)</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-free">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-free">View analytics (basic)</span>
+                        </li>
+                        <li class="feature-divider divider-free"></li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-cross">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </span>
+                            <span class="feature-text-muted">Priority search ranking</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-cross">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </span>
+                            <span class="feature-text-muted">Custom CTA buttons</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-cross">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </span>
+                            <span class="feature-text-muted">Video showcase</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- FEATURED -->
+                <div class="tier-card tier-card-featured">
+                    <div class="tier-badge-wrap">
+                        <span class="tier-badge badge-featured-label">Popular</span>
+                    </div>
+                    <div class="tier-marker marker-featured">
+                        <div class="marker-dot dot-featured"></div>
+                    </div>
+                    <div class="tier-name tier-name-featured">Featured</div>
+                    <div class="tier-tagline tagline-featured">Get seen first</div>
+                    <div class="tier-price-wrap">
+                        <div class="monthly-prices">
+                            <div class="tier-price-amount featured-price">
+                                <span class="price-currency">$</span>
+                                <span class="price-num">45</span>
+                                <span class="price-period">/mo</span>
+                            </div>
+                            <div class="price-annual-note featured-price">Billed monthly</div>
+                        </div>
+                        <div class="annual-prices">
+                            <div class="tier-price-amount featured-price">
+                                <span class="price-currency">$</span>
+                                <span class="price-num" id="featuredAnnual">37</span>
+                                <span class="price-period">/mo</span>
+                            </div>
+                            <div class="price-annual-note featured-price">Billed $450/year · 2 months free</div>
+                        </div>
+                    </div>
+                    <a href="/business" class="tier-cta cta-featured">Get Featured</a>
+                    <ul class="tier-features-list">
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-featured">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-featured"><strong>Ranked above Free</strong> in search</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-featured">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-featured">Yellow map marker + subtle glow</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-featured">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-featured">5 photos + logo</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-featured">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-featured">1 custom CTA button</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-featured">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-featured">Up to 3 additional info fields</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-featured">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-featured">Engagement analytics</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-featured">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-featured">1–2 events support</span>
+                        </li>
+                        <li class="feature-divider divider-featured"></li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-cross">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="3" opacity=".45"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </span>
+                            <span class="feature-text-featured" style="opacity:.5;">Video showcase</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-cross">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="3" opacity=".45"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </span>
+                            <span class="feature-text-featured" style="opacity:.5;">Homepage placement</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- PREMIUM -->
+                <div class="tier-card tier-card-premium">
+                    <div class="tier-badge-wrap">
+                        <span class="tier-badge badge-premium-label">Best Value</span>
+                    </div>
+                    <div class="tier-marker marker-premium">
+                        <div class="marker-dot dot-premium"></div>
+                    </div>
+                    <div class="tier-name tier-name-premium">Premium</div>
+                    <div class="tier-tagline tagline-premium">Dominate visibility &amp; conversions</div>
+                    <div class="tier-price-wrap">
+                        <div class="monthly-prices">
+                            <div class="tier-price-amount premium-price">
+                                <span class="price-currency">$</span>
+                                <span class="price-num">99</span>
+                                <span class="price-period">/mo</span>
+                            </div>
+                            <div class="price-annual-note premium-price">Billed monthly</div>
+                        </div>
+                        <div class="annual-prices">
+                            <div class="tier-price-amount premium-price">
+                                <span class="price-currency">$</span>
+                                <span class="price-num" id="premiumAnnual">82</span>
+                                <span class="price-period">/mo</span>
+                            </div>
+                            <div class="price-annual-note premium-price">Billed $990/year · 2 months free</div>
+                        </div>
+                    </div>
+                    <a href="/business" class="tier-cta cta-premium">Go Premium</a>
+                    <ul class="tier-features-list">
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-premium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-premium"><strong>Top priority</strong> in all search &amp; maps</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-premium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-premium">Purple marker + strong glow (+30% size)</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-premium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-premium">15 photos + video showcase</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-premium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-premium">2 custom CTA buttons</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-premium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-premium">Homepage &amp; category placement</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-premium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-premium">Owner info displayed publicly</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-premium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-premium">FAQ section + full SEO schema</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-premium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-premium">Unlimited events</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon icon-check-premium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="feature-text-premium">Advanced analytics + trends</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ── VISUAL HIERARCHY ──────────────────────────────────────────── -->
+    <section class="hierarchy-section">
+        <h2 class="hierarchy-title">Visual Hierarchy</h2>
+        <p class="hierarchy-subtitle">How your listing appears on the map and in search results</p>
+        <div class="hierarchy-markers">
+            <div class="h-marker-item">
+                <div class="h-marker-circle h-marker-free"><div class="h-marker-inner"></div></div>
+                <span class="h-marker-label label-free">Free</span>
+                <span class="h-marker-desc">Blue ring, base size, standard placement</span>
+            </div>
+            <div class="h-arrow">→</div>
+            <div class="h-marker-item">
+                <div class="h-marker-circle h-marker-featured"><div class="h-marker-inner"></div></div>
+                <span class="h-marker-label label-featured">Featured</span>
+                <span class="h-marker-desc">Gold ring, subtle glow, +15% larger</span>
+            </div>
+            <div class="h-arrow">→</div>
+            <div class="h-marker-item">
+                <div class="h-marker-circle h-marker-premium"><div class="h-marker-inner"></div></div>
+                <span class="h-marker-label label-premium">Premium</span>
+                <span class="h-marker-desc">Purple ring, strong glow, +30% larger</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── COMPARISON TABLE ──────────────────────────────────────────── -->
+    <section class="compare-section">
+        <div class="tiers-section">
+            <div class="compare-header-wrap">
+                <span class="section-label">Full Comparison</span>
+                <h2 class="section-title-lg" style="text-align:center;">Everything, side by side</h2>
+            </div>
+            <div class="compare-table-wrap">
+                <table class="compare-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="th-free"><span class="th-marker" style="background:var(--blue);"></span>Free</th>
+                            <th class="th-featured"><span class="th-marker" style="background:var(--gold);"></span>Featured</th>
+                            <th class="th-premium"><span class="th-marker" style="background:var(--purple);"></span>Premium</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- VISIBILITY -->
+                        <tr class="group-row"><td colspan="4">🔍 Visibility</td></tr>
+                        <tr>
+                            <td>Search ranking</td>
+                            <td><span class="cell-val" style="color:var(--text-light);">Below paid</span></td>
+                            <td><span class="cell-val cell-featured">Above Free</span></td>
+                            <td><span class="cell-val cell-premium">Top priority</span></td>
+                        </tr>
+                        <tr>
+                            <td>Map marker style</td>
+                            <td><span class="cell-val cell-free">Blue ring</span></td>
+                            <td><span class="cell-val cell-featured">Gold + glow</span></td>
+                            <td><span class="cell-val cell-premium">Purple + strong glow</span></td>
+                        </tr>
+                        <tr>
+                            <td>Marker size</td>
+                            <td><span class="cell-val" style="color:var(--text-light);">Base</span></td>
+                            <td><span class="cell-val cell-featured">+15%</span></td>
+                            <td><span class="cell-val cell-premium">+30%</span></td>
+                        </tr>
+                        <tr>
+                            <td>Homepage / category placement</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-yes check-yes-premium">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span></td>
+                        </tr>
+                        <tr>
+                            <td>Related listings inclusion</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="cell-val cell-featured">Limited (~10)</span></td>
+                            <td><span class="cell-val cell-premium">All same-subcategory</span></td>
+                        </tr>
+
+                        <!-- CONVERSION -->
+                        <tr class="group-row"><td colspan="4">💰 Conversion</td></tr>
+                        <tr>
+                            <td>Default CTA buttons</td>
+                            <td><span class="check-yes check-yes-free"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                            <td><span class="check-yes check-yes-featured"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                            <td><span class="check-yes check-yes-premium"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                        </tr>
+                        <tr>
+                            <td>Custom CTA buttons</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="cell-val cell-featured">1 button</span></td>
+                            <td><span class="cell-val cell-premium">2 buttons</span></td>
+                        </tr>
+                        <tr>
+                            <td>Sticky mobile CTA bar</td>
+                            <td><span class="cell-val" style="color:var(--text-light);">Default only</span></td>
+                            <td><span class="cell-val cell-featured">+ 1 custom</span></td>
+                            <td><span class="cell-val cell-premium">+ 2 custom</span></td>
+                        </tr>
+                        <tr>
+                            <td>Owner info displayed</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-yes check-yes-premium"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                        </tr>
+
+                        <!-- CONTENT -->
+                        <tr class="group-row"><td colspan="4">📄 Content Depth</td></tr>
+                        <tr>
+                            <td>Description length</td>
+                            <td><span class="cell-val" style="color:var(--text-light);">Short</span></td>
+                            <td><span class="cell-val cell-featured">Medium</span></td>
+                            <td><span class="cell-val cell-premium">Long</span></td>
+                        </tr>
+                        <tr>
+                            <td>Additional info fields</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="cell-val cell-featured">Up to 3</span></td>
+                            <td><span class="cell-val cell-premium">Up to 5</span></td>
+                        </tr>
+                        <tr>
+                            <td>FAQ section</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-yes check-yes-premium"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                        </tr>
+                        <tr>
+                            <td>Events support</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="cell-val cell-featured">1–2 events</span></td>
+                            <td><span class="cell-val cell-premium">Unlimited</span></td>
+                        </tr>
+
+                        <!-- MEDIA -->
+                        <tr class="group-row"><td colspan="4">🖼️ Media</td></tr>
+                        <tr>
+                            <td>Logo</td>
+                            <td><span class="check-yes check-yes-free"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                            <td><span class="check-yes check-yes-featured"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                            <td><span class="check-yes check-yes-premium"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                        </tr>
+                        <tr>
+                            <td>Photos</td>
+                            <td><span class="cell-val cell-free">2</span></td>
+                            <td><span class="cell-val cell-featured">5</span></td>
+                            <td><span class="cell-val cell-premium">15</span></td>
+                        </tr>
+                        <tr>
+                            <td>Video showcase</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-yes check-yes-premium"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                        </tr>
+
+                        <!-- SEO -->
+                        <tr class="group-row"><td colspan="4">🧠 SEO &amp; Schema</td></tr>
+                        <tr>
+                            <td>Basic schema (LocalBusiness)</td>
+                            <td><span class="check-yes check-yes-free"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                            <td><span class="check-yes check-yes-featured"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                            <td><span class="check-yes check-yes-premium"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                        </tr>
+                        <tr>
+                            <td>Enhanced schema (FAQ, Event)</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="cell-val cell-featured">Partial</span></td>
+                            <td><span class="cell-val cell-premium">Full</span></td>
+                        </tr>
+
+                        <!-- ANALYTICS -->
+                        <tr class="group-row"><td colspan="4">📊 Analytics</td></tr>
+                        <tr>
+                            <td>Views &amp; basic metrics</td>
+                            <td><span class="check-yes check-yes-free"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                            <td><span class="check-yes check-yes-featured"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                            <td><span class="check-yes check-yes-premium"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                        </tr>
+                        <tr>
+                            <td>Engagement breakdown (calls, directions)</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-yes check-yes-featured"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#92713a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                            <td><span class="check-yes check-yes-premium"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                        </tr>
+                        <tr>
+                            <td>Advanced trends &amp; breakdown</td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-no">—</span></td>
+                            <td><span class="check-yes check-yes-premium"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FAQ ───────────────────────────────────────────────────────── -->
+    <div class="notes-section">
+        <span class="section-label">Questions</span>
+        <h2 class="section-title-lg">Common questions</h2>
+
+        <div class="faq-item">
+            <div class="faq-q">
+                <span class="faq-q-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17" stroke-linecap="round" stroke-width="3"/></svg>
+                </span>
+                Is my listing always free?
+            </div>
+            <div class="faq-a">Yes. Free listings have no expiration and remain in the directory indefinitely. You can claim and manage your listing at any time through the Business Portal.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">
+                <span class="faq-q-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17" stroke-linecap="round" stroke-width="3"/></svg>
+                </span>
+                Can I cancel my plan anytime?
+            </div>
+            <div class="faq-a">Yes. Monthly plans can be cancelled at any time and your listing reverts to Free at the end of the billing period. Annual plans are non-refundable but can be cancelled to prevent renewal.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">
+                <span class="faq-q-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17" stroke-linecap="round" stroke-width="3"/></svg>
+                </span>
+                How do I upgrade from Free?
+            </div>
+            <div class="faq-a">Sign in to your Business Portal at thegreekdirectory.org/business, navigate to your listing, and select Upgrade. You'll be guided through the payment process.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">
+                <span class="faq-q-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17" stroke-linecap="round" stroke-width="3"/></svg>
+                </span>
+                What does "priority ranking" mean?
+            </div>
+            <div class="faq-a">When visitors search or browse listings, Premium listings appear first, followed by Featured, then Free. This applies to search results, category pages, and the map view. Within each tier, proximity and relevance determine order.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">
+                <span class="faq-q-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17" stroke-linecap="round" stroke-width="3"/></svg>
+                </span>
+                My business has multiple locations — do I pay per location?
+            </div>
+            <div class="faq-a">Each location is its own listing. Chain linking (the "More Locations" feature) is available on all tiers. Contact us if you manage multiple locations — we have bundle options available.</div>
+        </div>
+    </div>
+
+    <!-- ── BOTTOM CTA ─────────────────────────────────────────────────── -->
+    <section class="bottom-cta">
+        <div class="bottom-cta-inner">
+            <h2 class="bottom-cta-title">Ready to grow your presence?</h2>
+            <p class="bottom-cta-sub">Join thousands of Greek-owned businesses already on The Greek Directory.</p>
+            <div class="bottom-cta-btns">
+                <a href="/business" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                    Claim Your Listing
+                </a>
+                <a href="/listings" class="btn-secondary">
+                    Browse Listings
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <div data-partial="footer"></div>
+
+    <script src="js/partials-loader.js"></script>
+    <script src="js/pwa/storage.js"></script>
+    <script src="js/pwa/offline-translation.js"></script>
+    <script src="js/pwa/app.js"></script>
+    <script src="js/pwa/dock.js"></script>
+    <script>
+        // Billing toggle logic
+        function toggleBilling() {
+            var checked = document.getElementById('billingToggle').checked;
+            document.body.classList.toggle('annual', checked);
+            document.getElementById('monthlyLabel').classList.toggle('active', !checked);
+            document.getElementById('annualLabel').classList.toggle('active', checked);
+        }
+
+        function setBilling(mode) {
+            var isAnnual = mode === 'annual';
+            document.getElementById('billingToggle').checked = isAnnual;
+            document.body.classList.toggle('annual', isAnnual);
+            document.getElementById('monthlyLabel').classList.toggle('active', !isAnnual);
+            document.getElementById('annualLabel').classList.toggle('active', isAnnual);
+        }
+
+        // gtranslate
+        window.gtranslateSettings = {
+            "default_language": "en",
+            "native_language_names": true,
+            "detect_browser_language": true,
+            "languages": ["en", "el"],
+            "globe_color": "#66aaff",
+            "wrapper_selector": ".gtranslate_wrapper",
+            "alt_flags": {"en": "usa"}
+        };
+    </script>
+    <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
+</body>
+</html>
