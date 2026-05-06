@@ -31,7 +31,7 @@
         .badge-closing-soon { background: #f59e0b; color: white; }
         .badge-hours-unknown { background: #6b7280; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
-        .badge-verified { background: #0000FF; color: white; }
+        .badge-premium { background: #0000FF; color: white; }
         .badge-claimed { background: #6B7280; color: white; }
         img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
         
@@ -1243,7 +1243,7 @@
                 if (sortOption === 'default') {
                     const aTier = a.tier || 'FREE';
                     const bTier = b.tier || 'FREE';
-                    const tierPriority = { PREMIUM: 3, FEATURED: 2, VERIFIED: 1, FREE: 0 };
+                    const tierPriority = { PREMIUM: 3, FEATURED: 2, FEATURED: 1, FREE: 0 };
                     
                     const effectiveUserLocation = userLocation || estimatedUserLocation;
                     if (effectiveUserLocation) {
@@ -1428,7 +1428,7 @@
                     if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
                     
                     if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                    if (l.verified) badges.push('<span class="badge badge-premium">Premium</span>');
                     if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     
                     const isStarred = starredListings.includes(l.id);
@@ -1480,7 +1480,7 @@
                     if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
                     
                     if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                    if (l.verified) badges.push('<span class="badge badge-premium">Premium</span>');
                     if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     
                     const isStarred = starredListings.includes(l.id);
@@ -2357,7 +2357,7 @@
                 if (hasUnknownHours(l)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
                 
                 if (l.tier === 'FEATURED' || l.tier === 'PREMIUM') badges.push('<span class="badge badge-featured">Featured</span>');
-                if (l.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                if (l.verified) badges.push('<span class="badge badge-premium">Premium</span>');
                 if (!l.showClaimButton && l.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                 
                 const isStarred = starredListings.includes(l.id);
@@ -2448,7 +2448,7 @@
                     if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
                     
                     if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                    if (listing.verified) badges.push('<span class="badge badge-premium">Premium</span>');
                     if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -2502,7 +2502,7 @@
                     if (hasUnknownHours(listing)) badges.push('<span class="badge badge-hours-unknown">Hours Unknown</span>');
                     
                     if (isFeatured) badges.push('<span class="badge badge-featured">Featured</span>');
-                    if (listing.verified) badges.push('<span class="badge badge-verified">Verified</span>');
+                    if (listing.verified) badges.push('<span class="badge badge-premium">Premium</span>');
                     if (!listing.showClaimButton && listing.tier === 'FREE') badges.push('<span class="badge badge-claimed">Claimed</span>');
                     
                     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');

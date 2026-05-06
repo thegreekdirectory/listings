@@ -335,7 +335,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         .badge-opening-soon { background: #fbbf24; color: #78350f; }
         .badge-closing-soon { background: #f59e0b; color: white; }
         .badge-featured { background: #fbbf24; color: #78350f; }
-        .badge-verified { background: #0000FF; color: white; }
+        .badge-premium { background: #6b21a8; color: #ede9fe; }
         .badge-claimed { background: #6B7280; color: white; }
         .hours-disclaimer { background: #fef3c7; border: 1px solid #fbbf24; color: #78350f; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 8px; }
         .card-shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); }
@@ -826,8 +826,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                         };
 
                         const getTierBadge = (tier) => {
-                            if (tier === 'FEATURED' || tier === 'PREMIUM') return '<span class="badge badge-featured">Featured</span>';
-                            if (tier === 'VERIFIED') return '<span class="badge badge-verified">Verified</span>';
+                            if (tier === 'PREMIUM') return '<span class="badge badge-premium">Premium</span>';
+                            if (tier === 'FEATURED') return '<span class="badge badge-featured">Featured</span>';
                             return '';
                         };
 

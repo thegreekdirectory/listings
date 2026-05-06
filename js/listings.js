@@ -60,7 +60,7 @@ let desktopFiltersOverlay = false;
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+const CLAIMED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
 
 function isPwaMode() {
     return (window.PWAApp && window.PWAApp.isStandalone) ||
@@ -1028,7 +1028,7 @@ function applyFilters() {
         } else if (sortOption === 'default') {
             const aTier = a.tier || 'FREE';
             const bTier = b.tier || 'FREE';
-            const tierPriority = { PREMIUM: 100, FEATURED: 50, VERIFIED: 20, FREE: 0 };
+            const tierPriority = { PREMIUM: 100, FEATURED: 50, FREE: 0 };
             
             const effectiveUserLocation = userLocation || estimatedUserLocation;
             
@@ -1378,22 +1378,18 @@ function buildBadges(listing) {
         badges.push('<span class="badge badge-coming-soon">COMING SOON!</span>');
     }
 
-    const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
-
-    if (isFeatured) {
+    if (listing.tier === 'PREMIUM') {
+        badges.push('<span class="badge badge-premium">Premium</span>');
+    } else if (listing.tier === 'FEATURED') {
         badges.push('<span class="badge badge-featured">Featured</span>');
-    } else if (isVerified) {
-        badges.push('<span class="badge badge-verified">Verified</span>');
     }
 
     return badges;
 }
 
-function showsVerifiedCheckmark(listing) {
+function showsClaimedCheckmark(listing) {
     const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
-    const isVerified  = listing.verified || listing.tier === 'VERIFIED';
-    return isFeatured || isVerified || listing.is_claimed || listing.show_claim_button === false;
+    return isFeatured || listing.is_claimed || listing.show_claim_button === false;
 }
 
 
@@ -1445,7 +1441,7 @@ function renderListings() {
             const badges = buildBadges(l);
             const isStarred = starredListings.includes(String(l.id));
             const logoImage = l.logo || '';
-            const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
+            const checkmarkHtml = showsClaimedCheckmark(l) ? CLAIMED_CHECKMARK_SVG : '';
             
             return `
                 <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative hover-bounce listing-card-hover">
@@ -1493,7 +1489,7 @@ function renderListings() {
             const badges = buildBadges(l);
             const isStarred = starredListings.includes(String(l.id));
             const logoImage = l.logo || '';
-            const checkmarkHtml = showsVerifiedCheckmark(l) ? VERIFIED_CHECKMARK_SVG : '';
+            const checkmarkHtml = showsClaimedCheckmark(l) ? CLAIMED_CHECKMARK_SVG : '';
             
             return `
                 <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 flex gap-4 relative hover-bounce listing-card-hover">
@@ -2813,7 +2809,7 @@ function attachClusterClickHandler(targetMap, clusterGroup) {
         
         if (listings.length === 0) return;
         
-        const tierPriority = { PREMIUM: 4, FEATURED: 3, VERIFIED: 2, FREE: 1 };
+        const tierPriority = { PREMIUM: 4, FEATURED: 3, FREE: 1 };
         listings.sort((a, b) => {
             const aTier = a.tier || 'FREE';
             const bTier = b.tier || 'FREE';
@@ -2828,7 +2824,7 @@ function attachClusterClickHandler(targetMap, clusterGroup) {
             const firstPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : '';
             const logoImage = listing.logo || '';
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const checkmarkHtml = showsVerifiedCheckmark(listing) ? 
+            const checkmarkHtml = showsClaimedCheckmark(listing) ? 
                 '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#045093"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
             
             return `
@@ -3061,16 +3057,14 @@ function getTierMarkerStyles(listing) {
             return { className: 'tier-premium', zIndex: 400 };
         case 'FEATURED':
             return { className: 'tier-featured', zIndex: 300 };
-        case 'VERIFIED':
-            return { className: 'tier-verified', zIndex: 200 };
-        default:
+                default:
             return { className: 'tier-free', zIndex: 100 };
     }
 }
 
 function buildMapPopupContent(listing) {
     const badges = buildBadges(listing);
-    const checkmarkHtml = showsVerifiedCheckmark(listing)
+    const checkmarkHtml = showsClaimedCheckmark(listing)
         ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#045093"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         : '';
     const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -3355,7 +3349,7 @@ function renderSplitViewListings() {
         const categoryLabel = (l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category;
         const isStarred = starredListings.includes(String(l.id));
         const logoImage = l.logo || '';
-        const checkmarkHtml = showsVerifiedCheckmark(l) ? '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' : '';
+        const checkmarkHtml = showsClaimedCheckmark(l) ? '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045093"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' : '';
         const isSelected = String(selectedSplitListingId) === String(l.id);
         const hasCoordinates = l.coordinates && l.coordinates.lat && l.coordinates.lng;
         
