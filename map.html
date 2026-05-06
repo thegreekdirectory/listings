@@ -396,7 +396,7 @@
             return badges;
         }
 
-        function showsVerifiedCheckmark(listing) {
+        function showsClaimedCheckmark(listing) {
             const isFeatured = listing.tier === 'FEATURED' || listing.tier === 'PREMIUM';
             return isFeatured || listing.show_claim_button === false;
         }
@@ -419,7 +419,7 @@
 
         function buildMapPopupContent(listing) {
             const badges = buildBadges(listing);
-            const checkmarkHtml = showsVerifiedCheckmark(listing)
+            const checkmarkHtml = showsClaimedCheckmark(listing)
                 ? '<svg style="width:16px;height:16px;margin-left:4px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#045093"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
                 : '';
             const categorySlug = listing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');

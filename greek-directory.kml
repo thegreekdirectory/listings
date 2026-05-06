@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>The Greek Directory - Verified Locations</name>
+    <name>The Greek Directory - Locations</name>
     <description>Greek-owned businesses and organizations with verified public locations.</description>
     <Placemark>
       <name>Hellenic American Academy</name>

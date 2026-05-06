@@ -853,7 +853,6 @@ window.acceptRequest = async function(requestId) {
             ...listingData,
             slug: safeSlug,
             tier: 'FREE',
-            verified: false,
             visible: true,
             owner: undefined
         };
@@ -1304,7 +1303,6 @@ window.newListing = async function() {
             category: CATEGORIES[0],
             subcategories: [],
             tier: 'FREE',
-            verified: false,
             visible: true,
             is_chain: false,
             is_claimed: false
@@ -2370,7 +2368,6 @@ if (!slug) {
             subcategories: selectedSubcategories,
             primary_subcategory: primarySubcategory,
             tier: tierValue,
-            verified: tierValue !== 'FREE',
             pricing: document.getElementById('editPricing').value ? Number(document.getElementById('editPricing').value) : null,
             coming_soon: document.getElementById('editComingSoon').value === 'true',
             is_chain: isChain,
@@ -4616,7 +4613,6 @@ async function uploadListingsFromCSV(listings) {
                 subcategories: subcategories,
                 primary_subcategory: subcategories.length > 0 ? subcategories[0] : null,
                 tier: csvListing.tier || csvListing.Tier || 'FREE',
-                verified: (csvListing.tier || csvListing.Tier || 'FREE') !== 'FREE',
                 visible: csvListing.visible === 'false' ? false : true,
                 is_chain: csvListing.is_chain === 'true',
                 is_claimed: isClaimed,

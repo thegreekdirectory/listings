@@ -307,11 +307,6 @@ h3,
     color: #ffffff;
 }
 
-.badge-verified {
-    background: #0000FF;
-    color: white;
-}
-
 .badge-coming-soon {
     background: #ea580c;
     color: #fff;
@@ -406,7 +401,7 @@ a,
     z-index: 100 !important;
 }
 
-.custom-marker.tier-verified {
+.custom-marker.tier-premium {
     z-index: 200 !important;
 }
 

@@ -293,8 +293,8 @@ Listing IDs are UUIDs generated via `gen_random_uuid()` (instead of incrementing
 | `category` | `text` | One of 14 main categories |
 | `subcategories` | `text[]` | Array of subcategory strings |
 | `primary_subcategory` | `text` | Shown on listing cards |
-| `tier` | `text` | `FREE`, `VERIFIED`, `FEATURED`, `PREMIUM` |
-| `verified` | `boolean` | True for VERIFIED+ |
+| `tier` | `text` | `FREE`, `FEATURED`, `PREMIUM` |
+| `verified` | `boolean` | True for FEATURED+ |
 | `visible` | `boolean` | Controls public visibility |
 | `is_claimed` | `boolean` | Owner has claimed the listing |
 | `show_claim_button` | `boolean` | Override claim button display |
@@ -466,7 +466,7 @@ All database operations from the admin portal go through the `admin-proxy` Supab
 
 ## Listing Tiers & Features
 ### Note: Tier info is subject to change, and tiers are currently not being used but they will be in the near future. The logic has been kept for the future. Info is not up-to-date.
-| Feature | FREE | VERIFIED | FEATURED | PREMIUM |
+| Feature | FREE | FEATURED | PREMIUM |
 |---|---|---|---|---|
 | Basic info (name, address, contact) | ✅ | ✅ | ✅ | ✅ |
 | Logo | ✅ | ✅ | ✅ | ✅ |
@@ -474,7 +474,7 @@ All database operations from the admin portal go through the `admin-proxy` Supab
 | Video | ❌ | ❌ | ❌ | ✅ |
 | Custom CTA buttons | 0 | 0 | 1 | 2 |
 | Description max length | 1,000 chars | 2,000 chars | 2,000 chars | 2,000 chars |
-| Verified badge | ❌ | ✅ | ✅ | ✅ |
+| Premium badge | ❌ | ✅ | ✅ | ✅ |
 | Featured badge + priority | ❌ | ❌ | ✅ | ✅ |
 | Analytics — views | ✅ | ✅ | ✅ | ✅ |
 | Analytics — engagement breakdown | ❌ | ✅ | ✅ | ✅ |
@@ -572,7 +572,7 @@ Owners can update:
 #### Analytics
 Displays stats based on tier:
 - **FREE**: Total views + total engagement
-- **VERIFIED+**: Views, call clicks, website clicks, direction clicks, shares
+- **FEATURED+**: Views, call clicks, website clicks, direction clicks, shares
 - **PREMIUM**: All above + video plays
 
 #### Settings
@@ -756,7 +756,7 @@ Addresses are geocoded via the **Nominatim** OpenStreetMap API (`https://nominat
 
 Markers use CSS z-index by tier:
 - `tier-free`: z-index 100
-- `tier-verified`: z-index 200
+- `tier-premium`: z-index 200
 - `tier-featured`: z-index 300 (gold border + glow)
 - `tier-premium`: z-index 400 (gold border + glow)
 
