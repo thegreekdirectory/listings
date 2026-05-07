@@ -4007,6 +4007,7 @@ function generateTemplateReplacementsPart2(listing) {
     const coordinates = (hasStreetAddress2 && listing.coordinates) ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
     const fullAddress = hasStreetAddress2 ? [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ') : '';
     const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
+    const hasBusinessHours = listing.hours && Object.values(listing.hours).some(value => typeof value === 'string' && value.trim().length > 0);
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
