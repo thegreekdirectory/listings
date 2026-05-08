@@ -5,7 +5,7 @@ serve(async (req) => {
     return new Response('ok', { headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info'
     }});
   }
 
@@ -20,7 +20,7 @@ serve(async (req) => {
       'Surrogate-Control': 'no-store',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info'
     }
   });
 });
