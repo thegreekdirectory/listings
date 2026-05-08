@@ -56,6 +56,28 @@ let estimatedUserLocation = null;
 let selectedSplitListingId = null;
 let desktopFiltersOverlay = false;
 
+const SERVER_TIME_ENDPOINT = `${SUPABASE_URL}/functions/v1/listing-server-time`;
+let authoritativeNowUtc = null;
+
+async function ensureAuthoritativeNowUtc() {
+    if (authoritativeNowUtc instanceof Date && !Number.isNaN(authoritativeNowUtc.getTime())) return authoritativeNowUtc;
+    try {
+        const response = await fetch(SERVER_TIME_ENDPOINT, { cache: 'no-store', headers: { Accept: 'application/json', apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` } });
+        if (!response.ok) throw new Error('server time fetch failed');
+        const payload = await response.json();
+        authoritativeNowUtc = new Date(payload.nowUtc);
+    } catch (error) {
+        authoritativeNowUtc = new Date();
+    }
+    return authoritativeNowUtc;
+}
+
+function getListingLocalDate(listingTimezone = 'America/Chicago') {
+    const baseNow = authoritativeNowUtc instanceof Date ? authoritativeNowUtc : new Date();
+    return new Date(baseNow.toLocaleString('en-US', { timeZone: listingTimezone || 'America/Chicago' }));
+}
+
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
@@ -430,6 +452,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     loadStarredListings();
     currentView = getPreferredListingsLayout();
+    await ensureAuthoritativeNowUtc();
     loadListings();
     setupEventListeners();
     setView(currentView, { skipRender: true });
@@ -971,11 +994,11 @@ function applyFilters() {
             }
         }
         
-        const openStatus = isOpenNow(listing.hours);
+        const openStatus = isOpenNow(listing.hours, listing.timezone || 'America/Chicago');
         const matchesOpenNow = !openNowOnly || openStatus === true;
         const matchesClosedNow = !closedNowOnly || openStatus === false;
-        const matchesOpeningSoon = !openingSoonOnly || isOpeningSoon(listing.hours);
-        const matchesClosingSoon = !closingSoonOnly || isClosingSoon(listing.hours);
+        const matchesOpeningSoon = !openingSoonOnly || isOpeningSoon(listing.hours, listing.timezone || 'America/Chicago');
+        const matchesClosingSoon = !closingSoonOnly || isClosingSoon(listing.hours, listing.timezone || 'America/Chicago');
         const matchesHoursUnknown = !hoursUnknownOnly || hasUnknownHours(listing);
         const matchesOnlineOnly = !onlineOnly || isBasedIn(listing);
         const matchesPricing = !selectedPricing || Number(listing.pricing) === Number(selectedPricing);
@@ -1178,8 +1201,8 @@ function levenshteinDistance(a, b) {
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-function getCentralTimeNow() {
-    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+function getCentralTimeNow(listingTimezone = 'America/Chicago') {
+    return getListingLocalDate(listingTimezone);
 }
 
 function parseBusinessHoursRange(value) {
@@ -1229,7 +1252,7 @@ function parseBusinessHoursRange(value) {
     };
 }
 
-function getHoursStatus(hours) {
+function getHoursStatus(hours, listingTimezone = 'America/Chicago') {
     if (!hours || typeof hours !== 'object' || Object.keys(hours).length === 0) {
         return { isOpen: null, isOpeningSoon: false, isClosingSoon: false };
     }
@@ -1239,7 +1262,7 @@ function getHoursStatus(hours) {
         return { isOpen: null, isOpeningSoon: false, isClosingSoon: false };
     }
 
-    const centralTime = getCentralTimeNow();
+    const centralTime = getCentralTimeNow(listingTimezone);
     const currentMinutes = centralTime.getHours() * 60 + centralTime.getMinutes();
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const todayIndex = centralTime.getDay();
@@ -1299,20 +1322,20 @@ function getHoursStatus(hours) {
     };
 }
 
-function isOpenNow(hours) {
-    return getHoursStatus(hours).isOpen;
+function isOpenNow(hours, listingTimezone) {
+    return getHoursStatus(hours, listingTimezone).isOpen;
 }
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 */
 
-function isOpeningSoon(hours) {
-    return getHoursStatus(hours).isOpeningSoon;
+function isOpeningSoon(hours, listingTimezone) {
+    return getHoursStatus(hours, listingTimezone).isOpeningSoon;
 }
 
-function isClosingSoon(hours) {
-    return getHoursStatus(hours).isClosingSoon;
+function isClosingSoon(hours, listingTimezone) {
+    return getHoursStatus(hours, listingTimezone).isClosingSoon;
 }
 
 /*
@@ -1324,8 +1347,7 @@ function hasUnknownHours(listing) {
     if (!listing.hours || typeof listing.hours !== 'object') return true;
     const hasAnyHours = Object.values(listing.hours).some(h => h && h.trim() !== '');
     if (!hasAnyHours) return true;
-    const now = new Date();
-    const centralTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+    const centralTime = getCentralTimeNow(listing.timezone || 'America/Chicago');
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const today = days[centralTime.getDay()];
     const todayHours = listing.hours[today];
@@ -1360,9 +1382,9 @@ function getFullAddress(listing) {
 
 function buildBadges(listing) {
     const badges = [];
-    const openStatus = isOpenNow(listing.hours);
-    const openingSoon = isOpeningSoon(listing.hours);
-    const closingSoon = isClosingSoon(listing.hours);
+    const openStatus = isOpenNow(listing.hours, listing.timezone || 'America/Chicago');
+    const openingSoon = isOpeningSoon(listing.hours, listing.timezone || 'America/Chicago');
+    const closingSoon = isClosingSoon(listing.hours, listing.timezone || 'America/Chicago');
 
     if (openingSoon) {
         badges.push('<span class="badge badge-opening-soon">OPENING SOON</span>');

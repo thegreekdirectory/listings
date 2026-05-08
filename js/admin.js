@@ -1452,6 +1452,11 @@ function fillEditForm(listing) {
                             <option value="USA" ${listing?.country === 'USA' ? 'selected' : ''}>USA</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Timezone *</label>
+                        <input type="text" id="editTimezone" value="${listing?.timezone || 'America/Chicago'}" class="w-full px-4 py-2 border rounded-lg" placeholder="America/Chicago" required>
+                        <p class="text-xs text-gray-500 mt-1">Use an IANA timezone (example: America/Chicago).</p>
+                    </div>
                 </div>
             </div>
 
@@ -2359,7 +2364,24 @@ if (!slug) {
         }
         
 
-        const listingData = {
+        
+        const timezoneInput = document.getElementById('editTimezone');
+        const timezone = (timezoneInput?.value || '').trim() || 'America/Chicago';
+        const isValidIanaTimezone = (tz) => {
+            try {
+                return new Intl.DateTimeFormat('en-US', { timeZone: tz }).resolvedOptions().timeZone === tz;
+            } catch (error) {
+                return false;
+            }
+        };
+
+        if (!isValidIanaTimezone(timezone)) {
+            alert('Please enter a valid IANA timezone (example: America/Chicago).');
+            timezoneInput?.focus();
+            return;
+        }
+
+const listingData = {
             business_name: businessName,
             slug: slug,
             tagline: tagline,
@@ -2379,6 +2401,7 @@ if (!slug) {
             state: state,
             zip_code: zipCode,
             country: document.getElementById('editCountry').value || 'USA',
+            timezone,
             coordinates: coordinates,
             phone: phone,
             email: document.getElementById('editEmail').value.trim() || null,
@@ -2454,6 +2477,7 @@ if (!slug) {
                 additional_info: listingData.additional_info,
                 custom_ctas: listingData.custom_ctas,
                 hours: listingData.hours,
+                timezone: listingData.timezone,
                 social_media: listingData.social_media,
                 reviews: listingData.reviews,
                 owner_name: document.getElementById('editOwnerName').value.trim() || null,
@@ -3983,6 +4007,7 @@ function generateTemplateReplacementsPart2(listing) {
     const coordinates = (hasStreetAddress2 && listing.coordinates) ? `${listing.coordinates.lat},${listing.coordinates.lng}` : '';
     const fullAddress = hasStreetAddress2 ? [listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', ') : '';
     const hoursJson = listing.hours ? JSON.stringify(listing.hours) : 'null';
+    const hasBusinessHours = listing.hours && Object.values(listing.hours).some(value => typeof value === 'string' && value.trim().length > 0);
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
@@ -4005,7 +4030,8 @@ function generateTemplateReplacementsPart2(listing) {
         'FULL_ADDRESS': fullAddress,
         'HOURS_JSON': hoursJson,
         'SUGGEST_EDIT_MAILTO': suggestEditHref,
-        'BUSINESS_TIMEZONE': escapeHtml(listing.timezone || 'America/Chicago')
+        'BUSINESS_TIMEZONE': escapeHtml(listing.timezone || 'America/Chicago'),
+        'HOURS_LOGIC_SCRIPT': hasBusinessHours ? '<script src="/js/listing-hours.js"></script>' : ''
     };
 }
 
@@ -4604,7 +4630,24 @@ async function uploadListingsFromCSV(listings) {
             
             // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
             
-            const listingData = {
+            
+        const timezoneInput = document.getElementById('editTimezone');
+        const timezone = (timezoneInput?.value || '').trim() || 'America/Chicago';
+        const isValidIanaTimezone = (tz) => {
+            try {
+                return new Intl.DateTimeFormat('en-US', { timeZone: tz }).resolvedOptions().timeZone === tz;
+            } catch (error) {
+                return false;
+            }
+        };
+
+        if (!isValidIanaTimezone(timezone)) {
+            alert('Please enter a valid IANA timezone (example: America/Chicago).');
+            timezoneInput?.focus();
+            return;
+        }
+
+const listingData = {
                 business_name: businessName,
                 slug: slug,
                 tagline: csvListing.tagline || csvListing.Tagline || '',
