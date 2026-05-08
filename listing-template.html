@@ -842,6 +842,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const hoursData = {{HOURS_JSON}};
         const businessTimezone = '{{BUSINESS_TIMEZONE}}' || 'America/Chicago';
         const hoursServerTimeEndpoint = 'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/listing-server-time';
+        const hoursServerAuth = { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` };
         const galleryPhotos = {{PHOTOS_JSON}};
         let currentGalleryIndex = 0;
         
@@ -973,7 +974,8 @@ or distribution of this code can result in legal action to the fullest extent pe
             await window.TGDListingHours.updateOpenClosedBadge({
                 hoursData,
                 businessTimezone,
-                hoursServerTimeEndpoint
+                hoursServerTimeEndpoint,
+                hoursServerAuth
             });
         }
 
@@ -1280,8 +1282,8 @@ function openGallery(index = 0) {
             setTimeout(initializeMap, 1000);
         }
         
-        updateOpenClosedBadge();
-        setInterval(updateOpenClosedBadge, 60000);
+        initializeListingHoursStatus();
+        setInterval(initializeListingHoursStatus, 60000);
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
     </script>
