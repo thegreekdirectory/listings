@@ -313,7 +313,7 @@
         async function ensureAuthoritativeNowUtc() {
             if (authoritativeNowUtc instanceof Date && !Number.isNaN(authoritativeNowUtc.getTime())) return authoritativeNowUtc;
             try {
-                const response = await fetch(SERVER_TIME_ENDPOINT, { cache: 'no-store', headers: { Accept: 'application/json' } });
+                const response = await fetch(SERVER_TIME_ENDPOINT, { cache: 'no-store', headers: { Accept: 'application/json', apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` } });
                 if (!response.ok) throw new Error('server time fetch failed');
                 const payload = await response.json();
                 authoritativeNowUtc = new Date(payload.nowUtc);

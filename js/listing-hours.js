@@ -27,8 +27,8 @@
     return { startMinutes, endMinutes, overnight: endMinutes < startMinutes, is24Hours: false };
   }
 
-  async function getServerNow(endpoint) {
-    const resp = await fetch(endpoint, { method: 'GET', headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+  async function getServerNow(endpoint, authHeaders = {}) {
+    const resp = await fetch(endpoint, { method: 'GET', headers: { 'Accept': 'application/json', ...authHeaders }, cache: 'no-store' });
     if (!resp.ok) throw new Error('Failed to fetch authoritative server time.');
     const payload = await resp.json();
     if (!payload?.nowUtc) throw new Error('Server time payload missing nowUtc.');
@@ -66,10 +66,10 @@
     statusText.textContent = m[2]; statusText.className = m[3];
   }
 
-  async function updateOpenClosedBadge({ hoursData, businessTimezone, hoursServerTimeEndpoint }) {
+  async function updateOpenClosedBadge({ hoursData, businessTimezone, hoursServerTimeEndpoint, hoursServerAuth }) {
     const hasHours = hoursData && Object.values(hoursData).some(v => typeof v === 'string' && v.trim());
     if (!hasHours) return;
-    const serverNow = await getServerNow(hoursServerTimeEndpoint);
+    const serverNow = await getServerNow(hoursServerTimeEndpoint, hoursServerAuth || {});
     const local = getListingLocalParts(serverNow, businessTimezone || 'America/Chicago');
     const today = local.weekday;
     const todayIndex = days.indexOf(today);
