@@ -947,7 +947,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     </script>
-    <script src="https://codex-implement-timezone-and.thegreekdirectory.pages.dev/js/listing-hours.js"></script>
+    {{HOURS_LOGIC_SCRIPT}}
     <script>
         /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -965,6 +965,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const hoursData = {"friday":"08:00-17:30","monday":"08:00-17:30","sunday":"Closed","tuesday":"08:00-17:30","saturday":"09:00-13:00","thursday":"08:00-17:30","wednesday":"08:00-17:30"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const hoursServerTimeEndpoint = 'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/listing-server-time';
+        const hoursServerAuth = { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` };
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/85c20ada-1e1f-4013-d412-856c6046c500/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/e7dc4485-b55b-4228-e390-63aeb1a2ed00/public"];
         let currentGalleryIndex = 0;
         
@@ -1096,7 +1097,8 @@ or distribution of this code can result in legal action to the fullest extent pe
             await window.TGDListingHours.updateOpenClosedBadge({
                 hoursData,
                 businessTimezone,
-                hoursServerTimeEndpoint
+                hoursServerTimeEndpoint,
+                hoursServerAuth
             });
         }
 
@@ -1403,8 +1405,8 @@ function openGallery(index = 0) {
             setTimeout(initializeMap, 1000);
         }
         
-        updateOpenClosedBadge();
-        setInterval(updateOpenClosedBadge, 60000);
+        initializeListingHoursStatus();
+        setInterval(initializeListingHoursStatus, 60000);
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
     </script>
