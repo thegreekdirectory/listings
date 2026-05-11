@@ -80,6 +80,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     <link rel="preconnect" href="https://images.thegreekdirectory.org">
     <link rel="dns-prefetch" href="https://images.thegreekdirectory.org">
     <link rel="stylesheet" href="/css/pwa.css">
+
     <link rel="canonical" href="https://thegreekdirectory.org/listing/chicago-il/meli-cafe-greektown">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
     <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
@@ -206,9 +207,8 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
     </script>
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
-    
     <style>
-        /*
+            /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         */
         
@@ -506,7 +506,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-    </style>
+        </style>
+    
 </head>
 <body class="bg-gray-50">
     <noscript>
@@ -700,7 +701,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <h3 class="font-semibold text-gray-900 mb-2">Hours
                     <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
                         <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
-                        <span class="hours-tooltip">Last updated at 2026-05-03 08:24 UTC by TGD Admin.</span>
+                        <span class="hours-tooltip">Last updated at 2026-05-11 16:33 UTC by TGD Admin.</span>
                     </span>
                 </h3>
                 <div class="space-y-1"><div class="flex justify-between text-sm" data-hours-day="monday"><span class="font-medium hours-day-label">Monday:</span><span class="hours-day-value">7:00 AM - 2:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="tuesday"><span class="font-medium hours-day-label">Tuesday:</span><span class="hours-day-value">7:00 AM - 2:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="wednesday"><span class="font-medium hours-day-label">Wednesday:</span><span class="hours-day-value">Closed</span></div><div class="flex justify-between text-sm" data-hours-day="thursday"><span class="font-medium hours-day-label">Thursday:</span><span class="hours-day-value">7:00 AM - 2:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="friday"><span class="font-medium hours-day-label">Friday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="saturday"><span class="font-medium hours-day-label">Saturday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="sunday"><span class="font-medium hours-day-label">Sunday:</span><span class="hours-day-value">7:00 AM - 3:00 PM</span></div></div>
@@ -1017,6 +1018,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     </script>
+    <script src="/js/listing-hours.js"></script>
     <script>
         /*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -1033,6 +1035,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         const listingId = '53edba2f-23b1-496e-97b2-046996b37c17';
         const hoursData = {"friday":"07:00-15:00","monday":"07:00-14:00","sunday":"07:00-15:00","tuesday":"07:00-14:00","saturday":"07:00-15:00","thursday":"07:00-14:00","wednesday":"Closed"};
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
+        const hoursServerTimeEndpoint = 'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/listing-server-time';
+        const hoursServerAuth = { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` };
         const galleryPhotos = ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/dc0bbcc5-8077-47b1-038d-59c94d0ba700/public"];
         let currentGalleryIndex = 0;
         
@@ -1119,6 +1123,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             initializeReadMore();
             initializeTooltipToggle('verifiedCheckmarkButton');
             initializeTooltipToggle('hoursTooltipButton');
+            initializeListingHoursStatus();
         });
 
         function initializeTooltipToggle(buttonId) {
@@ -1158,158 +1163,17 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-        function parseHoursToMinutes(hoursText) {
-            if (!hoursText || typeof hoursText !== 'string') return null;
-            const value = hoursText.trim();
-            if (!value || value.toLowerCase() === 'closed') return null;
-            if (/24/.test(value.toLowerCase())) return { startMinutes: 0, endMinutes: 1439, overnight: false };
-
-            const h24 = value.match(/^(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})$/);
-            if (h24) {
-                const startMinutes = parseInt(h24[1], 10) * 60 + parseInt(h24[2], 10);
-                const endMinutes = parseInt(h24[3], 10) * 60 + parseInt(h24[4], 10);
-                return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
-            }
-
-            const h12 = value.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-            if (!h12) return null;
-            let [, sh, sm, sp, eh, em, ep] = h12;
-            let start = parseInt(sh, 10);
-            let end = parseInt(eh, 10);
-            if (sp.toUpperCase() === 'PM' && start !== 12) start += 12;
-            if (sp.toUpperCase() === 'AM' && start === 12) start = 0;
-            if (ep.toUpperCase() === 'PM' && end !== 12) end += 12;
-            if (ep.toUpperCase() === 'AM' && end === 12) end = 0;
-            const startMinutes = start * 60 + parseInt(sm, 10);
-            const endMinutes = end * 60 + parseInt(em, 10);
-            return { startMinutes, endMinutes, overnight: endMinutes < startMinutes };
-        }
-
-
-        function updateOpenClosedBadge() {
-            const badge = document.getElementById('openClosedBadge');
-            const statusText = document.getElementById('openStatusText');
-            const hasHours = hoursData && Object.values(hoursData).some(value => typeof value === 'string' && value.trim().length > 0);
-            if (!hasHours) {
-                if (badge) badge.style.display = 'none';
-                if (statusText) statusText.style.display = 'none';
-                return;
-            }
-            
-            const now = new Date();
-            const localNow = new Date(now.toLocaleString('en-US', { timeZone: businessTimezone }));
-            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-            const today = days[localNow.getDay()];
-
-            document.querySelectorAll('[data-hours-day]').forEach((row) => {
-                const dayLabel = row.querySelector('.hours-day-label');
-                const dayValue = row.querySelector('.hours-day-value');
-                if (dayLabel) dayLabel.classList.remove('font-bold');
-                if (dayValue) dayValue.classList.remove('font-bold');
+                async function initializeListingHoursStatus() {
+            if (typeof window.TGDListingHours?.updateOpenClosedBadge !== 'function') return;
+            await window.TGDListingHours.updateOpenClosedBadge({
+                hoursData,
+                businessTimezone,
+                hoursServerTimeEndpoint,
+                hoursServerAuth
             });
-
-            const todayRow = document.querySelector(`[data-hours-day="${today}"]`);
-            if (todayRow) {
-                const dayLabel = todayRow.querySelector('.hours-day-label');
-                const dayValue = todayRow.querySelector('.hours-day-value');
-                if (dayLabel) dayLabel.classList.add('font-bold');
-                if (dayValue) dayValue.classList.add('font-bold');
-            }
-
-            const todayHours = hoursData[today];
-            
-            if (!todayHours || todayHours.toLowerCase() === 'closed') {
-                if (badge) {
-                    badge.textContent = 'CLOSED';
-                    badge.className = 'badge badge-closed';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Closed Now';
-                    statusText.className = 'closed-now';
-                }
-                return;
-            }
-            
-            if (todayHours.toLowerCase().includes('24') || todayHours.toLowerCase().includes('open 24')) {
-                if (badge) {
-                    badge.textContent = 'OPEN';
-                    badge.className = 'badge badge-open';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Open 24 Hours';
-                    statusText.className = 'open-now';
-                }
-                return;
-            }
-            
-            /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-            
-            const parsed = parseHoursToMinutes(todayHours);
-            if (!parsed) {
-                if (badge) badge.style.display = 'none';
-                if (statusText) statusText.style.display = 'none';
-                return;
-            }
-
-            const currentMinutes = localNow.getHours() * 60 + localNow.getMinutes();
-            const { startMinutes, endMinutes, overnight: isOvernight } = parsed;
-
-            const isOpen = isOvernight
-                ? (currentMinutes >= startMinutes || currentMinutes <= endMinutes)
-                : (currentMinutes >= startMinutes && currentMinutes <= endMinutes);
-            const minutesToOpen = startMinutes - currentMinutes;
-            const minutesToClose = (isOvernight && currentMinutes <= endMinutes)
-                ? endMinutes - currentMinutes
-                : (isOvernight ? (24 * 60 - currentMinutes) + endMinutes : endMinutes - currentMinutes);
-
-            if (!isOpen && minutesToOpen > 0 && minutesToOpen <= 60) {
-                if (badge) {
-                    badge.textContent = 'OPENING SOON';
-                    badge.className = 'badge badge-opening-soon';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Opening Soon';
-                    statusText.className = 'open-now';
-                }
-                return;
-            }
-
-            if (isOpen && minutesToClose > 0 && minutesToClose <= 60) {
-                if (badge) {
-                    badge.textContent = 'CLOSING SOON';
-                    badge.className = 'badge badge-closing-soon';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Closing Soon';
-                    statusText.className = 'open-now';
-                }
-                return;
-            }
-
-            if (isOpen) {
-                if (badge) {
-                    badge.textContent = 'OPEN';
-                    badge.className = 'badge badge-open';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Open Now';
-                    statusText.className = 'open-now';
-                }
-            } else {
-                if (badge) {
-                    badge.textContent = 'CLOSED';
-                    badge.className = 'badge badge-closed';
-                }
-                if (statusText) {
-                    statusText.textContent = 'Closed Now';
-                    statusText.className = 'closed-now';
-                }
-            }
         }
-        
-        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
-        
-        function openGallery(index = 0) {
+
+function openGallery(index = 0) {
             const modal = document.getElementById('galleryModal');
             if (!modal || !galleryPhotos || galleryPhotos.length === 0) return;
             modal.classList.add('active');
@@ -1612,8 +1476,8 @@ or distribution of this code can result in legal action to the fullest extent pe
             setTimeout(initializeMap, 1000);
         }
         
-        updateOpenClosedBadge();
-        setInterval(updateOpenClosedBadge, 60000);
+        initializeListingHoursStatus();
+        setInterval(initializeListingHoursStatus, 60000);
         
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
     </script>
