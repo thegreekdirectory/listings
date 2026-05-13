@@ -348,6 +348,11 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; line-height: 1.35; }
+        .listing-description ul,
+        .listing-description ol { margin-left: 1.5rem; padding-left: 1rem; }
+        .listing-description ul { list-style-type: disc; }
+        .listing-description ol { list-style-type: decimal; }
+        .listing-description li { margin: 0.25rem 0; }
         .listing-description-wrap { margin: 0 0 1.5rem; }
         .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
         .listing-description p { margin-bottom: 1rem; }
@@ -922,6 +927,10 @@ or distribution of this code can result in legal action to the fullest extent pe
                     el.addEventListener('click', () => trackClick('website'));
                 });
             }
+
+            document.querySelectorAll('a[href^="mailto:"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('email'));
+            });
 
             document.querySelectorAll('[data-cta-name]').forEach(el => {
                 el.addEventListener('click', () => trackClick('custom_cta', el.dataset.ctaName || 'custom'));
