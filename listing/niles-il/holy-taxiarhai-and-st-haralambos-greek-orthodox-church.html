@@ -1022,7 +1022,17 @@ or distribution of this code can result in legal action to the fullest extent pe
             
             const websiteDomain = 'saintharalambosgoc.org';
             if (websiteDomain) {
-                document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
+                document.querySelectorAll('a[href]').forEach(el => {
+                    const href = el.getAttribute('href') || '';
+                    let parsedUrl;
+                    try {
+                        parsedUrl = new URL(href, window.location.origin);
+                    } catch (error) {
+                        return;
+                    }
+                    const isWebLink = parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+                    if (!isWebLink) return;
+                    if (parsedUrl.hostname !== websiteDomain) return;
                     el.addEventListener('click', () => trackClick('website'));
                 });
             }
