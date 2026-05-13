@@ -3685,14 +3685,14 @@ function generateTemplateReplacements(listing) {
     let emailButtonMobile = '';
     if (listing.email) {
         emailButton = `
-            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium hover-bounce">
+            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium hover-bounce" onclick="trackClick('email')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 Email
             </a>
         `;
-        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button hover-bounce" style="background:#6b7280;"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
+        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button hover-bounce" style="background:#6b7280;" onclick="trackClick('email')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -3741,7 +3741,7 @@ function generateTemplateReplacements(listing) {
                 return `
                     <a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer"
                         class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 hover-bounce"
-                        style="background-color:${color};" data-cta-name="${escapeHtml(label)}">
+                        style="background-color:${color};" data-cta-name="${escapeHtml(label)}" onclick="trackClick('custom_cta', '${escapeHtml(label)}')">
                         ${icon}
                         <span>${escapeHtml(label)}</span>
                     </a>
@@ -3754,7 +3754,7 @@ function generateTemplateReplacements(listing) {
                 const label = String(cta.name).trim().slice(0, 15);
                 const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#045093';
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-4 h-4') || '';
-                return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:${color};" data-cta-name="${escapeHtml(label)}">${icon}<span>${escapeHtml(label)}</span></a>`;
+                return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:${color};" data-cta-name="${escapeHtml(label)}" onclick="trackClick('custom_cta', '${escapeHtml(label)}')">${icon}<span>${escapeHtml(label)}</span></a>`;
             }).join('');
     }
     
@@ -3850,7 +3850,9 @@ function generateTemplateReplacementsPart2(listing) {
             const safeFullName = decodeEscapedText(owner.full_name);
             const safeTitle = decodeEscapedText(owner.title || '');
             const ownerLine = safeTitle ? `${safeTitle}: ${safeFullName}` : `Owner: ${safeFullName}`;
-            ownerDetails += `<p><strong>${escapeHtml(ownerLine)}</strong></p>`;
+            ownerDetails += safeTitle
+                ? `<p><strong>${escapeHtml(safeTitle)}:</strong> ${escapeHtml(safeFullName)}</p>`
+                : `<p><strong>Owner:</strong> ${escapeHtml(safeFullName)}</p>`;
         }
         if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(decodeEscapedText(owner.from_greece))}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
