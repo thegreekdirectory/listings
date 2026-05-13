@@ -126,6 +126,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 },
                 "openingHoursSpecification": [],
                 "sameAs": ["https://facebook.com/Yaya-Mas-Greek-Kuzina-61556913128583","https://instagram.com/yayamas_kuzina"],
+                
                 "mainEntityOfPage": {"@id": "https://thegreekdirectory.org/listing/chicago-il/yaya-mas-greek-kuzina-logan-square#page"},
                 "identifier": {
                     "@type": "PropertyValue",
@@ -347,6 +348,11 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; line-height: 1.35; }
+        .listing-description ul,
+        .listing-description ol { margin-left: 1.5rem; padding-left: 1rem; }
+        .listing-description ul { list-style-type: disc; }
+        .listing-description ol { list-style-type: decimal; }
+        .listing-description li { margin: 0.25rem 0; }
         .listing-description-wrap { margin: 0 0 1.5rem; }
         .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
         .listing-description p { margin-bottom: 1rem; }
@@ -665,7 +671,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
-                <span>yayamas.com/logan-square</span>
+                <a href="https://yayamas.com/logan-square/" onclick="trackClick('website')">yayamas.com/logan-square</a>
             </div>
         
                             
@@ -1042,10 +1048,24 @@ or distribution of this code can result in legal action to the fullest extent pe
             
             const websiteDomain = 'yayamas.com';
             if (websiteDomain) {
-                document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
+                document.querySelectorAll('a[href]').forEach(el => {
+                    const href = el.getAttribute('href') || '';
+                    let parsedUrl;
+                    try {
+                        parsedUrl = new URL(href, window.location.origin);
+                    } catch (error) {
+                        return;
+                    }
+                    const isWebLink = parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+                    if (!isWebLink) return;
+                    if (parsedUrl.hostname !== websiteDomain) return;
                     el.addEventListener('click', () => trackClick('website'));
                 });
             }
+
+            document.querySelectorAll('a[href^="mailto:"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('email'));
+            });
 
             document.querySelectorAll('[data-cta-name]').forEach(el => {
                 el.addEventListener('click', () => trackClick('custom_cta', el.dataset.ctaName || 'custom'));

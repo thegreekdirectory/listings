@@ -126,6 +126,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 },
                 "openingHoursSpecification": [],
                 "sameAs": ["https://instagram.com/opaoriginals"],
+                
                 "mainEntityOfPage": {"@id": "https://thegreekdirectory.org/listing/online/opa-originals#page"},
                 "identifier": {
                     "@type": "PropertyValue",
@@ -347,6 +348,11 @@ or distribution of this code can result in legal action to the fullest extent pe
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; line-height: 1.35; }
+        .listing-description ul,
+        .listing-description ol { margin-left: 1.5rem; padding-left: 1rem; }
+        .listing-description ul { list-style-type: disc; }
+        .listing-description ol { list-style-type: decimal; }
+        .listing-description li { margin: 0.25rem 0; }
         .listing-description-wrap { margin: 0 0 1.5rem; }
         .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
         .listing-description p { margin-bottom: 1rem; }
@@ -589,7 +595,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                             
                             <a href="https://opaoriginals.shop" target="_blank" class="mobile-cta-button hover-bounce" style="background:#2563eb;" onclick="trackClick('website')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span>Website</span></a>
                             
-                            <a href="https://opaoriginals.shop/collections/all" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:#055193;" data-cta-name="Shop"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7.5h18M6 7.5l1.2 12h9.6L18 7.5M9.75 11.25v4.5m4.5-4.5v4.5M9 4.5h6"/></svg><span>Shop</span></a>
+                            <a href="https://opaoriginals.shop/collections/all" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:#055193;" data-cta-name="Shop" onclick="trackClick('custom_cta', 'Shop')"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7.5h18M6 7.5l1.2 12h9.6L18 7.5M9.75 11.25v4.5m4.5-4.5v4.5M9 4.5h6"/></svg><span>Shop</span></a>
                         </div>
                     </div>
 
@@ -665,7 +671,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
-                <span>opaoriginals.shop</span>
+                <a href="https://opaoriginals.shop" onclick="trackClick('website')">opaoriginals.shop</a>
             </div>
         
                             
@@ -686,7 +692,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                             
                     <a href="https://opaoriginals.shop/collections/all" target="_blank" rel="noopener noreferrer"
                         class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 hover-bounce"
-                        style="background-color:#055193;" data-cta-name="Shop">
+                        style="background-color:#055193;" data-cta-name="Shop" onclick="trackClick('custom_cta', 'Shop')">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7.5h18M6 7.5l1.2 12h9.6L18 7.5M9.75 11.25v4.5m4.5-4.5v4.5M9 4.5h6"/></svg>
                         <span>Shop</span>
                     </a>
@@ -954,10 +960,24 @@ or distribution of this code can result in legal action to the fullest extent pe
             
             const websiteDomain = 'opaoriginals.shop';
             if (websiteDomain) {
-                document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
+                document.querySelectorAll('a[href]').forEach(el => {
+                    const href = el.getAttribute('href') || '';
+                    let parsedUrl;
+                    try {
+                        parsedUrl = new URL(href, window.location.origin);
+                    } catch (error) {
+                        return;
+                    }
+                    const isWebLink = parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+                    if (!isWebLink) return;
+                    if (parsedUrl.hostname !== websiteDomain) return;
                     el.addEventListener('click', () => trackClick('website'));
                 });
             }
+
+            document.querySelectorAll('a[href^="mailto:"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('email'));
+            });
 
             document.querySelectorAll('[data-cta-name]').forEach(el => {
                 el.addEventListener('click', () => trackClick('custom_cta', el.dataset.ctaName || 'custom'));
