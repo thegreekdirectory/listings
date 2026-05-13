@@ -1351,9 +1351,9 @@ function fillEditForm(listing) {
                         <p class="text-xs mt-1" id="editCustomShortlinkStatus"></p>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-2">Tagline (max 75) *</label>
-                        <input type="text" id="editTagline" value="${listing?.tagline || ''}" maxlength="75" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">
-                        <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span>/75</p>
+                        <label class="block text-sm font-medium mb-2">Tagline *</label>
+                        <input type="text" id="editTagline" value="${listing?.tagline || ''}" class="w-full px-4 py-2 border rounded-lg" oninput="updateCharCounters()">
+                        <p class="text-xs text-gray-500 mt-1"><span id="taglineCount">${(listing?.tagline || '').length}</span> characters</p>
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-2">Description *</label>
@@ -1525,6 +1525,16 @@ function fillEditFormContinuation(listing, owner) {
                         </div>
                     `}).join('')}
                 </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Hours Label</label>
+                        <input type="text" id="editHoursLabelCustom" value="${listing?.hours_label_custom || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Hours">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Hours Disclaimer</label>
+                        <input type="text" id="editHoursDisclaimerCustom" value="${listing?.hours_disclaimer_custom || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Hours may vary — call to confirm.">
+                    </div>
+                </div>
             </div>
 
             <!-- Social Media -->
@@ -1643,6 +1653,10 @@ function fillEditFormContinuation(listing, owner) {
                         `;
                     }).join('')}
                 </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium mb-2">Additional Schema.org Properties</label>
+                    <textarea id="editCustomSchemaProperties" rows="4" class="w-full px-4 py-2 border rounded-lg font-mono text-sm" placeholder='"paymentAccepted": "Cash, Credit Card",&#10;"hasMenu": "https://example.com/menu"'>${listing?.custom_schema_properties || ''}</textarea>
+                </div>
             </div>
 
             <!-- Custom CTA Buttons -->
@@ -1656,7 +1670,7 @@ function fillEditFormContinuation(listing, owner) {
                         <div class="md:col-span-2 border border-gray-200 rounded-lg p-4 space-y-3">
                             <div>
                                 <label class="block text-sm font-medium mb-2">CTA ${index + 1} Name</label>
-                                <input type="text" id="editCtaName${index}" value="${cta.name || ''}" class="w-full px-4 py-2 border rounded-lg" maxlength="15">
+                                <input type="text" id="editCtaName${index}" value="${cta.name || ''}" class="w-full px-4 py-2 border rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-2">CTA ${index + 1} Link</label>
@@ -2247,12 +2261,6 @@ async function saveListing() {
             return;
         }
 
-        const taglineLimit = getTaglineMaxLength(document.getElementById('editCity').value.trim(), document.getElementById('editState').value.trim());
-        if (tagline.length > taglineLimit) {
-            alert(`Tagline must be ${taglineLimit} characters or fewer for SEO metadata compliance.`);
-            return;
-        }
-        
         if (selectedSubcategories.length === 0) {
             alert('At least one subcategory is required');
             return;
@@ -2350,11 +2358,6 @@ if (!slug) {
                 alert(`CTA ${i + 1} requires both a name and a link.`);
                 return;
             }
-            if (name.length > 15) {
-                alert(`CTA ${i + 1} name must be 15 characters or fewer.`);
-                return;
-            }
-            
             customCtas.push({
                 name,
                 url,
@@ -2421,6 +2424,9 @@ const listingData = {
                 saturday: normalizeHoursInput(document.getElementById('editHoursSaturday').value.trim()),
                 sunday: normalizeHoursInput(document.getElementById('editHoursSunday').value.trim())
             },
+            hours_label_custom: document.getElementById('editHoursLabelCustom').value.trim() || null,
+            hours_disclaimer_custom: document.getElementById('editHoursDisclaimerCustom').value.trim() || null,
+            custom_schema_properties: document.getElementById('editCustomSchemaProperties').value || null,
             social_media: {
                 facebook: document.getElementById('editFacebook').value.trim() || null,
                 instagram: document.getElementById('editInstagram').value.trim() || null,
@@ -2478,6 +2484,9 @@ const listingData = {
                 custom_ctas: listingData.custom_ctas,
                 hours: listingData.hours,
                 timezone: listingData.timezone,
+                hours_label_custom: listingData.hours_label_custom,
+                hours_disclaimer_custom: listingData.hours_disclaimer_custom,
+                custom_schema_properties: listingData.custom_schema_properties,
                 social_media: listingData.social_media,
                 reviews: listingData.reviews,
                 owner_name: document.getElementById('editOwnerName').value.trim() || null,
@@ -3621,7 +3630,7 @@ function generateTemplateReplacements(listing) {
         
         hoursSection = `
             <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Hours
+                <h3 class="font-semibold text-gray-900 mb-2">${escapeHtml(listing.hours_label_custom || 'Hours')}
                     <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
                         <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
                         <span class="hours-tooltip">Last updated at ${escapeHtml(hoursUpdatedAtUtc)} UTC by ${escapeHtml(hoursUpdatedBy)}.</span>
@@ -3629,7 +3638,7 @@ function generateTemplateReplacements(listing) {
                 </h3>
                 <div class="space-y-1">${hoursRows}</div>
                 <div id="openStatusText" class="mt-2 text-sm"></div>
-                <div class="hours-disclaimer">Hours may vary — call to confirm.</div>
+                <div class="hours-disclaimer">${escapeHtml(listing.hours_disclaimer_custom || 'Hours may vary — call to confirm.')}</div>
             </div>
         `;
     }
@@ -3676,14 +3685,14 @@ function generateTemplateReplacements(listing) {
     let emailButtonMobile = '';
     if (listing.email) {
         emailButton = `
-            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium hover-bounce">
+            <a href="mailto:${listing.email}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium hover-bounce" onclick="trackClick('email')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 Email
             </a>
         `;
-        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button hover-bounce" style="background:#6b7280;"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
+        emailButtonMobile = `<a href="mailto:${listing.email}" class="mobile-cta-button hover-bounce" style="background:#6b7280;" onclick="trackClick('email')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span>Email</span></a>`;
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -3726,13 +3735,13 @@ function generateTemplateReplacements(listing) {
             .filter(cta => cta && cta.name && cta.url)
             .slice(0, maxCtaButtons)
             .map(cta => {
-                const label = String(cta.name).trim().slice(0, 15);
+                const label = String(cta.name).trim();
                 const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#045093';
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-5 h-5') || '';
                 return `
                     <a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer"
                         class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 hover-bounce"
-                        style="background-color:${color};" data-cta-name="${escapeHtml(label)}">
+                        style="background-color:${color};" data-cta-name="${escapeHtml(label)}" onclick="trackClick('custom_cta', '${escapeHtml(label)}')">
                         ${icon}
                         <span>${escapeHtml(label)}</span>
                     </a>
@@ -3742,10 +3751,10 @@ function generateTemplateReplacements(listing) {
         customCtaButtonsMobile = listing.custom_ctas
             .filter(cta => cta && cta.name && cta.url)
             .map(cta => {
-                const label = String(cta.name).trim().slice(0, 15);
+                const label = String(cta.name).trim();
                 const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#045093';
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-4 h-4') || '';
-                return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:${color};" data-cta-name="${escapeHtml(label)}">${icon}<span>${escapeHtml(label)}</span></a>`;
+                return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:${color};" data-cta-name="${escapeHtml(label)}" onclick="trackClick('custom_cta', '${escapeHtml(label)}')">${icon}<span>${escapeHtml(label)}</span></a>`;
             }).join('');
     }
     
@@ -3840,8 +3849,10 @@ function generateTemplateReplacementsPart2(listing) {
         if (owner.name_title_visible !== false && owner.full_name) {
             const safeFullName = decodeEscapedText(owner.full_name);
             const safeTitle = decodeEscapedText(owner.title || '');
-            const ownerName = safeTitle ? `${safeFullName}, ${safeTitle}` : safeFullName;
-            ownerDetails += `<p><strong>Owner:</strong> ${escapeHtml(ownerName)}</p>`;
+            const ownerLine = safeTitle ? `${safeTitle}: ${safeFullName}` : `Owner: ${safeFullName}`;
+            ownerDetails += safeTitle
+                ? `<p><strong>${escapeHtml(safeTitle)}:</strong> ${escapeHtml(safeFullName)}</p>`
+                : `<p><strong>Owner:</strong> ${escapeHtml(safeFullName)}</p>`;
         }
         if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(decodeEscapedText(owner.from_greece))}, Greece</p>`;
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline">${escapeHtml(owner.owner_email)}</a></p>`;
@@ -4026,6 +4037,7 @@ function generateTemplateReplacementsPart2(listing) {
         'SHARE_TRIGGER_BUTTON': `<a class="hero-chip justify-center gap-2 px-4 py-3 text-white" onclick="openShareModal()" style="background-color:#045093; font-size: 16px; cursor: pointer;" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.6495 0.799565C18.4834 -0.72981 16.0093 0.081426 16.0093 1.99313V3.91272C12.2371 3.86807 9.65665 5.16473 7.9378 6.97554C6.10034 8.9113 5.34458 11.3314 5.02788 12.9862C4.86954 13.8135 5.41223 14.4138 5.98257 14.6211C6.52743 14.8191 7.25549 14.7343 7.74136 14.1789C9.12036 12.6027 11.7995 10.4028 16.0093 10.5464V13.0069C16.0093 14.9186 18.4834 15.7298 19.6495 14.2004L23.3933 9.29034C24.2022 8.2294 24.2022 6.7706 23.3933 5.70966L19.6495 0.799565ZM7.48201 11.6095C9.28721 10.0341 11.8785 8.55568 16.0093 8.55568H17.0207C17.5792 8.55568 18.0319 9.00103 18.0319 9.55037L18.0317 13.0069L21.7754 8.09678C22.0451 7.74313 22.0451 7.25687 21.7754 6.90322L18.0317 1.99313V4.90738C18.0317 5.4567 17.579 5.90201 17.0205 5.90201H16.0093C11.4593 5.90201 9.41596 8.33314 9.41596 8.33314C8.47524 9.32418 7.86984 10.502 7.48201 11.6095Z" fill="#FFFFFF"/><path d="M7 1.00391H4C2.34315 1.00391 1 2.34705 1 4.00391V20.0039C1 21.6608 2.34315 23.0039 4 23.0039H20C21.6569 23.0039 23 21.6608 23 20.0039V17.0039C23 16.4516 22.5523 16.0039 22 16.0039C21.4477 16.0039 21 16.4516 21 17.0039V20.0039C21 20.5562 20.5523 21.0039 20 21.0039H4C3.44772 21.0039 3 20.5562 3 20.0039V4.00391C3 3.45162 3.44772 3.00391 4 3.00391H7C7.55228 3.00391 8 2.55619 8 2.00391C8 1.45162 7.55228 1.00391 7 1.00391Z" fill="#FFFFFF"/></svg><span>Share</span></a>`,
         'SUGGEST_EDIT_BUTTON': suggestEditButton,
         'HOURS_SCHEMA': hoursSchema,
+        'CUSTOM_SCHEMA_PROPERTIES': listing.custom_schema_properties || '',
         'COORDINATES': coordinates,
         'FULL_ADDRESS': fullAddress,
         'HOURS_JSON': hoursJson,
