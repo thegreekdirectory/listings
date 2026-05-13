@@ -924,6 +924,8 @@ or distribution of this code can result in legal action to the fullest extent pe
             const websiteDomain = '{{WEBSITE_DOMAIN}}';
             if (websiteDomain) {
                 document.querySelectorAll(`a[href*="${websiteDomain}"]`).forEach(el => {
+                    const href = (el.getAttribute('href') || '').trim().toLowerCase();
+                    if (href.startsWith('mailto:') || href.startsWith('tel:')) return;
                     el.addEventListener('click', () => trackClick('website'));
                 });
             }

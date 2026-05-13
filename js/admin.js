@@ -1670,7 +1670,7 @@ function fillEditFormContinuation(listing, owner) {
                         <div class="md:col-span-2 border border-gray-200 rounded-lg p-4 space-y-3">
                             <div>
                                 <label class="block text-sm font-medium mb-2">CTA ${index + 1} Name</label>
-                                <input type="text" id="editCtaName${index}" value="${cta.name || ''}" class="w-full px-4 py-2 border rounded-lg" maxlength="15">
+                                <input type="text" id="editCtaName${index}" value="${cta.name || ''}" class="w-full px-4 py-2 border rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-2">CTA ${index + 1} Link</label>
@@ -3735,7 +3735,7 @@ function generateTemplateReplacements(listing) {
             .filter(cta => cta && cta.name && cta.url)
             .slice(0, maxCtaButtons)
             .map(cta => {
-                const label = String(cta.name).trim().slice(0, 15);
+                const label = String(cta.name).trim();
                 const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#045093';
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-5 h-5') || '';
                 return `
@@ -3751,7 +3751,7 @@ function generateTemplateReplacements(listing) {
         customCtaButtonsMobile = listing.custom_ctas
             .filter(cta => cta && cta.name && cta.url)
             .map(cta => {
-                const label = String(cta.name).trim().slice(0, 15);
+                const label = String(cta.name).trim();
                 const color = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(cta.color || '') ? cta.color : '#045093';
                 const icon = getCustomCtaIconSvg(cta.icon, 'w-4 h-4') || '';
                 return `<a href="${escapeHtml(String(cta.url).trim())}" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:${color};" data-cta-name="${escapeHtml(label)}" onclick="trackClick('custom_cta', '${escapeHtml(label)}')">${icon}<span>${escapeHtml(label)}</span></a>`;
