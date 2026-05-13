@@ -1,3 +1,4 @@
+/*
 export async function onRequest(context) {
   const { request, next } = context;
   const url = new URL(request.url);
@@ -44,3 +45,4 @@ function appendQuery(url, param) {
   const separator = url.includes("?") ? "&" : "?";
   return `${url}${separator}${param}`;
 }
+*/
