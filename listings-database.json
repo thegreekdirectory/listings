@@ -1136,7 +1136,7 @@
       "listingId": 6,
       "metadata": {
         "createdAt": "2026-01-16T16:56:38.076Z",
-        "updatedAt": "2026-01-17T02:17:05.868Z"
+        "updatedAt": "2026-05-14T14:28:03.554Z"
       },
       "analytics": {
         "views": 0,
@@ -1149,7 +1149,7 @@
         "lastViewed": "2026-01-16T16:56:38.076Z",
         "detailedViews": []
       },
-      "visible": true
+      "visible": false
     },
     {
       "businessName": "Hello",
@@ -1268,10 +1268,10 @@
       },
       "id": "example-listing-1",
       "slug": "example-listing-1",
-      "visible": false,
+      "visible": true,
       "metadata": {
         "createdAt": "2026-05-03T18:19:12.294Z",
-        "updatedAt": "2026-05-14T14:26:21.794Z"
+        "updatedAt": "2026-05-03T18:19:12.296Z"
       }
     }
   ]
