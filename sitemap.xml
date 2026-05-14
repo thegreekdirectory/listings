@@ -31,13 +31,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/education-community</loc>
+    <loc>https://thegreekdirectory.org/category/church-religious-organization</loc>
     <lastmod>2026-05-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/church-religious-organization</loc>
+    <loc>https://thegreekdirectory.org/category/education-community</loc>
     <lastmod>2026-05-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -89,6 +89,12 @@
     <lastmod>2026-05-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://thegreekdirectory.org/listing/schiller-park-il/holy-trinity-greek-orthodox-church</loc>
+    <lastmod>2026-05-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/niles-il/aristotle-greek-school</loc>
