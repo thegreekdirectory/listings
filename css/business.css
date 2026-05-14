@@ -1,467 +1,1749 @@
 /*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law.
-*/
+ * THE GREEK DIRECTORY — BUSINESS PORTAL
+ * Premium redesign — css/business.css
+ * © The Greek Directory 2025
+ */
 
-/* ============================================
-   BUSINESS PORTAL - COMPLETE CSS
-   Styling for business owner dashboard
-   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Sora:wght@300;400;500;600&display=swap');
 
+/* ─── Variables ─────────────────────────────────────────────── */
 :root {
-    --primary-blue: #045093;
-    --primary-blue-dark: #044174;
-    --secondary-gold: #D4AF37;
-    --success-green: #10b981;
-    --error-red: #ef4444;
-    --warning-yellow: #f59e0b;
-    --text-dark: #1a1a1a;
-    --text-light: #666;
-    --border-color: #e5e7eb;
-    --bg-light: #f9fafb;
+  --navy:         #09152a;
+  --navy-mid:     #0f2040;
+  --navy-light:   #1a3155;
+  --blue:         #045093;
+  --blue-hover:   #0361ae;
+  --blue-50:      #eff6ff;
+  --blue-100:     #dbeafe;
+  --gold:         #c9a227;
+  --gold-light:   #e8c346;
+  --gold-pale:    #fdf6e3;
+
+  --slate-900: #0f172a;
+  --slate-700: #334155;
+  --slate-500: #64748b;
+  --slate-400: #94a3b8;
+  --slate-300: #cbd5e1;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --slate-50:  #f8fafc;
+  --white:     #ffffff;
+
+  --success:    #059669;
+  --success-bg: #d1fae5;
+  --error:      #dc2626;
+  --error-bg:   #fee2e2;
+  --warning:    #d97706;
+  --warning-bg: #fef3c7;
+
+  --sidebar-w: 272px;
+  --r-sm: 6px;
+  --r:    10px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+
+  --shadow-xs: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.05);
+  --shadow:    0 4px 16px rgba(0,0,0,.1), 0 2px 6px rgba(0,0,0,.06);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.14), 0 4px 12px rgba(0,0,0,.08);
+  --shadow-blue: 0 4px 18px rgba(4,80,147,.35);
+  --shadow-gold: 0 4px 18px rgba(201,162,39,.35);
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+/* ─── Base ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+html { scroll-behavior: smooth; }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    line-height: 1.6;
-    background: var(--bg-light);
+  font-family: 'Sora', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--slate-900);
+  background: var(--slate-100);
+  -webkit-font-smoothing: antialiased;
 }
 
-.auth-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+h1, h2, h3, h4 {
+  font-family: 'Playfair Display', Georgia, serif;
+  line-height: 1.25;
 }
 
-.auth-card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 480px;
-    width: 100%;
-    overflow: hidden;
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button { cursor: pointer; font-family: inherit; }
+
+img { display: block; max-width: 100%; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--slate-400); }
+
+/* ─── Auth Page ─────────────────────────────────────────────── */
+.bp-auth {
+  display: grid;
+  grid-template-columns: 480px 1fr;
+  min-height: 100vh;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-.auth-header {
-    background: var(--primary-blue);
-    color: white;
-    padding: 2rem;
-    text-align: center;
+.bp-auth__brand {
+  position: relative;
+  background: var(--navy);
+  overflow: hidden;
+  padding: 56px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.auth-header h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+/* Greek key repeating border along the right edge */
+.bp-auth__brand::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 6px;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--gold) 0px,
+    var(--gold) 8px,
+    transparent 8px,
+    transparent 16px,
+    var(--gold) 16px,
+    var(--gold) 24px,
+    transparent 24px,
+    transparent 36px,
+    var(--navy-mid) 36px,
+    var(--navy-mid) 44px,
+    transparent 44px,
+    transparent 52px
+  );
+  opacity: .6;
 }
 
-.auth-body {
-    padding: 2rem;
+/* Subtle geometric background */
+.bp-auth__brand::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 75% 15%, rgba(201,162,39,.12) 0%, transparent 45%),
+    radial-gradient(circle at 20% 80%, rgba(4,80,147,.25) 0%, transparent 50%);
+  pointer-events: none;
 }
 
-.auth-divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 1.5rem 0;
+.bp-auth__brand-content {
+  position: relative;
+  z-index: 1;
+  animation: fadeUp .6s ease both;
 }
 
-.auth-divider::before,
-.auth-divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid var(--border-color);
+.bp-auth__logo {
+  height: 56px;
+  width: auto;
+  margin-bottom: 40px;
 }
 
-.auth-divider span {
-    padding: 0 1rem;
-    color: var(--text-light);
-    font-size: 0.875rem;
+.bp-auth__headline {
+  font-size: 2.25rem;
+  color: var(--white);
+  font-weight: 600;
+  margin-bottom: 12px;
+  line-height: 1.2;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-.error-message {
-    background: #fee2e2;
-    border: 1px solid #fca5a5;
-    color: #991b1b;
-    padding: 0.875rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
+.bp-auth__sub {
+  color: rgba(255,255,255,.55);
+  font-size: .9rem;
+  line-height: 1.6;
+  max-width: 320px;
 }
 
-.success-message {
-    background: #d1fae5;
-    border: 1px solid #6ee7b7;
-    color: #065f46;
-    padding: 0.875rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
+.bp-auth__features {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeUp .6s .15s ease both;
 }
 
-.info-notice {
-    font-size: 0.75rem;
-    color: var(--warning-yellow);
-    margin-top: 0.25rem;
-    font-style: italic;
+.bp-auth__features li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255,255,255,.7);
+  font-size: .875rem;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-.tgd-input {
-    width: 100%;
-    padding: 0.875rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.2s;
+.bp-auth__features li::before {
+  content: '';
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(201,162,39,.2);
+  border: 1px solid rgba(201,162,39,.4);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9a227' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-size: 14px;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
-.tgd-input:focus {
-    outline: none;
-    border-color: var(--primary-blue);
-    box-shadow: 0 0 0 3px rgba(5, 81, 147, 0.1);
+.bp-auth__badge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--r);
+  background: rgba(201,162,39,.12);
+  border: 1px solid rgba(201,162,39,.25);
+  color: var(--gold-light);
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+  animation: fadeUp .6s .3s ease both;
 }
 
-.tgd-input:disabled {
-    background: var(--bg-light);
-    cursor: not-allowed;
-    opacity: 0.6;
+/* ─── Auth Form Panel ───────────────────────────────────────── */
+.bp-auth__form {
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+  overflow-y: auto;
 }
 
-.tgd-button-primary {
-    width: 100%;
-    padding: 0.875rem 1.5rem;
-    background: var(--primary-blue);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+.bp-form-container {
+  width: 100%;
+  max-width: 440px;
+  animation: fadeUp .5s .1s ease both;
 }
 
-.tgd-button-primary:hover {
-    background: var(--primary-blue-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(5, 81, 147, 0.3);
+.bp-form-container h2 {
+  font-size: 1.75rem;
+  color: var(--slate-900);
+  margin-bottom: 6px;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-.tgd-button-secondary {
-    width: 100%;
-    padding: 0.875rem 1.5rem;
-    background: white;
-    color: var(--primary-blue);
-    border: 2px solid var(--primary-blue);
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+.bp-form-container > p {
+  color: var(--slate-500);
+  font-size: .9rem;
+  margin-bottom: 28px;
 }
 
-.tgd-button-secondary:hover {
-    background: var(--bg-light);
+.bp-form-row { margin-bottom: 18px; }
+
+.bp-label {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  margin-bottom: 6px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
 }
 
-#listingSearchResults {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    max-height: 200px;
-    overflow-y: auto;
+.bp-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--r);
+  font-family: inherit;
+  font-size: .95rem;
+  color: var(--slate-900);
+  background: var(--white);
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
 }
 
-#listingSearchResults > div {
-    padding: 0.75rem;
-    cursor: pointer;
-    transition: background 0.2s;
+.bp-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(4,80,147,.1);
 }
 
-#listingSearchResults > div:hover {
-    background: var(--bg-light);
+.bp-input:disabled {
+  background: var(--slate-50);
+  color: var(--slate-400);
+  cursor: not-allowed;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+.bp-input::placeholder { color: var(--slate-400); }
 
-.id-badge {
-    display: inline-block;
-    background: var(--bg-light);
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-light);
-    margin-left: 0.5rem;
+.bp-input-hint {
+  font-size: .78rem;
+  color: var(--slate-400);
+  margin-top: 5px;
+  font-style: italic;
 }
 
-.tier-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-transform: uppercase;
+.bp-input-locked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .78rem;
+  color: var(--warning);
+  margin-top: 5px;
 }
 
-.tier-FREE {
-    background: #f3f4f6;
-    color: #374151;
+/* ─── Buttons ───────────────────────────────────────────────── */
+.bp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1.5px solid transparent;
+  border-radius: var(--r);
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  line-height: 1;
 }
 
-.tier-PREMIUM {
-    background: #dbeafe;
-    color: #1e40af;
+.bp-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
-.tier-FEATURED {
-    background: #fef3c7;
-    color: #92400e;
+.bp-btn--primary {
+  background: var(--blue);
+  color: var(--white);
+  box-shadow: var(--shadow-blue);
+}
+.bp-btn--primary:hover:not(:disabled) {
+  background: var(--blue-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(4,80,147,.4);
 }
 
-.tier-PREMIUM {
-    background: #ede9fe;
-    color: #6b21a8;
+.bp-btn--gold {
+  background: var(--gold);
+  color: #1a0e00;
+  box-shadow: var(--shadow-gold);
+}
+.bp-btn--gold:hover:not(:disabled) {
+  background: var(--gold-light);
+  transform: translateY(-1px);
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-button[id^="tab-"] {
-    transition: all 0.2s;
-    whitespace: nowrap;
+.bp-btn--secondary {
+  background: var(--white);
+  color: var(--blue);
+  border-color: var(--blue);
+}
+.bp-btn--secondary:hover:not(:disabled) {
+  background: var(--blue-50);
 }
 
-.preview-card {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.bp-btn--ghost {
+  background: transparent;
+  color: var(--slate-600);
+  border-color: var(--slate-200);
+}
+.bp-btn--ghost:hover:not(:disabled) {
+  background: var(--slate-100);
+  color: var(--slate-900);
 }
 
-.preview-main-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
+.bp-btn--danger {
+  background: var(--error-bg);
+  color: var(--error);
+  border-color: #fca5a5;
+}
+.bp-btn--danger:hover:not(:disabled) {
+  background: #fecaca;
 }
 
-.preview-info {
-    padding: 1.5rem;
+.bp-btn--full { width: 100%; }
+
+.bp-btn--sm { padding: 7px 14px; font-size: .82rem; }
+.bp-btn--lg { padding: 13px 28px; font-size: 1rem; }
+
+.bp-btn--loading {
+  position: relative;
+  color: transparent !important;
+}
+.bp-btn--loading::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
 }
 
-.preview-logo {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    border-radius: 8px;
-    background: white;
-    padding: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* ─── Auth Message ──────────────────────────────────────────── */
+.bp-auth-msg {
+  padding: 12px 14px;
+  border-radius: var(--r);
+  font-size: .875rem;
+  margin-bottom: 18px;
+  display: none;
+  align-items: flex-start;
+  gap: 10px;
+}
+.bp-auth-msg.visible { display: flex; }
+.bp-auth-msg--error { background: var(--error-bg); color: #991b1b; border: 1px solid #fca5a5; }
+.bp-auth-msg--success { background: var(--success-bg); color: #065f46; border: 1px solid #6ee7b7; }
+
+.bp-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+  color: var(--slate-400);
+  font-size: .8rem;
+}
+.bp-divider::before, .bp-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--slate-200);
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+/* Listing search dropdown */
+.bp-search-results {
+  border: 1.5px solid var(--slate-200);
+  border-top: none;
+  border-radius: 0 0 var(--r) var(--r);
+  background: var(--white);
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  display: none;
+}
+.bp-search-results.open { display: block; }
+.bp-search-result-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .15s;
+  border-bottom: 1px solid var(--slate-100);
+}
+.bp-search-result-item:hover { background: var(--blue-50); }
+.bp-search-result-item:last-child { border-bottom: none; }
+.bp-search-result-item .name { font-weight: 500; font-size: .9rem; }
+.bp-search-result-item .meta { font-size: .78rem; color: var(--slate-500); margin-top: 1px; }
+.bp-search-result-item.claimed .name { color: var(--slate-400); }
 
-.disabled-field {
-    position: relative;
+/* ─── Dashboard Layout ──────────────────────────────────────── */
+.bp-layout {
+  display: flex;
+  min-height: 100vh;
 }
 
-.disabled-field input {
-    background: var(--bg-light);
-    cursor: not-allowed;
+/* ─── Sidebar ───────────────────────────────────────────────── */
+.bp-sidebar {
+  width: var(--sidebar-w);
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
 }
 
-.char-counter {
-    font-size: 0.75rem;
-    color: var(--text-light);
+/* Gold accent line along top */
+.bp-sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--blue), var(--gold));
 }
 
-.char-counter.warning {
-    color: var(--warning-yellow);
-    font-weight: 600;
+.bp-sidebar__logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
 }
 
-.char-counter.error {
-    color: var(--error-red);
-    font-weight: 600;
+.bp-sidebar__logo img {
+  height: 40px;
+  width: auto;
 }
 
-.subcategory-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    transition: all 0.2s;
+.bp-sidebar__business {
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
 }
 
-.subcategory-checkbox:has(input[type="checkbox"]:checked) {
-    border-color: var(--primary-blue);
-    background: #eff6ff;
+.bp-sidebar__business-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--white);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-.subcategory-checkbox input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
+.bp-sidebar__business-id {
+  font-size: .72rem;
+  color: rgba(255,255,255,.35);
+  font-family: 'Sora', monospace;
 }
 
-.subcategory-checkbox input[type="radio"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    accent-color: var(--secondary-gold);
+/* Nav */
+.bp-sidebar__nav {
+  flex: 1;
+  padding: 12px 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.subcategory-checkbox label {
-    flex: 1;
-    cursor: pointer;
-    font-size: 0.875rem;
+.bp-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--r);
+  color: rgba(255,255,255,.5);
+  font-size: .9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  position: relative;
 }
 
-.analytics-stat-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.bp-nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.analytics-stat-card .text-4xl {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+.bp-nav-item:hover {
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.8);
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-.owner-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.bp-nav-item.active {
+  background: rgba(255,255,255,.1);
+  color: var(--white);
 }
 
-.visibility-toggle {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-    width: fit-content;
+.bp-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px; bottom: 6px;
+  width: 3px;
+  background: var(--gold);
+  border-radius: 0 3px 3px 0;
 }
 
-.visibility-toggle.visible {
-    background: #d1fae5;
-    color: #065f46;
+/* Footer */
+.bp-sidebar__footer {
+  padding: 16px 12px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.visibility-toggle.hidden {
-    background: #fee2e2;
-    color: #991b1b;
+.bp-sidebar__user {
+  padding: 8px 14px;
+  border-radius: var(--r);
+  background: rgba(255,255,255,.05);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
-.visibility-toggle:hover {
-    transform: scale(1.05);
+.bp-sidebar__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--navy-mid));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-@media (max-width: 768px) {
-    .auth-container {
-        padding: 1rem;
-    }
-    
-    .preview-card {
-        flex-direction: column;
-    }
-    
-    .preview-main-image {
-        height: 250px;
-    }
+.bp-sidebar__user-email {
+  font-size: .78rem;
+  color: rgba(255,255,255,.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.loading {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 0.8s linear infinite;
+.bp-sidebar__logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--r);
+  color: rgba(255,255,255,.4);
+  font-size: .875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  border: none;
+  background: none;
+  width: 100%;
+}
+
+.bp-sidebar__logout svg {
+  width: 16px; height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bp-sidebar__logout:hover {
+  background: rgba(220,38,38,.12);
+  color: #fca5a5;
+}
+
+/* ─── Mobile Header ─────────────────────────────────────────── */
+.bp-mobile-header {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 60px;
+  background: var(--navy);
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.bp-hamburger {
+  background: none;
+  border: none;
+  color: var(--white);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+.bp-hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: all .2s;
+}
+
+.bp-mobile-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--white);
+  font-weight: 600;
+  flex: 1;
+}
+
+.bp-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 90;
+  backdrop-filter: blur(2px);
+}
+.bp-sidebar-overlay.open { display: block; }
+
+/* ─── Main Content ──────────────────────────────────────────── */
+.bp-main {
+  flex: 1;
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.bp-content {
+  flex: 1;
+  padding: 32px 36px;
+  max-width: 1100px;
+}
+
+/* ─── Page Header ───────────────────────────────────────────── */
+.bp-page-header {
+  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bp-page-header h1 {
+  font-size: 1.75rem;
+  color: var(--slate-900);
+}
+
+.bp-page-header p {
+  color: var(--slate-500);
+  font-size: .9rem;
+  margin-top: 4px;
+}
+
+/* ─── Tier Badges ───────────────────────────────────────────── */
+.bp-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.bp-tier--free {
+  background: var(--slate-100);
+  color: var(--slate-700);
+  border: 1px solid var(--slate-200);
+}
+
+.bp-tier--featured {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.bp-tier--premium {
+  background: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #c4b5fd;
+}
+
+/* ─── Cards ─────────────────────────────────────────────────── */
+.bp-card {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,.04);
+  overflow: hidden;
+}
+
+.bp-card-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--slate-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bp-card-header h2 {
+  font-size: 1.1rem;
+  color: var(--slate-900);
+}
+
+.bp-card-body { padding: 24px; }
+
+/* ─── Overview ──────────────────────────────────────────────── */
+.bp-welcome-banner {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 60%, #0d2d55 100%);
+  border-radius: var(--r-xl);
+  padding: 32px 36px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bp-welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,162,39,.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.bp-welcome-banner__title {
+  font-size: 1.6rem;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.bp-welcome-banner__sub {
+  color: rgba(255,255,255,.55);
+  font-size: .9rem;
+  margin-bottom: 20px;
+}
+
+.bp-welcome-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ─── Stat Grid ─────────────────────────────────────────────── */
+.bp-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.bp-stat-card {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-xs);
+  border: 1px solid rgba(0,0,0,.04);
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.bp-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.bp-stat-card__icon {
+  width: 38px; height: 38px;
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.bp-stat-card__icon svg {
+  width: 18px; height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bp-stat-card__value {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+  color: var(--slate-900);
+}
+
+.bp-stat-card__label {
+  font-size: .78rem;
+  color: var(--slate-500);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 500;
+}
+
+.bp-stat-card--blue  .bp-stat-card__icon { background: var(--blue-50); color: var(--blue); }
+.bp-stat-card--gold  .bp-stat-card__icon { background: var(--gold-pale); color: var(--gold); }
+.bp-stat-card--green .bp-stat-card__icon { background: var(--success-bg); color: var(--success); }
+.bp-stat-card--rose  .bp-stat-card__icon { background: #fff1f2; color: #e11d48; }
+.bp-stat-card--indigo .bp-stat-card__icon { background: #eef2ff; color: #4f46e5; }
+.bp-stat-card--teal  .bp-stat-card__icon { background: #f0fdf9; color: #0f766e; }
+
+/* ─── Listing Preview ───────────────────────────────────────── */
+.bp-listing-preview {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,.04);
+  margin-bottom: 24px;
+}
+
+.bp-listing-preview__hero {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  background: var(--slate-100);
+}
+
+.bp-listing-preview__hero-placeholder {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,.2);
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+}
+
+.bp-listing-preview__body {
+  padding: 20px 24px 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.bp-listing-preview__logo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r);
+  object-fit: contain;
+  border: 1px solid var(--slate-200);
+  background: var(--white);
+  padding: 4px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-xs);
+  margin-top: -36px;
+}
+
+.bp-listing-preview__info { flex: 1; min-width: 0; }
+
+.bp-listing-preview__name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.bp-listing-preview__tagline {
+  color: var(--slate-500);
+  font-size: .875rem;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.bp-listing-preview__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.bp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: .75rem;
+  font-weight: 500;
+  background: var(--blue-50);
+  color: var(--blue);
+  border: 1px solid var(--blue-100);
+}
+
+.bp-pill--gold {
+  background: var(--gold-pale);
+  color: #7a5a00;
+  border-color: #fde68a;
+}
+
+/* ─── Features List (Overview) ──────────────────────────────── */
+.bp-features-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bp-features-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: .875rem;
+  color: var(--slate-700);
+  line-height: 1.5;
+}
+
+.bp-features-list li::before {
+  content: '';
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--success-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23059669' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-size: 12px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* ─── Edit Form ─────────────────────────────────────────────── */
+.bp-section {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+  border: 1px solid rgba(0,0,0,.04);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.bp-section__head {
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.bp-section__head:hover { background: var(--slate-50); }
+
+.bp-section__head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bp-section__head-icon {
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blue-50);
+  color: var(--blue);
+  flex-shrink: 0;
+}
+
+.bp-section__head-icon svg {
+  width: 16px; height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bp-section__title {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--slate-900);
+  font-family: 'Sora', sans-serif;
+}
+
+.bp-section__chevron {
+  width: 18px; height: 18px;
+  stroke: var(--slate-400);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .25s;
+}
+
+.bp-section.open .bp-section__chevron { transform: rotate(180deg); }
+
+.bp-section__body {
+  padding: 22px;
+  display: none;
+}
+
+.bp-section.open .bp-section__body { display: block; }
+
+/* ─── Form Grid ─────────────────────────────────────────────── */
+.bp-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.bp-form-grid--1 { grid-template-columns: 1fr; }
+.bp-form-grid--3 { grid-template-columns: 1fr 1fr 1fr; }
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+
+.bp-field { display: flex; flex-direction: column; gap: 6px; }
+
+.bp-char-counter {
+  font-size: .75rem;
+  color: var(--slate-400);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.bp-char-counter.warn { color: var(--warning); }
+.bp-char-counter.over { color: var(--error); }
+
+/* ─── Phone Input ───────────────────────────────────────────── */
+.bp-phone-wrap { display: flex; gap: 8px; }
+.bp-phone-wrap select {
+  flex-shrink: 0;
+  width: 130px;
+  padding: 11px 10px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--r);
+  font-family: inherit;
+  font-size: .85rem;
+  color: var(--slate-700);
+  background: var(--white);
+  outline: none;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+.bp-phone-wrap select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(4,80,147,.1);
+}
+.bp-phone-wrap input { flex: 1; }
+
+/* ─── Hours Grid ────────────────────────────────────────────── */
+.bp-hours-grid { display: flex; flex-direction: column; gap: 10px; }
+
+.bp-hours-row {
+  display: grid;
+  grid-template-columns: 100px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.bp-hours-day {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--slate-600);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.bp-hours-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .8rem;
+  color: var(--slate-500);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bp-hours-check input[type=checkbox] {
+  width: 15px; height: 15px;
+  cursor: pointer;
+  accent-color: var(--blue);
+}
+
+/* ─── Subcategories ─────────────────────────────────────────── */
+.bp-subcats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.bp-subcat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+
+.bp-subcat-item:hover { border-color: var(--blue); background: var(--blue-50); }
+.bp-subcat-item.selected { border-color: var(--blue); background: var(--blue-50); }
+
+.bp-subcat-item input[type=checkbox] {
+  width: 16px; height: 16px;
+  cursor: pointer;
+  accent-color: var(--blue);
+  flex-shrink: 0;
+}
+
+.bp-subcat-item input[type=radio] {
+  width: 14px; height: 14px;
+  cursor: pointer;
+  accent-color: var(--gold);
+  flex-shrink: 0;
+}
+
+.bp-subcat-item label {
+  flex: 1;
+  font-size: .85rem;
+  color: var(--slate-700);
+  cursor: pointer;
+}
+
+.bp-subcat-hint {
+  font-size: .75rem;
+  color: var(--slate-400);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ─── Media Upload ──────────────────────────────────────────── */
+.bp-upload-box {
+  border: 2px dashed var(--slate-200);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--slate-50);
+}
+
+.bp-upload-box:hover {
+  border-color: var(--blue);
+  background: var(--blue-50);
+}
+
+.bp-upload-box input[type=file] {
+  display: none;
+}
+
+.bp-upload-icon {
+  width: 44px; height: 44px;
+  border-radius: var(--r);
+  background: var(--blue-50);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.bp-upload-icon svg {
+  width: 22px; height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bp-upload-box p {
+  font-size: .875rem;
+  color: var(--slate-500);
+}
+
+.bp-upload-box strong { color: var(--blue); }
+
+.bp-photo-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.bp-photo-thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--r);
+  overflow: hidden;
+  border: 1.5px solid var(--slate-200);
+}
+
+.bp-photo-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.bp-photo-thumb__remove {
+  position: absolute;
+  top: 3px; right: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.6);
+  color: white;
+  border: none;
+  font-size: .7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.bp-photo-thumb:hover .bp-photo-thumb__remove { opacity: 1; }
+
+.bp-upload-status {
+  margin-top: 10px;
+  font-size: .82rem;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  display: none;
+}
+.bp-upload-status.visible { display: block; }
+.bp-upload-status.loading { background: var(--blue-50); color: var(--blue); }
+.bp-upload-status.success { background: var(--success-bg); color: var(--success); }
+.bp-upload-status.error { background: var(--error-bg); color: var(--error); }
+
+/* ─── Custom CTAs ───────────────────────────────────────────── */
+.bp-cta-builder {
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  background: var(--slate-50);
+}
+
+.bp-cta-builder + .bp-cta-builder { margin-top: 12px; }
+
+/* ─── Visibility Toggle ─────────────────────────────────────── */
+.bp-vis-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--slate-100);
+}
+.bp-vis-row:last-child { border-bottom: none; }
+
+.bp-vis-row__label { font-size: .9rem; font-weight: 500; color: var(--slate-800); }
+.bp-vis-row__sub { font-size: .78rem; color: var(--slate-400); margin-top: 2px; }
+
+.bp-toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.bp-toggle-switch input {
+  opacity: 0;
+  width: 0; height: 0;
+  position: absolute;
+}
+
+.bp-toggle-switch__track {
+  position: absolute;
+  inset: 0;
+  border-radius: 99px;
+  background: var(--slate-200);
+  transition: background .2s;
+  cursor: pointer;
+}
+
+.bp-toggle-switch__track::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: var(--shadow-xs);
+  transition: transform .2s;
+}
+
+.bp-toggle-switch input:checked + .bp-toggle-switch__track { background: var(--blue); }
+.bp-toggle-switch input:checked + .bp-toggle-switch__track::after { transform: translateX(20px); }
+
+/* ─── Analytics Detailed ────────────────────────────────────── */
+.bp-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.bp-analytics-card {
+  border-radius: var(--r-lg);
+  padding: 22px 18px;
+  color: white;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: transform .2s;
+}
+
+.bp-analytics-card:hover { transform: translateY(-3px); }
+
+.bp-analytics-card__value {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.bp-analytics-card__label {
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 600;
+  opacity: .85;
+}
+
+/* gradient backgrounds */
+.bg-grad-1 { background: linear-gradient(135deg, #1a3155, #045093); }
+.bg-grad-2 { background: linear-gradient(135deg, #7c3aed, #4f46e5); }
+.bg-grad-3 { background: linear-gradient(135deg, #059669, #0d9488); }
+.bg-grad-4 { background: linear-gradient(135deg, #dc2626, #e11d48); }
+.bg-grad-5 { background: linear-gradient(135deg, #d97706, #c9a227); }
+.bg-grad-6 { background: linear-gradient(135deg, #0891b2, #0284c7); }
+
+.bp-upgrade-notice {
+  background: linear-gradient(135deg, var(--gold-pale), #fffbeb);
+  border: 1px solid #fde68a;
+  border-radius: var(--r-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.bp-upgrade-notice__icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.bp-upgrade-notice h4 {
+  font-size: 1rem;
+  color: #78350f;
+  margin-bottom: 4px;
+}
+
+.bp-upgrade-notice p {
+  font-size: .85rem;
+  color: #92400e;
+}
+
+/* ─── Inline Event Log ──────────────────────────────────────── */
+.bp-event-log {
+  margin-top: 20px;
+}
+
+.bp-event-log__title {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--slate-500);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 12px;
+}
+
+.bp-event-log__list { display: flex; flex-direction: column; gap: 8px; }
+
+.bp-event-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--r);
+  background: var(--slate-50);
+  border: 1px solid var(--slate-100);
+}
+
+.bp-event-item__dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bp-event-item__action { font-size: .875rem; font-weight: 500; flex: 1; color: var(--slate-800); }
+.bp-event-item__time { font-size: .75rem; color: var(--slate-400); white-space: nowrap; }
+
+/* ─── Cloudflare Config ─────────────────────────────────────── */
+.bp-cf-config {
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.bp-cf-config__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bp-cf-config__toggle-label {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bp-cf-config__fields {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  display: none;
+}
+.bp-cf-config__fields.open { display: grid; }
+
+/* ─── Save Bar ──────────────────────────────────────────────── */
+.bp-save-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0; right: 0;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--slate-200);
+  padding: 14px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 50;
+  margin: 0 -36px;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.06);
+}
+
+.bp-save-bar p { font-size: .875rem; color: var(--slate-500); }
+
+/* ─── Toast Notifications ───────────────────────────────────── */
+.bp-toasts {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.bp-toast {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 380px;
+  border-left: 4px solid transparent;
+  transform: translateX(120%);
+  opacity: 0;
+  transition: all .35s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: auto;
+}
+
+.bp-toast.show { transform: translateX(0); opacity: 1; }
+
+.bp-toast--success { border-color: var(--success); }
+.bp-toast--error   { border-color: var(--error); }
+.bp-toast--info    { border-color: var(--blue); }
+.bp-toast--warning { border-color: var(--warning); }
+
+.bp-toast__icon {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .75rem;
+  flex-shrink: 0;
+}
+
+.bp-toast--success .bp-toast__icon { background: var(--success-bg); color: var(--success); }
+.bp-toast--error   .bp-toast__icon { background: var(--error-bg);   color: var(--error); }
+.bp-toast--info    .bp-toast__icon { background: var(--blue-50);    color: var(--blue); }
+
+.bp-toast__msg { font-size: .875rem; color: var(--slate-700); line-height: 1.4; }
+.bp-toast__close { margin-left: auto; background: none; border: none; color: var(--slate-400); cursor: pointer; padding: 2px; line-height: 1; font-size: 1rem; }
+
+/* ─── Confirm Modal ─────────────────────────────────────────── */
+.bp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(9,21,42,.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn .2s ease;
+}
+
+.bp-modal {
+  background: var(--white);
+  border-radius: var(--r-xl);
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: scaleUp .25s cubic-bezier(.34,1.56,.64,1);
+}
+
+.bp-modal h3 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: var(--slate-900);
+}
+
+.bp-modal p {
+  font-size: .9rem;
+  color: var(--slate-600);
+  line-height: 1.6;
+  margin-bottom: 22px;
+  white-space: pre-line;
+}
+
+.bp-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ─── Animations ────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(.92); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+.bp-fade-in {
+  animation: fadeUp .4s ease both;
 }
 
-::-webkit-scrollbar-track {
-    background: var(--bg-light);
+/* ─── Misc Utilities ────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+.bp-inline-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r);
+  font-size: .875rem;
+  border: 1px solid transparent;
 }
 
-::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 4px;
+.bp-inline-msg--info    { background: var(--blue-50);    color: #1e3a8a; border-color: var(--blue-100); }
+.bp-inline-msg--warning { background: var(--warning-bg); color: #78350f; border-color: #fde68a; }
+.bp-inline-msg--success { background: var(--success-bg); color: #064e3b; border-color: #6ee7b7; }
+
+.bp-loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--slate-400);
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
+.bp-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--slate-200);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code can result in legal action to the fullest extent permitted by law.
-*/
+/* ─── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .bp-content { padding: 24px 24px; }
+  .bp-save-bar { margin: 0 -24px; padding: 14px 24px; }
+}
+
+@media (max-width: 768px) {
+  .bp-auth {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .bp-auth__brand {
+    padding: 28px 24px;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .bp-auth__brand::after { display: none; }
+
+  .bp-auth__headline { font-size: 1.3rem; margin-bottom: 0; }
+  .bp-auth__sub { display: none; }
+  .bp-auth__features { display: none; }
+  .bp-auth__badge { display: none; }
+  .bp-auth__brand-content { display: flex; align-items: center; gap: 16px; }
+  .bp-auth__logo { height: 36px; margin-bottom: 0; }
+
+  .bp-auth__form { padding: 32px 20px; align-items: flex-start; }
+
+  .bp-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .bp-sidebar.open { transform: translateX(0); }
+
+  .bp-mobile-header { display: flex; }
+  .bp-main { margin-left: 0; }
+
+  .bp-content { padding: 20px 16px; }
+  .bp-save-bar { margin: 0 -16px; padding: 12px 16px; }
+
+  .bp-form-grid { grid-template-columns: 1fr; }
+  .col-span-2 { grid-column: span 1; }
+  .bp-form-grid--3 { grid-template-columns: 1fr; }
+  .col-span-3 { grid-column: span 1; }
+
+  .bp-hours-row { grid-template-columns: 80px 1fr; flex-wrap: wrap; }
+  .bp-hours-row .bp-hours-checks { grid-column: span 2; display: flex; gap: 16px; }
+
+  .bp-analytics-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .bp-stat-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .bp-welcome-banner { padding: 24px; }
+  .bp-welcome-banner__title { font-size: 1.3rem; }
+
+  .bp-modal__actions { flex-direction: column; }
+  .bp-modal__actions .bp-btn { width: 100%; }
+
+  .bp-page-header { margin-bottom: 20px; }
+  .bp-page-header h1 { font-size: 1.4rem; }
+}
+
+@media (max-width: 480px) {
+  .bp-stat-grid { grid-template-columns: 1fr; }
+  .bp-analytics-grid { grid-template-columns: 1fr; }
+  .bp-subcats-grid { grid-template-columns: 1fr; }
+}
