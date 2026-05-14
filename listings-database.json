@@ -1268,10 +1268,10 @@
       },
       "id": "example-listing-1",
       "slug": "example-listing-1",
-      "visible": true,
+      "visible": false,
       "metadata": {
         "createdAt": "2026-05-03T18:19:12.294Z",
-        "updatedAt": "2026-05-03T18:19:12.296Z"
+        "updatedAt": "2026-05-14T14:26:21.794Z"
       }
     }
   ]
