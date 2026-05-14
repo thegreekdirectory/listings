@@ -3855,7 +3855,8 @@ function generateTemplateReplacementsPart2(listing) {
                 : `<p><strong>Owner:</strong> ${escapeHtml(safeFullName)}</p>`;
         }
         if (owner.from_greece){
-          if (owner.from_greece == "Cyprus"){
+          const ownerLowerC = owner.from_greece.toLowerCase();
+          if (ownerLowerC.includes("cyprus") || ownerLowerC.includes("pontus") || ownerLowerC.includes("greece")){
             ownerDetails += `<p><strong>From:</strong> ${escapeHtml(decodeEscapedText(owner.from_greece))}</p>`;
           }
           else {
