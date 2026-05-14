@@ -1,224 +1,335 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <title>Business Portal - The Greek Directory</title>
-    <meta name="apple-mobile-web-app-status-bar-style" content="white">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="TGD Business">
-    <meta name="theme-color" content="#045093">
-    <link rel="manifest" href="/business-manifest.json">
-    <link rel="apple-touch-startup-image" href="https://thegreekdirectory.org/Squarekeylogoapple4.png">
-    <link rel="apple-touch-icon" href="https://thegreekdirectory.org/Squarekeylogoapple4.png">
-    <link rel="icon" href="https://thegreekdirectory.org/Square%20key%20logo.png">
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="/src/output.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <meta name="cloudflare-account-id" content="">
-    <meta name="cloudflare-api-key" content="">
-    <link rel="stylesheet" href="css/business.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Portal — The Greek Directory</title>
+
+  <!-- PWA -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="TGD Business">
+  <meta name="theme-color" content="#09152a">
+  <link rel="manifest" href="/business-manifest.json">
+  <link rel="apple-touch-icon" href="https://thegreekdirectory.org/Squarekeylogoapple4.png">
+  <link rel="icon" href="https://thegreekdirectory.org/Square%20key%20logo.png">
+
+  <!-- Supabase + Sortable -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/src/output.css">
+  <link rel="stylesheet" href="/css/business.css">
+
+  <!-- Cloudflare Images config (set by server/build; can be empty) -->
+  <meta name="cloudflare-account-id" content="">
+  <meta name="cloudflare-api-key" content="">
 </head>
-<body class="bg-gray-50">
-    <!-- Login/Signup Page -->
-    <div id="authPage" class="auth-container hidden">
-        <div class="auth-card">
-            <div class="auth-header">
-                <img src="https://static.thegreekdirectory.org/Logo2white.png" alt="The Greek Directory logo" class="h-16 w-auto mx-auto mb-4">
-                <h1 class="text-3xl font-bold">Business Portal</h1>
-                <p class="text-blue-100 mt-2">Manage your listing on The Greek Directory</p>
-            </div>
-            
-            <div class="auth-body">
-                <div id="authMessage" class="hidden"></div>
-                
-                <!-- Sign In Form -->
-                <div id="signInForm">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Sign In</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                            <input type="email" id="signInEmail" class="tgd-input" placeholder="your@email.com" autocomplete="email">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                            <input type="password" id="signInPassword" class="tgd-input" placeholder="Enter your password" autocomplete="current-password">
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="rememberMe" class="w-4 h-4 mr-2">
-                                <span class="text-sm text-gray-700">Remember me</span>
-                            </label>
-                            <a href="#" onclick="showForgotPassword()" class="text-sm text-blue-600 hover:text-blue-800">Forgot password?</a>
-                        </div>
-                        <button onclick="handleSignIn()" class="tgd-button-primary w-full">
-                            Sign In
-                        </button>
-                    </div>
-                    
-                    <div class="auth-divider">
-                        <span>Don't have an account?</span>
-                    </div>
-                    
-                    <button onclick="showSignUpForm()" class="tgd-button-secondary w-full">
-                        Create Account
-                    </button>
-                    
-                    <p class="text-center text-sm text-gray-600 mt-4">
-                        Need help? <a href="mailto:contact@thegreekdirectory.org" class="text-blue-600 hover:underline">Contact us</a>
-                    </p>
-                </div>
-                
-                <!-- Sign Up Form -->
-                <div id="signUpForm" class="hidden">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Create Account</h2>
-                    <p class="text-sm text-gray-600 mb-6">Sign up to claim and manage your business listing</p>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Find Your Business *</label>
-                            <input type="text" id="signUpListingSearch" class="tgd-input" placeholder="Search by business name or Listing ID..." oninput="searchListingForSignup()">
-                            <div id="listingSearchResults" class="mt-2 max-h-48 overflow-y-auto border rounded-lg"></div>
-                            <input type="hidden" id="signUpListingId">
-                        </div>
-                        
-                        <div id="confirmationKeyContainer" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirmation Key *</label>
-                            <input type="text" id="signUpConfirmationKey" class="tgd-input" placeholder="Enter confirmation key">
-                            <p class="text-xs text-gray-500 mt-1">Contact admin@thegreekdirectory.org if you need your confirmation key</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Email *</label>
-                            <input type="email" id="signUpEmail" class="tgd-input" placeholder="your@business.com" autocomplete="email">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Phone (Optional)</label>
-                            <input type="tel" id="signUpPhone" class="tgd-input" placeholder="(555) 123-4567" autocomplete="tel">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
-                            <input type="password" id="signUpPassword" class="tgd-input" placeholder="Create a secure password" autocomplete="new-password">
-                            <p class="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
-                            <input type="password" id="signUpPasswordConfirm" class="tgd-input" placeholder="Re-enter your password" autocomplete="new-password">
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <input type="checkbox" id="agreeTerms" class="w-4 h-4 mt-1 mr-2">
-                            <label for="agreeTerms" class="text-sm text-gray-700">
-                                I agree to the <a href="https://thegreekdirectory.org/terms" target="_blank" class="text-blue-600 hover:underline">Terms of Service</a> and <a href="https://thegreekdirectory.org/privacy" target="_blank" class="text-blue-600 hover:underline">Privacy Policy</a>
-                            </label>
-                        </div>
-                        
-                        <button onclick="handleSignUp()" class="tgd-button-primary w-full">
-                            Create Account
-                        </button>
-                    </div>
-                    
-                    <div class="auth-divider">
-                        <span>Already have an account?</span>
-                    </div>
-                    
-                    <button onclick="showSignInForm()" class="tgd-button-secondary w-full">
-                        Sign In
-                    </button>
-                </div>
-                
-                <!-- Forgot Password Form -->
-                <div id="forgotPasswordForm" class="hidden">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Reset Password</h2>
-                    <p class="text-sm text-gray-600 mb-6">Enter your email to receive a password reset link</p>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                            <input type="email" id="resetEmail" class="tgd-input" placeholder="your@email.com" autocomplete="email">
-                        </div>
-                        
-                        <button onclick="handlePasswordReset()" class="tgd-button-primary w-full">
-                            Send Reset Link
-                        </button>
-                    </div>
-                    
-                    <div class="auth-divider">
-                        <span>Remember your password?</span>
-                    </div>
-                    
-                    <button onclick="showSignInForm()" class="tgd-button-secondary w-full">
-                        Back to Sign In
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Dashboard Page -->
-    <div id="dashboardPage" class="hidden">
-        <header class="bg-white shadow-sm border-b sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <img src="https://social.thegreekdirectory.org/Logo2.png" alt="The Greek Directory" class="h-12 w-auto">
-                        <div>
-                            <h1 class="text-xl font-bold" style="color: #045093;">Business Portal</h1>
-                            <p class="text-sm text-gray-600"><span id="businessName"></span> <span id="listingIdDisplay" class="id-badge"></span></p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span id="planBadge" class="tier-badge"></span>
-                        <button onclick="logout()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Logout</button>
-                    </div>
-                </div>
-            </div>
-        </header>
+<body>
 
-        <div class="max-w-7xl mx-auto px-4 py-6">
-            <!-- Navigation Tabs -->
-            <div class="flex gap-2 mb-6 overflow-x-auto">
-                <button onclick="switchTab('overview')" id="tab-overview" class="px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600">Overview</button>
-                <button onclick="switchTab('edit')" id="tab-edit" class="px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700">Edit Listing</button>
-                <button onclick="switchTab('analytics')" id="tab-analytics" class="px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700">Analytics</button>
-                <button onclick="switchTab('settings')" id="tab-settings" class="px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700">Settings</button>
-            </div>
-            
-            <!-- Overview Tab -->
-            <div id="content-overview" class="space-y-6"></div>
+<!-- ═══════════════════════════════════════════════════════
+     AUTH PAGE
+════════════════════════════════════════════════════════ -->
+<div id="authPage" class="bp-auth hidden">
 
-            <!-- Edit Tab -->
-            <div id="content-edit" class="hidden"></div>
-            
-            <!-- Analytics Tab -->
-            <div id="content-analytics" class="hidden"></div>
-            
-            <!-- Settings Tab -->
-            <div id="content-settings" class="hidden"></div>
-        </div>
+  <!-- Left brand panel -->
+  <div class="bp-auth__brand">
+    <div class="bp-auth__brand-content">
+      <img src="https://static.thegreekdirectory.org/Logo2white.png"
+           alt="The Greek Directory"
+           class="bp-auth__logo">
+      <h1 class="bp-auth__headline">Business Portal</h1>
+      <p class="bp-auth__sub">
+        Manage your listing, update hours, track analytics,
+        and connect with the Greek-American community — all in one place.
+      </p>
     </div>
-    <script>
-        window.CLOUDFLARE_IMAGES_CONFIG = {
-            accountId: document.querySelector('meta[name="cloudflare-account-id"]')?.content || '',
-            apiKey: document.querySelector('meta[name="cloudflare-api-key"]')?.content || ''
-        };
-    </script>
-    <script src="js/supabase-config.js"></script>
-    <script src="js/business-auth.js"></script>
-    <script src="js/rich-text-editor.js"></script>
-    <script src="js/business-dashboard.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/business-sw.js').catch((error) => {
-                console.warn('Business portal service worker registration failed:', error);
-            });
-        }
-    </script>
-    <script>window.gtranslateSettings = {"default_language":"en","native_language_names":true,"detect_browser_language":true,"languages":["en","el"],"globe_color":"#66aaff","wrapper_selector":".gtranslate_wrapper","alt_flags":{"en":"usa"}}</script>
-    <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
+
+    <ul class="bp-auth__features">
+      <li>Real-time listing updates and photo uploads</li>
+      <li>Analytics: views, calls, website clicks &amp; more</li>
+      <li>Hours, social media &amp; custom CTA buttons</li>
+      <li>Mobile-friendly business portal PWA</li>
+    </ul>
+
+    <div class="bp-auth__badge">
+      <span>🏛️</span>
+      <span>America's Premier Greek Business Directory</span>
+    </div>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="bp-auth__form">
+    <div class="bp-form-container">
+
+      <!-- Auth message -->
+      <div id="authMsg" class="bp-auth-msg" role="alert"></div>
+
+      <!-- ── Sign In ── -->
+      <div id="signInForm">
+        <h2>Welcome back</h2>
+        <p>Sign in to manage your Greek Directory listing.</p>
+
+        <div class="bp-form-row">
+          <label class="bp-label" for="siEmail">Email Address</label>
+          <input class="bp-input" type="email" id="siEmail"
+                 placeholder="you@email.com" autocomplete="email">
+        </div>
+
+        <div class="bp-form-row">
+          <label class="bp-label" for="siPassword">Password</label>
+          <input class="bp-input" type="password" id="siPassword"
+                 placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--slate-600);cursor:pointer;">
+            <input type="checkbox" id="rememberMe" style="accent-color:var(--blue);">
+            Remember me
+          </label>
+          <button type="button" onclick="showForgotPassword()"
+                  style="background:none;border:none;color:var(--blue);font-size:.85rem;font-weight:500;cursor:pointer;">
+            Forgot password?
+          </button>
+        </div>
+
+        <button class="bp-btn bp-btn--primary bp-btn--full bp-btn--lg"
+                id="signInBtn" onclick="handleSignIn()">Sign In</button>
+
+        <div class="bp-divider">or</div>
+
+        <button class="bp-btn bp-btn--secondary bp-btn--full"
+                onclick="showSignUpForm()">
+          Create an Account
+        </button>
+
+        <p style="text-align:center;margin-top:18px;font-size:.82rem;color:var(--slate-400);">
+          Need help?
+          <a href="mailto:contact@thegreekdirectory.org">contact@thegreekdirectory.org</a>
+        </p>
+      </div>
+
+      <!-- ── Sign Up ── -->
+      <div id="signUpForm" class="hidden">
+        <h2>Create Account</h2>
+        <p>Claim your business listing and start managing it today.</p>
+
+        <div class="bp-form-row" style="position:relative;">
+          <label class="bp-label" for="suSearch">Find Your Business *</label>
+          <input class="bp-input" type="text" id="suSearch"
+                 placeholder="Search by business name or ID…"
+                 oninput="searchListingForSignup()" autocomplete="off">
+          <div id="listingSearchResults" class="bp-search-results"></div>
+          <input type="hidden" id="suListingId">
+        </div>
+
+        <div id="confirmKeyRow" class="bp-form-row hidden">
+          <label class="bp-label" for="suConfirmKey">Confirmation Key *</label>
+          <input class="bp-input" type="text" id="suConfirmKey"
+                 placeholder="e.g. alpha-beta-gamma">
+          <p class="bp-input-hint">Contact support if you need your key.</p>
+        </div>
+
+        <div class="bp-form-row">
+          <label class="bp-label" for="suEmail">Business Email *</label>
+          <input class="bp-input" type="email" id="suEmail"
+                 placeholder="you@yourbusiness.com" autocomplete="email">
+        </div>
+
+        <div class="bp-form-row">
+          <label class="bp-label" for="suPhone">Phone (optional)</label>
+          <input class="bp-input" type="tel" id="suPhone"
+                 placeholder="(555) 123-4567" autocomplete="tel">
+        </div>
+
+        <div class="bp-form-row">
+          <label class="bp-label" for="suPassword">Password *</label>
+          <input class="bp-input" type="password" id="suPassword"
+                 placeholder="Min 6 characters" autocomplete="new-password">
+        </div>
+
+        <div class="bp-form-row">
+          <label class="bp-label" for="suPasswordConfirm">Confirm Password *</label>
+          <input class="bp-input" type="password" id="suPasswordConfirm"
+                 placeholder="Re-enter password" autocomplete="new-password">
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:22px;font-size:.85rem;color:var(--slate-600);">
+          <input type="checkbox" id="agreeTerms"
+                 style="margin-top:2px;accent-color:var(--blue);flex-shrink:0;">
+          <label for="agreeTerms">
+            I agree to the
+            <a href="https://thegreekdirectory.org/terms" target="_blank">Terms of Service</a>
+            and
+            <a href="https://thegreekdirectory.org/privacy" target="_blank">Privacy Policy</a>
+          </label>
+        </div>
+
+        <button class="bp-btn bp-btn--primary bp-btn--full bp-btn--lg"
+                id="signUpBtn" onclick="handleSignUp()">Create Account</button>
+
+        <div class="bp-divider">or</div>
+
+        <button class="bp-btn bp-btn--secondary bp-btn--full"
+                onclick="showSignInForm()">Back to Sign In</button>
+      </div>
+
+      <!-- ── Forgot Password ── -->
+      <div id="forgotPasswordForm" class="hidden">
+        <h2>Reset Password</h2>
+        <p>Enter your email and we'll send a reset link.</p>
+
+        <div class="bp-form-row">
+          <label class="bp-label" for="resetEmail">Email Address</label>
+          <input class="bp-input" type="email" id="resetEmail"
+                 placeholder="you@email.com" autocomplete="email">
+        </div>
+
+        <button class="bp-btn bp-btn--primary bp-btn--full bp-btn--lg"
+                id="resetBtn" onclick="handlePasswordReset()">Send Reset Link</button>
+
+        <div class="bp-divider">or</div>
+
+        <button class="bp-btn bp-btn--secondary bp-btn--full"
+                onclick="showSignInForm()">Back to Sign In</button>
+      </div>
+
+    </div><!-- /bp-form-container -->
+  </div><!-- /bp-auth__form -->
+
+</div><!-- /authPage -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     DASHBOARD
+════════════════════════════════════════════════════════ -->
+<div id="dashboardPage" class="bp-layout hidden">
+
+  <!-- Sidebar -->
+  <aside class="bp-sidebar" id="sidebar">
+
+    <div class="bp-sidebar__logo">
+      <img src="https://social.thegreekdirectory.org/Logo2.png"
+           alt="The Greek Directory">
+    </div>
+
+    <div class="bp-sidebar__business">
+      <div class="bp-sidebar__business-name" id="sbBusinessName">Loading…</div>
+      <div class="bp-sidebar__business-id" id="sbListingId"></div>
+    </div>
+
+    <nav class="bp-sidebar__nav">
+      <button class="bp-nav-item active" data-tab="overview" onclick="switchTab('overview')">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Overview
+      </button>
+      <button class="bp-nav-item" data-tab="edit" onclick="switchTab('edit')">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit Listing
+      </button>
+      <button class="bp-nav-item" data-tab="analytics" onclick="switchTab('analytics')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </button>
+      <button class="bp-nav-item" data-tab="settings" onclick="switchTab('settings')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </button>
+    </nav>
+
+    <div class="bp-sidebar__footer">
+      <div class="bp-sidebar__user">
+        <div class="bp-sidebar__avatar" id="sbAvatar">?</div>
+        <div class="bp-sidebar__user-email" id="sbUserEmail"></div>
+      </div>
+      <button class="bp-sidebar__logout" onclick="logout()">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- Mobile overlay -->
+  <div class="bp-sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Main area -->
+  <div class="bp-main">
+
+    <!-- Mobile header -->
+    <header class="bp-mobile-header">
+      <button class="bp-hamburger" onclick="openSidebar()" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+      <span class="bp-mobile-title" id="mobileTitle">Overview</span>
+      <span id="mobileTierBadge"></span>
+    </header>
+
+    <main class="bp-content">
+      <div id="content-overview" class="bp-tab bp-fade-in"></div>
+      <div id="content-edit"     class="bp-tab bp-fade-in hidden"></div>
+      <div id="content-analytics" class="bp-tab bp-fade-in hidden"></div>
+      <div id="content-settings"  class="bp-tab bp-fade-in hidden"></div>
+    </main>
+
+  </div>
+
+</div><!-- /dashboardPage -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TOAST CONTAINER
+════════════════════════════════════════════════════════ -->
+<div id="toastContainer" class="bp-toasts" aria-live="polite"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════════════════ -->
+<script>
+  window.CLOUDFLARE_IMAGES_CONFIG = {
+    accountId: document.querySelector('meta[name="cloudflare-account-id"]')?.content || '',
+    apiKey:    document.querySelector('meta[name="cloudflare-api-key"]')?.content || ''
+  };
+</script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/business-auth.js"></script>
+<script src="/js/rich-text-editor.js"></script>
+<script src="/js/business-dashboard.js"></script>
+
+<script>
+  /* Sidebar toggling */
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  /* Service Worker */
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/business-sw.js').catch(console.warn);
+  }
+</script>
+
+<!-- GTranslate -->
+<script>
+  window.gtranslateSettings = {
+    "default_language": "en",
+    "native_language_names": true,
+    "detect_browser_language": true,
+    "languages": ["en","el"],
+    "globe_color": "#66aaff",
+    "wrapper_selector": ".gtranslate_wrapper",
+    "alt_flags": {"en":"usa"}
+  };
+</script>
+<script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
+
 </body>
 </html>
