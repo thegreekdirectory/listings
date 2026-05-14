@@ -465,20 +465,8 @@ All database operations from the admin portal go through the `admin-proxy` Supab
 ---
 
 ## Listing Tiers & Features
-### Note: Tier info is subject to change, and tiers are currently not being used but they will be in the near future. The logic has been kept for the future. Info is not up-to-date.
-| Feature | FREE | FEATURED | PREMIUM |
-|---|---|---|---|---|
-| Basic info (name, address, contact) | ✅ | ✅ | ✅ | ✅ |
-| Logo | ✅ | ✅ | ✅ | ✅ |
-| Photos | 1 | 1 | 5 | 15 |
-| Video | ❌ | ❌ | ❌ | ✅ |
-| Custom CTA buttons | 0 | 0 | 1 | 2 |
-| Description max length | 1,000 chars | 2,000 chars | 2,000 chars | 2,000 chars |
-| Premium badge | ❌ | ✅ | ✅ | ✅ |
-| Featured badge + priority | ❌ | ❌ | ✅ | ✅ |
-| Analytics — views | ✅ | ✅ | ✅ | ✅ |
-| Analytics — engagement breakdown | ❌ | ✅ | ✅ | ✅ |
-| Analytics — video plays | ❌ | ❌ | ❌ | ✅ |
+
+All tier information can be found in the file `tiers.html` in the root of this repository.
 
 ---
 
