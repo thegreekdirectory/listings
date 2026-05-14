@@ -1136,7 +1136,7 @@
       "listingId": 6,
       "metadata": {
         "createdAt": "2026-01-16T16:56:38.076Z",
-        "updatedAt": "2026-05-14T14:28:03.554Z"
+        "updatedAt": "2026-05-14T14:28:05.903Z"
       },
       "analytics": {
         "views": 0,
@@ -1149,7 +1149,7 @@
         "lastViewed": "2026-01-16T16:56:38.076Z",
         "detailedViews": []
       },
-      "visible": false
+      "visible": true
     },
     {
       "businessName": "Hello",
