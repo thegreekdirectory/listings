@@ -1696,7 +1696,7 @@ function fillEditFormContinuation(listing, owner) {
 
             <!-- Owner Info -->
             <div>
-                <h3 class="text-lg font-bold mb-4">Owner Information</h3>
+                <h3 class="text-lg font-bold mb-4">Leadership</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="md:col-span-2">
                         <label class="flex items-center gap-2">
@@ -3854,7 +3854,14 @@ function generateTemplateReplacementsPart2(listing) {
                 ? `<p><strong>${escapeHtml(safeTitle)}:</strong> ${escapeHtml(safeFullName)}</p>`
                 : `<p><strong>Owner:</strong> ${escapeHtml(safeFullName)}</p>`;
         }
-        if (owner.from_greece) ownerDetails += `<p><strong>From:</strong> ${escapeHtml(decodeEscapedText(owner.from_greece))}, Greece</p>`;
+        if (owner.from_greece){
+          if (owner.from_greece == "Cyprus"){
+            ownerDetails += `<p><strong>From:</strong> ${escapeHtml(decodeEscapedText(owner.from_greece))}</p>`;
+          }
+          else {
+          	ownerDetails += `<p><strong>From:</strong> ${escapeHtml(decodeEscapedText(owner.from_greece))}, Greece</p>`;
+          }
+        }
         if (owner.email_visible && owner.owner_email) ownerDetails += `<p><strong>Email:</strong> <a href="mailto:${owner.owner_email}" class="text-blue-600 hover:underline" target="_blank">${escapeHtml(owner.owner_email)}</a></p>`;
         if (owner.phone_visible && owner.owner_phone) ownerDetails += `<p><strong>Phone:</strong> <a href="tel:${owner.owner_phone}" class="text-blue-600 hover:underline">${formatPhoneNumber(owner.owner_phone)}</a></p>`;
         return ownerDetails ? `<div class="mb-4">${ownerDetails}</div>` : '';
@@ -3862,7 +3869,7 @@ function generateTemplateReplacementsPart2(listing) {
     if (ownerCards) {
         ownerInfoSection = `
             <div class="owner-info-section">
-                <h3 class="text-lg font-bold text-gray-900 mb-3">Owner Information</h3>
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Leadership</h3>
                 ${ownerCards}
             </div>
         `;
