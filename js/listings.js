@@ -1483,7 +1483,7 @@ function renderListings() {
                                 ${logoImage ? `<img src="${logoImage}" alt="${l.business_name} logo" class="w-16 h-16 rounded object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
                                 <div class="flex-1 min-w-0">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full text-white block w-fit mb-2" style="background-color:#045093;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
-                                    <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">
+                                    <h3 class="text-lg font-bold text-gray-900 mb-1 flex items-start gap-1.5 min-w-0">
                                         ${l.business_name}
                                         ${checkmarkHtml}
                                     </h3>
@@ -1527,7 +1527,7 @@ function renderListings() {
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background-color:#045093;">${(l.subcategories && l.subcategories.length > 0) ? l.subcategories[0] : l.category}</span>
                                 ${badges.join('')}
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 flex items-start gap-1.5 min-w-0">${l.business_name}${checkmarkHtml}</h3>
                             <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                             <div class="flex flex-col gap-1 text-sm text-gray-600">
                                 <div class="flex items-center gap-1">
@@ -3391,7 +3391,7 @@ function renderSplitViewListings() {
                                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style="background-color:#045093;">${categoryLabel}</span>
                                 ${badges.join('')}
                             </div>
-                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
+                            <h3 class="text-base font-bold text-gray-900 mb-1 flex items-start gap-1.5 min-w-0">${l.business_name}${checkmarkHtml}</h3>
                             <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
                             <div class="text-xs text-gray-600">
                                 <div class="flex items-center gap-1 truncate">
@@ -3409,7 +3409,7 @@ function renderSplitViewListings() {
                             <div class="flex gap-1 mb-1 flex-wrap">
                                 ${badges.join('')}
                             </div>
-                            <h3 class="text-base font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
+                            <h3 class="text-base font-bold text-gray-900 mb-1 flex items-start gap-1.5 min-w-0">${l.business_name}${checkmarkHtml}</h3>
                             <p class="text-xs text-gray-600 mb-1 truncate">${l.tagline || l.description}</p>
                             <div class="text-xs text-gray-600">
                                 <div class="flex items-center gap-1 truncate">
