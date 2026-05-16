@@ -17,7 +17,7 @@ function getTaglineMaxLength(city = '', state = '') {
     return Math.max(30, Math.min(75, 160 - suffix.length - 2));
 }
 
-// Per-tier limits (single source of truth — mirrors tiers.html)
+// Per-tier limits — single source of truth, mirrors tiers.html
 const TIER_LIMITS = {
     FREE:     { maxDesc: 1000, maxPhotos: 2,  maxCtas: 0, maxInfoFields: 0, hasVideo: false },
     FEATURED: { maxDesc: 2000, maxPhotos: 5,  maxCtas: 1, maxInfoFields: 3, hasVideo: false },
@@ -64,10 +64,7 @@ function showToast(message, type = 'info', duration = 4000) {
         <div class="bp-toast__msg">${message}</div>
         <button class="bp-toast__close" aria-label="Dismiss">✕</button>
     `;
-    const dismiss = () => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 400);
-    };
+    const dismiss = () => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); };
     toast.querySelector('.bp-toast__close').addEventListener('click', dismiss);
     container.appendChild(toast);
     requestAnimationFrame(() => { requestAnimationFrame(() => toast.classList.add('show')); });
@@ -93,10 +90,7 @@ function showConfirmModal({ title, message, confirmLabel = 'Confirm', cancelLabe
         </div>
     `;
     document.body.appendChild(backdrop);
-    const close = () => {
-        backdrop.style.opacity = '0';
-        setTimeout(() => backdrop.remove(), 200);
-    };
+    const close = () => { backdrop.style.opacity = '0'; setTimeout(() => backdrop.remove(), 200); };
     backdrop.querySelector('#modalCancel').addEventListener('click', close);
     backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
     backdrop.querySelector('#modalConfirm').addEventListener('click', () => { close(); if (typeof onConfirm === 'function') onConfirm(); });
@@ -113,8 +107,7 @@ function switchTab(tab) {
     if (!valid.includes(tab)) tab = 'overview';
     valid.forEach(t => {
         document.getElementById(`content-${t}`)?.classList.toggle('hidden', t !== tab);
-        const navBtn = document.querySelector(`.bp-nav-item[data-tab="${t}"]`);
-        if (navBtn) navBtn.classList.toggle('active', t === tab);
+        document.querySelector(`.bp-nav-item[data-tab="${t}"]`)?.classList.toggle('active', t === tab);
     });
     const mobileTitle = document.getElementById('mobileTitle');
     if (mobileTitle) mobileTitle.textContent = TAB_LABELS[tab] || tab;
@@ -143,7 +136,6 @@ async function loadListingData() {
         return;
     }
     window.BP.currentListing = data;
-    // Load dynamic subcategories
     try {
         const { data: dynSubs } = await window.TGDAuth.supabaseClient
             .from('category_subcategories')
@@ -200,9 +192,8 @@ function renderOverview() {
             'Basic listing with logo and 2 photos',
             'Contact info — phone, email, and website',
             'Hours of operation',
-            'Social media links',
-            'Review site links (Google, Yelp, TripAdvisor)',
-            'Tagline (up to 75 characters)',
+            'Social media and review links',
+            `Tagline (up to 75 characters)`,
             `Description (up to ${limits.maxDesc.toLocaleString()} characters)`,
             'Analytics — total views and engagement',
         ],
@@ -213,22 +204,22 @@ function renderOverview() {
             `Photo gallery (up to ${limits.maxPhotos} photos)`,
             `Up to ${limits.maxInfoFields} additional info fields`,
             '1 custom CTA button',
-            'Engagement analytics — website, call & direction clicks',
+            'Engagement analytics — calls, website & directions',
         ],
         PREMIUM: [
             'Everything in Featured Profile',
             'Premium badge and top search priority',
-            `Extended description (up to ${limits.maxDesc.toLocaleString()} characters)`,
+            `Description up to ${limits.maxDesc.toLocaleString()} characters`,
             `Photo gallery (up to ${limits.maxPhotos} photos)`,
             'Video embed',
             `Up to ${limits.maxInfoFields} additional info fields`,
             '2 custom CTA buttons',
             'Homepage and category placement',
-            'Advanced analytics including video plays',
+            'Full analytics including video plays',
         ],
     };
 
-    const heroImg  = (listing.photos && listing.photos.length > 0) ? listing.photos[0] : listing.logo;
+    const heroImg  = (listing.photos?.length > 0) ? listing.photos[0] : listing.logo;
     const verified = listing.verified || tier === 'FEATURED' || tier === 'PREMIUM';
     const checkSvg = `<svg style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#045093"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
@@ -302,7 +293,7 @@ function renderOverview() {
                     ${tier === 'FREE' ? `
                         <div style="margin-top:18px;padding:14px;background:var(--gold-pale);border-radius:var(--r);border:1px solid #fde68a;">
                             <div style="font-size:.82rem;font-weight:600;color:#78350f;margin-bottom:4px;">Upgrade your listing</div>
-                            <div style="font-size:.78rem;color:#92400e;">Contact us to unlock Featured or Premium features, including more photos and detailed analytics.</div>
+                            <div style="font-size:.78rem;color:#92400e;">Contact us to unlock Featured or Premium features.</div>
                             <a href="mailto:contact@thegreekdirectory.org?subject=Upgrade%20Inquiry%20—%20${encodeURIComponent(listing.business_name)}"
                                style="display:inline-block;margin-top:10px;font-size:.8rem;font-weight:600;color:var(--gold);">
                                 Contact for Upgrade →
@@ -323,22 +314,19 @@ async function _loadOverviewStats() {
     const banner = document.getElementById('overviewStatsBanner');
     if (!banner) return;
     try {
-        const tier   = listing.tier || 'FREE';
-        const stats  = await _fetchAnalyticsAggregates(listing.id);
-
-        const statCards = [
-            { label: 'Total Views',    value: stats.views,            color: 'blue',   icon: EYE_SVG   },
-            { label: 'Call Clicks',    value: stats.call_clicks,      color: 'green',  icon: PHONE_SVG },
-            { label: 'Website Clicks', value: stats.website_clicks,   color: 'indigo', icon: GLOBE_SVG },
-            { label: 'Directions',     value: stats.direction_clicks, color: 'rose',   icon: MAP_SVG   },
-        ];
-
+        const tier  = listing.tier || 'FREE';
+        const stats = await _fetchAnalyticsAggregates(listing.id);
         const visibleStats = tier === 'FREE'
             ? [
-                statCards[0],
+                { label: 'Total Views',      value: stats.views,            color: 'blue',  icon: EYE_SVG  },
                 { label: 'Total Engagement', value: stats.call_clicks + stats.website_clicks + stats.direction_clicks + stats.share_clicks, color: 'gold', icon: STAR_SVG },
               ]
-            : statCards;
+            : [
+                { label: 'Total Views',    value: stats.views,            color: 'blue',   icon: EYE_SVG   },
+                { label: 'Call Clicks',    value: stats.call_clicks,      color: 'green',  icon: PHONE_SVG },
+                { label: 'Website Clicks', value: stats.website_clicks,   color: 'indigo', icon: GLOBE_SVG },
+                { label: 'Directions',     value: stats.direction_clicks, color: 'rose',   icon: MAP_SVG   },
+              ];
 
         banner.innerHTML = `
             <div class="bp-stat-grid">
@@ -366,10 +354,7 @@ async function renderAnalytics() {
     const container = document.getElementById('content-analytics');
     container.innerHTML = `
         <div class="bp-page-header">
-            <div>
-                <h1>Analytics</h1>
-                <p>Performance data for ${_esc(listing.business_name)}</p>
-            </div>
+            <div><h1>Analytics</h1><p>Performance data for ${_esc(listing.business_name)}</p></div>
         </div>
         <div id="analyticsBody">
             <div class="bp-loading-screen">
@@ -380,9 +365,9 @@ async function renderAnalytics() {
     `;
 
     try {
-        const stats  = await _fetchAnalyticsAggregates(listing.id);
-        const events = await _fetchAnalyticsEvents(listing.id, 20);
-        const cards  = _buildAnalyticsCards(stats, tier);
+        const stats    = await _fetchAnalyticsAggregates(listing.id);
+        const events   = await _fetchAnalyticsEvents(listing.id, 20);
+        const cards    = _buildAnalyticsCards(stats, tier);
         const eventLog = _buildEventLog(events);
 
         document.getElementById('analyticsBody').innerHTML = `
@@ -403,6 +388,7 @@ async function renderAnalytics() {
             `}
         `;
     } catch (err) {
+        console.error('Analytics render error:', err);
         document.getElementById('analyticsBody').innerHTML = `
             <div class="bp-inline-msg bp-inline-msg--warning">
                 Could not load analytics data. Please try again later.
@@ -412,71 +398,94 @@ async function renderAnalytics() {
 }
 
 /*
- * FIX: The listing_analytics table stores individual event rows (one per user action)
- * with an `action` field ('view', 'call', 'website', etc.) and NO numeric count columns.
- * Previous code was adding row.views + 1 for view rows, double-counting everything.
+ * FIX: listing_analytics only stores individual event rows.
+ * Columns: listing_id, action, platform, timestamp, user_agent
+ * The columns views/call_clicks/etc. live in the separate `analytics` table.
  *
- * Rows that have an `action` value → count as individual events.
- * Rows without `action` (old aggregate-style rows) → sum their numeric columns.
+ * Strategy:
+ *   1. Count individual action events from listing_analytics (only select columns that exist)
+ *   2. Also pull aggregate totals from `analytics` table for legacy counts
+ *   3. Return the higher of the two so legacy data isn't lost
  */
 async function _fetchAnalyticsAggregates(listingId) {
-    const { data, error } = await window.TGDAuth.supabaseClient
-        .from('listing_analytics')
-        .select('action, views, call_clicks, website_clicks, direction_clicks, share_clicks, video_plays, share_platforms, timestamp')
-        .eq('listing_id', listingId)
-        .order('timestamp', { ascending: false });
-
-    if (error) throw error;
-
     const totals = {
         views: 0, call_clicks: 0, website_clicks: 0,
         direction_clicks: 0, share_clicks: 0, video_plays: 0,
-        share_platforms: {},
     };
 
-    (data || []).forEach(row => {
-        if (row.action) {
-            // Individual event row — count once by action type
-            switch (row.action) {
-                case 'view':       totals.views++;            break;
-                case 'call':       totals.call_clicks++;      break;
-                case 'website':    totals.website_clicks++;   break;
-                case 'directions': totals.direction_clicks++; break;
-                case 'share':      totals.share_clicks++;     break;
-                case 'video':      totals.video_plays++;      break;
-            }
-        } else {
-            // Legacy aggregate row — sum numeric columns
-            totals.views            += (row.views            || 0);
-            totals.call_clicks      += (row.call_clicks      || 0);
-            totals.website_clicks   += (row.website_clicks   || 0);
-            totals.direction_clicks += (row.direction_clicks || 0);
-            totals.share_clicks     += (row.share_clicks     || 0);
-            totals.video_plays      += (row.video_plays      || 0);
-        }
+    // ── 1. Count individual event rows from listing_analytics ──────
+    // Only select columns that actually exist in this table
+    try {
+        const { data: eventRows, error: eventsError } = await window.TGDAuth.supabaseClient
+            .from('listing_analytics')
+            .select('action')          // action is the only column we need for counting
+            .eq('listing_id', listingId);
 
-        // Always merge share_platforms breakdown
-        if (row.share_platforms && typeof row.share_platforms === 'object') {
-            Object.entries(row.share_platforms).forEach(([k, v]) => {
-                totals.share_platforms[k] = (totals.share_platforms[k] || 0) + (v || 0);
+        if (eventsError) {
+            console.warn('listing_analytics query error:', eventsError.message);
+        } else if (Array.isArray(eventRows)) {
+            eventRows.forEach(row => {
+                switch (row.action) {
+                    case 'view':       totals.views++;            break;
+                    case 'call':       totals.call_clicks++;      break;
+                    case 'website':    totals.website_clicks++;   break;
+                    case 'directions': totals.direction_clicks++; break;
+                    case 'share':      totals.share_clicks++;     break;
+                    case 'video':      totals.video_plays++;      break;
+                }
             });
         }
-    });
+    } catch (e) {
+        console.warn('Could not count listing_analytics events:', e);
+    }
+
+    // ── 2. Pull legacy aggregate totals from `analytics` table ─────
+    try {
+        const { data: agg, error: aggError } = await window.TGDAuth.supabaseClient
+            .from('analytics')
+            .select('views, call_clicks, website_clicks, direction_clicks, share_clicks, video_plays')
+            .eq('listing_id', listingId)
+            .maybeSingle();
+
+        if (!aggError && agg) {
+            // Use the larger value so legacy aggregated data isn't wiped out by a fresh event count
+            totals.views            = Math.max(totals.views,            agg.views            || 0);
+            totals.call_clicks      = Math.max(totals.call_clicks,      agg.call_clicks      || 0);
+            totals.website_clicks   = Math.max(totals.website_clicks,   agg.website_clicks   || 0);
+            totals.direction_clicks = Math.max(totals.direction_clicks, agg.direction_clicks || 0);
+            totals.share_clicks     = Math.max(totals.share_clicks,     agg.share_clicks     || 0);
+            totals.video_plays      = Math.max(totals.video_plays,      agg.video_plays      || 0);
+        }
+    } catch (e) {
+        // analytics table may not have a row yet — not an error
+    }
 
     return totals;
 }
 
+/*
+ * Fetch recent individual event rows for the activity log.
+ * Only select columns that exist in listing_analytics.
+ */
 async function _fetchAnalyticsEvents(listingId, limit = 20) {
-    const { data, error } = await window.TGDAuth.supabaseClient
-        .from('listing_analytics')
-        .select('action, platform, timestamp')
-        .eq('listing_id', listingId)
-        .not('action', 'is', null)
-        .order('timestamp', { ascending: false })
-        .limit(limit);
+    try {
+        const { data, error } = await window.TGDAuth.supabaseClient
+            .from('listing_analytics')
+            .select('action, platform, timestamp')
+            .eq('listing_id', listingId)
+            .not('action', 'is', null)
+            .order('timestamp', { ascending: false })
+            .limit(limit);
 
-    if (error) throw error;
-    return data || [];
+        if (error) {
+            console.warn('Could not fetch analytics events:', error.message);
+            return [];
+        }
+        return data || [];
+    } catch (e) {
+        console.warn('_fetchAnalyticsEvents error:', e);
+        return [];
+    }
 }
 
 function _buildAnalyticsCards(stats, tier) {
@@ -488,21 +497,11 @@ function _buildAnalyticsCards(stats, tier) {
         { label: 'Shares',         value: stats.share_clicks,     grad: 'bg-grad-5', icon: SHARE_SVG },
         { label: 'Video Plays',    value: stats.video_plays,      grad: 'bg-grad-6', icon: VIDEO_SVG },
     ];
-
-    // FREE: views + total engagement only
-    // FEATURED: views, calls, website, directions, shares (no video)
-    // PREMIUM: all six cards
-    let visible;
-    if (tier === 'FREE') {
-        visible = [
-            all[0],
-            { label: 'Total Engagement', value: stats.call_clicks + stats.website_clicks + stats.direction_clicks + stats.share_clicks, grad: 'bg-grad-2', icon: STAR_SVG },
-        ];
-    } else if (tier === 'FEATURED') {
-        visible = all.slice(0, 5); // no video card
-    } else {
-        visible = all;
-    }
+    const visible = tier === 'FREE'
+        ? [all[0], { label: 'Total Engagement', value: stats.call_clicks + stats.website_clicks + stats.direction_clicks + stats.share_clicks, grad: 'bg-grad-2', icon: STAR_SVG }]
+        : tier === 'FEATURED'
+        ? all.slice(0, 5)
+        : all;
 
     return visible.map(c => `
         <div class="bp-analytics-card ${c.grad}">
@@ -513,9 +512,7 @@ function _buildAnalyticsCards(stats, tier) {
 }
 
 function _buildEventLog(events) {
-    if (!events.length) {
-        return '<p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:20px 0;">No events recorded yet.</p>';
-    }
+    if (!events.length) return '<p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:20px 0;">No events recorded yet.</p>';
     const colors = { view: '#3b82f6', call: '#10b981', website: '#6366f1', directions: '#ef4444', share: '#f59e0b', video: '#0ea5e9' };
     const labels = { view: 'Page View', call: 'Phone Call', website: 'Website Visit', directions: 'Directions', share: 'Share', video: 'Video Play' };
     return `
@@ -548,9 +545,7 @@ function renderEditForm() {
     const maxInfoFields = limits.maxInfoFields;
     const hasVideo      = limits.hasVideo;
 
-    // Cache limits for use in saveChanges
-    _tierLimits = limits;
-
+    _tierLimits      = limits;
     _uploadedImages  = { logo: null, photos: [], video: null };
     _removedPhotos   = [];
     _selectedSubcats = [...(listing.subcategories || [])];
@@ -566,7 +561,6 @@ function renderEditForm() {
             </div>
         </div>
 
-        <!-- ── Basic Info ── -->
         ${_section('basic', EDIT_SVG, 'Basic Information', true, `
             <div class="bp-form-grid">
                 <div class="bp-field col-span-2">
@@ -574,7 +568,6 @@ function renderEditForm() {
                     <input class="bp-input" type="text" value="${_esc(listing.business_name)}" disabled>
                     <span class="bp-input-locked">🔒 Contact support to change the business name</span>
                 </div>
-
                 <div class="bp-field col-span-2">
                     <label class="bp-label" for="editTagline">Tagline <span style="color:var(--error);">*</span></label>
                     <input class="bp-input" type="text" id="editTagline"
@@ -586,7 +579,6 @@ function renderEditForm() {
                         <span class="bp-char-counter" id="ctr-tagline">${(listing.tagline||'').length}/${taglineMax}</span>
                     </div>
                 </div>
-
                 <div class="bp-field col-span-2">
                     <label class="bp-label" for="editDescription">Description (max ${maxDesc.toLocaleString()} characters)</label>
                     <textarea class="bp-input" id="editDescription" rows="6">${_esc(listing.description || '')}</textarea>
@@ -595,13 +587,11 @@ function renderEditForm() {
                         <span class="bp-char-counter" id="ctr-description">0/${maxDesc}</span>
                     </div>
                 </div>
-
                 <div class="bp-field">
                     <label class="bp-label">Category</label>
                     <input class="bp-input" type="text" value="${_esc(listing.category)}" disabled>
                     <span class="bp-input-locked">🔒 Contact support to change</span>
                 </div>
-
                 <div class="bp-field">
                     <label class="bp-label" for="editPricing">Pricing</label>
                     <select class="bp-input" id="editPricing">
@@ -609,7 +599,6 @@ function renderEditForm() {
                         ${[1,2,3,4].map(n => `<option value="${n}" ${Number(listing.pricing)===n?'selected':''}>${'$'.repeat(n)}</option>`).join('')}
                     </select>
                 </div>
-
                 <div class="bp-field">
                     <label class="bp-label" for="editComingSoon">Status</label>
                     <select class="bp-input" id="editComingSoon">
@@ -618,8 +607,6 @@ function renderEditForm() {
                     </select>
                 </div>
             </div>
-
-            <!-- Subcategories -->
             <div style="margin-top:18px;">
                 <label class="bp-label">Subcategories</label>
                 <p class="bp-subcat-hint">Select all that apply. ⭐ marks the primary (shown on listing cards).</p>
@@ -627,7 +614,6 @@ function renderEditForm() {
             </div>
         `)}
 
-        <!-- ── Location ── -->
         ${_section('location', MAP_SVG, 'Location', false, `
             <div class="bp-form-grid">
                 <div class="bp-field col-span-2">
@@ -649,7 +635,6 @@ function renderEditForm() {
             </div>
         `)}
 
-        <!-- ── Contact ── -->
         ${_section('contact', PHONE_SVG, 'Contact Information', false, `
             <div class="bp-form-grid">
                 <div class="bp-field">
@@ -667,12 +652,10 @@ function renderEditForm() {
             </div>
         `)}
 
-        <!-- ── Hours ── -->
         ${_section('hours', CLOCK_SVG, 'Hours of Operation', false, `
             <div class="bp-hours-grid" id="hoursGrid"></div>
         `)}
 
-        <!-- ── Media ── -->
         ${_section('media', IMAGE_SVG, 'Photos & Media', false, `
             <div class="bp-cf-config">
                 <div class="bp-cf-config__toggle" onclick="_toggleCfConfig()">
@@ -697,10 +680,7 @@ function renderEditForm() {
                     </div>
                 </div>
             </div>
-
             <div id="uploadStatus" class="bp-upload-status"></div>
-
-            <!-- Logo -->
             <div style="margin-bottom:20px;">
                 <label class="bp-label">Logo</label>
                 <label class="bp-upload-box" for="logoUpload">
@@ -713,8 +693,6 @@ function renderEditForm() {
                     ${listing.logo ? `<div class="bp-photo-thumb"><img src="${_esc(listing.logo)}" alt="Logo"></div>` : ''}
                 </div>
             </div>
-
-            <!-- Photos -->
             <div style="margin-bottom:20px;">
                 <label class="bp-label">Photos <span style="color:var(--slate-400);font-weight:400;">(${maxPhotos} max for your plan)</span></label>
                 <label class="bp-upload-box" for="photosUpload">
@@ -727,8 +705,6 @@ function renderEditForm() {
                     ${(listing.photos || []).map((url, i) => _photoThumb(url, i, 'existing')).join('')}
                 </div>
             </div>
-
-            <!-- Video -->
             ${hasVideo ? `
                 <div>
                     <label class="bp-label">Video</label>
@@ -748,25 +724,23 @@ function renderEditForm() {
             `}
         `)}
 
-        <!-- ── Social Media ── -->
         ${_section('social', SHARE_SVG, 'Social Media', false, `
             <div class="bp-form-grid">
-                ${_socialField('Facebook',        'editFacebook',   listing.social_media?.facebook,   'username or page URL')}
-                ${_socialField('Instagram',       'editInstagram',  listing.social_media?.instagram,  'username')}
-                ${_socialField('Twitter / X',     'editTwitter',    listing.social_media?.twitter,    'username')}
-                ${_socialField('YouTube',         'editYoutube',    listing.social_media?.youtube,    'channel name or URL')}
-                ${_socialField('TikTok',          'editTiktok',     listing.social_media?.tiktok,     'username')}
-                ${_socialField('LinkedIn',        'editLinkedin',   listing.social_media?.linkedin,   'full URL')}
-                ${_socialField('Other 1 — Name',  'editOther1Name', listing.social_media?.other1_name,'e.g. Pinterest')}
-                ${_socialField('Other 1 — URL',   'editOther1',     listing.social_media?.other1,     'https://')}
-                ${_socialField('Other 2 — Name',  'editOther2Name', listing.social_media?.other2_name,'e.g. Discord')}
-                ${_socialField('Other 2 — URL',   'editOther2',     listing.social_media?.other2,     'https://')}
-                ${_socialField('Other 3 — Name',  'editOther3Name', listing.social_media?.other3_name,'e.g. Reddit')}
-                ${_socialField('Other 3 — URL',   'editOther3',     listing.social_media?.other3,     'https://')}
+                ${_socialField('Facebook',       'editFacebook',   listing.social_media?.facebook,   'username or page URL')}
+                ${_socialField('Instagram',      'editInstagram',  listing.social_media?.instagram,  'username')}
+                ${_socialField('Twitter / X',    'editTwitter',    listing.social_media?.twitter,    'username')}
+                ${_socialField('YouTube',        'editYoutube',    listing.social_media?.youtube,    'channel name or URL')}
+                ${_socialField('TikTok',         'editTiktok',     listing.social_media?.tiktok,     'username')}
+                ${_socialField('LinkedIn',       'editLinkedin',   listing.social_media?.linkedin,   'full URL')}
+                ${_socialField('Other 1 — Name', 'editOther1Name', listing.social_media?.other1_name,'e.g. Pinterest')}
+                ${_socialField('Other 1 — URL',  'editOther1',     listing.social_media?.other1,     'https://')}
+                ${_socialField('Other 2 — Name', 'editOther2Name', listing.social_media?.other2_name,'e.g. Discord')}
+                ${_socialField('Other 2 — URL',  'editOther2',     listing.social_media?.other2,     'https://')}
+                ${_socialField('Other 3 — Name', 'editOther3Name', listing.social_media?.other3_name,'e.g. Reddit')}
+                ${_socialField('Other 3 — URL',  'editOther3',     listing.social_media?.other3,     'https://')}
             </div>
         `)}
 
-        <!-- ── Reviews ── -->
         ${_section('reviews', STAR_SVG, 'Review Sites', false, `
             <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:16px;">
                 You can add review links if they are empty. Existing links are locked — contact support to change them.
@@ -784,16 +758,13 @@ function renderEditForm() {
             </div>
         `)}
 
-        <!-- ── Additional Info (tier-gated) ── -->
         ${_section('info', EDIT_SVG, 'Additional Information', false,
             maxInfoFields === 0
                 ? `<div class="bp-inline-msg bp-inline-msg--info">
-                       Additional information fields are available on Featured (3 fields) and Premium (5 fields) plans.
+                       Additional information fields are available on Featured (3) and Premium (5) plans.
                        <a href="mailto:contact@thegreekdirectory.org?subject=Upgrade%20Inquiry" style="margin-left:4px;font-weight:600;">Upgrade →</a>
                    </div>`
-                : `<p style="font-size:.85rem;color:var(--slate-500);margin-bottom:16px;">
-                       Up to ${maxInfoFields} custom label/value pairs shown on your listing page.
-                   </p>
+                : `<p style="font-size:.85rem;color:var(--slate-500);margin-bottom:16px;">Up to ${maxInfoFields} custom label/value pairs shown on your listing page.</p>
                    <div class="bp-form-grid">
                        ${[...Array(maxInfoFields)].map((_, i) => {
                            const item = (listing.additional_info || [])[i] || {};
@@ -805,18 +776,14 @@ function renderEditForm() {
                                <div class="bp-field">
                                    <label class="bp-label" for="infoValue${i}">Value ${i+1}</label>
                                    <input class="bp-input" type="text" id="infoValue${i}" value="${_esc(item.value||'')}" maxlength="120" placeholder="e.g. 1987">
-                               </div>
-                           `;
+                               </div>`;
                        }).join('')}
                    </div>`
         )}
 
-        <!-- ── Custom CTAs (tier-gated) ── -->
         ${maxCtas > 0
             ? _section('ctas', STAR_SVG, `Custom CTA Buttons (${maxCtas} allowed)`, false, `
-                <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:16px;">
-                    Button name max 15 characters. Used for booking links, menus, order forms, etc.
-                </p>
+                <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:16px;">Button name max 15 characters.</p>
                 ${[...Array(maxCtas)].map((_, i) => {
                     const cta = (listing.custom_ctas || [])[i] || {};
                     return `
@@ -837,13 +804,10 @@ function renderEditForm() {
                                 </div>
                                 <div class="bp-field">
                                     <label class="bp-label" for="ctaIcon${i}">Icon (optional)</label>
-                                    <select class="bp-input" id="ctaIcon${i}">
-                                        ${_ctaIconOptions(cta.icon||'')}
-                                    </select>
+                                    <select class="bp-input" id="ctaIcon${i}">${_ctaIconOptions(cta.icon||'')}</select>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 }).join('')}
             `)
             : `<div class="bp-section" style="margin-bottom:16px;">
@@ -861,29 +825,23 @@ function renderEditForm() {
                </div>`
         }
 
-        <!-- Save Bar -->
         <div class="bp-save-bar">
             <p>Changes will update your listing and regenerate your live page.</p>
             <div style="display:flex;gap:10px;">
                 <button class="bp-btn bp-btn--ghost" onclick="renderEditForm()">Reset</button>
-                <button class="bp-btn bp-btn--primary bp-btn--lg" id="saveBtn" onclick="saveChanges()">
-                    Save Changes
-                </button>
+                <button class="bp-btn bp-btn--primary bp-btn--lg" id="saveBtn" onclick="saveChanges()">Save Changes</button>
             </div>
         </div>
     `;
 
-    // Mount phone input
     window.BP.createPhoneInput('editPhoneWrap', listing.phone || '', window.BP.userCountry);
 
-    // Mount RTE for description
     if (window.RichTextEditor) {
         _rteInstance = window.RichTextEditor.mount({
-            inputId: 'editDescription',
+            inputId:  'editDescription',
             onChange: (html, text) => _updateCounter('description', text.length, maxDesc),
         });
-        const initialLen = window.RichTextEditor.stripHtml(listing.description || '').length;
-        _updateCounter('description', initialLen, maxDesc);
+        _updateCounter('description', window.RichTextEditor.stripHtml(listing.description || '').length, maxDesc);
     } else {
         const descEl = document.getElementById('editDescription');
         if (descEl) {
@@ -915,7 +873,7 @@ function _section(id, iconSvg, title, openByDefault, bodyHtml) {
     `;
 }
 
-window._toggleSection = function(id) { document.getElementById(id)?.classList.toggle('open'); };
+window._toggleSection  = id => document.getElementById(id)?.classList.toggle('open');
 window._toggleCfConfig = function() {
     document.getElementById('cfFields')?.classList.toggle('open');
     const chev = document.getElementById('cfChevron');
@@ -930,20 +888,17 @@ function _renderSubcats() {
     const grid     = document.getElementById('subcatsGrid');
     if (!grid || !category) return;
     const options = SUBCATEGORIES[category] || [];
-    if (!options.length) {
-        grid.innerHTML = '<p style="color:var(--slate-400);font-size:.85rem;">No subcategories available for this category.</p>';
-        return;
-    }
+    if (!options.length) { grid.innerHTML = '<p style="color:var(--slate-400);font-size:.85rem;">No subcategories available for this category.</p>'; return; }
     grid.innerHTML = options.map(sub => {
         const selected  = _selectedSubcats.includes(sub);
         const isPrimary = sub === _primarySubcat;
         return `
             <div class="bp-subcat-item ${selected ? 'selected' : ''}" id="subcat-wrap-${_safeId(sub)}">
-                <input type="checkbox" id="subcat-${_safeId(sub)}" ${selected ? 'checked' : ''}
+                <input type="checkbox" id="subcat-${_safeId(sub)}" ${selected?'checked':''}
                        onchange="_toggleSubcat('${sub.replace(/'/g,"\\'")}')">
                 <label for="subcat-${_safeId(sub)}" style="flex:1;">${_esc(sub)}</label>
                 <input type="radio" name="primarySubcat" title="Set as primary"
-                       ${isPrimary ? 'checked' : ''} ${!selected ? 'disabled' : ''}
+                       ${isPrimary?'checked':''} ${!selected?'disabled':''}
                        onchange="_setPrimarySubcat('${sub.replace(/'/g,"\\'")}')">
                 <span title="Primary subcategory" style="font-size:.7rem;color:var(--gold);flex-shrink:0;">⭐</span>
             </div>
@@ -971,24 +926,21 @@ function _renderHours(hours) {
         const val      = hours[key] || '';
         const isClosed = val.toLowerCase() === 'closed';
         const is24h    = /00:00-23:59|open 24/i.test(val);
-        const displayVal = (isClosed || is24h) ? '' : val;
         return `
             <div class="bp-hours-row">
                 <span class="bp-hours-day">${day.slice(0,3)}</span>
                 <input class="bp-input" type="text" id="hours-${key}"
-                       value="${_esc(displayVal)}"
+                       value="${_esc((isClosed || is24h) ? '' : val)}"
                        placeholder="9:00 AM - 5:00 PM"
                        ${isClosed || is24h ? 'disabled' : ''}>
                 <div class="bp-hours-checks" style="display:flex;gap:14px;">
                     <label class="bp-hours-check">
                         <input type="checkbox" id="closed-${key}" ${isClosed?'checked':''}
-                               onchange="_toggleDayClosed('${key}')">
-                        Closed
+                               onchange="_toggleDayClosed('${key}')"> Closed
                     </label>
                     <label class="bp-hours-check">
                         <input type="checkbox" id="open24-${key}" ${is24h?'checked':''}
-                               onchange="_toggle24Hours('${key}')">
-                        24 hrs
+                               onchange="_toggle24Hours('${key}')"> 24 hrs
                     </label>
                 </div>
             </div>
@@ -997,18 +949,12 @@ function _renderHours(hours) {
 }
 
 window._toggleDayClosed = function(key) {
-    const input = document.getElementById(`hours-${key}`);
-    const closed = document.getElementById(`closed-${key}`);
-    const open24 = document.getElementById(`open24-${key}`);
-    if (closed.checked) { input.value = ''; input.disabled = true; open24.checked = false; }
-    else { input.disabled = false; }
+    const input = document.getElementById(`hours-${key}`), closed = document.getElementById(`closed-${key}`), open24 = document.getElementById(`open24-${key}`);
+    if (closed.checked) { input.value = ''; input.disabled = true; open24.checked = false; } else { input.disabled = false; }
 };
 window._toggle24Hours = function(key) {
-    const input = document.getElementById(`hours-${key}`);
-    const open24 = document.getElementById(`open24-${key}`);
-    const closed = document.getElementById(`closed-${key}`);
-    if (open24.checked) { input.value = ''; input.disabled = true; closed.checked = false; }
-    else { input.disabled = false; }
+    const input = document.getElementById(`hours-${key}`), open24 = document.getElementById(`open24-${key}`), closed = document.getElementById(`closed-${key}`);
+    if (open24.checked) { input.value = ''; input.disabled = true; closed.checked = false; } else { input.disabled = false; }
 };
 
 // ─── 10. Save Changes ─────────────────────────────────────────────
@@ -1021,17 +967,15 @@ async function saveChanges() {
     const maxDesc       = limits.maxDesc;
     const maxInfoFields = limits.maxInfoFields;
 
-    // ── Collect & validate ──────────────────────────────────────
     const tagline    = document.getElementById('editTagline').value.trim();
     const city       = document.getElementById('editCity').value.trim();
     const state      = document.getElementById('editState').value.trim();
     const taglineMax = getTaglineMaxLength(city, state);
 
-    if (!tagline)                      return showToast('Tagline is required.', 'error');
-    if (tagline.length > taglineMax)   return showToast(`Tagline must be ${taglineMax} characters or fewer.`, 'error');
+    if (!tagline)                     return showToast('Tagline is required.', 'error');
+    if (tagline.length > taglineMax)  return showToast(`Tagline must be ${taglineMax} characters or fewer.`, 'error');
     if (_selectedSubcats.length === 0) return showToast('Please select at least one subcategory.', 'error');
 
-    // Description
     let description = '';
     if (_rteInstance) {
         description = window.RichTextEditor.sanitizeRichTextHtml(_rteInstance.getHtml());
@@ -1042,12 +986,10 @@ async function saveChanges() {
         if (description.length > maxDesc) return showToast('Description is too long.', 'error');
     }
 
-    // Phone
     const phone    = window.BP.getPhoneValue('editPhoneWrap');
     const phoneRaw = document.querySelector('#editPhoneWrap .phone-number')?.value?.trim();
     if (phoneRaw && !phone) return showToast('Phone number is not valid. US numbers need 10 digits.', 'error');
 
-    // Hours
     const hours = {};
     let hoursChanged = false;
     DAYS.forEach(day => {
@@ -1063,7 +1005,6 @@ async function saveChanges() {
         if ((listing.hours || {})[key] !== val) hoursChanged = true;
     });
 
-    // Additional info (only collect up to tier limit)
     const additionalInfo = [];
     for (let i = 0; i < maxInfoFields; i++) {
         const label = document.getElementById(`infoLabel${i}`)?.value.trim();
@@ -1071,7 +1012,6 @@ async function saveChanges() {
         if (label && value) additionalInfo.push({ label, value });
     }
 
-    // CTAs (only collect up to tier limit)
     const customCtas = [];
     for (let i = 0; i < limits.maxCtas; i++) {
         const name  = document.getElementById(`ctaName${i}`)?.value.trim();
@@ -1084,15 +1024,13 @@ async function saveChanges() {
         customCtas.push({ name, url, color, icon });
     }
 
-    // Media
     const existingPhotos = (listing.photos || []).filter(u => !_removedPhotos.includes(u));
     const mergedPhotos   = [...existingPhotos, ..._uploadedImages.photos].slice(0, limits.maxPhotos);
     const updatedLogo    = _uploadedImages.logo  || listing.logo  || null;
     const updatedVideo   = limits.hasVideo ? (_uploadedImages.video || listing.video || null) : listing.video;
 
     const updates = {
-        tagline,
-        description,
+        tagline, description,
         subcategories:       _selectedSubcats,
         primary_subcategory: _primarySubcat,
         pricing:             document.getElementById('editPricing').value ? Number(document.getElementById('editPricing').value) : null,
@@ -1101,12 +1039,9 @@ async function saveChanges() {
         city:                city || null,
         state:               state || null,
         zip_code:            document.getElementById('editZip').value.trim() || null,
-        phone,
+        phone, logo: updatedLogo, photos: mergedPhotos, video: updatedVideo,
         email:               document.getElementById('editEmail').value.trim() || null,
         website:             document.getElementById('editWebsite').value.trim() || null,
-        logo:                updatedLogo,
-        photos:              mergedPhotos,
-        video:               updatedVideo,
         hours,
         social_media: {
             facebook:    document.getElementById('editFacebook')?.value.trim()   || null,
@@ -1138,10 +1073,7 @@ async function saveChanges() {
         updated_by_role: 'owner',
     };
 
-    if (hoursChanged) {
-        updates.hours_updated_at = new Date().toISOString();
-        updates.hours_updated_by = 'owner';
-    }
+    if (hoursChanged) { updates.hours_updated_at = new Date().toISOString(); updates.hours_updated_by = 'owner'; }
 
     const changes = _diffChanges(listing, updates);
     if (changes.length === 0) { showToast('No changes detected.', 'info'); return; }
@@ -1150,39 +1082,73 @@ async function saveChanges() {
         title:        'Save Changes',
         message:      `The following will be updated:\n\n${changes.map(c => `• ${c}`).join('\n')}`,
         confirmLabel: 'Save',
-        onConfirm:    () => _performSave(updates),
+        onConfirm:    () => _performSave(listing.id, updates),
     });
 }
 
-async function _performSave(updates) {
-    const listing = window.BP.currentListing;
+/*
+ * FIX: Decouple the UPDATE from the RETURNING SELECT.
+ *
+ * The old code used .update().select().single() — this requires the RETURNING
+ * SELECT to return exactly 1 row. If the RLS SELECT policy differs from the
+ * UPDATE policy (e.g. SELECT only allows visible=true rows via anon), the
+ * RETURNING hits 0 rows and PostgREST throws PGRST116 (406).
+ *
+ * Solution: PATCH without .select() (fire-and-forget the write), then do a
+ * separate GET to reload the listing. The GET goes through its own SELECT
+ * policy which is already working (we loaded the listing on sign-in).
+ */
+async function _performSave(listingId, updates) {
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) saveBtn.classList.add('bp-btn--loading');
     try {
-        const { data, error } = await window.TGDAuth.supabaseClient
+        // ── 1. Write — no RETURNING needed ────────────────────────
+        const { error: updateError } = await window.TGDAuth.supabaseClient
             .from('listings')
             .update(updates)
-            .eq('id', listing.id)
-            .select()
+            .eq('id', listingId);
+
+        if (updateError) {
+            console.error('Listing update error:', updateError);
+            throw new Error(updateError.message || 'Failed to save listing.');
+        }
+
+        // ── 2. Read — reload the row with the same SELECT that worked at login ──
+        const { data: refreshed, error: selectError } = await window.TGDAuth.supabaseClient
+            .from('listings')
+            .select('*')
+            .eq('id', listingId)
             .single();
-        if (error) throw error;
-        window.BP.currentListing = data;
+
+        if (selectError || !refreshed) {
+            // Write succeeded; we just can't re-fetch — apply locally so the UI reflects the save
+            console.warn('Could not re-fetch listing after save. Applying updates locally.', selectError);
+            window.BP.currentListing = { ...window.BP.currentListing, ...updates };
+        } else {
+            window.BP.currentListing = refreshed;
+        }
+
         showToast('Listing saved successfully!', 'success');
-        // Best-effort page regeneration (non-fatal if edge function doesn't exist)
+
+        // ── 3. Best-effort page regeneration (non-fatal) ───────────
         try {
             const session = await window.TGDAuth.getCurrentSession();
             if (session) {
                 await fetch(`${SUPABASE_EDGE_BASE}/update-listing`, {
-                    method: 'POST',
+                    method:  'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ listing_id: listing.id, regenerate_page: true }),
+                    body:    JSON.stringify({ listing_id: listingId, regenerate_page: true }),
                 });
             }
-        } catch (_) { /* Admin must regenerate static page manually */ }
+        } catch (_) {
+            // No update-listing edge function deployed — admin regenerates the page manually
+        }
+
         renderDashboard();
         switchTab('overview');
+
     } catch (err) {
-        console.error('Save error:', err);
+        console.error('_performSave error:', err);
         showToast(`Save failed: ${err.message}`, 'error');
     } finally {
         if (saveBtn) saveBtn.classList.remove('bp-btn--loading');
@@ -1196,16 +1162,16 @@ window.saveChanges = saveChanges;
 function _cfConfig() {
     const stored = (() => { try { return JSON.parse(localStorage.getItem(CF_STORAGE_KEY) || '{}'); } catch(_) { return {}; } })();
     return {
-        accountId:      document.getElementById('cfAccountId')?.value.trim()  || stored.accountId  || '',
-        apiKey:         document.getElementById('cfApiKey')?.value.trim()     || stored.apiKey      || '',
-        uploadEndpoint: document.getElementById('cfEndpoint')?.value.trim()   || stored.uploadEndpoint || UPLOAD_PROXY,
+        accountId:      document.getElementById('cfAccountId')?.value.trim()  || stored.accountId       || '',
+        apiKey:         document.getElementById('cfApiKey')?.value.trim()     || stored.apiKey           || '',
+        uploadEndpoint: document.getElementById('cfEndpoint')?.value.trim()   || stored.uploadEndpoint   || UPLOAD_PROXY,
     };
 }
 
 function _loadCfConfig() {
     try {
-        const cfg = JSON.parse(localStorage.getItem(CF_STORAGE_KEY) || '{}');
-        const save = () => { localStorage.setItem(CF_STORAGE_KEY, JSON.stringify({ accountId: document.getElementById('cfAccountId')?.value.trim(), apiKey: document.getElementById('cfApiKey')?.value.trim(), uploadEndpoint: document.getElementById('cfEndpoint')?.value.trim() })); };
+        const cfg  = JSON.parse(localStorage.getItem(CF_STORAGE_KEY) || '{}');
+        const save = () => localStorage.setItem(CF_STORAGE_KEY, JSON.stringify({ accountId: document.getElementById('cfAccountId')?.value.trim(), apiKey: document.getElementById('cfApiKey')?.value.trim(), uploadEndpoint: document.getElementById('cfEndpoint')?.value.trim() }));
         ['cfAccountId','cfApiKey','cfEndpoint'].forEach(id => {
             const el  = document.getElementById(id);
             if (!el)  return;
@@ -1225,7 +1191,7 @@ async function _uploadToCloudflare(file) {
     const json = await res.json();
     if (!res.ok || !json.success) throw new Error(json?.errors?.[0]?.message || 'Upload failed');
     const variants = json?.result?.variants || [];
-    let url = (variants[0] || json?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
+    const url = (variants[0] || json?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
     if (!url) throw new Error('Upload succeeded but no URL returned.');
     return url;
 }
@@ -1253,12 +1219,12 @@ window._handleLogoUpload = async function(event) {
 window._handlePhotosUpload = async function(event) {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
-    const existing  = (window.BP.currentListing?.photos || []).filter(u => !_removedPhotos.includes(u));
-    const slots     = _tierLimits.maxPhotos - existing.length - _uploadedImages.photos.length;
+    const existing = (window.BP.currentListing?.photos || []).filter(u => !_removedPhotos.includes(u));
+    const slots    = _tierLimits.maxPhotos - existing.length - _uploadedImages.photos.length;
     if (slots <= 0) { showToast(`Photo limit reached (${_tierLimits.maxPhotos} max for your plan).`, 'warning'); return; }
-    const toUpload  = files.slice(0, slots);
+    const toUpload = files.slice(0, slots);
     _setUploadStatus(`Uploading ${toUpload.length} photo(s)…`, 'loading');
-    const preview   = document.getElementById('photosPreview');
+    const preview  = document.getElementById('photosPreview');
     let successCount = 0;
     for (let i = 0; i < toUpload.length; i++) {
         try {
@@ -1323,7 +1289,7 @@ function renderSettings() {
                 <div class="bp-vis-row">
                     <div>
                         <div class="bp-vis-row__label">Owner Name &amp; Title</div>
-                        <div class="bp-vis-row__sub">Shows "${_esc(owner.full_name||'')}" ${owner.title ? `— ${_esc(owner.title)}` : ''}</div>
+                        <div class="bp-vis-row__sub">Shows "${_esc(owner.full_name||'')}"${owner.title ? ` — ${_esc(owner.title)}` : ''}</div>
                     </div>
                     <label class="bp-toggle-switch">
                         <input type="checkbox" id="visNameTitle" ${_settingsVis.nameTitle?'checked':''}
@@ -1357,7 +1323,7 @@ function renderSettings() {
                     </label>
                 </div>
                 <div style="margin-top:20px;">
-                    <button class="bp-btn bp-btn--primary" onclick="saveSettings()">Save Contact Settings</button>
+                    <button class="bp-btn bp-btn--primary" id="saveSettingsBtn" onclick="saveSettings()">Save Contact Settings</button>
                 </div>
             </div>
         </div>
@@ -1400,18 +1366,32 @@ window._onVisChange = function(field, checked) {
 };
 
 async function saveSettings() {
-    const email  = document.getElementById('settingsEmail')?.value.trim();
-    const phone  = window.BP.getPhoneValue('settingsPhoneWrap');
+    const btn = document.getElementById('saveSettingsBtn');
+    if (btn) btn.classList.add('bp-btn--loading');
+
+    const email = document.getElementById('settingsEmail')?.value.trim();
+    const phone = window.BP.getPhoneValue('settingsPhoneWrap');
+
     const updates = {
-        owner_email:        email || window.BP.ownerData[0].owner_email,
+        owner_email:        email || window.BP.ownerData?.[0]?.owner_email,
         owner_phone:        phone,
         name_title_visible: _settingsVis.nameTitle,
         email_visible:      _settingsVis.email,
         phone_visible:      _settingsVis.phone,
     };
+
     const result = await window.TGDAuth.updateBusinessOwnerContact(updates);
-    if (result.success) { window.BP.ownerData = result.data; showToast('Settings saved successfully!', 'success'); renderSettings(); }
-    else showToast(`Failed to save settings: ${result.error}`, 'error');
+
+    if (btn) btn.classList.remove('bp-btn--loading');
+
+    if (result.success) {
+        // Refresh in-memory ownerData so the UI reflects the saved state
+        window.BP.ownerData = result.data;
+        showToast('Settings saved successfully!', 'success');
+        renderSettings();
+    } else {
+        showToast(`Failed to save settings: ${result.error}`, 'error');
+    }
 }
 
 window.saveSettings = saveSettings;
@@ -1419,9 +1399,9 @@ window.saveSettings = saveSettings;
 async function changePassword() {
     const newPass     = document.getElementById('newPassword')?.value;
     const confirmPass = document.getElementById('confirmPassword')?.value;
-    if (!newPass || !confirmPass)   return showToast('Please fill in both password fields.', 'error');
-    if (newPass.length < 6)         return showToast('Password must be at least 6 characters.', 'error');
-    if (newPass !== confirmPass)    return showToast('Passwords do not match.', 'error');
+    if (!newPass || !confirmPass)  return showToast('Please fill in both password fields.', 'error');
+    if (newPass.length < 6)        return showToast('Password must be at least 6 characters.', 'error');
+    if (newPass !== confirmPass)   return showToast('Passwords do not match.', 'error');
     const btn = document.getElementById('changePassBtn');
     if (btn) btn.classList.add('bp-btn--loading');
     const result = await window.TGDAuth.updatePassword(newPass);
@@ -1441,7 +1421,7 @@ window.changePassword = changePassword;
 
 const _svgAttr = `style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"`;
 const EYE_SVG   = `<svg ${_svgAttr}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
-const PHONE_SVG = `<svg ${_svgAttr}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.89 9.11 19.79 19.79 0 01.83 .5a2 2 0 012 2v3a2 2 0 001.45 1.93 12.66 12.66 0 002.77.78 2 2 0 001.74-1.62l.18-.74a16 16 0 008.52 8.52l-.74.18a2 2 0 00-1.62 1.74 12.66 12.66 0 00.78 2.77A2 2 0 0020.1 19"/></svg>`;
+const PHONE_SVG = `<svg ${_svgAttr}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.89 9.11 19.79 19.79 0 01.83.5a2 2 0 012 2v3a2 2 0 001.45 1.93 12.66 12.66 0 002.77.78 2 2 0 001.74-1.62l.18-.74a16 16 0 008.52 8.52l-.74.18a2 2 0 00-1.62 1.74 12.66 12.66 0 00.78 2.77A2 2 0 0020.1 19"/></svg>`;
 const GLOBE_SVG = `<svg ${_svgAttr}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`;
 const MAP_SVG   = `<svg ${_svgAttr}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 const SHARE_SVG = `<svg ${_svgAttr}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
@@ -1466,8 +1446,7 @@ function _timeAgo(ts) {
     const hrs = Math.floor(mins / 60);
     if (hrs < 24)  return `${hrs}h ago`;
     const days = Math.floor(hrs / 24);
-    if (days < 30) return `${days}d ago`;
-    return new Date(ts).toLocaleDateString();
+    return days < 30 ? `${days}d ago` : new Date(ts).toLocaleDateString();
 }
 
 function _normalizeHours(value) {
@@ -1485,7 +1464,7 @@ function _normalizeHours(value) {
         return `${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
     };
     const parts = raw.split(/\s*[-–]\s*/);
-    if (parts.length === 2) { const start = toTime(parts[0]); const end = toTime(parts[1]); if (start && end) return `${start}-${end}`; }
+    if (parts.length === 2) { const s = toTime(parts[0]); const e = toTime(parts[1]); if (s && e) return `${s}-${e}`; }
     return raw;
 }
 
@@ -1512,10 +1491,10 @@ function _reviewField(label, id, value, placeholder, lockIfSet = true) {
 
 function _ctaIconOptions(selected) {
     const opts = [
-        { v: '', l: 'No icon' }, { v: '⭐', l: '⭐ Star' }, { v: '🛍️', l: '🛍️ Shop' },
-        { v: '📅', l: '📅 Calendar' }, { v: '🎟️', l: '🎟️ Ticket' }, { v: '🍽️', l: '🍽️ Food' },
-        { v: '📦', l: '📦 Package' }, { v: '💬', l: '💬 Message' }, { v: '🧾', l: '🧾 Quote' },
-        { v: '🎉', l: '🎉 Event' }, { v: '📋', l: '📋 Menu' },
+        {v:'',l:'No icon'},{v:'⭐',l:'⭐ Star'},{v:'🛍️',l:'🛍️ Shop'},
+        {v:'📅',l:'📅 Calendar'},{v:'🎟️',l:'🎟️ Ticket'},{v:'🍽️',l:'🍽️ Food'},
+        {v:'📦',l:'📦 Package'},{v:'💬',l:'💬 Message'},{v:'🧾',l:'🧾 Quote'},
+        {v:'🎉',l:'🎉 Event'},{v:'📋',l:'📋 Menu'},
     ];
     return opts.map(o => `<option value="${o.v}" ${selected===o.v?'selected':''}>${o.l}</option>`).join('');
 }
@@ -1537,7 +1516,7 @@ function _diffChanges(original, updates) {
         ['email','Email'],['website','Website'],['logo','Logo'],['video','Video'],
     ];
     simple.forEach(([k, label]) => { if (String(original[k] ?? '') !== String(updates[k] ?? '')) changes.push(label); });
-    if (JSON.stringify(original.subcategories?.sort()) !== JSON.stringify(updates.subcategories?.sort())) changes.push('Subcategories');
+    if (JSON.stringify([...(original.subcategories||[])].sort()) !== JSON.stringify([...(updates.subcategories||[])].sort())) changes.push('Subcategories');
     if (original.primary_subcategory !== updates.primary_subcategory) changes.push('Primary subcategory');
     if (JSON.stringify(original.hours || {}) !== JSON.stringify(updates.hours || {})) changes.push('Hours of operation');
     if (JSON.stringify(original.social_media || {}) !== JSON.stringify(updates.social_media || {})) changes.push('Social media links');
