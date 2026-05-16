@@ -1,1070 +1,540 @@
 # The Greek Directory
 
-> **America's premier online directory of Greek-owned businesses.**
-> Connecting Greek-American communities with the businesses that serve them — from family restaurants and Greek schools to law firms, churches, and specialty markets.
+America's premier online directory of Greek-owned businesses.
 
----
+The Greek Directory is a static-first business directory and installable web app for the Greek-American community. Visitors can discover businesses by category, location, hours, tier, map position, and saved favorites. Business owners can claim and manage their listings through the Business Portal. Admins manage listing data, listing requests, static listing-page generation, shortlinks, analytics, and category metadata.
 
-## Table of Contents
-
-1. [Project Overview](#project-overview)
-2. [Live URLs](#live-urls)
-3. [Technology Stack](#technology-stack)
-4. [Architecture Overview](#architecture-overview)
-5. [Repository Structure](#repository-structure)
-6. [Pages & Routes](#pages--routes)
-7. [Frontend Architecture](#frontend-architecture)
-8. [Supabase Database](#supabase-database)
-9. [Authentication](#authentication)
-10. [Listing Tiers & Features](#listing-tiers--features)
-11. [Admin Portal](#admin-portal)
-12. [Business Owner Portal](#business-owner-portal)
-13. [PWA (Progressive Web App)](#pwa-progressive-web-app)
-14. [Static Page Generation](#static-page-generation)
-15. [Analytics System](#analytics-system)
-16. [Map & Geocoding](#map--geocoding)
-17. [Search System](#search-system)
-18. [Starring / Favorites](#starring--favorites)
-19. [Multi-Language Support](#multi-language-support)
-20. [Dark Mode](#dark-mode)
-21. [Service Worker & Offline Support](#service-worker--offline-support)
-22. [Redirects & Reserved Routes](#redirects--reserved-routes)
-23. [Sitemaps](#sitemaps)
-24. [Media / Image Uploads](#media--image-uploads)
-25. [GitHub Actions & Workflows](#github-actions--workflows)
-26. [Category & Subcategory System](#category--subcategory-system)
-27. [Environment & Configuration](#environment--configuration)
-28. [CSS Architecture](#css-architecture)
-29. [JavaScript Architecture](#javascript-architecture)
-30. [Deployment](#deployment)
-
----
-
-## Project Overview
-
-The Greek Directory is a full-featured business directory web application and PWA built for the Greek-American community. It allows:
-
-- **Visitors** to discover and filter Greek-owned businesses by category, location, hours, and more.
-- **Business Owners** to claim and manage their listings through a dedicated portal.
-- **Admins** to create, edit, publish, and analyze all listings through a secure admin portal.
-
-The platform generates **static HTML listing pages** for each business and publishes them to a GitHub repository (`thegreekdirectory/listings`), which is served via Cloudflare Pages for maximum SEO performance and load speed.
-
----
+This README reflects the current codebase and the live Supabase project as of 2026-05-16. The Business Portal is being actively rebuilt, so treat the Business Portal notes below as current implementation context plus active-work guidance.
 
 ## Live URLs
 
-| Environment | URL |
-|---|---|
-| Main Site | `https://thegreekdirectory.org` |
-| Listing Pages | `https://thegreekdirectory.org/listing/[slug]` |
+| Surface | URL |
+| --- | --- |
+| Main site | `https://thegreekdirectory.org` |
+| Listings directory | `https://thegreekdirectory.org/listings` |
+| Individual listing pages | `https://thegreekdirectory.org/listing/[slug]` |
 | Business Portal | `https://thegreekdirectory.org/business` |
-| PWA Install Guide | `https://app.thegreekdirectory.org` |
-| Static Assets | `https://static.thegreekdirectory.org` |
-| Image CDN | `https://images.thegreekdirectory.org` |
-| Image Upload Proxy | `https://tgd-images-upload.thegreekdirectory.org` |
-
----
+| Admin Portal | `https://thegreekdirectory.org/admin?mpesmesa=thelonampo[DD]` |
+| Suggest an edit | `https://thegreekdirectory.org/suggest-edit?id=[listing_id]` |
+| PWA install page | `https://app.thegreekdirectory.org` |
+| Static assets | `https://static.thegreekdirectory.org` |
+| Cloudflare Images CDN | `https://images.thegreekdirectory.org` |
+| Cloudflare Images upload proxy | `https://tgd-images-upload.thegreekdirectory.org` |
 
 ## Technology Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | Vanilla HTML5, CSS3, JavaScript (ES2020+) |
-| **Styling** | Tailwind CSS (custom compiled `src/output.css`) + page-specific CSS |
-| **Database** | Supabase (PostgreSQL) |
-| **Auth** | Supabase Auth (email/password + magic link) |
-| **Edge Functions** | Supabase Edge Functions (Deno) |
-| **Maps** | Leaflet.js + Leaflet.MarkerCluster + OpenStreetMap (Nominatim geocoding) |
-| **Images** | Cloudflare Images (upload proxy) |
-| **Hosting** | Cloudflare Pages |
-| **Static Pages** | GitHub API → `thegreekdirectory/listings` repo → Cloudflare Pages |
-| **PWA** | Service Worker, Web App Manifest, IndexedDB |
-| **Analytics** | Custom Supabase analytics + Cloudflare Web Analytics beacon |
-| **Translations** | GTranslate widget (EN ↔ EL) |
-| **Rich Text** | Custom `RichTextEditor` (contenteditable + `document.execCommand`) |
+| Layer | Current implementation |
+| --- | --- |
+| Frontend | Static HTML, CSS, and vanilla JavaScript |
+| Styling | Plain CSS plus committed Tailwind output in `src/output.css` |
+| Database | Supabase Postgres project `luetekzqrrgdxtopzvqw` |
+| Auth | Supabase Auth for Business Portal users |
+| Edge functions | Supabase Edge Functions for admin proxying, GitHub writes, and server time |
+| Hosting | Cloudflare Pages |
+| Media | Cloudflare Images through upload proxy and `images.thegreekdirectory.org` delivery |
+| Maps | Leaflet, Leaflet MarkerCluster, OpenStreetMap tiles, Nominatim geocoding |
+| Search/filtering | Client-side filtering over Supabase listing rows |
+| PWA | Web app manifests, service workers, IndexedDB, standalone-mode UI |
+| Translation | GTranslate widget plus offline translation helpers |
+| Analytics | Supabase event and aggregate tables, plus Cloudflare Web Analytics where included |
+| Static listing pages | Generated HTML committed to this repository and served by Cloudflare Pages |
 
----
+## Architecture
 
-## Architecture Overview
-
+```text
+Browser
+  |
+  v
+Cloudflare Pages
+  |-- Static site files from this repository
+  |-- Generated /listing/[slug].html pages
+  |-- PWA service workers and manifests
+  |
+  |-- Supabase anon client
+  |     |-- public listings and category data
+  |     |-- Business Portal auth and owner-scoped updates
+  |     |-- listing suggestions and analytics inserts
+  |
+  |-- Supabase Edge Functions
+  |     |-- admin-proxy for admin-only service-role operations
+  |     |-- listing-server-time for authoritative UTC time
+  |     |-- update-github-file for GitHub Contents API writes
+  |
+  |-- Cloudflare Images upload proxy
+  |     |-- logo, photo, and video/media uploads
+  |
+  `-- GitHub Contents API
+        `-- generated listing pages, sitemaps, and repository files
 ```
-User Browser
-     │
-     ▼
-Cloudflare Pages (CDN)
-     │
-     ├─── Static HTML/CSS/JS files (this repo)
-     │
-     └─── /listing/[slug].html ──► thegreekdirectory/listings repo (GitHub)
-                                         │
-                                         └─ Generated by Admin Portal
-                                              via GitHub Contents API
 
-Backend:
-     ├─── Supabase PostgreSQL (listings, owners, analytics, requests)
-     ├─── Supabase Auth (business owner accounts)
-     ├─── Supabase Edge Functions (magic link, listing update, admin proxy)
-     └─── Cloudflare Images (media storage + delivery)
-```
-
-The architecture is intentionally **static-first**: individual listing pages are pre-rendered HTML files, giving them full SEO indexability and instant load times. Dynamic data (filtering, search, analytics) is fetched client-side from Supabase.
-
----
+The app is still static-first. Public directory pages are static assets that fetch live data from Supabase. Individual listing pages are generated static HTML files, which keeps listing pages fast, indexable, and independent of a server-rendering runtime.
 
 ## Repository Structure
 
-```
+```text
 /
-├── index.html                  # Homepage
-├── listings.html               # Listings directory page
-├── listing-template.html       # Template used to generate /listing/[slug].html
-├── map.html                    # Full-screen map view (PWA)
-├── categories.html             # Category browser (PWA)
-├── settings.html               # PWA settings page
-├── starred.html                # Starred listings (PWA)
-├── about.html                  # About page
-├── business.html               # Business owner portal
-├── admin.html                  # Admin portal (password-protected)
-├── submit-listing.html         # Public listing submission form
-├── app.html                    # PWA install guide (iOS/Android)
-├── offline.html                # Offline fallback page
-├── 404.html                    # 404 error page
-├── reserved.html               # "Coming Soon" placeholder for reserved routes
-├── view-starred.html           # Redirects to /listings?starred=1
-├── _redirects                  # Cloudflare Pages redirect rules
-│
-├── manifest.json               # PWA manifest (main app)
-├── business-manifest.json      # PWA manifest (business portal)
-├── service-worker.js           # Main site service worker
-├── business-sw.js              # Business portal service worker
-│
-├── css/
-│   ├── index.css               # Homepage styles (hero, search, cards)
-│   ├── listings.css            # Listings page styles (map, filters, split view)
-│   ├── admin.css               # Admin portal styles
-│   ├── business.css            # Business owner portal styles
-│   ├── pwa.css                 # PWA-specific styles (dock, splash, themes)
-│   └── submit.css              # Submission form styles
-│
-├── src/
-│   ├── input.css               # Tailwind source
-│   └── output.css              # Compiled Tailwind utility classes (custom build)
-│
-├── js/
-│   ├── index.js                # Homepage logic (search, listings render)
-│   ├── listings.js             # Listings page (8-part: filters, map, split view)
-│   ├── admin.js                # Admin portal (13-part: CRUD, page gen, analytics)
-│   ├── business-auth.js        # Business portal authentication
-│   ├── business-dashboard.js   # Business portal dashboard & edit forms
-│   ├── supabase-config.js      # Supabase client + auth helpers
-│   ├── rich-text-editor.js     # Custom RTE component
-│   ├── submit.js               # Public submission form logic
-│   ├── partials-loader.js      # Header/footer partial injection
-│   └── pwa/
-│       ├── app.js              # PWA app manager (theme, language, SW)
-│       ├── dock.js             # PWA navigation dock
-│       ├── settings.js         # PWA settings manager
-│       ├── starred.js          # Starred listings manager
-│       ├── storage.js          # IndexedDB wrapper (PWA storage)
-│       ├── directions.js       # Map app directions URL builder
-│       └── offline-translation.js  # Offline UI translations (EN/EL)
-│
-├── partials/
-│   ├── header.html             # Site header (nav, language toggle, hamburger)
-│   └── footer.html             # Site footer
-│
-├── scripts/
-│   └── build-tailwind-output.js  # Custom Tailwind CSS build script
-│
-├── supabase/
-│   └── functions/
-│       └── update-github-file/
-│           └── index.ts        # Edge functions: magic link, password reset, listing update
-│
-├── .github/
-│   └── workflows/
-│       ├── business-portal-api.yml  # GitHub Actions: business login/update via dispatch
-│       └── track-analytics.yml      # GitHub Actions: analytics tracking via dispatch
-│
-├── tailwind.config.js
-├── sitemap.xml                 # Auto-generated sitemap (main)
-├── sitemap_index.xml           # Sitemap index
-├── sitemap-general.xml         # General pages sitemap
-├── sitemap-categories.xml      # Category pages sitemap
-├── sitemap-listings.xml        # Listing pages sitemap
-├── sitemap-places.xml          # Place pages sitemap
-├── sitemap-news.xml            # News sitemap (placeholder)
-├── sitemap-events.xml          # Events sitemap (placeholder)
-├── sitemap-kml.xml             # KML map data sitemap
-├── greek-directory.kml         # Google Maps KML data
-└── CATEGORY_IMAGES.md          # Default Unsplash images per category
+|-- index.html                         Homepage
+|-- listings.html                      Full listings directory
+|-- listing-template.html              Template for generated listing pages
+|-- listing/                           Generated listing pages by place/slug
+|-- business.html                      Business Portal shell
+|-- admin.html                         Admin Portal shell
+|-- submit-listing.html                Public listing submission form
+|-- suggest-edit.html                  Public listing edit suggestion form
+|-- map.html                           Standalone map view
+|-- categories.html                    Category browser
+|-- starred.html                       Saved/starred listings page
+|-- settings.html                      PWA settings page
+|-- app.html                           PWA install guide
+|-- offline.html                       Offline fallback
+|-- reserved.html                      Placeholder for reserved routes
+|-- 404.html                           Error page
+|-- _redirects                         Cloudflare Pages redirects
+|-- manifest.json                      Main PWA manifest
+|-- business-manifest.json             Business Portal PWA manifest
+|-- service-worker.js                  Main site service worker
+|-- business-sw.js                     Business Portal service worker
+|-- css/                               Page and feature styles
+|-- js/                                Frontend modules
+|-- js/pwa/                            PWA storage, dock, settings, directions
+|-- partials/                          Header and footer partials
+|-- scripts/build-tailwind-output.js   Tailwind output builder
+|-- src/input.css                      Tailwind source
+|-- src/output.css                     Committed Tailwind output
+|-- supabase/edge-functions/           Reference copies of Edge Functions
+|-- .github/workflows/                 Legacy repository-dispatch workflows
+|-- sitemap*.xml                       Sitemap files
+|-- greek-directory.kml                KML export
+|-- CATEGORY_IMAGES.md                 Default category image references
+|-- package.json                       Tailwind build scripts and dependencies
 ```
 
----
+## Main Routes
 
-## Pages & Routes
-
-### Public Pages
-
-| Route | File | Description |
-|---|---|---|
-| `/` | `index.html` | Homepage with hero search, featured & recent listings |
-| `/listings` | `listings.html` | Full filterable listings directory |
-| `/listing/[slug]` | `listing/[slug].html` (generated) | Individual business listing page |
-| `/categories` | `categories.html` | Category browser with subcategory drill-down |
-| `/map` | `map.html` | Standalone full-screen map (PWA) |
-| `/about` | `about.html` | About the project and founder's message |
-| `/submit-listing` | `submit-listing.html` | Public form to submit a business for review |
-| `/app` | `app.html` | PWA install instructions |
-| `/starred` | `starred.html` | Starred listings (PWA) |
+| Route | File | Purpose |
+| --- | --- | --- |
+| `/` | `index.html` | Homepage with discovery entry points |
+| `/listings` | `listings.html` | Searchable, filterable listings directory |
+| `/listing/[slug]` | `listing/[...].html` | Generated static listing page |
+| `/business` | `business.html` | Business Portal |
+| `/admin` | `admin.html` | Admin Portal with daily URL gate and GitHub token login |
+| `/submit-listing` | `submit-listing.html` | Public new-listing request form |
+| `/suggest-edit?id=[listing_id]` | `suggest-edit.html` | Public edit suggestion workflow |
+| `/map` | `map.html` | Map-first directory view |
+| `/categories` | `categories.html` | Category and subcategory browsing |
+| `/starred` | `starred.html` | Saved listings |
 | `/settings` | `settings.html` | PWA settings |
-| `/view-starred` | `view-starred.html` | Redirects to `/listings?starred=1` |
-| `/offline` | `offline.html` | Shown by service worker when offline |
+| `/offline` | `offline.html` | Offline fallback |
 
-### Protected / Operational Pages
+Cloudflare Pages redirects are maintained in `_redirects`. They strip common file extensions, map `/search` to `/listings`, expose hash-route aliases for listings, and reserve future route families such as `/claim`, `/places`, `/events`, `/news`, `/blog`, `/posts`, and `/resources`.
 
-| Route | File | Access |
-|---|---|---|
-| `/business` | `business.html` | Business owners (Supabase auth) |
-| `/admin` | `admin.html` | Admin only (GitHub PAT + daily key) |
+## Supabase Project
 
-### Redirect / Utility Pages
+| Item | Value |
+| --- | --- |
+| Project ID/ref | `luetekzqrrgdxtopzvqw` |
+| Project name | `thegreekdirectory's Project` |
+| Region | `us-west-2` |
+| Postgres | 17.x |
+| Public URL | `https://luetekzqrrgdxtopzvqw.supabase.co` |
 
-| Route | Description |
-|---|---|
-| `/claim/*` | Reserved — redirects to `reserved.html` |
-| `/place/*`, `/places/*` | Reserved |
-| `/events/*`, `/event/*` | Reserved |
-| `/news/*` | Reserved |
-| `/blog/*` | Reserved |
-| `/search` | Redirects to `/listings` |
-| `/*.html` | Strips `.html` extension (301) |
+The public frontend uses the Supabase anon key. RLS is enabled on the application tables and policies decide what anonymous users, authenticated business owners, and admin/service-role paths may read or write.
 
----
+## Current Public Schema
 
-## Frontend Architecture
+The live public schema currently includes these application tables and views:
 
-### Partials System
+| Object | Kind | Purpose | Current use |
+| --- | --- | --- | --- |
+| `listings` | table | Canonical business listing records | Main site, generated pages, Admin Portal, Business Portal |
+| `business_owners` | table | Owner records linked to listings | Business Portal claim/auth/profile logic |
+| `category_subcategories` | table | Dynamic subcategory lists and Schema.org maps | Admin, Business Portal, suggestion form, filters |
+| `listing_requests` | table | Public new-listing submissions | Submit form and admin review |
+| `listing_suggestions` | table | Public edit suggestions for existing listings | `/suggest-edit` |
+| `listing_analytics` | table | Legacy/current listing event rows and counters | Listing pages and Business Portal analytics |
+| `analytics` | table | Aggregate analytics rows | Admin proxy compatibility and summaries |
+| `analytics_summary` | table | Listing-level aggregate summary | Public/admin analytics surface |
+| `analytics_events` | table | Event stream for newer analytics model | Insert-gated by approved paths |
+| `analytics_sessions` | table | Visitor/session records | Insert-gated by approved paths |
+| `analytics_listing_daily` | table | Daily listing aggregates | Owner/admin analytics |
+| `analytics_tier_daily` | table | Daily tier-level aggregates | Admin analytics |
+| `listing_metrics_events` | table | Newer listing metric event stream | Owner-scoped select policy exists |
+| `shortlinks` | table | Shortlink definitions and redirects | Admin Portal shortlink management |
+| `shortlink_events` | table | Shortlink click/event log | Shortlink analytics |
+| `listing_kpi_daily` | view | Daily KPI rollup | Analytics/reporting |
+| `shortlink_event_summary` | view | Shortlink event summary | Analytics/reporting |
 
-Headers and footers are loaded dynamically via `js/partials-loader.js`, which:
-1. Fetches `/partials/header.html` and `/partials/footer.html`
-2. Injects them into `[data-partial="header"]` and `[data-partial="footer"]` elements
-3. Re-executes `<script>` tags within injected HTML (browsers don't run scripts injected via `innerHTML`)
-4. Dispatches a `tgd:partials-loaded` custom event when complete
+Current row estimates from the live project include about 52 listings, 52 business owner rows, 14 category rows, 4,500+ `listing_analytics` rows, 429 shortlinks, and 100+ shortlink events.
 
-In PWA mode, `[data-partial="header"]` and `[data-partial="footer"]` are hidden via `css/pwa.css`, replaced by the dock navigation.
+## Key Table Notes
 
-### Tailwind CSS Build
+### `listings`
 
-The project uses a **custom Tailwind output** instead of the CDN to avoid external dependencies. The build is done via `scripts/build-tailwind-output.js`, a Node.js script that generates `src/output.css` with all needed utility classes pre-computed from hex values (no JIT). This file is committed to the repository.
+`listings` is the canonical record for each business. Important fields include:
 
-> **Exception:** `admin.html` explicitly uses the Tailwind CDN and must not have `src/output.css` added to it.
+- Identity and routing: `id`, `slug`, `business_name`
+- Classification: `category`, `subcategories`, `primary_subcategory`, `tier`, `verified`, `visible`
+- Chain and status metadata: `is_chain`, `chain_name`, `chain_id`, `coming_soon`, `temporarily_closed`, `permanently_closed`
+- Location: `address`, `city`, `state`, `zip_code`, `country`, `coordinates`, `places_url_ending`, `timezone`
+- Contact and media: `phone`, `email`, `website`, `logo`, `photos`, `video`
+- Business details: `tagline`, `description`, `meta_description`, `pricing`, `hours`, `hours_label_custom`, `hours_disclaimer_custom`
+- Structured metadata: `social_media`, `reviews`, `additional_info`, `custom_ctas`, `custom_schema_properties`
+- Claiming and timestamps: `is_claimed`, `created_at`, `updated_at`
 
-### Rich Text Editor
+### `business_owners`
 
-`js/rich-text-editor.js` provides a lightweight contenteditable-based RTE used in listing description fields. It supports:
-- Paragraph, Heading 3, Bold, Italic, Underline
-- Ordered and unordered lists
-- Link insertion/removal
-- Undo/Redo
-- HTML sanitization (allowlist: `P`, `BR`, `B`, `STRONG`, `I`, `EM`, `U`, `UL`, `OL`, `LI`, `A`, `H3`)
+`business_owners` links Supabase Auth users to listings. Important fields include:
 
----
+- `listing_id` foreign key to `listings.id`
+- `owner_email`, `owner_phone`, `full_name`, `title`, `from_greece`
+- `owner_user_id`, which is used by current RLS and owner matching
+- `confirmation_key`, which is used during claim/signup and cleared after claim
+- Visibility flags: `name_title_visible`, `email_visible`, `phone_visible`, plus older `owner_email_visible`
+- Claim protection fields: `claim_attempts`, `claim_locked_until`
 
-## Supabase Database
+### `listing_requests` and `listing_suggestions`
 
-**Project URL:** `https://luetekzqrrgdxtopzvqw.supabase.co`
+`listing_requests` stores new business submissions from `/submit-listing`.
 
-### Tables
+`listing_suggestions` stores proposed edits from `/suggest-edit?id=[listing_id]`. Suggestions include the suggester contact fields, listing metadata, owner visibility fields, media URLs, hours, social links, review links, and a `status` value that defaults to `pending`.
 
-#### `listings`
-The core table. Each row is one business listing.
+### Analytics Tables
 
-Listing IDs are UUIDs generated via `gen_random_uuid()` (instead of incrementing integers).
+There are two analytics generations in the database:
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `uuid` | Primary key (random UUID) |
-| `business_name` | `text` | Required |
-| `slug` | `text` | URL-safe unique identifier |
-| `tagline` | `text` | Max ~75 chars (SEO-constrained) |
-| `description` | `text` | Rich HTML; max length depends on tier |
-| `category` | `text` | One of 14 main categories |
-| `subcategories` | `text[]` | Array of subcategory strings |
-| `primary_subcategory` | `text` | Shown on listing cards |
-| `tier` | `text` | `FREE`, `FEATURED`, `PREMIUM` |
-| `verified` | `boolean` | True for FEATURED+ |
-| `visible` | `boolean` | Controls public visibility |
-| `is_claimed` | `boolean` | Owner has claimed the listing |
-| `show_claim_button` | `boolean` | Override claim button display |
-| `is_chain` | `boolean` | Part of a chain |
-| `chain_name` | `text` | Chain brand name |
-| `chain_id` | `text` | Groups chain locations |
-| `coming_soon` | `boolean` | Shows "Coming Soon" badge |
-| `address` | `text` | Street address |
-| `city` | `text` | |
-| `state` | `text` | US state abbreviation |
-| `zip_code` | `text` | 5-digit US ZIP |
-| `country` | `text` | Default `USA` |
-| `coordinates` | `jsonb` | `{lat, lng}` — geocoded |
-| `phone` | `text` | E.164 format e.g. `+16305551234` |
-| `email` | `text` | |
-| `website` | `text` | Full URL with `https://` |
-| `logo` | `text` | URL |
-| `photos` | `text[]` | Array of photo URLs |
-| `video` | `text` | URL |
-| `hours` | `jsonb` | `{monday, tuesday, ..., sunday}` — normalized `HH:MM-HH:MM` or `Closed` |
-| `social_media` | `jsonb` | `{facebook, instagram, twitter, youtube, tiktok, linkedin, other1..3}` |
-| `reviews` | `jsonb` | `{google, yelp, tripadvisor, other1..3}` |
-| `additional_info` | `jsonb[]` | `[{label, value}]` — up to 5 |
-| `custom_ctas` | `jsonb[]` | `[{name, url, color, icon}]` — tier-limited |
-| `pricing` | `integer` | 1–4 ($ to $$$$) |
-| `analytics` | `jsonb` | Legacy analytics (migrated to `listing_analytics`) |
-| `timezone` | `text` | Default `America/Chicago` |
-| `hours_updated_at` | `timestamptz` | |
-| `hours_updated_by` | `text` | `owner` or `admin` |
-| `updated_by_role` | `text` | |
-| `created_at` | `timestamptz` | |
-| `updated_at` | `timestamptz` | |
+- Existing/legacy-compatible listing analytics: `listing_analytics`, `analytics`, and `analytics_summary`
+- Newer event/session/daily structures: `analytics_events`, `analytics_sessions`, `analytics_listing_daily`, `analytics_tier_daily`, `listing_metrics_events`, and `listing_kpi_daily`
 
-#### `business_owners`
-Linked to `listings` via `listing_id`. Stores owner contact and auth info.
+The Business Portal currently reads `listing_analytics` directly for owner-facing analytics cards and recent activity. Some newer analytics tables are present but have little or no data yet.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `bigint` | Primary key |
-| `listing_id` | `uuid` | FK to `listings.id` |
-| `full_name` | `text` | |
-| `title` | `text` | e.g. `Owner`, `CEO` |
-| `from_greece` | `text` | Region of Greece |
-| `owner_email` | `text` | Used for Supabase Auth |
-| `owner_phone` | `text` | E.164 |
-| `owner_user_id` | `text` | Composite ID set on claim |
-| `confirmation_key` | `text` | 3-word key for claiming (`alpha-beta-gamma`); cleared on claim |
-| `name_title_visible` | `boolean` | Show name on listing page |
-| `email_visible` | `boolean` | |
-| `phone_visible` | `boolean` | |
+### Shortlinks
 
-#### `listing_analytics`
-Event-level analytics tracking.
+`shortlinks` stores paths, target URLs, and optional `listing_refer_id` links back to listings. Admin code supports generated system shortlinks under `/l/[code]` and custom shortlinks. `shortlink_events` records click/event metadata, and `shortlink_event_summary` rolls events up by path.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `bigint` | |
-| `listing_id` | `uuid` | FK to `listings.id` |
-| `action` | `text` | `view`, `call`, `website`, `directions`, `share`, `video` |
-| `platform` | `text` | Share platform (e.g. `facebook`, `sms`) |
-| `timestamp` | `timestamptz` | |
-| `user_agent` | `text` | |
-| `views` | `integer` | Aggregated view count |
-| `call_clicks` | `integer` | |
-| `website_clicks` | `integer` | |
-| `direction_clicks` | `integer` | |
-| `share_clicks` | `integer` | |
-| `video_plays` | `integer` | |
-| `share_platforms` | `jsonb` | `{facebook: N, twitter: N, ...}` |
-| `last_viewed` | `timestamptz` | |
+## RLS and Access Model
 
-#### `listing_requests`
-Submissions from the public `/submit-listing` form, pending admin review.
+The live project uses RLS policies rather than hiding the anon key.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `bigint` | |
-| `business_name` | `text` | |
-| `slug` | `text` | |
-| `tagline` | `text` | |
-| `description` | `text` | |
-| `category` | `text` | |
-| `subcategories` | `text[]` | |
-| `primary_subcategory` | `text` | |
-| `address` | `text` | |
-| `city` | `text` | |
-| `state` | `text` | |
-| `zip_code` | `text` | |
-| `country` | `text` | |
-| `phone` | `text` | |
-| `email` | `text` | |
-| `website` | `text` | |
-| `logo` | `text` | |
-| `photos` | `text[]` | |
-| `video` | `text` | |
-| `hours` | `jsonb` | |
-| `social_media` | `jsonb` | |
-| `reviews` | `jsonb` | |
-| `additional_info` | `jsonb[]` | |
-| `custom_ctas` | `jsonb[]` | |
-| `owner_name` | `text` | |
-| `owner_title` | `text` | |
-| `owner_email` | `text` | |
-| `owner_phone` | `text` | |
-| `from_greece` | `text` | |
-| `owner_name_title_visible` | `boolean` | |
-| `owner_email_visible` | `boolean` | |
-| `owner_phone_visible` | `boolean` | |
-| `owner_contacts` | `jsonb[]` | Multiple owners |
-| `created_at` | `timestamptz` | |
+Current behavior at a high level:
 
-#### `category_subcategories`
-Dynamically-loaded subcategory lists per category (overrides hardcoded defaults).
+- Public users can read visible listings.
+- Public users can read dynamic category/subcategory metadata.
+- Public users can insert listing requests and edit suggestions, with validation checks on required fields.
+- Public listing pages can insert allowed analytics events.
+- Business owners can read and update their own listing and owner data through policies tied to `owner_user_id` and/or owner email.
+- Admin operations are routed through the `admin-proxy` Edge Function, which uses the service role key server-side after validating a GitHub token.
+- Analytics rows have a mix of public, owner-scoped, admin-scoped, and approved-path policies depending on the table.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `bigint` | |
-| `category` | `text` | Matches `listings.category` |
-| `subcategories` | `text[]` | List of subcategory strings |
-| `schema_type_map` | `jsonb` | Maps subcategory → Schema.org type(s) |
+Important implementation detail: several policies rely on helper functions such as `analytics_is_admin()`, `analytics_is_approved_path()`, and `analytics_is_listing_owner(listing_id)`.
 
-### RLS Policies
+## Active Supabase Edge Functions
 
-The Supabase anon key is used client-side. RLS (Row Level Security) policies control what unauthenticated users can read/write:
+The live Supabase project currently has these active Edge Functions:
 
-- **`listings`**: Public `SELECT` on rows where `visible = true`. Admins use a service role via the `admin-proxy` edge function.
-- **`business_owners`**: Business owners can read/update their own rows (matched by authenticated user email). Public read is restricted.
-- **`listing_analytics`**: Public `INSERT` allowed (for tracking). Aggregated reads controlled per listing.
-- **`listing_requests`**: Public `INSERT` allowed (form submissions). Admin reads via service role.
-- **`category_subcategories`**: Public `SELECT` allowed.
+| Function | JWT required | Purpose |
+| --- | --- | --- |
+| `admin-proxy` | No | Validates a GitHub PAT from `x-github-token`, then performs admin/service-role operations against Supabase. |
+| `listing-server-time` | Yes | Returns authoritative UTC time for listing-hours calculations. |
+| `update-github-file` | Yes | Updates a GitHub file through the GitHub Contents API using a server-side token. |
 
-### Supabase Edge Functions
+### `admin-proxy`
 
-Located in `supabase/functions/`:
+The Admin Portal calls `admin-proxy` for operations such as:
 
-| Function | Purpose |
-|---|---|
-| `send-magic-link` | Generates and sends magic link to business owner email |
-| `send-password-reset` | Sends password reset email |
-| `update-listing` | Updates listing in Supabase + optionally regenerates the static page |
-| `admin-proxy` | Server-side proxy for admin operations using service role key (bypasses RLS) |
+- Listing CRUD: `listings:list`, `listings:insert`, `listings:update`, `listings:delete`
+- Owner management: `owners:list`, `owners:upsert`, `owners:delete`
+- Listing requests: `requests:list`, `requests:update`, `requests:delete`
+- Analytics compatibility: `analytics:get`, `analytics:list`, `analytics:upsert`
+- Dynamic subcategories: `subcategories:list`, `subcategories:insert`, `subcategories:update`, `subcategories:delete`
+- Read-only admin SQL through `sql:select`
+- Shortlinks: `shortlinks:get`, `shortlinks:check`, `shortlinks:insert`, `shortlinks:delete`
 
----
+The function is intentionally not protected by Supabase JWT verification because it does its own GitHub token validation. It should only expose admin actions after validating that token.
 
-## Authentication
+### `listing-server-time`
 
-### Business Owner Auth
+`js/listings.js` calls this function to get `nowUtc` and evaluate open/closed/opening-soon/closing-soon filters against listing time zones. The function disables caching and includes CORS headers.
 
-Business owners authenticate via **Supabase Auth** (email + password). The flow:
+### `update-github-file`
 
-1. Owner finds their listing in the sign-up search
-2. Enters the **confirmation key** (3-word code set by admin, e.g. `alpha-beta-gamma`)
-3. Creates an account — Supabase Auth user is created, confirmation key is cleared from `business_owners`, `owner_user_id` is set
-4. On subsequent sign-ins, Supabase session is maintained
-5. Auth state changes trigger `onAuthStateChange` → loads listing data and shows dashboard
-
-Implemented in `js/supabase-config.js` (`window.TGDAuth`) and `js/business-auth.js`.
-
-### Admin Auth
-
-The admin portal (`admin.html`) uses a **two-factor approach**:
-
-1. A URL-based daily key: `?mpesmesa=thelonampo{DD}` (day of month appended). If the key doesn't match, the user is immediately redirected to the homepage.
-2. A **GitHub Personal Access Token** (PAT) with `repo` scope, stored in `localStorage`. This token is used directly for all GitHub API calls (page generation, sitemap updates).
-
-All database operations from the admin portal go through the `admin-proxy` Supabase Edge Function, which uses the **service role key** server-side — never exposed to the client.
-
----
-
-## Listing Tiers & Features
-
-All tier information can be found in the file `tiers.html` in the root of this repository.
-
----
+This function updates files in GitHub using a `GITHUB_TOKEN` environment variable. It fetches the current file SHA and writes replacement content through the GitHub Contents API.
 
 ## Admin Portal
 
-**File:** `admin.html` + `js/admin.js`
-
-The admin portal provides full CRUD control over all listings. It is split into 13 logical sections within `js/admin.js`:
-
-1. **Configuration & State** — constants, category/subcategory maps, state variables
-2. **Authentication & Login** — GitHub PAT verification, daily key check
-3. **Load & Render Listings** — fetch from Supabase via admin proxy, render table
-4. **Analytics Modal** — view per-listing analytics data
-5. **Edit Form (Part 1)** — basic info, location, contact, phone input
-6. **Edit Form (Part 2)** — hours, social media, reviews, owner info, media uploads
-7. **Geocoding & Save** — address geocoding via Nominatim, save to Supabase
-8. **Delete & Magic Link** — delete listings, send owner magic links
-9. **Helper Functions** — HTML escaping, JSON escaping, time formatting
-10. **Template Replacements (Part 1)** — generate all `{{PLACEHOLDER}}` values for listing template
-11. **Template Replacements (Part 2)** — owner info, map section, related listings, claim button
-12. **Page Generation & Analytics** — fetch template from GitHub, apply replacements, push to GitHub
-13. **Generate All Pages & CSV Upload** — bulk generation, CSV import
-
-### Key Admin Operations
-
-#### Listing Management
-- Create, read, update, delete listings
-- Toggle visibility per listing
-- Set tier (FREE → PREMIUM)
-- Mark as claimed/unclaimed
-
-#### Static Page Generation
-When saving a listing, the admin portal:
-1. Applies default Unsplash images if no logo/photos exist
-2. Fetches `listing-template.html` from the GitHub repo via raw URL
-3. Replaces all `{{PLACEHOLDER}}` tokens with listing data
-4. Pushes the generated HTML to `listing/[slug].html` in the GitHub repo via the Contents API
-5. Updates `sitemap.xml`
-
-#### Request Management
-- View all pending submission requests from the public form
-- Edit request data before approval
-- Accept → creates listing + owner record + generates static page
-- Deny → deletes the request
-
-#### Analytics
-- View per-listing analytics: views, call clicks, website clicks, direction clicks, shares, video plays
-- Share platform breakdown (Facebook, Twitter, LinkedIn, SMS, Email)
-- Detailed event log (last 100 events)
-
-#### CSV Upload
-Bulk-import listings from a CSV file. Supported columns map to all listing fields. Photos and subcategories use `|` as a delimiter within a cell.
-
----
-
-## Business Owner Portal
-
-**File:** `business.html` + `js/business-auth.js` + `js/business-dashboard.js`
-
-### Authentication Flow
-
-1. **Sign In** — email + password via Supabase Auth
-2. **Sign Up** — search listing by name → enter confirmation key → create account
-3. **Forgot Password** — sends reset email via Supabase
-4. **Session Persistence** — Supabase handles token refresh; `onAuthStateChange` drives UI
-
-### Dashboard Tabs
-
-#### Overview
-- Listing preview card (live data)
-- Quick actions (Edit, Analytics, View Live)
-- Feature checklist based on current tier
-
-#### Edit Listing
-Owners can update:
-- Tagline (SEO-length-constrained)
-- Description (tier-limited character count)
-- Subcategories (checkboxes with primary selector)
-- Pricing ($–$$$$)
-- Coming Soon toggle
-- Address, city, state, ZIP
-- Phone (E.164), email, website
-- Photos and logo (upload to Cloudflare Images)
-- Video (PREMIUM only)
-- Hours of operation (per day, with Closed / 24 Hours toggles)
-- Social media links (6 standard + 3 custom)
-- Review site links (Google, Yelp, TripAdvisor + 3 custom); existing links are locked (admin-change only)
-- Additional info (up to 5 label/value pairs)
-- Custom CTA buttons (tier-limited; name max 15 chars)
-
-#### Analytics
-Displays stats based on tier:
-- **FREE**: Total views + total engagement
-- **FEATURED+**: Views, call clicks, website clicks, direction clicks, shares
-- **PREMIUM**: All above + video plays
-
-#### Settings
-- Owner email and phone (visibility toggles: name+title, email, phone)
-- Password change via Supabase Auth
-
----
-
-## PWA (Progressive Web App)
-
-The site is fully installable as a PWA on iOS and Android.
-
-### Manifests
-
-- **Main app**: `manifest.json` — scope `/`, start URL `/index.html`
-- **Business portal**: `business-manifest.json` — scope `/business`, start URL `/business#overview`
-
-### Service Workers
-
-- **Main**: `service-worker.js` (cache name `tgd-static-v4`) — caches core assets and uses network-first strategy for navigation
-- **Business portal**: `business-sw.js` (cache name `tgd-business-v2`)
-
-### PWA Dock (`js/pwa/dock.js`)
-
-A native-app-style bottom navigation dock, **only visible in standalone mode** (`display-mode: standalone` or `navigator.standalone`). Features:
-- 5 default apps: Home, Search (Listings), Map, Starred, Settings
-- Customizable dock order (drag to reorder in Settings)
-- "More" overflow menu for extra apps
-- Auto-hide on scroll (optional, toggled in Settings)
-- Long-press on active tab = page reload with haptic feedback
-- SVG icons for all dock items
-- Tier-based active state styling
-
-### PWA App Manager (`js/pwa/app.js`)
-
-- **Theme**: light, dark, or system (uses `body.theme-light` / `body.theme-dark` classes)
-- **Language**: syncs with GTranslate cookie (`googtrans`)
-- **Splash screen**: shown on launch, fades out after 1 second
-- **Update detection**: checks service worker for updates, shows Settings badge
-- **External links**: opens in system browser instead of in-app WebView
-- **Back button**: injects a floating back button on individual listing pages
-- **Hard refresh**: clears caches while preserving starred listings and settings
-- **Reset**: clears all data and re-registers service worker
-
-### PWA Storage (`js/pwa/storage.js`)
-
-IndexedDB wrapper (`TGDDatabase`, store `starredListings`). Methods:
-- `init()` — opens DB and creates object store
-- `addStarred(listing)` — stores full listing data + caches images via SW
-- `removeStarred(id)` — removes by ID
-- `isStarred(id)` — boolean check
-- `getAllStarred()` — returns all, sorted by timestamp (newest first)
-- `getStarredCount()`
-- `clearAll()`
+Files:
 
-Emits `tgd:starred-changed` custom event and writes to `localStorage` for cross-tab sync.
+- `admin.html`
+- `js/admin.js`
+- `css/admin.css`
+- `js/rich-text-editor.js`
 
-### PWA Settings (`js/pwa/settings.js`)
+The Admin Portal is protected by a URL day-key check and then by a GitHub Personal Access Token entered by the admin. The token is stored in `localStorage.tgd_admin_token` and sent to `admin-proxy` as `x-github-token` for validation.
 
-Full settings UI rendered in `settings.html`:
-- Default map app (Apple Maps, Google Maps, Waze, or Ask Every Time)
-- Dock auto-hide toggle
-- Listings layout preference (grid or list)
-- Dock app customization (add, remove, reorder)
-- Theme selector
-- Language selector (English / Greek)
-- Social media links (Facebook, Instagram, YouTube)
-- Help links (Support, Contact, Legal, Website)
-- Share app button
-- Clear cache & reload
-- Reset app (clears all data)
-- Update banner (shown when a new SW version is detected)
+Current responsibilities include:
 
-### Directions (`js/pwa/directions.js`)
+- Listing CRUD
+- Owner record management
+- New listing request review
+- Dynamic subcategory management
+- Category-to-Schema.org metadata management
+- Shortlink creation and conflict checking
+- CSV upload/import
+- Geocoding with Nominatim
+- Static listing-page generation from `listing-template.html`
+- Sitemap updates
+- Cloudflare Images uploads through the upload proxy
+- Analytics review
 
-Builds the appropriate directions URL based on:
-- Whether the app is in PWA standalone mode
-- The user's saved map app preference (`tgd_default_map_app` in localStorage)
-- Available coordinate data on the listing
+The Admin Portal still contains some legacy compatibility paths. The live data source is Supabase, not `listings-database.json`.
 
-Returns Apple Maps, Waze, or Google Maps URLs.
+## Business Portal
 
----
+Files:
 
-## Static Page Generation
+- `business.html`
+- `js/business-auth.js`
+- `js/business-dashboard.js`
+- `js/supabase-config.js`
+- `css/business.css`
+- `business-manifest.json`
+- `business-sw.js`
 
-Each listing gets a dedicated pre-rendered HTML page at `/listing/[slug].html`. The generation process (triggered from the admin portal):
+The Business Portal is far along in a rebuild. The current version is a Supabase Auth-backed owner dashboard with four main tabs:
 
-### Template System
+| Tab | Purpose |
+| --- | --- |
+| Overview | Preview the listing, show tier features, quick actions, and quick analytics. |
+| Edit Listing | Let an owner update allowed listing details, media, hours, links, and CTAs. |
+| Analytics | Show tier-gated analytics cards and, for paid tiers, recent activity. |
+| Settings | Manage owner contact details, visibility, and password changes. |
 
-`listing-template.html` contains over 100 `{{PLACEHOLDER}}` tokens. The admin portal's `generateTemplateReplacements()` and `generateTemplateReplacementsPart2()` functions compute values for every token:
+### Business Portal Auth Flow
 
-**Key placeholders include:**
-- `{{BUSINESS_NAME}}`, `{{TAGLINE}}`, `{{DESCRIPTION}}`
-- `{{CATEGORY}}`, `{{SUBCATEGORIES_TAGS}}`, `{{STATUS_BADGES}}`
-- `{{PHOTOS_SLIDES}}`, `{{CAROUSEL_CONTROLS}}`, `{{TOTAL_PHOTOS}}`
-- `{{ADDRESS_SECTION}}`, `{{PHONE_SECTION}}`, `{{EMAIL_SECTION}}`, `{{WEBSITE_SECTION}}`, `{{HOURS_SECTION}}`
-- `{{PHONE_BUTTON}}`, `{{DIRECTIONS_BUTTON}}`, `{{CUSTOM_CTA_BUTTONS}}` (desktop)
-- `{{PHONE_BUTTON_MOBILE}}` etc. (mobile CTA bar)
-- `{{SOCIAL_MEDIA_SECTION}}`, `{{REVIEW_SECTION}}`
-- `{{MAP_SECTION}}`, `{{RELATED_LISTINGS_SECTION}}`
-- `{{OWNER_INFO_SECTION}}`, `{{CLAIM_BUTTON}}`, `{{SUGGEST_EDIT_BUTTON}}`
-- `{{SUGGEST_EDIT_BUTTON}}` now links to `/suggest-edit?id={listing.id}` so edits are submitted in-app instead of email.
-- `{{SCHEMA_TYPES_JSON}}`, `{{HOURS_SCHEMA}}`, `{{SAME_AS_SCHEMA}}`
-- `{{META_DESCRIPTION}}`, `{{PRIMARY_IMAGE}}`, `{{LISTING_URL}}`
-- `{{COORDINATES}}`, `{{FULL_ADDRESS}}`, `{{HOURS_JSON}}`
-- `{{PHOTOS_JSON}}`, `{{BUSINESS_TIMEZONE}}`
+1. A visitor searches for their business during signup.
+2. The portal loads visible listings and owner records from Supabase.
+3. If the listing is claimable, the owner enters the confirmation key.
+4. `signUpBusinessOwner()` creates a Supabase Auth account with metadata including `listing_id`, `role: business_owner`, and `owner_user_id`.
+5. The matching `business_owners` row is updated with `owner_user_id`, owner contact data, and a cleared `confirmation_key`.
+6. On sign-in, `getBusinessOwnerData()` loads owner rows by email and the dashboard loads the linked listing.
 
-### Schema.org Structured Data
+### Business Portal Editing
 
-Each listing page includes JSON-LD structured data with:
-- Business type inferred from category/subcategory (e.g., `Restaurant`, `Church`, `HairSalon`, etc.)
-- `LocalBusiness` as default
-- Opening hours specification
-- Geo coordinates
-- `sameAs` links from social media profiles
-- `BreadcrumbList` for navigation context
+The current owner edit surface includes:
 
-### Default Images
+- Tagline and rich-text description
+- Subcategories and primary subcategory
+- Pricing and coming-soon status
+- Address, city, state, ZIP, and phone/email/website
+- Hours with closed and 24-hour support
+- Social links and review links
+- Additional information rows
+- Tier-limited custom CTA buttons
+- Logo, photos, and video uploads through Cloudflare Images
+- Owner contact fields and visibility flags
 
-When a listing has no logo or photos, the admin portal automatically assigns default **Unsplash** images per category (defined in `CATEGORY_IMAGES.md` and `js/admin.js`):
+After saving, the portal updates Supabase and attempts to call a Supabase Edge Function path to regenerate the live static page. If that function is unavailable, the code treats regeneration as non-fatal and expects the page to be regenerated by a later admin save.
 
-| Category | Default Image |
-|---|---|
-| Food & Hospitality | Restaurant interior |
-| Beauty & Health | Salon |
-| Home & Construction | House architecture |
-| Professional & Business Services | Office meeting |
-| … | … (14 categories total) |
+### Business Portal Tier Rules
 
----
+The Business Portal currently treats listing tiers as:
 
-## Analytics System
+| Tier | Label | Portal behavior |
+| --- | --- | --- |
+| `FREE` | Standard Profile | Basic listing, one photo, contact info, hours, social/review links, basic analytics. |
+| `FEATURED` | Featured Profile | More photos, featured placement, custom CTA, enhanced analytics. |
+| `PREMIUM` | Premium Profile | Largest media allowance, video, two CTAs, and more complete analytics. |
 
-Analytics are tracked on individual listing pages via `trackAnalytics()` in the generated HTML. Events are inserted into the `listing_analytics` Supabase table:
+The public tier details live in `tiers.html`.
 
-| Event | Trigger |
-|---|---|
-| `view` | Page load (`window.addEventListener('load', ...)`) |
-| `call` | Click on `tel:` link |
-| `website` | Click on website link |
-| `directions` | Click on directions button |
-| `share` | Share button click (with `platform` parameter) |
-| `video` | Video play (PREMIUM) |
+## Public Listing Suggestions
 
-The admin portal reads aggregated and per-event analytics from `listing_analytics` via the `admin-proxy` edge function.
+`suggest-edit.html` and `js/suggest-edit.js` implement the public edit suggestion flow. A generated listing page links to `/suggest-edit?id={listing.id}`. The form fetches the current listing, pre-fills editable fields, validates required values, and inserts a pending row into `listing_suggestions`.
 
-Business owners see summarized analytics in the business portal (level of detail depends on tier).
+This path is separate from the Business Portal. It allows community corrections without owner authentication.
 
----
+## Listings Directory
 
-## Map & Geocoding
+Files:
 
-### Map Library
+- `listings.html`
+- `js/listings.js`
+- `css/listings.css`
 
-**Leaflet.js** (`1.9.4`) with **Leaflet.MarkerCluster** (`1.5.3`) on OpenStreetMap tiles.
+The listings page loads `listings` rows from Supabase and filters client-side. Current behavior includes:
 
-### Views
+- Category and dynamic subcategory filters
+- Any/all subcategory filter mode
+- Country, state, city, ZIP, location, and radius filters
+- Open now, closed now, opening soon, closing soon, hours unknown, online only, coming soon, and pricing filters
+- Tier-aware/default sorting, A-Z sorting, closest-to-me sorting, and random sorting
+- Leaflet map and split-map modes
+- Marker clustering
+- User location and estimated-location support via browser geolocation and `ipapi.co`
+- Saved/starred listings through cookies and PWA IndexedDB sync
+- Authoritative server time from `listing-server-time`
 
-- **Full map** (`map.html`) — standalone full-screen map with category/location filters
-- **Map panel** (in `listings.html`) — toggleable map panel above listings grid
-- **Split view** — side-by-side listings list + interactive map; clicking a listing flies the map to its marker and opens a popup
-- **Listing detail map** — embedded Leaflet map in each generated listing page (lazy-initialized after 1 second)
+## Static Listing Pages
 
-### Geocoding
+`listing-template.html` is the template used by admin-side generation. Generated pages are committed under `listing/` and served by Cloudflare Pages.
 
-Addresses are geocoded via the **Nominatim** OpenStreetMap API (`https://nominatim.openstreetmap.org/search`). Results are stored in `listings.coordinates` as `{lat, lng}`.
+Generated pages include:
 
-- Admin portal geocodes addresses automatically on save
-- If geocoding fails, the listing appears without a map pin (not in map results)
-- The listing detail page falls back to geocoding on the client side if coordinates are missing
+- SEO metadata and canonical listing URL
+- Schema.org JSON-LD with category/subcategory-derived types
+- Logo, photos, carousel, video, contact buttons, custom CTAs, owner sections, and reviews/social links
+- Open/closed status using stored hours and timezone
+- Embedded map when coordinates are available
+- Analytics tracking calls
+- A suggest-edit link that points to `/suggest-edit?id={listing.id}`
 
-### IP-Based Location Estimation
+## PWA
 
-`js/listings.js` calls `https://ipapi.co/json/` on page load to estimate the user's city/state. This is used to:
-- Bias search results toward nearby listings in the default sort
-- Center the map on the user's approximate location
-- Show an estimated-location circle on the map (10km radius)
+The main site and Business Portal both have PWA support.
 
-### Marker Priority
+Main PWA pieces:
 
-Markers use CSS z-index by tier:
-- `tier-free`: z-index 100
-- `tier-premium`: z-index 200
-- `tier-featured`: z-index 300 (gold border + glow)
-- `tier-premium`: z-index 400 (gold border + glow)
+- `manifest.json`
+- `service-worker.js`
+- `js/pwa/app.js`
+- `js/pwa/dock.js`
+- `js/pwa/settings.js`
+- `js/pwa/storage.js`
+- `js/pwa/starred.js`
+- `js/pwa/directions.js`
+- `js/pwa/offline-translation.js`
+- `css/pwa.css`
 
----
+Business Portal PWA pieces:
 
-## Search System
+- `business-manifest.json`
+- `business-sw.js`
 
-### Listings Page Search
+The main PWA supports standalone-mode navigation, saved listings, offline fallback behavior, app settings, language/theme preferences, map-app preferences, and image caching for saved listings.
 
-`js/listings.js` implements full client-side search with debouncing (100ms). Filtering runs against:
-- Business name
-- Tagline
-- Description
-- Full address
+## Media and Cloudflare Images
 
-Includes a **typo suggestion** feature using Levenshtein distance — if no results are found, it suggests the closest matching business name.
+The admin and Business Portal upload flows use Cloudflare Images. Uploads go through:
 
-### Homepage Predictive Search
-
-`js/index.js` implements a predictive dropdown (180ms debounce) that shows:
-1. **Businesses** — matched by name or tagline, with thumbnail
-2. **Categories** — matched by name, with emoji icon
-3. **Locations** — city/state combinations from listing data
-4. Footer: "Search all listings for…" link
-
-### Advanced Filters (Listings Page)
-
-| Filter | Implementation |
-|---|---|
-| Category | Dropdown/buttons (14 main categories) |
-| Subcategory | Checkboxes with Any/All mode toggle |
-| Open Now | Checks current time against stored hours (Central Time) |
-| Closed Now | Inverse of Open Now |
-| Opening Soon | Opens within 60 minutes |
-| Closing Soon | Closes within 60 minutes |
-| Online Only | Listings with city/state but no street address |
-| Coming Soon | `coming_soon === true` |
-| Pricing | $ to $$$$ |
-| Country | Dropdown from available listing countries |
-| State | Dropdown filtered by selected country |
-| Location Search | Autocomplete for city, state, ZIP, or country |
-| Radius | Miles from estimated/precise user location (requires geolocation) |
-
-Filters sync between mobile (top panel) and desktop (sidebar) variants. All filter state is reflected in the URL query string for shareability.
-
-### Sort Options
-
-- **Default** — scored ranking by: tier priority → proximity to user (city/state/distance) → seeded random (consistent within a session)
-- **A-Z** — alphabetical by business name
-- **Closest to Me** — by geodesic distance (requires geolocation or estimated location)
-- **Random** — Fisher-Yates shuffle
-
----
-
-## Starring / Favorites
-
-The starring system has two layers:
-
-### Layer 1: Cookie-based (all visitors)
-
-`starredListings` cookie stores an array of listing IDs. Used on the listings page for instant UI updates without requiring IndexedDB.
-
-### Layer 2: IndexedDB (PWA users)
-
-`js/pwa/storage.js` stores full listing objects in IndexedDB for offline access. The starred manager (`js/pwa/starred.js`) syncs between both layers.
-
-### Cross-Tab Sync
-
-When a listing is starred/unstarred, a `localStorage` key `tgd_starred_sync` is written with `{action, listingId, timestamp}`. All open tabs listen for the `storage` event to update their UI accordingly.
-
-### Star Button Architecture
-
-Star buttons use a CSS class `star-button` with a `data-listing-id` attribute. A single delegated event listener on `document` (capture phase) handles all star clicks, preventing propagation to the listing card link.
-
----
-
-## Multi-Language Support
-
-The site supports **English** and **Greek (Ελληνικά)** via the **GTranslate** widget.
-
-### Language Toggle
-
-A custom CSS switch (`.language-switch`) in the header renders US and Greek flag SVGs. The toggle updates:
-1. `localStorage.tgd_language` (persisted preference)
-2. The `googtrans` cookie (read by GTranslate)
-3. `document.documentElement.lang`
-4. The GTranslate combo box (for integration with the widget)
-
-The PWA app manager (`js/pwa/app.js`) exposes `window.TGDLanguage.setLanguage()` for programmatic control and syncs the widget on every page load.
-
-### Offline Translations
-
-`js/pwa/offline-translation.js` stores UI strings in `localStorage` for offline mode:
-- Supported keys: `home`, `listings`, `settings`, `map`, `starred`, `offline`, `the_greek_directory`, `filters`, `clear_all`, `loading`
-- Applied to elements with `data-offline-i18n` attribute when `!navigator.onLine`
-
----
-
-## Dark Mode
-
-Dark mode is controlled via body classes (`body.theme-light` / `body.theme-dark`) applied by `js/pwa/app.js`.
-
-CSS files use two methods:
-1. **`body.theme-dark .class`** selector (for programmatic PWA theme switching)
-2. **`@media (prefers-color-scheme: dark)`** (for system-preference-based dark mode on non-PWA)
-
----
-
-## Service Worker & Offline Support
-
-### Main SW (`service-worker.js`, cache: `tgd-static-v4`)
-
-**Cached core assets:**
-- All main HTML pages (`index.html`, `listings.html`, `map.html`, etc.)
-- All CSS (`src/output.css`, `css/*.css`)
-- All JS files including PWA modules
-- Logo and favicon from `static.thegreekdirectory.org`
-
-**Strategy:** Network-first for all requests. On network failure:
-- Serves cached version if available
-- For navigation requests: falls back to `offline.html`
-- For other requests: returns `503 Offline` text
-
-**Additional features:**
-- `CACHE_IMAGE` message from listings page — pre-caches starred listing images
-- `SKIP_WAITING` message — activates new SW immediately
-- Periodic update checks every 5 minutes while online
-
-### Business SW (`business-sw.js`, cache: `tgd-business-v2`)
-
-Caches only the business portal assets. Uses a simple cache-then-network strategy.
-
----
-
-## Redirects & Reserved Routes
-
-`_redirects` (Cloudflare Pages format):
-
-- **Extension stripping**: `/*.html → /:splat 301`
-- **Search alias**: `/search → /listings 307`
-- **Listings hash routes**: `/listings/map → /listings#map 307`
-- **Reserved paths**: `/claim/*`, `/place/*`, `/places/*`, `/events/*`, `/event/*`, `/news/*`, `/blog/*`, `/post/*`, `/posts/*`, `/resource/*`, `/resources/*` all redirect to `reserved.html?n=[code]`
-
-`reserved.html` reads the `n` parameter, maps it to a readable route name, and displays a "Coming Soon" message. Unknown codes redirect to the homepage.
-
----
-
-## Sitemaps
-
-The admin portal auto-generates and pushes `sitemap.xml` to GitHub on every listing save or page generation. The sitemap includes:
-
-1. **Homepage** (priority 1.0)
-2. **State pages** — `/places/usa/[state]` for each state with listings (priority 0.9)
-3. **City/region pages** — `/places/usa/[state]/[city-slug]` (priority 0.8); Chicago suburbs map to `chicagoland`
-4. **Category pages** — `/category/[slug]` for each category with visible listings (priority 0.7)
-5. **Individual listings** — `/listing/[slug]` with the listing's `updated_at` date (priority 0.6)
-
-The sitemap index (`sitemap_index.xml`) references 7 sub-sitemaps for different content types.
-
----
-
-## Media / Image Uploads
-
-### Cloudflare Images
-
-All media uploads go through a CORS-safe proxy:
-- **Endpoint**: `https://tgd-images-upload.thegreekdirectory.org` (POST with `FormData`)
-- Returns an image URL under `https://images.thegreekdirectory.org`
-
-Used in both the admin portal and the business owner portal.
-
-### Cloudflare Credentials Storage
-
-The admin and business portals store Cloudflare account ID, API key, and upload endpoint in `localStorage` (`tgdCloudflareImagesConfig`) to avoid re-entering them each session. These are never sent to any server other than Cloudflare.
-
----
-
-## GitHub Actions & Workflows
-
-### `business-portal-api.yml`
-
-Triggered by `repository_dispatch` with types `business_update` or `business_login`. Handles:
-- **`business_login`**: Reads `listings-database.json`, verifies credentials by matching `slug + ownerEmail + businessPortalPassword`
-- **`business_update`**: Updates the matching listing in `listings-database.json` and commits the change
-
-> **Note:** This workflow appears to be a legacy system. The live site uses Supabase for all data. This workflow operates on a flat JSON file (`listings-database.json`) in the repo.
-
-### `track-analytics.yml`
-
-Triggered by `repository_dispatch` with type `track_analytics`. Reads `listings-database.json`, increments counters (views, calls, website clicks, etc.) for the specified listing, and commits the updated file.
-
-> **Note:** The live site tracks analytics directly to the `listing_analytics` Supabase table from the listing page JS. These GitHub Actions-based analytics are also legacy.
-
----
-
-## Category & Subcategory System
-
-### 14 Main Categories
-
-| Category | Icon |
-|---|---|
-| Automotive & Transportation | 🚗 |
-| Beauty & Health | 💅 |
-| Church & Religious Organization | ⛪ |
-| Cultural/Fraternal Organization | 🎭 |
-| Education & Community | 📚 |
-| Entertainment, Arts & Recreation | 🎨 |
-| Food & Hospitality | 🍽️ |
-| Grocery & Imports | 🛒 |
-| Home & Construction | 🏠 |
-| Industrial & Manufacturing | 🏭 |
-| Pets & Veterinary | 🐾 |
-| Professional & Business Services | 💼 |
-| Real Estate & Development | 🏢 |
-| Retail & Shopping | 🛍️ |
-
-### Subcategories
-
-Each category has a hardcoded list of subcategories in `js/admin.js`, `js/listings.js`, `js/submit.js`, and `categories.html`. These defaults can be **overridden dynamically** from the `category_subcategories` Supabase table, loaded at startup by the admin and business portals.
-
-The `schema_type_map` field in `category_subcategories` maps subcategory strings to Schema.org business type arrays (e.g., `{Restaurant: ["Restaurant", "LocalBusiness"]}`), used during static page generation for structured data.
-
-### Subcategory Filter Modes
-
-On the listings page, subcategory filters support two modes:
-- **Any** — listing must have at least one of the selected subcategories
-- **All** — listing must have all selected subcategories
-
----
-
-## Environment & Configuration
-
-### Supabase (public)
-
-```js
-const SUPABASE_URL  = 'https://luetekzqrrgdxtopzvqw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // anon key (public)
+```text
+https://tgd-images-upload.thegreekdirectory.org
 ```
 
-These are hardcoded in client-side JS files (intentional — anon key is safe to expose; RLS enforces access control).
+Returned image delivery URLs are normalized to:
 
-### GitHub (admin only)
-
-- GitHub PAT with `repo` scope — stored in `localStorage.tgd_admin_token`, entered by admin at login
-- Target repo: `thegreekdirectory/listings`
-
-### Cloudflare Images (stored locally in browser)
-
-- Account ID, API Key, Upload Endpoint — stored in `localStorage.tgdCloudflareImagesConfig`
-
----
-
-## CSS Architecture
-
-The canonical primary brand blue used across templates, generated listing pages, admin/business portals, and CTA defaults is `#045093` (replacing the previous primary blue shade).
-
-All CSS is written in plain CSS with no preprocessor. Tailwind utility classes from `src/output.css` are used for layout and spacing throughout HTML files.
-
-| File | Scope | Key Contents |
-|---|---|---|
-| `src/output.css` | Global | Custom-compiled Tailwind utilities |
-| `css/index.css` | Homepage | Hero, search bar, chips, listing cards, predictive dropdown |
-| `css/listings.css` | Listings page | Map markers, split view, star button, subcategory tags, filter panel, dark mode overrides |
-| `css/admin.css` | Admin portal | Auth card, table, modal, tier badges |
-| `css/business.css` | Business portal | Auth card, preview card, analytics cards, visibility toggles |
-| `css/pwa.css` | PWA (standalone) | Dock, splash screen, toast, themes (light/dark), safe areas |
-| `css/submit.css` | Submit form | Form fields, map, subcategory pills |
-
-`css/pwa.css` uses `body.pwa-mode` as a scope prefix on all dock-related rules, ensuring they only apply in standalone mode.
-
----
-
-## JavaScript Architecture
-
-### Global State (listings page)
-
-`js/listings.js` manages a comprehensive global state:
-
-```js
-allListings        // All listings fetched from Supabase
-filteredListings   // After all filters applied
-currentView        // 'grid' | 'list'
-selectedCategory   // String
-selectedSubcategories // String[]
-subcategoryMode    // 'any' | 'all'
-selectedCountry, selectedState, selectedCity, selectedZip
-selectedRadius     // Miles
-openNowOnly, closedNowOnly, openingSoonOnly, closingSoonOnly
-hoursUnknownOnly, onlineOnly, comingSoonOnly, selectedPricing
-map, markerClusterGroup   // Leaflet instances
-mapOpen, splitViewActive, filtersOpen
-userLocation, estimatedUserLocation
-starredListings    // ID array (from cookie)
-viewingStarredOnly
-displayedListingsCount  // Pagination
+```text
+https://images.thegreekdirectory.org
 ```
 
-### Phone Number Handling
+The Business Portal stores local Cloudflare/upload configuration in `localStorage.tgdCloudflareImagesConfig`. Admin and owner media writes ultimately store URLs in `listings.logo`, `listings.photos`, and `listings.video`.
 
-Phones are stored in **E.164 format** (e.g., `+16305551234`). The `normalizePhoneE164()` function converts US 10-digit inputs. `formatPhoneNumber()` converts E.164 back to `(630) 555-1234` for display. Custom `createPhoneInput()` renders a country-code selector + formatted input.
+## Maps and Geocoding
 
-### Hours Normalization
+The app uses Leaflet and OpenStreetMap tiles. Geocoding uses the Nominatim search API.
 
-Hours are stored as `HH:MM-HH:MM` (24-hour). Input can be in `12:00 PM - 8:00 PM` format, normalized by `normalizeHoursInput()`. The `parseBusinessHoursRange()` function handles overnight spans (e.g., `10:00 PM - 3:00 AM`).
+Map-related behavior appears in:
 
-The `getHoursStatus()` function evaluates current open/closed/opening-soon/closing-soon state using Central Time (`America/Chicago`) as the default timezone.
+- `listings.html` and `js/listings.js` for directory maps and split view
+- `map.html` for standalone map mode
+- `suggest-edit.html` and `js/suggest-edit.js` for address suggestion and pin placement
+- Generated listing pages for listing detail maps
+- `js/pwa/directions.js` for Apple Maps, Google Maps, and Waze directions URLs
 
----
+Coordinates are stored in `listings.coordinates` as JSON.
+
+## Search and Discovery
+
+Search is implemented client-side across listing data. The directory supports search by business name, tagline, description, and location fields. Homepage search and directory search are separate frontend surfaces but use the same Supabase-backed listing source.
+
+Discovery data is organized around 14 main categories:
+
+- Automotive & Transportation
+- Beauty & Health
+- Church & Religious Organization
+- Cultural/Fraternal Organization
+- Education & Community
+- Entertainment, Arts & Recreation
+- Food & Hospitality
+- Grocery & Imports
+- Home & Construction
+- Industrial & Manufacturing
+- Pets & Veterinary
+- Professional & Business Services
+- Real Estate & Development
+- Retail & Shopping
+
+Subcategories can be loaded dynamically from `category_subcategories` and override hardcoded fallback maps in the frontend.
+
+## Environment and Configuration
+
+Public frontend configuration is hardcoded in JavaScript because the Supabase anon key is intended to be public:
+
+```js
+const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
+const SUPABASE_ANON_KEY = '[public anon JWT]';
+```
+
+Private credentials must remain server-side or local-only:
+
+- Supabase service role key: only in Supabase Edge Function environment variables.
+- GitHub token for admin operations: entered by admin and stored in browser `localStorage`.
+- GitHub token for `update-github-file`: Supabase Edge Function environment variable.
+- Cloudflare Images API credentials: upload proxy/server-side where possible, or local browser config for admin/owner upload flows.
+
+## Build and Local Development
+
+The repository is static. There is no app server or bundler required for production deployment.
+
+Install dependencies only if you need to rebuild Tailwind output:
+
+```bash
+npm install
+npm run tailwind:build
+```
+
+Available scripts:
+
+```bash
+npm run tailwind:build
+npm run tailwind:watch
+```
+
+`src/output.css` is committed, so Cloudflare Pages does not need a build step for normal deploys.
 
 ## Deployment
 
-The site is hosted on **Cloudflare Pages** (multiple repos/deployments):
+The site is deployed through Cloudflare Pages from this repository.
 
-1. **Main site** — this repository, deployed to `thegreekdirectory.org`
-2. **Listing pages** — `thegreekdirectory/listings` repository, deployed to the same domain under `/listing/`
+Deployment characteristics:
 
-**Build command:** None (static files only, no build step required at deploy time — `src/output.css` is committed)
+- Static files are served directly.
+- Generated listing pages live in this repo under `listing/`.
+- No runtime build command is required for normal production deploys.
+- Sitemaps and KML files are committed artifacts.
+- Cloudflare Pages `_redirects` controls route aliases and reserved paths.
 
-**Cloudflare Web Analytics** is included via the beacon script on `listings.html`.
+## Legacy and Compatibility Notes
 
----
+The repository still contains or references older systems that should be treated carefully:
 
-*© 2025 The Greek Directory. All rights reserved.*
+- `listings-database.json` and GitHub Actions repository-dispatch workflows are legacy compatibility paths. Supabase is the live data source.
+- Some README history referenced Edge Functions that are not active in Supabase today. The active functions are `admin-proxy`, `listing-server-time`, and `update-github-file`.
+- There are multiple analytics generations in the schema. Business Portal code currently reads `listing_analytics`; newer analytics tables exist but are not fully populated.
+- The Business Portal rebuild is ongoing. Keep README updates tied to the current code and live schema instead of desired future behavior.
+
+## Contributor Notes
+
+When updating this project:
+
+- Prefer Supabase as the source of truth for listings, owners, requests, suggestions, categories, shortlinks, and analytics.
+- Keep generated listing pages and sitemaps in sync after admin listing changes.
+- Do not expose Supabase service-role keys, GitHub tokens, or Cloudflare API secrets in public frontend code.
+- Preserve RLS assumptions when adding tables or policies.
+- Update `category_subcategories` when changing dynamic categories or Schema.org type mappings.
+- If changing Business Portal save behavior, verify both Supabase updates and static-page regeneration behavior.
+- If changing analytics, document which analytics generation is authoritative.
+
+## License and Ownership
+
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
+This repository contains proprietary source code owned by The Greek Directory. Unauthorized use, copying, modification, or distribution is prohibited without written permission.
