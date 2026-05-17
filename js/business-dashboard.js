@@ -1087,63 +1087,47 @@ async function saveChanges() {
 }
 
 /*
- * FIX: Decouple the UPDATE from the RETURNING SELECT.
+ * FIX: Route listing saves through the update-listing-bp edge function.
  *
- * The old code used .update().select().single() — this requires the RETURNING
- * SELECT to return exactly 1 row. If the RLS SELECT policy differs from the
- * UPDATE policy (e.g. SELECT only allows visible=true rows via anon), the
- * RETURNING hits 0 rows and PostgREST throws PGRST116 (406).
+ * Direct SDK .update() calls on `listings` are silently blocked by RLS for
+ * business-owner sessions — the UPDATE policy uses a USING clause that may
+ * not match the anon/user JWT context, causing 0 rows affected with no error.
  *
- * Solution: PATCH without .select() (fire-and-forget the write), then do a
- * separate GET to reload the listing. The GET goes through its own SELECT
- * policy which is already working (we loaded the listing on sign-in).
+ * update-listing-bp validates the caller's JWT, verifies they own the listing
+ * via business_owners, then writes with the service-role key so RLS is
+ * bypassed after a proper ownership check. It returns the full updated row.
  */
 async function _performSave(listingId, updates) {
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) saveBtn.classList.add('bp-btn--loading');
     try {
-        // ── 1. Write — no RETURNING needed ────────────────────────
-        const { error: updateError } = await window.TGDAuth.supabaseClient
-            .from('listings')
-            .update(updates)
-            .eq('id', listingId);
+        const session = await window.TGDAuth.getCurrentSession();
+        if (!session) throw new Error('Not authenticated. Please sign in again.');
 
-        if (updateError) {
-            console.error('Listing update error:', updateError);
-            throw new Error(updateError.message || 'Failed to save listing.');
-        }
-
-        // ── 2. Read — reload the row with the same SELECT that worked at login ──
-        const { data: refreshed, error: selectError } = await window.TGDAuth.supabaseClient
-            .from('listings')
-            .select('*')
-            .eq('id', listingId)
-            .single();
-
-        if (selectError || !refreshed) {
-            // Write succeeded; we just can't re-fetch — apply locally so the UI reflects the save
-            console.warn('Could not re-fetch listing after save. Applying updates locally.', selectError);
-            window.BP.currentListing = { ...window.BP.currentListing, ...updates };
-        } else {
-            window.BP.currentListing = refreshed;
-        }
-
-        showToast('Listing saved successfully!', 'success');
-
-        // ── 3. Best-effort page regeneration (non-fatal) ───────────
-        try {
-            const session = await window.TGDAuth.getCurrentSession();
-            if (session) {
-                await fetch(`${SUPABASE_EDGE_BASE}/update-listing`, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body:    JSON.stringify({ listing_id: listingId, regenerate_page: true }),
-                });
+        const resp = await fetch(
+            `${SUPABASE_EDGE_BASE}/update-listing-bp`,
+            {
+                method:  'POST',
+                headers: {
+                    'Content-Type':  'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    action:     'update-listing',
+                    listing_id: listingId,
+                    updates,
+                }),
             }
-        } catch (_) {
-            // No update-listing edge function deployed — admin regenerates the page manually
+        );
+
+        const result = await resp.json();
+        if (!resp.ok || !result.success) {
+            throw new Error(result.error || `Save failed (HTTP ${resp.status})`);
         }
 
+        // Edge function returns the full updated row
+        window.BP.currentListing = result.data;
+        showToast('Listing saved successfully!', 'success');
         renderDashboard();
         switchTab('overview');
 
