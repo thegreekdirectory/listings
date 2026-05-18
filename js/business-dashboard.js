@@ -398,14 +398,14 @@ async function renderAnalytics() {
 }
 
 /*
- * FIX: listing_analytics only stores individual event rows.
- * Columns: listing_id, action, platform, timestamp, user_agent
- * The columns views/call_clicks/etc. live in the separate `analytics` table.
+ * _fetchAnalyticsAggregates
  *
- * Strategy:
- *   1. Count individual action events from listing_analytics (only select columns that exist)
- *   2. Also pull aggregate totals from `analytics` table for legacy counts
- *   3. Return the higher of the two so legacy data isn't lost
+ * listing_analytics columns: id, action, platform, timestamp, user_agent, created_at, listing_id
+ * analytics columns:         id, views, call_clicks, website_clicks, direction_clicks,
+ *                            share_clicks, video_plays, last_viewed, created_at, updated_at, listing_id
+ *
+ * Strategy: count individual event rows from listing_analytics (select 'action' only),
+ * then pull legacy aggregate totals from analytics, take the max of each.
  */
 async function _fetchAnalyticsAggregates(listingId) {
     const totals = {
@@ -413,12 +413,13 @@ async function _fetchAnalyticsAggregates(listingId) {
         direction_clicks: 0, share_clicks: 0, video_plays: 0,
     };
 
-    // ── 1. Count individual event rows from listing_analytics ──────
-    // Only select columns that actually exist in this table
+    // ── 1. Count individual event rows from listing_analytics ──
+    // Only select 'action' — the only column needed for counting.
+    // Do NOT select views/call_clicks/etc. — those don't exist here.
     try {
         const { data: eventRows, error: eventsError } = await window.TGDAuth.supabaseClient
             .from('listing_analytics')
-            .select('action')          // action is the only column we need for counting
+            .select('action')
             .eq('listing_id', listingId);
 
         if (eventsError) {
@@ -439,7 +440,9 @@ async function _fetchAnalyticsAggregates(listingId) {
         console.warn('Could not count listing_analytics events:', e);
     }
 
-    // ── 2. Pull legacy aggregate totals from `analytics` table ─────
+    // ── 2. Pull legacy aggregate totals from the analytics table ──
+    // These columns DO exist in analytics: views, call_clicks, website_clicks,
+    // direction_clicks, share_clicks, video_plays.
     try {
         const { data: agg, error: aggError } = await window.TGDAuth.supabaseClient
             .from('analytics')
@@ -448,7 +451,6 @@ async function _fetchAnalyticsAggregates(listingId) {
             .maybeSingle();
 
         if (!aggError && agg) {
-            // Use the larger value so legacy aggregated data isn't wiped out by a fresh event count
             totals.views            = Math.max(totals.views,            agg.views            || 0);
             totals.call_clicks      = Math.max(totals.call_clicks,      agg.call_clicks      || 0);
             totals.website_clicks   = Math.max(totals.website_clicks,   agg.website_clicks   || 0);
@@ -457,15 +459,18 @@ async function _fetchAnalyticsAggregates(listingId) {
             totals.video_plays      = Math.max(totals.video_plays,      agg.video_plays      || 0);
         }
     } catch (e) {
-        // analytics table may not have a row yet — not an error
+        // No row in analytics yet — not an error
     }
 
     return totals;
 }
 
 /*
+ * _fetchAnalyticsEvents
+ *
  * Fetch recent individual event rows for the activity log.
- * Only select columns that exist in listing_analytics.
+ * Only select columns that exist in listing_analytics:
+ *   action, platform, timestamp
  */
 async function _fetchAnalyticsEvents(listingId, limit = 20) {
     try {
@@ -1087,46 +1092,52 @@ async function saveChanges() {
 }
 
 /*
- * FIX: Route listing saves through the update-listing-bp edge function.
+ * _performSave
  *
- * Direct SDK .update() calls on `listings` are silently blocked by RLS for
- * business-owner sessions — the UPDATE policy uses a USING clause that may
- * not match the anon/user JWT context, causing 0 rows affected with no error.
+ * Writes updates directly via the Supabase SDK (RLS policies are now correct).
  *
- * update-listing-bp validates the caller's JWT, verifies they own the listing
- * via business_owners, then writes with the service-role key so RLS is
- * bypassed after a proper ownership check. It returns the full updated row.
+ * Pattern: .update() WITHOUT chained .select() to avoid the PGRST116 / 406
+ * "0 rows returned" error that occurs when RLS allows the write but the
+ * implicit RETURNING clause hits a policy gap. After a successful write we do
+ * a clean separate .select() to reload the row.
  */
 async function _performSave(listingId, updates) {
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) saveBtn.classList.add('bp-btn--loading');
+
     try {
-        const session = await window.TGDAuth.getCurrentSession();
-        if (!session) throw new Error('Not authenticated. Please sign in again.');
-
-        const resp = await fetch(
-            `${SUPABASE_EDGE_BASE}/update-listing-bp`,
-            {
-                method:  'POST',
-                headers: {
-                    'Content-Type':  'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                    action:     'update-listing',
-                    listing_id: listingId,
-                    updates,
-                }),
-            }
-        );
-
-        const result = await resp.json();
-        if (!resp.ok || !result.success) {
-            throw new Error(result.error || `Save failed (HTTP ${resp.status})`);
+        // ── Allowed fields (owner cannot touch tier, visible, slug, is_claimed, etc.) ──
+        const ALLOWED = new Set([
+            'tagline','description','subcategories','primary_subcategory',
+            'pricing','coming_soon','address','city','state','zip_code','country','timezone',
+            'phone','email','website','logo','photos','video',
+            'hours','hours_label_custom','hours_disclaimer_custom',
+            'hours_updated_at','hours_updated_by',
+            'social_media','reviews','additional_info','custom_ctas','updated_by_role',
+        ]);
+        const filtered = {};
+        for (const [k, v] of Object.entries(updates)) {
+            if (ALLOWED.has(k)) filtered[k] = v;
         }
 
-        // Edge function returns the full updated row
-        window.BP.currentListing = result.data;
+        // ── Step 1: UPDATE — no .select() chained to avoid 406/PGRST116 ──
+        const { error: updateError } = await window.TGDAuth.supabaseClient
+            .from('listings')
+            .update(filtered)
+            .eq('id', listingId);
+
+        if (updateError) throw new Error(updateError.message || 'Update failed');
+
+        // ── Step 2: Reload the full row in a separate query ──
+        const { data: updatedListing, error: fetchError } = await window.TGDAuth.supabaseClient
+            .from('listings')
+            .select('*')
+            .eq('id', listingId)
+            .single();
+
+        if (fetchError) throw new Error(fetchError.message || 'Could not reload listing after save');
+
+        window.BP.currentListing = updatedListing;
         showToast('Listing saved successfully!', 'success');
         renderDashboard();
         switchTab('overview');
@@ -1369,7 +1380,6 @@ async function saveSettings() {
     if (btn) btn.classList.remove('bp-btn--loading');
 
     if (result.success) {
-        // Refresh in-memory ownerData so the UI reflects the saved state
         window.BP.ownerData = result.data;
         showToast('Settings saved successfully!', 'success');
         renderSettings();
