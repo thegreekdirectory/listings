@@ -1641,21 +1641,37 @@ function _updateCounter(field, current, max) {
 window._updateCounter = _updateCounter;
 
 function _diffChanges(original, updates) {
-    const changes = [];
-    const simple  = [
-        ['tagline','Tagline'],['description','Description'],['pricing','Pricing'],
-        ['coming_soon','Coming Soon status'],['address','Address'],['city','City'],
-        ['state','State'],['zip_code','ZIP Code'],['phone','Phone'],
-        ['email','Email'],['website','Website'],['logo','Logo'],['video','Video'],
-    ];
-    simple.forEach(([k, label]) => { if (String(original[k] ?? '') !== String(updates[k] ?? '')) changes.push(label); });
-    if (JSON.stringify([...(original.subcategories||[])].sort()) !== JSON.stringify([...(updates.subcategories||[])].sort())) changes.push('Subcategories');
-    if (original.primary_subcategory !== updates.primary_subcategory) changes.push('Primary subcategory');
-    if (JSON.stringify(original.hours || {}) !== JSON.stringify(updates.hours || {})) changes.push('Hours of operation');
-    if (JSON.stringify(original.social_media || {}) !== JSON.stringify(updates.social_media || {})) changes.push('Social media links');
-    if (JSON.stringify(original.reviews || {}) !== JSON.stringify(updates.reviews || {})) changes.push('Review links');
-    if (JSON.stringify(original.additional_info || []) !== JSON.stringify(updates.additional_info || [])) changes.push('Additional information');
-    if (JSON.stringify(original.custom_ctas || []) !== JSON.stringify(updates.custom_ctas || [])) changes.push('Custom CTA buttons');
-    if (JSON.stringify(original.photos || []) !== JSON.stringify(updates.photos || [])) changes.push('Photos');
-    return changes;
+  const changes = [];
+  const simple = [
+    ['tagline', 'Tagline'], ['description', 'Description'], ['pricing', 'Pricing'],
+    ['coming_soon', 'Coming Soon status'], ['address', 'Address'], ['city', 'City'],
+    ['state', 'State'], ['zip_code', 'ZIP Code'], ['phone', 'Phone'],
+    ['email', 'Email'], ['website', 'Website'], ['logo', 'Logo'], ['video', 'Video']
+  ];
+  simple.forEach(([k, label]) => {
+    if (String(original[k] ?? '') !== String(updates[k] ?? '')) changes.push(label);
+  });
+  if (JSON.stringify(original.subcategories?.sort()) !== JSON.stringify(updates.subcategories?.sort())) changes.push('Subcategories');
+  if (original.primary_subcategory !== updates.primary_subcategory) changes.push('Primary subcategory');
+
+  // Normalize structured fields before comparing: strip keys whose value is null/undefined/''
+  // so that a fully-keyed form object with all-null values equals a missing/empty original.
+  const _canonObj = (obj) => {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
+    const out = {};
+    Object.entries(obj).forEach(([k, v]) => {
+      if (v !== null && v !== undefined && v !== '') out[k] = v;
+    });
+    return out;
+  };
+
+  if (JSON.stringify(_canonObj(original.hours))        !== JSON.stringify(_canonObj(updates.hours)))        changes.push('Hours of operation');
+  if (JSON.stringify(_canonObj(original.social_media)) !== JSON.stringify(_canonObj(updates.social_media))) changes.push('Social media links');
+  if (JSON.stringify(_canonObj(original.reviews))      !== JSON.stringify(_canonObj(updates.reviews)))      changes.push('Review links');
+  if (JSON.stringify(original.additional_info || [])   !== JSON.stringify(updates.additional_info || []))   changes.push('Additional information');
+
+  // Treat null and [] as equivalent for CTAs
+  if (JSON.stringify(original.custom_ctas || []) !== JSON.stringify(updates.custom_ctas || [])) changes.push('Custom CTA buttons');
+
+  return changes;
 }
