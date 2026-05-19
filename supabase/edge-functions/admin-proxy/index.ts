@@ -93,6 +93,12 @@ serve(async (req: Request) => {
           .select()
           .single()
         if (error) throw toError(error)
+
+        const { error: summaryError } = await supabase
+          .from('listing_analytics_summary')
+          .insert({ listing_id: data.id })
+        if (summaryError) throw toError(summaryError)
+
         result = data
         break
       }
@@ -219,7 +225,7 @@ serve(async (req: Request) => {
         const { listing_id } = payload
         if (!listing_id) throw new Error('analytics:get requires listing_id')
         const { data, error } = await supabase
-          .from('analytics')
+          .from('listing_analytics_summary')
           .select('*')
           .eq('listing_id', listing_id)
           .maybeSingle()
@@ -230,40 +236,11 @@ serve(async (req: Request) => {
 
       case 'analytics:list': {
         const { data, error } = await supabase
-          .from('analytics')
+          .from('listing_analytics_summary')
           .select('*')
-          .order('views', { ascending: false })
+          .order('views_all', { ascending: false })
         if (error) throw toError(error)
         result = data
-        break
-      }
-
-      case 'analytics:upsert': {
-        const { listing_id } = payload
-        if (!listing_id) throw new Error('analytics:upsert requires listing_id')
-        const { data: existing } = await supabase
-          .from('analytics')
-          .select('id')
-          .eq('listing_id', listing_id)
-          .maybeSingle()
-        if (existing) {
-          const { data, error } = await supabase
-            .from('analytics')
-            .update(payload)
-            .eq('listing_id', listing_id)
-            .select()
-            .single()
-          if (error) throw toError(error)
-          result = data
-        } else {
-          const { data, error } = await supabase
-            .from('analytics')
-            .insert(payload)
-            .select()
-            .single()
-          if (error) throw toError(error)
-          result = data
-        }
         break
       }
 
