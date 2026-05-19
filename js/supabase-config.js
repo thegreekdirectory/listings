@@ -253,11 +253,23 @@ async function resetPassword(email) {
         return { success: true, message: 'Password reset email sent! Check your inbox.' };
     } catch (err) {
         console.error('Password reset error:', err);
-        let message = err.message || 'Password reset failed';
-        if (/Error sending recovery email/i.test(message)) {
-            message = 'Could not send the reset email. Please contact support at contact@thegreekdirectory.org.';
+        const raw = err.message || '';
+
+        // Surface SMTP misconfiguration clearly — this is a server-side config issue,
+        // not something the user did wrong.
+        if (
+            /Error sending recovery email/i.test(raw) ||
+            /Authentication failed/i.test(raw) ||
+            /535/i.test(raw) ||
+            /smtp/i.test(raw)
+        ) {
+            return {
+                success: false,
+                error: 'Password reset emails are temporarily unavailable due to a mail server configuration issue. Please contact support at contact@thegreekdirectory.org to reset your password.',
+            };
         }
-        return { success: false, error: message };
+
+        return { success: false, error: raw || 'Password reset failed. Please try again or contact support.' };
     }
 }
 
