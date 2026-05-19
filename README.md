@@ -152,16 +152,8 @@ The live public schema currently includes these application tables and views:
 | `listing_requests` | table | Public new-listing submissions | Submit form and admin review |
 | `listing_suggestions` | table | Public edit suggestions for existing listings | `/suggest-edit` |
 | `listing_analytics` | table | Legacy/current listing event rows and counters | Listing pages and Business Portal analytics |
-| `analytics` | table | Aggregate analytics rows | Admin proxy compatibility and summaries |
-| `analytics_summary` | table | Listing-level aggregate summary | Public/admin analytics surface |
-| `analytics_events` | table | Event stream for newer analytics model | Insert-gated by approved paths |
-| `analytics_sessions` | table | Visitor/session records | Insert-gated by approved paths |
-| `analytics_listing_daily` | table | Daily listing aggregates | Owner/admin analytics |
-| `analytics_tier_daily` | table | Daily tier-level aggregates | Admin analytics |
-| `listing_metrics_events` | table | Newer listing metric event stream | Owner-scoped select policy exists |
 | `shortlinks` | table | Shortlink definitions and redirects | Admin Portal shortlink management |
 | `shortlink_events` | table | Shortlink click/event log | Shortlink analytics |
-| `listing_kpi_daily` | view | Daily KPI rollup | Analytics/reporting |
 | `shortlink_event_summary` | view | Shortlink event summary | Analytics/reporting |
 
 Current row estimates from the live project include about 52 listings, 52 business owner rows, 14 category rows, 4,500+ `listing_analytics` rows, 429 shortlinks, and 100+ shortlink events.
@@ -200,12 +192,12 @@ Current row estimates from the live project include about 52 listings, 52 busine
 
 ### Analytics Tables
 
-There are two analytics generations in the database:
+The analytics model in the database is:
 
-- Existing/legacy-compatible listing analytics: `listing_analytics`, `analytics`, and `analytics_summary`
-- Newer event/session/daily structures: `analytics_events`, `analytics_sessions`, `analytics_listing_daily`, `analytics_tier_daily`, `listing_metrics_events`, and `listing_kpi_daily`
+- `listing_analytics` for insert-only raw event logs.
+- `listing_analytics_summary` for pre-aggregated listing metrics by time bucket.
 
-The Business Portal currently reads `listing_analytics` directly for owner-facing analytics cards and recent activity. Some newer analytics tables are present but have little or no data yet.
+The Business Portal currently reads `listing_analytics` directly for owner-facing analytics cards and recent activity.
 
 ### Shortlinks
 
@@ -244,7 +236,7 @@ The Admin Portal calls `admin-proxy` for operations such as:
 - Listing CRUD: `listings:list`, `listings:insert`, `listings:update`, `listings:delete`
 - Owner management: `owners:list`, `owners:upsert`, `owners:delete`
 - Listing requests: `requests:list`, `requests:update`, `requests:delete`
-- Analytics compatibility: `analytics:get`, `analytics:list`, `analytics:upsert`
+- Analytics access: `analytics:get`, `analytics:list` (both sourced from `listing_analytics_summary`).
 - Dynamic subcategories: `subcategories:list`, `subcategories:insert`, `subcategories:update`, `subcategories:delete`
 - Read-only admin SQL through `sql:select`
 - Shortlinks: `shortlinks:get`, `shortlinks:check`, `shortlinks:insert`, `shortlinks:delete`
@@ -285,7 +277,7 @@ Current responsibilities include:
 - Cloudflare Images uploads through the upload proxy
 - Analytics review
 
-The Admin Portal still contains some legacy compatibility paths. The live data source is Supabase, not `listings-database.json`.
+The Admin Portal reads analytics from Supabase summary rows (`listing_analytics_summary`) and raw events from `listing_analytics` only when needed.
 
 ## Business Portal
 
@@ -516,9 +508,9 @@ Deployment characteristics:
 
 The repository still contains or references older systems that should be treated carefully:
 
-- `listings-database.json` and GitHub Actions repository-dispatch workflows are legacy compatibility paths. Supabase is the live data source.
+- Supabase is the live data source for listings and analytics.
 - Some README history referenced Edge Functions that are not active in Supabase today. The active functions are `admin-proxy`, `listing-server-time`, and `update-github-file`.
-- There are multiple analytics generations in the schema. Business Portal code currently reads `listing_analytics`; newer analytics tables exist but are not fully populated.
+- Analytics is standardized on `listing_analytics` (raw events) and `listing_analytics_summary` (aggregates).
 - The Business Portal rebuild is ongoing. Keep README updates tied to the current code and live schema instead of desired future behavior.
 
 ## Contributor Notes
