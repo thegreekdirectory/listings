@@ -1654,24 +1654,39 @@ function _diffChanges(original, updates) {
   if (JSON.stringify(original.subcategories?.sort()) !== JSON.stringify(updates.subcategories?.sort())) changes.push('Subcategories');
   if (original.primary_subcategory !== updates.primary_subcategory) changes.push('Primary subcategory');
 
-  // Normalize structured fields before comparing: strip keys whose value is null/undefined/''
-  // so that a fully-keyed form object with all-null values equals a missing/empty original.
+  // Canonical flat-object compare: strip null/undefined/'' values, then sort keys so
+  // key-insertion-order differences between the DB record and the hardcoded update payload
+  // don't produce false positives.
   const _canonObj = (obj) => {
     if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
-    const out = {};
-    Object.entries(obj).forEach(([k, v]) => {
-      if (v !== null && v !== undefined && v !== '') out[k] = v;
-    });
-    return out;
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([, v]) => v !== null && v !== undefined && v !== '')
+        .sort(([a], [b]) => a.localeCompare(b))
+    );
   };
 
-  if (JSON.stringify(_canonObj(original.hours))        !== JSON.stringify(_canonObj(updates.hours)))        changes.push('Hours of operation');
+  // Hours: also normalise the time format on both sides so a DB value of
+  // "9:00 AM - 5:00 PM" and a form-produced "09:00-17:00" compare as equal.
+  const _canonHours = (obj) => {
+    if (!obj || typeof obj !== 'object') return {};
+    return Object.fromEntries(
+      Object.entries(obj)
+        .map(([k, v]) => [k, v ? _normalizeHours(v) : null])
+        .filter(([, v]) => v !== null && v !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b))
+    );
+  };
+
+  // CTAs: treat icon null and '' as equivalent (the <select> always returns '').
+  const _canonCtas = (arr) =>
+    (arr || []).map(c => ({ ...c, icon: c.icon || '' }));
+
+  if (JSON.stringify(_canonHours(original.hours))      !== JSON.stringify(_canonHours(updates.hours)))      changes.push('Hours of operation');
   if (JSON.stringify(_canonObj(original.social_media)) !== JSON.stringify(_canonObj(updates.social_media))) changes.push('Social media links');
   if (JSON.stringify(_canonObj(original.reviews))      !== JSON.stringify(_canonObj(updates.reviews)))      changes.push('Review links');
   if (JSON.stringify(original.additional_info || [])   !== JSON.stringify(updates.additional_info || []))   changes.push('Additional information');
-
-  // Treat null and [] as equivalent for CTAs
-  if (JSON.stringify(original.custom_ctas || []) !== JSON.stringify(updates.custom_ctas || [])) changes.push('Custom CTA buttons');
+  if (JSON.stringify(_canonCtas(original.custom_ctas)) !== JSON.stringify(_canonCtas(updates.custom_ctas))) changes.push('Custom CTA buttons');
 
   return changes;
 }
