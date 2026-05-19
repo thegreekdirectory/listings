@@ -945,7 +945,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             document.querySelectorAll('[data-cta-name]').forEach(el => {
                 el.addEventListener('click', () => trackClick('custom_cta', el.dataset.ctaName || 'custom'));
             });
-            
+
             checkAdminRedirect();
             initializeReadMore();
             initializeTooltipToggle('verifiedCheckmarkButton');
