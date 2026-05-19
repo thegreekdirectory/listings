@@ -1052,6 +1052,7 @@ window.viewAnalytics = async function(listingId) {
         console.log('Fetching analytics data...');
         
         const analyticsData = await adminProxy('analytics:get', { listing_id: listingId });
+        const analyticsEvents = await adminProxy('analytics:events', { listing_id: listingId, limit: 20 });
         console.log('Analytics data fetched:', analyticsData ? 1 : 0, 'events');
         
         // Aggregate analytics
@@ -1078,19 +1079,19 @@ window.viewAnalytics = async function(listingId) {
                 const renderSummaryCards = (bucket) => {
                     const metric = (prefix) => Number(analyticsData[prefix + '_' + bucket] || 0);
                     const cards = [
-                        ['Views', metric('views')],
-                        ['Call Clicks', metric('call_clicks')],
-                        ['Email Clicks', metric('email_clicks')],
-                        ['Website Clicks', metric('website_clicks')],
-                        ['Directions Clicks', metric('directions_clicks')],
-                        ['Custom CTA 1', metric('custom_cta_1')],
-                        ['Custom CTA 2', metric('custom_cta_2')],
-                        ['Shares', metric('share_clicks')]
+                        ['Total Views', metric('views'), 'from-blue-500 to-blue-600'],
+                        ['Call Clicks', metric('call_clicks'), 'from-green-500 to-green-600'],
+                        ['Email Clicks', metric('email_clicks'), 'from-violet-500 to-violet-600'],
+                        ['Website Clicks', metric('website_clicks'), 'from-purple-500 to-purple-600'],
+                        ['Directions', metric('directions_clicks'), 'from-orange-500 to-orange-600'],
+                        ['Custom CTA 1', metric('custom_cta_1'), 'from-cyan-500 to-cyan-600'],
+                        ['Custom CTA 2', metric('custom_cta_2'), 'from-indigo-500 to-indigo-600'],
+                        ['Shares', metric('share_clicks'), 'from-pink-500 to-pink-600']
                     ];
                     grid.innerHTML = cards.map(function(card) {
-                        return '<div class="bg-white border border-gray-200 p-4 rounded-lg">'
-                            + '<div class="text-2xl font-bold text-gray-900">' + card[1] + '</div>'
-                            + '<div class="text-xs text-gray-600">' + card[0] + '</div>'
+                        return '<div class="bg-gradient-to-br ' + card[2] + ' text-white p-4 rounded-lg shadow-sm">'
+                            + '<div class="text-2xl font-bold">' + card[1] + '</div>'
+                            + '<div class="text-xs opacity-90">' + card[0] + '</div>'
                             + '</div>';
                     }).join('');
                 };
@@ -1099,6 +1100,49 @@ window.viewAnalytics = async function(listingId) {
                 if (select) {
                     renderSummaryCards(select.value || 'all');
                     select.addEventListener('change', (event) => renderSummaryCards(event.target.value));
+                }
+            }
+
+            const eventsContainer = document.getElementById('analyticsRecentActivity');
+            if (eventsContainer) {
+                const labels = {
+                    view: 'Page View',
+                    call: 'Phone Call',
+                    email: 'Email Click',
+                    website: 'Website Visit',
+                    directions: 'Directions',
+                    share: 'Share',
+                    custom_cta_1: 'Custom CTA 1',
+                    custom_cta_2: 'Custom CTA 2'
+                };
+                const colors = {
+                    view: '#3b82f6',
+                    call: '#10b981',
+                    email: '#8b5cf6',
+                    website: '#6366f1',
+                    directions: '#f97316',
+                    share: '#ec4899',
+                    custom_cta_1: '#06b6d4',
+                    custom_cta_2: '#4f46e5'
+                };
+                const rows = Array.isArray(analyticsEvents) ? analyticsEvents : [];
+                if (!rows.length) {
+                    eventsContainer.innerHTML = '<p class="text-sm text-gray-500 text-center py-6">No events recorded yet.</p>';
+                } else {
+                    eventsContainer.innerHTML = rows.map((row) => {
+                        const label = labels[row.action] || row.action || 'Event';
+                        const platform = row.platform ? '<span class="text-xs text-gray-500"> via ' + row.platform + '</span>' : '';
+                        const time = row.timestamp ? new Date(row.timestamp).toLocaleString() : 'Unknown time';
+                        const dot = colors[row.action] || '#94a3b8';
+                        return '<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">'
+                            + '<div class="flex items-center gap-2">'
+                            + '<span class="inline-block w-2 h-2 rounded-full" style="background:' + dot + ';"></span>'
+                            + '<span class="text-sm font-medium text-gray-800">' + label + '</span>'
+                            + platform
+                            + '</div>'
+                            + '<div class="text-xs text-gray-500">' + time + '</div>'
+                            + '</div>';
+                    }).join('');
                 }
             }
         }
@@ -1150,6 +1194,10 @@ function generateAnalyticsContent(listing, analytics) {
             </select>
         </div>
         <div id="analyticsSummaryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4"></div>
+        <div class="mt-6 bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h3>
+            <div id="analyticsRecentActivity"></div>
+        </div>
     `;
 }
 

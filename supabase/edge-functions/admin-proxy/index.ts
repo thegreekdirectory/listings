@@ -244,6 +244,21 @@ serve(async (req: Request) => {
         break
       }
 
+      case 'analytics:events': {
+        const { listing_id, limit = 20 } = payload
+        if (!listing_id) throw new Error('analytics:events requires listing_id')
+        const { data, error } = await supabase
+          .from('listing_analytics')
+          .select('action, platform, timestamp')
+          .eq('listing_id', listing_id)
+          .not('action', 'is', null)
+          .order('timestamp', { ascending: false })
+          .limit(limit)
+        if (error) throw toError(error)
+        result = data
+        break
+      }
+
       // ── SUBCATEGORIES ──────────────────────────────────────────────────
       case 'subcategories:list': {
         const { data, error } = await supabase
