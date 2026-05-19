@@ -595,7 +595,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                             
                             
                             
-                            <a href="https://tgd.gr" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:#000000;" data-cta-name="Test1" onclick="trackClick('custom_cta', 'Test1')"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM12 12v9m0-9c-4.5 0-7.5 2.1-7.5 5.25V21h15v-3.75C19.5 14.1 16.5 12 12 12z"/></svg><span>Test1</span></a><a href="https://tgd.gr/index.html" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:#045093;" data-cta-name="Test 2nd" onclick="trackClick('custom_cta', 'Test 2nd')"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM12 12v9m0-9c-4.5 0-7.5 2.1-7.5 5.25V21h15v-3.75C19.5 14.1 16.5 12 12 12z"/></svg><span>Test 2nd</span></a>
+                            <a href="https://tgd.gr" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:#000000;" data-cta-name="Test1"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM12 12v9m0-9c-4.5 0-7.5 2.1-7.5 5.25V21h15v-3.75C19.5 14.1 16.5 12 12 12z"/></svg><span>Test1</span></a><a href="https://tgd.gr/index.html" target="_blank" rel="noopener noreferrer" class="mobile-cta-button hover-bounce" style="background:#045093;" data-cta-name="Test 2nd"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM12 12v9m0-9c-4.5 0-7.5 2.1-7.5 5.25V21h15v-3.75C19.5 14.1 16.5 12 12 12z"/></svg><span>Test 2nd</span></a>
                         </div>
                     </div>
 
@@ -662,7 +662,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                             
                     <a href="https://tgd.gr" target="_blank" rel="noopener noreferrer"
                         class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 hover-bounce"
-                        style="background-color:#000000;" data-cta-name="Test1" onclick="trackClick('custom_cta', 'Test1')">
+                        style="background-color:#000000;" data-cta-name="Test1">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM12 12v9m0-9c-4.5 0-7.5 2.1-7.5 5.25V21h15v-3.75C19.5 14.1 16.5 12 12 12z"/></svg>
                         <span>Test1</span>
                     </a>
@@ -952,7 +952,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             document.querySelectorAll('[data-cta-name]').forEach(el => {
                 el.addEventListener('click', () => trackClick('custom_cta', el.dataset.ctaName || 'custom'));
             });
-            
+
             checkAdminRedirect();
             initializeReadMore();
             initializeTooltipToggle('verifiedCheckmarkButton');
