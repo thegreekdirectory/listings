@@ -1680,7 +1680,12 @@ function _diffChanges(original, updates) {
 
   // CTAs: treat icon null and '' as equivalent (the <select> always returns '').
   const _canonCtas = (arr) =>
-    (arr || []).map(c => ({ ...c, icon: c.icon || '' }));
+  (arr || []).map(c => ({
+    name:  c.name  || '',
+    url:   c.url   || '',
+    color: c.color || '#045093',
+    icon:  c.icon  || ''
+  }));
 
   if (JSON.stringify(_canonHours(original.hours))      !== JSON.stringify(_canonHours(updates.hours)))      changes.push('Hours of operation');
   if (JSON.stringify(_canonObj(original.social_media)) !== JSON.stringify(_canonObj(updates.social_media))) changes.push('Social media links');
