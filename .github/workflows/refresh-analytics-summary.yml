@@ -12,11 +12,21 @@ jobs:
     steps:
       - name: Call Supabase RPC
         run: |
-          curl -X POST "$SUPABASE_URL/rest/v1/rpc/refresh_listing_analytics_summary" \
+          response=$(curl -sS -w "\n%{http_code}" -X POST "$SUPABASE_URL/rest/v1/rpc/refresh_listing_analytics_summary" \
             -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
-            -d "{}"
+            -d "{}")
+
+          body=$(echo "$response" | head -n -1)
+          status=$(echo "$response" | tail -n 1)
+
+          echo "HTTP Status: $status"
+          echo "Response: $body"
+
+          if [ "$status" -ne 200 ] && [ "$status" -ne 204 ]; then
+            exit 1
+          fi
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
