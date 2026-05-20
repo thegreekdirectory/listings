@@ -1052,28 +1052,13 @@ window.viewAnalytics = async function(listingId) {
         console.log('Fetching analytics data...');
         
         const analyticsData = await adminProxy('analytics:get', { listing_id: listingId });
+        const analyticsEvents = await adminProxy('analytics:events', { listing_id: listingId, limit: 20 });
         console.log('Analytics data fetched:', analyticsData ? 1 : 0, 'events');
         
         // Aggregate analytics
         const analytics = {
-            views: 0,
-            call_clicks: 0,
-            website_clicks: 0,
-            direction_clicks: 0,
-            share_clicks: 0,
-            video_plays: 0,
-            detailedViews: [],
-            sharePlatforms: analyticsData?.share_platforms || {}
+            summary: analyticsData || null
         };
-
-        if (analyticsData) {
-            analytics.views = Number(analyticsData.views) || 0;
-            analytics.call_clicks = Number(analyticsData.call_clicks) || 0;
-            analytics.website_clicks = Number(analyticsData.website_clicks) || 0;
-            analytics.direction_clicks = Number(analyticsData.direction_clicks) || 0;
-            analytics.share_clicks = Number(analyticsData.share_clicks) || 0;
-            analytics.video_plays = Number(analyticsData.video_plays) || 0;
-        }
         
         console.log('Aggregated analytics:', analytics);
         
@@ -1087,7 +1072,79 @@ window.viewAnalytics = async function(listingId) {
             modalTitle.textContent = `Analytics: ${listing.business_name}`;
         }
         if (modalContent) {
-            modalContent.innerHTML = generateAnalyticsContent(listing, analytics, analytics.detailedViews, analytics.sharePlatforms);
+            modalContent.innerHTML = generateAnalyticsContent(listing, analytics);
+
+            const grid = document.getElementById('analyticsSummaryGrid');
+            if (grid && analyticsData) {
+                const renderSummaryCards = (bucket) => {
+                    const metric = (prefix) => Number(analyticsData[prefix + '_' + bucket] || 0);
+                    const cards = [
+                        ['Total Views', metric('views'), 'from-blue-500 to-blue-600'],
+                        ['Call Clicks', metric('call_clicks'), 'from-green-500 to-green-600'],
+                        ['Email Clicks', metric('email_clicks'), 'from-violet-500 to-violet-600'],
+                        ['Website Clicks', metric('website_clicks'), 'from-purple-500 to-purple-600'],
+                        ['Directions', metric('directions_clicks'), 'from-orange-500 to-orange-600'],
+                        ['Custom CTA 1', metric('custom_cta_1'), 'from-cyan-500 to-cyan-600'],
+                        ['Custom CTA 2', metric('custom_cta_2'), 'from-indigo-500 to-indigo-600'],
+                        ['Shares', metric('share_clicks'), 'from-pink-500 to-pink-600']
+                    ];
+                    grid.innerHTML = cards.map(function(card) {
+                        return '<div class="bg-gradient-to-br ' + card[2] + ' text-white p-4 rounded-lg shadow-sm">'
+                            + '<div class="text-2xl font-bold">' + card[1] + '</div>'
+                            + '<div class="text-xs opacity-90">' + card[0] + '</div>'
+                            + '</div>';
+                    }).join('');
+                };
+
+                const select = document.getElementById('analyticsTimeBucket');
+                if (select) {
+                    renderSummaryCards(select.value || 'all');
+                    select.addEventListener('change', (event) => renderSummaryCards(event.target.value));
+                }
+            }
+
+            const eventsContainer = document.getElementById('analyticsRecentActivity');
+            if (eventsContainer) {
+                const labels = {
+                    view: 'Page View',
+                    call: 'Phone Call',
+                    email: 'Email Click',
+                    website: 'Website Visit',
+                    directions: 'Directions',
+                    share: 'Share',
+                    custom_cta_1: 'Custom CTA 1',
+                    custom_cta_2: 'Custom CTA 2'
+                };
+                const colors = {
+                    view: '#3b82f6',
+                    call: '#10b981',
+                    email: '#8b5cf6',
+                    website: '#6366f1',
+                    directions: '#f97316',
+                    share: '#ec4899',
+                    custom_cta_1: '#06b6d4',
+                    custom_cta_2: '#4f46e5'
+                };
+                const rows = Array.isArray(analyticsEvents) ? analyticsEvents : [];
+                if (!rows.length) {
+                    eventsContainer.innerHTML = '<p class="text-sm text-gray-500 text-center py-6">No events recorded yet.</p>';
+                } else {
+                    eventsContainer.innerHTML = rows.map((row) => {
+                        const label = labels[row.action] || row.action || 'Event';
+                        const platform = row.platform ? '<span class="text-xs text-gray-500"> via ' + row.platform + '</span>' : '';
+                        const time = row.timestamp ? new Date(row.timestamp).toLocaleString() : 'Unknown time';
+                        const dot = colors[row.action] || '#94a3b8';
+                        return '<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">'
+                            + '<div class="flex items-center gap-2">'
+                            + '<span class="inline-block w-2 h-2 rounded-full" style="background:' + dot + ';"></span>'
+                            + '<span class="text-sm font-medium text-gray-800">' + label + '</span>'
+                            + platform
+                            + '</div>'
+                            + '<div class="text-xs text-gray-500">' + time + '</div>'
+                            + '</div>';
+                    }).join('');
+                }
+            }
         }
 
         if (modal) {
@@ -1103,147 +1160,47 @@ window.viewAnalytics = async function(listingId) {
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
-function generateAnalyticsContent(listing, analytics, detailedViews, sharePlatforms) {
-    const views = analytics.views || 0;
-    const callClicks = analytics.call_clicks || 0;
-    const websiteClicks = analytics.website_clicks || 0;
-    const directionClicks = analytics.direction_clicks || 0;
-    const shareClicks = analytics.share_clicks || 0;
-    const videoPlays = analytics.video_plays || 0;
-    const lastViewed = detailedViews.length > 0 ? new Date(detailedViews[0].timestamp).toLocaleString() : 'Never';
-    
-    // Summary stats
-    let content = `
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${views}</div>
-                <div class="text-sm opacity-90">Total Views</div>
-            </div>
-            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${callClicks}</div>
-                <div class="text-sm opacity-90">Call Clicks</div>
-            </div>
-            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${websiteClicks}</div>
-                <div class="text-sm opacity-90">Website Clicks</div>
-            </div>
-            <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${directionClicks}</div>
-                <div class="text-sm opacity-90">Direction Clicks</div>
-            </div>
-            <div class="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${shareClicks}</div>
-                <div class="text-sm opacity-90">Shares</div>
-            </div>
-            <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-4 rounded-lg">
-                <div class="text-3xl font-bold">${videoPlays}</div>
-                <div class="text-sm opacity-90">Video Plays</div>
-            </div>
-        </div>
-        
-        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-            <div class="text-sm text-gray-600">Last Viewed: <span class="font-semibold text-gray-900">${lastViewed}</span></div>
-        </div>
-    `;
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
-    // Share platforms breakdown
-    if (Object.keys(sharePlatforms).length > 0) {
-        content += `
-            <div class="mb-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-3">Share Platform Breakdown</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        `;
-        
-        const platformNames = {
-            'facebook': '📘 Facebook',
-            'twitter': '🐦 Twitter/X',
-            'linkedin': '💼 LinkedIn',
-            'sms': '💬 SMS',
-            'email': '📧 Email',
-            'native': '📱 Native Share'
-        };
-        
-        Object.entries(sharePlatforms).forEach(([platform, count]) => {
-            content += `
-                <div class="bg-white border border-gray-200 p-3 rounded-lg">
-                    <div class="text-2xl font-bold text-gray-900">${count}</div>
-                    <div class="text-xs text-gray-600">${platformNames[platform] || platform}</div>
-                </div>
-            `;
-        });
-        
-        content += `
-                </div>
-            </div>
-        `;
-    }
-    
-    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    
-    // Detailed activity log
-    if (detailedViews.length > 0) {
-        content += `
-            <div class="mb-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-3">Activity Log (Last ${Math.min(detailedViews.length, 100)} Events)</h3>
-                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 border-b">
-                            <tr>
-                                <th class="text-left py-2 px-4 font-semibold">Timestamp</th>
-                                <th class="text-left py-2 px-4 font-semibold">Action</th>
-                                <th class="text-left py-2 px-4 font-semibold">Details</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-        `;
-        
-        // Show latest 100 events
-        const recentViews = detailedViews.slice(0, 100);
-        
-        recentViews.forEach(view => {
-            const timestamp = new Date(view.timestamp).toLocaleString();
-            const actionIcons = {
-                'view': '👁️ View',
-                'call': '📞 Call',
-                'website': '🌐 Website',
-                'directions': '🗺️ Directions',
-                'share': '📤 Share',
-                'video': '🎥 Video'
-            };
-            
-            const actionText = actionIcons[view.action] || view.action;
-            const platform = view.platform ? ` (${view.platform})` : '';
-            const userAgent = view.user_agent ? view.user_agent.substring(0, 50) + '...' : 'Unknown';
-            
-            content += `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-2 px-4 text-gray-600">${timestamp}</td>
-                    <td class="py-2 px-4 font-medium">${actionText}${platform}</td>
-                    <td class="py-2 px-4 text-xs text-gray-500">${userAgent}</td>
-                </tr>
-            `;
-        });
-        
-        content += `
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    } else {
-        content += `
+function generateAnalyticsContent(listing, analytics) {
+    const summary = analytics?.summary;
+    const buckets = [
+        { key: '7d', label: 'Last 7 Days' },
+        { key: '14d', label: 'Last 14 Days' },
+        { key: '1m', label: 'Last 1 Month' },
+        { key: '3m', label: 'Last 3 Months' },
+        { key: '6m', label: 'Last 6 Months' },
+        { key: '1y', label: 'Last 1 Year' },
+        { key: '2y', label: 'Last 2 Years' },
+        { key: 'all', label: 'All Time' }
+    ];
+
+    if (!summary) {
+        return `
             <div class="p-8 text-center bg-gray-50 rounded-lg">
                 <div class="text-gray-400 text-4xl mb-2">📊</div>
-                <div class="text-gray-600">No analytics data available yet</div>
-                <div class="text-sm text-gray-500 mt-2">Visit the listing page to generate some activity</div>
+                <div class="text-gray-600">No analytics summary available yet</div>
             </div>
         `;
     }
-    
-    return content;
+
+    const bucketOptions = buckets
+        .map((bucket) => `<option value="${bucket.key}" ${bucket.key === 'all' ? 'selected' : ''}>${bucket.label}</option>`)
+        .join('');
+
+    return `
+        <div class="mb-4 flex items-center gap-3">
+            <label for="analyticsTimeBucket" class="text-sm font-medium text-gray-700">Time Range</label>
+            <select id="analyticsTimeBucket" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                ${bucketOptions}
+            </select>
+        </div>
+        <div id="analyticsSummaryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4"></div>
+        <div class="mt-6 bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h3>
+            <div id="analyticsRecentActivity"></div>
+        </div>
+    `;
 }
+
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
@@ -4094,19 +4051,6 @@ async function prepareListingPageGeneration(listingId, options = {}) {
         await adminProxy('listings:update', { id: listingId, photos: listing.photos });
     }
     
-    if (!skipAnalytics) {
-        console.log('Creating analytics entry for listing:', listingId);
-        await adminProxy('analytics:upsert', {
-            listing_id: listingId,
-            views: 0,
-            call_clicks: 0,
-            website_clicks: 0,
-            direction_clicks: 0,
-            share_clicks: 0,
-            video_plays: 0,
-            last_viewed: new Date().toISOString()
-        });
-    }
     
     const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
     if (!templateResponse.ok) {
@@ -4701,18 +4645,6 @@ const listingData = {
             // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
             
             const data = await adminProxy('listings:insert', listingData);
-            
-            // Create analytics entry
-            await adminProxy('analytics:upsert', {
-                listing_id: data.id,
-                views: 0,
-                call_clicks: 0,
-                website_clicks: 0,
-                direction_clicks: 0,
-                share_clicks: 0,
-                video_plays: 0,
-                last_viewed: new Date().toISOString()
-            });
             
             const ownerData = {
                 listing_id: data.id,
