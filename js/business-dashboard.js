@@ -1145,23 +1145,32 @@ async function _uploadToCloudflare(file, assetType = 'photo') {
     const listingId = window.BP.currentListing?.id || '';
 
     // ── Step 1: Request a one-time upload URL from our proxy worker ──
-    const urlRes = await fetch(`${UPLOAD_PROXY}?action=request-upload-url`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ assetType, listingId }),
-    });
-    const urlData = await urlRes.json();
+    let urlRes, urlData;
+    try {
+        urlRes  = await fetch(`${UPLOAD_PROXY}?action=request-upload-url`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ assetType, listingId }),
+        });
+        urlData = await urlRes.json();
+    } catch (netErr) {
+        throw new Error(`Could not reach upload server: ${netErr.message}`);
+    }
     if (!urlRes.ok || !urlData.success) {
-        throw new Error(urlData.error || 'Could not get upload URL from server');
+        throw new Error(urlData?.error || `Upload server error (HTTP ${urlRes.status})`);
     }
 
     // ── Step 2: Upload directly to Cloudflare — no auth needed here ──
-    const formData = new FormData();
-    formData.append('file', file);
-    const uploadRes = await fetch(urlData.uploadURL, { method: 'POST', body: formData });
+    const uploadForm = new FormData();
+    uploadForm.append('file', file);
+    const uploadRes = await fetch(urlData.uploadURL, { method: 'POST', body: uploadForm });
     if (!uploadRes.ok) {
-        const errData = await uploadRes.json().catch(() => ({}));
-        throw new Error(errData?.errors?.[0]?.message || `Cloudflare upload failed (${uploadRes.status})`);
+        let errMsg = `Cloudflare upload failed (HTTP ${uploadRes.status})`;
+        try {
+            const errData = await uploadRes.json();
+            if (errData?.errors?.[0]?.message) errMsg = errData.errors[0].message;
+        } catch (_) { /* non-JSON body, keep generic message */ }
+        throw new Error(errMsg);
     }
 
     if (!urlData.imageUrl) throw new Error('Upload succeeded but no image URL was returned.');
