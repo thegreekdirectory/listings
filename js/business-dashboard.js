@@ -1,1493 +1,1531 @@
-// js/business-dashboard.js - COMPLETE
+// js/business-dashboard.js
 /*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+ * THE GREEK DIRECTORY — Business Portal Dashboard
+ * © The Greek Directory 2025. All rights reserved.
+ */
 
-// ============================================
-// BUSINESS DASHBOARD FUNCTIONALITY - COMPLETE
-// Configuration & State Management
-// ============================================
+// ─── 1. Constants & State ────────────────────────────────────────
 
-let SUBCATEGORIES = {
-    'Automotive & Transportation': ['Auto Detailer', 'Auto Repair Shop', 'Car Dealer', 'Taxi & Limo Service'],
-    'Beauty & Health': ['Barbershops', 'Esthetician', 'Hair Salons', 'Nail Salon', 'Spas', 'Chiropractor', 'Dentist', 'Doctor', 'Nutritionist', 'Optometrist', 'Orthodontist', 'Physical Therapist', 'Physical Trainer'],
-    'Church & Religious Organization': ['Church'],
-    'Cultural/Fraternal Organization': ['Dance Troupe', 'Non-Profit', 'Philanthropic Group', 'Society', 'Youth Organization'],
-    'Education & Community': ['Childcare', 'Greek School', 'Senior Care', 'Tutor'],
-    'Entertainment, Arts & Recreation': ['Band', 'DJs', 'Entertainment Group', 'Photographer', 'Art'],
-    'Food & Hospitality': ['Banquet Hall', 'Catering Service', 'Event Venue', 'Bakeries', 'Deli', 'Pastry Shop', 'Bar', 'Breakfast', 'Coffee', 'Lunch', 'Dinner', 'Restaurant', 'Hotel', 'Airbnb'],
-    'Grocery & Imports': ['Butcher Shop', 'Liquor Shop', 'Market', 'Greek Alcohol', 'Honey', 'Olive Oil', 'Food Distribution', 'Food Manufacturer'],
-    'Home & Construction': ['Carpenter', 'Electrician', 'General Contractor', 'Handyman', 'HVAC', 'Landscaping', 'Painter', 'Plumber', 'Roofing', 'Tile & Stone Specialist'],
-    'Industrial & Manufacturing': ['Food Manufacturer'],
-    'Pets & Veterinary': ['Veterinarian', 'Pet Accessories Maker'],
-    'Professional & Business Services': ['Business Services', 'Consultant', 'CPA', 'Financial Advisor', 'Insurance Agent', 'IT Service & Repair', 'Lawyer', 'Marketing & Creative Agency', 'Notaries', 'Wedding Planner', 'Travel Agency'],
-    'Real Estate & Development': ['Appraiser', 'Broker', 'Developer', 'Lender', 'Property Management', 'Real Estate Agent'],
-    'Retail & Shopping': ['Boutique Shop', 'ECommerce', 'Jewelry', 'Souvenir Shop']
-};
+const SUPABASE_EDGE_BASE = 'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1';
+const CF_STORAGE_KEY     = 'tgdCloudflareImagesConfig';
+const UPLOAD_PROXY       = 'https://tgd-images-upload.thegreekdirectory.org';
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-
-const META_DESCRIPTION_SUFFIX = 'Greek business in {city}, {state}. View address, phone, hours, and photos.';
-const VERIFIED_CHECKMARK_SVG = `<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
-const LOCATION_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
-const PHONE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>`;
-const EMAIL_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.945a2 2 0 002.22 0L21 8"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>`;
-const WEBSITE_ICON_SVG = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.6 9h16.8M3.6 15h16.8M10 3.4A15.4 15.4 0 0112.75 12 15.4 15.4 0 0110 20.6M14 3.4A15.4 15.4 0 0011.25 12 15.4 15.4 0 0014 20.6"></path></svg>`;
-const CHECK_ICON_SVG = `<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#045193"></circle><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+const META_DESC_SUFFIX = ' — Greek business in {city}, {state}. View address, phone, hours, and photos.';
 
 function getTaglineMaxLength(city = '', state = '') {
-    const suffixLength = META_DESCRIPTION_SUFFIX.replace('{city}', city || '').replace('{state}', state || '').length;
-    return Math.max(30, Math.min(75, 160 - suffixLength - 2));
+    const suffix = META_DESC_SUFFIX.replace('{city}', city || '').replace('{state}', state || '');
+    return Math.max(30, Math.min(75, 160 - suffix.length - 2));
 }
 
-function normalizeSingleTime(value) {
-    const raw = String(value || '').trim().toUpperCase();
-    if (!raw) return null;
-    const match = raw.match(/^(\d{1,2})(?::?(\d{2}))?\s*(AM|PM)?$/i);
-    if (!match) return null;
-    let hour = Number(match[1]);
-    const minute = Number(match[2] || '0');
-    const meridiem = match[3];
-    if (minute > 59 || hour > 24) return null;
-    if (meridiem === 'PM' && hour < 12) hour += 12;
-    if (meridiem === 'AM' && hour === 12) hour = 0;
-    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+// Per-tier limits — single source of truth, mirrors tiers.html
+const TIER_LIMITS = {
+    FREE:     { maxDesc: 1000, maxPhotos: 2,  maxCtas: 0, maxInfoFields: 0, hasVideo: false },
+    FEATURED: { maxDesc: 2000, maxPhotos: 5,  maxCtas: 1, maxInfoFields: 3, hasVideo: false },
+    PREMIUM:  { maxDesc: 5000, maxPhotos: 15, maxCtas: 2, maxInfoFields: 5, hasVideo: true  },
+};
+
+// Subcategories (defaults; overridden by category_subcategories table)
+let SUBCATEGORIES = {
+    'Automotive & Transportation':       ['Auto Detailer','Auto Repair Shop','Car Dealer','Taxi & Limo Service'],
+    'Beauty & Health':                   ['Barbershop','Esthetician','Hair Salon','Nail Salon','Spa','Chiropractor','Dentist','Doctor','Nutritionist','Optometrist','Orthodontist','Physical Therapist','Personal Trainer'],
+    'Church & Religious Organization':   ['Church','Greek Orthodox Church'],
+    'Cultural/Fraternal Organization':   ['Dance Troupe','Non-Profit','Philanthropic Group','Society','Youth Organization'],
+    'Education & Community':             ['Childcare','Greek School','Senior Care','Tutor'],
+    'Entertainment, Arts & Recreation':  ['Band','DJ','Entertainment Group','Photographer','Art Gallery'],
+    'Food & Hospitality':                ['Banquet Hall','Catering Service','Event Venue','Bakery','Deli','Pastry Shop','Bar','Breakfast','Coffee','Lunch','Dinner','Restaurant','Hotel','Airbnb'],
+    'Grocery & Imports':                 ['Butcher Shop','Liquor Shop','Market','Greek Alcohol','Honey','Olive Oil','Food Distribution','Food Manufacturer'],
+    'Home & Construction':               ['Carpenter','Electrician','General Contractor','Handyman','HVAC','Landscaping','Painter','Plumber','Roofing','Tile & Stone Specialist'],
+    'Industrial & Manufacturing':        ['Food Manufacturer','Industrial Supplier'],
+    'Pets & Veterinary':                 ['Veterinarian','Pet Accessories'],
+    'Professional & Business Services':  ['Business Services','Consultant','CPA','Financial Advisor','Insurance Agent','IT Service & Repair','Lawyer','Marketing & Creative Agency','Notary','Wedding Planner','Travel Agency'],
+    'Real Estate & Development':         ['Appraiser','Broker','Developer','Lender','Property Management','Real Estate Agent'],
+    'Retail & Shopping':                 ['Boutique Shop','eCommerce','Jewelry','Souvenir Shop'],
+};
+
+// Mutable edit-form state
+let _selectedSubcats  = [];
+let _primarySubcat    = null;
+let _uploadedImages   = { logo: null, photos: [], video: null };
+let _removedPhotos    = [];
+let _rteInstance      = null;
+let _tierLimits       = { ...TIER_LIMITS.FREE };
+let _settingsVis      = { nameTitle: true, email: false, phone: false };
+
+// ─── 2. Toast System ─────────────────────────────────────────────
+
+function showToast(message, type = 'info', duration = 4000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+    const toast = document.createElement('div');
+    toast.className = `bp-toast bp-toast--${type}`;
+    toast.innerHTML = `
+        <div class="bp-toast__icon">${icons[type] || 'ℹ'}</div>
+        <div class="bp-toast__msg">${message}</div>
+        <button class="bp-toast__close" aria-label="Dismiss">✕</button>
+    `;
+    const dismiss = () => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); };
+    toast.querySelector('.bp-toast__close').addEventListener('click', dismiss);
+    container.appendChild(toast);
+    requestAnimationFrame(() => { requestAnimationFrame(() => toast.classList.add('show')); });
+    if (duration > 0) setTimeout(dismiss, duration);
 }
 
-function normalizeHoursInput(value) {
-    const raw = String(value || '').trim();
-    if (!raw) return null;
-    if (/^closed$/i.test(raw)) return 'Closed';
-    if (/24\s*hours|open\s*24/i.test(raw)) return '00:00-23:59';
-    const parts = raw.split(/\s*-\s*/);
-    if (parts.length === 2) {
-        const start = normalizeSingleTime(parts[0]);
-        const end = normalizeSingleTime(parts[1]);
-        return start && end ? `${start}-${end}` : null;
-    }
-    return normalizeSingleTime(raw);
+// ─── 3. Confirm Modal ────────────────────────────────────────────
+
+function showConfirmModal({ title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', onConfirm, danger = false }) {
+    const existing = document.getElementById('bpModal');
+    if (existing) existing.remove();
+    const backdrop = document.createElement('div');
+    backdrop.className = 'bp-modal-backdrop';
+    backdrop.id = 'bpModal';
+    backdrop.innerHTML = `
+        <div class="bp-modal" role="dialog" aria-modal="true">
+            <h3>${title}</h3>
+            <p>${message}</p>
+            <div class="bp-modal__actions">
+                <button class="bp-btn bp-btn--ghost" id="modalCancel">${cancelLabel}</button>
+                <button class="bp-btn ${danger ? 'bp-btn--danger' : 'bp-btn--primary'}" id="modalConfirm">${confirmLabel}</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(backdrop);
+    const close = () => { backdrop.style.opacity = '0'; setTimeout(() => backdrop.remove(), 200); };
+    backdrop.querySelector('#modalCancel').addEventListener('click', close);
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+    backdrop.querySelector('#modalConfirm').addEventListener('click', () => { close(); if (typeof onConfirm === 'function') onConfirm(); });
 }
 
-let uploadedImages = { logo: null, photos: [], video: null };
-let photosSortable = null;
-let selectedSubcategories = [];
-let businessDescriptionEditor = null;
-let primarySubcategory = null;
-let settingsVisibility = { nameTitle: true, email: false, phone: false };
-let currentMaxPhotos = 1;
-let currentMaxCtas = 0;
-async function loadDynamicSubcategories() {
-    try {
-        const { data, error } = await window.TGDAuth.supabaseClient
-            .from('category_subcategories')
-            .select('category, subcategories');
-        if (error) return;
-        if (Array.isArray(data)) {
-            const next = {};
-            data.forEach((row) => {
-                if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
-            });
-            SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
-        }
-    } catch (error) {
-        console.warn('Could not load dynamic subcategories', error);
-    }
+window.BP.showConfirmModal = showConfirmModal;
+
+// ─── 4. Tab Switching ─────────────────────────────────────────────
+
+const TAB_LABELS = { overview: 'Overview', edit: 'Edit Listing', analytics: 'Analytics', settings: 'Settings' };
+
+function switchTab(tab) {
+    const valid = Object.keys(TAB_LABELS);
+    if (!valid.includes(tab)) tab = 'overview';
+    valid.forEach(t => {
+        document.getElementById(`content-${t}`)?.classList.toggle('hidden', t !== tab);
+        document.querySelector(`.bp-nav-item[data-tab="${t}"]`)?.classList.toggle('active', t === tab);
+    });
+    const mobileTitle = document.getElementById('mobileTitle');
+    if (mobileTitle) mobileTitle.textContent = TAB_LABELS[tab] || tab;
+    if (window.location.hash !== `#${tab}`) history.replaceState({}, '', `${window.location.pathname}#${tab}`);
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('sidebarOverlay')?.classList.remove('open');
+    document.body.style.overflow = '';
 }
 
+window.BP.switchTab = switchTab;
+
+// ─── 5. Load Listing Data ─────────────────────────────────────────
 
 async function loadListingData() {
-    if (!ownerData || ownerData.length === 0) {
-        console.error('No owner data available');
+    const ownerData = window.BP.ownerData;
+    if (!ownerData || ownerData.length === 0) return;
+    const listingId = ownerData[0].listing_id;
+    const { data, error } = await window.TGDAuth.supabaseClient
+        .from('listings')
+        .select('*')
+        .eq('id', listingId)
+        .single();
+    if (error) {
+        console.error('Error loading listing:', error);
+        showToast('Failed to load listing data. Please refresh.', 'error');
         return;
     }
-    
-    const listingId = ownerData[0].listing_id;
-    
+    window.BP.currentListing = data;
     try {
-        const { data, error } = await window.TGDAuth.supabaseClient
-            .from('listings')
-            .select('*')
-            .eq('id', listingId)
-            .single();
-        
-        if (error) throw error;
-        
-        currentListing = data;
-        await loadDynamicSubcategories();
-        console.log('Listing loaded:', currentListing);
-        
-    } catch (error) {
-        console.error('Error loading listing:', error);
-        alert('Failed to load listing data');
-    }
+        const { data: dynSubs } = await window.TGDAuth.supabaseClient
+            .from('category_subcategories')
+            .select('category, subcategories');
+        if (Array.isArray(dynSubs)) {
+            dynSubs.forEach(row => {
+                if (row.category && Array.isArray(row.subcategories)) SUBCATEGORIES[row.category] = row.subcategories;
+            });
+        }
+    } catch (_) { /* use defaults */ }
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+window.BP.loadListingData = loadListingData;
+
+// ─── 6. Render Dashboard Entry Point ────────────────────────────
 
 function renderDashboard() {
-    if (!currentListing) return;
-    
-    document.getElementById('businessName').textContent = currentListing.business_name;
-    document.getElementById('listingIdDisplay').textContent = `${currentListing.id}`;
-    
-    const tier = currentListing.tier || 'FREE';
-    const previewCheckmark = currentListing.verified || tier === 'VERIFIED' || tier === 'FEATURED' || tier === 'PREMIUM' || currentListing.is_claimed || currentListing.show_claim_button === false
-        ? VERIFIED_CHECKMARK_SVG
-        : '';
-    const planBadge = document.getElementById('planBadge');
-    if (planBadge) {
-        const badges = {
-            FREE: 'Standard Profile',
-            VERIFIED: 'Verified Profile',
-            FEATURED: 'Featured Profile',
-            PREMIUM: 'Premium Profile'
-        };
-        planBadge.textContent = badges[tier] || 'Business Profile';
-        planBadge.className = `tier-badge tier-${tier}`;
+    const listing = window.BP.currentListing;
+    if (!listing) return;
+
+    document.getElementById('sbBusinessName').textContent = listing.business_name;
+    document.getElementById('sbListingId').textContent    = listing.id.slice(0, 8) + '…';
+
+    const tier = listing.tier || 'FREE';
+    _tierLimits = TIER_LIMITS[tier] || TIER_LIMITS.FREE;
+
+    const tierLabels = { FREE: 'Standard', FEATURED: 'Featured', PREMIUM: 'Premium' };
+    const mobileBadge = document.getElementById('mobileTierBadge');
+    if (mobileBadge) {
+        mobileBadge.innerHTML = `<span class="bp-tier bp-tier--${tier.toLowerCase()}">${tierLabels[tier] || tier}</span>`;
     }
-    
-    const categorySlug = currentListing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://thegreekdirectory.org/listing/${currentListing.slug}`;
-    
-    const viewBtn = document.getElementById('viewLiveBtn');
-    if (viewBtn) {
-        viewBtn.href = listingUrl;
-    }
-    
+
     renderOverview();
     renderEditForm();
     renderAnalytics();
     renderSettings();
-    syncTabWithHash();
 }
 
-function switchTab(tab) {
-    const validTabs = ['overview', 'edit', 'analytics', 'settings'];
-    if (!validTabs.includes(tab)) tab = 'overview';
+window.BP.renderDashboard = renderDashboard;
 
-    ['overview', 'edit', 'analytics', 'settings'].forEach(t => {
-        document.getElementById(`content-${t}`).classList.add('hidden');
-        document.getElementById(`tab-${t}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700';
-    });
-    
-    document.getElementById(`content-${tab}`).classList.remove('hidden');
-    document.getElementById(`tab-${tab}`).className = 'px-4 py-2 rounded-lg font-medium bg-white border-2 border-blue-600 text-blue-600';
-    if (window.location.hash !== `#${tab}`) {
-        history.replaceState({}, '', `${window.location.pathname}#${tab}`);
-    }
-}
-
-function syncTabWithHash() {
-    const hashTab = (window.location.hash || '').replace('#', '').trim();
-    const target = ['overview', 'edit', 'analytics', 'settings'].includes(hashTab) ? hashTab : 'overview';
-    switchTab(target);
-}
-
-const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
-
-function getStoredCloudflareConfig() {
-    try {
-        const stored = localStorage.getItem(CLOUDFLARE_STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
-    } catch (error) {
-        console.warn('Unable to read Cloudflare config from storage:', error);
-        return {};
-    }
-}
-
-function setStoredCloudflareConfig(config) {
-    try {
-        localStorage.setItem(CLOUDFLARE_STORAGE_KEY, JSON.stringify(config));
-    } catch (error) {
-        console.warn('Unable to save Cloudflare config:', error);
-    }
-}
-
-function getCloudflareConfig() {
-    const config = window.CLOUDFLARE_IMAGES_CONFIG || {};
-    const stored = getStoredCloudflareConfig();
-    const accountInput = document.getElementById('cloudflareAccountId');
-    const apiKeyInput = document.getElementById('cloudflareApiKey');
-    const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
-    const inputAccountId = accountInput?.value?.trim() || '';
-    const inputApiKey = apiKeyInput?.value?.trim() || '';
-    const inputUploadEndpoint = uploadEndpointInput?.value?.trim() || '';
-    if ((inputAccountId || inputApiKey || inputUploadEndpoint) && (!stored.accountId || !stored.apiKey || !stored.uploadEndpoint)) {
-        setStoredCloudflareConfig({
-            accountId: inputAccountId,
-            apiKey: inputApiKey,
-            uploadEndpoint: inputUploadEndpoint
-        });
-    }
-    return {
-        accountId: stored.accountId || inputAccountId || config.accountId || '',
-        apiKey: stored.apiKey || inputApiKey || config.apiKey || '',
-        uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
-    };
-}
-
-function setMediaUploadStatus(message, isError = false) {
-    const statusEl = document.getElementById('mediaUploadStatus');
-    if (!statusEl) return;
-    statusEl.textContent = message;
-    statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
-}
-
-function getCustomCtaIconOptions(selected = '') {
-    const options = [
-        { value: '', label: 'No icon' },
-        { value: '⭐', label: 'Star' },
-        { value: '🛍️', label: 'Shop' },
-        { value: '📅', label: 'Calendar' },
-        { value: '🎟️', label: 'Ticket' },
-        { value: '🍽️', label: 'Food' },
-        { value: '📦', label: 'Package' },
-        { value: '💬', label: 'Message' },
-        { value: '🧾', label: 'Quote' },
-        { value: '🎉', label: 'Event' }
-    ];
-    return options.map((option) => `<option value="${option.value}" ${selected === option.value ? 'selected' : ''}>${option.value ? `${option.value} ${option.label}` : option.label}</option>`).join('');
-}
-
-async function uploadToCloudflareImages(file) {
-    const { accountId, apiKey, uploadEndpoint } = getCloudflareConfig();
-    if (uploadEndpoint) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const response = await fetch(uploadEndpoint, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        if (!response.ok || !result.success) {
-            const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-            throw new Error(errorMessage);
-        }
-        
-        const variants = result?.result?.variants || [];
-        return (variants[0] || result?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
-    }
-    if (!accountId || !apiKey) {
-        throw new Error('Cloudflare Images credentials are missing. Add them in the Media section.');
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`, {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${apiKey}`
-        },
-        body: formData
-    });
-    
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-        const errorMessage = result?.errors?.[0]?.message || 'Upload failed.';
-        throw new Error(errorMessage);
-    }
-    
-    const variants = result?.result?.variants || [];
-    return (variants[0] || result?.result?.url || '').replace('https://imagedelivery.net', 'https://images.thegreekdirectory.org');
-}
-
-function updateMediaPreview() {
-    const logoPreview = document.getElementById('mediaLogoPreview');
-    if (logoPreview) {
-        const logoUrl = uploadedImages.logo || currentListing?.logo || '';
-        logoPreview.src = logoUrl || '';
-        logoPreview.classList.toggle('hidden', !logoUrl);
-    }
-    
-    const photosPreview = document.getElementById('mediaPhotosPreview');
-    if (photosPreview) {
-        const allPhotos = [...(currentListing?.photos || []), ...uploadedImages.photos];
-        photosPreview.innerHTML = allPhotos.map(url => `
-            <img src="${url}" alt="Listing photo" class="w-20 h-20 rounded-lg object-cover">
-        `).join('');
-    }
-}
-
-async function handleLogoUpload(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-        setMediaUploadStatus('Uploading logo...');
-        const url = await uploadToCloudflareImages(file);
-        uploadedImages.logo = url;
-        updateMediaPreview();
-        setMediaUploadStatus('Logo uploaded successfully.');
-    } catch (error) {
-        console.error('Logo upload failed:', error);
-        setMediaUploadStatus(`Logo upload failed: ${error.message}`, true);
-    }
-}
-
-async function handlePhotosUpload(event) {
-    const files = Array.from(event.target.files || []);
-    if (files.length === 0) return;
-    
-    const existingCount = (currentListing?.photos || []).length + uploadedImages.photos.length;
-    const availableSlots = currentMaxPhotos - existingCount;
-    if (availableSlots <= 0) {
-        setMediaUploadStatus(`Photo limit reached for your current plan (${currentMaxPhotos}).`, true);
-        return;
-    }
-    
-    try {
-        setMediaUploadStatus('Uploading photos...');
-        const uploadFiles = files.slice(0, availableSlots);
-        for (const file of uploadFiles) {
-            const url = await uploadToCloudflareImages(file);
-            uploadedImages.photos.push(url);
-        }
-        updateMediaPreview();
-        setMediaUploadStatus('Photos uploaded successfully.');
-    } catch (error) {
-        console.error('Photo upload failed:', error);
-        setMediaUploadStatus(`Photo upload failed: ${error.message}`, true);
-    }
-}
-
-async function handleVideoUpload(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-        setMediaUploadStatus('Uploading video...');
-        const url = await uploadToCloudflareImages(file);
-        uploadedImages.video = url;
-        setMediaUploadStatus('Video uploaded successfully.');
-    } catch (error) {
-        console.error('Video upload failed:', error);
-        setMediaUploadStatus(`Video upload failed: ${error.message}`, true);
-    }
-}
-
-function attachMediaUploadHandlers() {
-    const logoUpload = document.getElementById('editLogoUpload');
-    if (logoUpload) logoUpload.onchange = handleLogoUpload;
-    
-    const photosUpload = document.getElementById('editPhotosUpload');
-    if (photosUpload) photosUpload.onchange = handlePhotosUpload;
-    
-    const videoUpload = document.getElementById('editVideoUpload');
-    if (videoUpload) videoUpload.onchange = handleVideoUpload;
-}
-
-function attachCloudflareConfigHandlers() {
-    const accountInput = document.getElementById('cloudflareAccountId');
-    const apiKeyInput = document.getElementById('cloudflareApiKey');
-    const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
-    if (!accountInput || !apiKeyInput || !uploadEndpointInput) return;
-    
-    const config = getCloudflareConfig();
-    accountInput.value = config.accountId || '';
-    apiKeyInput.value = config.apiKey || '';
-    uploadEndpointInput.value = config.uploadEndpoint || '';
-    
-    const saveConfig = () => {
-        setStoredCloudflareConfig({
-            accountId: accountInput.value.trim(),
-            apiKey: apiKeyInput.value.trim(),
-            uploadEndpoint: uploadEndpointInput.value.trim()
-        });
-    };
-    
-    accountInput.addEventListener('input', saveConfig);
-    apiKeyInput.addEventListener('input', saveConfig);
-    uploadEndpointInput.addEventListener('input', saveConfig);
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+// ─── 7. Overview Tab ─────────────────────────────────────────────
 
 function renderOverview() {
-    if (!currentListing) return;
-    
-    const tier = currentListing.tier || 'FREE';
+    const listing    = window.BP.currentListing;
+    if (!listing) return;
+    const tier       = listing.tier || 'FREE';
+    const limits     = TIER_LIMITS[tier] || TIER_LIMITS.FREE;
+    const listingUrl = `https://thegreekdirectory.org/listing/${listing.slug}`;
+    const tierLabels = { FREE: 'Standard Profile', FEATURED: 'Featured Profile', PREMIUM: 'Premium Profile' };
+    const tierLabel  = tierLabels[tier] || 'Profile';
+
     const features = {
-        'FREE': [
-            '✅ Basic listing with logo and 1 photo',
-            '✅ Contact information (phone, email, website)',
-            '✅ Hours of operation',
-            '✅ Social media links',
-            '✅ Review site links',
-            '✅ Tagline (max 75 characters)',
-            '✅ Description (max 1000 characters)',
-            '✅ Basic analytics (total views and engagement)'
+        FREE: [
+            'Basic listing with logo and 2 photos',
+            'Contact info — phone, email, and website',
+            'Hours of operation',
+            'Social media and review links',
+            `Tagline (up to 75 characters)`,
+            `Description (up to ${limits.maxDesc.toLocaleString()} characters)`,
+            'Analytics — total views and engagement',
         ],
-        'VERIFIED': [
-            '✅ Includes all Standard Profile features',
-            '✅ Verified badge',
-            '✅ Extended description (max 2000 characters)',
-            '✅ Enhanced analytics (website, call, and direction clicks)',
-            '✅ Monthly analytics totals'
+        FEATURED: [
+            'Everything in Standard Profile',
+            'Featured badge and elevated search ranking',
+            `Extended description (up to ${limits.maxDesc.toLocaleString()} characters)`,
+            `Photo gallery (up to ${limits.maxPhotos} photos)`,
+            `Up to ${limits.maxInfoFields} additional info fields`,
+            '1 custom CTA button',
+            'Engagement analytics — calls, website & directions',
         ],
-        'FEATURED': [
-            '✅ Includes all Verified Profile features',
-            '✅ Featured badge and priority placement',
-            '✅ Photo gallery (up to 5 photos)',
-            '✅ Advanced analytics (click breakdown and trends)',
-            '✅ Category placement indicator'
+        PREMIUM: [
+            'Everything in Featured Profile',
+            'Premium badge and top search priority',
+            `Description up to ${limits.maxDesc.toLocaleString()} characters`,
+            `Photo gallery (up to ${limits.maxPhotos} photos)`,
+            'Video embed',
+            `Up to ${limits.maxInfoFields} additional info fields`,
+            '2 custom CTA buttons',
+            'Homepage and category placement',
+            'Full analytics including video plays',
         ],
-        'PREMIUM': [
-            '✅ Includes all Featured Profile features',
-            '✅ Premium badge and top placement',
-            '✅ Extended photo gallery (up to 15 photos)',
-            '✅ Video embedding (1 video)',
-            '✅ Comprehensive analytics (video plays, comparative performance)',
-            '✅ Full engagement history'
-        ]
     };
-    
-    const categorySlug = currentListing.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const listingUrl = `https://thegreekdirectory.org/listing/${currentListing.slug}`;
-    
-    const content = document.getElementById('content-overview');
-    content.innerHTML = `
-        <div class="bg-white rounded-lg p-6 shadow-sm">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome!</h2>
-            <p class="text-gray-700 mb-4">Manage your listing on The Greek Directory. Your current plan includes the following features:</p>
-            
-            <div class="space-y-2 mb-6">
-                ${features[tier].map(f => `<div class="flex items-start gap-2">${CHECK_ICON_SVG}<span>${String(f).replace(/^✅\s*/, '')}</span></div>`).join('')}
+
+    const heroImg  = (listing.photos?.length > 0) ? listing.photos[0] : listing.logo;
+    const verified = listing.verified || tier === 'FEATURED' || tier === 'PREMIUM';
+    const checkSvg = `<svg style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#045093"/><path d="M7 12.5l3.5 3.5L17 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    document.getElementById('content-overview').innerHTML = `
+        <div class="bp-welcome-banner">
+            <div class="bp-welcome-banner__title">Welcome back 👋</div>
+            <div class="bp-welcome-banner__sub">
+                Managing <strong style="color:var(--white);">${_esc(listing.business_name)}</strong>
+                &nbsp;·&nbsp; <span class="bp-tier bp-tier--${tier.toLowerCase()}" style="vertical-align:middle;">${tierLabel}</span>
             </div>
-            
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 class="font-semibold text-blue-900 mb-2">Quick Actions</h3>
-                <div class="flex gap-3 flex-wrap">
-                    <button onclick="switchTab('edit')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Edit Listing</button>
-                    <button onclick="switchTab('analytics')" class="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50">View Analytics</button>
-                    <a id="viewLiveBtn" href="${listingUrl}" target="_blank" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">View Live Page</a>
-                </div>
+            <div class="bp-welcome-actions">
+                <button class="bp-btn bp-btn--gold bp-btn--sm" onclick="switchTab('edit')">
+                    <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Listing
+                </button>
+                <button class="bp-btn bp-btn--ghost bp-btn--sm" onclick="switchTab('analytics')"
+                        style="border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.75);">
+                    View Analytics
+                </button>
+                <a class="bp-btn bp-btn--ghost bp-btn--sm" href="${listingUrl}" target="_blank" rel="noopener"
+                   style="border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.75);text-decoration:none;">
+                    View Live Page ↗
+                </a>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg p-6 shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Listing Preview</h3>
-            <div class="preview-card">
-                <img id="previewMainImage" src="${(currentListing.photos && currentListing.photos.length > 0) ? currentListing.photos[0] : currentListing.logo}" alt="Main preview" class="preview-main-image">
-                <div class="preview-info">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="flex-1">
-                            <h4 id="previewBusinessName" class="text-2xl font-bold text-gray-900 mb-1" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${currentListing.business_name}${previewCheckmark}</h4>
-                            <p id="previewTagline" class="text-gray-600 italic text-sm mb-2">${currentListing.tagline || ''}</p>
-                            <div id="previewCategory" class="inline-block px-3 py-1 text-sm font-semibold text-white rounded-full mb-2" style="background-color:#055193;">${currentListing.category}</div>
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;">
+            <div>
+                <div class="bp-listing-preview">
+                    ${heroImg
+                        ? `<img class="bp-listing-preview__hero" src="${_esc(heroImg)}" alt="Listing hero">`
+                        : `<div class="bp-listing-preview__hero-placeholder">${_esc(listing.business_name.charAt(0))}</div>`
+                    }
+                    <div class="bp-listing-preview__body">
+                        ${listing.logo ? `<img class="bp-listing-preview__logo" src="${_esc(listing.logo)}" alt="Logo">` : ''}
+                        <div class="bp-listing-preview__info">
+                            <div class="bp-listing-preview__name">
+                                ${_esc(listing.business_name)}
+                                ${verified ? checkSvg : ''}
+                            </div>
+                            ${listing.tagline ? `<div class="bp-listing-preview__tagline">${_esc(listing.tagline)}</div>` : ''}
+                            <div class="bp-listing-preview__meta">
+                                <span class="bp-pill">${_esc(listing.category)}</span>
+                                ${listing.primary_subcategory ? `<span class="bp-pill bp-pill--gold">${_esc(listing.primary_subcategory)}</span>` : ''}
+                                ${listing.city && listing.state ? `<span style="font-size:.8rem;color:var(--slate-400);">📍 ${_esc(listing.city)}, ${_esc(listing.state)}</span>` : ''}
+                            </div>
+                            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+                                ${listing.phone   ? `<span style="font-size:.82rem;color:var(--slate-600);">📞 ${_esc(window.BP.formatPhoneDisplay(listing.phone))}</span>` : ''}
+                                ${listing.email   ? `<span style="font-size:.82rem;color:var(--slate-600);">✉️ ${_esc(listing.email)}</span>` : ''}
+                                ${listing.website ? `<a href="${_esc(listing.website)}" target="_blank" style="font-size:.82rem;color:var(--blue);">🌐 Website</a>` : ''}
+                            </div>
                         </div>
-                        ${currentListing.logo ? `<img id="previewLogo" src="${currentListing.logo}" alt="Logo" class="preview-logo ml-4">` : ''}
                     </div>
-                    <div id="previewDetails" class="text-sm text-gray-700 space-y-1">
-                        <div><span class="font-semibold">Listing ID:</span> ${currentListing.id}</div>
-                        ${currentListing.subcategories && currentListing.subcategories.length > 0 ? 
-                            `<div><span class="font-semibold">Subcategories:</span> ${currentListing.subcategories.join(', ')}</div>` : ''}
-                        ${currentListing.city && currentListing.state ? 
-                            `<div class="flex items-center gap-2">${LOCATION_ICON_SVG}<span><span class="font-semibold">Location:</span> ${currentListing.city}, ${currentListing.state}</span></div>` : ''}
-                        ${currentListing.phone ? 
-                            `<div class="flex items-center gap-2">${PHONE_ICON_SVG}<span><span class="font-semibold">Phone:</span> ${formatPhoneNumber(currentListing.phone)}</span></div>` : ''}
-                        ${currentListing.email ? 
-                            `<div class="flex items-center gap-2">${EMAIL_ICON_SVG}<span><span class="font-semibold">Email:</span> ${currentListing.email}</span></div>` : ''}
-                        ${currentListing.website ? 
-                            `<div class="flex items-center gap-2">${WEBSITE_ICON_SVG}<span><span class="font-semibold">Website:</span> <a href="${currentListing.website}" target="_blank" class="text-blue-600 hover:underline">${currentListing.website}</a></span></div>` : ''}
+                </div>
+                <div id="overviewStatsBanner" style="margin-top:16px;">
+                    <div class="bp-loading-screen" style="min-height:100px;">
+                        <div class="bp-spinner"></div>
+                        <span style="font-size:.8rem;">Loading analytics…</span>
                     </div>
+                </div>
+            </div>
+
+            <div class="bp-card">
+                <div class="bp-card-header">
+                    <h2 style="font-family:'Sora',sans-serif;font-size:.95rem;">${tierLabel} Features</h2>
+                </div>
+                <div class="bp-card-body">
+                    <ul class="bp-features-list">
+                        ${(features[tier] || features.FREE).map(f => `<li>${f}</li>`).join('')}
+                    </ul>
+                    ${tier === 'FREE' ? `
+                        <div style="margin-top:18px;padding:14px;background:var(--gold-pale);border-radius:var(--r);border:1px solid #fde68a;">
+                            <div style="font-size:.82rem;font-weight:600;color:#78350f;margin-bottom:4px;">Upgrade your listing</div>
+                            <div style="font-size:.78rem;color:#92400e;">Contact us to unlock Featured or Premium features.</div>
+                            <a href="mailto:contact@thegreekdirectory.org?subject=Upgrade%20Inquiry%20—%20${encodeURIComponent(listing.business_name)}"
+                               style="display:inline-block;margin-top:10px;font-size:.8rem;font-weight:600;color:var(--gold);">
+                                Contact for Upgrade →
+                            </a>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         </div>
     `;
+
+    _loadOverviewStats();
+}
+
+async function _loadOverviewStats() {
+    const listing = window.BP.currentListing;
+    if (!listing) return;
+    const banner = document.getElementById('overviewStatsBanner');
+    if (!banner) return;
+    try {
+        const tier  = listing.tier || 'FREE';
+        const stats = await _fetchAnalyticsAggregates(listing.id);
+        const visibleStats = tier === 'FREE'
+            ? [
+                { label: 'Total Views',      value: stats.views,            color: 'blue',  icon: EYE_SVG  },
+                { label: 'Total Engagement', value: stats.call_clicks + stats.website_clicks + stats.direction_clicks + stats.share_clicks, color: 'gold', icon: STAR_SVG },
+              ]
+            : [
+                { label: 'Total Views',    value: stats.views,            color: 'blue',   icon: EYE_SVG   },
+                { label: 'Call Clicks',    value: stats.call_clicks,      color: 'green',  icon: PHONE_SVG },
+                { label: 'Website Clicks', value: stats.website_clicks,   color: 'indigo', icon: GLOBE_SVG },
+                { label: 'Directions',     value: stats.direction_clicks, color: 'rose',   icon: MAP_SVG   },
+              ];
+
+        banner.innerHTML = `
+            <div class="bp-stat-grid">
+                ${visibleStats.map(s => `
+                    <div class="bp-stat-card bp-stat-card--${s.color}">
+                        <div class="bp-stat-card__icon">${s.icon}</div>
+                        <div class="bp-stat-card__value">${_fmt(s.value)}</div>
+                        <div class="bp-stat-card__label">${s.label}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } catch (_) {
+        banner.innerHTML = '';
+    }
+}
+
+// ─── 8. Analytics Tab ─────────────────────────────────────────────
+
+async function renderAnalytics() {
+    const listing = window.BP.currentListing;
+    if (!listing) return;
+    const tier = listing.tier || 'FREE';
+
+    const container = document.getElementById('content-analytics');
+    container.innerHTML = `
+        <div class="bp-page-header">
+            <div><h1>Analytics</h1><p>Performance data for ${_esc(listing.business_name)}</p></div>
+        </div>
+        <div id="analyticsBody">
+            <div class="bp-loading-screen">
+                <div class="bp-spinner"></div>
+                <span style="font-size:.85rem;color:var(--slate-400);">Fetching your stats…</span>
+            </div>
+        </div>
+    `;
+
+    try {
+        const stats    = await _fetchAnalyticsAggregates(listing.id);
+        const events   = await _fetchAnalyticsEvents(listing.id, 20);
+        const cards    = _buildAnalyticsCards(stats, tier);
+        const eventLog = _buildEventLog(events);
+
+        document.getElementById('analyticsBody').innerHTML = `
+            <div class="bp-analytics-grid">${cards}</div>
+            ${tier === 'FREE' ? `
+                <div class="bp-upgrade-notice">
+                    <div class="bp-upgrade-notice__icon">📈</div>
+                    <div>
+                        <h4>Unlock Detailed Analytics</h4>
+                        <p>Upgrade to Featured or Premium to see call clicks, website visits, direction requests, shares, and recent event history.</p>
+                    </div>
+                </div>
+            ` : `
+                <div class="bp-card" style="margin-top:4px;">
+                    <div class="bp-card-header"><h2>Recent Activity</h2></div>
+                    <div class="bp-card-body">${eventLog}</div>
+                </div>
+            `}
+        `;
+    } catch (err) {
+        console.error('Analytics render error:', err);
+        document.getElementById('analyticsBody').innerHTML = `
+            <div class="bp-inline-msg bp-inline-msg--warning">
+                Could not load analytics data. Please try again later.
+            </div>
+        `;
+    }
 }
 
 /*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+ * _fetchAnalyticsAggregates
+ *
+ * listing_analytics columns: id, action, platform, timestamp, user_agent, created_at, listing_id
+ * analytics columns:         id, views, call_clicks, website_clicks, direction_clicks,
+ *                            share_clicks, video_plays, last_viewed, created_at, updated_at, listing_id
+ *
+ * Strategy: count individual event rows from listing_analytics (select 'action' only),
+ * then pull legacy aggregate totals from analytics, take the max of each.
+ */
+async function _fetchAnalyticsAggregates(listingId) {
+    const totals = {
+        views: 0, call_clicks: 0, website_clicks: 0,
+        direction_clicks: 0, share_clicks: 0, video_plays: 0,
+    };
+
+    // ── 1. Count individual event rows from listing_analytics ──
+    // Only select 'action' — the only column needed for counting.
+    // Do NOT select views/call_clicks/etc. — those don't exist here.
+    try {
+        const { data: eventRows, error: eventsError } = await window.TGDAuth.supabaseClient
+            .from('listing_analytics')
+            .select('action')
+            .eq('listing_id', listingId);
+
+        if (eventsError) {
+            console.warn('listing_analytics query error:', eventsError.message);
+        } else if (Array.isArray(eventRows)) {
+            eventRows.forEach(row => {
+                switch (row.action) {
+                    case 'view':       totals.views++;            break;
+                    case 'call':       totals.call_clicks++;      break;
+                    case 'website':    totals.website_clicks++;   break;
+                    case 'directions': totals.direction_clicks++; break;
+                    case 'share':      totals.share_clicks++;     break;
+                    case 'video':      totals.video_plays++;      break;
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('Could not count listing_analytics events:', e);
+    }
+
+    // ── 2. Pull legacy aggregate totals from the analytics table ──
+    // These columns DO exist in analytics: views, call_clicks, website_clicks,
+    // direction_clicks, share_clicks, video_plays.
+    try {
+        const { data: agg, error: aggError } = await window.TGDAuth.supabaseClient
+            .from('analytics')
+            .select('views, call_clicks, website_clicks, direction_clicks, share_clicks, video_plays')
+            .eq('listing_id', listingId)
+            .maybeSingle();
+
+        if (!aggError && agg) {
+            totals.views            = Math.max(totals.views,            agg.views            || 0);
+            totals.call_clicks      = Math.max(totals.call_clicks,      agg.call_clicks      || 0);
+            totals.website_clicks   = Math.max(totals.website_clicks,   agg.website_clicks   || 0);
+            totals.direction_clicks = Math.max(totals.direction_clicks, agg.direction_clicks || 0);
+            totals.share_clicks     = Math.max(totals.share_clicks,     agg.share_clicks     || 0);
+            totals.video_plays      = Math.max(totals.video_plays,      agg.video_plays      || 0);
+        }
+    } catch (e) {
+        // No row in analytics yet — not an error
+    }
+
+    return totals;
+}
+
+/*
+ * _fetchAnalyticsEvents
+ *
+ * Fetch recent individual event rows for the activity log.
+ * Only select columns that exist in listing_analytics:
+ *   action, platform, timestamp
+ */
+async function _fetchAnalyticsEvents(listingId, limit = 20) {
+    try {
+        const { data, error } = await window.TGDAuth.supabaseClient
+            .from('listing_analytics')
+            .select('action, platform, timestamp')
+            .eq('listing_id', listingId)
+            .not('action', 'is', null)
+            .order('timestamp', { ascending: false })
+            .limit(limit);
+
+        if (error) {
+            console.warn('Could not fetch analytics events:', error.message);
+            return [];
+        }
+        return data || [];
+    } catch (e) {
+        console.warn('_fetchAnalyticsEvents error:', e);
+        return [];
+    }
+}
+
+function _buildAnalyticsCards(stats, tier) {
+    const all = [
+        { label: 'Total Views',    value: stats.views,            grad: 'bg-grad-1', icon: EYE_SVG   },
+        { label: 'Call Clicks',    value: stats.call_clicks,      grad: 'bg-grad-2', icon: PHONE_SVG },
+        { label: 'Website Clicks', value: stats.website_clicks,   grad: 'bg-grad-3', icon: GLOBE_SVG },
+        { label: 'Directions',     value: stats.direction_clicks, grad: 'bg-grad-4', icon: MAP_SVG   },
+        { label: 'Shares',         value: stats.share_clicks,     grad: 'bg-grad-5', icon: SHARE_SVG },
+        { label: 'Video Plays',    value: stats.video_plays,      grad: 'bg-grad-6', icon: VIDEO_SVG },
+    ];
+    const visible = tier === 'FREE'
+        ? [all[0], { label: 'Total Engagement', value: stats.call_clicks + stats.website_clicks + stats.direction_clicks + stats.share_clicks, grad: 'bg-grad-2', icon: STAR_SVG }]
+        : tier === 'FEATURED'
+        ? all.slice(0, 5)
+        : all;
+
+    return visible.map(c => `
+        <div class="bp-analytics-card ${c.grad}">
+            <div class="bp-analytics-card__value">${_fmt(c.value)}</div>
+            <div class="bp-analytics-card__label">${c.label}</div>
+        </div>
+    `).join('');
+}
+
+function _buildEventLog(events) {
+    if (!events.length) return '<p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:20px 0;">No events recorded yet.</p>';
+    const colors = { view: '#3b82f6', call: '#10b981', website: '#6366f1', directions: '#ef4444', share: '#f59e0b', video: '#0ea5e9' };
+    const labels = { view: 'Page View', call: 'Phone Call', website: 'Website Visit', directions: 'Directions', share: 'Share', video: 'Video Play' };
+    return `
+        <div class="bp-event-log__list">
+            ${events.map(e => `
+                <div class="bp-event-item">
+                    <div class="bp-event-item__dot" style="background:${colors[e.action] || '#94a3b8'};"></div>
+                    <div class="bp-event-item__action">
+                        ${labels[e.action] || e.action}
+                        ${e.platform ? `<span style="color:var(--slate-400);font-size:.78rem;">via ${e.platform}</span>` : ''}
+                    </div>
+                    <div class="bp-event-item__time">${_timeAgo(e.timestamp)}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// ─── 9. Edit Tab ──────────────────────────────────────────────────
 
 function renderEditForm() {
-    if (!currentListing) return;
-    
-    const tier = currentListing.tier || 'FREE';
-    const maxDesc = tier === 'FREE' ? 1000 : 2000;
-    const maxPhotos = tier === 'FREE' ? 1 : tier === 'FEATURED' ? 5 : tier === 'PREMIUM' ? 15 : 1;
-    const maxCtas = tier === 'PREMIUM' ? 2 : tier === 'FEATURED' ? 1 : 0;
-    currentMaxPhotos = maxPhotos;
-    currentMaxCtas = maxCtas;
-    uploadedImages = { logo: null, photos: [], video: null };
-    
-    selectedSubcategories = currentListing.subcategories || [];
-    primarySubcategory = currentListing.primary_subcategory || null;
-    
-    const content = document.getElementById('content-edit');
-    content.innerHTML = `
-        <div class="bg-white rounded-lg p-6 shadow-sm">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Edit Your Listing</h2>
-                <button onclick="saveChanges()" class="px-6 py-2 text-white rounded-lg font-medium" style="background-color: #055193;">Save Changes</button>
+    const listing = window.BP.currentListing;
+    if (!listing) return;
+
+    const tier          = listing.tier || 'FREE';
+    const limits        = TIER_LIMITS[tier] || TIER_LIMITS.FREE;
+    const maxDesc       = limits.maxDesc;
+    const maxPhotos     = limits.maxPhotos;
+    const maxCtas       = limits.maxCtas;
+    const maxInfoFields = limits.maxInfoFields;
+    const hasVideo      = limits.hasVideo;
+
+    _tierLimits      = limits;
+    _uploadedImages  = { logo: null, photos: [], video: null };
+    _removedPhotos   = [];
+    _selectedSubcats = [...(listing.subcategories || [])];
+    _primarySubcat   = listing.primary_subcategory || _selectedSubcats[0] || null;
+
+    const taglineMax = getTaglineMaxLength(listing.city, listing.state);
+
+    document.getElementById('content-edit').innerHTML = `
+        <div class="bp-page-header">
+            <div>
+                <h1>Edit Listing</h1>
+                <p>Changes are saved to your listing and regenerate your live page.</p>
             </div>
-            
-            <div class="space-y-6">
-                <!-- Basic Information -->
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2 disabled-field">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
-                            <input type="text" value="${currentListing.business_name}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
-                            <p class="info-notice">Contact Support to change this</p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tagline (SEO-limited) *</label>
-                            <input type="text" id="editTagline" value="${currentListing.tagline || ''}" maxlength="60" class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="updateCharCounter('tagline')">
-                            <p class="char-counter mt-1"><span id="taglineCount">${(currentListing.tagline || '').length}</span>/75</p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Description (max ${maxDesc} chars)</label>
-                            <textarea id="editDescription" rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg">${currentListing.description || ''}</textarea>
-                            <p class="char-counter mt-1"><span id="descriptionCount">${(window.RichTextEditor ? window.RichTextEditor.stripHtml(currentListing.description || '') : (currentListing.description || '').length)}</span>/<span id="descriptionMax">${maxDesc}</span></p>
-                        </div>
-                        <div class="disabled-field">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                            <input type="text" value="${currentListing.category}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled>
-                            <p class="info-notice">Contact Support to change this</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Subcategories</label>
-                            <div id="subcategoriesGrid" class="grid grid-cols-2 gap-2"></div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Pricing</label>
-                            <select id="editPricing" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                                <option value="">Select pricing</option>
-                                <option value="1" ${Number(currentListing.pricing) === 1 ? 'selected' : ''}>$</option>
-                                <option value="2" ${Number(currentListing.pricing) === 2 ? 'selected' : ''}>$$</option>
-                                <option value="3" ${Number(currentListing.pricing) === 3 ? 'selected' : ''}>$$$</option>
-                                <option value="4" ${Number(currentListing.pricing) === 4 ? 'selected' : ''}>$$$$</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Coming Soon *</label>
-                            <select id="editComingSoon" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
-                                <option value="false" ${(currentListing.coming_soon ?? false) ? '' : 'selected'}>No</option>
-                                <option value="true" ${(currentListing.coming_soon ?? false) ? 'selected' : ''}>Yes</option>
-                            </select>
-                        </div>
+        </div>
+
+        ${_section('basic', EDIT_SVG, 'Basic Information', true, `
+            <div class="bp-form-grid">
+                <div class="bp-field col-span-2">
+                    <label class="bp-label">Business Name</label>
+                    <input class="bp-input" type="text" value="${_esc(listing.business_name)}" disabled>
+                    <span class="bp-input-locked">🔒 Contact support to change the business name</span>
+                </div>
+                <div class="bp-field col-span-2">
+                    <label class="bp-label" for="editTagline">Tagline <span style="color:var(--error);">*</span></label>
+                    <input class="bp-input" type="text" id="editTagline"
+                           value="${_esc(listing.tagline || '')}"
+                           maxlength="${taglineMax}"
+                           oninput="_updateCounter('tagline', this.value.length, ${taglineMax})">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:.78rem;color:var(--slate-400);">Keep it descriptive for SEO</span>
+                        <span class="bp-char-counter" id="ctr-tagline">${(listing.tagline||'').length}/${taglineMax}</span>
                     </div>
                 </div>
-
-                <!-- Location -->
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Location Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                            <input type="text" id="editAddress" value="${currentListing.address || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
-                            <input type="text" id="editCity" value="${currentListing.city || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
-                            <input type="text" id="editState" value="${currentListing.state || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
-                            <input type="text" id="editZipCode" value="${currentListing.zip_code || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
+                <div class="bp-field col-span-2">
+                    <label class="bp-label" for="editDescription">Description (max ${maxDesc.toLocaleString()} characters)</label>
+                    <textarea class="bp-input" id="editDescription" rows="6">${_esc(listing.description || '')}</textarea>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="font-size:.78rem;color:var(--slate-400);">HTML formatting supported</span>
+                        <span class="bp-char-counter" id="ctr-description">0/${maxDesc}</span>
                     </div>
                 </div>
-
-                <!-- Contact Information -->
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                            <div id="editPhoneContainer"></div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                            <input type="email" id="editEmail" value="${currentListing.email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
-                            <input type="url" id="editWebsite" value="${currentListing.website || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                    </div>
+                <div class="bp-field">
+                    <label class="bp-label">Category</label>
+                    <input class="bp-input" type="text" value="${_esc(listing.category)}" disabled>
+                    <span class="bp-input-locked">🔒 Contact support to change</span>
                 </div>
+                <div class="bp-field">
+                    <label class="bp-label" for="editPricing">Pricing</label>
+                    <select class="bp-input" id="editPricing">
+                        <option value="">Not specified</option>
+                        ${[1,2,3,4].map(n => `<option value="${n}" ${Number(listing.pricing)===n?'selected':''}>${'$'.repeat(n)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="bp-field">
+                    <label class="bp-label" for="editComingSoon">Status</label>
+                    <select class="bp-input" id="editComingSoon">
+                        <option value="false" ${!listing.coming_soon?'selected':''}>Open / Active</option>
+                        <option value="true"  ${listing.coming_soon?'selected':''}>Coming Soon</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top:18px;">
+                <label class="bp-label">Subcategories</label>
+                <p class="bp-subcat-hint">Select all that apply. ⭐ marks the primary (shown on listing cards).</p>
+                <div class="bp-subcats-grid" id="subcatsGrid"></div>
+            </div>
+        `)}
 
-                <!-- Media Uploads -->
+        ${_section('location', MAP_SVG, 'Location', false, `
+            <div class="bp-form-grid">
+                <div class="bp-field col-span-2">
+                    <label class="bp-label" for="editAddress">Street Address</label>
+                    <input class="bp-input" type="text" id="editAddress" value="${_esc(listing.address||'')}" placeholder="123 Main St">
+                </div>
+                <div class="bp-field">
+                    <label class="bp-label" for="editCity">City</label>
+                    <input class="bp-input" type="text" id="editCity" value="${_esc(listing.city||'')}" placeholder="Chicago">
+                </div>
+                <div class="bp-field">
+                    <label class="bp-label" for="editState">State</label>
+                    <input class="bp-input" type="text" id="editState" value="${_esc(listing.state||'')}" placeholder="IL" maxlength="2">
+                </div>
+                <div class="bp-field">
+                    <label class="bp-label" for="editZip">ZIP Code</label>
+                    <input class="bp-input" type="text" id="editZip" value="${_esc(listing.zip_code||'')}" placeholder="60601" maxlength="10">
+                </div>
+            </div>
+        `)}
+
+        ${_section('contact', PHONE_SVG, 'Contact Information', false, `
+            <div class="bp-form-grid">
+                <div class="bp-field">
+                    <label class="bp-label">Phone</label>
+                    <div id="editPhoneWrap"></div>
+                </div>
+                <div class="bp-field">
+                    <label class="bp-label" for="editEmail">Email</label>
+                    <input class="bp-input" type="email" id="editEmail" value="${_esc(listing.email||'')}" placeholder="hello@yourbusiness.com">
+                </div>
+                <div class="bp-field col-span-2">
+                    <label class="bp-label" for="editWebsite">Website</label>
+                    <input class="bp-input" type="url" id="editWebsite" value="${_esc(listing.website||'')}" placeholder="https://yourbusiness.com">
+                </div>
+            </div>
+        `)}
+
+        ${_section('hours', CLOCK_SVG, 'Hours of Operation', false, `
+            <div class="bp-hours-grid" id="hoursGrid"></div>
+        `)}
+
+        ${_section('media', IMAGE_SVG, 'Photos & Media', false, `
+            <div id="uploadStatus" class="bp-upload-status"></div>
+            <div style="margin-bottom:20px;">
+                <label class="bp-label">Logo</label>
+                <label class="bp-upload-box" for="logoUpload">
+                    <input type="file" id="logoUpload" accept="image/*" onchange="_handleLogoUpload(event)">
+                    <div class="bp-upload-icon">${IMAGE_SVG}</div>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p style="font-size:.78rem;margin-top:4px;">PNG, JPG, WebP — square recommended</p>
+                </label>
+                <div id="logoPreview" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                    ${listing.logo ? `<div class="bp-photo-thumb"><img src="${_esc(listing.logo)}" alt="Logo"></div>` : ''}
+                </div>
+            </div>
+            <div style="margin-bottom:20px;">
+                <label class="bp-label">Photos <span style="color:var(--slate-400);font-weight:400;">(${maxPhotos} max for your plan)</span></label>
+                <label class="bp-upload-box" for="photosUpload">
+                    <input type="file" id="photosUpload" accept="image/*" multiple onchange="_handlePhotosUpload(event)">
+                    <div class="bp-upload-icon">${IMAGE_SVG}</div>
+                    <p><strong>Click to upload photos</strong></p>
+                    <p style="font-size:.78rem;margin-top:4px;">Select up to ${maxPhotos} total photos</p>
+                </label>
+                <div id="photosPreview" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                    ${(listing.photos || []).map((url, i) => _photoThumb(url, i, 'existing')).join('')}
+                </div>
+            </div>
+            ${hasVideo ? `
                 <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Media</h3>
-                    <p class="text-sm text-gray-600 mb-4">Upload media directly to Cloudflare Images. Photo limit for your plan: ${maxPhotos}</p>
-                    <div class="grid grid-cols-1 gap-4">
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <div class="text-sm font-semibold text-gray-800">Cloudflare Images</div>
-                            <p class="text-xs text-gray-500 mt-1">Credentials and upload endpoint are stored locally in this browser.</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Account ID</label>
-                                    <input type="text" id="cloudflareAccountId" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Cloudflare account ID">
+                    <label class="bp-label">Video</label>
+                    <label class="bp-upload-box" for="videoUpload">
+                        <input type="file" id="videoUpload" accept="video/*" onchange="_handleVideoUpload(event)">
+                        <div class="bp-upload-icon">${VIDEO_SVG}</div>
+                        <p><strong>Upload a video</strong></p>
+                        <p style="font-size:.78rem;margin-top:4px;">MP4 recommended</p>
+                    </label>
+                    ${listing.video ? `<div style="margin-top:8px;font-size:.82rem;color:var(--slate-500);">Current: <a href="${_esc(listing.video)}" target="_blank" style="color:var(--blue);">View video ↗</a></div>` : ''}
+                </div>
+            ` : `
+                <div class="bp-inline-msg bp-inline-msg--info">
+                    Video uploads are available on the Premium plan.
+                    <a href="mailto:contact@thegreekdirectory.org?subject=Upgrade%20to%20Premium" style="margin-left:4px;font-weight:600;">Upgrade →</a>
+                </div>
+            `}
+        `)}
+
+        ${_section('social', SHARE_SVG, 'Social Media', false, `
+            <div class="bp-form-grid">
+                ${_socialField('Facebook',       'editFacebook',   listing.social_media?.facebook,   'username or page URL')}
+                ${_socialField('Instagram',      'editInstagram',  listing.social_media?.instagram,  'username')}
+                ${_socialField('Twitter / X',    'editTwitter',    listing.social_media?.twitter,    'username')}
+                ${_socialField('YouTube',        'editYoutube',    listing.social_media?.youtube,    'channel name or URL')}
+                ${_socialField('TikTok',         'editTiktok',     listing.social_media?.tiktok,     'username')}
+                ${_socialField('LinkedIn',       'editLinkedin',   listing.social_media?.linkedin,   'full URL')}
+                ${_socialField('Other 1 — Name', 'editOther1Name', listing.social_media?.other1_name,'e.g. Pinterest')}
+                ${_socialField('Other 1 — URL',  'editOther1',     listing.social_media?.other1,     'https://')}
+                ${_socialField('Other 2 — Name', 'editOther2Name', listing.social_media?.other2_name,'e.g. Discord')}
+                ${_socialField('Other 2 — URL',  'editOther2',     listing.social_media?.other2,     'https://')}
+                ${_socialField('Other 3 — Name', 'editOther3Name', listing.social_media?.other3_name,'e.g. Reddit')}
+                ${_socialField('Other 3 — URL',  'editOther3',     listing.social_media?.other3,     'https://')}
+            </div>
+        `)}
+
+        ${_section('reviews', STAR_SVG, 'Review Sites', false, `
+            <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:16px;">
+                You can add review links if they are empty. Existing links are locked — contact support to change them.
+            </p>
+            <div class="bp-form-grid bp-form-grid--1">
+                ${_reviewField('Google Reviews',        'editGoogleReviews', listing.reviews?.google,      'https://g.page/…')}
+                ${_reviewField('Yelp',                  'editYelp',          listing.reviews?.yelp,        'https://yelp.com/biz/…')}
+                ${_reviewField('TripAdvisor',           'editTripadvisor',   listing.reviews?.tripadvisor, 'https://tripadvisor.com/…')}
+                ${_reviewField('Other Review 1 — Name', 'editRev1Name',      listing.reviews?.other1_name, 'e.g. Angi', false)}
+                ${_reviewField('Other Review 1 — URL',  'editRev1',          listing.reviews?.other1,      'https://', false)}
+                ${_reviewField('Other Review 2 — Name', 'editRev2Name',      listing.reviews?.other2_name, 'e.g. BBB', false)}
+                ${_reviewField('Other Review 2 — URL',  'editRev2',          listing.reviews?.other2,      'https://', false)}
+                ${_reviewField('Other Review 3 — Name', 'editRev3Name',      listing.reviews?.other3_name, 'e.g. OpenTable', false)}
+                ${_reviewField('Other Review 3 — URL',  'editRev3',          listing.reviews?.other3,      'https://', false)}
+            </div>
+        `)}
+
+        ${_section('info', EDIT_SVG, 'Additional Information', false,
+            maxInfoFields === 0
+                ? `<div class="bp-inline-msg bp-inline-msg--info">
+                       Additional information fields are available on Featured (3) and Premium (5) plans.
+                       <a href="mailto:contact@thegreekdirectory.org?subject=Upgrade%20Inquiry" style="margin-left:4px;font-weight:600;">Upgrade →</a>
+                   </div>`
+                : `<p style="font-size:.85rem;color:var(--slate-500);margin-bottom:16px;">Up to ${maxInfoFields} custom label/value pairs shown on your listing page.</p>
+                   <div class="bp-form-grid">
+                       ${[...Array(maxInfoFields)].map((_, i) => {
+                           const item = (listing.additional_info || [])[i] || {};
+                           return `
+                               <div class="bp-field">
+                                   <label class="bp-label" for="infoLabel${i}">Label ${i+1}</label>
+                                   <input class="bp-input" type="text" id="infoLabel${i}" value="${_esc(item.label||'')}" maxlength="30" placeholder="e.g. Founded">
+                               </div>
+                               <div class="bp-field">
+                                   <label class="bp-label" for="infoValue${i}">Value ${i+1}</label>
+                                   <input class="bp-input" type="text" id="infoValue${i}" value="${_esc(item.value||'')}" maxlength="120" placeholder="e.g. 1987">
+                               </div>`;
+                       }).join('')}
+                   </div>`
+        )}
+
+        ${maxCtas > 0
+            ? _section('ctas', STAR_SVG, `Custom CTA Buttons (${maxCtas} allowed)`, false, `
+                <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:16px;">Button name max 15 characters.</p>
+                ${[...Array(maxCtas)].map((_, i) => {
+                    const cta = (listing.custom_ctas || [])[i] || {};
+                    return `
+                        <div class="bp-cta-builder">
+                            <div style="font-size:.82rem;font-weight:600;color:var(--slate-500);margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em;">Button ${i+1}</div>
+                            <div class="bp-form-grid">
+                                <div class="bp-field">
+                                    <label class="bp-label" for="ctaName${i}">Button Label</label>
+                                    <input class="bp-input" type="text" id="ctaName${i}" value="${_esc(cta.name||'')}" maxlength="15" placeholder="e.g. Order Online">
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">API Key</label>
-                                    <input type="password" id="cloudflareApiKey" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Cloudflare API key">
+                                <div class="bp-field">
+                                    <label class="bp-label" for="ctaUrl${i}">Link URL</label>
+                                    <input class="bp-input" type="url" id="ctaUrl${i}" value="${_esc(cta.url||'')}" placeholder="https://">
                                 </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Upload Endpoint (required for production)</label>
-                                    <input type="url" id="cloudflareUploadEndpoint" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="https://your-domain.com/cloudflare-upload">
-                                    <p class="text-[11px] text-gray-500 mt-1">Must proxy to Cloudflare Images to avoid CORS errors.</p>
+                                <div class="bp-field">
+                                    <label class="bp-label" for="ctaColor${i}">Button Color</label>
+                                    <input class="bp-input" type="color" id="ctaColor${i}" value="${_esc(cta.color||'#045093')}" style="height:44px;padding:4px 8px;cursor:pointer;">
                                 </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
-                            <input type="file" id="editLogoUpload" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                            <img id="mediaLogoPreview" src="${currentListing.logo || ''}" alt="Logo preview" class="mt-2 w-20 h-20 rounded-lg object-cover ${currentListing.logo ? '' : 'hidden'}">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Photos</label>
-                            <input type="file" id="editPhotosUpload" accept="image/*" multiple class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                            <div id="mediaPhotosPreview" class="mt-3 flex flex-wrap gap-2"></div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Video (optional)</label>
-                            <input type="file" id="editVideoUpload" accept="video/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div id="mediaUploadStatus" class="text-sm text-gray-600"></div>
-                    </div>
-                </div>
-
-                <!-- Hours -->
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Hours of Operation</h3>
-                    <div class="grid grid-cols-1 gap-3">
-                        ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
-                            const dayLower = day.toLowerCase();
-                            const hours = currentListing.hours && currentListing.hours[dayLower] ? currentListing.hours[dayLower] : '';
-                            const isClosed = hours.toLowerCase() === 'closed';
-                            const is24Hours = hours.toLowerCase().includes('24') || hours.toLowerCase().includes('open 24');
-                            
-                            return `
-                            <div class="flex gap-2 items-center">
-                                <label class="w-28 flex items-center font-medium text-gray-700">${day}:</label>
-                                <input type="text" id="editHours${day}" value="${hours}" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" placeholder="9:00 AM - 5:00 PM" ${isClosed || is24Hours ? 'disabled' : ''}>
-                                <label class="flex items-center gap-1">
-                                    <input type="checkbox" id="editClosed${day}" ${isClosed ? 'checked' : ''} onchange="toggleDayClosed('${day}')">
-                                    <span class="text-sm">Closed</span>
-                                </label>
-                                <label class="flex items-center gap-1">
-                                    <input type="checkbox" id="edit24Hours${day}" ${is24Hours ? 'checked' : ''} onchange="toggle24Hours('${day}')">
-                                    <span class="text-sm">24 Hours</span>
-                                </label>
-                            </div>
-                        `}).join('')}
-                    </div>
-                </div>
-
-                <!-- Social Media -->
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Social Media Links</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Facebook</label>
-                            <input type="text" id="editFacebook" value="${currentListing.social_media?.facebook || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Instagram</label>
-                            <input type="text" id="editInstagram" value="${currentListing.social_media?.instagram || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Twitter/X</label>
-                            <input type="text" id="editTwitter" value="${currentListing.social_media?.twitter || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">YouTube</label>
-                            <input type="text" id="editYoutube" value="${currentListing.social_media?.youtube || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="channel">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">TikTok</label>
-                            <input type="text" id="editTiktok" value="${currentListing.social_media?.tiktok || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="username">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn</label>
-                            <input type="url" id="editLinkedin" value="${currentListing.social_media?.linkedin || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 1 Name</label>
-                            <input type="text" id="editOtherSocial1Name" value="${currentListing.social_media?.other1_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Pinterest">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 1 URL</label>
-                            <input type="url" id="editOtherSocial1" value="${currentListing.social_media?.other1 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 2 Name</label>
-                            <input type="text" id="editOtherSocial2Name" value="${currentListing.social_media?.other2_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Discord">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 2 URL</label>
-                            <input type="url" id="editOtherSocial2" value="${currentListing.social_media?.other2 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 3 Name</label>
-                            <input type="text" id="editOtherSocial3Name" value="${currentListing.social_media?.other3_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Reddit">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Social 3 URL</label>
-                            <input type="url" id="editOtherSocial3" value="${currentListing.social_media?.other3 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review Sites -->
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Review Sites</h3>
-                    <p class="text-sm text-gray-600 mb-4">Add review links if not present (locked fields require Support)</p>
-                    <div class="grid grid-cols-1 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Google Reviews</label>
-                            <input type="url" id="editGoogleReviews" value="${currentListing.reviews?.google || ''}" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
-                                ${currentListing.reviews?.google ? 'disabled' : ''} 
-                                placeholder="Full Google Reviews URL">
-                            ${currentListing.reviews?.google ? '<p class="info-notice">Contact Support to change</p>' : ''}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Yelp</label>
-                            <input type="url" id="editYelp" value="${currentListing.reviews?.yelp || ''}" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
-                                ${currentListing.reviews?.yelp ? 'disabled' : ''} 
-                                placeholder="Full Yelp URL">
-                            ${currentListing.reviews?.yelp ? '<p class="info-notice">Contact Support to change</p>' : ''}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">TripAdvisor</label>
-                            <input type="url" id="editTripadvisor" value="${currentListing.reviews?.tripadvisor || ''}" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg" 
-                                ${currentListing.reviews?.tripadvisor ? 'disabled' : ''} 
-                                placeholder="Full TripAdvisor URL">
-                            ${currentListing.reviews?.tripadvisor ? '<p class="info-notice">Contact Support to change</p>' : ''}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 1 Name</label>
-                            <input type="text" id="editOtherReview1Name" value="${currentListing.reviews?.other1_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. BBB">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 1 URL</label>
-                            <input type="url" id="editOtherReview1" value="${currentListing.reviews?.other1 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 2 Name</label>
-                            <input type="text" id="editOtherReview2Name" value="${currentListing.reviews?.other2_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Angi">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 2 URL</label>
-                            <input type="url" id="editOtherReview2" value="${currentListing.reviews?.other2 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 3 Name</label>
-                            <input type="text" id="editOtherReview3Name" value="${currentListing.reviews?.other3_name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. OpenTable">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Other Review 3 URL</label>
-                            <input type="url" id="editOtherReview3" value="${currentListing.reviews?.other3 || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Full URL">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Additional Information -->
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Additional Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        ${[0, 1, 2, 3, 4].map(index => {
-                            const info = currentListing.additional_info?.[index] || {};
-                            return `
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Info Name ${index + 1}</label>
-                                <input type="text" id="editInfoName${index}" value="${info.label || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" maxlength="30">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Info Value ${index + 1}</label>
-                                <input type="text" id="editInfoValue${index}" value="${info.value || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" maxlength="120">
-                            </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-
-                <!-- Custom CTA Buttons -->
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Custom CTA Buttons</h3>
-                    <p class="text-sm text-gray-600 mb-4">Featured listings get 1 CTA. Premium listings get 2. Name max 15 characters.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        ${[0, 1].map(index => {
-                            const cta = currentListing.custom_ctas?.[index] || {};
-                            return `
-                            <div class="md:col-span-2 border border-gray-200 rounded-lg p-4 space-y-3">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">CTA ${index + 1} Name</label>
-                                    <input type="text" id="editCtaName${index}" value="${cta.name || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" maxlength="15">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">CTA ${index + 1} Link</label>
-                                    <input type="url" id="editCtaUrl${index}" value="${cta.url || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://">
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Button Color</label>
-                                        <input type="color" id="editCtaColor${index}" value="${cta.color || '#055193'}" class="w-full h-10 border border-gray-300 rounded-lg">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon</label>
-                                        <select id="editCtaIcon${index}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                                            ${getCustomCtaIconOptions(cta.icon || '')}
-                                        </select>
-                                    </div>
+                                <div class="bp-field">
+                                    <label class="bp-label" for="ctaIcon${i}">Icon (optional)</label>
+                                    <select class="bp-input" id="ctaIcon${i}">${_ctaIconOptions(cta.icon||'')}</select>
                                 </div>
                             </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
+                        </div>`;
+                }).join('')}
+            `)
+            : `<div class="bp-section" style="margin-bottom:16px;">
+                   <div class="bp-section__head" style="cursor:default;">
+                       <div class="bp-section__head-left">
+                           <div class="bp-section__head-icon">${STAR_SVG}</div>
+                           <span class="bp-section__title">Custom CTA Buttons</span>
+                       </div>
+                   </div>
+                   <div class="bp-section__body" style="display:block;">
+                       <div class="bp-inline-msg bp-inline-msg--info">
+                           Custom CTA buttons are available on Featured (1 button) and Premium (2 buttons) plans.
+                       </div>
+                   </div>
+               </div>`
+        }
+
+        <div class="bp-save-bar">
+            <p>Changes will update your listing and regenerate your live page.</p>
+            <div style="display:flex;gap:10px;">
+                <button class="bp-btn bp-btn--ghost" onclick="renderEditForm()">Reset</button>
+                <button class="bp-btn bp-btn--primary bp-btn--lg" id="saveBtn" onclick="saveChanges()">Save Changes</button>
             </div>
         </div>
     `;
-    
-    const phoneContainer = document.getElementById('editPhoneContainer');
-    if (phoneContainer) {
-        phoneContainer.innerHTML = createPhoneInput(currentListing.phone || '', userCountry);
-    }
-    
-    renderSubcategories();
-    updateMediaPreview();
-    attachMediaUploadHandlers();
+
+    window.BP.createPhoneInput('editPhoneWrap', listing.phone || '', window.BP.userCountry);
+
     if (window.RichTextEditor) {
-        businessDescriptionEditor = window.RichTextEditor.mount({ inputId: 'editDescription', onChange: () => updateCharCounter('description') });
-    }
-
-    attachCloudflareConfigHandlers();
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-function renderSubcategories() {
-    const category = currentListing.category;
-    const grid = document.getElementById('subcategoriesGrid');
-    
-    if (!grid) return;
-    
-    if (SUBCATEGORIES[category] && SUBCATEGORIES[category].length > 0) {
-        grid.innerHTML = '';
-        SUBCATEGORIES[category].forEach(sub => {
-            const isSelected = selectedSubcategories.includes(sub);
-            const isPrimary = sub === primarySubcategory;
-            
-            const div = document.createElement('div');
-            div.className = 'subcategory-checkbox';
-            div.innerHTML = `
-                <input type="checkbox" id="subcat-${sub.replace(/\s+/g, '-')}" 
-                    ${isSelected ? 'checked' : ''} 
-                    onchange="toggleSubcategory('${sub.replace(/'/g, "\\'")}')">
-                <label for="subcat-${sub.replace(/\s+/g, '-')}" class="flex-1">${sub}</label>
-                <input type="radio" name="primarySub" 
-                    ${isPrimary ? 'checked' : ''} 
-                    ${!isSelected ? 'disabled' : ''}
-                    onchange="setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')"
-                    title="Primary">
-            `;
-            grid.appendChild(div);
+        _rteInstance = window.RichTextEditor.mount({
+            inputId:  'editDescription',
+            onChange: (html, text) => _updateCounter('description', text.length, maxDesc),
         });
+        _updateCounter('description', window.RichTextEditor.stripHtml(listing.description || '').length, maxDesc);
+    } else {
+        const descEl = document.getElementById('editDescription');
+        if (descEl) {
+            descEl.addEventListener('input', () => _updateCounter('description', descEl.value.length, maxDesc));
+            _updateCounter('description', descEl.value.length, maxDesc);
+        }
     }
+
+    _renderSubcats();
+    _renderHours(listing.hours || {});
+    document.querySelector('.bp-section')?.classList.add('open');
 }
 
-window.toggleSubcategory = function(subcategory) {
-    const index = selectedSubcategories.indexOf(subcategory);
-    
-    if (index > -1) {
-        selectedSubcategories.splice(index, 1);
-        if (primarySubcategory === subcategory) {
-            primarySubcategory = selectedSubcategories.length > 0 ? selectedSubcategories[0] : null;
-        }
-    } else {
-        selectedSubcategories.push(subcategory);
-        if (!primarySubcategory) {
-            primarySubcategory = subcategory;
-        }
-    }
-    
-    renderSubcategories();
+// ── Section helpers ───────────────────────────────────────────────
+
+function _section(id, iconSvg, title, openByDefault, bodyHtml) {
+    return `
+        <div class="bp-section ${openByDefault ? 'open' : ''}" id="section-${id}">
+            <div class="bp-section__head" onclick="_toggleSection('section-${id}')">
+                <div class="bp-section__head-left">
+                    <div class="bp-section__head-icon">${iconSvg}</div>
+                    <span class="bp-section__title">${title}</span>
+                </div>
+                <svg class="bp-section__chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="bp-section__body">${bodyHtml}</div>
+        </div>
+    `;
+}
+
+window._toggleSection  = id => document.getElementById(id)?.classList.toggle('open');
+
+// ── Subcategories ─────────────────────────────────────────────────
+
+function _renderSubcats() {
+    const listing  = window.BP.currentListing;
+    const category = listing?.category;
+    const grid     = document.getElementById('subcatsGrid');
+    if (!grid || !category) return;
+    const options = SUBCATEGORIES[category] || [];
+    if (!options.length) { grid.innerHTML = '<p style="color:var(--slate-400);font-size:.85rem;">No subcategories available for this category.</p>'; return; }
+    grid.innerHTML = options.map(sub => {
+        const selected  = _selectedSubcats.includes(sub);
+        const isPrimary = sub === _primarySubcat;
+        return `
+            <div class="bp-subcat-item ${selected ? 'selected' : ''}" id="subcat-wrap-${_safeId(sub)}">
+                <input type="checkbox" id="subcat-${_safeId(sub)}" ${selected?'checked':''}
+                       onchange="_toggleSubcat('${sub.replace(/'/g,"\\'")}')">
+                <label for="subcat-${_safeId(sub)}" style="flex:1;">${_esc(sub)}</label>
+                <input type="radio" name="primarySubcat" title="Set as primary"
+                       ${isPrimary?'checked':''} ${!selected?'disabled':''}
+                       onchange="_setPrimarySubcat('${sub.replace(/'/g,"\\'")}')">
+                <span title="Primary subcategory" style="font-size:.7rem;color:var(--gold);flex-shrink:0;">⭐</span>
+            </div>
+        `;
+    }).join('');
+}
+
+window._toggleSubcat = function(sub) {
+    const idx = _selectedSubcats.indexOf(sub);
+    if (idx > -1) { _selectedSubcats.splice(idx, 1); if (_primarySubcat === sub) _primarySubcat = _selectedSubcats[0] || null; }
+    else { _selectedSubcats.push(sub); if (!_primarySubcat) _primarySubcat = sub; }
+    _renderSubcats();
+};
+window._setPrimarySubcat = function(sub) { _primarySubcat = sub; _renderSubcats(); };
+
+// ── Hours ─────────────────────────────────────────────────────────
+
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function _renderHours(hours) {
+    const grid = document.getElementById('hoursGrid');
+    if (!grid) return;
+    grid.innerHTML = DAYS.map(day => {
+        const key      = day.toLowerCase();
+        const val      = hours[key] || '';
+        const isClosed = val.toLowerCase() === 'closed';
+        const is24h    = /00:00-23:59|open 24/i.test(val);
+        return `
+            <div class="bp-hours-row">
+                <span class="bp-hours-day">${day.slice(0,3)}</span>
+                <input class="bp-input" type="text" id="hours-${key}"
+                       value="${_esc((isClosed || is24h) ? '' : val)}"
+                       placeholder="9:00 AM - 5:00 PM"
+                       ${isClosed || is24h ? 'disabled' : ''}>
+                <div class="bp-hours-checks" style="display:flex;gap:14px;">
+                    <label class="bp-hours-check">
+                        <input type="checkbox" id="closed-${key}" ${isClosed?'checked':''}
+                               onchange="_toggleDayClosed('${key}')"> Closed
+                    </label>
+                    <label class="bp-hours-check">
+                        <input type="checkbox" id="open24-${key}" ${is24h?'checked':''}
+                               onchange="_toggle24Hours('${key}')"> 24 hrs
+                    </label>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+window._toggleDayClosed = function(key) {
+    const input = document.getElementById(`hours-${key}`), closed = document.getElementById(`closed-${key}`), open24 = document.getElementById(`open24-${key}`);
+    if (closed.checked) { input.value = ''; input.disabled = true; open24.checked = false; } else { input.disabled = false; }
+};
+window._toggle24Hours = function(key) {
+    const input = document.getElementById(`hours-${key}`), open24 = document.getElementById(`open24-${key}`), closed = document.getElementById(`closed-${key}`);
+    if (open24.checked) { input.value = ''; input.disabled = true; closed.checked = false; } else { input.disabled = false; }
 };
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-window.setPrimarySubcategory = function(subcategory) {
-    primarySubcategory = subcategory;
-    renderSubcategories();
-};
-
-window.updateCharCounter = function(field) {
-    if (field === 'tagline') {
-        const input = document.getElementById('editTagline');
-        const counter = document.getElementById('taglineCount');
-        counter.textContent = input.value.length;
-    } else if (field === 'description') {
-        const input = document.getElementById('editDescription');
-        const counter = document.getElementById('descriptionCount');
-        const max = parseInt(document.getElementById('descriptionMax').textContent);
-        const current = window.RichTextEditor ? window.RichTextEditor.stripHtml(input.value).length : input.value.length;
-        
-        counter.textContent = current;
-        counter.parentElement.className = 'char-counter mt-1';
-        
-        if (current > max) {
-            counter.parentElement.className = 'char-counter error mt-1';
-        } else if (current > max * 0.9) {
-            counter.parentElement.className = 'char-counter warning mt-1';
-        }
-    }
-};
-
-window.toggleDayClosed = function(day) {
-    const input = document.getElementById(`editHours${day}`);
-    const closedCheckbox = document.getElementById(`editClosed${day}`);
-    const hours24Checkbox = document.getElementById(`edit24Hours${day}`);
-    
-    if (closedCheckbox.checked) {
-        input.value = 'Closed';
-        input.disabled = true;
-        hours24Checkbox.checked = false;
-    } else {
-        if (input.value.toLowerCase() === 'closed') {
-            input.value = '';
-        }
-        input.disabled = false;
-    }
-};
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-window.toggle24Hours = function(day) {
-    const input = document.getElementById(`editHours${day}`);
-    const closedCheckbox = document.getElementById(`editClosed${day}`);
-    const hours24Checkbox = document.getElementById(`edit24Hours${day}`);
-    
-    if (hours24Checkbox.checked) {
-        input.value = 'Open 24 Hours';
-        input.disabled = true;
-        closedCheckbox.checked = false;
-    } else {
-        if (input.value.toLowerCase().includes('24') || input.value.toLowerCase().includes('open 24')) {
-            input.value = '';
-        }
-        input.disabled = false;
-    }
-};
+// ─── 10. Save Changes ─────────────────────────────────────────────
 
 async function saveChanges() {
-    const tagline = document.getElementById('editTagline').value.trim();
-    if (!tagline) {
-        alert('Tagline is required');
-        return;
+    const listing = window.BP.currentListing;
+    if (!listing) return;
+
+    const limits        = _tierLimits;
+    const maxDesc       = limits.maxDesc;
+    const maxInfoFields = limits.maxInfoFields;
+
+    const tagline    = document.getElementById('editTagline').value.trim();
+    const city       = document.getElementById('editCity').value.trim();
+    const state      = document.getElementById('editState').value.trim();
+    const taglineMax = getTaglineMaxLength(city, state);
+
+    if (!tagline)                     return showToast('Tagline is required.', 'error');
+    if (tagline.length > taglineMax)  return showToast(`Tagline must be ${taglineMax} characters or fewer.`, 'error');
+    if (_selectedSubcats.length === 0) return showToast('Please select at least one subcategory.', 'error');
+
+    let description = '';
+    if (_rteInstance) {
+        description = window.RichTextEditor.sanitizeRichTextHtml(_rteInstance.getHtml());
+        const plainLen = window.RichTextEditor.stripHtml(description).length;
+        if (plainLen > maxDesc) return showToast(`Description is too long (${plainLen}/${maxDesc} chars).`, 'error');
+    } else {
+        description = document.getElementById('editDescription')?.value || '';
+        if (description.length > maxDesc) return showToast('Description is too long.', 'error');
     }
-    const taglineLimit = getTaglineMaxLength(document.getElementById('editCity').value.trim(), document.getElementById('editState').value.trim());
-    if (tagline.length > taglineLimit) {
-        alert(`Tagline must be ${taglineLimit} characters or fewer for SEO metadata compliance.`);
-        return;
-    }
-    
-    if (selectedSubcategories.length === 0) {
-        alert('At least one subcategory is required');
-        return;
-    }
-    
-    const tier = currentListing.tier || 'FREE';
-    const maxDesc = tier === 'FREE' ? 1000 : 2000;
-    const description = window.RichTextEditor ? window.RichTextEditor.sanitizeRichTextHtml(businessDescriptionEditor ? businessDescriptionEditor.getHtml() : document.getElementById('editDescription').value) : document.getElementById('editDescription').value;
-    
-    if ((window.RichTextEditor ? window.RichTextEditor.stripHtml(description).length : description.length) > maxDesc) {
-        alert(`Description too long! Maximum ${maxDesc} characters for your current plan.`);
-        return;
-    }
-    
-    const phoneContainer = document.getElementById('editPhoneContainer');
-    const phone = getPhoneValue(phoneContainer);
-    const phoneRawValue = phoneContainer?.querySelector('.phone-number-input')?.value?.trim();
-    if (phoneRawValue && !phone) {
-        alert('Phone number must be a valid US 10-digit number and is stored as E.164.');
-        return;
-    }
-    
+
+    const phone    = window.BP.getPhoneValue('editPhoneWrap');
+    const phoneRaw = document.querySelector('#editPhoneWrap .phone-number')?.value?.trim();
+    if (phoneRaw && !phone) return showToast('Phone number is not valid. US numbers need 10 digits.', 'error');
+
+    const hours = {};
+    let hoursChanged = false;
+    DAYS.forEach(day => {
+        const key    = day.toLowerCase();
+        const closed = document.getElementById(`closed-${key}`)?.checked;
+        const open24 = document.getElementById(`open24-${key}`)?.checked;
+        const input  = document.getElementById(`hours-${key}`)?.value.trim() || '';
+        let val = null;
+        if (closed)      val = 'Closed';
+        else if (open24) val = '00:00-23:59';
+        else if (input)  val = _normalizeHours(input);
+        hours[key] = val;
+        if ((listing.hours || {})[key] !== val) hoursChanged = true;
+    });
+
     const additionalInfo = [];
-    for (let i = 0; i < 5; i += 1) {
-        const label = document.getElementById(`editInfoName${i}`)?.value.trim();
-        const value = document.getElementById(`editInfoValue${i}`)?.value.trim();
-        if (label && value) {
-            additionalInfo.push({ label, value });
-        }
+    for (let i = 0; i < maxInfoFields; i++) {
+        const label = document.getElementById(`infoLabel${i}`)?.value.trim();
+        const value = document.getElementById(`infoValue${i}`)?.value.trim();
+        if (label && value) additionalInfo.push({ label, value });
     }
-    
+
     const customCtas = [];
-    for (let i = 0; i < 2; i += 1) {
-        const name = document.getElementById(`editCtaName${i}`)?.value.trim();
-        const url = document.getElementById(`editCtaUrl${i}`)?.value.trim();
-        const color = document.getElementById(`editCtaColor${i}`)?.value.trim();
-        const icon = document.getElementById(`editCtaIcon${i}`)?.value.trim();
-        
-        if (!name && !url && !icon) continue;
-        if (!name || !url) {
-            alert(`CTA ${i + 1} requires both a name and a link.`);
-            return;
-        }
-        if (name.length > 15) {
-            alert(`CTA ${i + 1} name must be 15 characters or fewer.`);
-            return;
-        }
-        customCtas.push({
-            name,
-            url,
-            color: color || '#055193',
-            icon: icon || ''
-        });
+    for (let i = 0; i < limits.maxCtas; i++) {
+        const name  = document.getElementById(`ctaName${i}`)?.value.trim();
+        const url   = document.getElementById(`ctaUrl${i}`)?.value.trim();
+        const color = document.getElementById(`ctaColor${i}`)?.value || '#045093';
+        const icon  = document.getElementById(`ctaIcon${i}`)?.value || '';
+        if (!name && !url) continue;
+        if (!name || !url) return showToast(`CTA Button ${i+1} needs both a name and a link.`, 'error');
+        if (name.length > 15) return showToast(`CTA Button ${i+1} name must be 15 characters or fewer.`, 'error');
+        customCtas.push({ name, url, color, icon });
     }
-    
-    if (currentMaxCtas === 0 && customCtas.length > 0) {
-        alert('Custom CTA buttons are only available for Featured and Premium listings.');
-        return;
-    }
-    
-    const mergedPhotos = [
-        ...(currentListing.photos || []),
-        ...uploadedImages.photos
-    ].slice(0, currentMaxPhotos);
-    const updatedLogo = uploadedImages.logo || currentListing.logo || null;
-    const updatedVideo = uploadedImages.video || currentListing.video || null;
 
-    const changes = [];
-    if (currentListing.tagline !== tagline) changes.push(`Tagline updated`);
-    if (currentListing.description !== description) changes.push('Description updated');
-    
-    const newSubcategories = selectedSubcategories.sort().join(',');
-    const oldSubcategories = (currentListing.subcategories || []).sort().join(',');
-    if (oldSubcategories !== newSubcategories) changes.push(`Subcategories updated`);
+    const existingPhotos = (listing.photos || []).filter(u => !_removedPhotos.includes(u));
+    const mergedPhotos   = [...existingPhotos, ..._uploadedImages.photos].slice(0, limits.maxPhotos);
+    const updatedLogo    = _uploadedImages.logo  || listing.logo  || null;
+    const updatedVideo   = limits.hasVideo ? (_uploadedImages.video || listing.video || null) : listing.video;
 
-    if (JSON.stringify(currentListing.additional_info || []) !== JSON.stringify(additionalInfo)) {
-        changes.push('Additional info updated');
-    }
-    if (JSON.stringify(currentListing.custom_ctas || []) !== JSON.stringify(customCtas.slice(0, currentMaxCtas))) {
-        changes.push('Custom CTA buttons updated');
-    }
-    if ((currentListing.logo || '') !== (updatedLogo || '')) {
-        changes.push('Logo updated');
-    }
-    if (JSON.stringify(currentListing.photos || []) !== JSON.stringify(mergedPhotos)) {
-        changes.push('Photos updated');
-    }
-    if ((currentListing.video || '') !== (updatedVideo || '')) {
-        changes.push('Video updated');
-    }
-    
-    if (changes.length === 0) {
-        alert('No changes detected.');
-        return;
-    }
-    
-    const confirmMessage = `Save these changes?\n\n${changes.map(c => `• ${c}`).join('\n')}`;
-    
-    if (!confirm(confirmMessage)) return;
-    
-    /*
-    Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-    */
-    
+    const updates = {
+        tagline, description,
+        subcategories:       _selectedSubcats,
+        primary_subcategory: _primarySubcat,
+        pricing:             document.getElementById('editPricing').value ? Number(document.getElementById('editPricing').value) : null,
+        coming_soon:         document.getElementById('editComingSoon').value === 'true',
+        address:             document.getElementById('editAddress').value.trim() || null,
+        city:                city || null,
+        state:               state || null,
+        zip_code:            document.getElementById('editZip').value.trim() || null,
+        phone, logo: updatedLogo, photos: mergedPhotos, video: updatedVideo,
+        email:               document.getElementById('editEmail').value.trim() || null,
+        website:             document.getElementById('editWebsite').value.trim() || null,
+        hours,
+        social_media: {
+            facebook:    document.getElementById('editFacebook')?.value.trim()   || null,
+            instagram:   document.getElementById('editInstagram')?.value.trim()  || null,
+            twitter:     document.getElementById('editTwitter')?.value.trim()    || null,
+            youtube:     document.getElementById('editYoutube')?.value.trim()    || null,
+            tiktok:      document.getElementById('editTiktok')?.value.trim()     || null,
+            linkedin:    document.getElementById('editLinkedin')?.value.trim()   || null,
+            other1_name: document.getElementById('editOther1Name')?.value.trim() || null,
+            other1:      document.getElementById('editOther1')?.value.trim()     || null,
+            other2_name: document.getElementById('editOther2Name')?.value.trim() || null,
+            other2:      document.getElementById('editOther2')?.value.trim()     || null,
+            other3_name: document.getElementById('editOther3Name')?.value.trim() || null,
+            other3:      document.getElementById('editOther3')?.value.trim()     || null,
+        },
+        reviews: {
+            google:      listing.reviews?.google      || document.getElementById('editGoogleReviews')?.value.trim() || null,
+            yelp:        listing.reviews?.yelp        || document.getElementById('editYelp')?.value.trim()          || null,
+            tripadvisor: listing.reviews?.tripadvisor || document.getElementById('editTripadvisor')?.value.trim()   || null,
+            other1_name: document.getElementById('editRev1Name')?.value.trim() || null,
+            other1:      document.getElementById('editRev1')?.value.trim()     || null,
+            other2_name: document.getElementById('editRev2Name')?.value.trim() || null,
+            other2:      document.getElementById('editRev2')?.value.trim()     || null,
+            other3_name: document.getElementById('editRev3Name')?.value.trim() || null,
+            other3:      document.getElementById('editRev3')?.value.trim()     || null,
+        },
+        additional_info: additionalInfo,
+        custom_ctas:     customCtas,
+        updated_by_role: 'owner',
+    };
+
+    if (hoursChanged) { updates.hours_updated_at = new Date().toISOString(); updates.hours_updated_by = 'owner'; }
+
+    const changes = _diffChanges(listing, updates);
+    if (changes.length === 0) { showToast('No changes detected.', 'info'); return; }
+
+    showConfirmModal({
+        title:        'Save Changes',
+        message:      `The following will be updated:\n\n${changes.map(c => `• ${c}`).join('\n')}`,
+        confirmLabel: 'Save',
+        onConfirm:    () => _performSave(listing.id, updates),
+    });
+}
+
+/*
+ * _performSave
+ *
+ * Writes updates directly via the Supabase SDK (RLS policies are now correct).
+ *
+ * Pattern: .update() WITHOUT chained .select() to avoid the PGRST116 / 406
+ * "0 rows returned" error that occurs when RLS allows the write but the
+ * implicit RETURNING clause hits a policy gap. After a successful write we do
+ * a clean separate .select() to reload the row.
+ */
+async function _performSave(listingId, updates) {
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) saveBtn.classList.add('bp-btn--loading');
+
     try {
-        const updates = {
-            tagline: tagline,
-            description: description,
-            subcategories: selectedSubcategories,
-            primary_subcategory: primarySubcategory,
-            address: document.getElementById('editAddress').value.trim() || null,
-            city: document.getElementById('editCity').value.trim() || null,
-            state: document.getElementById('editState').value.trim() || null,
-            zip_code: document.getElementById('editZipCode').value.trim() || null,
-            phone: phone,
-            email: document.getElementById('editEmail').value.trim() || null,
-            website: document.getElementById('editWebsite').value.trim() || null,
-            pricing: document.getElementById('editPricing').value ? Number(document.getElementById('editPricing').value) : null,
-            coming_soon: document.getElementById('editComingSoon').value === 'true',
-            logo: updatedLogo,
-            photos: mergedPhotos,
-            video: updatedVideo,
-            hours: {
-                monday: normalizeHoursInput(document.getElementById('editHoursMonday').value.trim()),
-                tuesday: normalizeHoursInput(document.getElementById('editHoursTuesday').value.trim()),
-                wednesday: normalizeHoursInput(document.getElementById('editHoursWednesday').value.trim()),
-                thursday: normalizeHoursInput(document.getElementById('editHoursThursday').value.trim()),
-                friday: normalizeHoursInput(document.getElementById('editHoursFriday').value.trim()),
-                saturday: normalizeHoursInput(document.getElementById('editHoursSaturday').value.trim()),
-                sunday: normalizeHoursInput(document.getElementById('editHoursSunday').value.trim())
-            },
-            social_media: {
-                facebook: document.getElementById('editFacebook').value.trim() || null,
-                instagram: document.getElementById('editInstagram').value.trim() || null,
-                twitter: document.getElementById('editTwitter').value.trim() || null,
-                youtube: document.getElementById('editYoutube').value.trim() || null,
-                tiktok: document.getElementById('editTiktok').value.trim() || null,
-                linkedin: document.getElementById('editLinkedin').value.trim() || null,
-                other1_name: document.getElementById('editOtherSocial1Name').value.trim() || null,
-                other1: document.getElementById('editOtherSocial1').value.trim() || null,
-                other2_name: document.getElementById('editOtherSocial2Name').value.trim() || null,
-                other2: document.getElementById('editOtherSocial2').value.trim() || null,
-                other3_name: document.getElementById('editOtherSocial3Name').value.trim() || null,
-                other3: document.getElementById('editOtherSocial3').value.trim() || null
-            },
-            reviews: {
-                ...currentListing.reviews,
-                google: currentListing.reviews?.google || document.getElementById('editGoogleReviews').value.trim() || null,
-                yelp: currentListing.reviews?.yelp || document.getElementById('editYelp').value.trim() || null,
-                tripadvisor: currentListing.reviews?.tripadvisor || document.getElementById('editTripadvisor').value.trim() || null,
-                other1_name: document.getElementById('editOtherReview1Name').value.trim() || null,
-                other1: document.getElementById('editOtherReview1').value.trim() || null,
-                other2_name: document.getElementById('editOtherReview2Name').value.trim() || null,
-                other2: document.getElementById('editOtherReview2').value.trim() || null,
-                other3_name: document.getElementById('editOtherReview3Name').value.trim() || null,
-                other3: document.getElementById('editOtherReview3').value.trim() || null
-            },
-            additional_info: additionalInfo,
-            custom_ctas: customCtas.slice(0, currentMaxCtas)
-        };
-        
-        const { data, error } = await window.TGDAuth.supabaseClient
+        // ── Allowed fields (owner cannot touch tier, visible, slug, is_claimed, etc.) ──
+        const ALLOWED = new Set([
+            'tagline','description','subcategories','primary_subcategory',
+            'pricing','coming_soon','address','city','state','zip_code','country','timezone',
+            'phone','email','website','logo','photos','video',
+            'hours','hours_label_custom','hours_disclaimer_custom',
+            'hours_updated_at','hours_updated_by',
+            'social_media','reviews','additional_info','custom_ctas','updated_by_role',
+        ]);
+        const filtered = {};
+        for (const [k, v] of Object.entries(updates)) {
+            if (ALLOWED.has(k)) filtered[k] = v;
+        }
+
+        // ── Step 1: UPDATE — no .select() chained to avoid 406/PGRST116 ──
+        const { error: updateError } = await window.TGDAuth.supabaseClient
             .from('listings')
-            .update(updates)
-            .eq('id', currentListing.id)
-            .select()
+            .update(filtered)
+            .eq('id', listingId);
+
+        if (updateError) throw new Error(updateError.message || 'Update failed');
+
+        // ── Step 2: Reload the full row in a separate query ──
+        const { data: updatedListing, error: fetchError } = await window.TGDAuth.supabaseClient
+            .from('listings')
+            .select('*')
+            .eq('id', listingId)
             .single();
-        
-        if (error) throw error;
-        
-        currentListing = data;
-        await loadDynamicSubcategories();
-        
-        alert('✅ Changes saved successfully!');
+
+        if (fetchError) throw new Error(fetchError.message || 'Could not reload listing after save');
+
+        window.BP.currentListing = updatedListing;
+        showToast('Listing saved successfully!', 'success');
         renderDashboard();
         switchTab('overview');
-        
-    } catch (error) {
-        console.error('Error saving changes:', error);
-        alert('❌ Failed to save changes: ' + error.message);
+
+    } catch (err) {
+        console.error('_performSave error:', err);
+        showToast(`Save failed: ${err.message}`, 'error');
+    } finally {
+        if (saveBtn) saveBtn.classList.remove('bp-btn--loading');
     }
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+window.saveChanges = saveChanges;
 
-function renderAnalytics() {
-    if (!currentListing) return;
-    
-    const tier = currentListing.tier || 'FREE';
-    const analytics = currentListing.analytics || {
-        views: 0,
-        call_clicks: 0,
-        website_clicks: 0,
-        direction_clicks: 0,
-        share_clicks: 0,
-        video_plays: 0
-    };
-    
-    const content = document.getElementById('content-analytics');
-    
-    let html = '';
-    
-    if (tier === 'FREE') {
-        html = `
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="analytics-stat-card">
-                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                        <div class="text-sm opacity-90">Total Views</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="text-4xl font-bold mb-2">${(analytics.call_clicks || 0) + (analytics.website_clicks || 0) + (analytics.direction_clicks || 0) + (analytics.share_clicks || 0)}</div>
-                        <div class="text-sm opacity-90">Total Engagement</div>
-                    </div>
-                </div>
-                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-sm text-blue-900"><strong>Want more?</strong> Contact support to unlock detailed analytics.</p>
-                </div>
-            </div>
-        `;
-    } else if (tier === 'VERIFIED') {
-        html = `
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
-                
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div class="analytics-stat-card">
-                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                        <div class="text-sm opacity-90">Views</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${PHONE_ICON_SVG}<span>Calls</span></div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${WEBSITE_ICON_SVG}<span>Website</span></div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${LOCATION_ICON_SVG}<span>Directions</span></div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Shares</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    } else {
-        html = `
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
-                
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div class="analytics-stat-card">
-                        <div class="text-4xl font-bold mb-2">${analytics.views || 0}</div>
-                        <div class="text-sm opacity-90">Views</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.call_clicks || 0}</div>
-                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${PHONE_ICON_SVG}<span>Calls</span></div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.website_clicks || 0}</div>
-                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${WEBSITE_ICON_SVG}<span>Website</span></div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.direction_clicks || 0}</div>
-                        <div class="text-sm opacity-90 flex items-center justify-center gap-2">${LOCATION_ICON_SVG}<span>Directions</span></div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.share_clicks || 0}</div>
-                        <div class="text-sm opacity-90">Shares</div>
-                    </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
-                        <div class="text-4xl font-bold mb-2">${analytics.video_plays || 0}</div>
-                        <div class="text-sm opacity-90">Video Plays</div>
-                    </div>
-                </div>
-            </div>
-        `;
+// ─── 11. Media Upload ─────────────────────────────────────────────
+
+/*
+ * _uploadToCloudflare — Direct Creator Upload flow.
+ *
+ * Step 1: POST to our worker (?action=request-upload-url) to get a
+ *         one-time Cloudflare upload URL. The worker calls the CF Images API
+ *         with its server-side token — no credentials ever reach the browser.
+ *
+ * Step 2: POST the file directly to the one-time URL returned by CF.
+ *         CF accepts it without any auth header on the client side.
+ *
+ * Step 3: Return the canonical image URL (constructed in step 1 from the
+ *         image ID, so it's available before the upload even starts).
+ *
+ * @param {File}   file      - The file to upload
+ * @param {string} assetType - 'logo' | 'photo' | 'video'
+ */
+async function _uploadToCloudflare(file, assetType = 'photo') {
+    const listingId = window.BP.currentListing?.id || '';
+
+    // ── Step 1: Request a one-time upload URL from our proxy worker ──
+    let urlRes, urlData;
+    try {
+        urlRes  = await fetch(`${UPLOAD_PROXY}?action=request-upload-url`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ assetType, listingId }),
+        });
+        urlData = await urlRes.json();
+    } catch (netErr) {
+        throw new Error(`Could not reach upload server: ${netErr.message}`);
     }
-    
-    content.innerHTML = html;
+    if (!urlRes.ok || !urlData.success) {
+        throw new Error(urlData?.error || `Upload server error (HTTP ${urlRes.status})`);
+    }
+
+    // ── Step 2: Upload directly to Cloudflare — no auth needed here ──
+    const uploadForm = new FormData();
+    uploadForm.append('file', file);
+    const uploadRes = await fetch(urlData.uploadURL, { method: 'POST', body: uploadForm });
+    if (!uploadRes.ok) {
+        let errMsg = `Cloudflare upload failed (HTTP ${uploadRes.status})`;
+        try {
+            const errData = await uploadRes.json();
+            if (errData?.errors?.[0]?.message) errMsg = errData.errors[0].message;
+        } catch (_) { /* non-JSON body, keep generic message */ }
+        throw new Error(errMsg);
+    }
+
+    if (!urlData.imageUrl) throw new Error('Upload succeeded but no image URL was returned.');
+    return urlData.imageUrl;
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
+function _setUploadStatus(msg, type = '') {
+    const el = document.getElementById('uploadStatus');
+    if (!el) return;
+    el.textContent = msg;
+    el.className   = `bp-upload-status ${type ? `visible ${type}` : ''}`;
+}
+
+window._handleLogoUpload = async function(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    _setUploadStatus('Uploading logo…', 'loading');
+    try {
+        const url = await _uploadToCloudflare(file, 'logo');
+        const preview = document.getElementById('logoPreview');
+        if (preview) preview.innerHTML = `<div class="bp-photo-thumb"><img src="${_esc(url)}" alt="Logo"></div>`;
+        _setUploadStatus('Logo uploaded successfully.', 'success');
+    } catch (err) { _setUploadStatus(`Logo upload failed: ${err.message}`, 'error'); }
+};
+
+window._handlePhotosUpload = async function(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    const existing = (window.BP.currentListing?.photos || []).filter(u => !_removedPhotos.includes(u));
+    const slots    = _tierLimits.maxPhotos - existing.length - _uploadedImages.photos.length;
+    if (slots <= 0) { showToast(`Photo limit reached (${_tierLimits.maxPhotos} max for your plan).`, 'warning'); return; }
+    const toUpload = files.slice(0, slots);
+    _setUploadStatus(`Uploading ${toUpload.length} photo(s)…`, 'loading');
+    const preview  = document.getElementById('photosPreview');
+    let successCount = 0;
+    for (let i = 0; i < toUpload.length; i++) {
+        try {
+            const url = await _uploadToCloudflare(toUpload[i], 'photo');
+            _uploadedImages.photos.push(url);
+            if (preview) { const idx = existing.length + _uploadedImages.photos.length - 1; preview.insertAdjacentHTML('beforeend', _photoThumb(url, idx, 'new')); }
+            successCount++;
+        } catch (err) { _setUploadStatus(`Photo ${i+1} failed: ${err.message}`, 'error'); }
+    }
+    if (successCount > 0) _setUploadStatus(`${successCount} photo(s) uploaded successfully.`, 'success');
+};
+
+window._handleVideoUpload = async function(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    _setUploadStatus('Uploading video…', 'loading');
+    try {
+        const url = await _uploadToCloudflare(file, 'video');
+        _setUploadStatus('Video uploaded successfully.', 'success');
+    } catch (err) { _setUploadStatus(`Video upload failed: ${err.message}`, 'error'); }
+};
+
+window._removePhoto = function(url, type) {
+    if (type === 'existing') { _removedPhotos.push(url); window.BP.currentListing.photos = (window.BP.currentListing.photos || []).filter(u => u !== url); }
+    else { _uploadedImages.photos = _uploadedImages.photos.filter(u => u !== url); }
+    const preview = document.getElementById('photosPreview');
+    if (preview) {
+        const all = [...(window.BP.currentListing?.photos || []).filter(u => !_removedPhotos.includes(u)), ..._uploadedImages.photos];
+        preview.innerHTML = all.map((u, i) => _photoThumb(u, i, _uploadedImages.photos.includes(u) ? 'new' : 'existing')).join('');
+    }
+};
+
+function _photoThumb(url, idx, type) {
+    return `
+        <div class="bp-photo-thumb">
+            <img src="${_esc(url)}" alt="Photo ${idx+1}">
+            <button class="bp-photo-thumb__remove" onclick="_removePhoto('${url.replace(/'/g,"\\'")}','${type}')" title="Remove">✕</button>
+        </div>
+    `;
+}
+
+// ─── 12. Settings Tab ─────────────────────────────────────────────
 
 function renderSettings() {
+    const ownerData = window.BP.ownerData;
     if (!ownerData || ownerData.length === 0) return;
-    
     const owner = ownerData[0];
-    settingsVisibility = {
-        nameTitle: owner.name_title_visible !== false,
-        email: owner.email_visible || false,
-        phone: owner.phone_visible || false
-    };
-    
-    const content = document.getElementById('content-settings');
-    content.innerHTML = `
-        <div class="bg-white rounded-lg p-6 shadow-sm">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">Account Settings</h2>
-            
-            <div class="space-y-6">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="owner-field md:col-span-2">
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">👤 Owner Name + Title Visibility</label>
-                                <p class="text-xs text-gray-500">Owner name and title always show/hide together.</p>
-                            </div>
-                            <div class="mt-2">
-                                <button class="visibility-toggle ${settingsVisibility.nameTitle ? 'visible' : 'hidden'}" onclick="toggleSettingsFieldVisibility('nameTitle')">
-                                    ${settingsVisibility.nameTitle ? 'Visible' : 'Hidden'}
-                                </button>
-                            </div>
-                        </div>
+    _settingsVis = { nameTitle: owner.name_title_visible !== false, email: !!owner.email_visible, phone: !!owner.phone_visible };
 
-                        <div class="owner-field">
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">✉️ Owner Email</label>
-                                <input type="email" id="settingsOwnerEmail" value="${owner.owner_email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                            </div>
-                            <div class="mt-2">
-                                <button class="visibility-toggle ${settingsVisibility.email ? 'visible' : 'hidden'}" onclick="toggleSettingsFieldVisibility('email')">
-                                    ${settingsVisibility.email ? 'Visible' : 'Hidden'}
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="owner-field">
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">📞 Owner Phone</label>
-                                <div id="settingsOwnerPhoneContainer"></div>
-                            </div>
-                            <div class="mt-2">
-                                <button class="visibility-toggle ${settingsVisibility.phone ? 'visible' : 'hidden'}" onclick="toggleSettingsFieldVisibility('phone')">
-                                    ${settingsVisibility.phone ? 'Visible' : 'Hidden'}
-                                </button>
-                            </div>
+    document.getElementById('content-settings').innerHTML = `
+        <div class="bp-page-header">
+            <div><h1>Settings</h1><p>Manage your contact visibility and account security.</p></div>
+        </div>
+
+        <div class="bp-card" style="margin-bottom:16px;">
+            <div class="bp-card-header"><h2>Contact Information &amp; Visibility</h2></div>
+            <div class="bp-card-body">
+                <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:20px;">
+                    Control which of your contact details appear publicly on your listing page.
+                </p>
+                <div class="bp-vis-row">
+                    <div>
+                        <div class="bp-vis-row__label">Owner Name &amp; Title</div>
+                        <div class="bp-vis-row__sub">Shows "${_esc(owner.full_name||'')}"${owner.title ? ` — ${_esc(owner.title)}` : ''}</div>
+                    </div>
+                    <label class="bp-toggle-switch">
+                        <input type="checkbox" id="visNameTitle" ${_settingsVis.nameTitle?'checked':''}
+                               onchange="_onVisChange('nameTitle', this.checked)">
+                        <span class="bp-toggle-switch__track"></span>
+                    </label>
+                </div>
+                <div class="bp-vis-row">
+                    <div>
+                        <div class="bp-vis-row__label">Owner Email</div>
+                        <div class="bp-vis-row__sub">
+                            <input class="bp-input" type="email" id="settingsEmail" value="${_esc(owner.owner_email||'')}"
+                                   style="max-width:300px;margin-top:6px;" placeholder="owner@example.com">
                         </div>
                     </div>
+                    <label class="bp-toggle-switch">
+                        <input type="checkbox" id="visEmail" ${_settingsVis.email?'checked':''}
+                               onchange="_onVisChange('email', this.checked)">
+                        <span class="bp-toggle-switch__track"></span>
+                    </label>
                 </div>
-                
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Password</h3>
-                    <div class="max-w-md space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                            <input type="password" id="settingsNewPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-                            <input type="password" id="settingsConfirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <button onclick="updatePassword()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Update Password</button>
+                <div class="bp-vis-row">
+                    <div>
+                        <div class="bp-vis-row__label">Owner Phone</div>
+                        <div class="bp-vis-row__sub"><div id="settingsPhoneWrap" style="margin-top:6px;max-width:360px;"></div></div>
                     </div>
+                    <label class="bp-toggle-switch">
+                        <input type="checkbox" id="visPhone" ${_settingsVis.phone?'checked':''}
+                               onchange="_onVisChange('phone', this.checked)">
+                        <span class="bp-toggle-switch__track"></span>
+                    </label>
                 </div>
-                
-                <div class="border-t pt-6">
-                    <button onclick="saveSettings()" class="px-6 py-3 text-white rounded-lg font-medium" style="background-color: #055193;">Save Settings</button>
+                <div style="margin-top:20px;">
+                    <button class="bp-btn bp-btn--primary" id="saveSettingsBtn" onclick="saveSettings()">Save Contact Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bp-card">
+            <div class="bp-card-header"><h2>Change Password</h2></div>
+            <div class="bp-card-body">
+                <div style="max-width:360px;display:flex;flex-direction:column;gap:14px;">
+                    <div class="bp-field">
+                        <label class="bp-label" for="newPassword">New Password</label>
+                        <input class="bp-input" type="password" id="newPassword" placeholder="Min 6 characters" autocomplete="new-password">
+                    </div>
+                    <div class="bp-field">
+                        <label class="bp-label" for="confirmPassword">Confirm New Password</label>
+                        <input class="bp-input" type="password" id="confirmPassword" placeholder="Re-enter password" autocomplete="new-password">
+                    </div>
+                    <div>
+                        <button class="bp-btn bp-btn--primary" id="changePassBtn" onclick="changePassword()">Update Password</button>
+                    </div>
                 </div>
             </div>
         </div>
     `;
-    
-    const ownerPhoneContainer = document.getElementById('settingsOwnerPhoneContainer');
-    if (ownerPhoneContainer) {
-        ownerPhoneContainer.innerHTML = createPhoneInput(owner.owner_phone || '', userCountry);
-    }
+
+    window.BP.createPhoneInput('settingsPhoneWrap', owner.owner_phone || '', window.BP.userCountry);
 }
 
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
-window.toggleSettingsFieldVisibility = function(field) {
-    settingsVisibility[field] = !settingsVisibility[field];
-    if (field === 'nameTitle' && !settingsVisibility.nameTitle) {
-        settingsVisibility.email = false;
-        settingsVisibility.phone = false;
+window._onVisChange = function(field, checked) {
+    if (field === 'nameTitle' && !checked) {
+        _settingsVis.nameTitle = false; _settingsVis.email = false; _settingsVis.phone = false;
+        document.getElementById('visEmail').checked = false;
+        document.getElementById('visPhone').checked = false;
+    } else if ((field === 'email' || field === 'phone') && checked && !_settingsVis.nameTitle) {
+        showToast('Enable "Owner Name & Title" visibility first.', 'warning');
+        document.getElementById(`vis${field.charAt(0).toUpperCase()+field.slice(1)}`).checked = false;
+        return;
+    } else {
+        _settingsVis[field] = checked;
     }
-    if ((field === 'email' || field === 'phone') && settingsVisibility[field] && !settingsVisibility.nameTitle) {
-        settingsVisibility[field] = false;
-        alert('Enable Name + Title visibility first.');
-    }
-
-    ['nameTitle', 'email', 'phone'].forEach((f) => {
-        const button = document.querySelector(`.visibility-toggle[onclick*="${f}"]`);
-        if (!button) return;
-        if (settingsVisibility[f]) {
-            button.className = 'visibility-toggle visible';
-            button.textContent = 'Visible';
-        } else {
-            button.className = 'visibility-toggle hidden';
-            button.textContent = 'Hidden';
-        }
-    });
 };
 
-async function updatePassword() {
-    const newPassword = document.getElementById('settingsNewPassword').value;
-    const confirmPassword = document.getElementById('settingsConfirmPassword').value;
-    
-    if (!newPassword || !confirmPassword) {
-        alert('Please enter and confirm your new password');
-        return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-        alert('Passwords do not match');
-        return;
-    }
-    
-    if (newPassword.length < 6) {
-        alert('Password must be at least 6 characters');
-        return;
-    }
-    
-    const result = await window.TGDAuth.updatePassword(newPassword);
-    
-    if (result.success) {
-        alert(result.message);
-        document.getElementById('settingsNewPassword').value = '';
-        document.getElementById('settingsConfirmPassword').value = '';
-    } else {
-        alert('Error: ' + result.error);
-    }
-}
-
-/*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-*/
-
 async function saveSettings() {
-    if (!ownerData || ownerData.length === 0) return;
-    
-    const updatedEmail = document.getElementById('settingsOwnerEmail').value.trim();
-    const ownerPhoneContainer = document.getElementById('settingsOwnerPhoneContainer');
-    const updatedPhone = getPhoneValue(ownerPhoneContainer);
-    
+    const btn = document.getElementById('saveSettingsBtn');
+    if (btn) btn.classList.add('bp-btn--loading');
+
+    const email = document.getElementById('settingsEmail')?.value.trim();
+    const phone = window.BP.getPhoneValue('settingsPhoneWrap');
+
     const updates = {
-        owner_email: updatedEmail,
-        owner_phone: updatedPhone,
-        name_title_visible: settingsVisibility.nameTitle,
-        email_visible: settingsVisibility.email,
-        phone_visible: settingsVisibility.phone
+        owner_email:        email || window.BP.ownerData?.[0]?.owner_email,
+        owner_phone:        phone,
+        name_title_visible: _settingsVis.nameTitle,
+        email_visible:      _settingsVis.email,
+        phone_visible:      _settingsVis.phone,
     };
-    
+
     const result = await window.TGDAuth.updateBusinessOwnerContact(updates);
-    
+
+    if (btn) btn.classList.remove('bp-btn--loading');
+
     if (result.success) {
-        ownerData = result.data;
-        alert('Settings saved successfully!');
+        window.BP.ownerData = result.data;
+        showToast('Settings saved successfully!', 'success');
         renderSettings();
     } else {
-        alert('Error: ' + result.error);
+        showToast(`Failed to save settings: ${result.error}`, 'error');
     }
 }
 
 window.saveSettings = saveSettings;
-window.updatePassword = updatePassword;
-window.saveChanges = saveChanges;
-window.switchTab = switchTab;
-window.loadListingData = loadListingData;
 
-window.addEventListener('hashchange', syncTabWithHash);
+async function changePassword() {
+    const newPass     = document.getElementById('newPassword')?.value;
+    const confirmPass = document.getElementById('confirmPassword')?.value;
+    if (!newPass || !confirmPass)  return showToast('Please fill in both password fields.', 'error');
+    if (newPass.length < 6)        return showToast('Password must be at least 6 characters.', 'error');
+    if (newPass !== confirmPass)   return showToast('Passwords do not match.', 'error');
+    const btn = document.getElementById('changePassBtn');
+    if (btn) btn.classList.add('bp-btn--loading');
+    const result = await window.TGDAuth.updatePassword(newPass);
+    if (btn) btn.classList.remove('bp-btn--loading');
+    if (result.success) {
+        showToast('Password updated successfully!', 'success');
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+    } else {
+        showToast(`Password update failed: ${result.error}`, 'error');
+    }
+}
+
+window.changePassword = changePassword;
+
+// ─── 13. Inline SVG Icons ────────────────────────────────────────
+
+const _svgAttr = `style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"`;
+const EYE_SVG   = `<svg ${_svgAttr}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const PHONE_SVG = `<svg ${_svgAttr}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.89 9.11 19.79 19.79 0 01.83.5a2 2 0 012 2v3a2 2 0 001.45 1.93 12.66 12.66 0 002.77.78 2 2 0 001.74-1.62l.18-.74a16 16 0 008.52 8.52l-.74.18a2 2 0 00-1.62 1.74 12.66 12.66 0 00.78 2.77A2 2 0 0020.1 19"/></svg>`;
+const GLOBE_SVG = `<svg ${_svgAttr}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`;
+const MAP_SVG   = `<svg ${_svgAttr}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+const SHARE_SVG = `<svg ${_svgAttr}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
+const VIDEO_SVG = `<svg ${_svgAttr}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`;
+const STAR_SVG  = `<svg ${_svgAttr}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+const EDIT_SVG  = `<svg ${_svgAttr}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+const CLOCK_SVG = `<svg ${_svgAttr}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+const IMAGE_SVG = `<svg ${_svgAttr}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+
+// ─── 14. Helper Functions ────────────────────────────────────────
+
+function _esc(str)    { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function _safeId(str) { return str.replace(/[^a-z0-9]/gi, '-').toLowerCase(); }
+function _fmt(n)      { return Number(n || 0).toLocaleString(); }
+
+function _timeAgo(ts) {
+    if (!ts) return '';
+    const diff = Date.now() - new Date(ts).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1)  return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)  return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return days < 30 ? `${days}d ago` : new Date(ts).toLocaleDateString();
+}
+
+function _normalizeHours(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    if (/^closed$/i.test(raw)) return 'Closed';
+    if (/24\s*hours?|open\s*24/i.test(raw)) return '00:00-23:59';
+    const toTime = t => {
+        t = t.trim().toUpperCase();
+        const m = t.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/);
+        if (!m) return null;
+        let h = parseInt(m[1]); const min = parseInt(m[2] || '0');
+        if (m[3] === 'PM' && h < 12) h += 12;
+        if (m[3] === 'AM' && h === 12) h = 0;
+        return `${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+    };
+    const parts = raw.split(/\s*[-–]\s*/);
+    if (parts.length === 2) { const s = toTime(parts[0]); const e = toTime(parts[1]); if (s && e) return `${s}-${e}`; }
+    return raw;
+}
+
+function _socialField(label, id, value, placeholder) {
+    return `
+        <div class="bp-field">
+            <label class="bp-label" for="${id}">${label}</label>
+            <input class="bp-input" type="text" id="${id}" value="${_esc(value||'')}" placeholder="${_esc(placeholder)}">
+        </div>
+    `;
+}
+
+function _reviewField(label, id, value, placeholder, lockIfSet = true) {
+    const locked = lockIfSet && !!value;
+    return `
+        <div class="bp-field">
+            <label class="bp-label" for="${id}">${label}</label>
+            <input class="bp-input" type="url" id="${id}" value="${_esc(value||'')}"
+                   placeholder="${_esc(placeholder)}" ${locked ? 'disabled' : ''}>
+            ${locked ? `<span class="bp-input-locked">🔒 Contact support to update this link</span>` : ''}
+        </div>
+    `;
+}
+
+function _ctaIconOptions(selected) {
+    const opts = [
+        {v:'',l:'No icon'},{v:'⭐',l:'⭐ Star'},{v:'🛍️',l:'🛍️ Shop'},
+        {v:'📅',l:'📅 Calendar'},{v:'🎟️',l:'🎟️ Ticket'},{v:'🍽️',l:'🍽️ Food'},
+        {v:'📦',l:'📦 Package'},{v:'💬',l:'💬 Message'},{v:'🧾',l:'🧾 Quote'},
+        {v:'🎉',l:'🎉 Event'},{v:'📋',l:'📋 Menu'},
+    ];
+    return opts.map(o => `<option value="${o.v}" ${selected===o.v?'selected':''}>${o.l}</option>`).join('');
+}
+
+function _updateCounter(field, current, max) {
+    const el = document.getElementById(`ctr-${field}`);
+    if (!el) return;
+    el.textContent = `${current}/${max}`;
+    el.className   = `bp-char-counter${current > max ? ' over' : current > max * 0.9 ? ' warn' : ''}`;
+}
+window._updateCounter = _updateCounter;
 
 /*
-Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
-or distribution of this code will result in legal action to the fullest extent permitted by law.
-*/
+ * _normalizeForDiff
+ *
+ * Strips null/undefined values from a plain object so that
+ *   {facebook: null, instagram: null}  ≡  null  ≡  {}
+ * when comparing original DB values (may be null) against always-constructed
+ * update objects (every key present, unset ones set to null).
+ * Arrays are returned as-is; non-objects collapse to {}.
+ */
+function _normalizeForDiff(val) {
+    if (Array.isArray(val)) return val;
+    if (!val || typeof val !== 'object') return {};
+    const out = {};
+    for (const [k, v] of Object.entries(val)) {
+        if (v !== null && v !== undefined) out[k] = v;
+    }
+    return out;
+}
+
+function _diffChanges(original, updates) {
+    const changes = [];
+    const simple  = [
+        ['tagline','Tagline'],['description','Description'],['pricing','Pricing'],
+        ['coming_soon','Coming Soon status'],['address','Address'],['city','City'],
+        ['state','State'],['zip_code','ZIP Code'],['phone','Phone'],
+        ['email','Email'],['website','Website'],['logo','Logo'],['video','Video'],
+    ];
+    simple.forEach(([k, label]) => { if (String(original[k] ?? '') !== String(updates[k] ?? '')) changes.push(label); });
+    if (JSON.stringify([...(original.subcategories||[])].sort()) !== JSON.stringify([...(updates.subcategories||[])].sort())) changes.push('Subcategories');
+    if (original.primary_subcategory !== updates.primary_subcategory) changes.push('Primary subcategory');
+
+    // Object fields: strip null values from both sides before comparing.
+    // The DB may store null for these fields; saveChanges() always builds a full
+    // object with null for each unset key. Without stripping, null ≠ {key: null}.
+    if (JSON.stringify(_normalizeForDiff(original.hours))        !== JSON.stringify(_normalizeForDiff(updates.hours)))        changes.push('Hours of operation');
+    if (JSON.stringify(_normalizeForDiff(original.social_media)) !== JSON.stringify(_normalizeForDiff(updates.social_media))) changes.push('Social media links');
+    if (JSON.stringify(_normalizeForDiff(original.reviews))      !== JSON.stringify(_normalizeForDiff(updates.reviews)))      changes.push('Review links');
+
+    // Arrays: normalize null → []
+    if (JSON.stringify(original.additional_info || []) !== JSON.stringify(updates.additional_info || [])) changes.push('Additional information');
+    if (JSON.stringify(original.custom_ctas     || []) !== JSON.stringify(updates.custom_ctas     || [])) changes.push('Custom CTA buttons');
+    if (JSON.stringify(original.photos          || []) !== JSON.stringify(updates.photos          || [])) changes.push('Photos');
+    return changes;
+}
