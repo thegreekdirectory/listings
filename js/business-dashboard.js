@@ -1505,27 +1505,57 @@ function _normalizeForDiff(val) {
 }
 
 function _diffChanges(original, updates) {
-    const changes = [];
-    const simple  = [
-        ['tagline','Tagline'],['description','Description'],['pricing','Pricing'],
-        ['coming_soon','Coming Soon status'],['address','Address'],['city','City'],
-        ['state','State'],['zip_code','ZIP Code'],['phone','Phone'],
-        ['email','Email'],['website','Website'],['logo','Logo'],['video','Video'],
-    ];
-    simple.forEach(([k, label]) => { if (String(original[k] ?? '') !== String(updates[k] ?? '')) changes.push(label); });
-    if (JSON.stringify([...(original.subcategories||[])].sort()) !== JSON.stringify([...(updates.subcategories||[])].sort())) changes.push('Subcategories');
-    if (original.primary_subcategory !== updates.primary_subcategory) changes.push('Primary subcategory');
+  const changes = [];
+  const simple = [
+    ['tagline', 'Tagline'], ['description', 'Description'], ['pricing', 'Pricing'],
+    ['coming_soon', 'Coming Soon status'], ['address', 'Address'], ['city', 'City'],
+    ['state', 'State'], ['zip_code', 'ZIP Code'], ['phone', 'Phone'],
+    ['email', 'Email'], ['website', 'Website'], ['logo', 'Logo'], ['video', 'Video']
+  ];
+  simple.forEach(([k, label]) => {
+    if (String(original[k] ?? '') !== String(updates[k] ?? '')) changes.push(label);
+  });
+  if (JSON.stringify(original.subcategories?.sort()) !== JSON.stringify(updates.subcategories?.sort())) changes.push('Subcategories');
+  if (original.primary_subcategory !== updates.primary_subcategory) changes.push('Primary subcategory');
 
-    // Object fields: strip null values from both sides before comparing.
-    // The DB may store null for these fields; saveChanges() always builds a full
-    // object with null for each unset key. Without stripping, null ≠ {key: null}.
-    if (JSON.stringify(_normalizeForDiff(original.hours))        !== JSON.stringify(_normalizeForDiff(updates.hours)))        changes.push('Hours of operation');
-    if (JSON.stringify(_normalizeForDiff(original.social_media)) !== JSON.stringify(_normalizeForDiff(updates.social_media))) changes.push('Social media links');
-    if (JSON.stringify(_normalizeForDiff(original.reviews))      !== JSON.stringify(_normalizeForDiff(updates.reviews)))      changes.push('Review links');
+  // Canonical flat-object compare: strip null/undefined/'' values, then sort keys so
+  // key-insertion-order differences between the DB record and the hardcoded update payload
+  // don't produce false positives.
+  const _canonObj = (obj) => {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([, v]) => v !== null && v !== undefined && v !== '')
+        .sort(([a], [b]) => a.localeCompare(b))
+    );
+  };
 
-    // Arrays: normalize null → []
-    if (JSON.stringify(original.additional_info || []) !== JSON.stringify(updates.additional_info || [])) changes.push('Additional information');
-    if (JSON.stringify(original.custom_ctas     || []) !== JSON.stringify(updates.custom_ctas     || [])) changes.push('Custom CTA buttons');
-    if (JSON.stringify(original.photos          || []) !== JSON.stringify(updates.photos          || [])) changes.push('Photos');
-    return changes;
+  // Hours: also normalise the time format on both sides so a DB value of
+  // "9:00 AM - 5:00 PM" and a form-produced "09:00-17:00" compare as equal.
+  const _canonHours = (obj) => {
+    if (!obj || typeof obj !== 'object') return {};
+    return Object.fromEntries(
+      Object.entries(obj)
+        .map(([k, v]) => [k, v ? _normalizeHours(v) : null])
+        .filter(([, v]) => v !== null && v !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b))
+    );
+  };
+
+  // CTAs: treat icon null and '' as equivalent (the <select> always returns '').
+  const _canonCtas = (arr) =>
+  (arr || []).map(c => ({
+    name:  c.name  || '',
+    url:   c.url   || '',
+    color: c.color || '#045093',
+    icon:  c.icon  || ''
+  }));
+
+  if (JSON.stringify(_canonHours(original.hours))      !== JSON.stringify(_canonHours(updates.hours)))      changes.push('Hours of operation');
+  if (JSON.stringify(_canonObj(original.social_media)) !== JSON.stringify(_canonObj(updates.social_media))) changes.push('Social media links');
+  if (JSON.stringify(_canonObj(original.reviews))      !== JSON.stringify(_canonObj(updates.reviews)))      changes.push('Review links');
+  if (JSON.stringify(original.additional_info || [])   !== JSON.stringify(updates.additional_info || []))   changes.push('Additional information');
+  if (JSON.stringify(_canonCtas(original.custom_ctas)) !== JSON.stringify(_canonCtas(updates.custom_ctas))) changes.push('Custom CTA buttons');
+
+  return changes;
 }
