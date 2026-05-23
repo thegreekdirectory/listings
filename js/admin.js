@@ -1700,45 +1700,67 @@ function fillEditFormContinuation(listing, owner) {
             <div>
                 <h3 class="text-lg font-bold mb-4">Media</h3>
                 <div class="grid grid-cols-1 gap-4">
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <div class="text-sm font-semibold text-gray-800">Cloudflare Images</div>
-                        <p class="text-xs text-gray-500 mt-1">Credentials and upload endpoint are stored locally in this browser.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Account ID</label>
-                                <input type="text" id="cloudflareAccountId" class="w-full px-3 py-2 border rounded-lg" placeholder="Cloudflare account ID">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">API Key</label>
-                                <input type="password" id="cloudflareApiKey" class="w-full px-3 py-2 border rounded-lg" placeholder="Cloudflare API key">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Upload Endpoint (required for production)</label>
-                                <input type="url" id="cloudflareUploadEndpoint" class="w-full px-3 py-2 border rounded-lg" placeholder="https://your-domain.com/cloudflare-upload">
-                                <p class="text-[11px] text-gray-500 mt-1">Must proxy to Cloudflare Images to avoid CORS errors.</p>
-                            </div>
-                        </div>
+
+                    <!-- Logo -->
+                    <div class="border border-gray-200 rounded-lg p-4 space-y-2">
+                        <label class="block text-sm font-semibold text-gray-800">Logo</label>
+                        <label for="editLogoUpload"
+                               class="flex flex-col items-center justify-center gap-1 w-full border-2 border-dashed border-gray-300 rounded-lg py-5 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                            <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-sm font-medium text-gray-600">Click to upload logo</span>
+                            <span class="text-xs text-gray-400">PNG, JPG, WebP — square recommended</span>
+                            <input type="file" id="editLogoUpload" accept="image/*" class="hidden">
+                        </label>
+                        <input type="url" id="editLogo" value="${listing?.logo || ''}"
+                               class="w-full px-4 py-2 border rounded-lg text-sm"
+                               placeholder="Or paste a logo URL">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Logo</label>
-                        <input type="file" id="editLogoUpload" accept="image/*" class="w-full px-4 py-2 border rounded-lg">
-                        <p class="text-xs text-gray-500 mt-1">Uploads to Cloudflare Images and fills the URL below.</p>
-                        <input type="url" id="editLogo" value="${listing?.logo || ''}" class="w-full px-4 py-2 border rounded-lg mt-2" placeholder="Logo URL">
+
+                    <!-- Photos -->
+                    <div class="border border-gray-200 rounded-lg p-4 space-y-2">
+                        <label class="block text-sm font-semibold text-gray-800">Photos</label>
+                        <label for="editPhotosUpload"
+                               class="flex flex-col items-center justify-center gap-1 w-full border-2 border-dashed border-gray-300 rounded-lg py-5 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                            <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-sm font-medium text-gray-600">Click to upload photos</span>
+                            <span class="text-xs text-gray-400">Select one or more images</span>
+                            <input type="file" id="editPhotosUpload" accept="image/*" multiple class="hidden">
+                        </label>
+                        <textarea id="editPhotos" rows="4"
+                                  class="w-full px-4 py-2 border rounded-lg text-sm font-mono"
+                                  placeholder="Uploaded URLs appear here automatically (one per line)">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+                        <p class="text-xs text-gray-400">You can also paste external URLs directly — one per line.</p>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Photos</label>
-                        <input type="file" id="editPhotosUpload" accept="image/*" multiple class="w-full px-4 py-2 border rounded-lg">
-                        <p class="text-xs text-gray-500 mt-1">Uploads to Cloudflare Images and appends to the list below.</p>
-                        <textarea id="editPhotos" rows="4" class="w-full px-4 py-2 border rounded-lg mt-2" placeholder="Uploaded photo URLs (one per line)">${listing?.photos ? listing.photos.join('\n') : ''}</textarea>
+
+                    <!-- Video -->
+                    <div class="border border-gray-200 rounded-lg p-4 space-y-2">
+                        <label class="block text-sm font-semibold text-gray-800">Video</label>
+                        <label for="editVideoUpload"
+                               class="flex flex-col items-center justify-center gap-1 w-full border-2 border-dashed border-gray-300 rounded-lg py-5 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                            <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                            </svg>
+                            <span class="text-sm font-medium text-gray-600">Click to upload video</span>
+                            <span class="text-xs text-gray-400">MP4 recommended</span>
+                            <input type="file" id="editVideoUpload" accept="video/*" class="hidden">
+                        </label>
+                        <input type="url" id="editVideo" value="${listing?.video || ''}"
+                               class="w-full px-4 py-2 border rounded-lg text-sm"
+                               placeholder="Or paste a video URL">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Video</label>
-                        <input type="file" id="editVideoUpload" accept="video/*" class="w-full px-4 py-2 border rounded-lg">
-                        <p class="text-xs text-gray-500 mt-1">Uploads to Cloudflare Images and fills the URL below.</p>
-                        <input type="url" id="editVideo" value="${listing?.video || ''}" class="w-full px-4 py-2 border rounded-lg mt-2" placeholder="Video URL">
-                    </div>
+
+                    <!-- Upload status -->
                     <div id="mediaUploadStatus" class="text-sm text-gray-600"></div>
+
                 </div>
+            </div>
             </div>
         </div>
     `;
@@ -1755,7 +1777,6 @@ function fillEditFormContinuation(listing, owner) {
     }
     updateCharCounters();
     attachMediaUploadHandlers();
-    attachCloudflareConfigHandlers();
 }
 
 async function initializeCustomShortlinkField(listing) {
@@ -1797,109 +1818,64 @@ async function initializeCustomShortlinkField(listing) {
     });
 }
 
-const CLOUDFLARE_STORAGE_KEY = 'tgdCloudflareImagesConfig';
+const UPLOAD_PROXY = 'https://tgd-images-upload.thegreekdirectory.org';
 
-function getStoredCloudflareConfig() {
+/**
+ * Upload a file to Cloudflare Images using the Direct Creator Upload flow.
+ * Mirrors the exact same approach used in business-dashboard.js.
+ *
+ * @param {File}   file      - The File object to upload
+ * @param {string} assetType - 'logo' | 'photo' | 'video'
+ * @returns {Promise<string>} - Resolves to the canonical image URL string
+ */
+async function uploadToCloudflareImages(file, assetType = 'photo') {
+    const listingId = editingListing?.id || '';
+
+    let urlRes, urlData;
     try {
-        const stored = localStorage.getItem(CLOUDFLARE_STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
-    } catch (error) {
-        console.warn('Unable to read Cloudflare config from storage:', error);
-        return {};
-    }
-}
-
-function setStoredCloudflareConfig(config) {
-    try {
-        localStorage.setItem(CLOUDFLARE_STORAGE_KEY, JSON.stringify(config));
-    } catch (error) {
-        console.warn('Unable to save Cloudflare config:', error);
-    }
-}
-
-function getCloudflareConfig() {
-    const config = window.CLOUDFLARE_IMAGES_CONFIG || {};
-    const stored = getStoredCloudflareConfig();
-    const accountInput = document.getElementById('cloudflareAccountId');
-    const apiKeyInput = document.getElementById('cloudflareApiKey');
-    const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
-    const inputAccountId = accountInput?.value?.trim() || '';
-    const inputApiKey = apiKeyInput?.value?.trim() || '';
-    const inputUploadEndpoint = uploadEndpointInput?.value?.trim() || '';
-    if ((inputAccountId || inputApiKey || inputUploadEndpoint) && (!stored.accountId || !stored.apiKey || !stored.uploadEndpoint)) {
-        setStoredCloudflareConfig({
-            accountId: inputAccountId,
-            apiKey: inputApiKey,
-            uploadEndpoint: inputUploadEndpoint
+        urlRes = await fetch(`${UPLOAD_PROXY}?action=request-upload-url`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ assetType, listingId }),
         });
+        urlData = await urlRes.json();
+    } catch (netErr) {
+        throw new Error(`Could not reach upload server: ${netErr.message}`);
     }
-    return {
-    uploadEndpoint: stored.uploadEndpoint || inputUploadEndpoint || config.uploadEndpoint || ''
-    };
-}
 
-function attachCloudflareConfigHandlers() {
-    const accountInput = document.getElementById('cloudflareAccountId');
-    const apiKeyInput = document.getElementById('cloudflareApiKey');
-    const uploadEndpointInput = document.getElementById('cloudflareUploadEndpoint');
-    if (!accountInput || !apiKeyInput || !uploadEndpointInput) return;
-    
-    const config = getCloudflareConfig();
-    accountInput.value = config.accountId || '';
-    apiKeyInput.value = config.apiKey || '';
-    uploadEndpointInput.value = config.uploadEndpoint || '';
-    
-    const saveConfig = () => {
-        setStoredCloudflareConfig({
-            accountId: accountInput.value.trim(),
-            apiKey: apiKeyInput.value.trim(),
-            uploadEndpoint: uploadEndpointInput.value.trim()
-        });
-    };
-    
-    accountInput.addEventListener('input', saveConfig);
-    apiKeyInput.addEventListener('input', saveConfig);
-    uploadEndpointInput.addEventListener('input', saveConfig);
-}
-
-function setMediaUploadStatus(message, isError = false) {
-    const statusEl = document.getElementById('mediaUploadStatus');
-    if (!statusEl) return;
-    statusEl.textContent = message;
-    statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
-}
-
-async function uploadToCloudflareImages(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const res = await fetch(
-    "https://tgd-images-upload.thegreekdirectory.org",
-    {
-      method: "POST",
-      body: formData,
+    if (!urlRes.ok || !urlData.success) {
+        throw new Error(urlData?.error || `Upload server error (HTTP ${urlRes.status})`);
     }
-  );
 
-  if (!res.ok) {
-    throw new Error("Upload failed");
-  }
+    const uploadForm = new FormData();
+    uploadForm.append('file', file);
 
-  return await res.json();
+    const uploadRes = await fetch(urlData.uploadURL, { method: 'POST', body: uploadForm });
+    if (!uploadRes.ok) {
+        let msg = `Cloudflare upload failed (HTTP ${uploadRes.status})`;
+        try {
+            const errData = await uploadRes.json();
+            if (errData?.errors?.[0]?.message) msg = errData.errors[0].message;
+        } catch (_) { }
+        throw new Error(msg);
+    }
+
+    if (!urlData.imageUrl) throw new Error('Upload succeeded but no image URL was returned.');
+    return urlData.imageUrl;
 }
 
 async function handleLogoUpload(event) {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-        setMediaUploadStatus('Uploading logo...');
-        const url = await uploadToCloudflareImages(file);
+        setMediaUploadStatus('Uploading logo…');
+        const url = await uploadToCloudflareImages(file, 'logo');
         const logoInput = document.getElementById('editLogo');
         if (logoInput) logoInput.value = url;
-        setMediaUploadStatus('Logo uploaded successfully.');
+        setMediaUploadStatus('✅ Logo uploaded successfully.');
     } catch (error) {
         console.error('Logo upload failed:', error);
-        setMediaUploadStatus(`Logo upload failed: ${error.message}`, true);
+        setMediaUploadStatus(`❌ Logo upload failed: ${error.message}`, true);
     }
 }
 
@@ -1908,17 +1884,17 @@ async function handlePhotosUpload(event) {
     if (files.length === 0) return;
     const photoInput = document.getElementById('editPhotos');
     if (!photoInput) return;
-    
     try {
-        setMediaUploadStatus('Uploading photos...');
+        setMediaUploadStatus(`Uploading ${files.length} photo${files.length > 1 ? 's' : ''}…`);
         for (const file of files) {
-            const url = await uploadToCloudflareImages(file);
-            photoInput.value = `${photoInput.value.trim() ? `${photoInput.value.trim()}\n` : ''}${url}`;
+            const url = await uploadToCloudflareImages(file, 'photo');
+            photoInput.value = `${photoInput.value.trim() ? `${photoInput.value.trim()}
+` : ''}${url}`;
         }
-        setMediaUploadStatus('Photos uploaded successfully.');
+        setMediaUploadStatus(`✅ ${files.length} photo${files.length > 1 ? 's' : ''} uploaded successfully.`);
     } catch (error) {
         console.error('Photo upload failed:', error);
-        setMediaUploadStatus(`Photo upload failed: ${error.message}`, true);
+        setMediaUploadStatus(`❌ Photo upload failed: ${error.message}`, true);
     }
 }
 
@@ -1926,14 +1902,14 @@ async function handleVideoUpload(event) {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-        setMediaUploadStatus('Uploading video...');
-        const url = await uploadToCloudflareImages(file);
+        setMediaUploadStatus('Uploading video…');
+        const url = await uploadToCloudflareImages(file, 'video');
         const videoInput = document.getElementById('editVideo');
         if (videoInput) videoInput.value = url;
-        setMediaUploadStatus('Video uploaded successfully.');
+        setMediaUploadStatus('✅ Video uploaded successfully.');
     } catch (error) {
         console.error('Video upload failed:', error);
-        setMediaUploadStatus(`Video upload failed: ${error.message}`, true);
+        setMediaUploadStatus(`❌ Video upload failed: ${error.message}`, true);
     }
 }
 
