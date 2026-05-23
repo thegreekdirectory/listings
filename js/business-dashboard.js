@@ -1626,12 +1626,18 @@ function _reviewField(label, id, value, placeholder, lockIfSet = true) {
 
 function _ctaIconOptions(selected) {
     const opts = [
-        {v:'',l:'No icon'},{v:'⭐',l:'⭐ Star'},{v:'🛍️',l:'🛍️ Shop'},
-        {v:'📅',l:'📅 Calendar'},{v:'🎟️',l:'🎟️ Ticket'},{v:'🍽️',l:'🍽️ Food'},
-        {v:'📦',l:'📦 Package'},{v:'💬',l:'💬 Message'},{v:'🧾',l:'🧾 Quote'},
-        {v:'🎉',l:'🎉 Event'},{v:'📋',l:'📋 Menu'},
+        { v: '',         l: 'No icon'   },
+        { v: 'star',     l: '⭐ Star'    },
+        { v: 'shop',     l: '🛍️ Shop'   },
+        { v: 'calendar', l: '📅 Calendar'},
+        { v: 'ticket',   l: '🎟️ Ticket' },
+        { v: 'food',     l: '🍽️ Food'   },
+        { v: 'package',  l: '📦 Package' },
+        { v: 'message',  l: '💬 Message' },
+        { v: 'quote',    l: '🧾 Quote'   },
+        { v: 'event',    l: '🎉 Event'   },
     ];
-    return opts.map(o => `<option value="${o.v}" ${selected===o.v?'selected':''}>${o.l}</option>`).join('');
+    return opts.map(o => `<option value="${o.v}" ${selected === o.v ? 'selected' : ''}>${o.l}</option>`).join('');
 }
 
 function _updateCounter(field, current, max) {
