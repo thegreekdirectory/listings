@@ -116,10 +116,10 @@ or distribution of this code can result in legal action to the fullest extent pe
                 },
                 "geo": {
                     "@type": "GeoCoordinates",
-                    "latitude": "42.1844691",
-                    "longitude": "-87.8001048"
+                    "latitude": "42.1846041",
+                    "longitude": "-87.8002961"
                 },
-                "hasMap": "https://maps.google.com/?q=42.1844691,-87.8001048",
+                "hasMap": "https://maps.google.com/?q=42.1846041,-87.8002961",
                 "areaServed": {
                     "@type": "AdministrativeArea",
                     "name": "IL"
@@ -600,7 +600,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     </div>
 
                     <div class="listing-description-wrap" id="descriptionSection">
-                        <div class="text-gray-700 listing-description" id="listingDescription"><h3>20+ Years of Barbering Experience You Can Trust</h3><div>Though newly launched, our barbers bring over 10 years of experience serving clients in Highland Park—delivering clean cuts, sharp fades, and classic grooming with precision and care.</div><div>Our barbers combine long practiced techniques with today’s styles, creating a space where everyone can feel confident, fresh, and taken care of. From precision fades to traditional hot lather shaves, every service is delivered with skill, passion, and attention to detail.</div><div><br></div><div><h3>Why Choose Us</h3><div>We’re not just cutting hair — we’re creating an experience. From the moment you walk through our doors, you’re treated to a welcoming, professional environment where every detail matters. Our skilled barbers are artists in their craft, trained to deliver precision and style with every cut. From classic cuts to luxury grooming, our services are designed to elevate your look and experience.</div></div></div>
+                        <div class="text-gray-700 listing-description" id="listingDescription"><h3>20+ Years of Barbering Experience You Can Trust</h3>Though newly launched, our barbers bring over 10 years of experience serving clients in Highland Park—delivering clean cuts, sharp fades, and classic grooming with precision and care.Our barbers combine long practiced techniques with today’s styles, creating a space where everyone can feel confident, fresh, and taken care of. From precision fades to traditional hot lather shaves, every service is delivered with skill, passion, and attention to detail.<br><h3>Why Choose Us</h3>We’re not just cutting hair — we’re creating an experience. From the moment you walk through our doors, you’re treated to a welcoming, professional environment where every detail matters. Our skilled barbers are artists in their craft, trained to deliver precision and style with every cut. From classic cuts to luxury grooming, our services are designed to elevate your look and experience.</div>
                         <div class="description-divider">
                             <span class="description-divider-line"></span>
                             <button type="button" class="read-more-btn hidden" id="listingReadMoreBtn" style="cursor: pointer">Read more</button>
@@ -809,7 +809,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         id: 'bd18e6a7-5f00-4f07-9b3f-18568c27f1d3',
         business_name: "2nd Street Barbers",
         tagline: "A Modern Cut with Classic Craftsmanship",
-        description: "<h3>20+ Years of Barbering Experience You Can Trust</h3><div>Though newly launched, our barbers bring over 10 years of experience serving clients in Highland Park—delivering clean cuts, sharp fades, and classic grooming with precision and care.</div><div>Our barbers combine long practiced techniques with today’s styles, creating a space where everyone can feel confident, fresh, and taken care of. From precision fades to traditional hot lather shaves, every service is delivered with skill, passion, and attention to detail.</div><div><br></div><div><h3>Why Choose Us</h3><div>We’re not just cutting hair — we’re creating an experience. From the moment you walk through our doors, you’re treated to a welcoming, professional environment where every detail matters. Our skilled barbers are artists in their craft, trained to deliver precision and style with every cut. From classic cuts to luxury grooming, our services are designed to elevate your look and experience.</div></div>",
+        description: "<h3>20+ Years of Barbering Experience You Can Trust</h3>Though newly launched, our barbers bring over 10 years of experience serving clients in Highland Park—delivering clean cuts, sharp fades, and classic grooming with precision and care.Our barbers combine long practiced techniques with today’s styles, creating a space where everyone can feel confident, fresh, and taken care of. From precision fades to traditional hot lather shaves, every service is delivered with skill, passion, and attention to detail.<br><h3>Why Choose Us</h3>We’re not just cutting hair — we’re creating an experience. From the moment you walk through our doors, you’re treated to a welcoming, professional environment where every detail matters. Our skilled barbers are artists in their craft, trained to deliver precision and style with every cut. From classic cuts to luxury grooming, our services are designed to elevate your look and experience.",
         category: 'Beauty &amp; Health',
         city: "Highland Park",
         state: "IL",
@@ -1263,14 +1263,14 @@ function openGallery(index = 0) {
             const toggle = document.getElementById('shortenUrlToggle');
             if (toggle && input) {
                 toggle.addEventListener('change', (event) => {
-                    input.value = event.target.checked ? `https://tgd.gr/l/KN4MdP` : `https://thegreekdirectory.org/listing/highland-park-il/2nd-street-barbers`;
+                    input.value = event.target.checked ? `https://thegreekdirectory.org/listing/highland-park-il/2nd-street-barbers` : `https://thegreekdirectory.org/listing/highland-park-il/2nd-street-barbers`;
                 });
             }
         });
 
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-        const coordinatesStr = '42.1844691,-87.8001048';
+        const coordinatesStr = '42.1846041,-87.8002961';
         const fullAddress = '610 Central Ave, Highland Park, IL, 60035';
 
         async function geocodeAddress(address) {
