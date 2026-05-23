@@ -25,22 +25,55 @@ export async function onRequest(context) {
     .on("script", {
       element(el) {
         const src = el.getAttribute("src");
-        if (src) el.setAttribute("src", appendQuery(src, queryPair));
+        // Pass the current hostname to properly identify external vs internal links
+        if (src) el.setAttribute("src", appendQuery(src, queryPair, url.hostname));
       },
     })
     .on("link", {
       element(el) {
         const href = el.getAttribute("href");
-        if (href) el.setAttribute("href", appendQuery(href, queryPair));
+        if (href) el.setAttribute("href", appendQuery(href, queryPair, url.hostname));
       },
     })
-    // You can add 'img' or other tags here too
+    .on("a", {
+      element(el) {
+        const href = el.getAttribute("href");
+        if (href) el.setAttribute("href", appendQuery(href, queryPair, url.hostname));
+      },
+    })
     .transform(response);
 }
 
-// Helper function to handle URL joining
-function appendQuery(url, param) {
-  if (url.startsWith("http") && !url.includes(new URL(url).hostname)) return url; // Don't tag external links
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}${param}`;
+// Helper function to handle URL joining safely
+function appendQuery(targetUrl, paramPair, currentHostname) {
+  // 1. Skip non-navigational or non-HTTP links (anchors, emails, phone numbers, JS)
+  if (
+    targetUrl.startsWith("#") || 
+    targetUrl.startsWith("mailto:") || 
+    targetUrl.startsWith("tel:") || 
+    targetUrl.startsWith("javascript:")
+  ) {
+    return targetUrl;
+  }
+
+  // 2. Check if it's an absolute URL (starts with http/https)
+  if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
+    try {
+      const parsedUrl = new URL(targetUrl);
+      // If the hostnames don't match, it's external, so return it untouched
+      if (parsedUrl.hostname !== currentHostname) return targetUrl;
+    } catch (error) {
+      // If URL parsing fails for some reason, play it safe and don't modify
+      return targetUrl; 
+    }
+  }
+
+  // 3. Prevent duplicate appending if the param is somehow already there
+  if (targetUrl.includes(paramPair)) {
+    return targetUrl;
+  }
+
+  // 4. Append the query string for internal links (both absolute and relative)
+  const separator = targetUrl.includes("?") ? "&" : "?";
+  return `${targetUrl}${separator}${paramPair}`;
 }
