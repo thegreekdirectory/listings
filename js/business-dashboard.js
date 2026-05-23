@@ -310,9 +310,9 @@ function renderOverview() {
     document.getElementById('content-overview').innerHTML = `
         <div class="bp-welcome-banner">
             <div class="bp-welcome-banner__title">Welcome back 👋</div>
-            <div class="bp-welcome-banner__sub">
+            <div class="bp-welcome-banner__sub" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
                 Managing <strong style="color:var(--white);">${_esc(listing.business_name)}</strong>
-                &nbsp;·&nbsp; <span class="bp-tier bp-tier--${tier.toLowerCase()}" style="vertical-align:middle;">${tierLabel}</span>
+                <span class="bp-tier bp-tier--${tier.toLowerCase()}">${tierLabel}</span>
             </div>
             <div class="bp-welcome-actions">
                 <button class="bp-btn bp-btn--gold bp-btn--sm" onclick="switchTab('edit')">
@@ -330,7 +330,7 @@ function renderOverview() {
             </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;">
+        <div class="bp-overview-grid">
             <div>
                 <div class="bp-listing-preview">
                     ${heroImg
@@ -339,21 +339,21 @@ function renderOverview() {
                     }
                     <div class="bp-listing-preview__body">
                         ${listing.logo ? `<img class="bp-listing-preview__logo" src="${_esc(listing.logo)}" alt="Logo">` : ''}
-                        <div class="bp-listing-preview__info">
-                            <div class="bp-listing-preview__name">
+                        <div class="bp-listing-preview__info" style="min-width:0;">
+                            <div class="bp-listing-preview__name" style="word-break:break-word;">
                                 ${_esc(listing.business_name)}
                                 ${verified ? checkSvg : ''}
                             </div>
-                            ${listing.tagline ? `<div class="bp-listing-preview__tagline">${_esc(listing.tagline)}</div>` : ''}
+                            ${listing.tagline ? `<div class="bp-listing-preview__tagline" style="word-break:break-word;">${_esc(listing.tagline)}</div>` : ''}
                             <div class="bp-listing-preview__meta">
                                 <span class="bp-pill">${_esc(listing.category)}</span>
                                 ${listing.primary_subcategory ? `<span class="bp-pill bp-pill--gold">${_esc(listing.primary_subcategory)}</span>` : ''}
                                 ${listing.city && listing.state ? `<span style="font-size:.8rem;color:var(--slate-400);">📍 ${_esc(listing.city)}, ${_esc(listing.state)}</span>` : ''}
                             </div>
-                            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
-                                ${listing.phone   ? `<span style="font-size:.82rem;color:var(--slate-600);">📞 ${_esc(window.BP.formatPhoneDisplay(listing.phone))}</span>` : ''}
-                                ${listing.email   ? `<span style="font-size:.82rem;color:var(--slate-600);">✉️ ${_esc(listing.email)}</span>` : ''}
-                                ${listing.website ? `<a href="${_esc(listing.website)}" target="_blank" style="font-size:.82rem;color:var(--blue);">🌐 Website</a>` : ''}
+                            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;min-width:0;">
+                                ${listing.phone   ? `<span style="font-size:.82rem;color:var(--slate-600);white-space:nowrap;">📞 ${_esc(window.BP.formatPhoneDisplay(listing.phone))}</span>` : ''}
+                                ${listing.email   ? `<span style="font-size:.82rem;color:var(--slate-600);overflow:hidden;text-overflow:ellipsis;max-width:100%;">✉️ ${_esc(listing.email)}</span>` : ''}
+                                ${listing.website ? `<a href="${_esc(listing.website)}" target="_blank" style="font-size:.82rem;color:var(--blue);white-space:nowrap;">🌐 Website</a>` : ''}
                             </div>
                         </div>
                     </div>
@@ -551,12 +551,12 @@ function _renderAnalyticsBody(summaryRow, events, tier, listing, bucket) {
     ` : '';
 
     document.getElementById('analyticsBody').innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-                <label style="font-size:.82rem;font-weight:600;color:var(--slate-600);text-transform:uppercase;letter-spacing:.04em;">Time Period</label>
+        <div class="bp-analytics-controls">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+                <label style="font-size:.82rem;font-weight:600;color:var(--slate-600);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">Time Period</label>
                 <select id="analyticsBucketSelect"
                         onchange="_onBucketChange(this.value)"
-                        style="padding:8px 32px 8px 12px;border:1.5px solid var(--slate-200);border-radius:var(--r);font-family:inherit;font-size:.875rem;color:var(--slate-900);background:var(--white);cursor:pointer;outline:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;">
+                        style="flex:1;min-width:0;padding:8px 32px 8px 12px;border:1.5px solid var(--slate-200);border-radius:var(--r);font-family:inherit;font-size:.875rem;color:var(--slate-900);background:var(--white);cursor:pointer;outline:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;">
                     ${TIME_BUCKETS.map(b => `<option value="${b.value}" ${b.value === bucket ? 'selected' : ''}>${b.label}</option>`).join('')}
                 </select>
             </div>
