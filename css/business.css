@@ -1014,7 +1014,7 @@ img { display: block; max-width: 100%; }
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-xs);
   border: 1px solid rgba(0,0,0,.04);
-  overflow: hidden;
+  overflow: clip;
   margin-bottom: 16px;
 }
 
@@ -1222,6 +1222,7 @@ img { display: block; max-width: 100%; }
   cursor: pointer;
   transition: all .2s;
   background: var(--slate-50);
+  position: relative;
 }
 
 .bp-upload-box:hover {
@@ -1230,7 +1231,11 @@ img { display: block; max-width: 100%; }
 }
 
 .bp-upload-box input[type=file] {
-  display: none;
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .bp-upload-icon {
