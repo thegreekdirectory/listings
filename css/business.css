@@ -807,6 +807,14 @@ img { display: block; max-width: 100%; }
   flex-wrap: wrap;
 }
 
+/* ─── Overview two-column grid (collapses to one column on mobile) ── */
+.bp-overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+
 /* ─── Stat Grid ─────────────────────────────────────────────── */
 .bp-stat-grid {
   display: grid;
@@ -907,6 +915,7 @@ img { display: block; max-width: 100%; }
   display: flex;
   gap: 16px;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .bp-listing-preview__logo {
@@ -1005,7 +1014,7 @@ img { display: block; max-width: 100%; }
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-xs);
   border: 1px solid rgba(0,0,0,.04);
-  overflow: hidden;
+  overflow: clip;
   margin-bottom: 16px;
 }
 
@@ -1070,6 +1079,9 @@ img { display: block; max-width: 100%; }
 .bp-section__body {
   padding: 22px;
   display: none;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .bp-section.open .bp-section__body { display: block; }
@@ -1206,6 +1218,7 @@ img { display: block; max-width: 100%; }
 
 /* ─── Media Upload ──────────────────────────────────────────── */
 .bp-upload-box {
+  display: block;
   border: 2px dashed var(--slate-200);
   border-radius: var(--r-lg);
   padding: 24px;
@@ -1361,6 +1374,16 @@ img { display: block; max-width: 100%; }
 
 .bp-toggle-switch input:checked + .bp-toggle-switch__track { background: var(--blue); }
 .bp-toggle-switch input:checked + .bp-toggle-switch__track::after { transform: translateX(20px); }
+
+/* ─── Analytics Controls Bar ────────────────────────────────── */
+.bp-analytics-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
 
 /* ─── Analytics Detailed ────────────────────────────────────── */
 .bp-analytics-grid {
@@ -1684,6 +1707,13 @@ img { display: block; max-width: 100%; }
   .bp-save-bar { margin: 0 -24px; padding: 14px 24px; }
 }
 
+@media (max-width: 900px) {
+  /* Overview: side-by-side → stacked */
+  .bp-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .bp-auth {
     grid-template-columns: 1fr;
@@ -1731,6 +1761,8 @@ img { display: block; max-width: 100%; }
   .bp-analytics-grid { grid-template-columns: repeat(2, 1fr); }
 
   .bp-stat-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .bp-listing-preview__logo { margin-top: 0; }
 
   .bp-welcome-banner { padding: 24px; }
   .bp-welcome-banner__title { font-size: 1.3rem; }
