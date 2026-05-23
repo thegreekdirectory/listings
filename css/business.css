@@ -1079,6 +1079,9 @@ img { display: block; max-width: 100%; }
 .bp-section__body {
   padding: 22px;
   display: none;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .bp-section.open .bp-section__body { display: block; }
@@ -1215,6 +1218,7 @@ img { display: block; max-width: 100%; }
 
 /* ─── Media Upload ──────────────────────────────────────────── */
 .bp-upload-box {
+  display: block;
   border: 2px dashed var(--slate-200);
   border-radius: var(--r-lg);
   padding: 24px;
@@ -1222,7 +1226,6 @@ img { display: block; max-width: 100%; }
   cursor: pointer;
   transition: all .2s;
   background: var(--slate-50);
-  position: relative;
 }
 
 .bp-upload-box:hover {
@@ -1231,11 +1234,7 @@ img { display: block; max-width: 100%; }
 }
 
 .bp-upload-box input[type=file] {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 
 .bp-upload-icon {
