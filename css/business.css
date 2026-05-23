@@ -1371,6 +1371,16 @@ img { display: block; max-width: 100%; }
 .bp-toggle-switch input:checked + .bp-toggle-switch__track { background: var(--blue); }
 .bp-toggle-switch input:checked + .bp-toggle-switch__track::after { transform: translateX(20px); }
 
+/* ─── Analytics Controls Bar ────────────────────────────────── */
+.bp-analytics-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
 /* ─── Analytics Detailed ────────────────────────────────────── */
 .bp-analytics-grid {
   display: grid;
@@ -1747,6 +1757,8 @@ img { display: block; max-width: 100%; }
   .bp-analytics-grid { grid-template-columns: repeat(2, 1fr); }
 
   .bp-stat-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .bp-listing-preview__logo { margin-top: 0; }
 
   .bp-welcome-banner { padding: 24px; }
   .bp-welcome-banner__title { font-size: 1.3rem; }
