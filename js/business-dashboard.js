@@ -802,29 +802,6 @@ function renderEditForm() {
         `)}
 
         ${_section('media', IMAGE_SVG, 'Photos & Media', false, `
-            <div class="bp-cf-config">
-                <div class="bp-cf-config__toggle" onclick="_toggleCfConfig()">
-                    <span class="bp-cf-config__toggle-label">
-                        <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-                        Cloudflare Images Credentials
-                    </span>
-                    <svg id="cfChevron" style="width:16px;height:16px;stroke:var(--slate-400);fill:none;stroke-width:2;stroke-linecap:round;transition:transform .2s;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <div class="bp-cf-config__fields" id="cfFields">
-                    <div class="bp-field">
-                        <label class="bp-label" for="cfAccountId">Account ID</label>
-                        <input class="bp-input" type="text" id="cfAccountId" placeholder="Cloudflare account ID">
-                    </div>
-                    <div class="bp-field">
-                        <label class="bp-label" for="cfApiKey">API Key</label>
-                        <input class="bp-input" type="password" id="cfApiKey" placeholder="Images API token">
-                    </div>
-                    <div class="bp-field col-span-2">
-                        <label class="bp-label" for="cfEndpoint">Upload Proxy Endpoint</label>
-                        <input class="bp-input" type="url" id="cfEndpoint" placeholder="https://tgd-images-upload.thegreekdirectory.org">
-                    </div>
-                </div>
-            </div>
             <div id="uploadStatus" class="bp-upload-status"></div>
             <div style="margin-bottom:20px;">
                 <label class="bp-label">Logo</label>
@@ -997,7 +974,6 @@ function renderEditForm() {
 
     _renderSubcats();
     _renderHours(listing.hours || {});
-    _loadCfConfig();
     document.querySelector('.bp-section')?.classList.add('open');
 }
 
@@ -1019,11 +995,6 @@ function _section(id, iconSvg, title, openByDefault, bodyHtml) {
 }
 
 window._toggleSection  = id => document.getElementById(id)?.classList.toggle('open');
-window._toggleCfConfig = function() {
-    document.getElementById('cfFields')?.classList.toggle('open');
-    const chev = document.getElementById('cfChevron');
-    if (chev) chev.style.transform = document.getElementById('cfFields')?.classList.contains('open') ? 'rotate(180deg)' : '';
-};
 
 // ── Subcategories ─────────────────────────────────────────────────
 
@@ -1287,8 +1258,6 @@ window.saveChanges = saveChanges;
 
 // ─── 12. Media Upload ─────────────────────────────────────────────
 
-// ─── 11. Media Upload ─────────────────────────────────────────────
-
 /*
  * _uploadToCloudflare — Direct Creator Upload flow.
  *
@@ -1354,6 +1323,7 @@ window._handleLogoUpload = async function(event) {
     _setUploadStatus('Uploading logo…', 'loading');
     try {
         const url = await _uploadToCloudflare(file, 'logo');
+        _uploadedImages.logo = url;
         const preview = document.getElementById('logoPreview');
         if (preview) preview.innerHTML = `<div class="bp-photo-thumb"><img src="${_esc(url)}" alt="Logo"></div>`;
         _setUploadStatus('Logo uploaded successfully.', 'success');
@@ -1387,6 +1357,7 @@ window._handleVideoUpload = async function(event) {
     _setUploadStatus('Uploading video…', 'loading');
     try {
         const url = await _uploadToCloudflare(file, 'video');
+        _uploadedImages.video = url;
         _setUploadStatus('Video uploaded successfully.', 'success');
     } catch (err) { _setUploadStatus(`Video upload failed: ${err.message}`, 'error'); }
 };
@@ -1409,7 +1380,6 @@ function _photoThumb(url, idx, type) {
         </div>
     `;
 }
-
 
 // ─── 13. Settings Tab ─────────────────────────────────────────────
 
