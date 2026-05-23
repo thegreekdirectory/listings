@@ -807,6 +807,14 @@ img { display: block; max-width: 100%; }
   flex-wrap: wrap;
 }
 
+/* ─── Overview two-column grid (collapses to one column on mobile) ── */
+.bp-overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+
 /* ─── Stat Grid ─────────────────────────────────────────────── */
 .bp-stat-grid {
   display: grid;
@@ -907,6 +915,7 @@ img { display: block; max-width: 100%; }
   display: flex;
   gap: 16px;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .bp-listing-preview__logo {
@@ -1682,6 +1691,13 @@ img { display: block; max-width: 100%; }
 @media (max-width: 1024px) {
   .bp-content { padding: 24px 24px; }
   .bp-save-bar { margin: 0 -24px; padding: 14px 24px; }
+}
+
+@media (max-width: 900px) {
+  /* Overview: side-by-side → stacked */
+  .bp-overview-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
