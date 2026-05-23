@@ -85,14 +85,20 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/listing/fgh</loc>
-    <lastmod>2026-05-22</lastmod>
+    <loc>https://thegreekdirectory.org/listing//vcdftyui987y6t43</loc>
+    <lastmod>2026-05-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/listing/tt</loc>
-    <lastmod>2026-05-18</lastmod>
+    <loc>https://thegreekdirectory.org/listing//vcdftyui987y6t</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://thegreekdirectory.org/listing/234</loc>
+    <lastmod>2026-05-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -356,7 +362,7 @@
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/example-listing</loc>
-    <lastmod>2026-05-19</lastmod>
+    <lastmod>2026-05-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -386,7 +392,7 @@
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/downers-grove-il/eagle-restaurant</loc>
-    <lastmod>2026-05-23</lastmod>
+    <lastmod>2026-05-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
