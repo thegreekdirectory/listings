@@ -640,6 +640,7 @@ function _buildEventLog(events) {
     if (!events || !events.length) {
         return '<p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:20px 0;">No events recorded yet.</p>';
     }
+    const customCtas = window.BP.currentListing?.custom_ctas || [];
     const colors = {
         view:       '#3b82f6',
         call:       '#10b981',
@@ -648,7 +649,6 @@ function _buildEventLog(events) {
         directions: '#ef4444',
         share:      '#f59e0b',
         video:      '#0ea5e9',
-        custom_cta: '#045093',
     };
     const labels = {
         view:       'Page View',
@@ -658,22 +658,42 @@ function _buildEventLog(events) {
         directions: 'Directions',
         share:      'Share',
         video:      'Video Play',
-        custom_cta: 'CTA Click',
     };
-    return `
-        <div class="bp-event-log__list">
-            ${events.map(e => `
-                <div class="bp-event-item">
-                    <div class="bp-event-item__dot" style="background:${colors[e.action] || '#94a3b8'};"></div>
-                    <div class="bp-event-item__action">
-                        ${labels[e.action] || e.action}
-                        ${e.platform ? `<span style="color:var(--slate-400);font-size:.78rem;margin-left:4px;">via ${_esc(e.platform)}</span>` : ''}
-                    </div>
-                    <div class="bp-event-item__time">${_timeAgo(e.timestamp)}</div>
-                </div>
-            `).join('')}
-        </div>
-    `;
+
+    function resolveAction(action) {
+        // custom_cta_1 maps to index 0, custom_cta_2 maps to index 1, etc.
+        const ctaMatch = action.match(/^custom_cta_(\d+)$/);
+        if (ctaMatch) {
+            const idx  = parseInt(ctaMatch[1], 10) - 1;
+            const name = customCtas[idx]?.name;
+            return {
+                label: name ? _esc(name) : 'CTA Button ' + (idx + 1),
+                color: '#ec4899',
+            };
+        }
+        return {
+            label: labels[action] || _esc(action),
+            color: colors[action] || '#94a3b8',
+        };
+    }
+
+    return [
+        '<div class="bp-event-log__list">',
+        events.map(e => {
+            const resolved = resolveAction(e.action);
+            return [
+                '<div class="bp-event-item">',
+                    '<div class="bp-event-item__dot" style="background:' + resolved.color + ';"></div>',
+                    '<div class="bp-event-item__action">',
+                        resolved.label,
+                        e.platform ? '<span style="color:var(--slate-400);font-size:.78rem;margin-left:4px;">via ' + _esc(e.platform) + '</span>' : '',
+                    '</div>',
+                    '<div class="bp-event-item__time">' + _timeAgo(e.timestamp) + '</div>',
+                '</div>',
+            ].join('');
+        }).join(''),
+        '</div>',
+    ].join('');
 }
 
 // ─── 10. Edit Tab ──────────────────────────────────────────────────
