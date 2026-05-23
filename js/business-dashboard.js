@@ -17,14 +17,25 @@ function getTaglineMaxLength(city = '', state = '') {
     return Math.max(30, Math.min(75, 160 - suffix.length - 2));
 }
 
-// Per-tier limits — single source of truth, mirrors tiers.html
 const TIER_LIMITS = {
     FREE:     { maxDesc: 1000, maxPhotos: 2,  maxCtas: 0, maxInfoFields: 0, hasVideo: false },
     FEATURED: { maxDesc: 2000, maxPhotos: 5,  maxCtas: 1, maxInfoFields: 3, hasVideo: false },
     PREMIUM:  { maxDesc: 5000, maxPhotos: 15, maxCtas: 2, maxInfoFields: 5, hasVideo: true  },
 };
 
-// Subcategories (defaults; overridden by category_subcategories table)
+// Analytics time buckets — suffix maps directly to column names in listing_analytics_summary
+const TIME_BUCKETS = [
+    { value: '7d',  label: 'Last 7 days'    },
+    { value: '14d', label: 'Last 14 days'   },
+    { value: '1m',  label: 'Last month'     },
+    { value: '3m',  label: 'Last 3 months'  },
+    { value: '6m',  label: 'Last 6 months'  },
+    { value: '1y',  label: 'Last year'      },
+    { value: '2y',  label: 'Last 2 years'   },
+    { value: 'all', label: 'All time'       },
+];
+const DEFAULT_BUCKET = '1m';
+
 let SUBCATEGORIES = {
     'Automotive & Transportation':       ['Auto Detailer','Auto Repair Shop','Car Dealer','Taxi & Limo Service'],
     'Beauty & Health':                   ['Barbershop','Esthetician','Hair Salon','Nail Salon','Spa','Chiropractor','Dentist','Doctor','Nutritionist','Optometrist','Orthodontist','Physical Therapist','Personal Trainer'],
@@ -42,7 +53,6 @@ let SUBCATEGORIES = {
     'Retail & Shopping':                 ['Boutique Shop','eCommerce','Jewelry','Souvenir Shop'],
 };
 
-// Mutable edit-form state
 let _selectedSubcats  = [];
 let _primarySubcat    = null;
 let _uploadedImages   = { logo: null, photos: [], video: null };
@@ -50,6 +60,9 @@ let _removedPhotos    = [];
 let _rteInstance      = null;
 let _tierLimits       = { ...TIER_LIMITS.FREE };
 let _settingsVis      = { nameTitle: true, email: false, phone: false };
+
+// Cached analytics summary row — fetched once per dashboard load, re-used on bucket switch
+let _analyticsSummaryCache = null;
 
 // ─── 2. Toast System ─────────────────────────────────────────────
 
@@ -136,6 +149,7 @@ async function loadListingData() {
         return;
     }
     window.BP.currentListing = data;
+    _analyticsSummaryCache = null; // bust cache on fresh load
     try {
         const { data: dynSubs } = await window.TGDAuth.supabaseClient
             .from('category_subcategories')
@@ -176,7 +190,77 @@ function renderDashboard() {
 
 window.BP.renderDashboard = renderDashboard;
 
-// ─── 7. Overview Tab ─────────────────────────────────────────────
+// ─── 7. Analytics Data Layer ──────────────────────────────────────
+
+/*
+ * Fetch the listing_analytics_summary row (one per listing, all buckets pre-computed).
+ * Result is cached for the session — bucket switching just reads the cached row.
+ */
+async function _fetchAnalyticsSummary(listingId) {
+    if (_analyticsSummaryCache && _analyticsSummaryCache.listing_id === listingId) {
+        return _analyticsSummaryCache;
+    }
+    const { data, error } = await window.TGDAuth.supabaseClient
+        .from('listing_analytics_summary')
+        .select('*')
+        .eq('listing_id', listingId)
+        .maybeSingle();
+    if (error) {
+        console.warn('listing_analytics_summary query error:', error.message);
+        return null;
+    }
+    _analyticsSummaryCache = data; // may be null if no row yet
+    return data;
+}
+
+/*
+ * Extract the 7 metric values for a given time bucket from the summary row.
+ * Column naming: {metric}_{bucket} e.g. views_1m, call_clicks_7d, directions_clicks_all
+ */
+function _getStatsForBucket(row, bucket) {
+    if (!row) {
+        return { views: 0, call_clicks: 0, email_clicks: 0, website_clicks: 0,
+                 directions_clicks: 0, custom_cta_1: 0, custom_cta_2: 0, share_clicks: 0 };
+    }
+    const s = bucket; // shorthand
+    return {
+        views:             row[`views_${s}`]             ?? 0,
+        call_clicks:       row[`call_clicks_${s}`]       ?? 0,
+        email_clicks:      row[`email_clicks_${s}`]      ?? 0,
+        website_clicks:    row[`website_clicks_${s}`]    ?? 0,
+        directions_clicks: row[`directions_clicks_${s}`] ?? 0,
+        custom_cta_1:      row[`custom_cta_1_${s}`]      ?? 0,
+        custom_cta_2:      row[`custom_cta_2_${s}`]      ?? 0,
+        share_clicks:      row[`share_clicks_${s}`]      ?? 0,
+    };
+}
+
+/*
+ * Fetch recent individual event rows for the activity log.
+ * Source: listing_analytics (columns: action, platform, timestamp only).
+ * Used for FEATURED and PREMIUM tiers.
+ */
+async function _fetchAnalyticsEvents(listingId, limit = 25) {
+    try {
+        const { data, error } = await window.TGDAuth.supabaseClient
+            .from('listing_analytics')
+            .select('action, platform, timestamp')
+            .eq('listing_id', listingId)
+            .not('action', 'is', null)
+            .order('timestamp', { ascending: false })
+            .limit(limit);
+        if (error) {
+            console.warn('listing_analytics events query error:', error.message);
+            return [];
+        }
+        return data || [];
+    } catch (e) {
+        console.warn('_fetchAnalyticsEvents error:', e);
+        return [];
+    }
+}
+
+// ─── 8. Overview Tab ─────────────────────────────────────────────
 
 function renderOverview() {
     const listing    = window.BP.currentListing;
@@ -204,7 +288,7 @@ function renderOverview() {
             `Photo gallery (up to ${limits.maxPhotos} photos)`,
             `Up to ${limits.maxInfoFields} additional info fields`,
             '1 custom CTA button',
-            'Engagement analytics — calls, website & directions',
+            'Full engagement analytics with time periods',
         ],
         PREMIUM: [
             'Everything in Featured Profile',
@@ -214,8 +298,8 @@ function renderOverview() {
             'Video embed',
             `Up to ${limits.maxInfoFields} additional info fields`,
             '2 custom CTA buttons',
-            'Homepage and category placement',
-            'Full analytics including video plays',
+            'Complete analytics including CTA and share tracking',
+            'Recent activity event log',
         ],
     };
 
@@ -314,19 +398,27 @@ async function _loadOverviewStats() {
     const banner = document.getElementById('overviewStatsBanner');
     if (!banner) return;
     try {
-        const tier  = listing.tier || 'FREE';
-        const stats = await _fetchAnalyticsAggregates(listing.id);
+        const tier    = listing.tier || 'FREE';
+        const row     = await _fetchAnalyticsSummary(listing.id);
+        const stats   = _getStatsForBucket(row, DEFAULT_BUCKET);
+        const totalEngagement = stats.call_clicks + stats.email_clicks + stats.website_clicks
+                              + stats.directions_clicks + stats.share_clicks
+                              + stats.custom_cta_1 + stats.custom_cta_2;
+
         const visibleStats = tier === 'FREE'
             ? [
-                { label: 'Total Views',      value: stats.views,            color: 'blue',  icon: EYE_SVG  },
-                { label: 'Total Engagement', value: stats.call_clicks + stats.website_clicks + stats.direction_clicks + stats.share_clicks, color: 'gold', icon: STAR_SVG },
+                { label: 'Views (last month)',      value: stats.views,          color: 'blue',  icon: EYE_SVG  },
+                { label: 'Engagement (last month)', value: totalEngagement,      color: 'gold',  icon: STAR_SVG },
               ]
             : [
-                { label: 'Total Views',    value: stats.views,            color: 'blue',   icon: EYE_SVG   },
-                { label: 'Call Clicks',    value: stats.call_clicks,      color: 'green',  icon: PHONE_SVG },
-                { label: 'Website Clicks', value: stats.website_clicks,   color: 'indigo', icon: GLOBE_SVG },
-                { label: 'Directions',     value: stats.direction_clicks, color: 'rose',   icon: MAP_SVG   },
+                { label: 'Views',       value: stats.views,             color: 'blue',   icon: EYE_SVG   },
+                { label: 'Calls',       value: stats.call_clicks,       color: 'green',  icon: PHONE_SVG },
+                { label: 'Website',     value: stats.website_clicks,    color: 'indigo', icon: GLOBE_SVG },
+                { label: 'Directions',  value: stats.directions_clicks, color: 'rose',   icon: MAP_SVG   },
               ];
+
+        const periodNote = tier === 'FREE' ? '' :
+            `<p style="font-size:.75rem;color:var(--slate-400);margin-top:6px;text-align:right;">Last 30 days · <button onclick="switchTab('analytics')" style="background:none;border:none;color:var(--blue);font-size:.75rem;cursor:pointer;padding:0;font-weight:500;">View all analytics →</button></p>`;
 
         banner.innerHTML = `
             <div class="bp-stat-grid">
@@ -338,13 +430,15 @@ async function _loadOverviewStats() {
                     </div>
                 `).join('')}
             </div>
+            ${periodNote}
         `;
-    } catch (_) {
+    } catch (err) {
+        console.warn('Overview stats error:', err);
         banner.innerHTML = '';
     }
 }
 
-// ─── 8. Analytics Tab ─────────────────────────────────────────────
+// ─── 9. Analytics Tab ─────────────────────────────────────────────
 
 async function renderAnalytics() {
     const listing = window.BP.currentListing;
@@ -353,7 +447,7 @@ async function renderAnalytics() {
 
     const container = document.getElementById('content-analytics');
     container.innerHTML = `
-        <div class="bp-page-header">
+        <div class="bp-page-header" style="flex-wrap:wrap;gap:12px;">
             <div><h1>Analytics</h1><p>Performance data for ${_esc(listing.business_name)}</p></div>
         </div>
         <div id="analyticsBody">
@@ -365,28 +459,12 @@ async function renderAnalytics() {
     `;
 
     try {
-        const stats    = await _fetchAnalyticsAggregates(listing.id);
-        const events   = await _fetchAnalyticsEvents(listing.id, 20);
-        const cards    = _buildAnalyticsCards(stats, tier);
-        const eventLog = _buildEventLog(events);
+        const summaryRow = await _fetchAnalyticsSummary(listing.id);
+        const events     = (tier === 'FREE') ? [] : await _fetchAnalyticsEvents(listing.id, 25);
 
-        document.getElementById('analyticsBody').innerHTML = `
-            <div class="bp-analytics-grid">${cards}</div>
-            ${tier === 'FREE' ? `
-                <div class="bp-upgrade-notice">
-                    <div class="bp-upgrade-notice__icon">📈</div>
-                    <div>
-                        <h4>Unlock Detailed Analytics</h4>
-                        <p>Upgrade to Featured or Premium to see call clicks, website visits, direction requests, shares, and recent event history.</p>
-                    </div>
-                </div>
-            ` : `
-                <div class="bp-card" style="margin-top:4px;">
-                    <div class="bp-card-header"><h2>Recent Activity</h2></div>
-                    <div class="bp-card-body">${eventLog}</div>
-                </div>
-            `}
-        `;
+        // Render with default bucket; bucket switching re-renders only the cards section
+        _renderAnalyticsBody(summaryRow, events, tier, listing, DEFAULT_BUCKET);
+
     } catch (err) {
         console.error('Analytics render error:', err);
         document.getElementById('analyticsBody').innerHTML = `
@@ -397,129 +475,191 @@ async function renderAnalytics() {
     }
 }
 
-/*
- * _fetchAnalyticsAggregates
- *
- * listing_analytics columns: id, action, platform, timestamp, user_agent, created_at, listing_id
- * analytics columns:         id, views, call_clicks, website_clicks, direction_clicks,
- *                            share_clicks, video_plays, last_viewed, created_at, updated_at, listing_id
- *
- * Strategy: count individual event rows from listing_analytics (select 'action' only),
- * then pull legacy aggregate totals from analytics, take the max of each.
- */
-async function _fetchAnalyticsAggregates(listingId) {
-    const totals = {
-        views: 0, call_clicks: 0, website_clicks: 0,
-        direction_clicks: 0, share_clicks: 0, video_plays: 0,
-    };
+function _renderAnalyticsBody(summaryRow, events, tier, listing, bucket) {
+    const stats      = _getStatsForBucket(summaryRow, bucket);
+    const bucketLabel = TIME_BUCKETS.find(b => b.value === bucket)?.label || bucket;
+    const updatedAt  = summaryRow?.updated_at
+        ? `Updated ${_timeAgo(summaryRow.updated_at)}`
+        : '';
 
-    // ── 1. Count individual event rows from listing_analytics ──
-    // Only select 'action' — the only column needed for counting.
-    // Do NOT select views/call_clicks/etc. — those don't exist here.
-    try {
-        const { data: eventRows, error: eventsError } = await window.TGDAuth.supabaseClient
-            .from('listing_analytics')
-            .select('action')
-            .eq('listing_id', listingId);
+    // CTA labels from listing config
+    const cta1Name = listing.custom_ctas?.[0]?.name || 'CTA Button 1';
+    const cta2Name = listing.custom_ctas?.[1]?.name || 'CTA Button 2';
 
-        if (eventsError) {
-            console.warn('listing_analytics query error:', eventsError.message);
-        } else if (Array.isArray(eventRows)) {
-            eventRows.forEach(row => {
-                switch (row.action) {
-                    case 'view':       totals.views++;            break;
-                    case 'call':       totals.call_clicks++;      break;
-                    case 'website':    totals.website_clicks++;   break;
-                    case 'directions': totals.direction_clicks++; break;
-                    case 'share':      totals.share_clicks++;     break;
-                    case 'video':      totals.video_plays++;      break;
-                }
-            });
-        }
-    } catch (e) {
-        console.warn('Could not count listing_analytics events:', e);
-    }
-
-    // ── 2. Pull legacy aggregate totals from the analytics table ──
-    // These columns DO exist in analytics: views, call_clicks, website_clicks,
-    // direction_clicks, share_clicks, video_plays.
-    try {
-        const { data: agg, error: aggError } = await window.TGDAuth.supabaseClient
-            .from('analytics')
-            .select('views, call_clicks, website_clicks, direction_clicks, share_clicks, video_plays')
-            .eq('listing_id', listingId)
-            .maybeSingle();
-
-        if (!aggError && agg) {
-            totals.views            = Math.max(totals.views,            agg.views            || 0);
-            totals.call_clicks      = Math.max(totals.call_clicks,      agg.call_clicks      || 0);
-            totals.website_clicks   = Math.max(totals.website_clicks,   agg.website_clicks   || 0);
-            totals.direction_clicks = Math.max(totals.direction_clicks, agg.direction_clicks || 0);
-            totals.share_clicks     = Math.max(totals.share_clicks,     agg.share_clicks     || 0);
-            totals.video_plays      = Math.max(totals.video_plays,      agg.video_plays      || 0);
-        }
-    } catch (e) {
-        // No row in analytics yet — not an error
-    }
-
-    return totals;
-}
-
-/*
- * _fetchAnalyticsEvents
- *
- * Fetch recent individual event rows for the activity log.
- * Only select columns that exist in listing_analytics:
- *   action, platform, timestamp
- */
-async function _fetchAnalyticsEvents(listingId, limit = 20) {
-    try {
-        const { data, error } = await window.TGDAuth.supabaseClient
-            .from('listing_analytics')
-            .select('action, platform, timestamp')
-            .eq('listing_id', listingId)
-            .not('action', 'is', null)
-            .order('timestamp', { ascending: false })
-            .limit(limit);
-
-        if (error) {
-            console.warn('Could not fetch analytics events:', error.message);
-            return [];
-        }
-        return data || [];
-    } catch (e) {
-        console.warn('_fetchAnalyticsEvents error:', e);
-        return [];
-    }
-}
-
-function _buildAnalyticsCards(stats, tier) {
-    const all = [
-        { label: 'Total Views',    value: stats.views,            grad: 'bg-grad-1', icon: EYE_SVG   },
-        { label: 'Call Clicks',    value: stats.call_clicks,      grad: 'bg-grad-2', icon: PHONE_SVG },
-        { label: 'Website Clicks', value: stats.website_clicks,   grad: 'bg-grad-3', icon: GLOBE_SVG },
-        { label: 'Directions',     value: stats.direction_clicks, grad: 'bg-grad-4', icon: MAP_SVG   },
-        { label: 'Shares',         value: stats.share_clicks,     grad: 'bg-grad-5', icon: SHARE_SVG },
-        { label: 'Video Plays',    value: stats.video_plays,      grad: 'bg-grad-6', icon: VIDEO_SVG },
+    // Build metric card definitions for this tier
+    const allMetrics = [
+        { key: 'views',             label: 'Views',                    grad: 'bg-grad-1', icon: EYE_SVG,       tiers: ['FREE','FEATURED','PREMIUM'] },
+        { key: 'call_clicks',       label: 'Call Clicks',              grad: 'bg-grad-2', icon: PHONE_SVG,     tiers: ['FEATURED','PREMIUM'] },
+        { key: 'email_clicks',      label: 'Email Clicks',             grad: 'bg-grad-3', icon: EMAIL_SVG,     tiers: ['FEATURED','PREMIUM'] },
+        { key: 'website_clicks',    label: 'Website Clicks',           grad: 'bg-grad-1', icon: GLOBE_SVG,     tiers: ['FEATURED','PREMIUM'] },
+        { key: 'directions_clicks', label: 'Directions',               grad: 'bg-grad-4', icon: MAP_SVG,       tiers: ['FEATURED','PREMIUM'] },
+        { key: 'share_clicks',      label: 'Shares',                   grad: 'bg-grad-5', icon: SHARE_SVG,     tiers: ['FEATURED','PREMIUM'] },
+        { key: 'custom_cta_1',      label: _esc(cta1Name),             grad: 'bg-grad-6', icon: CURSOR_SVG,    tiers: ['FEATURED','PREMIUM'] },
+        { key: 'custom_cta_2',      label: _esc(cta2Name),             grad: 'bg-grad-2', icon: CURSOR_SVG,    tiers: ['PREMIUM'] },
     ];
-    const visible = tier === 'FREE'
-        ? [all[0], { label: 'Total Engagement', value: stats.call_clicks + stats.website_clicks + stats.direction_clicks + stats.share_clicks, grad: 'bg-grad-2', icon: STAR_SVG }]
-        : tier === 'FEATURED'
-        ? all.slice(0, 5)
-        : all;
 
-    return visible.map(c => `
-        <div class="bp-analytics-card ${c.grad}">
-            <div class="bp-analytics-card__value">${_fmt(c.value)}</div>
-            <div class="bp-analytics-card__label">${c.label}</div>
+    // For FREE: show views card + total engagement card
+    let cardsHtml = '';
+    if (tier === 'FREE') {
+        const totalEngagement = stats.call_clicks + stats.email_clicks + stats.website_clicks
+                              + stats.directions_clicks + stats.share_clicks
+                              + stats.custom_cta_1 + stats.custom_cta_2;
+        cardsHtml = `
+            <div class="bp-analytics-card bg-grad-1">
+                <div class="bp-analytics-card__value">${_fmt(stats.views)}</div>
+                <div class="bp-analytics-card__label">Views</div>
+            </div>
+            <div class="bp-analytics-card bg-grad-2">
+                <div class="bp-analytics-card__value">${_fmt(totalEngagement)}</div>
+                <div class="bp-analytics-card__label">Total Engagement</div>
+            </div>
+        `;
+    } else {
+        const visibleMetrics = allMetrics.filter(m => m.tiers.includes(tier));
+        // Hide CTA cards if the listing doesn't actually have those CTAs configured
+        const filteredMetrics = visibleMetrics.filter(m => {
+            if (m.key === 'custom_cta_1') return (listing.custom_ctas?.length ?? 0) >= 1;
+            if (m.key === 'custom_cta_2') return (listing.custom_ctas?.length ?? 0) >= 2;
+            return true;
+        });
+        cardsHtml = filteredMetrics.map(m => `
+            <div class="bp-analytics-card ${m.grad}">
+                <div class="bp-analytics-card__value">${_fmt(stats[m.key])}</div>
+                <div class="bp-analytics-card__label">${m.label}</div>
+            </div>
+        `).join('');
+    }
+
+    const eventLogHtml = (tier !== 'FREE') ? `
+        <div class="bp-card" style="margin-top:20px;">
+            <div class="bp-card-header">
+                <h2>Recent Activity</h2>
+                <span style="font-size:.78rem;color:var(--slate-400);">Last 25 events</span>
+            </div>
+            <div class="bp-card-body">${_buildEventLog(events)}</div>
         </div>
-    `).join('');
+    ` : '';
+
+    const upgradeNotice = (tier === 'FREE') ? `
+        <div class="bp-upgrade-notice" style="margin-top:16px;">
+            <div class="bp-upgrade-notice__icon">📈</div>
+            <div>
+                <h4>Unlock Detailed Analytics</h4>
+                <p>Upgrade to Featured or Premium to see call, email, website, directions, share, and CTA click tracking across any time period.</p>
+            </div>
+        </div>
+    ` : '';
+
+    document.getElementById('analyticsBody').innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <label style="font-size:.82rem;font-weight:600;color:var(--slate-600);text-transform:uppercase;letter-spacing:.04em;">Time Period</label>
+                <select id="analyticsBucketSelect"
+                        onchange="_onBucketChange(this.value)"
+                        style="padding:8px 32px 8px 12px;border:1.5px solid var(--slate-200);border-radius:var(--r);font-family:inherit;font-size:.875rem;color:var(--slate-900);background:var(--white);cursor:pointer;outline:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;">
+                    ${TIME_BUCKETS.map(b => `<option value="${b.value}" ${b.value === bucket ? 'selected' : ''}>${b.label}</option>`).join('')}
+                </select>
+            </div>
+            ${updatedAt ? `<span style="font-size:.75rem;color:var(--slate-400);">${_esc(updatedAt)}</span>` : ''}
+        </div>
+
+        <div class="bp-analytics-grid" id="analyticsCards">${cardsHtml}</div>
+
+        ${upgradeNotice}
+        ${eventLogHtml}
+    `;
+
+    // Store on window so the bucket-change handler can access everything
+    window._analyticsState = { summaryRow, events, tier, listing };
 }
+
+/*
+ * Called when the time period dropdown changes.
+ * Re-renders only the cards grid — no new network request needed.
+ */
+window._onBucketChange = function(bucket) {
+    const { summaryRow, tier, listing } = window._analyticsState || {};
+    if (!summaryRow && tier !== 'FREE') return;
+    const stats      = _getStatsForBucket(summaryRow, bucket);
+    const cta1Name   = listing?.custom_ctas?.[0]?.name || 'CTA Button 1';
+    const cta2Name   = listing?.custom_ctas?.[1]?.name || 'CTA Button 2';
+
+    let cardsHtml = '';
+    if (tier === 'FREE') {
+        const totalEngagement = stats.call_clicks + stats.email_clicks + stats.website_clicks
+                              + stats.directions_clicks + stats.share_clicks
+                              + stats.custom_cta_1 + stats.custom_cta_2;
+        cardsHtml = `
+            <div class="bp-analytics-card bg-grad-1">
+                <div class="bp-analytics-card__value">${_fmt(stats.views)}</div>
+                <div class="bp-analytics-card__label">Views</div>
+            </div>
+            <div class="bp-analytics-card bg-grad-2">
+                <div class="bp-analytics-card__value">${_fmt(totalEngagement)}</div>
+                <div class="bp-analytics-card__label">Total Engagement</div>
+            </div>
+        `;
+    } else {
+        const allMetrics = [
+            { key: 'views',             label: 'Views',               grad: 'bg-grad-1', icon: EYE_SVG,    tiers: ['FREE','FEATURED','PREMIUM'] },
+            { key: 'call_clicks',       label: 'Call Clicks',         grad: 'bg-grad-2', icon: PHONE_SVG,  tiers: ['FEATURED','PREMIUM'] },
+            { key: 'email_clicks',      label: 'Email Clicks',        grad: 'bg-grad-3', icon: EMAIL_SVG,  tiers: ['FEATURED','PREMIUM'] },
+            { key: 'website_clicks',    label: 'Website Clicks',      grad: 'bg-grad-1', icon: GLOBE_SVG,  tiers: ['FEATURED','PREMIUM'] },
+            { key: 'directions_clicks', label: 'Directions',          grad: 'bg-grad-4', icon: MAP_SVG,    tiers: ['FEATURED','PREMIUM'] },
+            { key: 'share_clicks',      label: 'Shares',              grad: 'bg-grad-5', icon: SHARE_SVG,  tiers: ['FEATURED','PREMIUM'] },
+            { key: 'custom_cta_1',      label: _esc(cta1Name),        grad: 'bg-grad-6', icon: CURSOR_SVG, tiers: ['FEATURED','PREMIUM'] },
+            { key: 'custom_cta_2',      label: _esc(cta2Name),        grad: 'bg-grad-2', icon: CURSOR_SVG, tiers: ['PREMIUM'] },
+        ];
+        const visibleMetrics = allMetrics
+            .filter(m => m.tiers.includes(tier))
+            .filter(m => {
+                if (m.key === 'custom_cta_1') return (listing?.custom_ctas?.length ?? 0) >= 1;
+                if (m.key === 'custom_cta_2') return (listing?.custom_ctas?.length ?? 0) >= 2;
+                return true;
+            });
+        cardsHtml = visibleMetrics.map(m => `
+            <div class="bp-analytics-card ${m.grad}">
+                <div class="bp-analytics-card__value">${_fmt(stats[m.key])}</div>
+                <div class="bp-analytics-card__label">${m.label}</div>
+            </div>
+        `).join('');
+    }
+
+    const grid = document.getElementById('analyticsCards');
+    if (grid) {
+        grid.style.opacity = '0';
+        grid.style.transition = 'opacity 0.15s ease';
+        setTimeout(() => {
+            grid.innerHTML = cardsHtml;
+            grid.style.opacity = '1';
+        }, 150);
+    }
+};
 
 function _buildEventLog(events) {
-    if (!events.length) return '<p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:20px 0;">No events recorded yet.</p>';
-    const colors = { view: '#3b82f6', call: '#10b981', website: '#6366f1', directions: '#ef4444', share: '#f59e0b', video: '#0ea5e9' };
-    const labels = { view: 'Page View', call: 'Phone Call', website: 'Website Visit', directions: 'Directions', share: 'Share', video: 'Video Play' };
+    if (!events || !events.length) {
+        return '<p style="color:var(--slate-400);font-size:.875rem;text-align:center;padding:20px 0;">No events recorded yet.</p>';
+    }
+    const colors = {
+        view:       '#3b82f6',
+        call:       '#10b981',
+        email:      '#8b5cf6',
+        website:    '#6366f1',
+        directions: '#ef4444',
+        share:      '#f59e0b',
+        video:      '#0ea5e9',
+        custom_cta: '#045093',
+    };
+    const labels = {
+        view:       'Page View',
+        call:       'Phone Call',
+        email:      'Email Click',
+        website:    'Website Visit',
+        directions: 'Directions',
+        share:      'Share',
+        video:      'Video Play',
+        custom_cta: 'CTA Click',
+    };
     return `
         <div class="bp-event-log__list">
             ${events.map(e => `
@@ -527,7 +667,7 @@ function _buildEventLog(events) {
                     <div class="bp-event-item__dot" style="background:${colors[e.action] || '#94a3b8'};"></div>
                     <div class="bp-event-item__action">
                         ${labels[e.action] || e.action}
-                        ${e.platform ? `<span style="color:var(--slate-400);font-size:.78rem;">via ${e.platform}</span>` : ''}
+                        ${e.platform ? `<span style="color:var(--slate-400);font-size:.78rem;margin-left:4px;">via ${_esc(e.platform)}</span>` : ''}
                     </div>
                     <div class="bp-event-item__time">${_timeAgo(e.timestamp)}</div>
                 </div>
@@ -536,7 +676,7 @@ function _buildEventLog(events) {
     `;
 }
 
-// ─── 9. Edit Tab ──────────────────────────────────────────────────
+// ─── 10. Edit Tab ──────────────────────────────────────────────────
 
 function renderEditForm() {
     const listing = window.BP.currentListing;
@@ -662,6 +802,29 @@ function renderEditForm() {
         `)}
 
         ${_section('media', IMAGE_SVG, 'Photos & Media', false, `
+            <div class="bp-cf-config">
+                <div class="bp-cf-config__toggle" onclick="_toggleCfConfig()">
+                    <span class="bp-cf-config__toggle-label">
+                        <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                        Cloudflare Images Credentials
+                    </span>
+                    <svg id="cfChevron" style="width:16px;height:16px;stroke:var(--slate-400);fill:none;stroke-width:2;stroke-linecap:round;transition:transform .2s;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="bp-cf-config__fields" id="cfFields">
+                    <div class="bp-field">
+                        <label class="bp-label" for="cfAccountId">Account ID</label>
+                        <input class="bp-input" type="text" id="cfAccountId" placeholder="Cloudflare account ID">
+                    </div>
+                    <div class="bp-field">
+                        <label class="bp-label" for="cfApiKey">API Key</label>
+                        <input class="bp-input" type="password" id="cfApiKey" placeholder="Images API token">
+                    </div>
+                    <div class="bp-field col-span-2">
+                        <label class="bp-label" for="cfEndpoint">Upload Proxy Endpoint</label>
+                        <input class="bp-input" type="url" id="cfEndpoint" placeholder="https://tgd-images-upload.thegreekdirectory.org">
+                    </div>
+                </div>
+            </div>
             <div id="uploadStatus" class="bp-upload-status"></div>
             <div style="margin-bottom:20px;">
                 <label class="bp-label">Logo</label>
@@ -834,6 +997,7 @@ function renderEditForm() {
 
     _renderSubcats();
     _renderHours(listing.hours || {});
+    _loadCfConfig();
     document.querySelector('.bp-section')?.classList.add('open');
 }
 
@@ -855,6 +1019,11 @@ function _section(id, iconSvg, title, openByDefault, bodyHtml) {
 }
 
 window._toggleSection  = id => document.getElementById(id)?.classList.toggle('open');
+window._toggleCfConfig = function() {
+    document.getElementById('cfFields')?.classList.toggle('open');
+    const chev = document.getElementById('cfChevron');
+    if (chev) chev.style.transform = document.getElementById('cfFields')?.classList.contains('open') ? 'rotate(180deg)' : '';
+};
 
 // ── Subcategories ─────────────────────────────────────────────────
 
@@ -933,7 +1102,7 @@ window._toggle24Hours = function(key) {
     if (open24.checked) { input.value = ''; input.disabled = true; closed.checked = false; } else { input.disabled = false; }
 };
 
-// ─── 10. Save Changes ─────────────────────────────────────────────
+// ─── 11. Save Changes ─────────────────────────────────────────────
 
 async function saveChanges() {
     const listing = window.BP.currentListing;
@@ -948,8 +1117,8 @@ async function saveChanges() {
     const state      = document.getElementById('editState').value.trim();
     const taglineMax = getTaglineMaxLength(city, state);
 
-    if (!tagline)                     return showToast('Tagline is required.', 'error');
-    if (tagline.length > taglineMax)  return showToast(`Tagline must be ${taglineMax} characters or fewer.`, 'error');
+    if (!tagline)                      return showToast('Tagline is required.', 'error');
+    if (tagline.length > taglineMax)   return showToast(`Tagline must be ${taglineMax} characters or fewer.`, 'error');
     if (_selectedSubcats.length === 0) return showToast('Please select at least one subcategory.', 'error');
 
     let description = '';
@@ -1064,20 +1233,14 @@ async function saveChanges() {
 
 /*
  * _performSave
- *
- * Writes updates directly via the Supabase SDK (RLS policies are now correct).
- *
- * Pattern: .update() WITHOUT chained .select() to avoid the PGRST116 / 406
- * "0 rows returned" error that occurs when RLS allows the write but the
- * implicit RETURNING clause hits a policy gap. After a successful write we do
- * a clean separate .select() to reload the row.
+ * UPDATE without chained .select() to avoid PGRST116/406.
+ * Then a clean separate .select() to reload the row.
  */
 async function _performSave(listingId, updates) {
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) saveBtn.classList.add('bp-btn--loading');
 
     try {
-        // ── Allowed fields (owner cannot touch tier, visible, slug, is_claimed, etc.) ──
         const ALLOWED = new Set([
             'tagline','description','subcategories','primary_subcategory',
             'pricing','coming_soon','address','city','state','zip_code','country','timezone',
@@ -1091,7 +1254,6 @@ async function _performSave(listingId, updates) {
             if (ALLOWED.has(k)) filtered[k] = v;
         }
 
-        // ── Step 1: UPDATE — no .select() chained to avoid 406/PGRST116 ──
         const { error: updateError } = await window.TGDAuth.supabaseClient
             .from('listings')
             .update(filtered)
@@ -1099,7 +1261,6 @@ async function _performSave(listingId, updates) {
 
         if (updateError) throw new Error(updateError.message || 'Update failed');
 
-        // ── Step 2: Reload the full row in a separate query ──
         const { data: updatedListing, error: fetchError } = await window.TGDAuth.supabaseClient
             .from('listings')
             .select('*')
@@ -1109,6 +1270,7 @@ async function _performSave(listingId, updates) {
         if (fetchError) throw new Error(fetchError.message || 'Could not reload listing after save');
 
         window.BP.currentListing = updatedListing;
+        _analyticsSummaryCache = null; // bust cache so analytics re-fetch with new data
         showToast('Listing saved successfully!', 'success');
         renderDashboard();
         switchTab('overview');
@@ -1122,6 +1284,8 @@ async function _performSave(listingId, updates) {
 }
 
 window.saveChanges = saveChanges;
+
+// ─── 12. Media Upload ─────────────────────────────────────────────
 
 // ─── 11. Media Upload ─────────────────────────────────────────────
 
@@ -1246,7 +1410,8 @@ function _photoThumb(url, idx, type) {
     `;
 }
 
-// ─── 12. Settings Tab ─────────────────────────────────────────────
+
+// ─── 13. Settings Tab ─────────────────────────────────────────────
 
 function renderSettings() {
     const ownerData = window.BP.ownerData;
@@ -1395,21 +1560,23 @@ async function changePassword() {
 
 window.changePassword = changePassword;
 
-// ─── 13. Inline SVG Icons ────────────────────────────────────────
+// ─── 14. Inline SVG Icons ────────────────────────────────────────
 
 const _svgAttr = `style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"`;
-const EYE_SVG   = `<svg ${_svgAttr}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
-const PHONE_SVG = `<svg ${_svgAttr}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.89 9.11 19.79 19.79 0 01.83.5a2 2 0 012 2v3a2 2 0 001.45 1.93 12.66 12.66 0 002.77.78 2 2 0 001.74-1.62l.18-.74a16 16 0 008.52 8.52l-.74.18a2 2 0 00-1.62 1.74 12.66 12.66 0 00.78 2.77A2 2 0 0020.1 19"/></svg>`;
-const GLOBE_SVG = `<svg ${_svgAttr}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`;
-const MAP_SVG   = `<svg ${_svgAttr}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
-const SHARE_SVG = `<svg ${_svgAttr}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
-const VIDEO_SVG = `<svg ${_svgAttr}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`;
-const STAR_SVG  = `<svg ${_svgAttr}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-const EDIT_SVG  = `<svg ${_svgAttr}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-const CLOCK_SVG = `<svg ${_svgAttr}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-const IMAGE_SVG = `<svg ${_svgAttr}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+const EYE_SVG    = `<svg ${_svgAttr}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const PHONE_SVG  = `<svg ${_svgAttr}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.89 9.11 19.79 19.79 0 01.83.5a2 2 0 012 2v3a2 2 0 001.45 1.93 12.66 12.66 0 002.77.78 2 2 0 001.74-1.62l.18-.74a16 16 0 008.52 8.52l-.74.18a2 2 0 00-1.62 1.74 12.66 12.66 0 00.78 2.77A2 2 0 0020.1 19"/></svg>`;
+const GLOBE_SVG  = `<svg ${_svgAttr}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`;
+const MAP_SVG    = `<svg ${_svgAttr}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+const SHARE_SVG  = `<svg ${_svgAttr}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
+const VIDEO_SVG  = `<svg ${_svgAttr}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`;
+const STAR_SVG   = `<svg ${_svgAttr}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+const EDIT_SVG   = `<svg ${_svgAttr}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+const CLOCK_SVG  = `<svg ${_svgAttr}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+const IMAGE_SVG  = `<svg ${_svgAttr}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+const EMAIL_SVG  = `<svg ${_svgAttr}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+const CURSOR_SVG = `<svg ${_svgAttr}><path d="M4 4l7.07 17 2.51-7.39L21 11.07z"/></svg>`;
 
-// ─── 14. Helper Functions ────────────────────────────────────────
+// ─── 15. Helper Functions ────────────────────────────────────────
 
 function _esc(str)    { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function _safeId(str) { return str.replace(/[^a-z0-9]/gi, '-').toLowerCase(); }
@@ -1484,25 +1651,6 @@ function _updateCounter(field, current, max) {
     el.className   = `bp-char-counter${current > max ? ' over' : current > max * 0.9 ? ' warn' : ''}`;
 }
 window._updateCounter = _updateCounter;
-
-/*
- * _normalizeForDiff
- *
- * Strips null/undefined values from a plain object so that
- *   {facebook: null, instagram: null}  ≡  null  ≡  {}
- * when comparing original DB values (may be null) against always-constructed
- * update objects (every key present, unset ones set to null).
- * Arrays are returned as-is; non-objects collapse to {}.
- */
-function _normalizeForDiff(val) {
-    if (Array.isArray(val)) return val;
-    if (!val || typeof val !== 'object') return {};
-    const out = {};
-    for (const [k, v] of Object.entries(val)) {
-        if (v !== null && v !== undefined) out[k] = v;
-    }
-    return out;
-}
 
 function _diffChanges(original, updates) {
   const changes = [];
