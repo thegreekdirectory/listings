@@ -1864,6 +1864,13 @@ async function uploadToCloudflareImages(file, assetType = 'photo') {
     return urlData.imageUrl;
 }
 
+function setMediaUploadStatus(message, isError = false) {
+    const statusEl = document.getElementById('mediaUploadStatus');
+    if (!statusEl) return;
+    statusEl.textContent = message || '';
+    statusEl.className = `text-sm ${isError ? 'text-red-600' : 'text-gray-600'}`;
+}
+
 async function handleLogoUpload(event) {
     const file = event.target.files?.[0];
     if (!file) return;
