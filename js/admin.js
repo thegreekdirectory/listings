@@ -2473,7 +2473,7 @@ const listingData = {
         if (exists) continue;
         try {
             await adminProxy('shortlinks:insert', {
-                title: listingData.business_name,
+                title: `LISTING: ${listingData.business_name}`,
                 path: candidate,
                 redirect_to: `https://thegreekdirectory.org/listing/${savedListing.slug || listingData.slug}`,
                 listing_refer_id: savedListing.id,
@@ -2501,7 +2501,7 @@ if (customShortlinkPath && isValidCustomShortlink(customShortlinkPath)) {
         } else {
             try {
                 await adminProxy('shortlinks:insert', {
-                    title: listingData.business_name,
+                    title: `LISTING: ${listingData.business_name}`,
                     path: customShortlinkPath,
                     redirect_to: `https://thegreekdirectory.org/listing/${savedListing.slug || listingData.slug}`,
                     listing_refer_id: savedListing.id,
