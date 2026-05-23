@@ -31,12 +31,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/automotive-transportation</loc>
-    <lastmod>2026-05-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://thegreekdirectory.org/category/education-community</loc>
     <lastmod>2026-05-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -85,22 +79,10 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/listing/rttta</loc>
+    <loc>https://thegreekdirectory.org/category/automotive-transportation</loc>
     <lastmod>2026-05-23</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://thegreekdirectory.org/listing//vcdftyui987y6t</loc>
-    <lastmod>2026-05-23</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://thegreekdirectory.org/listing/234</loc>
-    <lastmod>2026-05-23</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/guardian-angel-orthodox-day-school</loc>
@@ -362,7 +344,7 @@
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/example-listing</loc>
-    <lastmod>2026-05-14</lastmod>
+    <lastmod>2026-05-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
