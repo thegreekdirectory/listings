@@ -36,7 +36,7 @@ async function loadPartials() {
         // Load header
         const headerElement = document.querySelector('[data-partial="header"]');
         if (headerElement) {
-            const headerResponse = await fetch('/partials/header.html');
+            const headerResponse = await fetch('/partials/header.html?access=granted');
             if (headerResponse.ok) {
                 headerElement.innerHTML = await headerResponse.text();
                 // Execute scripts that were silently dropped by innerHTML
@@ -51,7 +51,7 @@ async function loadPartials() {
         // Load footer
         const footerElement = document.querySelector('[data-partial="footer"]');
         if (footerElement) {
-            const footerResponse = await fetch('/partials/footer.html');
+            const footerResponse = await fetch('/partials/footer.html?access=granted');
             if (footerResponse.ok) {
                 footerElement.innerHTML = await footerResponse.text();
                 // Execute scripts that were silently dropped by innerHTML
