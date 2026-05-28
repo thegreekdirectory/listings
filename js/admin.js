@@ -647,7 +647,7 @@ async function loadListings() {
             ? listings.slice().sort((a, b) => {
                 const aTime = new Date(a.created_at || 0).getTime();
                 const bTime = new Date(b.created_at || 0).getTime();
-                if (aTime !== bTime) return aTime - bTime;
+                if (aTime !== bTime) return bTime - aTime;
                 return String(a.business_name || '').localeCompare(String(b.business_name || ''));
             })
             : [];
