@@ -20,7 +20,7 @@ export async function onRequest(context) {
     return response;
   }
 
-  // Client-side script to observe dynamic DOM mutations
+  // Client-side script to observe dynamic DOM mutations (Now with Image support)
   const clientSideObserverScript = `
     <script>
       (function() {
@@ -29,13 +29,14 @@ export async function onRequest(context) {
         const queryPair = SECRET_PARAM + "=" + SECRET_VALUE;
         const currentHostname = window.location.hostname;
 
-        // Replicate server-side append logic for the browser
         function appendQuery(targetUrl) {
           if (!targetUrl || 
               targetUrl.startsWith("#") || 
               targetUrl.startsWith("mailto:") || 
               targetUrl.startsWith("tel:") || 
-              targetUrl.startsWith("javascript:")) {
+              targetUrl.startsWith("javascript:") ||
+              targetUrl.startsWith("data:") || 
+              targetUrl.startsWith("blob:")) {
             return targetUrl;
           }
 
@@ -54,81 +55,106 @@ export async function onRequest(context) {
           return targetUrl + separator + queryPair;
         }
 
-        // Apply to a specific node and all its children
+        // Helper to parse responsive image sets (e.g., "img.jpg 320w, img-large.jpg 800w")
+        function appendQueryToSrcset(srcsetString) {
+          if (!srcsetString) return srcsetString;
+          return srcsetString.split(',').map(part => {
+            const trimmed = part.trim();
+            if (!trimmed) return part;
+            const parts = trimmed.split(/\\s+/);
+            parts[0] = appendQuery(parts[0]); // Only update the URL, keep the size modifier
+            return parts.join(' ');
+          }).join(', ');
+        }
+
         function processNode(node) {
+          // Handle href elements
           if (node.tagName === 'A' || node.tagName === 'LINK') {
             const href = node.getAttribute('href');
             if (href) node.setAttribute('href', appendQuery(href));
-          } else if (node.tagName === 'SCRIPT') {
+          } 
+          // Handle src elements
+          else if (node.tagName === 'SCRIPT' || node.tagName === 'IMG' || node.tagName === 'SOURCE') {
             const src = node.getAttribute('src');
             if (src) node.setAttribute('src', appendQuery(src));
+            
+            // Handle srcset for responsive images/pictures
+            if (node.tagName === 'IMG' || node.tagName === 'SOURCE') {
+              const srcset = node.getAttribute('srcset');
+              if (srcset) node.setAttribute('srcset', appendQueryToSrcset(srcset));
+            }
           }
           
-          // Check children if a container node (like a <div>) was inserted
+          // Check dynamically inserted container children
           if (node.querySelectorAll) {
-            node.querySelectorAll('a[href], link[href], script[src]').forEach(child => {
+            const selectors = 'a[href], link[href], script[src], img[src], img[srcset], source[src], source[srcset]';
+            node.querySelectorAll(selectors).forEach(child => {
               if (child.tagName === 'A' || child.tagName === 'LINK') {
                 child.setAttribute('href', appendQuery(child.getAttribute('href')));
-              } else if (child.tagName === 'SCRIPT') {
-                child.setAttribute('src', appendQuery(child.getAttribute('src')));
+              } else if (child.tagName === 'SCRIPT' || child.tagName === 'IMG' || child.tagName === 'SOURCE') {
+                const src = child.getAttribute('src');
+                if (src) child.setAttribute('src', appendQuery(src));
+                
+                if (child.tagName === 'IMG' || child.tagName === 'SOURCE') {
+                  const srcset = child.getAttribute('srcset');
+                  if (srcset) child.setAttribute('srcset', appendQueryToSrcset(srcset));
+                }
               }
             });
           }
         }
 
-        // Watch the DOM for newly added elements
         const observer = new MutationObserver((mutations) => {
           mutations.forEach((mutation) => {
             mutation.addedNodes.forEach((node) => {
-              if (node.nodeType === 1) { // Node.ELEMENT_NODE
-                processNode(node);
-              }
+              if (node.nodeType === 1) processNode(node);
             });
           });
         });
 
-        // Start observing immediately
         observer.observe(document.documentElement, { childList: true, subtree: true });
       })();
     </script>
   `;
 
-  // 4. If it IS HTML, rewrite static links AND inject the mutation observer
+  // 4. Transform HTML tags
   return new HTMLRewriter()
     .on("head", {
-      element(el) {
-        // Inject the observer script into the head
-        el.append(clientSideObserverScript, { html: true });
-      }
+      element(el) { el.append(clientSideObserverScript, { html: true }); }
     })
     .on("script", {
       element(el) {
         const src = el.getAttribute("src");
         if (src) el.setAttribute("src", appendQuery(src, queryPair, url.hostname));
-      },
+      }
     })
-    .on("link", {
+    .on("link, a", {
       element(el) {
         const href = el.getAttribute("href");
         if (href) el.setAttribute("href", appendQuery(href, queryPair, url.hostname));
-      },
+      }
     })
-    .on("a", {
+    .on("img, source", {
       element(el) {
-        const href = el.getAttribute("href");
-        if (href) el.setAttribute("href", appendQuery(href, queryPair, url.hostname));
-      },
+        const src = el.getAttribute("src");
+        if (src) el.setAttribute("src", appendQuery(src, queryPair, url.hostname));
+        
+        const srcset = el.getAttribute("srcset");
+        if (srcset) el.setAttribute("srcset", appendQueryToSrcset(srcset, queryPair, url.hostname));
+      }
     })
     .transform(response);
 }
 
-// Helper function for server-side static URL rewriting
+// Server-side static URL rewriting
 function appendQuery(targetUrl, paramPair, currentHostname) {
   if (
     targetUrl.startsWith("#") || 
     targetUrl.startsWith("mailto:") || 
     targetUrl.startsWith("tel:") || 
-    targetUrl.startsWith("javascript:")
+    targetUrl.startsWith("javascript:") ||
+    targetUrl.startsWith("data:") ||
+    targetUrl.startsWith("blob:")
   ) {
     return targetUrl;
   }
@@ -146,4 +172,16 @@ function appendQuery(targetUrl, paramPair, currentHostname) {
 
   const separator = targetUrl.includes("?") ? "&" : "?";
   return `${targetUrl}${separator}${paramPair}`;
+}
+
+// Server-side responsive image set rewriting
+function appendQueryToSrcset(srcsetString, paramPair, currentHostname) {
+  if (!srcsetString) return srcsetString;
+  return srcsetString.split(',').map(part => {
+    const trimmed = part.trim();
+    if (!trimmed) return part;
+    const parts = trimmed.split(/\s+/);
+    parts[0] = appendQuery(parts[0], paramPair, currentHostname);
+    return parts.join(' ');
+  }).join(', ');
 }
