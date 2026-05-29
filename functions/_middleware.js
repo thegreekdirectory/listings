@@ -11,21 +11,99 @@ export async function onRequest(context) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  // 2. Get the actual response (the HTML, CSS, or JS file)
+  // 2. Get the actual response
   const response = await next();
 
-  // 3. If it's NOT HTML, just send it (it already passed the 403 check above)
+  // 3. If it's NOT HTML, just send it
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) {
     return response;
   }
 
-  // 4. If it IS HTML, rewrite all links to include the query param
+  // Client-side script to observe dynamic DOM mutations
+  const clientSideObserverScript = `
+    <script>
+      (function() {
+        const SECRET_PARAM = "${SECRET_PARAM}";
+        const SECRET_VALUE = "${SECRET_VALUE}";
+        const queryPair = SECRET_PARAM + "=" + SECRET_VALUE;
+        const currentHostname = window.location.hostname;
+
+        // Replicate server-side append logic for the browser
+        function appendQuery(targetUrl) {
+          if (!targetUrl || 
+              targetUrl.startsWith("#") || 
+              targetUrl.startsWith("mailto:") || 
+              targetUrl.startsWith("tel:") || 
+              targetUrl.startsWith("javascript:")) {
+            return targetUrl;
+          }
+
+          if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
+            try {
+              const parsedUrl = new URL(targetUrl);
+              if (parsedUrl.hostname !== currentHostname) return targetUrl;
+            } catch (error) {
+              return targetUrl;
+            }
+          }
+
+          if (targetUrl.includes(queryPair)) return targetUrl;
+
+          const separator = targetUrl.includes("?") ? "&" : "?";
+          return targetUrl + separator + queryPair;
+        }
+
+        // Apply to a specific node and all its children
+        function processNode(node) {
+          if (node.tagName === 'A' || node.tagName === 'LINK') {
+            const href = node.getAttribute('href');
+            if (href) node.setAttribute('href', appendQuery(href));
+          } else if (node.tagName === 'SCRIPT') {
+            const src = node.getAttribute('src');
+            if (src) node.setAttribute('src', appendQuery(src));
+          }
+          
+          // Check children if a container node (like a <div>) was inserted
+          if (node.querySelectorAll) {
+            node.querySelectorAll('a[href], link[href], script[src]').forEach(child => {
+              if (child.tagName === 'A' || child.tagName === 'LINK') {
+                child.setAttribute('href', appendQuery(child.getAttribute('href')));
+              } else if (child.tagName === 'SCRIPT') {
+                child.setAttribute('src', appendQuery(child.getAttribute('src')));
+              }
+            });
+          }
+        }
+
+        // Watch the DOM for newly added elements
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (node.nodeType === 1) { // Node.ELEMENT_NODE
+                processNode(node);
+              }
+            });
+          });
+        });
+
+        // Start observing immediately
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+      })();
+    </script>
+  `;
+
+  // 4. If it IS HTML, rewrite static links AND inject the mutation observer
   return new HTMLRewriter()
+    .on("head", {
+      element(el) {
+        // Inject the observer script into the head
+        el.append(clientSideObserverScript, { html: true });
+      }
+    })
     .on("script", {
       element(el) {
         const src = el.getAttribute("src");
-        // Pass the current hostname to properly identify external vs internal links
         if (src) el.setAttribute("src", appendQuery(src, queryPair, url.hostname));
       },
     })
@@ -44,9 +122,8 @@ export async function onRequest(context) {
     .transform(response);
 }
 
-// Helper function to handle URL joining safely
+// Helper function for server-side static URL rewriting
 function appendQuery(targetUrl, paramPair, currentHostname) {
-  // 1. Skip non-navigational or non-HTTP links (anchors, emails, phone numbers, JS)
   if (
     targetUrl.startsWith("#") || 
     targetUrl.startsWith("mailto:") || 
@@ -56,24 +133,17 @@ function appendQuery(targetUrl, paramPair, currentHostname) {
     return targetUrl;
   }
 
-  // 2. Check if it's an absolute URL (starts with http/https)
   if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
     try {
       const parsedUrl = new URL(targetUrl);
-      // If the hostnames don't match, it's external, so return it untouched
       if (parsedUrl.hostname !== currentHostname) return targetUrl;
     } catch (error) {
-      // If URL parsing fails for some reason, play it safe and don't modify
       return targetUrl; 
     }
   }
 
-  // 3. Prevent duplicate appending if the param is somehow already there
-  if (targetUrl.includes(paramPair)) {
-    return targetUrl;
-  }
+  if (targetUrl.includes(paramPair)) return targetUrl;
 
-  // 4. Append the query string for internal links (both absolute and relative)
   const separator = targetUrl.includes("?") ? "&" : "?";
   return `${targetUrl}${separator}${paramPair}`;
 }
