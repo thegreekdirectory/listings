@@ -1,4 +1,4 @@
-# The Greek Directory Listings
+# The Greek Directory
 
 Developer documentation for **The Greek Directory**, a static-first web application for discovering, managing, and promoting Greek-owned and Greek-themed businesses. The repository contains the public website, listing search experience, generated listing pages, business owner portal, admin portal, PWA assets, Cloudflare Worker code, Supabase Edge Function source mirrors, and deployment workflows.
 
