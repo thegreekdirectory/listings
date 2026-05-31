@@ -1,13 +1,14 @@
 # Supabase Database Audit Report
 ## Project: The Greek Directory (`luetekzqrrgdxtopzvqw`)
 
-**Generated:** 2026-05-27  
-**Database Host:** `db.luetekzqrrgdxtopzvqw.supabase.co`  
-**API URL:** `https://luetekzqrrgdxtopzvqw.supabase.co`  
-**Region:** `us-west-2`  
-**Status:** `ACTIVE_HEALTHY`  
-**PostgreSQL Version:** `17.6.1.063` (Engine: 17, Channel: GA)  
-**Organization ID:** `hagpqllpuxzcqacxmxdj`  
+**Generated:** 2026-05-27
+**Last Updated:** 2026-05-31 (migration `fix_rls_user_metadata_references` — resolved 4 CRITICAL security advisors)
+**Database Host:** `db.luetekzqrrgdxtopzvqw.supabase.co`
+**API URL:** `https://luetekzqrrgdxtopzvqw.supabase.co`
+**Region:** `us-west-2`
+**Status:** `ACTIVE_HEALTHY`
+**PostgreSQL Version:** `17.6.1.063` (Engine: 17, Channel: GA)
+**Organization ID:** `hagpqllpuxzcqacxmxdj`
 **Created:** `2026-01-13T23:40:47Z`
 
 ---
@@ -81,9 +82,9 @@
 
 ### 3.1 Table: `public.listings`
 
-**Comment:** Core business listings table  
-**RLS Enabled:** Yes  
-**Row Count:** 54  
+**Comment:** Core business listings table
+**RLS Enabled:** Yes
+**Row Count:** 54
 **Primary Key:** `id` (uuid)
 
 #### Column Definitions
@@ -216,9 +217,9 @@ ALTER TABLE public.listings ENABLE ROW LEVEL SECURITY;
 
 ### 3.2 Table: `public.business_owners`
 
-**Comment:** Business owner information and authentication  
-**RLS Enabled:** Yes  
-**Row Count:** 54  
+**Comment:** Business owner information and authentication
+**RLS Enabled:** Yes
+**Row Count:** 54
 **Primary Key:** `id` (bigint, sequence)
 
 #### Column Definitions
@@ -282,9 +283,9 @@ ALTER TABLE public.business_owners ENABLE ROW LEVEL SECURITY;
 
 ### 3.3 Table: `public.listing_analytics`
 
-**Comment:** Individual analytics events for listing pages (views, clicks, shares)  
-**RLS Enabled:** Yes  
-**Row Count:** 169  
+**Comment:** Individual analytics events for listing pages (views, clicks, shares)
+**RLS Enabled:** Yes
+**Row Count:** 169
 **Primary Key:** `id` (bigint, sequence)
 
 #### Column Definitions
@@ -325,9 +326,9 @@ ALTER TABLE public.listing_analytics ENABLE ROW LEVEL SECURITY;
 
 ### 3.4 Table: `public.listing_analytics_summary`
 
-**Comment:** (none — materialized-style summary table)  
-**RLS Enabled:** Yes  
-**Row Count:** 54  
+**Comment:** (none — materialized-style summary table)
+**RLS Enabled:** Yes
+**Row Count:** 54
 **Primary Key:** `listing_id` (uuid)
 
 This table is a pre-aggregated analytics summary maintained via the `increment_listing_analytics` SECURITY DEFINER trigger function. It stores window-based counters (7d, 14d, 1m, 3m, 6m, 1y, 2y, all) for every tracked action type per listing.
@@ -437,8 +438,8 @@ ALTER TABLE public.listing_analytics_summary ENABLE ROW LEVEL SECURITY;
 
 ### 3.5 Table: `public.listing_requests`
 
-**RLS Enabled:** Yes  
-**Row Count:** 0  
+**RLS Enabled:** Yes
+**Row Count:** 0
 **Primary Key:** `id` (bigint, identity BY DEFAULT)
 
 This table mirrors `listings` and `business_owners` structure for intake of new listing submission requests before admin review/approval.
@@ -537,8 +538,8 @@ ALTER TABLE public.listing_requests ENABLE ROW LEVEL SECURITY;
 
 ### 3.6 Table: `public.listing_suggestions`
 
-**RLS Enabled:** Yes  
-**Row Count:** 0  
+**RLS Enabled:** Yes
+**Row Count:** 0
 **Primary Key:** `id` (bigint, sequence)
 
 Accepts community-submitted edits/suggestions for existing listings. Contains a full mirror of listing fields plus suggester contact info and a `status` workflow column.
@@ -614,8 +615,8 @@ ALTER TABLE public.listing_suggestions ENABLE ROW LEVEL SECURITY;
 
 ### 3.7 Table: `public.shortlinks`
 
-**RLS Enabled:** Yes  
-**Row Count:** 431  
+**RLS Enabled:** Yes
+**Row Count:** 431
 **Primary Key:** `id` (uuid)
 
 Stores URL shortlinks for listings and arbitrary redirects. `listing_custom` distinguishes system-generated shortlinks from owner-customized ones.
@@ -655,8 +656,8 @@ ALTER TABLE public.shortlinks ENABLE ROW LEVEL SECURITY;
 
 ### 3.8 Table: `public.shortlink_events`
 
-**RLS Enabled:** Yes  
-**Row Count:** 103  
+**RLS Enabled:** Yes
+**Row Count:** 103
 **Primary Key:** `id` (bigint, identity ALWAYS)
 
 Logs every shortlink click event with geo data from Cloudflare/CDN headers.
@@ -703,8 +704,8 @@ ALTER TABLE public.shortlink_events ENABLE ROW LEVEL SECURITY;
 
 ### 3.9 Table: `public.category_subcategories`
 
-**RLS Enabled:** Yes  
-**Row Count:** 14  
+**RLS Enabled:** Yes
+**Row Count:** 14
 **Primary Key:** `category` (text)
 
 Lookup/reference table defining which subcategories belong to each category, and the JSON-LD schema type map per subcategory.
@@ -795,8 +796,8 @@ All `auth.*` tables have RLS enabled. These are managed by Supabase Auth and sho
 
 | Policy Name | Command | Roles | Type | USING / WITH CHECK |
 |---|---|---|---|---|
-| `tgd_listings_select` | SELECT | public | PERMISSIVE | `(visible = true) OR analytics_is_admin() OR id IN (SELECT bo.listing_id FROM business_owners bo WHERE (bo.owner_user_id IS NOT NULL AND bo.owner_user_id = (auth.jwt() -> 'user_metadata' ->> 'owner_user_id'))) OR id IN (SELECT bo.listing_id FROM business_owners bo WHERE (bo.owner_email IS NOT NULL AND bo.owner_email = auth.email()))` |
-| `tgd_listings_update` | UPDATE | public | PERMISSIVE | `analytics_is_admin() OR id IN (...owner_user_id match...) OR id IN (...owner_email match...)` |
+| `tgd_listings_select` | SELECT | public | PERMISSIVE | `(visible = true) OR analytics_is_admin() OR id IN (SELECT bo.listing_id FROM business_owners bo WHERE (bo.owner_email IS NOT NULL AND bo.owner_email = (SELECT auth.email())))` |
+| `tgd_listings_update` | UPDATE | public | PERMISSIVE | `analytics_is_admin() OR id IN (SELECT bo.listing_id FROM business_owners bo WHERE (bo.owner_email IS NOT NULL AND bo.owner_email = (SELECT auth.email())))` |
 | `tgd_listings_admin_insert` | INSERT | public | PERMISSIVE | WITH CHECK: `analytics_is_admin()` |
 | `tgd_listings_admin_delete` | DELETE | public | PERMISSIVE | `analytics_is_admin()` |
 
@@ -810,12 +811,8 @@ CREATE POLICY tgd_listings_select ON public.listings
     OR analytics_is_admin()
     OR (id IN (
       SELECT bo.listing_id FROM business_owners bo
-      WHERE (bo.owner_user_id IS NOT NULL
-        AND bo.owner_user_id = (auth.jwt() -> 'user_metadata'::text) ->> 'owner_user_id'::text)
-    ))
-    OR (id IN (
-      SELECT bo.listing_id FROM business_owners bo
-      WHERE (bo.owner_email IS NOT NULL AND bo.owner_email = auth.email())
+      WHERE (bo.owner_email IS NOT NULL)
+        AND (bo.owner_email = (SELECT auth.email()))
     ))
   );
 
@@ -826,24 +823,16 @@ CREATE POLICY tgd_listings_update ON public.listings
     analytics_is_admin()
     OR (id IN (
       SELECT bo.listing_id FROM business_owners bo
-      WHERE (bo.owner_user_id IS NOT NULL
-        AND bo.owner_user_id = (auth.jwt() -> 'user_metadata'::text) ->> 'owner_user_id'::text)
-    ))
-    OR (id IN (
-      SELECT bo.listing_id FROM business_owners bo
-      WHERE (bo.owner_email IS NOT NULL AND bo.owner_email = auth.email())
+      WHERE (bo.owner_email IS NOT NULL)
+        AND (bo.owner_email = (SELECT auth.email()))
     ))
   )
   WITH CHECK (
     analytics_is_admin()
     OR (id IN (
       SELECT bo.listing_id FROM business_owners bo
-      WHERE (bo.owner_user_id IS NOT NULL
-        AND bo.owner_user_id = (auth.jwt() -> 'user_metadata'::text) ->> 'owner_user_id'::text)
-    ))
-    OR (id IN (
-      SELECT bo.listing_id FROM business_owners bo
-      WHERE (bo.owner_email IS NOT NULL AND bo.owner_email = auth.email())
+      WHERE (bo.owner_email IS NOT NULL)
+        AND (bo.owner_email = (SELECT auth.email()))
     ))
   );
 
@@ -864,8 +853,8 @@ CREATE POLICY tgd_listings_admin_delete ON public.listings
 
 | Policy Name | Command | Roles | Type | Notes |
 |---|---|---|---|---|
-| `tgd_owners_select` | SELECT | public | PERMISSIVE | admin OR unclaimed (confirmation_key NOT NULL AND owner_user_id IS NULL) OR owner_user_id match OR owner_email match |
-| `tgd_owners_update` | UPDATE | public | PERMISSIVE | same conditions; WITH CHECK: admin OR owner_user_id match OR owner_email match |
+| `tgd_owners_select` | SELECT | public | PERMISSIVE | admin OR unclaimed (confirmation_key NOT NULL AND owner_user_id IS NULL) OR owner_email match |
+| `tgd_owners_update` | UPDATE | public | PERMISSIVE | USING: same as select; WITH CHECK: admin OR owner_email match |
 | `tgd_owners_admin_insert` | INSERT | public | PERMISSIVE | WITH CHECK: `analytics_is_admin()` |
 | `tgd_owners_admin_delete` | DELETE | public | PERMISSIVE | `analytics_is_admin()` |
 
@@ -877,8 +866,7 @@ CREATE POLICY tgd_owners_select ON public.business_owners
   USING (
     analytics_is_admin()
     OR ((confirmation_key IS NOT NULL) AND (owner_user_id IS NULL))
-    OR ((owner_user_id IS NOT NULL) AND (owner_user_id = (auth.jwt() -> 'user_metadata'::text) ->> 'owner_user_id'::text))
-    OR ((owner_email IS NOT NULL) AND (owner_email = auth.email()))
+    OR ((owner_email IS NOT NULL) AND (owner_email = (SELECT auth.email())))
   );
 
 -- UPDATE policy
@@ -887,13 +875,11 @@ CREATE POLICY tgd_owners_update ON public.business_owners
   USING (
     analytics_is_admin()
     OR ((confirmation_key IS NOT NULL) AND (owner_user_id IS NULL))
-    OR ((owner_user_id IS NOT NULL) AND (owner_user_id = (auth.jwt() -> 'user_metadata'::text) ->> 'owner_user_id'::text))
-    OR ((owner_email IS NOT NULL) AND (owner_email = auth.email()))
+    OR ((owner_email IS NOT NULL) AND (owner_email = (SELECT auth.email())))
   )
   WITH CHECK (
     analytics_is_admin()
-    OR ((owner_user_id IS NOT NULL) AND (owner_user_id = (auth.jwt() -> 'user_metadata'::text) ->> 'owner_user_id'::text))
-    OR ((owner_email IS NOT NULL) AND (owner_email = auth.email()))
+    OR ((owner_email IS NOT NULL) AND (owner_email = (SELECT auth.email())))
   );
 
 -- INSERT (admin only)
@@ -1088,7 +1074,7 @@ $$;
 
 **Language:** SQL | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`
 
-Checks if the calling auth user owns a specific listing by `owner_user_id`. ⚠️ Callable by `anon` — see Security Advisors.
+Checks if the calling auth user owns a specific listing by `owner_user_id`. ⚠️ Callable by `anon` — see Security Advisors. Note: `business_owners.owner_user_id` is currently unpopulated for all rows; this function always returns false for non-admin callers.
 
 ```sql
 CREATE OR REPLACE FUNCTION public.analytics_is_listing_owner(target_listing_id uuid)
@@ -1133,7 +1119,7 @@ $$;
 
 ### 7.5 `generate_slug(business_name text)` → text
 
-**Language:** plpgsql | **Volatility:** IMMUTABLE | **Security:** INVOKER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** IMMUTABLE | **Security:** INVOKER | **search_path:** `public`
 **Comment:** Generates URL-safe slug from business name
 
 ```sql
@@ -1153,7 +1139,7 @@ $$;
 
 ### 7.6 `get_category_counts()` → TABLE(category text, count bigint)
 
-**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`
 **Comment:** Get listing counts per category
 
 ```sql
@@ -1180,7 +1166,7 @@ $$;
 
 ### 7.7 `get_chain_locations(p_chain_id text, exclude_listing_id bigint)` → SETOF listings
 
-**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`
 **Comment:** Get all locations for a chain business
 
 > **Note:** The `exclude_listing_id` parameter is typed `bigint` but `listings.id` is now `uuid`. This function may be outdated following the `listings_id_int8_to_uuid` migration.
@@ -1212,7 +1198,7 @@ $$;
 
 ### 7.8 `get_featured_listings(limit_count integer)` → SETOF listings
 
-**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`
 **Comment:** Get featured and premium listings
 
 ```sql
@@ -1244,7 +1230,7 @@ $$;
 
 ### 7.9 `get_listing_analytics(p_listing_id bigint)` → TABLE(...)
 
-**Language:** plpgsql | **Volatility:** VOLATILE | **Security:** DEFINER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** VOLATILE | **Security:** DEFINER | **search_path:** `public`
 **Comment:** Retrieves analytics summary for a listing
 
 > **Note:** References `public.analytics_summary` which does not exist in the current schema. This function is likely a legacy artifact. The current summary table is `listing_analytics_summary`.
@@ -1275,7 +1261,7 @@ $$;
 
 ### 7.10 `get_listings_by_category(category_name text, limit_count integer, offset_count integer)` → SETOF listings
 
-**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`
 **Comment:** Get all listings in a category, sorted by tier
 
 ```sql
@@ -1314,7 +1300,7 @@ $$;
 
 ### 7.11 `get_listings_by_location(p_city, p_state, limit_count, offset_count)` → SETOF listings
 
-**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`
 **Comment:** Get all listings in a location
 
 ```sql
@@ -1355,7 +1341,7 @@ $$;
 
 ### 7.12 `get_location_counts()` → TABLE(state text, city text, count bigint)
 
-**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`
 **Comment:** Get listing counts per location
 
 ```sql
@@ -1383,7 +1369,7 @@ $$;
 
 ### 7.13 `get_recent_listings(limit_count integer)` → SETOF listings
 
-**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`
 **Comment:** Get recently added listings
 
 ```sql
@@ -1628,7 +1614,7 @@ Full KPI rollup from `listing_kpi_daily`. Returns map-opens, pin interactions, b
 
 ### 7.21 `search_listings(search_query text, limit_count integer, offset_count integer)` → TABLE(...)
 
-**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`, `extensions`  
+**Language:** plpgsql | **Volatility:** STABLE | **Security:** DEFINER | **search_path:** `public`, `extensions`
 **Comment:** Full-text search across listings with relevance ranking
 
 Uses `pg_trgm` `similarity()` to compute weighted relevance (business_name × 3 + tagline + category + city), filtered by `ILIKE` match on multiple columns including unnested `subcategories`.
@@ -1720,7 +1706,7 @@ $$;
 
 ### 7.25 `track_analytics_event(p_listing_id bigint, p_action text, p_platform text)` → void
 
-**Language:** plpgsql | **Volatility:** VOLATILE | **Security:** DEFINER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** VOLATILE | **Security:** DEFINER | **search_path:** `public`
 **Comment:** Tracks an analytics event for a listing
 
 > Inserts into `public.analytics_events` which does not exist in the current schema. Legacy/dead code.
@@ -1729,7 +1715,7 @@ $$;
 
 ### 7.26 `update_analytics_summary()` → trigger
 
-**Language:** plpgsql | **Volatility:** VOLATILE | **Security:** INVOKER | **search_path:** `public`  
+**Language:** plpgsql | **Volatility:** VOLATILE | **Security:** INVOKER | **search_path:** `public`
 **Comment:** Automatically updates analytics summary when events are inserted
 
 > References `public.analytics_summary` (does not exist). Legacy/dead code.
@@ -1902,8 +1888,8 @@ CREATE UNIQUE INDEX category_subcategories_pkey ON public.category_subcategories
 | `listing_analytics_id_seq` | `listing_analytics.id` | bigint | 1 | 1 | 9223372036854775807 | 1 | NO |
 | `listing_suggestions_id_seq` | `listing_suggestions.id` | bigint | 1 | 1 | 9223372036854775807 | 1 | NO |
 
-*`listing_requests.id` uses `GENERATED BY DEFAULT AS IDENTITY` (inline identity, no named sequence).*  
-*`shortlink_events.id` uses `GENERATED ALWAYS AS IDENTITY` (inline identity, no named sequence).*  
+*`listing_requests.id` uses `GENERATED BY DEFAULT AS IDENTITY` (inline identity, no named sequence).*
+*`shortlink_events.id` uses `GENERATED ALWAYS AS IDENTITY` (inline identity, no named sequence).*
 *`listings.id` and `shortlinks.id` use `gen_random_uuid()` — no sequence.*
 
 ---
@@ -2171,7 +2157,7 @@ Key notable available extensions:
 
 ## 15. Migration History
 
-Total migrations: **39**  
+Total migrations: **38**
 Listed in chronological order (oldest → newest):
 
 | Version | Migration Name | Notes |
@@ -2213,34 +2199,44 @@ Listed in chronological order (oldest → newest):
 | `20260519180644` | `fix_refresh_listing_analytics_summary_where_clause` | WHERE clause bug fix in refresh function |
 | `20260520013502` | `restore_full_refresh_listing_analytics_summary_function` | Restored full refresh function body |
 | `20260520013731` | `complete_daily_refresh_all_56_columns` | Ensured all 56 columns covered in refresh |
+| `20260531220548` | `fix_rls_user_metadata_references` | **Security:** Removed user_metadata from 4 RLS policies; added (SELECT auth.email()) performance wrapper |
 
 ---
 
 ## 16. Security Advisors
 
-### 16.1 ERROR: RLS References User Metadata
+### ~~16.1 ERROR: RLS References User Metadata~~ ✅ RESOLVED
 
-**Severity:** 🔴 ERROR  
+**Severity:** ~~🔴 ERROR~~ → ✅ Resolved by migration `fix_rls_user_metadata_references` (2026-05-31)
 **Remediation:** https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata
 
-The following RLS policies reference `auth.jwt() -> 'user_metadata'` which is **user-editable** and should never be used in security contexts:
+The following four RLS policies previously referenced `auth.jwt() -> 'user_metadata'` (user-editable) for ownership checks. All four have been updated to use `owner_email = (SELECT auth.email())` exclusively.
 
-| Table | Policy | Issue |
+| Table | Policy | Status |
 |---|---|---|
-| `public.business_owners` | `tgd_owners_select` | `owner_user_id = (auth.jwt() -> 'user_metadata') ->> 'owner_user_id'` |
-| `public.business_owners` | `tgd_owners_update` | Same |
-| `public.listings` | `tgd_listings_select` | Same pattern for owner lookup |
-| `public.listings` | `tgd_listings_update` | Same |
+| `public.business_owners` | `tgd_owners_select` | ✅ Fixed |
+| `public.business_owners` | `tgd_owners_update` | ✅ Fixed |
+| `public.listings` | `tgd_listings_select` | ✅ Fixed |
+| `public.listings` | `tgd_listings_update` | ✅ Fixed |
 
-**Risk:** Any authenticated user can set `user_metadata.owner_user_id` to any value and gain access to any listing or business_owner row that uses this field for ownership checking.
+**What was removed from each policy:**
+```sql
+-- Removed (was present in USING and/or WITH CHECK of all four policies):
+OR ((owner_user_id IS NOT NULL) AND
+    (owner_user_id = ((auth.jwt() -> 'user_metadata'::text) ->> 'owner_user_id'::text)))
+```
 
-**Fix:** Move `owner_user_id` lookups to use `app_metadata` (server-controlled) or use only `auth.email()` / `auth.uid()` comparisons against columns that are not user-settable.
+**Investigation findings that informed the fix:**
+- `business_owners.owner_user_id` was `NULL` for all 55 rows — the removed branch never evaluated to `true` in production.
+- The `user_metadata.owner_user_id` value format (`example-{listing_id}`) was incompatible with how SECURITY DEFINER helper functions (`analytics_is_listing_owner`, `current_owner_listing_ids`) compared `owner_user_id` against `auth.uid()` — the two mechanisms were never consistent.
+- All real owner access was already flowing exclusively through the `owner_email = auth.email()` branch, which is preserved.
+- Removing the `user_metadata` branch makes the policies strictly tighter (closes a forgeable path) without restricting any real user.
 
 ---
 
 ### 16.2 WARN: Function Search Path Mutable
 
-**Severity:** 🟡 WARN  
+**Severity:** 🟡 WARN
 **Remediation:** https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable
 
 | Function | Issue |
@@ -2253,7 +2249,7 @@ The following RLS policies reference `auth.jwt() -> 'user_metadata'` which is **
 
 ### 16.3 WARN: RLS Policy Always True (INSERT)
 
-**Severity:** 🟡 WARN  
+**Severity:** 🟡 WARN
 **Remediation:** https://supabase.com/docs/guides/database/database-linter?lint=0024_permissive_rls_policy
 
 | Table | Policy | Issue |
@@ -2266,7 +2262,7 @@ The following RLS policies reference `auth.jwt() -> 'user_metadata'` which is **
 
 ### 16.4 WARN: Public Can Execute SECURITY DEFINER Functions
 
-**Severity:** 🟡 WARN  
+**Severity:** 🟡 WARN
 **Remediation:** https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
 
 The `anon` role can call these SECURITY DEFINER functions via the REST API (`/rest/v1/rpc/...`). Many are intentional (public listing reads), but several should be reviewed:
@@ -2301,7 +2297,7 @@ The `anon` role can call these SECURITY DEFINER functions via the REST API (`/re
 
 ### 16.5 WARN: Leaked Password Protection Disabled
 
-**Severity:** 🟡 WARN  
+**Severity:** 🟡 WARN
 **Remediation:** https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
 HaveIBeenPwned.org integration is disabled. Enable in Auth settings to prevent compromised passwords.
@@ -2310,21 +2306,28 @@ HaveIBeenPwned.org integration is disabled. Enable in Auth settings to prevent c
 
 ## 17. Performance Advisors
 
-### 17.1 WARN: Auth RLS Initialization Plan
+### ~~17.1 WARN: Auth RLS Initialization Plan~~ ✅ RESOLVED
 
-**Severity:** 🟡 WARN  
+**Severity:** ~~🟡 WARN~~ → ✅ Resolved by migration `fix_rls_user_metadata_references` (2026-05-31)
 **Remediation:** https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan
 
-The following RLS policies call `auth.email()` and `auth.jwt()` directly (not wrapped in `(SELECT ...)`), causing them to be re-evaluated for every row scanned:
+The following RLS policies previously called `auth.email()` directly (not wrapped in `(SELECT ...)`), causing re-evaluation for every row scanned. All four have been updated to use `(SELECT auth.email())`.
 
-| Table | Policy |
-|---|---|
-| `public.business_owners` | `tgd_owners_select` |
-| `public.business_owners` | `tgd_owners_update` |
-| `public.listings` | `tgd_listings_select` |
-| `public.listings` | `tgd_listings_update` |
+| Table | Policy | Status |
+|---|---|---|
+| `public.business_owners` | `tgd_owners_select` | ✅ Fixed |
+| `public.business_owners` | `tgd_owners_update` | ✅ Fixed |
+| `public.listings` | `tgd_listings_select` | ✅ Fixed |
+| `public.listings` | `tgd_listings_update` | ✅ Fixed |
 
-**Fix:** Replace all `auth.email()` and `auth.jwt()` calls in USING/WITH CHECK clauses with `(SELECT auth.email())` and `(SELECT auth.jwt())` to cause PostgreSQL to evaluate them once per query, not once per row.
+**Fix applied:**
+```sql
+-- Before (re-evaluated per row):
+owner_email = auth.email()
+
+-- After (evaluated once per query):
+owner_email = (SELECT auth.email())
+```
 
 ---
 
@@ -2342,7 +2345,7 @@ Since `listing_suggestions` has 0 rows and has never been queried, these indexes
 
 ### 17.3 WARN: Multiple Permissive SELECT Policies on `shortlinks`
 
-**Severity:** 🟡 WARN  
+**Severity:** 🟡 WARN
 **Remediation:** https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies
 
 The `anon` role has two separate SELECT policies on `shortlinks` (`Allow public read access` and `shortlinks_public_select`), both with `USING (true)`. PostgreSQL must evaluate both for every query against this table.
@@ -2385,13 +2388,14 @@ category_subcategories (lookup table, PK = category text)
 - JWT role = `service_role` or `admin`
 - `app_metadata.role` = `admin` or `super_admin`
 
-**Business owner access** is determined by two mechanisms:
-- `owner_user_id` in `business_owners` matched against `user_metadata.owner_user_id` (⚠️ user-editable — security risk)
-- `owner_email` in `business_owners` matched against `auth.email()` (safe)
+**Business owner access** is determined by a single mechanism in RLS policies:
+- `owner_email` in `business_owners` matched against `(SELECT auth.email())` (safe, server-controlled)
+
+> **Note:** An `owner_user_id` column exists on `business_owners` but is currently unpopulated (`NULL` for all rows). RLS policies previously included a secondary ownership check that matched `owner_user_id` against `auth.jwt() -> 'user_metadata' ->> 'owner_user_id'`. This was removed by migration `fix_rls_user_metadata_references` (2026-05-31) because: (1) `user_metadata` is user-editable and must not be used in security contexts, (2) the column was never populated so the branch was dead code, and (3) the value format stored in `user_metadata` was inconsistent with how SECURITY DEFINER helper functions (`analytics_is_listing_owner`, `current_owner_listing_ids`) compare `owner_user_id` against `auth.uid()`. If `owner_user_id`-based ownership is implemented in the future, it should compare against `auth.uid()` via `app_metadata` (server-controlled) — never `user_metadata`.
 
 **Claim flow:** Unclaimed listings have `owner_user_id = NULL` and a `confirmation_key`. The RLS policy exposes these rows publicly so the claim UI can work. After 5 failed attempts, `claim_locked_until` is set.
 
-**Business Portal writes:** The `update-listing-bp` edge function handles authenticated owner updates by verifying JWT → email → business_owners row match, then writing with the service role key. This bypasses RLS intentionally but enforces field-level restrictions via an allowlist.
+**Business Portal writes:** The `update-listing-bp` edge function handles authenticated owner updates by verifying JWT → email → `business_owners` row match, then writing with the service role key. This bypasses RLS intentionally but enforces field-level restrictions via an allowlist.
 
 ### 18.4 Shortlink System
 
@@ -2434,4 +2438,4 @@ These should be updated to use `uuid` to match the current schema.
 
 ---
 
-*End of Audit Report — thegreekdirectory's Project (`luetekzqrrgdxtopzvqw`) — Generated 2026-05-27*
+*End of Audit Report — thegreekdirectory's Project (`luetekzqrrgdxtopzvqw`) — Last Updated 2026-05-31*
