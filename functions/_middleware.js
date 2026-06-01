@@ -13,14 +13,30 @@ export async function onRequest(context) {
 
   // 2. Get the actual response
   const response = await next();
-
-  // 3. If it's NOT HTML, just send it
   const contentType = response.headers.get("content-type") || "";
+
+  // 3. Process External CSS files
+  if (contentType.includes("text/css")) {
+    const originalCSS = await response.text();
+    const modifiedCSS = rewriteCSSURLs(originalCSS, queryPair, url.hostname);
+    
+    // Create new headers to remove content-length since the body size changed
+    const newHeaders = new Headers(response.headers);
+    newHeaders.delete("content-length");
+    
+    return new Response(modifiedCSS, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders
+    });
+  }
+
+  // 4. If it's NOT HTML, just send it (e.g., images, fonts, raw data)
   if (!contentType.includes("text/html")) {
     return response;
   }
 
-  // Client-side script to observe dynamic DOM mutations (Now with Image support)
+  // Client-side script to observe dynamic DOM mutations
   const clientSideObserverScript = `
     <script>
       (function() {
@@ -55,39 +71,50 @@ export async function onRequest(context) {
           return targetUrl + separator + queryPair;
         }
 
-        // Helper to parse responsive image sets (e.g., "img.jpg 320w, img-large.jpg 800w")
         function appendQueryToSrcset(srcsetString) {
           if (!srcsetString) return srcsetString;
           return srcsetString.split(',').map(part => {
             const trimmed = part.trim();
             if (!trimmed) return part;
             const parts = trimmed.split(/\\s+/);
-            parts[0] = appendQuery(parts[0]); // Only update the URL, keep the size modifier
+            parts[0] = appendQuery(parts[0]);
             return parts.join(' ');
           }).join(', ');
         }
 
+        function rewriteCSSURLsClient(cssString) {
+          if (!cssString) return cssString;
+          return cssString.replace(/url\\((['"]?)(.*?)\\1\\)/ig, function(match, quote, targetUrl) {
+             return "url(" + quote + appendQuery(targetUrl) + quote + ")";
+          });
+        }
+
         function processNode(node) {
-          // Handle href elements
+          // Handle standard attributes
           if (node.tagName === 'A' || node.tagName === 'LINK') {
             const href = node.getAttribute('href');
             if (href) node.setAttribute('href', appendQuery(href));
-          } 
-          // Handle src elements
-          else if (node.tagName === 'SCRIPT' || node.tagName === 'IMG' || node.tagName === 'SOURCE') {
+          } else if (node.tagName === 'SCRIPT' || node.tagName === 'IMG' || node.tagName === 'SOURCE') {
             const src = node.getAttribute('src');
             if (src) node.setAttribute('src', appendQuery(src));
             
-            // Handle srcset for responsive images/pictures
             if (node.tagName === 'IMG' || node.tagName === 'SOURCE') {
               const srcset = node.getAttribute('srcset');
               if (srcset) node.setAttribute('srcset', appendQueryToSrcset(srcset));
             }
           }
+
+          // Handle inline styles and style tags
+          if (node.hasAttribute && node.hasAttribute('style')) {
+            node.setAttribute('style', rewriteCSSURLsClient(node.getAttribute('style')));
+          }
+          if (node.tagName === 'STYLE') {
+            node.textContent = rewriteCSSURLsClient(node.textContent);
+          }
           
           // Check dynamically inserted container children
           if (node.querySelectorAll) {
-            const selectors = 'a[href], link[href], script[src], img[src], img[srcset], source[src], source[srcset]';
+            const selectors = 'a[href], link[href], script[src], img[src], img[srcset], source[src], source[srcset], [style], style';
             node.querySelectorAll(selectors).forEach(child => {
               if (child.tagName === 'A' || child.tagName === 'LINK') {
                 child.setAttribute('href', appendQuery(child.getAttribute('href')));
@@ -99,6 +126,13 @@ export async function onRequest(context) {
                   const srcset = child.getAttribute('srcset');
                   if (srcset) child.setAttribute('srcset', appendQueryToSrcset(srcset));
                 }
+              }
+              
+              if (child.hasAttribute && child.hasAttribute('style')) {
+                child.setAttribute('style', rewriteCSSURLsClient(child.getAttribute('style')));
+              }
+              if (child.tagName === 'STYLE') {
+                child.textContent = rewriteCSSURLsClient(child.textContent);
               }
             });
           }
@@ -117,7 +151,7 @@ export async function onRequest(context) {
     </script>
   `;
 
-  // 4. Transform HTML tags
+  // 5. Transform HTML tags
   return new HTMLRewriter()
     .on("head", {
       element(el) { el.append(clientSideObserverScript, { html: true }); }
@@ -143,12 +177,52 @@ export async function onRequest(context) {
         if (srcset) el.setAttribute("srcset", appendQueryToSrcset(srcset, queryPair, url.hostname));
       }
     })
+    // Rewrite inline style attributes (e.g. style="background-image: url(...)")
+    .on("[style]", {
+      element(el) {
+        const style = el.getAttribute("style");
+        if (style) el.setAttribute("style", rewriteCSSURLs(style, queryPair, url.hostname));
+      }
+    })
+    // Rewrite <style> blocks in HTML (Buffers chunks correctly)
+    .on("style", new StyleRewriter(queryPair, url.hostname))
     .transform(response);
+}
+
+
+/* ==========================================================================
+   Server-Side Helper Functions & Classes
+   ========================================================================== */
+
+// Class to buffer and process <style> tags chunk by chunk in HTMLRewriter
+class StyleRewriter {
+  constructor(queryPair, hostname) {
+    this.queryPair = queryPair;
+    this.hostname = hostname;
+    this.buffer = "";
+  }
+  text(textNode) {
+    this.buffer += textNode.text;
+    if (textNode.lastInTextNode) {
+      textNode.replace(rewriteCSSURLs(this.buffer, this.queryPair, this.hostname), { html: true });
+    } else {
+      textNode.remove();
+    }
+  }
+}
+
+// Rewrites url(...) strings inside CSS
+function rewriteCSSURLs(cssString, paramPair, currentHostname) {
+  if (!cssString) return cssString;
+  return cssString.replace(/url\((['"]?)(.*?)\1\)/ig, (match, quote, targetUrl) => {
+    return `url(${quote}${appendQuery(targetUrl, paramPair, currentHostname)}${quote})`;
+  });
 }
 
 // Server-side static URL rewriting
 function appendQuery(targetUrl, paramPair, currentHostname) {
   if (
+    !targetUrl ||
     targetUrl.startsWith("#") || 
     targetUrl.startsWith("mailto:") || 
     targetUrl.startsWith("tel:") || 
