@@ -8,7 +8,7 @@ export async function onRequest(context) {
 
   // 1. Check if the current request has the secret
   if (url.searchParams.get(SECRET_PARAM) !== SECRET_VALUE) {
-    return new Response("Forbidden", { status: 403 });
+    return new Response("403 Forbidden", { status: 403 });
   }
 
   // 2. Get the actual response
