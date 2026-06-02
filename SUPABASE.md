@@ -105,6 +105,7 @@
 | `is_chain` | `boolean` | NULL | `false` | Comment: Whether this is part of a chain business |
 | `chain_name` | `text` | NULL | — | |
 | `chain_id` | `text` | NULL | — | Comment: Shared ID for all locations in a chain |
+| `more_listings_title_custom` | `text` | NULL | — | Custom title for the More Listings section; defaults to `More Locations` when blank or NULL |
 | `address` | `text` | NULL | — | |
 | `city` | `text` | NULL | — | |
 | `state` | `text` | NULL | — | |
@@ -164,6 +165,7 @@ CREATE TABLE public.listings (
   is_chain                 boolean               DEFAULT false,
   chain_name               text,
   chain_id                 text,
+  more_listings_title_custom text,
   address                  text,
   city                     text,
   state                    text,
@@ -206,6 +208,7 @@ COMMENT ON COLUMN public.listings.verified IS 'Whether listing has been verified
 COMMENT ON COLUMN public.listings.visible IS 'Whether listing is publicly visible';
 COMMENT ON COLUMN public.listings.is_chain IS 'Whether this is part of a chain business';
 COMMENT ON COLUMN public.listings.chain_id IS 'Shared ID for all locations in a chain';
+COMMENT ON COLUMN public.listings.more_listings_title_custom IS 'Custom title for the More Listings section on listing pages; defaults to More Locations when blank or NULL';
 COMMENT ON COLUMN public.listings.places_url_ending IS 'Array of local page slug paths this listing belongs to, e.g. {"/chicago","/illinois"}. Used for future Local Pages feature.';
 COMMENT ON COLUMN public.listings.is_claimed IS 'Whether the listing has been claimed by a business owner';
 COMMENT ON COLUMN public.listings.timezone IS 'IANA timezone name used for server-authoritative hours and open/closed status calculations (example: America/Chicago).';

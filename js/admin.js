@@ -1375,6 +1375,10 @@ function fillEditForm(listing) {
                         <label class="block text-sm font-medium mb-2">Chain ID</label>
                         <input type="text" id="editChainId" value="${listing?.chain_id || ''}" class="w-full px-4 py-2 border rounded-lg" placeholder="Auto-generated if empty">
                     </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">More Listings Title</label>
+                        <input type="text" id="editMoreListingsTitleCustom" value="${escapeHtml(listing?.more_listings_title_custom || '')}" class="w-full px-4 py-2 border rounded-lg" placeholder="More Locations">
+                    </div>
                 </div>
             </div>
 
@@ -2339,6 +2343,7 @@ const listingData = {
             is_claimed: isClaimed,
             chain_name: isChain ? chainName : null,
             chain_id: isChain ? chainId : null,
+            more_listings_title_custom: isChain ? (document.getElementById('editMoreListingsTitleCustom').value.trim() || null) : null,
             address: address,
             city: city,
             state: state,
@@ -3849,9 +3854,10 @@ function generateTemplateReplacementsPart2(listing) {
     // Generate Related Listings section for chain businesses
     let relatedListingsSection = '';
     if (listing.is_chain && listing.chain_id) {
+        const moreListingsTitle = escapeHtml(listing.more_listings_title_custom || 'More Locations');
         relatedListingsSection = `
             <div class="mt-8">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">More Locations</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">${moreListingsTitle}</h2>
                 <div id="relatedListingsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <p class="text-gray-600 col-span-full">Loading related locations...</p>
                 </div>
