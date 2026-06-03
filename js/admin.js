@@ -3993,7 +3993,7 @@ function generateTemplateReplacementsPart2(listing) {
         'HOURS_SCHEMA': hoursSchema,
         'CUSTOM_SCHEMA_PROPERTIES': listing.custom_schema_properties || '',
         'COORDINATES': coordinates,
-        'FULL_ADDRESS': fullAddress,
+        'FULL_ADDRESS': fullAddress.replace(/'/g, "\\'"),
         'HOURS_JSON': hoursJson,
         'SUGGEST_EDIT_MAILTO': suggestEditHref,
         'BUSINESS_TIMEZONE': escapeHtml(listing.timezone || 'America/Chicago'),
