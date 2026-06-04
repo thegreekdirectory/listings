@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!-- app-home.html -->
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>The Greek Directory</title>
+    <meta name="description" content="Discover Greek-owned businesses across America.">
+
+    <!-- PWA Meta -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Greek Directory">
+    <meta name="robots" content="noindex">
+
+    <!-- Icons -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png"
+          media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png"
+          media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/app1.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+
+    <!-- Preconnect for data -->
+    <link rel="preconnect" href="https://luetekzqrrgdxtopzvqw.supabase.co">
+    <link rel="preconnect" href="https://static.thegreekdirectory.org">
+
+    <!-- Inline splash (avoids FOUC) -->
+    <style>
+        .pwa-splash{position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s ease,visibility .5s ease}
+        .pwa-splash.fade-out{opacity:0;visibility:hidden}
+        .pwa-splash-logo{width:110px;height:auto}
+        body.theme-dark .pwa-splash{background:#0b1120}
+    </style>
+
+    <link rel="stylesheet" href="/css/pwa.css">
+    <link rel="stylesheet" href="/css/app-home.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+</head>
+
+<body>
+    <!-- ========================================
+         APP HEADER
+         (no traditional nav — dock handles that)
+         ======================================== -->
+    <header class="app-header" id="appHeader">
+        <div class="app-header-inner">
+            <div class="app-header-brand">
+                <img src="https://static.thegreekdirectory.org/img/logo/blue.svg"
+                     alt="The Greek Directory" class="app-logo" id="appLogo">
+            </div>
+            <div class="app-greeting" id="appGreeting" aria-live="polite">
+                <span class="greeting-dot"></span>
+                <span id="greetingText">Welcome</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================
+         SEARCH SECTION
+         Blue band — search lives here, not in hero
+         ======================================== -->
+    <div class="search-band" aria-label="Search">
+        <div class="search-wrapper" role="search">
+            <div class="search-bar" id="searchBar">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+                </svg>
+                <input
+                    type="search" id="mainSearch" class="search-input"
+                    placeholder="Search businesses, categories, cities…"
+                    autocomplete="off" autocorrect="off" spellcheck="false"
+                    aria-label="Search Greek-owned businesses"
+                >
+                <button class="search-clear" id="searchClear" aria-label="Clear search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="search-dropdown hidden" id="searchDropdown"
+                 role="listbox" aria-label="Search suggestions"></div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         CATEGORY RAIL
+         Horizontal-scroll pill navigation
+         ======================================== -->
+    <nav class="cat-rail-wrap" aria-label="Browse by category">
+        <div class="cat-rail" id="categoryRail">
+            <button class="cat-pill active" data-cat="all"
+                    onclick="filterByCategory(null)">
+                <span class="cat-icon" aria-hidden="true">🏛️</span>
+                <span>All</span>
+            </button>
+            <button class="cat-pill" data-cat="Food &amp; Hospitality"
+                    onclick="filterByCategory('Food & Hospitality')">
+                <span class="cat-icon" aria-hidden="true">🍽️</span>
+                <span>Restaurants</span>
+            </button>
+            <button class="cat-pill" data-cat="Church &amp; Religious Organization"
+                    onclick="filterByCategory('Church & Religious Organization')">
+                <span class="cat-icon" aria-hidden="true">⛪</span>
+                <span>Churches</span>
+            </button>
+            <button class="cat-pill" data-cat="Professional &amp; Business Services"
+                    onclick="filterByCategory('Professional & Business Services')">
+                <span class="cat-icon" aria-hidden="true">💼</span>
+                <span>Services</span>
+            </button>
+            <button class="cat-pill" data-cat="Grocery &amp; Imports"
+                    onclick="filterByCategory('Grocery & Imports')">
+                <span class="cat-icon" aria-hidden="true">🛒</span>
+                <span>Markets</span>
+            </button>
+            <button class="cat-pill" data-cat="Education &amp; Community"
+                    onclick="filterByCategory('Education & Community')">
+                <span class="cat-icon" aria-hidden="true">📚</span>
+                <span>Education</span>
+            </button>
+            <button class="cat-pill" data-cat="Cultural/Fraternal Organization"
+                    onclick="filterByCategory('Cultural/Fraternal Organization')">
+                <span class="cat-icon" aria-hidden="true">🎭</span>
+                <span>Cultural</span>
+            </button>
+            <button class="cat-pill" data-cat="Real Estate &amp; Development"
+                    onclick="filterByCategory('Real Estate & Development')">
+                <span class="cat-icon" aria-hidden="true">🏢</span>
+                <span>Real Estate</span>
+            </button>
+            <button class="cat-pill" data-cat="Beauty &amp; Health"
+                    onclick="filterByCategory('Beauty & Health')">
+                <span class="cat-icon" aria-hidden="true">💅</span>
+                <span>Beauty</span>
+            </button>
+            <button class="cat-pill" data-cat="Entertainment, Arts &amp; Recreation"
+                    onclick="filterByCategory('Entertainment, Arts & Recreation')">
+                <span class="cat-icon" aria-hidden="true">🎨</span>
+                <span>Arts</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========================================
+         MAIN CONTENT
+         ======================================== -->
+    <main class="app-main" id="appMain">
+
+        <!-- Starred / Favourites carousel (hidden until starred items exist) -->
+        <section class="app-section" id="starredSection" style="display:none" aria-labelledby="starredHeading">
+            <div class="section-head">
+                <h2 class="section-title" id="starredHeading">
+                    <svg class="section-icon icon-star-fill" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Your Starred
+                </h2>
+                <a href="/starred.html" class="section-link">See all →</a>
+            </div>
+            <div class="carousel" id="starredCarousel" aria-label="Starred businesses"></div>
+        </section>
+
+        <!-- Featured Businesses -->
+        <section class="app-section" id="featuredSection" style="display:none" aria-labelledby="featuredHeading">
+            <div class="section-head">
+                <h2 class="section-title" id="featuredHeading">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    Featured
+                </h2>
+                <a href="/listings?tier=FEATURED" class="section-link">See all →</a>
+            </div>
+            <div class="listings-grid" id="featuredGrid"></div>
+        </section>
+
+        <!-- Recently Added / Filtered listings -->
+        <section class="app-section" id="recentSection" aria-labelledby="recentHeading">
+            <div class="section-head">
+                <h2 class="section-title" id="recentHeading">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2" stroke-linecap="round"/>
+                    </svg>
+                    <span id="recentTitle">Recently Added</span>
+                </h2>
+                <a href="/listings" class="section-link" id="recentSeeAll">See all →</a>
+            </div>
+
+            <!-- Skeleton cards shown while loading -->
+            <div class="listings-grid" id="recentGrid">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+        </section>
+
+        <!-- Empty state for category filter with no results -->
+        <div class="empty-state" id="emptyState" style="display:none" role="status">
+            <div class="empty-icon" aria-hidden="true">🔍</div>
+            <h3>No listings found</h3>
+            <p>Try a different category or browse everything</p>
+            <button class="empty-cta" onclick="filterByCategory(null)">Browse All</button>
+        </div>
+
+    </main>
+
+    <!-- Spacer so content doesn't hide under the dock -->
+    <div class="dock-spacer" aria-hidden="true"></div>
+
+    <!-- ========================================
+         SCRIPTS — order matters
+         ======================================== -->
+    <script src="/js/pwa/storage.js"></script>
+    <script src="/js/pwa/offline-translation.js"></script>
+    <script src="/js/pwa/app.js"></script>
+    <script src="/js/pwa/dock.js"></script>
+    <script src="/js/pwa/starred.js"></script>
+    <script src="/js/pwa/directions.js"></script>
+    <script src="/js/app-home.js"></script>
+
+    <!-- GTranslate -->
+    <script>
+        window.gtranslateSettings = {
+            "default_language": "en",
+            "native_language_names": true,
+            "detect_browser_language": true,
+            "languages": ["en", "el"],
+            "globe_color": "#66aaff",
+            "wrapper_selector": ".gtranslate_wrapper",
+            "alt_flags": { "en": "usa" }
+        };
+    </script>
+    <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
+</body>
+</html>
