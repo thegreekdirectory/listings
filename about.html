@@ -26,7 +26,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@500;700;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/index.css">
@@ -35,7 +35,7 @@
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
     <style>
-        /* PWA splash screen */
+        /* ── PWA splash ── */
         .pwa-splash {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -48,231 +48,1139 @@
         }
         .pwa-splash.fade-out { opacity: 0; visibility: hidden; }
         .pwa-splash-logo { width: 120px; height: auto; }
-        @media (prefers-color-scheme: dark) { .pwa-splash { background: #000000; } }
+        @media (prefers-color-scheme: dark) { .pwa-splash { background: #000; } }
+
+        /* ── Design tokens ── */
+        :root {
+            --blue:        #045093;
+            --blue-dark:   #033d74;
+            --blue-mid:    #0a4b87;
+            --gold:        #D4AF37;
+            --gold-light:  #e6c84e;
+            --gold-pale:   #fdf8e8;
+            --navy:        #09152a;
+            --navy-mid:    #0f2040;
+            --text-dark:   #1a1a1a;
+            --text-mid:    #4b5563;
+            --text-light:  #6b7280;
+            --bg-light:    #f9fafb;
+            --border:      #e5e7eb;
+        }
 
         /* ── Fonts ── */
-        .font-bitter   { font-family: 'Bitter', Georgia, serif; }
-        .font-montserrat { font-family: 'Montserrat', Arial, sans-serif; }
+        .font-bitter      { font-family: 'Bitter', Georgia, serif; }
+        .font-montserrat  { font-family: 'Montserrat', Arial, sans-serif; }
+        .font-playfair    { font-family: 'Playfair Display', Georgia, serif; }
 
-        /* ── Hero ── */
+        /* ── Base ── */
+        body {
+            font-family: 'Bitter', Georgia, serif;
+            color: var(--text-dark);
+            background: #fff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── HERO ── */
         .about-hero {
             position: relative;
-            height: 340px;
+            min-height: 520px;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: flex-end;
             overflow: hidden;
-            background-color: #1f1f1f;
+            background-color: var(--navy);
         }
-        @media (max-width: 479px) { .about-hero { height: 250px; } }
 
         .about-hero-bg {
             position: absolute;
             inset: 0;
             background-image: url('https://lh3.googleusercontent.com/sitesv/APaQ0STQ79yaU2GBRMX0rgB-QibK26Wo3nfdpVfLZLueNLgRvHbgkLdBy_6_ivg-kEuSxfy_mAgIgJ6wCR8RpnbA9UXCAuUPLJdiG-jpBLeQYk8r29GcKBRqPTSWCgC8oNqJB7XvCRWo_Un3uplGz8OUVQ9Cx6dEggjJU7pbidyRm_ABLjettmPVqBnjVqE=w16383');
             background-size: cover;
-            background-position: center center;
+            background-position: center 30%;
+            transform: scale(1.04);
+            transition: transform 8s ease;
         }
+
+        .about-hero-bg.loaded { transform: scale(1); }
+
+        /* Multi-layer overlay: dark at top, gradient to bottom */
         .about-hero-overlay {
             position: absolute;
             inset: 0;
-            background-color: rgba(31, 31, 31, 0.5);
-        }
-        .about-hero-title {
-            position: relative;
-            z-index: 1;
-            font-family: 'Montserrat', Arial, sans-serif;
-            font-weight: 700;
-            font-size: clamp(2.25rem, 5vw, 3.625rem);
-            line-height: 1.06;
-            color: #ffffff;
-            text-align: center;
-            margin: 0;
+            background:
+                linear-gradient(160deg, rgba(9,21,42,0.82) 0%, rgba(4,80,147,0.45) 55%, rgba(9,21,42,0.80) 100%);
         }
 
-        /* ── Section headings (Montserrat 34pt bold, TGD blue) ── */
+        /* Gold accent line at very bottom */
+        .about-hero-accent {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), var(--blue), var(--gold), transparent);
+            opacity: 0.7;
+        }
+
+        .about-hero-inner {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem 4rem;
+        }
+
+        /* Eyebrow label */
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 1.25rem;
+            padding: 0.35rem 1rem;
+            border: 1px solid rgba(212,175,55,0.4);
+            border-radius: 999px;
+            background: rgba(212,175,55,0.1);
+            animation: fadeUp 0.7s ease both;
+        }
+
+        .hero-eyebrow-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--gold);
+            animation: pulse 2s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.75); }
+        }
+
+        .hero-title {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: clamp(2.25rem, 5.5vw, 4rem);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -0.025em;
+            color: #fff;
+            margin-bottom: 1.25rem;
+            animation: fadeUp 0.7s 0.1s ease both;
+        }
+
+        .hero-title span {
+            color: var(--gold);
+        }
+
+        .hero-subtitle {
+            font-family: 'Bitter', Georgia, serif;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: rgba(255,255,255,0.78);
+            line-height: 1.65;
+            max-width: 560px;
+            animation: fadeUp 0.7s 0.2s ease both;
+        }
+
+        /* Scroll indicator */
+        .hero-scroll {
+            position: absolute;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255,255,255,0.4);
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            animation: fadeIn 1s 0.8s ease both;
+        }
+
+        .hero-scroll-line {
+            width: 1px;
+            height: 36px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+            animation: scrollPulse 2s ease infinite;
+        }
+
+        @keyframes scrollPulse {
+            0% { transform: scaleY(1); opacity: 0.5; }
+            50% { transform: scaleY(0.5); opacity: 0.2; }
+            100% { transform: scaleY(1); opacity: 0.5; }
+        }
+
+        /* ── STAT BAR ── */
+        .stat-bar {
+            background: var(--blue);
+            padding: 1.5rem 1.5rem;
+        }
+
+        .stat-bar-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 0.5rem 1rem;
+            border-right: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .stat-item:last-child { border-right: none; }
+
+        .stat-number {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: clamp(1.6rem, 3.5vw, 2.25rem);
+            font-weight: 800;
+            color: var(--gold);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-family: 'Bitter', Georgia, serif;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.72);
+            line-height: 1.3;
+        }
+
+        /* ── SECTION BASE ── */
+        .about-section {
+            padding: 5rem 1.5rem;
+        }
+
+        .section-inner {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* ── SECTION LABEL ── */
+        .section-label {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 0 0 32px;
+            height: 2px;
+            background: var(--gold);
+            border-radius: 1px;
+        }
+
+        /* ── SECTION HEADING ── */
         .section-heading {
             font-family: 'Montserrat', Arial, sans-serif;
-            font-weight: 700;
-            font-size: clamp(1.5rem, 4vw, 2.125rem);
-            line-height: 1.2;
-            color: #045093;
-            margin-top: 0;
-            margin-bottom: 0;
+            font-weight: 800;
+            font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            color: var(--navy);
+            margin-bottom: 1.5rem;
         }
 
-        /* ── Body text (Bitter 11pt, #212121) ── */
+        .section-heading span { color: var(--blue); }
+
+        /* ── BODY TEXT ── */
         .body-text {
             font-family: 'Bitter', Georgia, serif;
-            font-size: 1rem;
-            line-height: 1.6;
-            color: #212121;
+            font-size: 1.05rem;
+            line-height: 1.75;
+            color: var(--text-mid);
         }
 
-        /* ── Horizontal rule: 2px, blue, matches Google Sites divider ── */
+        .body-text + .body-text { margin-top: 1.25rem; }
+
+        /* ── SECTION 1: MISSION (2-col layout) ── */
+        .mission-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .mission-visual {
+            position: relative;
+        }
+
+        .mission-map-card {
+            background: var(--navy);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mission-map-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 40%, rgba(4,80,147,0.5) 0%, transparent 65%),
+                        radial-gradient(ellipse at 80% 70%, rgba(212,175,55,0.12) 0%, transparent 55%);
+            pointer-events: none;
+        }
+
+        .map-dots {
+            position: relative;
+            z-index: 1;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* USA outline using clip-path approximation */
+        .usa-shape {
+            width: 100%;
+            max-width: 280px;
+            height: 160px;
+            position: relative;
+        }
+
+        .dot-cluster {
+            position: absolute;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .map-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(212,175,55,0.6);
+            animation: dotPulse 3s ease infinite;
+        }
+
+        .map-dot.bright {
+            background: var(--gold);
+            animation: dotPulse 2s ease infinite;
+        }
+
+        .map-dot.blue {
+            background: rgba(100,160,220,0.7);
+            animation: dotPulse 2.5s ease infinite;
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
+        }
+
+        .map-card-stat {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .map-card-stat-num {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--gold);
+        }
+
+        .map-card-stat-lbl {
+            font-family: 'Bitter', Georgia, serif;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 2px;
+        }
+
+        /* Floating badge on card */
+        .floating-badge {
+            position: absolute;
+            top: -14px;
+            right: 24px;
+            background: var(--gold);
+            color: var(--navy);
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 999px;
+        }
+
+        /* ── DIVIDER ── */
         .tgd-divider {
-            height: 2px;
-            background-color: #045093;
-            opacity: 0.15;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
             border: none;
             margin: 0;
         }
 
-        /* ── CTA buttons (Google Sites style: filled blue, white text) ── */
-        .cta-btn-filled {
-            display: inline-flex;
+        /* Accented divider */
+        .tgd-divider-accent {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--blue) 70%, transparent);
+            border: none;
+            margin: 0;
+            opacity: 0.4;
+        }
+
+        /* ── SECTION 2: STORY (gray bg) ── */
+        .story-section {
+            background: var(--bg-light);
+        }
+
+        .story-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 4rem;
+            align-items: start;
+        }
+
+        /* Founder card */
+        .founder-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: sticky;
+            top: 100px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        }
+
+        .founder-card-top {
+            background: var(--navy);
+            padding: 1.75rem 1.5rem 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .founder-card-top::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 80% 20%, rgba(4,80,147,0.5) 0%, transparent 60%),
+                        radial-gradient(ellipse at 20% 80%, rgba(212,175,55,0.1) 0%, transparent 50%);
+        }
+
+        .founder-avatar {
+            position: relative;
+            z-index: 1;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--navy-mid));
+            border: 3px solid rgba(212,175,55,0.5);
+            display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0.75rem 1.5rem;
-            background-color: #045093;
-            color: #ffffff;
-            font-family: 'Bitter', Georgia, serif;
-            font-size: 1rem;
-            line-height: normal;
-            border: 2px solid #ffffff;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: background-color 0.2s, opacity 0.2s;
-            white-space: nowrap;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 1rem;
         }
-        .cta-btn-filled:hover { background-color: #044174; }
 
-        /* ── Footer link overrides ── */
-        .footer-legal-link {
-            color: inherit;
-            text-decoration: underline;
+        .founder-name {
+            position: relative;
+            z-index: 1;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2px;
         }
-        .footer-legal-link:hover { opacity: 0.7; }
+
+        .founder-role {
+            position: relative;
+            z-index: 1;
+            font-family: 'Bitter', Georgia, serif;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.55);
+        }
+
+        .founder-card-body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        .founder-detail {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-family: 'Bitter', Georgia, serif;
+            font-size: 0.85rem;
+            color: var(--text-mid);
+            line-height: 1.45;
+        }
+
+        .founder-detail:last-child { border-bottom: none; }
+
+        .founder-detail-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            margin-top: 1px;
+            color: var(--blue);
+        }
+
+        .founder-quote {
+            background: var(--gold-pale);
+            border-left: 3px solid var(--gold);
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .founder-quote p {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 0.9rem;
+            font-style: italic;
+            color: #5a4500;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Letter styling */
+        .letter-body p { margin-bottom: 1.25rem; }
+        .letter-body p:last-child { margin-bottom: 0; }
+
+        .letter-salutation {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.2rem;
+            color: var(--navy);
+            font-style: italic;
+            margin-bottom: 2rem !important;
+        }
+
+        .letter-greek {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.1rem;
+            color: var(--blue);
+            font-style: italic;
+            border-top: 1px solid var(--border);
+            padding-top: 1.25rem;
+            margin-top: 1.75rem !important;
+        }
+
+        /* ── SECTION 3: VALUES / HOW IT WORKS ── */
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .value-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 2rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        .value-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+        }
+
+        .value-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--blue), var(--gold));
+        }
+
+        .value-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(4,80,147,0.08), rgba(4,80,147,0.15));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .value-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--blue);
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .value-title {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+        }
+
+        .value-desc {
+            font-family: 'Bitter', Georgia, serif;
+            font-size: 0.9rem;
+            color: var(--text-mid);
+            line-height: 1.65;
+        }
+
+        /* ── SECTION 4: CTA ── */
+        .cta-section {
+            background: var(--navy);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 15% 50%, rgba(4,80,147,0.4) 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 30%, rgba(212,175,55,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Greek meander decorative strip */
+        .cta-section::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), var(--blue), var(--gold), transparent);
+            opacity: 0.5;
+        }
+
+        .cta-inner {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #fff;
+            line-height: 1.15;
+            margin-bottom: 1.25rem;
+        }
+
+        .cta-title span { color: var(--gold); }
+
+        .cta-sub {
+            font-family: 'Bitter', Georgia, serif;
+            font-size: 1.05rem;
+            color: rgba(255,255,255,0.65);
+            line-height: 1.65;
+            margin-bottom: 2.5rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Filled button */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.875rem 1.75rem;
+            background: var(--gold);
+            color: var(--navy);
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(212,175,55,0.35);
+        }
+
+        .btn-primary:hover {
+            background: var(--gold-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212,175,55,0.45);
+        }
+
+        .btn-primary:active { transform: scale(0.98); }
+
+        /* Outlined button */
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.875rem 1.75rem;
+            background: transparent;
+            color: #fff;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.65);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary:active { transform: scale(0.98); }
+
+        /* Third button - blue filled */
+        .btn-blue {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.875rem 1.75rem;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        }
+
+        .btn-blue:hover {
+            background: rgba(255,255,255,0.18);
+            border-color: rgba(255,255,255,0.4);
+            transform: translateY(-2px);
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        /* Scroll-reveal utility */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.65s ease, transform 0.65s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        /* ── DARK MODE ── */
+        @media (prefers-color-scheme: dark) {
+            body { background: #0f1117; }
+            .section-heading { color: #e5e7eb; }
+            .value-card { background: #1f2937; border-color: #374151; }
+            .value-title { color: #f3f4f6; }
+            .value-desc { color: #9ca3af; }
+            .body-text { color: #9ca3af; }
+            .tgd-divider { background: linear-gradient(90deg, transparent, #374151 20%, #374151 80%, transparent); }
+            .founder-card { background: #1f2937; border-color: #374151; }
+            .founder-detail { color: #9ca3af; border-color: #374151; }
+            .founder-quote { background: rgba(212,175,55,0.08); }
+            .founder-quote p { color: #d4af37; }
+            .stat-bar { background: #0a1628; }
+            .story-section { background: #111827; }
+            .letter-greek { border-color: #374151; }
+            .letter-salutation { color: #e5e7eb; }
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+            .mission-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+            .story-grid { grid-template-columns: 1fr; }
+            .founder-card { position: static; }
+            .values-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            .about-hero { min-height: 420px; }
+            .about-hero-inner { padding-bottom: 3rem; }
+            .about-section { padding: 3.5rem 1.25rem; }
+            .stat-bar-inner { grid-template-columns: 1fr; gap: 1.25rem; }
+            .stat-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.75rem 0; }
+            .stat-item:last-child { border-bottom: none; }
+            .values-grid { grid-template-columns: 1fr; }
+            .cta-buttons { flex-direction: column; align-items: center; }
+            .btn-primary, .btn-secondary, .btn-blue { width: 100%; max-width: 320px; justify-content: center; }
+        }
     </style>
 </head>
 <body class="bg-white">
-    <!-- Header -->
+    <!-- Header partial -->
     <div data-partial="header"></div>
 
-    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
-
-    <!-- ════════════════════════════════════════════════════
-         HERO — "About Us"
-         ════════════════════════════════════════════════════ -->
+    <!-- ════════════════════════════════════
+         HERO
+         ════════════════════════════════════ -->
     <section class="about-hero" aria-label="About Us hero">
-        <div class="about-hero-bg" role="presentation"></div>
+        <div class="about-hero-bg" role="presentation" id="heroBg"></div>
         <div class="about-hero-overlay" role="presentation"></div>
-        <h1 class="about-hero-title">About Us</h1>
+        <div class="about-hero-accent" role="presentation"></div>
+
+        <div class="about-hero-inner">
+            <div class="hero-eyebrow">
+                <span class="hero-eyebrow-dot"></span>
+                Our Story
+            </div>
+            <h1 class="hero-title">
+                Unifying<br>
+                <span>Greek-Americans</span><br>
+                Everywhere
+            </h1>
+            <p class="hero-subtitle">
+                A digital home for every Greek-owned business, organization, and community in America — built from scratch, by one of our own.
+            </p>
+        </div>
+
+        <div class="hero-scroll" aria-hidden="true">
+            <span class="hero-scroll-line"></span>
+            Scroll
+        </div>
     </section>
 
-    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+    <!-- ════════════════════════════════════
+         STAT BAR
+         ════════════════════════════════════ -->
+    <div class="stat-bar" role="complementary" aria-label="Directory at a glance">
+        <div class="stat-bar-inner">
+            <div class="stat-item">
+                <span class="stat-number">3M+</span>
+                <span class="stat-label">Greek-Americans across the U.S.</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">50</span>
+                <span class="stat-label">States where Greeks have put down roots</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">1</span>
+                <span class="stat-label">Central hub to find them all</span>
+            </div>
+        </div>
+    </div>
 
-    <!-- ════════════════════════════════════════════════════
-         SECTION 1 — "Unifying Greek-Americans Everywhere"
-         ════════════════════════════════════════════════════ -->
-    <section class="py-14 px-4 bg-white" aria-labelledby="unifying-heading">
-        <div class="max-w-3xl mx-auto">
-            <h2 id="unifying-heading" class="section-heading mb-8">
-                Unifying Greek-Americans Everywhere
+    <!-- ════════════════════════════════════
+         SECTION 1 — MISSION
+         ════════════════════════════════════ -->
+    <section class="about-section" aria-labelledby="mission-heading">
+        <div class="section-inner">
+            <div class="mission-grid">
+                <!-- Text -->
+                <div>
+                    <p class="section-label">Our Mission</p>
+                    <h2 id="mission-heading" class="section-heading reveal">
+                        One place for every<br><span>Greek-owned business</span>
+                    </h2>
+                    <p class="body-text reveal reveal-delay-1">
+                        All across the world, Greek immigrants have built restaurants, schools, churches, law firms, and so much more. The United States alone is home to approximately 3 million Greek-Americans — woven into their communities from coast to coast.
+                    </p>
+                    <p class="body-text reveal reveal-delay-2">
+                        But there has never been a single, modern place to find and support these businesses. Until now. The Greek Directory is that place — a fast, reliable, and smart platform connecting our community with the businesses that belong to it.
+                    </p>
+                </div>
+
+                <!-- Visual card -->
+                <div class="mission-visual reveal reveal-delay-2">
+                    <div class="mission-map-card">
+                        <span class="floating-badge">🇺🇸 Across America</span>
+
+                        <!-- Dot map visualization -->
+                        <div class="map-dots">
+                            <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:280px;height:auto;" aria-hidden="true">
+                                <!-- Simplified USA silhouette -->
+                                <path d="M 30 60 L 60 45 L 110 42 L 140 50 L 170 44 L 215 52 L 240 60 L 250 80 L 240 95 L 220 105 L 200 110 L 170 112 L 140 108 L 110 112 L 80 108 L 55 100 L 35 90 Z" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+
+                                <!-- Business dots scattered across "USA" -->
+                                <!-- NE cluster (Chicago, NY, Boston) -->
+                                <circle cx="195" cy="62" r="5" fill="#D4AF37" opacity="0.9"/>
+                                <circle cx="230" cy="66" r="4" fill="#D4AF37" opacity="0.75"/>
+                                <circle cx="218" cy="74" r="3" fill="#D4AF37" opacity="0.6"/>
+                                <circle cx="205" cy="77" r="3.5" fill="rgba(100,160,220,0.7)"/>
+                                <circle cx="243" cy="72" r="3" fill="#D4AF37" opacity="0.5"/>
+
+                                <!-- Midwest -->
+                                <circle cx="165" cy="72" r="5" fill="#D4AF37" opacity="0.85"/>
+                                <circle cx="148" cy="78" r="3.5" fill="#D4AF37" opacity="0.65"/>
+                                <circle cx="178" cy="82" r="3" fill="rgba(100,160,220,0.6)"/>
+
+                                <!-- South / FL -->
+                                <circle cx="192" cy="100" r="4" fill="#D4AF37" opacity="0.7"/>
+                                <circle cx="208" cy="108" r="3" fill="#D4AF37" opacity="0.5"/>
+                                <circle cx="180" cy="108" r="3.5" fill="rgba(100,160,220,0.5)"/>
+
+                                <!-- Texas -->
+                                <circle cx="130" cy="98" r="4.5" fill="#D4AF37" opacity="0.7"/>
+                                <circle cx="118" cy="104" r="3" fill="#D4AF37" opacity="0.5"/>
+
+                                <!-- West Coast -->
+                                <circle cx="55" cy="72" r="4.5" fill="#D4AF37" opacity="0.8"/>
+                                <circle cx="63" cy="84" r="3" fill="#D4AF37" opacity="0.6"/>
+                                <circle cx="48" cy="90" r="3.5" fill="rgba(100,160,220,0.6)"/>
+                                <circle cx="70" cy="96" r="3" fill="#D4AF37" opacity="0.5"/>
+
+                                <!-- Midwest scattered -->
+                                <circle cx="100" cy="76" r="3" fill="rgba(100,160,220,0.5)"/>
+                                <circle cx="115" cy="84" r="3.5" fill="#D4AF37" opacity="0.55"/>
+                                <circle cx="140" cy="96" r="3" fill="#D4AF37" opacity="0.5"/>
+                                <circle cx="88" cy="90" r="3" fill="rgba(100,160,220,0.5)"/>
+
+                                <!-- Legend -->
+                                <circle cx="30" cy="140" r="5" fill="#D4AF37" opacity="0.85"/>
+                                <text x="40" y="144" fill="rgba(255,255,255,0.55)" font-size="10" font-family="Bitter, serif">Greek-owned businesses</text>
+                                <circle cx="30" cy="155" r="5" fill="rgba(100,160,220,0.7)"/>
+                                <text x="40" y="159" fill="rgba(255,255,255,0.55)" font-size="10" font-family="Bitter, serif">Greek organizations</text>
+                            </svg>
+                        </div>
+
+                        <div class="map-card-stat">
+                            <div>
+                                <div class="map-card-stat-num">Chicagoland</div>
+                                <div class="map-card-stat-lbl">Launching first</div>
+                            </div>
+                            <div>
+                                <div class="map-card-stat-num">Nationwide</div>
+                                <div class="map-card-stat-lbl">The goal</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="tgd-divider">
+
+    <!-- ════════════════════════════════════
+         SECTION 2 — FOUNDER'S MESSAGE
+         ════════════════════════════════════ -->
+    <section class="about-section story-section" aria-labelledby="founder-heading">
+        <div class="section-inner">
+            <div class="story-grid">
+                <!-- Letter -->
+                <div>
+                    <p class="section-label reveal">Founder's Message</p>
+                    <h2 id="founder-heading" class="section-heading reveal">
+                        Why I built<br><span>The Greek Directory</span>
+                    </h2>
+
+                    <div class="letter-body body-text">
+                        <p class="letter-salutation reveal">Greek businesses are everywhere — but they're not easy to find. That's the problem I set out to solve.</p>
+
+                        <p class="reveal">I grew up in the suburbs of Chicago in a Greek-speaking environment and have been part of the community my entire life. But I started noticing something: outside of personal connections, Greek resources are scattered, outdated, or simply hidden.</p>
+
+                        <p class="reveal">My idea for <em>The Greek Directory</em> came from something simple. I was at church one Sunday, using the GOARCH Digital Chant Stand to follow the liturgy on my device. Afterward, people around me asked how I had found it so easily.</p>
+
+                        <p class="reveal">That moment made me ask: why isn't everything Greek-related this easy to find? Not just church readings — but businesses, organizations, events, churches. That's when this became more than an idea.</p>
+
+                        <p class="reveal">I reached out to business owners, restaurateurs, and entrepreneurs throughout Chicagoland. Their responses were consistent: <em>"Greek businesses need better visibility. The community needs a central place to connect."</em></p>
+
+                        <p class="reveal"><em>The Greek Directory</em> is being built to be exactly that — a trusted, organized, and growing platform where anyone can discover and support Greek-owned businesses.</p>
+
+                        <p class="reveal">Since November 2025, I've been building this from the ground up, writing thousands of lines of code myself. Right now, this is a one-person operation, and to scale this properly, our community needs to be involved.</p>
+
+                        <div class="reveal">
+                            <p style="margin-bottom: 0.5rem;">If you're Greek and own a business — <strong style="color: var(--blue);">submit it.</strong></p>
+                            <p style="margin-bottom: 0;">If you know one that should be listed — <strong style="color: var(--blue);">suggest it.</strong></p>
+                        </div>
+
+                        <p class="reveal" style="margin-top: 1.5rem; font-weight: 600; color: var(--navy);">This only works if we build it together.</p>
+
+                        <p class="letter-greek reveal">Ζήτω το Έθνος! Ζήτω η Ελλάδα!</p>
+                    </div>
+                </div>
+
+                <!-- Founder card -->
+                <div class="reveal reveal-delay-2">
+                    <div class="founder-card">
+                        <div class="founder-card-top">
+                            <div class="founder-avatar">Γ</div>
+                            <p class="founder-name">The Founder</p>
+                            <p class="founder-role">Greek-American, Chicagoland</p>
+                        </div>
+                        <div class="founder-card-body">
+                            <div class="founder-detail">
+                                <svg class="founder-detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                                <span>Raised in the Chicagoland Greek community</span>
+                            </div>
+                            <div class="founder-detail">
+                                <svg class="founder-detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                <span>Built every line of code from scratch, starting November 2025</span>
+                            </div>
+                            <div class="founder-detail">
+                                <svg class="founder-detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                <span>Actively verifying &amp; growing the Chicagoland listings</span>
+                            </div>
+                            <div class="founder-detail">
+                                <svg class="founder-detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <span>Backed by feedback from Greek business owners across the area</span>
+                            </div>
+
+                            <div class="founder-quote">
+                                <p>"This only works if we build it together."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="tgd-divider-accent">
+
+    <!-- ════════════════════════════════════
+         SECTION 3 — VALUES
+         ════════════════════════════════════ -->
+    <section class="about-section" aria-labelledby="values-heading">
+        <div class="section-inner">
+            <p class="section-label reveal">What We Stand For</p>
+            <h2 id="values-heading" class="section-heading reveal" style="max-width: 520px;">
+                Built on community.<br><span>Designed for discovery.</span>
             </h2>
-            <p class="body-text mb-5">
-                All across the world, Greek immigrants have established restaurants, schools, churches, law firms and so many other endeavors. The United States is home to about 3 million Greek-Americans, all embedded into their communities, but there's not a central hub where we can find and support these businesses. Until now.
-            </p>
-            <p class="body-text">
-                The Greek Directory is a modern digital platform created and developed by a young Greek-American from the Chicagoland area with aspirations to be the bridge between our Greek communities and our Greek-owned businesses. Created from scratch, our Directory is fast, reliable, and smart.
-            </p>
+
+            <div class="values-grid">
+                <!-- Community -->
+                <div class="value-card reveal">
+                    <div class="value-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <p class="value-title">Community First</p>
+                    <p class="value-desc">Built by a Greek-American, for Greek-Americans. Every feature, every decision is made with our community's needs at the center.</p>
+                </div>
+
+                <!-- Trust -->
+                <div class="value-card reveal reveal-delay-1">
+                    <div class="value-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <p class="value-title">Verified &amp; Trusted</p>
+                    <p class="value-desc">Every listing is individually researched and verified. We don't just aggregate — we curate, so you can trust what you find here.</p>
+                </div>
+
+                <!-- Discovery -->
+                <div class="value-card reveal reveal-delay-2">
+                    <div class="value-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
+                    <p class="value-title">Easy to Find</p>
+                    <p class="value-desc">Search by name, category, or location. Filter by what matters to you. Greek businesses shouldn't be hidden — we make them findable.</p>
+                </div>
+
+                <!-- Fast -->
+                <div class="value-card reveal">
+                    <div class="value-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    </div>
+                    <p class="value-title">Fast &amp; Modern</p>
+                    <p class="value-desc">Built from scratch with modern technology. The Greek Directory is quick, mobile-friendly, and works as a progressive web app.</p>
+                </div>
+
+                <!-- Visibility -->
+                <div class="value-card reveal reveal-delay-1">
+                    <div class="value-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                    <p class="value-title">Better Visibility</p>
+                    <p class="value-desc">Greek business owners deserve to be seen. Claim your listing, customize your profile, and connect with customers who are looking for you.</p>
+                </div>
+
+                <!-- Growing -->
+                <div class="value-card reveal reveal-delay-2">
+                    <div class="value-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                    </div>
+                    <p class="value-title">Always Growing</p>
+                    <p class="value-desc">We're starting in Chicagoland and expanding nationwide. With your help submitting and verifying listings, the Directory will keep growing.</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- Divider -->
     <hr class="tgd-divider">
 
-    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
-
-    <!-- ════════════════════════════════════════════════════
-         SECTION 2 — "Message from Our Founder"
-         Light gray background (#f0f0f0)
-         ════════════════════════════════════════════════════ -->
-    <section class="py-14 px-4" style="background-color: #f0f0f0;" aria-labelledby="founder-heading">
-        <div class="max-w-3xl mx-auto">
-            <h2 id="founder-heading" class="section-heading mb-8">
-                Message from Our Founder
+    <!-- ════════════════════════════════════
+         SECTION 4 — CTA
+         ════════════════════════════════════ -->
+    <section class="about-section cta-section" aria-label="Call to action">
+        <div class="cta-inner">
+            <h2 class="cta-title">
+                Help us build<br><span>the complete picture</span>
             </h2>
-
-            <p class="body-text mb-5">
-                Greek businesses are everywhere, but they're not easy to find. That is the problem I set out to solve.
+            <p class="cta-sub">
+                Know a Greek-owned business that should be listed? Own one yourself? Every submission strengthens our community's digital home.
             </p>
-
-            <p class="body-text mb-5">
-                I grew up in the suburbs of Chicago in a Greek-speaking environment and have been part of it my entire life.
-            </p>
-
-            <p class="body-text mb-5">
-                But I started noticing something: outside of personal connections, Greek resources are scattered, outdated, or simply hidden.
-            </p>
-
-            <p class="body-text mb-5">
-                My idea for <em>The Greek Directory</em> came from something simple. I was at church one Sunday, using the GOARCH Digital Chant Stand to follow the liturgy on my device. Afterward, some people around me had asked how I had gotten it so easily.
-            </p>
-
-            <p class="body-text mb-5">
-                That moment made me question something: why isn't everything Greek-related this easy to find? Not just church readings, but businesses, organizations, events, churches. That's when this became more than an idea.
-            </p>
-
-            <p class="body-text mb-5">
-                I reached out to business owners, restaurateurs, entrepreneurs, and other Greeks throughout Chicagoland, and their responses were consistent: "Greek businesses need better visibility…the community needs a central place to connect."
-            </p>
-
-            <p class="body-text mb-5">
-                <em>The Greek Directory</em> is being built to be exactly that: a trusted, organized, and growing platform where anyone can discover and support Greek-owned businesses.&nbsp;
-            </p>
-
-            <p class="body-text mb-5">
-                Since November 2025, I have been building this from the ground up—writing thousands of lines of code from scratch.
-            </p>
-
-            <p class="body-text mb-5">
-                Right now, this is a one-person operation. I'm actively searching and verifying businesses across Chicagoland, but to scale this properly and achieve this mission, our community needs to be involved.
-            </p>
-
-            <p class="body-text">
-                If you're Greek and own a business, submit it.<br>
-                If you know one (or many) that should be listed, suggest it.
-            </p>
-
-            <p class="body-text mt-5">
-                This only works if we build it together.
-            </p>
-
-            <p class="body-text mt-5" style="font-size: 1.125rem;">
-                Ζήτω το Έθνος! Ζήτω η Ελλάδα!
-            </p>
+            <div class="cta-buttons">
+                <a href="/submit-listing" class="btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Submit a Listing
+                </a>
+                <a href="https://www.thegreekdirectory.org/newsletter" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    Subscribe to Newsletter
+                </a>
+                <a href="/contact" class="btn-blue">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Contact Us
+                </a>
+            </div>
         </div>
     </section>
 
-    <!-- Divider -->
-    <hr class="tgd-divider">
-
-    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
-
-    <!-- ════════════════════════════════════════════════════
-         SECTION 3 — CTA Buttons
-         ════════════════════════════════════════════════════ -->
-    <section class="py-14 px-4 bg-white" aria-label="Call to action">
-        <div class="max-w-3xl mx-auto flex flex-wrap gap-4 justify-center md:justify-start">
-            <a href="/submit-listing" class="cta-btn-filled">
-                Submit a Listing!
-            </a>
-            <a href="https://www.thegreekdirectory.org/newsletter" target="_blank" rel="noopener noreferrer" class="cta-btn-filled">
-                Subscribe to Our Newsletter!
-            </a>
-            <a href="/contact" class="cta-btn-filled">
-                Contact Us
-            </a>
-        </div>
-    </section>
-
-    <!-- Divider -->
-    <hr class="tgd-divider">
-
-    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
-
-    <!-- Footer -->
+    <!-- Footer partial -->
     <div data-partial="footer"></div>
 
     <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
@@ -281,7 +1189,38 @@
     <script src="js/pwa/storage.js"></script>
     <script src="js/pwa/app.js"></script>
     <script src="js/pwa/dock.js"></script>
-    <script>window.gtranslateSettings = {"default_language":"en","native_language_names":true,"detect_browser_language":true,"languages":["en","el"],"globe_color":"#66aaff","wrapper_selector":".gtranslate_wrapper","alt_flags":{"en":"usa"}}</script>
+    <script>
+        window.gtranslateSettings = {
+            "default_language": "en",
+            "native_language_names": true,
+            "detect_browser_language": true,
+            "languages": ["en","el"],
+            "globe_color": "#66aaff",
+            "wrapper_selector": ".gtranslate_wrapper",
+            "alt_flags": {"en":"usa"}
+        };
+
+        // Scroll reveal
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.12 });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Subtle hero parallax on scroll
+        const heroBg = document.getElementById('heroBg');
+        if (heroBg) {
+            heroBg.classList.add('loaded'); // trigger initial zoom-out
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                heroBg.style.transform = `translateY(${scrollY * 0.3}px) scale(1)`;
+            }, { passive: true });
+        }
+    </script>
     <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
 </body>
 </html>
