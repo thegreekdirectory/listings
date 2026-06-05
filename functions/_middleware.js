@@ -1,6 +1,12 @@
 export async function onRequest(context) {
   const { request, next } = context;
   const url = new URL(request.url);
+
+  // --- NEW: Redirect any mixed-case or uppercase path to lowercase ---
+  if (url.pathname !== url.pathname.toLowerCase()) {
+    url.pathname = url.pathname.toLowerCase();
+    return Response.redirect(url.toString(), 301);
+  }
   
   const SECRET_PARAM = "access";
   const SECRET_VALUE = "granted";
@@ -27,7 +33,7 @@ export async function onRequest(context) {
     return response;
   }
 
-  // Client-side script to observe dynamic DOM mutations (Now with Image support)
+  // Client-side script to observe dynamic DOM mutations (Now with Image support and lowercase pathing)
   const clientSideObserverScript = `
     <script>
       (function() {
@@ -47,19 +53,37 @@ export async function onRequest(context) {
             return targetUrl;
           }
 
-          if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
+          let processedUrl = targetUrl;
+
+          // --- NEW: Process and lower-case the path ---
+          if (processedUrl.startsWith("http://") || processedUrl.startsWith("https://")) {
             try {
-              const parsedUrl = new URL(targetUrl);
-              if (parsedUrl.hostname !== currentHostname) return targetUrl;
+              const parsedUrl = new URL(processedUrl);
+              if (parsedUrl.hostname !== currentHostname) return processedUrl;
+              
+              parsedUrl.pathname = parsedUrl.pathname.toLowerCase();
+              processedUrl = parsedUrl.toString();
             } catch (error) {
-              return targetUrl;
+              return processedUrl;
             }
+          } else {
+            const hashIdx = processedUrl.indexOf('#');
+            const queryIdx = processedUrl.indexOf('?');
+            let pathEnd = processedUrl.length;
+            
+            if (hashIdx !== -1 && queryIdx !== -1) pathEnd = Math.min(hashIdx, queryIdx);
+            else if (hashIdx !== -1) pathEnd = hashIdx;
+            else if (queryIdx !== -1) pathEnd = queryIdx;
+            
+            const path = processedUrl.substring(0, pathEnd).toLowerCase();
+            const rest = processedUrl.substring(pathEnd);
+            processedUrl = path + rest;
           }
 
-          if (targetUrl.includes(queryPair)) return targetUrl;
+          if (processedUrl.includes(queryPair)) return processedUrl;
 
-          const separator = targetUrl.includes("?") ? "&" : "?";
-          return targetUrl + separator + queryPair;
+          const separator = processedUrl.includes("?") ? "&" : "?";
+          return processedUrl + separator + queryPair;
         }
 
         // Helper to parse responsive image sets (e.g., "img.jpg 320w, img-large.jpg 800w")
@@ -153,7 +177,7 @@ export async function onRequest(context) {
     .transform(response);
 }
 
-// Server-side static URL rewriting
+// Server-side static URL rewriting (Now with lowercase pathing)
 function appendQuery(targetUrl, paramPair, currentHostname) {
   if (
     targetUrl.startsWith("#") || 
@@ -166,19 +190,37 @@ function appendQuery(targetUrl, paramPair, currentHostname) {
     return targetUrl;
   }
 
-  if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
+  let processedUrl = targetUrl;
+
+  // --- NEW: Process and lower-case the path ---
+  if (processedUrl.startsWith("http://") || processedUrl.startsWith("https://")) {
     try {
-      const parsedUrl = new URL(targetUrl);
-      if (parsedUrl.hostname !== currentHostname) return targetUrl;
+      const parsedUrl = new URL(processedUrl);
+      if (parsedUrl.hostname !== currentHostname) return processedUrl;
+      
+      parsedUrl.pathname = parsedUrl.pathname.toLowerCase();
+      processedUrl = parsedUrl.toString();
     } catch (error) {
-      return targetUrl; 
+      return processedUrl; 
     }
+  } else {
+    const hashIdx = processedUrl.indexOf('#');
+    const queryIdx = processedUrl.indexOf('?');
+    let pathEnd = processedUrl.length;
+    
+    if (hashIdx !== -1 && queryIdx !== -1) pathEnd = Math.min(hashIdx, queryIdx);
+    else if (hashIdx !== -1) pathEnd = hashIdx;
+    else if (queryIdx !== -1) pathEnd = queryIdx;
+    
+    const path = processedUrl.substring(0, pathEnd).toLowerCase();
+    const rest = processedUrl.substring(pathEnd);
+    processedUrl = path + rest;
   }
 
-  if (targetUrl.includes(paramPair)) return targetUrl;
+  if (processedUrl.includes(paramPair)) return processedUrl;
 
-  const separator = targetUrl.includes("?") ? "&" : "?";
-  return `${targetUrl}${separator}${paramPair}`;
+  const separator = processedUrl.includes("?") ? "&" : "?";
+  return `${processedUrl}${separator}${paramPair}`;
 }
 
 // Server-side responsive image set rewriting
