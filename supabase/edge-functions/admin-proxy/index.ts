@@ -9,6 +9,15 @@ const corsHeaders = {
 
 const GITHUB_REPO = 'thegreekdirectory/listings'
 
+
+function prepareListingPayloadForJsonb(payload: Record<string, unknown>): Record<string, unknown> {
+  if (typeof payload.coordinates !== 'string') return payload
+  return {
+    ...payload,
+    coordinates: payload.coordinates === '' ? null : JSON.parse(payload.coordinates),
+  }
+}
+
 function toError(err: unknown): Error {
   if (err instanceof Error) return err
   if (typeof err === 'object' && err !== null && 'message' in err) {
@@ -87,9 +96,10 @@ serve(async (req: Request) => {
       }
 
       case 'listings:insert': {
+        const listingPayload = prepareListingPayloadForJsonb(payload as Record<string, unknown>)
         const { data, error } = await supabase
           .from('listings')
-          .insert(payload)
+          .insert(listingPayload)
           .select()
           .single()
         if (error) throw toError(error)
@@ -106,9 +116,10 @@ serve(async (req: Request) => {
       case 'listings:update': {
         const { id, ...updates } = payload
         if (!id) throw new Error('listings:update requires id')
+        const listingUpdates = prepareListingPayloadForJsonb(updates as Record<string, unknown>)
         const { data, error } = await supabase
           .from('listings')
-          .update(updates)
+          .update(listingUpdates)
           .eq('id', id)
           .select()
           .single()

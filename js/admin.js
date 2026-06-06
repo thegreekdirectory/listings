@@ -1418,6 +1418,11 @@ function fillEditForm(listing) {
                         <input type="text" id="editTimezone" value="${listing?.timezone || 'America/Chicago'}" class="w-full px-4 py-2 border rounded-lg" placeholder="America/Chicago" required>
                         <p class="text-xs text-gray-500 mt-1">Use an IANA timezone (example: America/Chicago).</p>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2" for="editCoordinates">Coordinates</label>
+                        <textarea id="editCoordinates" rows="4" class="w-full px-4 py-2 border rounded-lg font-mono text-sm" placeholder='{&quot;lat&quot;:43.83850,&quot;lng&quot;:-87.92659101}'>${escapeHtml(coordinatesToRawText(listing?.coordinates))}</textarea>
+                        <p class="text-xs text-gray-500 mt-1">Raw Supabase jsonb value. Saved exactly as entered; invalid JSON is left for Supabase to reject.</p>
+                    </div>
                 </div>
             </div>
 
@@ -2156,6 +2161,12 @@ function normalizeCoordinates(value) {
     return { lat, lng };
 }
 
+function coordinatesToRawText(value) {
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'string') return value;
+    return JSON.stringify(value);
+}
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 
@@ -2262,12 +2273,15 @@ if (!slug) {
         const city = document.getElementById('editCity').value.trim() || null;
         const state = document.getElementById('editState').value || null;
         const zipCode = document.getElementById('editZipCode').value.trim() || null;
+        const coordinatesRaw = document.getElementById('editCoordinates')?.value ?? '';
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         
         // AUTO-GEOCODING
-        let coordinates = normalizeCoordinates(editingListing?.coordinates);
-        if (address && city && state) {
+        let coordinates = coordinatesRaw === '' ? null : coordinatesRaw;
+        if (coordinatesRaw !== '') {
+            console.log('📍 Manual coordinates supplied; skipping auto-geocoding.');
+        } else if (address && city && state) {
             console.log('🌍 Auto-geocoding address...');
             coordinates = normalizeCoordinates(await geocodeAddress(address, city, state, zipCode));
             if (coordinates) {
