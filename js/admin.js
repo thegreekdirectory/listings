@@ -1419,8 +1419,8 @@ function fillEditForm(listing) {
                         <p class="text-xs text-gray-500 mt-1">Use an IANA timezone (example: America/Chicago).</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Coordinates</label>
-                        <input type="text" id="editCoordinates" value="${escapeHtml(coordinatesToRawText(listing?.coordinates))}" class="w-full px-4 py-2 border rounded-lg font-mono text-sm" placeholder='{&quot;lat&quot;:43.83850,&quot;lng&quot;:-87.92659101}'>
+                        <label class="block text-sm font-medium mb-2" for="editCoordinates">Coordinates</label>
+                        <textarea id="editCoordinates" rows="4" class="w-full px-4 py-2 border rounded-lg font-mono text-sm" placeholder='{&quot;lat&quot;:43.83850,&quot;lng&quot;:-87.92659101}'>${escapeHtml(coordinatesToRawText(listing?.coordinates))}</textarea>
                         <p class="text-xs text-gray-500 mt-1">Raw Supabase jsonb value. Saved exactly as entered; invalid JSON is left for Supabase to reject.</p>
                     </div>
                 </div>
