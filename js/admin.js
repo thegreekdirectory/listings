@@ -1086,7 +1086,9 @@ window.viewAnalytics = async function(listingId) {
                         ['Directions', metric('directions_clicks'), 'from-orange-500 to-orange-600'],
                         ['Custom CTA 1', metric('custom_cta_1'), 'from-cyan-500 to-cyan-600'],
                         ['Custom CTA 2', metric('custom_cta_2'), 'from-indigo-500 to-indigo-600'],
-                        ['Shares', metric('share_clicks'), 'from-pink-500 to-pink-600']
+                        ['Shares', metric('share_clicks'), 'from-pink-500 to-pink-600'],
+                        ['Social Media Clicks', metric('social_clicks'), 'from-violet-500 to-violet-600'],
+                        ['Review Clicks', metric('review_clicks'), 'from-amber-500 to-amber-600']
                     ];
                     grid.innerHTML = cards.map(function(card) {
                         return '<div class="bg-gradient-to-br ' + card[2] + ' text-white p-4 rounded-lg shadow-sm">'
@@ -1112,6 +1114,8 @@ window.viewAnalytics = async function(listingId) {
                     website: 'Website Visit',
                     directions: 'Directions',
                     share: 'Share',
+                    social: 'Social Media Click',
+                    review: 'Review Click',
                     custom_cta_1: 'Custom CTA 1',
                     custom_cta_2: 'Custom CTA 2'
                 };
@@ -1122,6 +1126,8 @@ window.viewAnalytics = async function(listingId) {
                     website: '#6366f1',
                     directions: '#f97316',
                     share: '#ec4899',
+                    social: '#8b5cf6',
+                    review: '#f59e0b',
                     custom_cta_1: '#06b6d4',
                     custom_cta_2: '#4f46e5'
                 };
@@ -1193,7 +1199,7 @@ function generateAnalyticsContent(listing, analytics) {
                 ${bucketOptions}
             </select>
         </div>
-        <div id="analyticsSummaryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4"></div>
+        <div id="analyticsSummaryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-10 gap-4"></div>
         <div class="mt-6 bg-white border border-gray-200 rounded-lg p-4">
             <h3 class="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h3>
             <div id="analyticsRecentActivity"></div>
@@ -3196,35 +3202,35 @@ function generateSocialMediaSection(listing, options = {}) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     if (socialMedia.facebook) {
-        socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook" title="Facebook">${socialSVGs.facebook}</a>`;
+        socialIcons += `<a href="https://facebook.com/${socialMedia.facebook}" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook" title="Facebook" onclick="trackClick('social', 'facebook')">${socialSVGs.facebook}</a>`;
     }
     if (socialMedia.instagram) {
-        socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram" title="Instagram">${socialSVGs.instagram}</a>`;
+        socialIcons += `<a href="https://instagram.com/${socialMedia.instagram}" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram" title="Instagram" onclick="trackClick('social', 'instagram')">${socialSVGs.instagram}</a>`;
     }
     if (socialMedia.twitter) {
-        socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon social-twitter" title="Twitter/X">${socialSVGs.twitter}</a>`;
+        socialIcons += `<a href="https://twitter.com/${socialMedia.twitter}" target="_blank" rel="noopener noreferrer" class="social-icon social-twitter" title="Twitter/X" onclick="trackClick('social', 'twitter')">${socialSVGs.twitter}</a>`;
     }
     if (socialMedia.youtube) {
-        socialIcons += `<a href="https://youtube.com/@${socialMedia.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube" title="YouTube">${socialSVGs.youtube}</a>`;
+        socialIcons += `<a href="https://youtube.com/@${socialMedia.youtube}" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube" title="YouTube" onclick="trackClick('social', 'youtube')">${socialSVGs.youtube}</a>`;
     }
     if (socialMedia.tiktok) {
-        socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok" title="TikTok">${socialSVGs.tiktok}</a>`;
+        socialIcons += `<a href="https://tiktok.com/@${socialMedia.tiktok}" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok" title="TikTok" onclick="trackClick('social', 'tiktok')">${socialSVGs.tiktok}</a>`;
     }
     if (socialMedia.linkedin) {
-        socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin" title="LinkedIn">${socialSVGs.linkedin}</a>`;
+        socialIcons += `<a href="${socialMedia.linkedin}" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin" title="LinkedIn" onclick="trackClick('social', 'linkedin')">${socialSVGs.linkedin}</a>`;
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     // Other social links (1-3)
     if (socialMedia.other1 && socialMedia.other1_name) {
-        socialIcons += `<a href="${socialMedia.other1}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(socialMedia.other1_name)}">${socialSVGs.other}</a>`;
+        socialIcons += `<a href="${socialMedia.other1}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(socialMedia.other1_name)}" onclick="trackClick('social', 'other1')">${socialSVGs.other}</a>`;
     }
     if (socialMedia.other2 && socialMedia.other2_name) {
-        socialIcons += `<a href="${socialMedia.other2}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(socialMedia.other2_name)}">${socialSVGs.other}</a>`;
+        socialIcons += `<a href="${socialMedia.other2}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(socialMedia.other2_name)}" onclick="trackClick('social', 'other2')">${socialSVGs.other}</a>`;
     }
     if (socialMedia.other3 && socialMedia.other3_name) {
-        socialIcons += `<a href="${socialMedia.other3}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(socialMedia.other3_name)}">${socialSVGs.other}</a>`;
+        socialIcons += `<a href="${socialMedia.other3}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(socialMedia.other3_name)}" onclick="trackClick('social', 'other3')">${socialSVGs.other}</a>`;
     }
     
     if (!socialIcons) return '';
@@ -3263,24 +3269,24 @@ function generateReviewSection(listing) {
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     
     if (reviews.google) {
-        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews">${googleSVG}</a>`;
+        reviewLinks += `<a href="${reviews.google}" target="_blank" rel="noopener noreferrer" class="social-icon social-google" title="Google Reviews" onclick="trackClick('review', 'google')">${googleSVG}</a>`;
     }
     if (reviews.yelp) {
-        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp">${yelpSVG}</a>`;
+        reviewLinks += `<a href="${reviews.yelp}" target="_blank" rel="noopener noreferrer" class="social-icon social-yelp" title="Yelp" onclick="trackClick('review', 'yelp')">${yelpSVG}</a>`;
     }
     if (reviews.tripadvisor) {
-        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor">${tripadvisorSVG}</a>`;
+        reviewLinks += `<a href="${reviews.tripadvisor}" target="_blank" rel="noopener noreferrer" class="social-icon social-tripadvisor" title="TripAdvisor" onclick="trackClick('review', 'tripadvisor')">${tripadvisorSVG}</a>`;
     }
     
     // Other review links (1-3)
     if (reviews.other1 && reviews.other1_name) {
-        reviewLinks += `<a href="${reviews.other1}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(reviews.other1_name)}">${starSVG}</a>`;
+        reviewLinks += `<a href="${reviews.other1}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(reviews.other1_name)}" onclick="trackClick('review', 'other1')">${starSVG}</a>`;
     }
     if (reviews.other2 && reviews.other2_name) {
-        reviewLinks += `<a href="${reviews.other2}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(reviews.other2_name)}">${starSVG}</a>`;
+        reviewLinks += `<a href="${reviews.other2}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(reviews.other2_name)}" onclick="trackClick('review', 'other2')">${starSVG}</a>`;
     }
     if (reviews.other3 && reviews.other3_name) {
-        reviewLinks += `<a href="${reviews.other3}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(reviews.other3_name)}">${starSVG}</a>`;
+        reviewLinks += `<a href="${reviews.other3}" target="_blank" rel="noopener noreferrer" class="social-icon social-other" title="${escapeHtml(reviews.other3_name)}" onclick="trackClick('review', 'other3')">${starSVG}</a>`;
     }
     
     if (!reviewLinks) return '';
