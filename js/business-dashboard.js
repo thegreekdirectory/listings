@@ -220,7 +220,8 @@ async function _fetchAnalyticsSummary(listingId) {
 function _getStatsForBucket(row, bucket) {
     if (!row) {
         return { views: 0, call_clicks: 0, email_clicks: 0, website_clicks: 0,
-                 directions_clicks: 0, custom_cta_1: 0, custom_cta_2: 0, share_clicks: 0 };
+                 directions_clicks: 0, custom_cta_1: 0, custom_cta_2: 0,
+                 share_clicks: 0, social_clicks: 0, review_clicks: 0 };
     }
     const s = bucket; // shorthand
     return {
@@ -232,6 +233,8 @@ function _getStatsForBucket(row, bucket) {
         custom_cta_1:      row[`custom_cta_1_${s}`]      ?? 0,
         custom_cta_2:      row[`custom_cta_2_${s}`]      ?? 0,
         share_clicks:      row[`share_clicks_${s}`]      ?? 0,
+        social_clicks:     row[`social_clicks_${s}`]     ?? 0,
+        review_clicks:     row[`review_clicks_${s}`]     ?? 0,
     };
 }
 
@@ -403,6 +406,7 @@ async function _loadOverviewStats() {
         const stats   = _getStatsForBucket(row, DEFAULT_BUCKET);
         const totalEngagement = stats.call_clicks + stats.email_clicks + stats.website_clicks
                               + stats.directions_clicks + stats.share_clicks
+                              + stats.social_clicks + stats.review_clicks
                               + stats.custom_cta_1 + stats.custom_cta_2;
 
         const visibleStats = tier === 'FREE'
@@ -494,6 +498,8 @@ function _renderAnalyticsBody(summaryRow, events, tier, listing, bucket) {
         { key: 'website_clicks',    label: 'Website Clicks',           grad: 'bg-grad-1', icon: GLOBE_SVG,     tiers: ['FEATURED','PREMIUM'] },
         { key: 'directions_clicks', label: 'Directions',               grad: 'bg-grad-4', icon: MAP_SVG,       tiers: ['FEATURED','PREMIUM'] },
         { key: 'share_clicks',      label: 'Shares',                   grad: 'bg-grad-5', icon: SHARE_SVG,     tiers: ['FEATURED','PREMIUM'] },
+        { key: 'social_clicks',     label: 'Social Media Clicks',      grad: 'bg-grad-3', icon: CURSOR_SVG,    tiers: ['FEATURED','PREMIUM'] },
+        { key: 'review_clicks',     label: 'Review Clicks',            grad: 'bg-grad-4', icon: STAR_SVG,      tiers: ['FEATURED','PREMIUM'] },
         { key: 'custom_cta_1',      label: _esc(cta1Name),             grad: 'bg-grad-6', icon: CURSOR_SVG,    tiers: ['FEATURED','PREMIUM'] },
         { key: 'custom_cta_2',      label: _esc(cta2Name),             grad: 'bg-grad-2', icon: CURSOR_SVG,    tiers: ['PREMIUM'] },
     ];
@@ -503,6 +509,7 @@ function _renderAnalyticsBody(summaryRow, events, tier, listing, bucket) {
     if (tier === 'FREE') {
         const totalEngagement = stats.call_clicks + stats.email_clicks + stats.website_clicks
                               + stats.directions_clicks + stats.share_clicks
+                              + stats.social_clicks + stats.review_clicks
                               + stats.custom_cta_1 + stats.custom_cta_2;
         cardsHtml = `
             <div class="bp-analytics-card bg-grad-1">
@@ -545,7 +552,7 @@ function _renderAnalyticsBody(summaryRow, events, tier, listing, bucket) {
             <div class="bp-upgrade-notice__icon">📈</div>
             <div>
                 <h4>Unlock Detailed Analytics</h4>
-                <p>Upgrade to Featured or Premium to see call, email, website, directions, share, and CTA click tracking across any time period.</p>
+                <p>Upgrade to Featured or Premium to see call, email, website, directions, share, social media, review, and CTA click tracking across any time period.</p>
             </div>
         </div>
     ` : '';
@@ -588,6 +595,7 @@ window._onBucketChange = function(bucket) {
     if (tier === 'FREE') {
         const totalEngagement = stats.call_clicks + stats.email_clicks + stats.website_clicks
                               + stats.directions_clicks + stats.share_clicks
+                              + stats.social_clicks + stats.review_clicks
                               + stats.custom_cta_1 + stats.custom_cta_2;
         cardsHtml = `
             <div class="bp-analytics-card bg-grad-1">
@@ -607,6 +615,8 @@ window._onBucketChange = function(bucket) {
             { key: 'website_clicks',    label: 'Website Clicks',      grad: 'bg-grad-1', icon: GLOBE_SVG,  tiers: ['FEATURED','PREMIUM'] },
             { key: 'directions_clicks', label: 'Directions',          grad: 'bg-grad-4', icon: MAP_SVG,    tiers: ['FEATURED','PREMIUM'] },
             { key: 'share_clicks',      label: 'Shares',              grad: 'bg-grad-5', icon: SHARE_SVG,  tiers: ['FEATURED','PREMIUM'] },
+            { key: 'social_clicks',     label: 'Social Media Clicks', grad: 'bg-grad-3', icon: CURSOR_SVG, tiers: ['FEATURED','PREMIUM'] },
+            { key: 'review_clicks',     label: 'Review Clicks',       grad: 'bg-grad-4', icon: STAR_SVG,   tiers: ['FEATURED','PREMIUM'] },
             { key: 'custom_cta_1',      label: _esc(cta1Name),        grad: 'bg-grad-6', icon: CURSOR_SVG, tiers: ['FEATURED','PREMIUM'] },
             { key: 'custom_cta_2',      label: _esc(cta2Name),        grad: 'bg-grad-2', icon: CURSOR_SVG, tiers: ['PREMIUM'] },
         ];
@@ -648,6 +658,8 @@ function _buildEventLog(events) {
         website:    '#6366f1',
         directions: '#ef4444',
         share:      '#f59e0b',
+        social:     '#8b5cf6',
+        review:     '#f97316',
         video:      '#0ea5e9',
     };
     const labels = {
@@ -657,6 +669,8 @@ function _buildEventLog(events) {
         website:    'Website Visit',
         directions: 'Directions',
         share:      'Share',
+        social:     'Social Media Click',
+        review:     'Review Click',
         video:      'Video Play',
     };
 
