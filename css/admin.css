@@ -373,6 +373,168 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
     font-style: italic;
 }
 
+
+/* ============================================
+   AUTOMATIC DARK MODE
+   Adjusts UI based on OS/System preferences
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary-blue: #3b82f6; 
+        --primary-blue-dark: #2563eb;
+        --success-green: #10b981;
+        --error-red: #ef4444;
+        --warning-yellow: #f59e0b;
+        --text-dark: #f9fafb;
+        --text-light: #9ca3af;
+        --border-color: #374151;
+        --bg-light: #111827;
+    }
+
+    body {
+        background-color: var(--bg-light);
+        color: var(--text-dark);
+        color-scheme: dark;
+    }
+
+    /* Core Admin Custom Classes */
+    .auth-card,
+    .modal-content,
+    #subcategoryCheckboxes > div {
+        background: #1f2937 !important;
+        color: var(--text-dark);
+    }
+
+    .error-message {
+        background: #7f1d1d;
+        border-color: #991b1b;
+        color: #fecaca;
+    }
+
+    .success-message {
+        background: #064e3b;
+        border-color: #065f46;
+        color: #a7f3d0;
+    }
+
+    .tier-FREE {
+        background: #374151;
+        color: #e5e7eb;
+    }
+
+    .tier-PREMIUM {
+        background: #4c1d95;
+        color: #ddd6fe;
+    }
+
+    .tier-FEATURED {
+        background: #78350f;
+        color: #fde68a;
+    }
+
+    #subcategoryCheckboxes > div:has(input[type="checkbox"]:checked) {
+        background: #1e3a8a !important;
+        border-color: var(--primary-blue);
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #1f2937;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #4b5563;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+    }
+
+    /* * Tailwind CSS Overrides for Dark Mode
+     * Forces standard Tailwind utility classes to invert cleanly 
+     */
+    .bg-white { background-color: #1f2937 !important; }
+    .bg-gray-50 { background-color: #111827 !important; }
+    .bg-gray-100 { background-color: #374151 !important; color: #f9fafb !important; }
+    .bg-gray-200 { background-color: #4b5563 !important; color: #f9fafb !important; }
+
+    .text-gray-900,
+    .text-gray-800,
+    .text-gray-700 { color: #f9fafb !important; }
+
+    .text-gray-600,
+    .text-gray-500 { color: #9ca3af !important; }
+
+    .border-gray-200,
+    .border-gray-300 { border-color: #374151 !important; }
+    
+    .border-b { border-bottom-color: #374151 !important; }
+    .border-t { border-top-color: #374151 !important; }
+
+    .hover\:bg-gray-50:hover { background-color: #374151 !important; }
+    .hover\:bg-gray-100:hover { background-color: #4b5563 !important; }
+    .hover\:bg-gray-200:hover { background-color: #6b7280 !important; }
+
+    /* Form Inputs Overrides */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="color"],
+    textarea,
+    select,
+    .tgd-input {
+        background-color: #374151 !important;
+        color: #f9fafb !important;
+        border-color: #4b5563 !important;
+    }
+    
+    input::placeholder,
+    textarea::placeholder {
+        color: #9ca3af !important;
+    }
+
+    input:disabled,
+    textarea:disabled,
+    select:disabled {
+        background-color: #1f2937 !important;
+        color: #6b7280 !important;
+        border-color: #374151 !important;
+    }
+
+    /* Action Buttons semantic background overrides */
+    .bg-blue-100 { background-color: #1e3a8a !important; color: #bfdbfe !important; }
+    .text-blue-700 { color: #bfdbfe !important; }
+    .hover\:bg-blue-200:hover { background-color: #1e40af !important; }
+
+    .bg-blue-50 { background-color: #172554 !important; }
+    .text-blue-900 { color: #bfdbfe !important; }
+    .text-blue-800 { color: #93c5fd !important; }
+    .border-blue-200 { border-color: #1e3a8a !important; }
+
+    .bg-green-100 { background-color: #064e3b !important; color: #a7f3d0 !important; }
+    .text-green-700 { color: #a7f3d0 !important; }
+    .hover\:bg-green-200:hover { background-color: #065f46 !important; }
+
+    .bg-red-100 { background-color: #7f1d1d !important; color: #fecaca !important; }
+    .text-red-700 { color: #fecaca !important; }
+    .hover\:bg-red-200:hover { background-color: #991b1b !important; }
+
+    .bg-orange-100 { background-color: #78350f !important; color: #fde68a !important; }
+    .text-orange-800 { color: #fde68a !important; }
+    .bg-orange-50 { background-color: #451a03 !important; }
+    .hover\:bg-orange-200:hover { background-color: #92400e !important; }
+    
+    .bg-purple-100 { background-color: #4c1d95 !important; color: #ddd6fe !important; }
+    .text-purple-700 { color: #ddd6fe !important; }
+    .hover\:bg-purple-200:hover { background-color: #5b21b6 !important; }
+
+    .bg-indigo-100 { background-color: #312e81 !important; color: #c7d2fe !important; }
+    .text-indigo-700 { color: #c7d2fe !important; }
+    .hover\:bg-indigo-200:hover { background-color: #3730a3 !important; }
+}
+
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 This source code is proprietary and no part may not be used, reproduced, or distributed 
