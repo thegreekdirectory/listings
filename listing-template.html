@@ -1275,7 +1275,7 @@ function openGallery(index = 0) {
                     popupAnchor: [1, -34]
                 });
                 L.marker([lat, lng], { icon: listingMapPinIcon }).addTo(map)
-                    .bindPopup('<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}')
+                    .bindPopup("<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}")
                     .openPopup();
                 
                 setTimeout(() => {
