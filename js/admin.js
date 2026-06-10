@@ -3127,7 +3127,9 @@ function escapeHtml(text) {
 }
 
 function escapeJsonForTemplate(value) {
-    return JSON.stringify(value === undefined || value === null ? '' : String(value)).slice(1, -1);
+    return JSON.stringify(value === undefined || value === null ? '' : String(value))
+        .slice(1, -1)
+        .replace(/'/g, "\\'"); // Escapes single quotes for template safety
 }
 
 function decodeEscapedText(value) {
