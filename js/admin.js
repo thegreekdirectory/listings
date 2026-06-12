@@ -22,35 +22,65 @@
 // ============================
 
 (function () {
+  // Store the original console methods
+  const originals = {
+    log: console.log,
+    warn: console.warn,
+    error: console.error
+  };
 
-  const oldLog = console.log;
-
-  console.log = function (...args) {
-
-    oldLog.apply(console, args);
-
-    const msg = args.join(" ");
-
+  // Helper function to create the on-screen notification
+  function showNotification(args, type) {
+    const msg = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(" ");
+    
     const box = document.createElement("div");
-    box.textContent = msg;
+    box.textContent = `[${type.toUpperCase()}] ${msg}`;
 
+    // Base styling
     box.style.position = "fixed";
     box.style.bottom = "10px";
     box.style.right = "10px";
-    box.style.background = "#222";
     box.style.color = "#fff";
     box.style.padding = "10px";
     box.style.borderRadius = "4px";
     box.style.fontFamily = "monospace";
     box.style.zIndex = "9999";
+    box.style.marginBottom = "5px"; // Helps if multiple pop up
+
+    // Color coding based on log type
+    if (type === 'error') {
+      box.style.background = "#ff4d4d";
+    } else if (type === 'warn') {
+      box.style.background = "#ffae42";
+      box.style.color = "#000"; // Dark text for better contrast on yellow
+    } else {
+      box.style.background = "#222";
+    }
 
     document.body.appendChild(box);
 
     setTimeout(() => {
       box.remove();
     }, 2000);
+  }
+
+  // Override console.log
+  console.log = function (...args) {
+    originals.log.apply(console, args);
+    showNotification(args, 'log');
   };
 
+  // Override console.warn
+  console.warn = function (...args) {
+    originals.warn.apply(console, args);
+    showNotification(args, 'warn');
+  };
+
+  // Override console.error
+  console.error = function (...args) {
+    originals.error.apply(console, args);
+    showNotification(args, 'error');
+  };
 })();
 
 // ============================================
