@@ -3764,6 +3764,9 @@ function generateTemplateReplacements(listing) {
         'SCHEMA_TYPES_JSON': JSON.stringify(schemaTypes),
         'SAME_AS_SCHEMA': sameAsSchema,
         'ZIP_CODE': escapeHtml(listing.zip_code || ''),
+        'IN_CITY_STATE': (decodedCity && decodedState) 
+            ? ` in ${escapeHtml(decodedCity)}, ${escapeHtml(decodedState)}` 
+            : '',
         'COUNTRY': 'US',
         'PHONE': listing.phone || '',
         'PHONE_SCHEMA': listing.phone || '',
