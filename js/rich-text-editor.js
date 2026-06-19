@@ -1,7 +1,8 @@
 /**
- * RichTextEditor v3.0 — Production-grade, dependency-free rich text editor
- * Features: Custom popovers, draggable image resizing, table grid picker,
- *           palette color dropdowns, semantic HTML sanitization.
+ * RichTextEditor v4.0 — Advanced block-style editing system
+ * Features: Slash commands, markdown shortcuts, table context menus,
+ *           JSON hydration/export, no-format paste toggle, smart caret escaping,
+ *           custom popovers, draggable image resizing, palette color dropdowns.
  */
 (function () {
   'use strict';
@@ -10,11 +11,10 @@
      SECTION 1: STYLES
   ═══════════════════════════════════════════════════════════════════ */
   function ensureStyles() {
-    if (document.getElementById('rte-shared-styles')) return;
+    if (document.getElementById('rte-shared-styles-v4')) return;
     const style = document.createElement('style');
-    style.id = 'rte-shared-styles';
+    style.id = 'rte-shared-styles-v4';
     style.textContent = `
-      /* ── CSS Variables ── */
       :root {
         --rte-bg: #ffffff;
         --rte-border: #e2e8f0;
@@ -27,7 +27,7 @@
         --rte-btn-color: #374151;
         --rte-btn-border: #d1d5db;
         --rte-radius: 0.625rem;
-        --rte-editor-min-height: 180px;
+        --rte-editor-min-height: 200px;
         --rte-focus-ring: 0 0 0 3px rgba(37,99,235,0.14);
         --rte-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
         --rte-divider: #e2e8f0;
@@ -43,12 +43,14 @@
         --rte-separator-color: #dde2ec;
         --rte-popover-bg: #ffffff;
         --rte-popover-border: #e2e8f0;
-        --rte-popover-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.07);
+        --rte-popover-shadow: 0 8px 30px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
         --rte-table-border: #cbd5e1;
         --rte-table-head-bg: #f1f5f9;
         --rte-table-alt-bg: #f8fafc;
         --rte-img-handle-size: 10px;
         --rte-img-handle-color: #2563eb;
+        --rte-slash-shadow: 0 12px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.07);
+        --rte-ctx-shadow: 0 8px 24px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.06);
       }
 
       /* ── WRAPPER ── */
@@ -84,11 +86,7 @@
         -webkit-backdrop-filter: blur(10px);
         min-height: 44px;
       }
-      .rte-toolbar-group {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-      }
+      .rte-toolbar-group { display: flex; align-items: center; gap: 2px; }
       .rte-separator {
         width: 1px;
         height: 20px;
@@ -140,10 +138,7 @@
         pointer-events: none;
         flex-shrink: 0;
       }
-      .rte-toolbar button svg.rte-filled {
-        fill: currentColor;
-        stroke: none;
-      }
+      .rte-toolbar button svg.rte-filled { fill: currentColor; stroke: none; }
 
       /* ── TOOLTIP ── */
       .rte-toolbar button[data-tip]::after {
@@ -164,11 +159,32 @@
         opacity: 0;
         transition: opacity 0.14s, transform 0.14s;
         z-index: 200;
-        letter-spacing: 0.01em;
       }
       .rte-toolbar button[data-tip]:hover::after {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
+      }
+
+      /* ── NO-FORMAT PASTE TOGGLE (wider) ── */
+      .rte-toolbar button.rte-paste-toggle {
+        width: auto;
+        padding: 0 8px;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        font-family: var(--rte-font);
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+        color: #64748b;
+      }
+      .rte-toolbar button.rte-paste-toggle.rte-active {
+        color: var(--rte-btn-active-color);
+        background: var(--rte-btn-active-bg);
+        border-color: #bcd0f7;
+      }
+      .rte-toolbar button.rte-paste-toggle svg {
+        width: 13px;
+        height: 13px;
       }
 
       /* ── TOOLBAR SELECT ── */
@@ -194,269 +210,192 @@
       }
       .rte-toolbar select:hover, .rte-toolbar select:focus { border-color: #93b4f5; }
 
-      /* ── COLOR PALETTE BUTTON ── */
-      .rte-palette-wrap {
-        position: relative;
-        display: flex;
-        align-items: center;
-        flex-shrink: 0;
-      }
+      /* ── COLOR PALETTE ── */
+      .rte-palette-wrap { position: relative; display: flex; align-items: center; flex-shrink: 0; }
       .rte-palette-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        width: 30px;
-        height: 30px;
-        border: 1px solid transparent;
-        border-radius: 6px;
-        background: transparent;
-        color: var(--rte-btn-color);
-        cursor: pointer;
-        transition: background var(--rte-transition), border-color var(--rte-transition);
-        position: relative;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 2px; width: 30px; height: 30px; border: 1px solid transparent;
+        border-radius: 6px; background: transparent; color: var(--rte-btn-color);
+        cursor: pointer; transition: background var(--rte-transition), border-color var(--rte-transition);
       }
-      .rte-palette-btn:hover {
-        background: var(--rte-btn-hover-bg);
-        border-color: var(--rte-btn-border);
-      }
+      .rte-palette-btn:hover { background: var(--rte-btn-hover-bg); border-color: var(--rte-btn-border); }
       .rte-palette-btn svg {
-        width: 14px;
-        height: 14px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        pointer-events: none;
+        width: 14px; height: 14px; fill: none; stroke: currentColor;
+        stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none;
       }
-      .rte-color-bar {
-        display: block;
-        width: 14px;
-        height: 3px;
-        border-radius: 2px;
-        margin-top: 1px;
-      }
-
-      /* ── COLOR PALETTE DROPDOWN ── */
+      .rte-color-bar { display: block; width: 14px; height: 3px; border-radius: 2px; margin-top: 1px; }
       .rte-palette-dropdown {
-        position: absolute;
-        top: calc(100% + 6px);
-        left: 0;
-        background: var(--rte-popover-bg);
-        border: 1px solid var(--rte-popover-border);
-        border-radius: 10px;
-        box-shadow: var(--rte-popover-shadow);
-        padding: 10px;
-        z-index: 300;
-        display: none;
-        flex-direction: column;
-        gap: 6px;
-        min-width: 168px;
-        animation: rte-dropdown-in 0.15s ease;
+        position: absolute; top: calc(100% + 6px); left: 0;
+        background: var(--rte-popover-bg); border: 1px solid var(--rte-popover-border);
+        border-radius: 10px; box-shadow: var(--rte-popover-shadow);
+        padding: 10px; z-index: 300; display: none; flex-direction: column; gap: 6px;
+        min-width: 168px; animation: rte-in 0.15s ease;
       }
       .rte-palette-dropdown.rte-open { display: flex; }
       .rte-palette-title {
-        font-size: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #94a3b8;
-        margin-bottom: 2px;
+        font-size: 10px; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 2px;
       }
-      .rte-palette-grid {
-        display: grid;
-        grid-template-columns: repeat(9, 1fr);
-        gap: 4px;
-      }
+      .rte-palette-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
       .rte-palette-swatch {
-        width: 16px;
-        height: 16px;
-        border-radius: 4px;
-        cursor: pointer;
+        width: 16px; height: 16px; border-radius: 4px; cursor: pointer;
         border: 1.5px solid rgba(0,0,0,0.08);
-        transition: transform 0.1s, box-shadow 0.1s;
-        flex-shrink: 0;
+        transition: transform 0.1s, box-shadow 0.1s; flex-shrink: 0;
       }
       .rte-palette-swatch:hover {
-        transform: scale(1.25);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        z-index: 1;
-        border-color: rgba(0,0,0,0.2);
+        transform: scale(1.3); box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+        z-index: 1; border-color: rgba(0,0,0,0.22);
       }
 
-      /* ── TABLE PICKER BUTTON & DROPDOWN ── */
-      .rte-table-wrap {
-        position: relative;
-        flex-shrink: 0;
-      }
+      /* ── TABLE PICKER ── */
+      .rte-table-wrap { position: relative; flex-shrink: 0; }
       .rte-table-panel {
-        position: absolute;
-        top: calc(100% + 6px);
-        left: 0;
-        background: var(--rte-popover-bg);
-        border: 1px solid var(--rte-popover-border);
-        border-radius: 10px;
-        box-shadow: var(--rte-popover-shadow);
-        padding: 10px;
-        z-index: 300;
-        display: none;
-        flex-direction: column;
-        gap: 8px;
-        animation: rte-dropdown-in 0.15s ease;
+        position: absolute; top: calc(100% + 6px); left: 0;
+        background: var(--rte-popover-bg); border: 1px solid var(--rte-popover-border);
+        border-radius: 10px; box-shadow: var(--rte-popover-shadow);
+        padding: 10px; z-index: 300; display: none; flex-direction: column; gap: 8px;
+        animation: rte-in 0.15s ease;
       }
       .rte-table-panel.rte-open { display: flex; }
       .rte-table-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 22px);
-        grid-template-rows: repeat(5, 22px);
-        gap: 3px;
+        display: grid; grid-template-columns: repeat(5, 22px);
+        grid-template-rows: repeat(5, 22px); gap: 3px;
       }
       .rte-table-cell {
-        width: 22px;
-        height: 22px;
-        border: 1.5px solid #d1d5db;
-        border-radius: 3px;
-        cursor: pointer;
-        transition: background 0.08s, border-color 0.08s;
+        width: 22px; height: 22px; border: 1.5px solid #d1d5db;
+        border-radius: 3px; cursor: pointer; transition: background 0.08s, border-color 0.08s;
         background: #f8fafc;
       }
-      .rte-table-cell.rte-hovered {
-        background: #dde8ff;
-        border-color: #2563eb;
-      }
-      .rte-table-label {
-        font-size: 11px;
-        font-weight: 600;
-        color: #64748b;
-        text-align: center;
-        font-family: var(--rte-font);
-        letter-spacing: 0.02em;
-      }
+      .rte-table-cell.rte-hovered { background: #dde8ff; border-color: #2563eb; }
+      .rte-table-label { font-size: 11px; font-weight: 600; color: #64748b; text-align: center; font-family: var(--rte-font); }
 
-      /* ── POPOVERS (Link / Image) ── */
+      /* ── POPOVERS ── */
       .rte-popover {
-        position: fixed;
-        background: var(--rte-popover-bg);
-        border: 1px solid var(--rte-popover-border);
-        border-radius: 12px;
-        box-shadow: var(--rte-popover-shadow);
-        padding: 16px;
-        z-index: 9999;
-        display: none;
-        flex-direction: column;
-        gap: 10px;
-        min-width: 300px;
-        animation: rte-dropdown-in 0.16s ease;
+        position: fixed; background: var(--rte-popover-bg);
+        border: 1px solid var(--rte-popover-border); border-radius: 12px;
+        box-shadow: var(--rte-popover-shadow); padding: 16px; z-index: 9999;
+        display: none; flex-direction: column; gap: 10px; min-width: 300px;
+        animation: rte-in 0.16s ease;
       }
       .rte-popover.rte-open { display: flex; }
-      .rte-popover-title {
-        font-size: 13px;
-        font-weight: 700;
-        color: #0f172a;
-        letter-spacing: -0.01em;
-        margin: 0;
-      }
-      .rte-popover-field {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
+      .rte-popover-title { font-size: 13px; font-weight: 700; color: #0f172a; letter-spacing: -0.01em; margin: 0; }
+      .rte-popover-field { display: flex; flex-direction: column; gap: 4px; }
       .rte-popover-field label {
-        font-size: 11px;
-        font-weight: 600;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        font-size: 11px; font-weight: 600; color: #64748b;
+        text-transform: uppercase; letter-spacing: 0.05em;
       }
       .rte-popover-field input {
-        height: 36px;
-        padding: 0 10px;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 7px;
-        font-family: var(--rte-font);
-        font-size: 13px;
-        color: #1e293b;
-        outline: none;
-        transition: border-color 0.13s, box-shadow 0.13s;
-        background: #f8fafc;
-        width: 100%;
-        box-sizing: border-box;
+        height: 36px; padding: 0 10px; border: 1.5px solid #e2e8f0; border-radius: 7px;
+        font-family: var(--rte-font); font-size: 13px; color: #1e293b; outline: none;
+        transition: border-color 0.13s, box-shadow 0.13s; background: #f8fafc;
+        width: 100%; box-sizing: border-box;
       }
       .rte-popover-field input:focus {
-        border-color: #2563eb;
-        background: #fff;
-        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        border-color: #2563eb; background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
       }
       .rte-popover-field input.rte-input-error { border-color: #ef4444; }
-      .rte-popover-actions {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-        margin-top: 2px;
-      }
+      .rte-popover-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 2px; }
       .rte-popover-cancel {
-        height: 32px;
-        padding: 0 14px;
-        border: 1px solid #e2e8f0;
-        border-radius: 7px;
-        background: #fff;
-        color: #64748b;
-        font-family: var(--rte-font);
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.12s, border-color 0.12s;
+        height: 32px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 7px;
+        background: #fff; color: #64748b; font-family: var(--rte-font); font-size: 12px;
+        font-weight: 600; cursor: pointer; transition: background 0.12s, border-color 0.12s;
       }
       .rte-popover-cancel:hover { background: #f1f5f9; border-color: #cbd5e1; }
       .rte-popover-submit {
-        height: 32px;
-        padding: 0 16px;
-        border: none;
-        border-radius: 7px;
-        background: #2563eb;
-        color: #fff;
-        font-family: var(--rte-font);
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background 0.12s, transform 0.07s;
-        letter-spacing: 0.01em;
+        height: 32px; padding: 0 16px; border: none; border-radius: 7px; background: #2563eb;
+        color: #fff; font-family: var(--rte-font); font-size: 12px; font-weight: 700;
+        cursor: pointer; transition: background 0.12s, transform 0.07s;
       }
       .rte-popover-submit:hover { background: #1d4ed8; }
       .rte-popover-submit:active { transform: scale(0.96); }
       .rte-popover-close {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        width: 24px;
-        height: 24px;
-        border: none;
-        background: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #94a3b8;
-        border-radius: 5px;
-        transition: background 0.1s, color 0.1s;
+        position: absolute; top: 10px; right: 10px; width: 24px; height: 24px;
+        border: none; background: none; cursor: pointer; display: flex;
+        align-items: center; justify-content: center; color: #94a3b8;
+        border-radius: 5px; transition: background 0.1s, color 0.1s;
       }
       .rte-popover-close:hover { background: #f1f5f9; color: #374151; }
 
+      /* ── SLASH COMMAND MENU ── */
+      .rte-slash-menu {
+        position: fixed; background: var(--rte-popover-bg);
+        border: 1px solid var(--rte-popover-border); border-radius: 12px;
+        box-shadow: var(--rte-slash-shadow); z-index: 9998;
+        display: none; flex-direction: column; overflow: hidden;
+        min-width: 240px; max-height: 320px;
+        animation: rte-in 0.14s ease;
+      }
+      .rte-slash-menu.rte-open { display: flex; }
+      .rte-slash-header {
+        padding: 8px 12px 4px;
+        font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.07em; color: #94a3b8; border-bottom: 1px solid #f1f5f9;
+        font-family: var(--rte-font);
+      }
+      .rte-slash-list {
+        overflow-y: auto; flex: 1;
+        scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;
+      }
+      .rte-slash-item {
+        display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+        cursor: pointer; transition: background 0.09s;
+        font-family: var(--rte-font); border: none; background: none;
+        width: 100%; text-align: left;
+      }
+      .rte-slash-item:hover, .rte-slash-item.rte-selected {
+        background: #f0f4ff;
+      }
+      .rte-slash-item-icon {
+        width: 30px; height: 30px; border-radius: 7px;
+        background: #f1f5f9; display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; color: #374151; transition: background 0.09s;
+      }
+      .rte-slash-item:hover .rte-slash-item-icon,
+      .rte-slash-item.rte-selected .rte-slash-item-icon {
+        background: #dde8ff; color: #2563eb;
+      }
+      .rte-slash-item-icon svg {
+        width: 14px; height: 14px; fill: none; stroke: currentColor;
+        stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none;
+      }
+      .rte-slash-item-text { display: flex; flex-direction: column; gap: 1px; }
+      .rte-slash-item-label { font-size: 13px; font-weight: 600; color: #1e293b; }
+      .rte-slash-item-desc { font-size: 11px; color: #94a3b8; }
+      .rte-slash-empty { padding: 16px 12px; font-size: 12px; color: #94a3b8; font-family: var(--rte-font); }
+
+      /* ── TABLE CONTEXT MENU ── */
+      .rte-ctx-menu {
+        position: fixed; background: var(--rte-popover-bg);
+        border: 1px solid var(--rte-popover-border); border-radius: 10px;
+        box-shadow: var(--rte-ctx-shadow); z-index: 9997;
+        display: none; flex-direction: column; overflow: hidden;
+        min-width: 200px; animation: rte-in 0.13s ease; padding: 4px;
+      }
+      .rte-ctx-menu.rte-open { display: flex; }
+      .rte-ctx-item {
+        display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+        cursor: pointer; border: none; background: none; width: 100%;
+        text-align: left; border-radius: 7px; transition: background 0.09s;
+        font-family: var(--rte-font);
+      }
+      .rte-ctx-item:hover { background: #f0f4ff; }
+      .rte-ctx-item svg {
+        width: 13px; height: 13px; fill: none; stroke: currentColor;
+        stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+        pointer-events: none; color: #64748b; flex-shrink: 0;
+      }
+      .rte-ctx-item-label { font-size: 12px; font-weight: 500; color: #374151; }
+      .rte-ctx-item.rte-danger:hover { background: #fff1f2; }
+      .rte-ctx-item.rte-danger:hover .rte-ctx-item-label { color: #dc2626; }
+      .rte-ctx-item.rte-danger:hover svg { color: #dc2626; }
+      .rte-ctx-separator { height: 1px; background: #f1f5f9; margin: 3px 0; }
+
       /* ── EDITOR CONTENT ── */
       .rte-editor {
-        min-height: var(--rte-editor-min-height);
-        padding: 16px 18px;
-        outline: none;
-        font-family: var(--rte-font);
-        font-size: 15px;
-        line-height: 1.7;
-        color: #1e293b;
-        caret-color: #2563eb;
-        word-break: break-word;
-        overflow-wrap: break-word;
-        position: relative;
+        min-height: var(--rte-editor-min-height); padding: 16px 18px;
+        outline: none; font-family: var(--rte-font); font-size: 15px; line-height: 1.7;
+        color: #1e293b; caret-color: #2563eb; word-break: break-word;
+        overflow-wrap: break-word; position: relative;
       }
       .rte-editor p { margin: 0 0 0.8em; }
       .rte-editor p:last-child { margin-bottom: 0; }
@@ -468,197 +407,112 @@
       .rte-editor a { color: #2563eb; text-decoration: underline; }
       .rte-editor a:hover { color: #1d4ed8; }
       .rte-editor blockquote {
-        margin: 1em 0;
-        padding: 12px 16px;
+        margin: 1em 0; padding: 12px 16px;
         border-left: 3px solid var(--rte-blockquote-border);
-        background: var(--rte-blockquote-bg);
-        border-radius: 0 8px 8px 0;
-        color: #334155;
-        font-style: italic;
+        background: var(--rte-blockquote-bg); border-radius: 0 8px 8px 0;
+        color: #334155; font-style: italic;
       }
       .rte-editor pre {
-        margin: 1em 0;
-        padding: 16px 18px;
-        background: var(--rte-code-bg);
-        color: var(--rte-code-color);
-        border-radius: 10px;
-        font-family: var(--rte-mono);
-        font-size: 13px;
-        line-height: 1.65;
-        overflow-x: auto;
-        white-space: pre-wrap;
+        margin: 1em 0; padding: 16px 18px; background: var(--rte-code-bg);
+        color: var(--rte-code-color); border-radius: 10px; font-family: var(--rte-mono);
+        font-size: 13px; line-height: 1.65; overflow-x: auto; white-space: pre-wrap;
       }
       .rte-editor code {
-        background: #f1f5f9;
-        color: #0f766e;
-        border-radius: 4px;
-        padding: 2px 5px;
-        font-family: var(--rte-mono);
-        font-size: 0.875em;
+        background: #f1f5f9; color: #0f766e; border-radius: 4px; padding: 2px 5px;
+        font-family: var(--rte-mono); font-size: 0.875em;
       }
       .rte-editor pre code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
       .rte-editor hr { border: none; border-top: 2px solid var(--rte-divider); margin: 1.5em 0; }
       .rte-editor img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 8px;
-        display: block;
-        margin: 0.8em 0;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        cursor: pointer;
-        transition: box-shadow 0.15s;
+        max-width: 100%; height: auto; border-radius: 8px; display: block;
+        margin: 0.8em 0; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        cursor: pointer; transition: box-shadow 0.15s;
       }
       .rte-editor img:hover { box-shadow: 0 2px 12px rgba(37,99,235,0.18); }
       .rte-editor img.rte-img-selected {
-        outline: 2px solid #2563eb;
-        outline-offset: 2px;
+        outline: 2px solid #2563eb; outline-offset: 2px;
         box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
       }
 
       /* ── PLACEHOLDER ── */
       .rte-editor[data-placeholder]:empty::before,
       .rte-editor.rte-placeholder::before {
-        content: attr(data-placeholder);
-        color: #94a3b8;
-        pointer-events: none;
-        display: block;
+        content: attr(data-placeholder); color: #94a3b8; pointer-events: none; display: block;
       }
 
       /* ── TABLES ── */
       .rte-editor table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1em 0;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 0 0 1px var(--rte-table-border);
-        font-size: 14px;
+        width: 100%; border-collapse: collapse; margin: 1em 0;
+        border-radius: 8px; overflow: hidden;
+        box-shadow: 0 0 0 1px var(--rte-table-border); font-size: 14px;
       }
       .rte-editor table thead { background: var(--rte-table-head-bg); }
       .rte-editor table th {
-        padding: 10px 14px;
-        text-align: left;
-        font-weight: 700;
-        font-size: 12px;
-        color: #374151;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border-bottom: 2px solid var(--rte-table-border);
+        padding: 10px 14px; text-align: left; font-weight: 700;
+        font-size: 12px; color: #374151; text-transform: uppercase;
+        letter-spacing: 0.05em; border-bottom: 2px solid var(--rte-table-border);
       }
       .rte-editor table td {
-        padding: 10px 14px;
-        border-bottom: 1px solid #f1f5f9;
-        color: #1e293b;
-        vertical-align: top;
+        padding: 10px 14px; border-bottom: 1px solid #f1f5f9;
+        color: #1e293b; vertical-align: top;
       }
       .rte-editor table tbody tr:nth-child(even) td { background: var(--rte-table-alt-bg); }
       .rte-editor table tbody tr:last-child td { border-bottom: none; }
       .rte-editor table th:not(:last-child),
-      .rte-editor table td:not(:last-child) {
-        border-right: 1px solid #f1f5f9;
-      }
-      .rte-editor table td[contenteditable="true"]:focus,
-      .rte-editor table th[contenteditable="true"]:focus {
-        outline: 2px solid #2563eb;
-        outline-offset: -2px;
-        border-radius: 2px;
+      .rte-editor table td:not(:last-child) { border-right: 1px solid #f1f5f9; }
+      .rte-editor table td:focus,
+      .rte-editor table th:focus {
+        outline: 2px solid #2563eb; outline-offset: -2px; border-radius: 2px;
       }
 
-      /* ── IMAGE RESIZE HANDLES ── */
-      .rte-img-overlay {
-        position: absolute;
-        pointer-events: none;
-        z-index: 50;
-      }
+      /* ── IMAGE RESIZE ── */
+      .rte-img-overlay { position: absolute; pointer-events: none; z-index: 50; }
       .rte-img-handle {
-        position: absolute;
-        width: var(--rte-img-handle-size);
-        height: var(--rte-img-handle-size);
-        background: #fff;
-        border: 2px solid var(--rte-img-handle-color);
-        border-radius: 3px;
-        pointer-events: all;
-        cursor: se-resize;
-        transition: transform 0.1s;
+        position: absolute; width: var(--rte-img-handle-size); height: var(--rte-img-handle-size);
+        background: #fff; border: 2px solid var(--rte-img-handle-color);
+        border-radius: 3px; pointer-events: all; cursor: se-resize; transition: transform 0.1s;
       }
       .rte-img-handle:hover { transform: scale(1.3); }
       .rte-img-handle[data-pos="br"] { bottom: -5px; right: -5px; cursor: se-resize; }
       .rte-img-handle[data-pos="bl"] { bottom: -5px; left: -5px; cursor: sw-resize; }
       .rte-img-handle[data-pos="tr"] { top: -5px; right: -5px; cursor: ne-resize; }
       .rte-img-handle[data-pos="tl"] { top: -5px; left: -5px; cursor: nw-resize; }
-
-      /* ── IMAGE ALIGNMENT BAR ── */
       .rte-img-align-bar {
-        position: absolute;
-        top: -38px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #1e293b;
-        border-radius: 8px;
-        padding: 5px 8px;
-        display: flex;
-        gap: 4px;
-        pointer-events: all;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-        z-index: 60;
+        position: absolute; top: -38px; left: 50%; transform: translateX(-50%);
+        background: #1e293b; border-radius: 8px; padding: 5px 8px;
+        display: flex; gap: 4px; pointer-events: all;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.25); z-index: 60;
       }
       .rte-img-align-btn {
-        width: 26px;
-        height: 26px;
-        border: 1px solid rgba(255,255,255,0.15);
-        border-radius: 5px;
-        background: transparent;
-        color: #94a3b8;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 26px; height: 26px; border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 5px; background: transparent; color: #94a3b8;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
         transition: background 0.1s, color 0.1s;
       }
-      .rte-img-align-btn:hover,
-      .rte-img-align-btn.rte-active { background: rgba(255,255,255,0.15); color: #ffffff; }
-      .rte-img-align-btn svg {
-        width: 13px;
-        height: 13px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        pointer-events: none;
+      .rte-img-align-btn:hover, .rte-img-align-btn.rte-active {
+        background: rgba(255,255,255,0.15); color: #fff;
       }
+      .rte-img-align-btn svg {
+        width: 13px; height: 13px; fill: none; stroke: currentColor;
+        stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none;
+      }
+      .rte-resize-glass { position: fixed; inset: 0; z-index: 99998; cursor: se-resize; background: transparent; }
 
       /* ── FOOTER ── */
       .rte-footer {
-        display: flex;
-        justify-content: flex-end;
-        padding: 4px 12px 5px;
+        display: flex; justify-content: flex-end; padding: 4px 12px 5px;
         border-top: 1px solid var(--rte-toolbar-border);
         background: var(--rte-toolbar-bg);
         border-radius: 0 0 var(--rte-radius) var(--rte-radius);
       }
-      .rte-char-count {
-        font-size: 11px;
-        color: #94a3b8;
-        font-family: var(--rte-font);
-        user-select: none;
-      }
+      .rte-char-count { font-size: 11px; color: #94a3b8; font-family: var(--rte-font); user-select: none; }
       .rte-char-count.rte-char-warn { color: #f59e0b; }
       .rte-char-count.rte-char-over { color: #ef4444; font-weight: 700; }
 
       /* ── ANIMATIONS ── */
-      @keyframes rte-dropdown-in {
-        from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+      @keyframes rte-in {
+        from { opacity: 0; transform: translateY(-5px) scale(0.97); }
         to   { opacity: 1; transform: translateY(0) scale(1); }
-      }
-
-      /* ── GLOBAL RESIZE GLASS (covers page during drag) ── */
-      .rte-resize-glass {
-        position: fixed;
-        inset: 0;
-        z-index: 99998;
-        cursor: se-resize;
-        background: transparent;
       }
     `;
     document.head.appendChild(style);
@@ -694,6 +548,18 @@
     imgLeft:     `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="9" height="9" rx="1"/><line x1="15" y1="6" x2="21" y2="6"/><line x1="15" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="3" y1="19" x2="21" y2="19"/></svg>`,
     imgCenter:   `<svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="10" rx="1"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="3" y1="20" x2="21" y2="20"/></svg>`,
     imgRight:    `<svg viewBox="0 0 24 24"><rect x="12" y="3" width="9" height="9" rx="1"/><line x1="3" y1="6" x2="9" y2="6"/><line x1="3" y1="9" x2="9" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="3" y1="19" x2="21" y2="19"/></svg>`,
+    pasteNoFormat: `<svg viewBox="0 0 24 24"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M6 6h12v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>`,
+    h1:          `<svg viewBox="0 0 24 24"><path d="M4 6v12M11 6v12M4 12h7"/><path d="M15 9.5c.5-1 1.5-1.5 2.5-1.5 1.5 0 2.5 1 2.5 2.2 0 1.1-.6 1.8-1.8 3L15 18h5.5"/></svg>`,
+    h2:          `<svg viewBox="0 0 24 24"><path d="M4 6v12M11 6v12M4 12h7"/><path d="M15 9.3c.4-.9 1.3-1.3 2.3-1.3 1.4 0 2.5.9 2.5 2.1 0 2.1-4.8 3-4.8 5.9h5"/></svg>`,
+    paragraph:   `<svg viewBox="0 0 24 24"><path d="M12 4v16M12 4H9.5a3.5 3.5 0 1 1 0-7H12"/><path d="M16 4v16"/></svg>`,
+    bulletList:  `<svg viewBox="0 0 24 24"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" class="rte-filled"/><circle cx="4" cy="12" r="1.5" class="rte-filled"/><circle cx="4" cy="18" r="1.5" class="rte-filled"/></svg>`,
+    orderedList: `<svg viewBox="0 0 24 24"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1V3M4 11.5c0-1 1.5-1.5 1.5-.5S4 12.5 3.5 14H6M4.5 17H6v1l-1.5 1.5H6v1H4"/></svg>`,
+    rowAbove:    `<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="6" rx="1"/><line x1="12" y1="3" x2="12" y2="8"/><polyline points="9 5 12 2 15 5"/></svg>`,
+    rowBelow:    `<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="6" rx="1"/><line x1="12" y1="16" x2="12" y2="21"/><polyline points="9 19 12 22 15 19"/></svg>`,
+    colLeft:     `<svg viewBox="0 0 24 24"><rect x="11" y="3" width="6" height="18" rx="1"/><line x1="3" y1="12" x2="8" y2="12"/><polyline points="5 9 2 12 5 15"/></svg>`,
+    colRight:    `<svg viewBox="0 0 24 24"><rect x="7" y="3" width="6" height="18" rx="1"/><line x1="16" y1="12" x2="21" y2="12"/><polyline points="19 9 22 12 19 15"/></svg>`,
+    trash:       `<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+    tableMenu:   `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><circle cx="19" cy="19" r="3" fill="currentColor" stroke="none" class="rte-filled"/></svg>`,
   };
 
   function makeBtn(tip, svgKey, opts = {}) {
@@ -704,6 +570,7 @@
     btn.innerHTML = SVG[svgKey] || '';
     if (opts.cmd)    btn.dataset.cmd    = opts.cmd;
     if (opts.action) btn.dataset.action = opts.action;
+    if (opts.className) btn.className = opts.className;
     return btn;
   }
 
@@ -734,14 +601,70 @@
 
 
   /* ═══════════════════════════════════════════════════════════════════
-     SECTION 4: SANITIZER
+     SECTION 4: UTILITIES
   ═══════════════════════════════════════════════════════════════════ */
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function escapeAttr(str) {
+    return String(str)
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function stripHtml(html) {
     const div = document.createElement('div');
     div.innerHTML = html || '';
     return (div.textContent || div.innerText || '').trim();
   }
 
+  // Find the nearest ancestor block element of a node, bounded by the editor root
+  function closestBlock(node, editorRoot) {
+    let el = node.nodeType === 3 ? node.parentElement : node;
+    const blockTags = new Set(['P','H1','H2','H3','LI','BLOCKQUOTE','PRE','TD','TH','DIV']);
+    while (el && el !== editorRoot) {
+      if (blockTags.has(el.tagName)) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  function placeCaretAtStart(el) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function placeCaretAtEnd(el) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function placeCaretAfter(el) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.setStartAfter(el);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SECTION 5: SANITIZER (web-ready, semantic HTML output)
+  ═══════════════════════════════════════════════════════════════════ */
   const ALLOWED_TAGS = new Set([
     'P','BR','B','STRONG','I','EM','U','S','DEL','SPAN',
     'UL','OL','LI',
@@ -785,13 +708,20 @@
     return safe.join('; ');
   }
 
+  /**
+   * Strips all editor-internal UI/tracking artifacts (slash menu remnants,
+   * resize handles, context menus, contenteditable markers, empty/orphan
+   * wrapper divs) and produces clean, semantic, web-safe HTML — entirely
+   * self-contained and free of layout-breaking inline hacks.
+   */
   function sanitizeRichTextHtml(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(`<div>${html || ''}</div>`, 'text/html');
 
-    // Remove any UI artifacts (resize handles, overlays, alignment bars)
+    // Strip all editor UI artifacts before walking
     doc.body.querySelectorAll(
-      '.rte-img-overlay, .rte-img-handle, .rte-img-align-bar, .rte-resize-glass, [data-rte-ui]'
+      '.rte-img-overlay, .rte-img-handle, .rte-img-align-bar, .rte-resize-glass, ' +
+      '.rte-slash-menu, .rte-ctx-menu, [data-rte-ui]'
     ).forEach(el => el.remove());
 
     const walk = (node) => {
@@ -807,11 +737,17 @@
 
         const keepAttrs = ALLOWED_ATTRS[tag] || [];
         [...child.attributes].forEach((a) => {
-          if (!keepAttrs.includes(a.name.toLowerCase())) {
+          const name = a.name.toLowerCase();
+          // Always strip editor-internal tracking attributes regardless of tag
+          if (name === 'contenteditable' || name.startsWith('data-rte') || name === 'spellcheck') {
             child.removeAttribute(a.name);
             return;
           }
-          if (a.name.toLowerCase() === 'style') {
+          if (!keepAttrs.includes(name)) {
+            child.removeAttribute(a.name);
+            return;
+          }
+          if (name === 'style') {
             const sanitized = sanitizeStyle(a.value);
             if (sanitized) child.setAttribute('style', sanitized);
             else child.removeAttribute('style');
@@ -839,13 +775,6 @@
             const combined = (existingStyle + '; max-width: 100%; height: auto').replace(/^;\s*/, '');
             child.setAttribute('style', combined);
           }
-          // Remove UI attributes
-          child.removeAttribute('data-rte-selected');
-        }
-
-        // Table cells: make sure they are NOT contenteditable in final output
-        if (tag === 'TD' || tag === 'TH') {
-          child.removeAttribute('contenteditable');
         }
 
         walk(child);
@@ -854,18 +783,44 @@
 
     walk(doc.body);
 
-    // Strip empty block elements (but not table rows/cells)
+    // Remove empty, non-semantic DIV wrappers left over from execCommand quirks
+    // (but never touch table/list/structural containers)
+    let changed = true;
+    while (changed) {
+      changed = false;
+      doc.body.querySelectorAll('div').forEach(div => {
+        const onlyWhitespace = !div.innerHTML.replace(/&nbsp;|\s/g, '').length;
+        if (onlyWhitespace && !div.querySelector('img, table, hr')) {
+          div.remove();
+          changed = true;
+        } else if (!div.attributes.length && div.children.length) {
+          // Unwrap attribute-less DIVs (execCommand sometimes wraps lines in DIVs)
+          const frag = document.createDocumentFragment();
+          while (div.firstChild) frag.appendChild(div.firstChild);
+          div.replaceWith(frag);
+          changed = true;
+        }
+      });
+    }
+
+    // Strip empty block-level elements (but preserve images/breaks/table cells)
     doc.body.querySelectorAll('p, h1, h2, h3, blockquote, li').forEach(el => {
       const content = el.innerHTML.replace(/&nbsp;|\s/g, '');
       if (!content && !el.querySelector('img, br')) el.remove();
     });
 
-    return doc.body.innerHTML;
+    // Collapse consecutive redundant <br> at block boundaries
+    doc.body.querySelectorAll('br + br').forEach(br => br.remove());
+
+    // Ensure table cells never retain stray contenteditable remnants (defense in depth)
+    doc.body.querySelectorAll('td, th').forEach(cell => cell.removeAttribute('contenteditable'));
+
+    return doc.body.innerHTML.trim();
   }
 
 
   /* ═══════════════════════════════════════════════════════════════════
-     SECTION 5: POPOVER SYSTEM (Link & Image)
+     SECTION 6: POPOVER SYSTEM (Link & Image — zero native prompt() calls)
   ═══════════════════════════════════════════════════════════════════ */
   function createPopoverSystem(wrapper) {
     const popover = document.createElement('div');
@@ -881,11 +836,9 @@
       const popW = 320;
       let left = rect.left;
       let top  = rect.bottom + 8;
-
       if (left + popW > window.innerWidth - 12) left = window.innerWidth - popW - 12;
       if (left < 12) left = 12;
       if (top + 220 > window.innerHeight - 12) top = rect.top - 220;
-
       popover.style.left = left + 'px';
       popover.style.top  = top + 'px';
     }
@@ -917,7 +870,6 @@
       titleEl.className = 'rte-popover-title';
       titleEl.textContent = config.title;
       popover.appendChild(titleEl);
-      popover.style.position = 'fixed';
 
       const closeBtnEl = document.createElement('button');
       closeBtnEl.className = 'rte-popover-close';
@@ -971,14 +923,8 @@
           const input = inputs[field.id];
           const val = input.value.trim();
           input.classList.remove('rte-input-error');
-          if (field.required && !val) {
-            input.classList.add('rte-input-error');
-            valid = false;
-          }
-          if (field.validate && !field.validate(val)) {
-            input.classList.add('rte-input-error');
-            valid = false;
-          }
+          if (field.required && !val) { input.classList.add('rte-input-error'); valid = false; }
+          if (field.validate && !field.validate(val)) { input.classList.add('rte-input-error'); valid = false; }
           values[field.id] = val;
         });
         if (!valid) return;
@@ -989,19 +935,13 @@
 
       _onSubmit = config.onSubmit;
       positionNear(refEl);
-
-      // Focus first input
       const firstInput = Object.values(inputs)[0];
       if (firstInput) setTimeout(() => firstInput.focus(), 30);
-
       return { close };
     }
 
-    // Close on outside click
     document.addEventListener('mousedown', (e) => {
-      if (popover.classList.contains('rte-open') && !popover.contains(e.target)) {
-        close();
-      }
+      if (popover.classList.contains('rte-open') && !popover.contains(e.target)) close();
     });
 
     return { open, close, saveSelection, restoreSelection };
@@ -1009,7 +949,7 @@
 
 
   /* ═══════════════════════════════════════════════════════════════════
-     SECTION 6: COLOR PALETTE DROPDOWN
+     SECTION 7: COLOR PALETTE DROPDOWN
   ═══════════════════════════════════════════════════════════════════ */
   function createPaletteDropdown(type, onSelect) {
     const wrap = document.createElement('div');
@@ -1029,8 +969,8 @@
 
     const dropdown = document.createElement('div');
     dropdown.className = 'rte-palette-dropdown';
+    dropdown.setAttribute('data-rte-ui', '');
 
-    // Section: Solid colors
     const solidTitle = document.createElement('div');
     solidTitle.className = 'rte-palette-title';
     solidTitle.textContent = type === 'text' ? 'Text Colors' : 'Highlight Colors';
@@ -1086,7 +1026,7 @@
 
 
   /* ═══════════════════════════════════════════════════════════════════
-     SECTION 7: TABLE PICKER
+     SECTION 8: TABLE GRID PICKER (toolbar insert)
   ═══════════════════════════════════════════════════════════════════ */
   function createTablePicker(onInsert) {
     const wrap = document.createElement('div');
@@ -1106,8 +1046,7 @@
     label.className = 'rte-table-label';
     label.textContent = 'Select table size';
 
-    let hoverCol = 0;
-    let hoverRow = 0;
+    let hoverCol = 0, hoverRow = 0;
     const cells = [];
 
     for (let r = 0; r < 5; r++) {
@@ -1137,11 +1076,7 @@
 
     grid.addEventListener('mouseleave', () => {
       label.textContent = 'Select table size';
-      for (let r = 0; r < 5; r++) {
-        for (let c = 0; c < 5; c++) {
-          cells[r][c].classList.remove('rte-hovered');
-        }
-      }
+      for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) cells[r][c].classList.remove('rte-hovered');
     });
 
     grid.addEventListener('click', (e) => {
@@ -1169,7 +1104,7 @@
 
 
   /* ═══════════════════════════════════════════════════════════════════
-     SECTION 8: IMAGE RESIZE & ALIGNMENT SYSTEM
+     SECTION 9: IMAGE RESIZE & ALIGNMENT SYSTEM
   ═══════════════════════════════════════════════════════════════════ */
   function createImageResizeSystem(editor, onChange) {
     let activeImg = null;
@@ -1178,7 +1113,6 @@
     function clearSelection() {
       if (activeImg) {
         activeImg.classList.remove('rte-img-selected');
-        activeImg.removeAttribute('data-rte-selected');
         activeImg = null;
       }
       if (overlay && overlay.parentNode) {
@@ -1200,15 +1134,12 @@
       clearSelection();
       activeImg = img;
       img.classList.add('rte-img-selected');
-      img.setAttribute('data-rte-selected', '1');
 
       overlay = document.createElement('div');
       overlay.className = 'rte-img-overlay';
       overlay.setAttribute('data-rte-ui', '');
 
-      // Resize handles
-      const positions = ['tl','tr','bl','br'];
-      positions.forEach(pos => {
+      ['tl','tr','bl','br'].forEach(pos => {
         const handle = document.createElement('div');
         handle.className = 'rte-img-handle';
         handle.setAttribute('data-pos', pos);
@@ -1216,7 +1147,7 @@
         handle.setAttribute('contenteditable', 'false');
 
         let startX, startY, startW, startH;
-        const onMousedown = (e) => {
+        handle.addEventListener('mousedown', (e) => {
           e.preventDefault();
           e.stopPropagation();
           startX = e.clientX;
@@ -1224,34 +1155,20 @@
           startW = img.getBoundingClientRect().width;
           startH = img.getBoundingClientRect().height;
 
-          // Create a glass layer to prevent iframe / element interference
           const glass = document.createElement('div');
           glass.className = 'rte-resize-glass';
           glass.setAttribute('data-rte-ui', '');
-          const posStr = pos;
-          const isLeft  = posStr.includes('l');
-          const isTop   = posStr.includes('t');
-
+          const isLeft = pos.includes('l');
+          const isTop  = pos.includes('t');
           document.body.appendChild(glass);
-          glass.style.cursor = pos === 'br' || pos === 'tl' ? 'nwse-resize' :
-                               pos === 'bl' || pos === 'tr' ? 'nesw-resize' : 'se-resize';
+          glass.style.cursor = (pos === 'br' || pos === 'tl') ? 'nwse-resize' :
+                               (pos === 'bl' || pos === 'tr') ? 'nesw-resize' : 'se-resize';
 
           const onMousemove = (me) => {
             const dx = me.clientX - startX;
             const dy = me.clientY - startY;
-            let newW, newH;
-
-            if (isLeft) {
-              newW = Math.max(40, startW - dx);
-            } else {
-              newW = Math.max(40, startW + dx);
-            }
-            if (isTop) {
-              newH = Math.max(30, startH - dy);
-            } else {
-              newH = Math.max(30, startH + dy);
-            }
-
+            let newW = isLeft ? Math.max(40, startW - dx) : Math.max(40, startW + dx);
+            let newH = isTop  ? Math.max(30, startH - dy) : Math.max(30, startH + dy);
             img.style.width  = Math.round(newW) + 'px';
             img.style.height = Math.round(newH) + 'px';
             positionOverlay(img);
@@ -1266,37 +1183,27 @@
 
           document.addEventListener('mousemove', onMousemove);
           document.addEventListener('mouseup', onMouseup);
-        };
+        });
 
-        handle.addEventListener('mousedown', onMousedown);
         overlay.appendChild(handle);
       });
 
-      // Alignment bar
       const alignBar = document.createElement('div');
       alignBar.className = 'rte-img-align-bar';
       alignBar.setAttribute('data-rte-ui', '');
 
       const alignConfigs = [
         { label: 'Float Left',  svgKey: 'imgLeft',   apply: () => {
-          img.style.float        = 'left';
-          img.style.marginRight  = '16px';
-          img.style.marginLeft   = '0';
-          img.style.display      = '';
-          img.style.marginTop    = '4px';
+          img.style.float = 'left'; img.style.marginRight = '16px';
+          img.style.marginLeft = '0'; img.style.display = ''; img.style.marginTop = '4px';
         }},
         { label: 'Center',      svgKey: 'imgCenter',  apply: () => {
-          img.style.float        = 'none';
-          img.style.display      = 'block';
-          img.style.marginLeft   = 'auto';
-          img.style.marginRight  = 'auto';
+          img.style.float = 'none'; img.style.display = 'block';
+          img.style.marginLeft = 'auto'; img.style.marginRight = 'auto';
         }},
         { label: 'Float Right', svgKey: 'imgRight',   apply: () => {
-          img.style.float        = 'right';
-          img.style.marginLeft   = '16px';
-          img.style.marginRight  = '0';
-          img.style.display      = '';
-          img.style.marginTop    = '4px';
+          img.style.float = 'right'; img.style.marginLeft = '16px';
+          img.style.marginRight = '0'; img.style.display = ''; img.style.marginTop = '4px';
         }},
       ];
 
@@ -1325,7 +1232,6 @@
       positionOverlay(img);
     }
 
-    // Click on image inside editor
     editor.addEventListener('click', (e) => {
       const img = e.target.closest('img');
       if (img && editor.contains(img)) {
@@ -1334,20 +1240,13 @@
         attachOverlay(img);
         return;
       }
-      // Click elsewhere in editor — deselect if not clicking on overlay UI
-      if (!e.target.closest('[data-rte-ui]')) {
-        clearSelection();
-      }
+      if (!e.target.closest('[data-rte-ui]')) clearSelection();
     });
 
-    // Update overlay position on editor scroll / resize
-    editor.addEventListener('scroll', () => {
-      if (activeImg && overlay) positionOverlay(activeImg);
-    });
-
-    const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => {
-      if (activeImg && overlay) positionOverlay(activeImg);
-    }) : null;
+    editor.addEventListener('scroll', () => { if (activeImg && overlay) positionOverlay(activeImg); });
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => { if (activeImg && overlay) positionOverlay(activeImg); })
+      : null;
     if (resizeObserver) resizeObserver.observe(editor);
 
     return { clearSelection };
@@ -1355,9 +1254,679 @@
 
 
   /* ═══════════════════════════════════════════════════════════════════
-     SECTION 9: TOOLBAR FACTORY
+     SECTION 10: TABLE CONTEXT MENU
+     (Insert Row Above/Below, Insert Column Left/Right, Delete Table)
   ═══════════════════════════════════════════════════════════════════ */
-  function createToolbar(editor, onChange, options, popoverSystem) {
+  function createTableContextMenu(editor, onChange) {
+    const ctxMenu = document.createElement('div');
+    ctxMenu.className = 'rte-ctx-menu';
+    ctxMenu.setAttribute('data-rte-ui', '');
+    document.body.appendChild(ctxMenu);
+
+    let activeCell = null;
+
+    function close() {
+      ctxMenu.classList.remove('rte-open');
+      ctxMenu.innerHTML = '';
+    }
+
+    function buildItem(label, svgKey, onClick, danger) {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'rte-ctx-item' + (danger ? ' rte-danger' : '');
+      item.innerHTML = `${SVG[svgKey] || ''}<span class="rte-ctx-item-label">${escapeHtml(label)}</span>`;
+      item.addEventListener('click', () => { close(); onClick(); });
+      return item;
+    }
+
+    function insertRow(cell, position) {
+      const table = cell.closest('table');
+      const row   = cell.closest('tr');
+      const isHeaderRow = row.parentElement.tagName === 'THEAD';
+      const cols  = row.children.length;
+      const newRow = document.createElement('tr');
+      for (let i = 0; i < cols; i++) {
+        const td = document.createElement('td');
+        td.setAttribute('contenteditable', 'true');
+        td.innerHTML = '\u00a0';
+        newRow.appendChild(td);
+      }
+      if (isHeaderRow) {
+        // Inserting adjacent to header row always lands in tbody
+        const tbody = table.querySelector('tbody');
+        if (position === 'above') {
+          tbody.insertBefore(newRow, tbody.firstChild);
+        } else {
+          tbody.insertBefore(newRow, tbody.firstChild);
+        }
+      } else {
+        if (position === 'above') row.parentElement.insertBefore(newRow, row);
+        else row.parentElement.insertBefore(newRow, row.nextSibling);
+      }
+      onChange();
+    }
+
+    function insertColumn(cell, position) {
+      const table = cell.closest('table');
+      const cellIndex = [...cell.parentElement.children].indexOf(cell);
+      table.querySelectorAll('tr').forEach(tr => {
+        const refCell = tr.children[cellIndex];
+        const isHeader = refCell.tagName === 'TH';
+        const newCell = document.createElement(isHeader ? 'th' : 'td');
+        newCell.setAttribute('contenteditable', 'true');
+        newCell.innerHTML = isHeader ? 'Header' : '\u00a0';
+        if (position === 'left') tr.insertBefore(newCell, refCell);
+        else tr.insertBefore(newCell, refCell.nextSibling);
+      });
+      onChange();
+    }
+
+    function deleteTable(cell) {
+      const table = cell.closest('table');
+      if (table && table.parentNode) {
+        table.parentNode.removeChild(table);
+        onChange();
+      }
+    }
+
+    function open(cell, x, y) {
+      activeCell = cell;
+      ctxMenu.innerHTML = '';
+      ctxMenu.appendChild(buildItem('Insert Row Above', 'rowAbove', () => insertRow(activeCell, 'above')));
+      ctxMenu.appendChild(buildItem('Insert Row Below', 'rowBelow', () => insertRow(activeCell, 'below')));
+      const sep1 = document.createElement('div');
+      sep1.className = 'rte-ctx-separator';
+      ctxMenu.appendChild(sep1);
+      ctxMenu.appendChild(buildItem('Insert Column Left',  'colLeft',  () => insertColumn(activeCell, 'left')));
+      ctxMenu.appendChild(buildItem('Insert Column Right', 'colRight', () => insertColumn(activeCell, 'right')));
+      const sep2 = document.createElement('div');
+      sep2.className = 'rte-ctx-separator';
+      ctxMenu.appendChild(sep2);
+      ctxMenu.appendChild(buildItem('Delete Table', 'trash', () => deleteTable(activeCell), true));
+
+      ctxMenu.classList.add('rte-open');
+      const menuW = 200;
+      let left = x, top = y;
+      if (left + menuW > window.innerWidth - 12) left = window.innerWidth - menuW - 12;
+      if (top + 180 > window.innerHeight - 12) top = window.innerHeight - 180 - 12;
+      ctxMenu.style.left = left + 'px';
+      ctxMenu.style.top  = top  + 'px';
+    }
+
+    // Right-click inside a table cell opens the context menu
+    editor.addEventListener('contextmenu', (e) => {
+      const cell = e.target.closest('td, th');
+      if (!cell || !editor.contains(cell)) return;
+      e.preventDefault();
+      open(cell, e.clientX, e.clientY);
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      if (ctxMenu.classList.contains('rte-open') && !ctxMenu.contains(e.target)) close();
+    });
+
+    return { open, close };
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SECTION 11: SLASH COMMAND MENU ("/" — Notion-style block picker)
+  ═══════════════════════════════════════════════════════════════════ */
+  function createSlashCommandSystem(editor, onChange, runBlockTool) {
+    const menu = document.createElement('div');
+    menu.className = 'rte-slash-menu';
+    menu.setAttribute('data-rte-ui', '');
+    document.body.appendChild(menu);
+
+    const COMMANDS = [
+      { id: 'h1',          label: 'Heading 1',     desc: 'Big section heading',      svgKey: 'h1',          keywords: ['h1','heading1','title'] },
+      { id: 'h2',          label: 'Heading 2',     desc: 'Medium section heading',   svgKey: 'h2',          keywords: ['h2','heading2','subtitle'] },
+      { id: 'paragraph',   label: 'Paragraph',     desc: 'Plain text block',         svgKey: 'paragraph',   keywords: ['p','text','paragraph'] },
+      { id: 'bulletList',  label: 'Bullet List',   desc: 'Unordered list of items',  svgKey: 'bulletList',  keywords: ['ul','bullet','list'] },
+      { id: 'orderedList', label: 'Numbered List', desc: 'Ordered list of items',    svgKey: 'orderedList', keywords: ['ol','number','ordered'] },
+      { id: 'blockquote',  label: 'Quote',         desc: 'Blockquote callout',       svgKey: 'blockquote',  keywords: ['quote','blockquote'] },
+      { id: 'codeBlock',   label: 'Code Block',    desc: 'Monospace code snippet',   svgKey: 'codeBlock',   keywords: ['code','pre','snippet'] },
+      { id: 'table',       label: 'Table',         desc: 'Insert a 3×3 table',       svgKey: 'table',       keywords: ['table','grid'] },
+      { id: 'image',       label: 'Image',         desc: 'Embed an image by URL',    svgKey: 'image',       keywords: ['image','img','picture'] },
+      { id: 'hr',          label: 'Divider',       desc: 'Horizontal rule',          svgKey: 'hr',          keywords: ['hr','divider','rule'] },
+      { id: 'link',        label: 'Link',          desc: 'Insert a hyperlink',       svgKey: 'link',        keywords: ['link','url','a'] },
+    ];
+
+    let open = false;
+    let anchorNode  = null;   // the text node containing "/"
+    let slashIndex  = -1;     // offset of "/" within anchorNode
+    let filterText  = '';
+    let selectedIdx = 0;
+    let filtered    = COMMANDS;
+
+    function render() {
+      menu.innerHTML = '';
+      const header = document.createElement('div');
+      header.className = 'rte-slash-header';
+      header.textContent = 'Insert Block';
+      menu.appendChild(header);
+
+      const list = document.createElement('div');
+      list.className = 'rte-slash-list';
+
+      if (!filtered.length) {
+        const empty = document.createElement('div');
+        empty.className = 'rte-slash-empty';
+        empty.textContent = `No blocks match "${filterText}"`;
+        list.appendChild(empty);
+      } else {
+        filtered.forEach((cmd, i) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'rte-slash-item' + (i === selectedIdx ? ' rte-selected' : '');
+          item.innerHTML = `
+            <span class="rte-slash-item-icon">${SVG[cmd.svgKey] || ''}</span>
+            <span class="rte-slash-item-text">
+              <span class="rte-slash-item-label">${escapeHtml(cmd.label)}</span>
+              <span class="rte-slash-item-desc">${escapeHtml(cmd.desc)}</span>
+            </span>`;
+          item.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            selectCommand(cmd);
+          });
+          item.addEventListener('mousemove', () => {
+            selectedIdx = i;
+            updateSelectedClasses();
+          });
+          list.appendChild(item);
+        });
+      }
+      menu.appendChild(list);
+    }
+
+    function updateSelectedClasses() {
+      [...menu.querySelectorAll('.rte-slash-item')].forEach((el, i) => {
+        el.classList.toggle('rte-selected', i === selectedIdx);
+      });
+    }
+
+    function position() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0).cloneRange();
+      range.collapse(true);
+      const rect = range.getClientRects()[0] || range.getBoundingClientRect();
+      const menuW = 260, menuH = 320;
+      let left = rect.left;
+      let top  = rect.bottom + 6;
+      if (left + menuW > window.innerWidth - 12) left = window.innerWidth - menuW - 12;
+      if (top + menuH > window.innerHeight - 12) top = rect.top - menuH - 6;
+      menu.style.left = Math.max(12, left) + 'px';
+      menu.style.top  = Math.max(12, top)  + 'px';
+    }
+
+    function openMenu(node, idx) {
+      anchorNode  = node;
+      slashIndex  = idx;
+      filterText  = '';
+      filtered    = COMMANDS;
+      selectedIdx = 0;
+      open = true;
+      menu.classList.add('rte-open');
+      render();
+      position();
+    }
+
+    function closeMenu() {
+      open = false;
+      anchorNode = null;
+      slashIndex = -1;
+      filterText = '';
+      menu.classList.remove('rte-open');
+    }
+
+    function updateFilter(text) {
+      filterText = text;
+      const lower = text.toLowerCase();
+      filtered = !lower
+        ? COMMANDS
+        : COMMANDS.filter(c =>
+            c.label.toLowerCase().includes(lower) ||
+            c.keywords.some(k => k.includes(lower))
+          );
+      selectedIdx = 0;
+      render();
+      position();
+    }
+
+    function removeSlashTrigger() {
+      // Remove the "/" plus any typed filter text from the DOM
+      if (!anchorNode || !anchorNode.isConnected) return;
+      const text = anchorNode.textContent || '';
+      const before = text.slice(0, slashIndex);
+      const sel = window.getSelection();
+      const caretOffset = sel && sel.rangeCount ? sel.getRangeAt(0).startOffset : text.length;
+      const after = text.slice(caretOffset);
+      anchorNode.textContent = before + after;
+      const range = document.createRange();
+      range.setStart(anchorNode, before.length);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    function selectCommand(cmd) {
+      removeSlashTrigger();
+      closeMenu();
+      runBlockTool(cmd.id);
+      onChange();
+    }
+
+    // Track typing inside the editor to detect "/" triggers and live filtering
+    editor.addEventListener('keydown', (e) => {
+      if (!open) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIdx = Math.min(selectedIdx + 1, Math.max(filtered.length - 1, 0));
+        updateSelectedClasses();
+        scrollSelectedIntoView();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIdx = Math.max(selectedIdx - 1, 0);
+        updateSelectedClasses();
+        scrollSelectedIntoView();
+      } else if (e.key === 'Enter') {
+        if (filtered[selectedIdx]) {
+          e.preventDefault();
+          selectCommand(filtered[selectedIdx]);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        removeSlashTrigger();
+        closeMenu();
+      } else if (e.key === 'Backspace') {
+        // Let it through; input handler will re-evaluate filter text
+      }
+    });
+
+    function scrollSelectedIntoView() {
+      const el = menu.querySelector('.rte-slash-item.rte-selected');
+      if (el) el.scrollIntoView({ block: 'nearest' });
+    }
+
+    editor.addEventListener('input', () => {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      const node  = range.startContainer;
+
+      if (!open) {
+        // Detect a fresh "/" trigger at the start of a block, or after whitespace
+        if (node.nodeType === 3) {
+          const text = node.textContent || '';
+          const offset = range.startOffset;
+          if (offset > 0 && text[offset - 1] === '/') {
+            const charBefore = text[offset - 2];
+            const atLineStart = offset === 1 || charBefore === undefined || /\s/.test(charBefore);
+            if (atLineStart) openMenu(node, offset - 1);
+          }
+        }
+        return;
+      }
+
+      // Menu is open — recompute filter text from anchorNode to caret
+      if (!anchorNode || !anchorNode.isConnected || node !== anchorNode) {
+        closeMenu();
+        return;
+      }
+      const text = anchorNode.textContent || '';
+      const caretOffset = range.startOffset;
+      if (caretOffset <= slashIndex || text[slashIndex] !== '/') {
+        closeMenu();
+        return;
+      }
+      const newFilter = text.slice(slashIndex + 1, caretOffset);
+      if (/\s/.test(newFilter)) { closeMenu(); return; }
+      updateFilter(newFilter);
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      if (open && !menu.contains(e.target)) closeMenu();
+    });
+
+    return { closeMenu, isOpen: () => open };
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SECTION 12: INLINE MARKDOWN AUTOCOMPLETE
+     (#, ##, *, -, 1., `code` — triggered on spacebar / backtick)
+  ═══════════════════════════════════════════════════════════════════ */
+  function createMarkdownAutocomplete(editor, onChange) {
+
+    function getCurrentBlockAndText() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      const range = sel.getRangeAt(0);
+      const block = closestBlock(range.startContainer, editor);
+      if (!block) return null;
+      return { sel, range, block };
+    }
+
+    // Converts "# " / "## " at line start into H1 / H2
+    function tryHeadingShorthand(block, sel) {
+      const text = block.textContent || '';
+      const match = text.match(/^(#{1,2})\s$/);
+      if (!match) return false;
+      const level = match[1].length === 1 ? 'H1' : 'H2';
+      const newEl = document.createElement(level);
+      newEl.innerHTML = '<br>';
+      block.replaceWith(newEl);
+      placeCaretAtStart(newEl);
+      return true;
+    }
+
+    // Converts "* " / "- " at line start into a bullet list item
+    function tryBulletShorthand(block) {
+      const text = block.textContent || '';
+      if (!/^[*-]\s$/.test(text)) return false;
+      const ul = document.createElement('ul');
+      const li = document.createElement('li');
+      li.innerHTML = '<br>';
+      ul.appendChild(li);
+      block.replaceWith(ul);
+      placeCaretAtStart(li);
+      return true;
+    }
+
+    // Converts "1. " at line start into an ordered list item
+    function tryOrderedShorthand(block) {
+      const text = block.textContent || '';
+      if (!/^1\.\s$/.test(text)) return false;
+      const ol = document.createElement('ol');
+      const li = document.createElement('li');
+      li.innerHTML = '<br>';
+      ol.appendChild(li);
+      block.replaceWith(ol);
+      placeCaretAtStart(li);
+      return true;
+    }
+
+    // Converts `code` immediately preceding the caret into <code>code</code>
+    function tryInlineCodeShorthand(block, range) {
+      if (range.startContainer.nodeType !== 3) return false;
+      const textNode = range.startContainer;
+      const text = textNode.textContent || '';
+      const caret = range.startOffset;
+      const before = text.slice(0, caret);
+      const m = before.match(/`([^`]+)`$/);
+      if (!m) return false;
+
+      const matchStart = caret - m[0].length;
+      const codeEl = document.createElement('code');
+      codeEl.textContent = m[1];
+
+      const afterText = text.slice(caret);
+      const beforeText = text.slice(0, matchStart);
+
+      const parent = textNode.parentNode;
+      const frag = document.createDocumentFragment();
+      if (beforeText) frag.appendChild(document.createTextNode(beforeText));
+      frag.appendChild(codeEl);
+      const trailingSpace = document.createTextNode('\u00a0' + afterText);
+      frag.appendChild(trailingSpace);
+
+      parent.replaceChild(frag, textNode);
+
+      const sel = window.getSelection();
+      const newRange = document.createRange();
+      newRange.setStart(trailingSpace, 1);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      return true;
+    }
+
+    editor.addEventListener('keydown', (e) => {
+      if (e.key !== ' ') return;
+      const ctx = getCurrentBlockAndText();
+      if (!ctx) return;
+      const { block, range } = ctx;
+
+      // Block-level shorthands only apply at true line start (block holds only the trigger text)
+      if (block && (tryHeadingShorthand(block, ctx.sel) ||
+                    tryBulletShorthand(block) ||
+                    tryOrderedShorthand(block))) {
+        e.preventDefault();
+        onChange();
+        return;
+      }
+
+      // Inline code shorthand can trigger anywhere in a line
+      if (tryInlineCodeShorthand(block, range)) {
+        e.preventDefault();
+        onChange();
+      }
+    });
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SECTION 13: SMART CARET ESCAPE
+     Fixes the classic contentEditable trap: pressing Enter twice inside
+     a <blockquote> or at the end of a <pre><code> block should escape
+     the block and drop a clean empty <p> below it.
+  ═══════════════════════════════════════════════════════════════════ */
+  function createCaretEscapeHandler(editor, onChange) {
+    let lastEnterInEmptyLine = false;
+
+    function isLastLineEmpty(block, range) {
+      // Heuristic: caret is at the end of the block and the immediately
+      // preceding content on this "line" is empty (just trailing <br> or whitespace)
+      const text = block.textContent || '';
+      return text.trim().length === 0 ||
+             /\n\s*$/.test(text) ||
+             (range.startContainer.nodeType === 3 && !range.startContainer.textContent.slice(range.startOffset).trim());
+    }
+
+    editor.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') { lastEnterInEmptyLine = false; return; }
+
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+
+      const blockquote = range.startContainer.nodeType === 3
+        ? range.startContainer.parentElement?.closest('blockquote')
+        : range.startContainer.closest?.('blockquote');
+
+      const preBlock = range.startContainer.nodeType === 3
+        ? range.startContainer.parentElement?.closest('pre')
+        : range.startContainer.closest?.('pre');
+
+      const trapBlock = blockquote || preBlock;
+      if (!trapBlock || !editor.contains(trapBlock)) { lastEnterInEmptyLine = false; return; }
+
+      // Determine if caret sits at the very end of the trap block with no
+      // trailing text on the current line (i.e. user just hit Enter once already)
+      const atEnd = isCaretAtBlockEnd(trapBlock, range);
+
+      if (atEnd && lastEnterInEmptyLine) {
+        // Second consecutive Enter on an empty trailing line — escape the block
+        e.preventDefault();
+        const newP = document.createElement('p');
+        newP.innerHTML = '<br>';
+        trapBlock.insertAdjacentElement('afterend', newP);
+
+        // Remove the now-superfluous empty trailing line inside the trap block
+        trimTrailingEmptyLine(trapBlock);
+
+        placeCaretAtStart(newP);
+        lastEnterInEmptyLine = false;
+        onChange();
+        return;
+      }
+
+      if (atEnd) {
+        // First Enter on what appears to be an empty trailing line: let browser
+        // insert the break as usual, but arm the escape for the next Enter.
+        lastEnterInEmptyLine = true;
+      } else {
+        lastEnterInEmptyLine = false;
+      }
+    });
+
+    function isCaretAtBlockEnd(block, range) {
+      const r = range.cloneRange();
+      r.selectNodeContents(block);
+      r.setStart(range.endContainer, range.endOffset);
+      return r.toString().trim().length === 0;
+    }
+
+    function trimTrailingEmptyLine(block) {
+      // Remove a single trailing empty text node / <br> that represents
+      // the now-redundant blank line left behind after escaping.
+      let last = block.lastChild;
+      if (last && last.nodeType === 3 && !last.textContent.trim()) {
+        block.removeChild(last);
+        last = block.lastChild;
+      }
+      if (last && last.tagName === 'BR') {
+        block.removeChild(last);
+      }
+    }
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SECTION 14: JSON HYDRATION & EXPORT ENGINE
+     getJson() parses the editor DOM into clean block objects.
+     setJson(data) regenerates semantic HTML from those block objects.
+  ═══════════════════════════════════════════════════════════════════ */
+  function domToJsonBlocks(editorRoot) {
+    const blocks = [];
+
+    [...editorRoot.children].forEach(node => {
+      const tag = node.tagName;
+
+      if (tag === 'P') {
+        blocks.push({ type: 'paragraph', content: node.innerHTML.trim() });
+      } else if (tag === 'H1') {
+        blocks.push({ type: 'heading', level: 1, content: node.innerHTML.trim() });
+      } else if (tag === 'H2') {
+        blocks.push({ type: 'heading', level: 2, content: node.innerHTML.trim() });
+      } else if (tag === 'H3') {
+        blocks.push({ type: 'heading', level: 3, content: node.innerHTML.trim() });
+      } else if (tag === 'UL' || tag === 'OL') {
+        blocks.push({
+          type: tag === 'UL' ? 'bulletList' : 'orderedList',
+          items: [...node.children].map(li => li.innerHTML.trim()),
+        });
+      } else if (tag === 'BLOCKQUOTE') {
+        blocks.push({ type: 'blockquote', content: node.innerHTML.trim() });
+      } else if (tag === 'PRE') {
+        const codeEl = node.querySelector('code');
+        blocks.push({ type: 'codeBlock', content: (codeEl ? codeEl.textContent : node.textContent) || '' });
+      } else if (tag === 'IMG') {
+        blocks.push({
+          type: 'image',
+          src: node.getAttribute('src') || '',
+          alt: node.getAttribute('alt') || '',
+          style: node.getAttribute('style') || '',
+        });
+      } else if (tag === 'HR') {
+        blocks.push({ type: 'divider' });
+      } else if (tag === 'TABLE') {
+        const rows = [];
+        let hasHeader = false;
+        const thead = node.querySelector('thead');
+        if (thead) {
+          hasHeader = true;
+          rows.push([...thead.querySelectorAll('th,td')].map(c => c.innerHTML.trim()));
+        }
+        const tbody = node.querySelector('tbody') || node;
+        [...tbody.querySelectorAll('tr')].forEach(tr => {
+          rows.push([...tr.children].map(c => c.innerHTML.trim()));
+        });
+        blocks.push({ type: 'table', hasHeader, rows });
+      } else if (tag === 'DIV') {
+        // Defensive: treat stray DIVs as paragraphs of their text content
+        if (node.textContent.trim()) {
+          blocks.push({ type: 'paragraph', content: node.innerHTML.trim() });
+        }
+      }
+      // Unknown / unsupported tags are intentionally skipped to keep JSON clean
+    });
+
+    return blocks;
+  }
+
+  function jsonBlocksToHtml(blocks) {
+    if (!Array.isArray(blocks)) return '';
+    const parts = [];
+
+    blocks.forEach(block => {
+      if (!block || typeof block !== 'object') return;
+      switch (block.type) {
+        case 'paragraph':
+          parts.push(`<p>${block.content || '<br>'}</p>`);
+          break;
+        case 'heading': {
+          const level = [1, 2, 3].includes(block.level) ? block.level : 1;
+          parts.push(`<h${level}>${block.content || ''}</h${level}>`);
+          break;
+        }
+        case 'bulletList':
+          parts.push(`<ul>${(block.items || []).map(i => `<li>${i}</li>`).join('')}</ul>`);
+          break;
+        case 'orderedList':
+          parts.push(`<ol>${(block.items || []).map(i => `<li>${i}</li>`).join('')}</ol>`);
+          break;
+        case 'blockquote':
+          parts.push(`<blockquote>${block.content || ''}</blockquote>`);
+          break;
+        case 'codeBlock':
+          parts.push(`<pre><code>${escapeHtml(block.content || '')}</code></pre>`);
+          break;
+        case 'image': {
+          const style = block.style || 'max-width:100%;height:auto;display:block;margin:0.8em 0;';
+          parts.push(`<img src="${escapeAttr(block.src || '')}" alt="${escapeAttr(block.alt || '')}" style="${escapeAttr(style)}">`);
+          break;
+        }
+        case 'divider':
+          parts.push('<hr>');
+          break;
+        case 'table': {
+          const rows = Array.isArray(block.rows) ? block.rows : [];
+          let html = '<table>';
+          if (block.hasHeader && rows.length) {
+            html += `<thead><tr>${rows[0].map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+            html += '<tbody>';
+            rows.slice(1).forEach(row => {
+              html += `<tr>${row.map(c => `<td>${c}</td>`).join('')}</tr>`;
+            });
+            html += '</tbody>';
+          } else {
+            html += '<tbody>';
+            rows.forEach(row => {
+              html += `<tr>${row.map(c => `<td>${c}</td>`).join('')}</tr>`;
+            });
+            html += '</tbody>';
+          }
+          html += '</table>';
+          parts.push(html);
+          break;
+        }
+        default:
+          // Unknown block types are skipped silently to avoid corrupting output
+          break;
+      }
+    });
+
+    return parts.join('');
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SECTION 15: TOOLBAR FACTORY
+     Includes the persistent No-Format Paste toggle (default OFF).
+  ═══════════════════════════════════════════════════════════════════ */
+  function createToolbar(editor, onChange, options, popoverSystem, pasteState) {
     const toolbar = document.createElement('div');
     toolbar.className = 'rte-toolbar';
     toolbar.setAttribute('role', 'toolbar');
@@ -1379,17 +1948,13 @@
     /* ── Format select ── */
     const select = document.createElement('select');
     select.setAttribute('aria-label', 'Text style');
-    [
-      ['Paragraph', 'P'],
-      ['Heading 1', 'H1'],
-      ['Heading 2', 'H2'],
-      ['Heading 3', 'H3'],
-    ].forEach(([lbl, val]) => {
-      const opt = document.createElement('option');
-      opt.value = val;
-      opt.textContent = lbl;
-      select.appendChild(opt);
-    });
+    [['Paragraph', 'P'], ['Heading 1', 'H1'], ['Heading 2', 'H2'], ['Heading 3', 'H3']]
+      .forEach(([lbl, val]) => {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = lbl;
+        select.appendChild(opt);
+      });
 
     /* ── Inline format buttons ── */
     const btnBold      = makeBtn('Bold (Ctrl+B)', 'bold', { cmd: 'bold' });
@@ -1400,21 +1965,13 @@
     /* ── Color palette dropdowns ── */
     const textColorWrap = createPaletteDropdown('text', (color) => {
       editor.focus();
-      if (color === 'transparent') {
-        document.execCommand('removeFormat', false, null);
-      } else {
-        document.execCommand('foreColor', false, color);
-      }
+      if (color === 'transparent') document.execCommand('removeFormat', false, null);
+      else document.execCommand('foreColor', false, color);
       onChange();
     });
-
     const bgColorWrap = createPaletteDropdown('bg', (color) => {
       editor.focus();
-      if (color === 'transparent') {
-        document.execCommand('hiliteColor', false, 'transparent');
-      } else {
-        document.execCommand('hiliteColor', false, color);
-      }
+      document.execCommand('hiliteColor', false, color === 'transparent' ? 'transparent' : color);
       onChange();
     });
 
@@ -1436,26 +1993,32 @@
     /* ── Table picker ── */
     const tablePicker = createTablePicker((rows, cols) => {
       editor.focus();
-      const tHead = `<thead><tr>${Array.from({length: cols}, (_,i) =>
-        `<th contenteditable="false" style="min-width:80px;">Header ${i+1}</th>`).join('')}</tr></thead>`;
-      const tBody = `<tbody>${Array.from({length: rows-1}, () =>
-        `<tr>${Array.from({length: cols}, () =>
-          `<td contenteditable="false"> </td>`).join('')}</tr>`).join('')}</tbody>`;
-      const tableHtml = `<table>${tHead}${tBody}</table><p> </p>`;
-      document.execCommand('insertHTML', false, tableHtml);
-      // Make cells editable after insertion
+      document.execCommand('insertHTML', false, buildTableHtml(rows, cols));
       setTimeout(() => {
-        editor.querySelectorAll('table td, table th').forEach(cell => {
-          cell.setAttribute('contenteditable', 'true');
-        });
+        editor.querySelectorAll('table td, table th').forEach(cell => cell.setAttribute('contenteditable', 'true'));
         onChange();
       }, 0);
     });
 
     /* ── Link / Image ── */
-    const btnLink  = makeBtn('Insert Link (Ctrl+K)', 'link',   { action: 'link' });
+    const btnLink   = makeBtn('Insert Link (Ctrl+K)', 'link',  { action: 'link' });
     const btnUnlink = makeBtn('Remove Link', 'unlink', { cmd: 'unlink' });
-    const btnImage = makeBtn('Insert Image', 'image', { action: 'image' });
+    const btnImage  = makeBtn('Insert Image', 'image', { action: 'image' });
+
+    /* ── No-Format Paste toggle (default OFF) ── */
+    const btnPasteToggle = document.createElement('button');
+    btnPasteToggle.type = 'button';
+    btnPasteToggle.className = 'rte-paste-toggle';
+    btnPasteToggle.setAttribute('data-tip', 'Toggle No-Format Paste');
+    btnPasteToggle.setAttribute('aria-label', 'Toggle No-Format Paste');
+    btnPasteToggle.setAttribute('aria-pressed', 'false');
+    btnPasteToggle.innerHTML = `${SVG.pasteNoFormat}<span>TXT</span>`;
+    btnPasteToggle.addEventListener('click', () => {
+      pasteState.noFormat = !pasteState.noFormat;
+      btnPasteToggle.classList.toggle('rte-active', pasteState.noFormat);
+      btnPasteToggle.setAttribute('aria-pressed', String(pasteState.noFormat));
+      editor.focus();
+    });
 
     /* ── Undo / Redo ── */
     const btnUndo = makeBtn('Undo (Ctrl+Z)', 'undo', { cmd: 'undo' });
@@ -1478,11 +2041,13 @@
     toolbar.appendChild(sep());
     toolbar.appendChild(grp(btnLink, btnUnlink, btnImage));
     toolbar.appendChild(sep());
+    toolbar.appendChild(grp(btnPasteToggle));
+    toolbar.appendChild(sep());
     toolbar.appendChild(grp(btnUndo, btnRedo));
 
     /* ── Prevent blur on toolbar click ── */
     toolbar.addEventListener('mousedown', (e) => {
-      if (!e.target.closest('.rte-palette-btn, .rte-palette-dropdown, .rte-table-wrap')) {
+      if (!e.target.closest('.rte-palette-btn, .rte-palette-dropdown, .rte-table-wrap, .rte-paste-toggle')) {
         e.preventDefault();
       }
     });
@@ -1507,39 +2072,25 @@
           title: 'Insert Link',
           submitLabel: 'Insert',
           fields: [
-            {
-              id: 'url',
-              label: 'URL',
-              placeholder: 'https://example.com',
-              required: true,
+            { id: 'url', label: 'URL', placeholder: 'https://example.com', required: true,
               value: existingHref,
-              validate: (v) => /^https?:\/\//i.test(v) || /^mailto:/i.test(v) || /^tel:/i.test(v),
-            },
-            {
-              id: 'text',
-              label: 'Link Text (optional)',
+              validate: (v) => /^https?:\/\//i.test(v) || /^mailto:/i.test(v) || /^tel:/i.test(v) },
+            { id: 'text', label: 'Link Text (optional)',
               placeholder: existingText || 'Leave blank to use selection',
-              required: false,
-              value: existingText,
-            },
+              required: false, value: existingText },
           ],
           onSubmit: ({ url, text }) => {
-            restoreAndApply(() => {
-              const sel2 = window.getSelection();
-              const isEmpty = !sel2 || !sel2.toString().trim();
-              if (isEmpty && text) {
-                document.execCommand('insertHTML', false,
-                  `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>`
-                );
-              } else if (isEmpty) {
-                document.execCommand('insertHTML', false,
-                  `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`
-                );
-              } else {
-                document.execCommand('createLink', false, url);
-              }
-              onChange();
-            });
+            popoverSystem.restoreSelection();
+            const sel2 = window.getSelection();
+            const isEmpty = !sel2 || !sel2.toString().trim();
+            if (isEmpty) {
+              const label = text || url;
+              document.execCommand('insertHTML', false,
+                `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`);
+            } else {
+              document.execCommand('createLink', false, url);
+            }
+            onChange();
           },
         }, btn);
 
@@ -1548,28 +2099,16 @@
           title: 'Insert Image',
           submitLabel: 'Insert',
           fields: [
-            {
-              id: 'src',
-              label: 'Image URL',
-              placeholder: 'https://example.com/image.jpg',
-              required: true,
-              validate: (v) => /^https?:\/\//i.test(v),
-            },
-            {
-              id: 'alt',
-              label: 'Alt Text (for accessibility)',
-              placeholder: 'Describe the image...',
-              required: false,
-            },
+            { id: 'src', label: 'Image URL', placeholder: 'https://example.com/image.jpg',
+              required: true, validate: (v) => /^https?:\/\//i.test(v) },
+            { id: 'alt', label: 'Alt Text (for accessibility)', placeholder: 'Describe the image...', required: false },
           ],
           onSubmit: ({ src, alt }) => {
-            restoreAndApply(() => {
-              const altText = alt || 'Image';
-              document.execCommand('insertHTML', false,
-                `<img src="${escapeAttr(src)}" alt="${escapeAttr(altText)}" style="max-width:100%;height:auto;display:block;margin:0.8em 0;">`
-              );
-              onChange();
-            });
+            popoverSystem.restoreSelection();
+            const altText = alt || 'Image';
+            document.execCommand('insertHTML', false,
+              `<img src="${escapeAttr(src)}" alt="${escapeAttr(altText)}" style="max-width:100%;height:auto;display:block;margin:0.8em 0;">`);
+            onChange();
           },
         }, btn);
 
@@ -1580,8 +2119,7 @@
         const sel = window.getSelection();
         const text = sel && sel.rangeCount > 0 ? sel.toString() : '';
         document.execCommand('insertHTML', false,
-          `<pre><code>${escapeHtml(text) || 'Enter code here'}</code></pre><p> </p>`
-        );
+          `<pre><code>${escapeHtml(text) || 'Enter code here'}</code></pre><p><br></p>`);
         onChange();
       } else if (action === 'hr') {
         document.execCommand('insertHorizontalRule', false, null);
@@ -1605,16 +2143,9 @@
     /* ── Active states ── */
     function updateActiveStates() {
       const cmdMap = [
-        [btnBold,      'bold'],
-        [btnItalic,    'italic'],
-        [btnUnderline, 'underline'],
-        [btnStrike,    'strikeThrough'],
-        [btnAlignL,    'justifyLeft'],
-        [btnAlignC,    'justifyCenter'],
-        [btnAlignR,    'justifyRight'],
-        [btnAlignJ,    'justifyFull'],
-        [btnUL,        'insertUnorderedList'],
-        [btnOL,        'insertOrderedList'],
+        [btnBold, 'bold'], [btnItalic, 'italic'], [btnUnderline, 'underline'], [btnStrike, 'strikeThrough'],
+        [btnAlignL, 'justifyLeft'], [btnAlignC, 'justifyCenter'], [btnAlignR, 'justifyRight'], [btnAlignJ, 'justifyFull'],
+        [btnUL, 'insertUnorderedList'], [btnOL, 'insertOrderedList'],
       ];
       cmdMap.forEach(([el, cmd]) => {
         try { el.classList.toggle('rte-active', document.queryCommandState(cmd)); } catch (e) {}
@@ -1625,35 +2156,101 @@
     editor.addEventListener('mouseup',         updateActiveStates);
     editor.addEventListener('selectionchange', updateActiveStates);
 
-    function restoreAndApply(fn) {
-      popoverSystem.restoreSelection();
-      fn();
-    }
+    return { toolbar, select };
+  }
 
-    return toolbar;
+  function buildTableHtml(rows, cols) {
+    const tHead = `<thead><tr>${Array.from({length: cols}, (_, i) =>
+      `<th contenteditable="false">Header ${i + 1}</th>`).join('')}</tr></thead>`;
+    const tBody = `<tbody>${Array.from({length: Math.max(rows - 1, 1)}, () =>
+      `<tr>${Array.from({length: cols}, () => `<td contenteditable="false">\u00a0</td>`).join('')}</tr>`).join('')}</tbody>`;
+    return `<table>${tHead}${tBody}</table><p><br></p>`;
   }
 
 
   /* ═══════════════════════════════════════════════════════════════════
-     SECTION 10: UTILITIES
+     SECTION 16: BLOCK TOOL DISPATCHER
+     Shared execution path used by both the toolbar and the slash menu,
+     so "/table" and clicking the table button behave identically.
   ═══════════════════════════════════════════════════════════════════ */
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  function escapeAttr(str) {
-    return String(str)
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+  function makeBlockToolRunner(editor, onChange, popoverSystem) {
+    return function runBlockTool(id) {
+      editor.focus();
+      switch (id) {
+        case 'h1':
+          document.execCommand('formatBlock', false, 'H1');
+          break;
+        case 'h2':
+          document.execCommand('formatBlock', false, 'H2');
+          break;
+        case 'paragraph':
+          document.execCommand('formatBlock', false, 'P');
+          break;
+        case 'bulletList':
+          document.execCommand('insertUnorderedList', false, null);
+          break;
+        case 'orderedList':
+          document.execCommand('insertOrderedList', false, null);
+          break;
+        case 'blockquote':
+          document.execCommand('formatBlock', false, 'BLOCKQUOTE');
+          break;
+        case 'codeBlock':
+          document.execCommand('insertHTML', false, '<pre><code>Enter code here</code></pre><p><br></p>');
+          break;
+        case 'table':
+          document.execCommand('insertHTML', false, buildTableHtml(3, 3));
+          setTimeout(() => {
+            editor.querySelectorAll('table td, table th').forEach(cell => cell.setAttribute('contenteditable', 'true'));
+            onChange();
+          }, 0);
+          break;
+        case 'hr':
+          document.execCommand('insertHorizontalRule', false, null);
+          break;
+        case 'image':
+          popoverSystem.open({
+            title: 'Insert Image',
+            submitLabel: 'Insert',
+            fields: [
+              { id: 'src', label: 'Image URL', placeholder: 'https://example.com/image.jpg',
+                required: true, validate: (v) => /^https?:\/\//i.test(v) },
+              { id: 'alt', label: 'Alt Text (for accessibility)', placeholder: 'Describe the image...', required: false },
+            ],
+            onSubmit: ({ src, alt }) => {
+              popoverSystem.restoreSelection();
+              document.execCommand('insertHTML', false,
+                `<img src="${escapeAttr(src)}" alt="${escapeAttr(alt || 'Image')}" style="max-width:100%;height:auto;display:block;margin:0.8em 0;">`);
+              onChange();
+            },
+          }, editor);
+          break;
+        case 'link':
+          popoverSystem.open({
+            title: 'Insert Link',
+            submitLabel: 'Insert',
+            fields: [
+              { id: 'url', label: 'URL', placeholder: 'https://example.com', required: true,
+                validate: (v) => /^https?:\/\//i.test(v) || /^mailto:/i.test(v) || /^tel:/i.test(v) },
+              { id: 'text', label: 'Link Text', placeholder: 'Link text', required: false },
+            ],
+            onSubmit: ({ url, text }) => {
+              popoverSystem.restoreSelection();
+              document.execCommand('insertHTML', false,
+                `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text || url)}</a>`);
+              onChange();
+            },
+          }, editor);
+          break;
+        default:
+          break;
+      }
+    };
   }
 
 
   /* ═══════════════════════════════════════════════════════════════════
-     SECTION 11: MOUNT
+     SECTION 17: MOUNT
   ═══════════════════════════════════════════════════════════════════ */
   function mount(options = {}) {
     ensureStyles();
@@ -1679,7 +2276,11 @@
 
     const maxLength = options.maxLength || null;
 
-    /* Sync hidden input */
+    /* Pending Sync's mutable state for the No-Format Paste toggle.
+       Defaults to OFF per spec, can be pre-seeded via options.noFormatPaste */
+    const pasteState = { noFormat: !!options.noFormatPaste };
+
+    /* Sync hidden input — always producing clean, semantic, web-ready HTML */
     const sync = () => {
       const clean = sanitizeRichTextHtml(editor.innerHTML);
       input.value = clean;
@@ -1710,14 +2311,29 @@
       charCount.classList.toggle('rte-char-over',  len > maxLength);
     };
 
-    /* Popover system */
+    /* Popover system (shared by toolbar, slash menu, and block-tool runner) */
     const popoverSystem = createPopoverSystem(wrapper);
 
-    /* Toolbar */
-    const toolbar = createToolbar(editor, sync, options, popoverSystem);
+    /* Block tool dispatcher — shared between toolbar buttons and slash commands */
+    const runBlockTool = makeBlockToolRunner(editor, sync, popoverSystem);
 
-    /* Image resize */
+    /* Toolbar (includes the No-Format Paste toggle) */
+    const { toolbar } = createToolbar(editor, sync, options, popoverSystem, pasteState);
+
+    /* Image resize & alignment system */
     const imgResizeSystem = createImageResizeSystem(editor, sync);
+
+    /* Table right-click context menu */
+    createTableContextMenu(editor, sync);
+
+    /* Slash command menu */
+    createSlashCommandSystem(editor, sync, runBlockTool);
+
+    /* Inline markdown autocomplete (#, ##, *, -, 1., `code`) */
+    createMarkdownAutocomplete(editor, sync);
+
+    /* Smart caret escape for blockquote / code block traps */
+    createCaretEscapeHandler(editor, sync);
 
     /* DOM assembly */
     input.style.display = 'none';
@@ -1726,11 +2342,20 @@
     wrapper.appendChild(editor);
     if (maxLength) wrapper.appendChild(footer);
 
-    /* Events */
+    /* Core input sync */
     editor.addEventListener('input', sync);
 
+    /* ── Paste handling: respects the No-Format Paste toggle ──
+       OFF (default): normal rich-text paste behavior is preserved.
+       ON: forcefully strips all HTML tags, styles, and attributes,
+           inserting absolute plain text only. */
     editor.addEventListener('paste', (e) => {
-      if (options.plainPaste) {
+      if (pasteState.noFormat) {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, text);
+      } else if (options.plainPaste) {
+        // Backward-compatible static option from v3, independent of the toggle
         e.preventDefault();
         const text = (e.clipboardData || window.clipboardData).getData('text/plain');
         document.execCommand('insertText', false, text);
@@ -1738,7 +2363,7 @@
       requestAnimationFrame(sync);
     });
 
-    /* Keyboard shortcuts */
+    /* ── Keyboard shortcuts ── */
     editor.addEventListener('keydown', (e) => {
       const ctrl = e.ctrlKey || e.metaKey;
       if (!ctrl) return;
@@ -1747,17 +2372,15 @@
       if (key === 'k') {
         e.preventDefault();
         popoverSystem.saveSelection();
-        toolbar.querySelector('button[data-action="link"]')?.click();
+        runBlockTool('link');
         return;
       }
-
-      // For b/i/u/z/y, let the browser handle, then sync
       if (['b', 'i', 'u', 'z', 'y'].includes(key)) {
         requestAnimationFrame(sync);
       }
     });
 
-    /* Tab navigation in table cells */
+    /* ── Tab navigation inside table cells ── */
     editor.addEventListener('keydown', (e) => {
       if (e.key !== 'Tab') return;
       const cell = e.target.closest('td, th');
@@ -1768,25 +2391,22 @@
       const idx   = cells.indexOf(cell);
       if (e.shiftKey) {
         if (idx > 0) cells[idx - 1].focus();
+      } else if (idx < cells.length - 1) {
+        cells[idx + 1].focus();
       } else {
-        if (idx < cells.length - 1) {
-          cells[idx + 1].focus();
-        } else {
-          // Add a new row at the end of tbody
-          const tbody = table.querySelector('tbody');
-          if (tbody) {
-            const cols = cell.closest('tr').children.length;
-            const newRow = document.createElement('tr');
-            for (let i = 0; i < cols; i++) {
-              const td = document.createElement('td');
-              td.contentEditable = 'true';
-              td.innerHTML = '\u00a0';
-              newRow.appendChild(td);
-            }
-            tbody.appendChild(newRow);
-            newRow.querySelector('td').focus();
-            sync();
+        const tbody = table.querySelector('tbody');
+        if (tbody) {
+          const cols = cell.closest('tr').children.length;
+          const newRow = document.createElement('tr');
+          for (let i = 0; i < cols; i++) {
+            const td = document.createElement('td');
+            td.setAttribute('contenteditable', 'true');
+            td.innerHTML = '\u00a0';
+            newRow.appendChild(td);
           }
+          tbody.appendChild(newRow);
+          newRow.querySelector('td').focus();
+          sync();
         }
       }
     });
@@ -1796,9 +2416,32 @@
     updateCharCount();
 
     return {
+      /* HTML API */
       getHtml:    () => sanitizeRichTextHtml(editor.innerHTML),
       getText:    () => stripHtml(editor.innerHTML),
       setHtml:    (html) => { editor.innerHTML = sanitizeRichTextHtml(html || ''); sync(); },
+
+      /* JSON API */
+      getJson:    () => domToJsonBlocks(editor),
+      setJson:    (data) => {
+        const html = jsonBlocksToHtml(Array.isArray(data) ? data : []);
+        editor.innerHTML = sanitizeRichTextHtml(html);
+        editor.querySelectorAll('table td, table th').forEach(cell => cell.setAttribute('contenteditable', 'true'));
+        sync();
+      },
+
+      /* No-Format Paste toggle API (programmatic control) */
+      getNoFormatPaste: () => pasteState.noFormat,
+      setNoFormatPaste: (val) => {
+        pasteState.noFormat = !!val;
+        const btn = toolbar.querySelector('.rte-paste-toggle');
+        if (btn) {
+          btn.classList.toggle('rte-active', pasteState.noFormat);
+          btn.setAttribute('aria-pressed', String(pasteState.noFormat));
+        }
+      },
+
+      /* Lifecycle / utility */
       focus:      () => editor.focus(),
       clear:      () => { editor.innerHTML = ''; imgResizeSystem.clearSelection(); sync(); },
       getElement: () => editor,
@@ -1806,7 +2449,7 @@
         imgResizeSystem.clearSelection();
         if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
         input.style.display = '';
-        document.querySelectorAll('.rte-popover').forEach(p => p.remove());
+        document.querySelectorAll('.rte-popover, .rte-slash-menu, .rte-ctx-menu').forEach(p => p.remove());
       },
     };
   }
@@ -1815,6 +2458,12 @@
   /* ═══════════════════════════════════════════════════════════════════
      PUBLIC API
   ═══════════════════════════════════════════════════════════════════ */
-  window.RichTextEditor = { mount, sanitizeRichTextHtml, stripHtml };
+  window.RichTextEditor = {
+    mount,
+    sanitizeRichTextHtml,
+    stripHtml,
+    domToJsonBlocks,
+    jsonBlocksToHtml,
+  };
 
 })();
