@@ -662,6 +662,36 @@
     sel.addRange(range);
   }
 
+  function unwrapFullySelectedBlockquote(editorRoot) {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
+
+  const range = sel.getRangeAt(0);
+  const startBlockquote = range.startContainer.nodeType === 3
+    ? range.startContainer.parentElement?.closest('blockquote')
+    : range.startContainer.closest?.('blockquote');
+  const endBlockquote = range.endContainer.nodeType === 3
+    ? range.endContainer.parentElement?.closest('blockquote')
+    : range.endContainer.closest?.('blockquote');
+
+  if (!startBlockquote || startBlockquote !== endBlockquote) return null;
+  if (!editorRoot.contains(startBlockquote)) return null;
+
+  const selectedText = range.toString().replace(/\s+/g, ' ').trim();
+  const fullText = startBlockquote.textContent.replace(/\s+/g, ' ').trim();
+  if (!fullText || selectedText !== fullText) return null;
+
+  const p = document.createElement('p');
+  p.innerHTML = startBlockquote.innerHTML;
+  startBlockquote.replaceWith(p);
+
+  const newRange = document.createRange();
+  newRange.selectNodeContents(p);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+
+  return p;
+}
 
   /* ═══════════════════════════════════════════════════════════════════
      SECTION 5: SANITIZER (web-ready, semantic HTML output)
@@ -2128,14 +2158,15 @@
           `<pre><code>${escapeHtml(text) || 'Enter code here'}</code></pre><p><br></p>`);
         onChange();
       } else if (action === 'clearFormat') {
-        const sel = window.getSelection();
-        const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
-        if (hasSelection) {
-          document.execCommand('removeFormat', false, null);
-          // removeFormat doesn't always clear highlight color; explicitly reset it too
-          document.execCommand('hiliteColor', false, 'transparent');
-          onChange();
-        }
+          const sel = window.getSelection();
+          const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
+          if (hasSelection) {
+            unwrapFullySelectedBlockquote(editor);
+            document.execCommand('removeFormat', false, null);
+            document.execCommand('hiliteColor', false, 'transparent');
+            onChange();
+          }
+      }
         // No selection: intentionally do nothing
       } else if (action === 'hr') {
         document.execCommand('insertHorizontalRule', false, null);
