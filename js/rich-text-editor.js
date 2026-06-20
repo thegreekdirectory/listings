@@ -2157,16 +2157,16 @@
         document.execCommand('insertHTML', false,
           `<pre><code>${escapeHtml(text) || 'Enter code here'}</code></pre><p><br></p>`);
         onChange();
-      } else if (action === 'clearFormat') {
-          const sel = window.getSelection();
-          const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
-          if (hasSelection) {
-            unwrapFullySelectedBlockquote(editor);
-            document.execCommand('removeFormat', false, null);
-            document.execCommand('hiliteColor', false, 'transparent');
-            onChange();
-          }
-      }
+} else if (action === 'clearFormat') {
+  const sel = window.getSelection();
+  const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
+  if (hasSelection) {
+    unwrapFullySelectedBlockquote(editor);
+    document.execCommand('removeFormat', false, null);
+    document.execCommand('hiliteColor', false, 'transparent');
+    onChange();
+  }
+}
         // No selection: intentionally do nothing
       } else if (action === 'hr') {
         document.execCommand('insertHorizontalRule', false, null);
