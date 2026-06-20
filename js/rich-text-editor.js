@@ -549,6 +549,7 @@
     imgCenter:   `<svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="10" rx="1"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="3" y1="20" x2="21" y2="20"/></svg>`,
     imgRight:    `<svg viewBox="0 0 24 24"><rect x="12" y="3" width="9" height="9" rx="1"/><line x1="3" y1="6" x2="9" y2="6"/><line x1="3" y1="9" x2="9" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="3" y1="19" x2="21" y2="19"/></svg>`,
     pasteNoFormat: `<svg viewBox="0 0 24 24"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M6 6h12v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>`,
+    clearFormat: `<svg viewBox="0 0 24 24"><path d="M5 5h9l-1 3"/><path d="M9.5 8 7 19"/><line x1="11" y1="19" x2="17" y2="19"/><line x1="3" y1="3" x2="21" y2="21"/></svg>`,
     h1:          `<svg viewBox="0 0 24 24"><path d="M4 6v12M11 6v12M4 12h7"/><path d="M15 9.5c.5-1 1.5-1.5 2.5-1.5 1.5 0 2.5 1 2.5 2.2 0 1.1-.6 1.8-1.8 3L15 18h5.5"/></svg>`,
     h2:          `<svg viewBox="0 0 24 24"><path d="M4 6v12M11 6v12M4 12h7"/><path d="M15 9.3c.4-.9 1.3-1.3 2.3-1.3 1.4 0 2.5.9 2.5 2.1 0 2.1-4.8 3-4.8 5.9h5"/></svg>`,
     paragraph:   `<svg viewBox="0 0 24 24"><path d="M12 4v16M12 4H9.5a3.5 3.5 0 1 1 0-7H12"/><path d="M16 4v16"/></svg>`,
@@ -2020,6 +2021,9 @@
       editor.focus();
     });
 
+    /* ── Clear Formatting ── */
+    const btnClearFormat = makeBtn('Clear Formatting', 'clearFormat', { action: 'clearFormat' });
+
     /* ── Undo / Redo ── */
     const btnUndo = makeBtn('Undo (Ctrl+Z)', 'undo', { cmd: 'undo' });
     const btnRedo = makeBtn('Redo (Ctrl+Y)', 'redo', { cmd: 'redo' });
@@ -2040,6 +2044,8 @@
     toolbar.appendChild(tablePicker);
     toolbar.appendChild(sep());
     toolbar.appendChild(grp(btnLink, btnUnlink, btnImage));
+    toolbar.appendChild(sep());
+    toolbar.appendChild(grp(btnClearFormat));
     toolbar.appendChild(sep());
     toolbar.appendChild(grp(btnPasteToggle));
     toolbar.appendChild(sep());
@@ -2121,6 +2127,16 @@
         document.execCommand('insertHTML', false,
           `<pre><code>${escapeHtml(text) || 'Enter code here'}</code></pre><p><br></p>`);
         onChange();
+      } else if (action === 'clearFormat') {
+        const sel = window.getSelection();
+        const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
+        if (hasSelection) {
+          document.execCommand('removeFormat', false, null);
+          // removeFormat doesn't always clear highlight color; explicitly reset it too
+          document.execCommand('hiliteColor', false, 'transparent');
+          onChange();
+        }
+        // No selection: intentionally do nothing
       } else if (action === 'hr') {
         document.execCommand('insertHorizontalRule', false, null);
         onChange();
