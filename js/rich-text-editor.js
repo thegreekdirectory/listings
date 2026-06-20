@@ -662,36 +662,48 @@
     sel.addRange(range);
   }
 
+  /**
+   * If the current selection fully covers a single <blockquote>'s text
+   * content (i.e. the user selected the whole quote, not just part of it),
+   * unwraps it into a plain <p>, preserving inner HTML. Returns the new
+   * element if an unwrap happened, otherwise null.
+   */
   function unwrapFullySelectedBlockquote(editorRoot) {
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
 
-  const range = sel.getRangeAt(0);
-  const startBlockquote = range.startContainer.nodeType === 3
-    ? range.startContainer.parentElement?.closest('blockquote')
-    : range.startContainer.closest?.('blockquote');
-  const endBlockquote = range.endContainer.nodeType === 3
-    ? range.endContainer.parentElement?.closest('blockquote')
-    : range.endContainer.closest?.('blockquote');
+    const range = sel.getRangeAt(0);
+    const startBlockquote = range.startContainer.nodeType === 3
+      ? range.startContainer.parentElement?.closest('blockquote')
+      : range.startContainer.closest?.('blockquote');
+    const endBlockquote = range.endContainer.nodeType === 3
+      ? range.endContainer.parentElement?.closest('blockquote')
+      : range.endContainer.closest?.('blockquote');
 
-  if (!startBlockquote || startBlockquote !== endBlockquote) return null;
-  if (!editorRoot.contains(startBlockquote)) return null;
+    // Selection must start and end inside the SAME blockquote
+    if (!startBlockquote || startBlockquote !== endBlockquote) return null;
+    if (!editorRoot.contains(startBlockquote)) return null;
 
-  const selectedText = range.toString().replace(/\s+/g, ' ').trim();
-  const fullText = startBlockquote.textContent.replace(/\s+/g, ' ').trim();
-  if (!fullText || selectedText !== fullText) return null;
+    // Compare selected text against the blockquote's full text (trimmed,
+    // whitespace-normalized) to confirm the whole quote is selected
+    const selectedText = range.toString().replace(/\s+/g, ' ').trim();
+    const fullText = startBlockquote.textContent.replace(/\s+/g, ' ').trim();
+    if (!fullText || selectedText !== fullText) return null;
 
-  const p = document.createElement('p');
-  p.innerHTML = startBlockquote.innerHTML;
-  startBlockquote.replaceWith(p);
+    const p = document.createElement('p');
+    p.innerHTML = startBlockquote.innerHTML;
+    startBlockquote.replaceWith(p);
 
-  const newRange = document.createRange();
-  newRange.selectNodeContents(p);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
+    // Re-select the new paragraph's contents so removeFormat still has
+    // something to act on afterward
+    const newRange = document.createRange();
+    newRange.selectNodeContents(p);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
 
-  return p;
-}
+    return p;
+  }
+
 
   /* ═══════════════════════════════════════════════════════════════════
      SECTION 5: SANITIZER (web-ready, semantic HTML output)
@@ -2157,16 +2169,17 @@
         document.execCommand('insertHTML', false,
           `<pre><code>${escapeHtml(text) || 'Enter code here'}</code></pre><p><br></p>`);
         onChange();
-} else if (action === 'clearFormat') {
-  const sel = window.getSelection();
-  const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
-  if (hasSelection) {
-    unwrapFullySelectedBlockquote(editor);
-    document.execCommand('removeFormat', false, null);
-    document.execCommand('hiliteColor', false, 'transparent');
-    onChange();
-  }
-}
+      } else if (action === 'clearFormat') {
+        const sel = window.getSelection();
+        const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
+        if (hasSelection) {
+          // If the whole quote box is selected, unwrap it to a plain <p> first
+          unwrapFullySelectedBlockquote(editor);
+          document.execCommand('removeFormat', false, null);
+          // removeFormat doesn't always clear highlight color; explicitly reset it too
+          document.execCommand('hiliteColor', false, 'transparent');
+          onChange();
+        }
         // No selection: intentionally do nothing
       } else if (action === 'hr') {
         document.execCommand('insertHorizontalRule', false, null);
