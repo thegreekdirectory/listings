@@ -2045,7 +2045,7 @@ window.updateSubcategoriesForCategory = function() {
     const container = document.getElementById('subcategoriesContainer');
     const checkboxDiv = document.getElementById('subcategoryCheckboxes');
     
-    // SAFE CHECK: If the modal isn't currently open, don't try to manipulate its DOM elements
+    // Safety check: If the modal element isn't active on screen, exit quietly
     if (!container || !checkboxDiv) {
         return;
     }
@@ -2063,14 +2063,12 @@ window.updateSubcategoriesForCategory = function() {
         const isPrimary = sub === primarySubcategory;
         const div = document.createElement('div');
         div.className = 'flex items-center gap-2 p-2 border rounded';
+        
+        // RESTORED: Uses the proper radio buttons with working state controls
         div.innerHTML = `
-            <input type="checkbox" id="subcat-${sub}" value="${sub}" ${isSelected ? 'checked' : ''} onchange="window.toggleSubcategorySelection('${sub}')" class="rounded text-blue-600 focus:ring-blue-500">
-            <label for="subcat-${sub}" class="text-sm select-none flex-1 text-gray-700">${sub}</label>
-            ${isSelected ? `
-                <button type="button" onclick="window.setPrimarySubcategory('${sub}')" class="text-xs px-2 py-0.5 rounded transition-colors ${isPrimary ? 'bg-blue-600 text-white font-semibold' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
-                    ${isPrimary ? 'Primary' : 'Set Primary'}
-                </button>
-            ` : ''}
+            <input type="checkbox" id="subcat-${sub.replace(/\s+/g, '-')}" value="${sub}" ${isSelected ? 'checked' : ''} onchange="window.toggleSubcategory('${sub.replace(/'/g, "\\'")}')" class="rounded text-blue-600 focus:ring-blue-500">
+            <label for="subcat-${sub.replace(/\s+/g, '-')}" class="text-sm select-none flex-1 text-gray-700">${sub}</label>
+            <input type="radio" name="primarySub" ${isPrimary ? 'checked' : ''} ${!isSelected ? 'disabled' : ''} onchange="window.setPrimarySubcategory('${sub.replace(/'/g, "\\'")}')" class="text-blue-600 focus:ring-blue-500" title="Primary">
         `;
         checkboxDiv.appendChild(div);
     });
