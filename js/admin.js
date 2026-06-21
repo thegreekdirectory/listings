@@ -639,15 +639,20 @@ async function loadSubcategories() {
         if (Array.isArray(data) && data.length > 0) {
             const next = {};
             data.forEach((row) => {
-                if (row.category && Array.isArray(row.subcategories)) next[row.category] = row.subcategories;
+                // Safely checks if row values align with your Supabase schema definition
+                if (row.category && Array.isArray(row.subcategories)) {
+                    next[row.category] = row.subcategories;
+                }
                 if (row.category && row.schema_type_map && typeof row.schema_type_map === 'object') {
                     CATEGORY_SCHEMA_TYPE_MAPS[row.category] = row.schema_type_map;
                 }
             });
-            if (Object.keys(next).length > 0) SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
+            if (Object.keys(next).length > 0) {
+                SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
+            }
         }
         
-        // NEW: Immediately refresh the UI if the edit modal happens to be open
+        // Triggers UI checkpoint update if modal is already open during lazy load
         if (document.getElementById('editCategory')) {
             window.updateSubcategoriesForCategory();
         }
