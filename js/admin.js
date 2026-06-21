@@ -646,6 +646,11 @@ async function loadSubcategories() {
             });
             if (Object.keys(next).length > 0) SUBCATEGORIES = { ...SUBCATEGORIES, ...next };
         }
+        
+        // NEW: Immediately refresh the UI if the edit modal happens to be open
+        if (document.getElementById('editCategory')) {
+            window.updateSubcategoriesForCategory();
+        }
     } catch (error) {
         console.warn('Could not load dynamic subcategories', error);
     }
@@ -1355,7 +1360,7 @@ function fillEditForm(listing) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Category *</label>
-                        <select id="editCategory" class="w-full px-4 py-2 border rounded-lg" onchange="updateSubcategoriesForCategory()">
+                        <select id="editCategory" class="w-full px-4 py-2 border rounded-lg" onchange="handleCategoryChange()">
                             ${CATEGORIES.map(cat => `<option value="${cat}" ${listing?.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
                         </select>
                     </div>
@@ -2020,6 +2025,15 @@ function updateCharCounters() {
     if (taglineCount) taglineCount.textContent = tagline.length;
     if (descCount) descCount.textContent = desc.length;
 }
+
+window.handleCategoryChange = function() {
+    // Clear previously selected subcategories so they don't carry over to the new category
+    selectedSubcategories = [];
+    primarySubcategory = null;
+    
+    // Trigger the re-render
+    updateSubcategoriesForCategory();
+};
 
 window.updateSubcategoriesForCategory = function() {
     const category = document.getElementById('editCategory')?.value;
