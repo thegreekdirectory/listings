@@ -2089,7 +2089,29 @@ serve(async (req) => {
 
 ---
 
-### 13.4 `update-listing-bp`
+### 13.4 `public-listings-fragments`
+
+| Property | Value |
+|---|---|
+| **Slug** | `public-listings-fragments` |
+| **Status** | Source mirror added for deployment |
+| **verify_jwt** | Intended for public GET access; deploy with JWT verification disabled or call with the public anon bearer as appropriate for the frontend migration. |
+
+**Purpose:** Public listing rendering/data origin for the home page, directory placards, and Leaflet map pins. The function reads visible listings with the server-side Supabase service role key and returns pre-rendered HTML fragments or minimal pin data, preventing public browser code from loading bulk raw listing rows directly from Supabase.
+
+**Environment Variables Required:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+
+**Supported Modes:**
+
+| Query mode | Response | High-level selected fields |
+|---|---|---|
+| `mode=index` | `{ featuredHtml, recentHtml, total }` | Listing identity, slug, display name, category/subcategory, tagline, phone, city/state, first media/logo inputs, tier/claimed/status flags, and hours/timezone for status. |
+| `mode=listings` | `{ html, total, nextCursor }` | Directory card fields including identity, slug, display name, categories/subcategories, tagline, phone, address parts, media/logo inputs, tier/claimed/status flags, and hours/timezone for status. |
+| `mode=map` | `{ pins }` | Minimal pin fields only: identity, slug, name, coordinates, category, city/state, derived status, logo URL, and primary image URL. Raw hours, timezone, address, phone, descriptions, contact/owner/social/review/analytics fields, and full photo arrays are not returned. |
+
+**Security Notes:** User/content-derived text is escaped before HTML rendering. The service role key is read only inside the Edge Function and is never returned. Unsupported modes return JSON 400 errors, and operational errors return generic JSON errors without leaking secrets.
+
+### 13.5 `update-listing-bp`
 
 | Property | Value |
 |---|---|
