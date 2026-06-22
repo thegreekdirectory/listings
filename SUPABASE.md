@@ -2097,7 +2097,7 @@ serve(async (req) => {
 | **Status** | Source mirror added for deployment |
 | **verify_jwt** | Intended for public GET access; deploy with JWT verification disabled or call with the public anon bearer as appropriate for the frontend migration. |
 
-**Purpose:** Public listing rendering/data origin for the home page, directory placards, and Leaflet map pins. The function reads visible listings with the server-side Supabase service role key and returns pre-rendered HTML fragments or minimal pin data, preventing public browser code from loading bulk raw listing rows directly from Supabase.
+**Purpose:** Public listing rendering/data origin for the home page, directory placards, and Leaflet map pins. The function reads visible listings with the server-side Supabase service role key and returns pre-rendered HTML fragments or minimal pin data, preventing public browser code from loading bulk raw listing rows directly from Supabase. It also calculates public listing hours status server-side from each listing's `hours`, `timezone`, and closure flags, so public responses expose only rendered badges or a derived pin status rather than raw hours or timezone.
 
 **Environment Variables Required:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 
@@ -2105,9 +2105,11 @@ serve(async (req) => {
 
 | Query mode | Response | High-level selected fields |
 |---|---|---|
-| `mode=index` | `{ featuredHtml, recentHtml, total }` | Listing identity, slug, display name, category/subcategory, tagline, phone, city/state, first media/logo inputs, tier/claimed/status flags, and hours/timezone for status. |
-| `mode=listings` | `{ html, total, nextCursor }` | Directory card fields including identity, slug, display name, categories/subcategories, tagline, phone, address parts, media/logo inputs, tier/claimed/status flags, and hours/timezone for status. |
-| `mode=map` | `{ pins }` | Minimal pin fields only: identity, slug, name, coordinates, category, city/state, derived status, logo URL, and primary image URL. Raw hours, timezone, address, phone, descriptions, contact/owner/social/review/analytics fields, and full photo arrays are not returned. |
+| `mode=index` | `{ featuredHtml, recentHtml, total }` | Listing identity, slug, display name, category/subcategory, tagline, phone, city/state, first media/logo inputs, tier/claimed/status flags, plus internal-only hours/timezone inputs used to render server-calculated status badges. Raw hours and timezone are not returned. |
+| `mode=listings` | `{ html, total, nextCursor }` | Directory card fields including identity, slug, display name, categories/subcategories, tagline, phone, address parts, media/logo inputs, tier/claimed/status flags, plus internal-only hours/timezone inputs used to render server-calculated status badges. Raw hours and timezone are not returned. |
+| `mode=map` | `{ pins }` | Minimal pin fields only: identity, slug, name, coordinates, category, city/state, server-calculated status (`Open`, `Closed`, `Opening Soon`, `Closing Soon`, or `Unknown`), logo URL, and primary image URL. Raw hours, timezone, address, phone, descriptions, contact/owner/social/review/analytics fields, and full photo arrays are not returned. |
+
+**Hours/status behavior:** `public-listings-fragments` uses the server current time, the listing IANA timezone (defaulting to `America/Chicago`), browser-compatible parsing for closed ranges, 24-hour/open-24-hours values, 12-hour/24-hour ranges, and overnight hours. `temporarily_closed` or `permanently_closed` forces `Closed`; missing, empty, or unparseable hours resolve to `Unknown` and usually render no badge.
 
 **Security Notes:** User/content-derived text is escaped before HTML rendering. The service role key is read only inside the Edge Function and is never returned. Unsupported modes return JSON 400 errors, and operational errors return generic JSON errors without leaking secrets.
 

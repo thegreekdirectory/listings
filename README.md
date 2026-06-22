@@ -146,7 +146,7 @@ The deployed Edge Functions are mirrored in `supabase/edge-functions/` for revie
 | `admin-proxy` | GitHub-token-authenticated admin API that performs CRUD on listings, owners, requests, suggestions, analytics, subcategories, and shortlinks using the service role key. |
 | `update-listing-bp` | Authenticated business portal write endpoint. Verifies the caller's Supabase JWT and `business_owners.owner_email`, then applies an allowlist of owner-editable fields. |
 | `listing-server-time` | Returns authoritative UTC time for open/closed calculations and disables caching. |
-| `public-listings-fragments` | Public GET endpoint that uses server-side Supabase access to return rendered home/directory listing HTML fragments and minimal map pin JSON without exposing bulk listing rows to browsers. |
+| `public-listings-fragments` | Public GET endpoint that uses server-side Supabase access to return rendered home/directory listing HTML fragments and minimal map pin JSON, including server-calculated public hours status, without exposing bulk listing rows, raw hours, or timezone to browsers. |
 | `update-github-file` | Uses a server-side `GITHUB_TOKEN` to update repository files through the GitHub Contents API. |
 
 See `SUPABASE.md` for exact deployed function metadata, environment variables, RLS context, and implementation details.
@@ -328,7 +328,7 @@ The Supabase anon key is intentionally present in browser JavaScript. Do not put
 - Public listing rows are live Supabase reads; individual listing pages are static generated files and can drift until regenerated.
 - Admin writes bypass RLS through `admin-proxy` after GitHub token validation. Review the Edge Function before changing admin authorization behavior.
 - Business owner writes should stay constrained to the `update-listing-bp` allowlist.
-- `listing-server-time` exists so open/closed status is not dependent on a visitor's local device clock.
+- `listing-server-time` exists for legacy/client-side status paths, while `public-listings-fragments` calculates public listing status server-side for migrated home, directory, and map fragments so visitors do not receive raw hours/timezone data for those responses.
 - Supabase standard storage buckets are not used for listing media in the audited configuration; media upload flows use Cloudflare Images.
 - `cloudflare/tgd-images-upload.js` is Worker source and is not part of the GitHub Pages static site runtime unless deployed to Cloudflare.
 - Reserved routes in `_redirects` are not evidence of implemented event/news/blog/resource systems.

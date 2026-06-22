@@ -79,14 +79,241 @@ function formatPhoneDisplay(phone: unknown): string {
   return raw;
 }
 
-function getHoursStatus(listing: Listing): HoursStatus {
+type ParsedHoursRange = {
+  closed: boolean;
+  allDay?: boolean;
+  startMinutes?: number;
+  endMinutes?: number;
+  overnight?: boolean;
+};
+
+type HoursStatusDetails = {
+  isOpen: boolean | null;
+  isOpeningSoon: boolean;
+  isClosingSoon: boolean;
+};
+
+const DEFAULT_TIMEZONE = "America/Chicago";
+const DAYS = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+] as const;
+
+function meaningfulHoursValue(value: unknown): boolean {
+  return String(value ?? "").trim() !== "";
+}
+
+function parseBusinessHoursRange(value: unknown): ParsedHoursRange | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  if (/^closed$/i.test(raw)) return { closed: true };
+  if (
+    /24\s*hours|open\s*24/i.test(raw) ||
+    raw === "00:00-23:59" ||
+    raw === "00:00 - 23:59"
+  ) {
+    return {
+      allDay: true,
+      startMinutes: 0,
+      endMinutes: 1439,
+      overnight: false,
+      closed: false,
+    };
+  }
+
+  const rangeMatch = raw.match(/^(.*?)\s*-\s*(.*?)$/);
+  if (!rangeMatch) return null;
+
+  const parseTime = (part: string): number | null => {
+    const trimmed = String(part || "").trim();
+    const match12 = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match12) {
+      let hour = parseInt(match12[1], 10);
+      const minute = parseInt(match12[2], 10);
+      const meridiem = match12[3].toUpperCase();
+      if (hour < 1 || hour > 12 || minute > 59) return null;
+      if (meridiem === "PM" && hour !== 12) hour += 12;
+      if (meridiem === "AM" && hour === 12) hour = 0;
+      return hour * 60 + minute;
+    }
+
+    const match24 = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+    if (match24) {
+      const hour = parseInt(match24[1], 10);
+      const minute = parseInt(match24[2], 10);
+      if (hour > 23 || minute > 59) return null;
+      return hour * 60 + minute;
+    }
+
+    return null;
+  };
+
+  const startMinutes = parseTime(rangeMatch[1]);
+  const endMinutes = parseTime(rangeMatch[2]);
+  if (startMinutes === null || endMinutes === null) return null;
+
+  return {
+    startMinutes,
+    endMinutes,
+    overnight: endMinutes <= startMinutes,
+    allDay: false,
+    closed: false,
+  };
+}
+
+function localDateForTimezone(now: Date, timezone: unknown): Date {
+  const requestedTimezone = toString(timezone) || DEFAULT_TIMEZONE;
+  try {
+    return new Date(
+      now.toLocaleString("en-US", { timeZone: requestedTimezone }),
+    );
+  } catch {
+    return new Date(
+      now.toLocaleString("en-US", { timeZone: DEFAULT_TIMEZONE }),
+    );
+  }
+}
+
+function getHoursStatusDetails(
+  hours: unknown,
+  listingTimezone: unknown = DEFAULT_TIMEZONE,
+  now = new Date(),
+): HoursStatusDetails {
+  if (!hours || typeof hours !== "object" || Array.isArray(hours)) {
+    return { isOpen: null, isOpeningSoon: false, isClosingSoon: false };
+  }
+
+  const values = Object.values(hours as Record<string, unknown>);
+  if (!values.some(meaningfulHoursValue)) {
+    return { isOpen: null, isOpeningSoon: false, isClosingSoon: false };
+  }
+
+  const parsedValues = values
+    .filter(meaningfulHoursValue)
+    .map(parseBusinessHoursRange);
+  if (!parsedValues.some(Boolean)) {
+    return { isOpen: null, isOpeningSoon: false, isClosingSoon: false };
+  }
+
+  const local = localDateForTimezone(now, listingTimezone);
+  const currentMinutes = local.getHours() * 60 + local.getMinutes();
+  const todayIndex = local.getDay();
+  const yesterdayIndex = (todayIndex + 6) % 7;
+  const hoursRecord = hours as Record<string, unknown>;
+  const todaySchedule = parseBusinessHoursRange(hoursRecord[DAYS[todayIndex]]);
+  const yesterdaySchedule = parseBusinessHoursRange(
+    hoursRecord[DAYS[yesterdayIndex]],
+  );
+
+  if (todaySchedule?.allDay) {
+    return { isOpen: true, isOpeningSoon: false, isClosingSoon: false };
+  }
+
+  if (
+    yesterdaySchedule &&
+    !yesterdaySchedule.closed &&
+    !yesterdaySchedule.allDay &&
+    yesterdaySchedule.overnight &&
+    typeof yesterdaySchedule.endMinutes === "number" &&
+    currentMinutes < yesterdaySchedule.endMinutes
+  ) {
+    return {
+      isOpen: true,
+      isOpeningSoon: false,
+      isClosingSoon: yesterdaySchedule.endMinutes - currentMinutes <= 60,
+    };
+  }
+
+  if (!todaySchedule || todaySchedule.closed) {
+    return { isOpen: false, isOpeningSoon: false, isClosingSoon: false };
+  }
+
+  const startMinutes = todaySchedule.startMinutes ?? 0;
+  const endMinutes = todaySchedule.endMinutes ?? 0;
+
+  if (todaySchedule.overnight) {
+    if (currentMinutes >= startMinutes || currentMinutes < endMinutes) {
+      const remainingMinutes =
+        currentMinutes >= startMinutes
+          ? 1440 - currentMinutes + endMinutes
+          : endMinutes - currentMinutes;
+      return {
+        isOpen: true,
+        isOpeningSoon: false,
+        isClosingSoon: remainingMinutes <= 60,
+      };
+    }
+
+    const minutesUntilOpen = startMinutes - currentMinutes;
+    return {
+      isOpen: false,
+      isOpeningSoon: minutesUntilOpen > 0 && minutesUntilOpen <= 60,
+      isClosingSoon: false,
+    };
+  }
+
+  if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
+    return {
+      isOpen: true,
+      isOpeningSoon: false,
+      isClosingSoon: endMinutes - currentMinutes <= 60,
+    };
+  }
+
+  const minutesUntilOpen = startMinutes - currentMinutes;
+  return {
+    isOpen: false,
+    isOpeningSoon: minutesUntilOpen > 0 && minutesUntilOpen <= 60,
+    isClosingSoon: false,
+  };
+}
+
+function isOpenNow(
+  hours: unknown,
+  listingTimezone?: unknown,
+  now?: Date,
+): boolean | null {
+  return getHoursStatusDetails(hours, listingTimezone, now).isOpen;
+}
+
+function isOpeningSoon(
+  hours: unknown,
+  listingTimezone?: unknown,
+  now?: Date,
+): boolean {
+  return getHoursStatusDetails(hours, listingTimezone, now).isOpeningSoon;
+}
+
+function isClosingSoon(
+  hours: unknown,
+  listingTimezone?: unknown,
+  now?: Date,
+): boolean {
+  return getHoursStatusDetails(hours, listingTimezone, now).isClosingSoon;
+}
+
+function getHoursStatus(listing: Listing, now = new Date()): HoursStatus {
   if (
     listing.temporarily_closed === true ||
     listing.permanently_closed === true
-  )
+  ) {
     return "Closed";
-  // Placeholder for Step 2: keep this helper isolated so full server-side hours logic can replace it.
-  if (!listing.hours || !listing.timezone) return "Unknown";
+  }
+
+  const status = getHoursStatusDetails(
+    listing.hours,
+    listing.timezone || DEFAULT_TIMEZONE,
+    now,
+  );
+  if (status.isOpeningSoon) return "Opening Soon";
+  if (status.isClosingSoon) return "Closing Soon";
+  if (status.isOpen === true) return "Open";
+  if (status.isOpen === false) return "Closed";
   return "Unknown";
 }
 
@@ -221,10 +448,8 @@ function coordinates(value: unknown): { lat: number; lng: number } | null {
   return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
 }
 
-function mapStatus(listing: Listing): string {
-  if (listing.permanently_closed === true) return "permanently_closed";
-  if (listing.temporarily_closed === true) return "temporarily_closed";
-  return statusClass(getHoursStatus(listing));
+function mapStatus(listing: Listing): HoursStatus {
+  return getHoursStatus(listing);
 }
 
 serve(async (req: Request) => {
