@@ -2101,6 +2101,8 @@ serve(async (req) => {
 
 **Environment Variables Required:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 
+**Optional Cloudflare façade:** `cloudflare/public-listings-api.js` can be deployed at `/api/public-listings` in front of this Edge Function. The request flow is Browser → Cloudflare Worker → `public-listings-fragments` → Supabase Postgres. The Worker expects `PUBLIC_LISTINGS_FUNCTION_URL` and can forward an optional `PUBLIC_LISTINGS_FUNCTION_TOKEN` as `x-public-listings-token`; it only proxies normalized `GET` query parameters and caches `mode=index`/`mode=map` responses briefly at the edge.
+
 **Supported Modes:**
 
 | Query mode | Response | High-level selected fields |
