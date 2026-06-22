@@ -54,8 +54,11 @@ The current implementation is a browser-heavy static site:
 ```mermaid
 flowchart TD
   Visitor[Public visitor] --> StaticSite[Static HTML/CSS/JS]
+  StaticSite --> PublicListingsWorker[Optional Cloudflare Worker: /api/public-listings]
+  PublicListingsWorker --> PublicFragments[Edge Function: public-listings-fragments]
+  PublicFragments --> Listings[(public.listings)]
   StaticSite --> SupabaseAnon[Supabase JS anon client]
-  SupabaseAnon --> Listings[(public.listings)]
+  SupabaseAnon --> Listings
   SupabaseAnon --> Categories[(public.category_subcategories)]
   StaticSite --> PWA[Service worker + IndexedDB]
   StaticSite --> ListingPages[Generated listing/*.html pages]
@@ -110,7 +113,7 @@ flowchart TD
 ├── assets/images/logo/            # Logo/favicon source assets
 ├── partials/                      # Header/footer partials loaded client-side
 ├── widgets/                       # Embeddable widgets
-├── cloudflare/                    # Cloudflare Worker source for image uploads
+├── cloudflare/                    # Cloudflare Worker source for image uploads and optional public API façades
 ├── functions/                     # Cloudflare Pages middleware for gated branch access
 ├── supabase/edge-functions/       # Source mirrors/reference copies for deployed Edge Functions
 ├── supabase/sql/                  # SQL/reference exports
@@ -146,7 +149,7 @@ The deployed Edge Functions are mirrored in `supabase/edge-functions/` for revie
 | `admin-proxy` | GitHub-token-authenticated admin API that performs CRUD on listings, owners, requests, suggestions, analytics, subcategories, and shortlinks using the service role key. |
 | `update-listing-bp` | Authenticated business portal write endpoint. Verifies the caller's Supabase JWT and `business_owners.owner_email`, then applies an allowlist of owner-editable fields. |
 | `listing-server-time` | Returns authoritative UTC time for open/closed calculations and disables caching. |
-| `public-listings-fragments` | Public GET endpoint that uses server-side Supabase access to return rendered home/directory listing HTML fragments and minimal map pin JSON without exposing bulk listing rows to browsers. |
+| `public-listings-fragments` | Public GET endpoint that uses server-side Supabase access to return rendered home/directory listing HTML fragments and minimal map pin JSON, including server-calculated public hours status, without exposing bulk listing rows, raw hours, or timezone to browsers. |
 | `update-github-file` | Uses a server-side `GITHUB_TOKEN` to update repository files through the GitHub Contents API. |
 
 See `SUPABASE.md` for exact deployed function metadata, environment variables, RLS context, and implementation details.
@@ -243,6 +246,7 @@ Supabase is the hosted backend for data, auth, Edge Functions, and analytics. Ba
 The repository includes two Cloudflare-oriented pieces:
 
 - `cloudflare/tgd-images-upload.js`: Worker for Cloudflare Images upload flows used by admin and business portal media uploads.
+- `cloudflare/public-listings-api.js`: Optional Worker façade for `/api/public-listings`; it normalizes safe query parameters, proxies `GET` requests to the `public-listings-fragments` Supabase Edge Function, adds CORS, and caches index/map responses briefly at the edge.
 - `functions/_middleware.js`: Cloudflare Pages middleware that gates a branch/preview deployment behind `?access=granted` and rewrites same-origin asset/navigation URLs to preserve the access parameter.
 
 ### Scheduled analytics refresh
@@ -317,6 +321,8 @@ The static browser app does not read local `.env` files. Configuration discovera
 | GitHub Actions secrets | `SUPABASE_SERVICE_ROLE_KEY` | Authorization for scheduled analytics refresh RPC. |
 | Cloudflare Worker | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Images account identifier. |
 | Cloudflare Worker | `CLOUDFLARE_IMAGES_API_TOKEN` | Cloudflare Images API token. |
+| Cloudflare Worker | `PUBLIC_LISTINGS_FUNCTION_URL` | Supabase `public-listings-fragments` Edge Function URL used by the optional `/api/public-listings` façade. |
+| Cloudflare Worker | `PUBLIC_LISTINGS_FUNCTION_TOKEN` | Optional shared token forwarded to the public listings Edge Function as `x-public-listings-token`. |
 | Admin browser session | GitHub PAT | Entered in the admin UI and sent as `x-github-token` to `admin-proxy`. |
 
 The Supabase anon key is intentionally present in browser JavaScript. Do not put service-role keys, GitHub tokens, or Cloudflare API tokens in browser code.
@@ -328,9 +334,9 @@ The Supabase anon key is intentionally present in browser JavaScript. Do not put
 - Public listing rows are live Supabase reads; individual listing pages are static generated files and can drift until regenerated.
 - Admin writes bypass RLS through `admin-proxy` after GitHub token validation. Review the Edge Function before changing admin authorization behavior.
 - Business owner writes should stay constrained to the `update-listing-bp` allowlist.
-- `listing-server-time` exists so open/closed status is not dependent on a visitor's local device clock.
+- `listing-server-time` exists for legacy/client-side status paths, while `public-listings-fragments` calculates public listing status server-side for migrated home, directory, and map fragments so visitors do not receive raw hours/timezone data for those responses.
 - Supabase standard storage buckets are not used for listing media in the audited configuration; media upload flows use Cloudflare Images.
-- `cloudflare/tgd-images-upload.js` is Worker source and is not part of the GitHub Pages static site runtime unless deployed to Cloudflare.
+- `cloudflare/tgd-images-upload.js` and `cloudflare/public-listings-api.js` are Worker sources and are not part of the GitHub Pages static site runtime unless deployed to Cloudflare.
 - Reserved routes in `_redirects` are not evidence of implemented event/news/blog/resource systems.
 
 ## Additional documentation
