@@ -67,6 +67,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://thegreekdirectory.org/category/beauty-health</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://thegreekdirectory.org/category/cultural-fraternal-organization</loc>
     <lastmod>2026-06-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -109,12 +115,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/beauty-health</loc>
-    <lastmod>2026-06-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://thegreekdirectory.org/listing/northbrook-il/greek-feast-souvlaki-grill</loc>
     <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
@@ -147,6 +147,12 @@
   <url>
     <loc>https://thegreekdirectory.org/listing/des-plaines-il/pickwick-theatre</loc>
     <lastmod>2026-06-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://thegreekdirectory.org/listing/wheeling-il/vasso-spa</loc>
+    <lastmod>2026-06-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
