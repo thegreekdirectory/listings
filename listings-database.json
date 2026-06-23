@@ -75,7 +75,7 @@
       "id": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-05T09:16:39.211Z",
-        "updatedAt": "2026-06-10T17:49:49.086Z"
+        "updatedAt": "2026-06-23T16:34:26.275Z"
       },
       "analytics": {
         "views": 0,
@@ -87,7 +87,7 @@
         "lastViewed": "2026-01-05T09:16:39.211Z",
         "detailedViews": []
       },
-      "visible": true
+      "visible": false
     },
     {
       "businessName": "Eagle Restaurant",
