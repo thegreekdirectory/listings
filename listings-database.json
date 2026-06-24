@@ -5,9 +5,6 @@
       "tagline": "Private dual-language day school & examination center for Ellinomatheia.",
       "description": "Hellenic American Academy is one of the largest Greek-American educational institutions in the United States. It offers a distinctive dual-language private day school program for students from Preschool through 8th Grade, preparing them for lifelong success. The Academy's problem-based learning curriculum emphasizes social, emotional, and academic growth and is fully recognized by the Illinois State Board of Education.",
       "category": "Education & Community",
-      "subcategories": [
-        "Greek School"
-      ],
       "phone": "(847) 317-1063",
       "address": "445 Pine St",
       "city": "Deerfield",
@@ -19,13 +16,6 @@
       "tier": "FEATURED",
       "verified": true,
       "showClaimButton": true,
-      "placesUrlEnding": null,
-      "slug": "hellenic-american-academy",
-      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/logo/logo/logo.png",
-      "photos": [
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-1.png",
-        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-2.png"
-      ],
       "hours": {
         "monday": "8:00 AM - 5:30 PM",
         "tuesday": "8:00 AM - 5:30 PM",
@@ -68,14 +58,16 @@
           "phone": false
         }
       },
-      "coordinates": {
-        "lat": 42.1612138,
-        "lng": -87.8568086
-      },
+      "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/logo/logo/logo.png",
+      "photos": [
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-1.png",
+        "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/photos/photos/photo-2.png"
+      ],
       "id": "hellenic-american-academy",
+      "slug": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-05T09:16:39.211Z",
-        "updatedAt": "2026-06-24T19:48:18.599Z"
+        "updatedAt": "2026-06-24T19:48:51.050Z"
       },
       "analytics": {
         "views": 0,
@@ -86,8 +78,7 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-05T09:16:39.211Z",
         "detailedViews": []
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "Eagle Restaurant",
