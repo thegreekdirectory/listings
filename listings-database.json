@@ -631,9 +631,12 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
-      "businessPortalPassword": null,
       "placesUrlEnding": "chicago",
       "slug": "a",
+      "logo": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200&h=200&fit=crop&q=80",
+      "photos": [
+        "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"
+      ],
       "hours": {
         "monday": "Closed",
         "tuesday": "10:30 AM - 8:00 PM",
@@ -677,18 +680,14 @@
         }
       },
       "coordinates": {
-        "lat": 42.0732503,
-        "lng": -87.8055076
+        "lat": 42.0576677,
+        "lng": -87.8061184
       },
-      "logo": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200&h=200&fit=crop&q=80",
-      "photos": [
-        "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"
-      ],
       "id": "a",
       "listingId": 1,
       "metadata": {
         "createdAt": "2026-01-13T08:51:41.440Z",
-        "updatedAt": "2026-05-03T18:16:39.288Z"
+        "updatedAt": "2026-06-24T05:34:04.233Z"
       },
       "analytics": {
         "views": 0,
