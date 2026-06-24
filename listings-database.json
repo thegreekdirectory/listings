@@ -18,7 +18,7 @@
       "website": "https://hellenicamericanacademy.org",
       "tier": "FEATURED",
       "verified": true,
-      "showClaimButton": false,
+      "showClaimButton": true,
       "placesUrlEnding": null,
       "slug": "hellenic-american-academy",
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/education-community/hellenic-american-academy/logo/logo/logo.png",
@@ -75,7 +75,7 @@
       "id": "hellenic-american-academy",
       "metadata": {
         "createdAt": "2026-01-05T09:16:39.211Z",
-        "updatedAt": "2026-06-24T05:31:12.883Z"
+        "updatedAt": "2026-06-24T05:45:22.427Z"
       },
       "analytics": {
         "views": 0,
