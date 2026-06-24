@@ -2,7 +2,7 @@
   "name": "The Greek Directory",
   "short_name": "The Greek Directory",
   "description": "Discover Greek-owned businesses across America",
-  "start_url": "/index.html",
+  "start_url": "/index.html?access=granted",
   "display": "standalone",
   "background_color": "#045093",
   "theme_color": "#045093",
