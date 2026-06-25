@@ -414,9 +414,6 @@
       "tagline": "Auto body shop offering repairs and installations, including mirrors.",
       "description": "",
       "category": "Automotive & Transportation",
-      "subcategories": [
-        "Auto Repair Shop"
-      ],
       "phone": "(847) 657-8181",
       "address": "3148 W Lake Ave",
       "city": "Glenview",
@@ -428,7 +425,6 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
-      "businessPortalPassword": null,
       "hours": {
         "monday": "7:30 AM - 6:00 PM",
         "tuesday": "7:30 AM - 6:00 PM",
@@ -475,12 +471,11 @@
       "photos": [
         "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80"
       ],
-      "video": null,
       "id": "lekas-auto-construction",
       "slug": "lekas-auto-construction",
       "metadata": {
         "createdAt": "2026-01-05T13:27:28.712Z",
-        "updatedAt": "2026-01-12T23:27:00.667Z"
+        "updatedAt": "2026-06-25T01:26:15.947Z"
       },
       "analytics": {
         "views": 0,
@@ -491,8 +486,7 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-05T13:27:28.712Z",
         "detailedViews": []
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "SKB Hair Salon",
