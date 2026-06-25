@@ -255,9 +255,6 @@
       "tagline": "Family-owned grocery store with Greek imports.",
       "description": "Brillakis Import Foods is a family-owned grocery store in Niles, Illinois, specializing in authentic Greek and imported foods, including cheeses, olive oil, pastries, and meats. It is known for its high-quality products, friendly service, and a wide selection of Greek groceries, imported beers, and other specialty items.",
       "category": "Grocery & Imports",
-      "subcategories": [
-        "Market"
-      ],
       "phone": "(847) 966-1250",
       "address": "9061 Courtland Dr",
       "city": "Niles",
@@ -269,7 +266,6 @@
       "tier": "FREE",
       "verified": false,
       "showClaimButton": true,
-      "businessPortalPassword": null,
       "hours": {
         "monday": "9:00 AM - 6:00 PM",
         "tuesday": "9:00 AM - 6:00 PM",
@@ -316,12 +312,11 @@
       "photos": [
         "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/grocery-imports/brillakis-import-foods/photos/photos/photo-1.jpeg"
       ],
-      "video": null,
       "id": "brillakis-import-foods",
       "slug": "brillakis-import-foods",
       "metadata": {
         "createdAt": "2026-01-05T10:54:25.512Z",
-        "updatedAt": "2026-01-12T23:26:04.539Z"
+        "updatedAt": "2026-06-25T01:26:01.961Z"
       },
       "analytics": {
         "views": 0,
@@ -332,8 +327,7 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-05T10:54:25.512Z",
         "detailedViews": []
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "Meraki Events Chicago",
