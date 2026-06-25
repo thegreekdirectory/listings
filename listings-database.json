@@ -404,7 +404,7 @@
       "slug": "meraki-events-chicago",
       "metadata": {
         "createdAt": "2026-01-05T11:01:49.789Z",
-        "updatedAt": "2026-06-25T01:25:29.542Z"
+        "updatedAt": "2026-06-25T01:25:37.805Z"
       },
       "analytics": {
         "views": 0,
@@ -415,7 +415,8 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-05T11:01:49.789Z",
         "detailedViews": []
-      }
+      },
+      "visible": true
     },
     {
       "businessName": "Lekas Auto Construction",
