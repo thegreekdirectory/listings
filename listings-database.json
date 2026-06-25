@@ -343,9 +343,6 @@
       "tagline": "Wedding planning service in Niles, IL.",
       "description": "At Meraki Event Designs & Catering we are dedicated to provide unforgettable memories with elegant designs and tasteful dishes, along with exceptional service for all our clients on their special day.\nWe provide for each of our clients a courteous and professional environment from set up to service breakdown. Meraki Event Designs & Catering strives on precision and perfection by offering a combination of unique designs and savory entrees. Meraki Event Designs & Catering also offers individual negotiable packages for clients who would prefer only unique designs or savory entrees for their special day.",
       "category": "Professional & Business Services",
-      "subcategories": [
-        "Wedding Planner"
-      ],
       "phone": "(847) 779-3056",
       "address": "9073 Courtland Dr",
       "city": "Niles",
@@ -357,9 +354,6 @@
       "tier": "FEATURED",
       "verified": true,
       "showClaimButton": false,
-      "businessPortalPassword": null,
-      "placesUrlEnding": null,
-      "slug": "meraki-events-chicago",
       "hours": {
         "monday": null,
         "tuesday": null,
@@ -402,18 +396,15 @@
           "phone": false
         }
       },
-      "coordinates": {
-        "lat": 42.0459021,
-        "lng": -87.8305043
-      },
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/professional-business-services/meraki-events-chicago/logo/logo/logo.jpeg",
       "photos": [
         "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80"
       ],
       "id": "meraki-events-chicago",
+      "slug": "meraki-events-chicago",
       "metadata": {
         "createdAt": "2026-01-05T11:01:49.789Z",
-        "updatedAt": "2026-01-13T16:32:33.528Z"
+        "updatedAt": "2026-06-25T01:25:29.542Z"
       },
       "analytics": {
         "views": 0,
@@ -424,8 +415,7 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-05T11:01:49.789Z",
         "detailedViews": []
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "Lekas Auto Construction",
