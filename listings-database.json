@@ -496,9 +496,6 @@
       "tagline": "Full-service hair salon in Niles, IL.",
       "description": "From the day we opened our doors in Niles in 2000, we've earned our spot as a top Salon. We offer unparalleled beauty pampering, but also respect our clients' busy schedules and will get you looking fabulous and on your way as soon as possible.\nOver the years, our expert team has had one mission--to make our devoted customers look stunning and feel their best. Contact us and see what our team of qualified professionals can do for you today. ",
       "category": "Beauty & Health",
-      "subcategories": [
-        "Hair Salons"
-      ],
       "phone": "(847) 966-0686",
       "address": "9081 Courtland Dr",
       "city": "Niles",
@@ -510,9 +507,6 @@
       "tier": "PREMIUM",
       "verified": true,
       "showClaimButton": true,
-      "businessPortalPassword": null,
-      "placesUrlEnding": null,
-      "slug": "skb-hair-salon",
       "hours": {
         "monday": null,
         "tuesday": null,
@@ -555,18 +549,15 @@
           "phone": false
         }
       },
-      "coordinates": {
-        "lat": 42.0458939,
-        "lng": -87.8303263
-      },
       "logo": "https://raw.githubusercontent.com/thegreekdirectory/listings/main/images/beauty-health/skb-hair-salon/logo/logo/logo.jpg",
       "photos": [
         "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80"
       ],
       "id": "skb-hair-salon",
+      "slug": "skb-hair-salon",
       "metadata": {
         "createdAt": "2026-01-05T15:02:36.405Z",
-        "updatedAt": "2026-01-13T16:32:48.438Z"
+        "updatedAt": "2026-06-25T01:28:27.240Z"
       },
       "analytics": {
         "views": 0,
@@ -577,8 +568,7 @@
         "videoPlays": 0,
         "lastViewed": "2026-01-05T15:02:36.405Z",
         "detailedViews": []
-      },
-      "visible": true
+      }
     },
     {
       "businessName": "A",
