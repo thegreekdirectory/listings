@@ -620,19 +620,46 @@ window.logout = logout;
 // ============================================
 
 
-function generateSlugFromName(name = '') {
+function generateSlugFromName(business_name = '', address = '', city = '', state = '') {
     const greekToLatin = {
         'α':'a','β':'b','γ':'g','δ':'d','ε':'e','ζ':'z','η':'h','θ':'th','ι':'i','κ':'k','λ':'l','μ':'m','ν':'n','ξ':'x','ο':'o','π':'p','ρ':'r','σ':'s','ς':'s','τ':'t','υ':'y','φ':'f','χ':'ch','ψ':'ps','ω':'o',
         'Α':'a','Β':'b','Γ':'g','Δ':'d','Ε':'e','Ζ':'z','Η':'h','Θ':'th','Ι':'i','Κ':'k','Λ':'l','Μ':'m','Ν':'n','Ξ':'x','Ο':'o','Π':'p','Ρ':'r','Σ':'s','Τ':'t','Υ':'y','Φ':'f','Χ':'ch','Ψ':'ps','Ω':'o'
     };
-    let out = name || '';
-    Object.entries(greekToLatin).forEach(([gr, lt]) => {
-        out = out.replace(new RegExp(gr, 'g'), lt);
-    });
-    out = out.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    return out || `listing-${Date.now()}`;
-}
 
+    // Helper function to clean individual slug components
+    function processComponent(text, removeApostrophes = false) {
+        let out = text || '';
+        
+        // Transliterate Greek characters to Latin
+        Object.entries(greekToLatin).forEach(([gr, lt]) => {
+            out = out.replace(new RegExp(gr, 'g'), lt);
+        });
+        
+        // Completely remove specific apostrophes/quotes instead of converting to hyphens
+        if (removeApostrophes) {
+            out = out.replace(/['’‘]/g, '');
+        }
+        
+        // Convert to lowercase, replace remaining non-alphanumeric characters with '-', and strip leading/trailing '-'
+        out = out.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        return out;
+    }
+
+    // Process each necessary component
+    const cleanBusinessName = processComponent(business_name, true);
+
+    // Fallback if the business name becomes completely empty after formatting
+    const finalBusinessName = cleanBusinessName || `listing-${Date.now()}`;
+
+    // Determine the slug prefix format based on the presence of an address
+    if (address && String(address).trim()) {
+        const cleanCity = processComponent(city, true);
+        const cleanState = processComponent(state, false);
+        return `${cleanCity}-${cleanState}/${finalBusinessName}`;
+    } else {
+        return `online/${finalBusinessName}`;
+    }
+}
 async function loadSubcategories() {
     try {
         const data = await adminProxy('subcategories:list');
@@ -2303,25 +2330,16 @@ async function saveListing() {
 // In saveListing function, replace the slug generation with:
 
 let slug = document.getElementById('editSlug').value.trim();
+
 if (!slug) {
-    // Transliterate Greek to Latin
-    const greekToLatin = {
-        'α': 'a', 'β': 'b', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'ζ': 'z', 'η': 'h', 'θ': 'th',
-        'ι': 'i', 'κ': 'k', 'λ': 'l', 'μ': 'm', 'ν': 'n', 'ξ': 'x', 'ο': 'o', 'π': 'p',
-        'ρ': 'r', 'σ': 's', 'ς': 's', 'τ': 't', 'υ': 'y', 'φ': 'f', 'χ': 'ch', 'ψ': 'ps', 'ω': 'o',
-        'Α': 'a', 'Β': 'b', 'Γ': 'g', 'Δ': 'd', 'Ε': 'e', 'Ζ': 'z', 'Η': 'h', 'Θ': 'th',
-        'Ι': 'i', 'Κ': 'k', 'Λ': 'l', 'Μ': 'm', 'Ν': 'n', 'Ξ': 'x', 'Ο': 'o', 'Π': 'p',
-        'Ρ': 'r', 'Σ': 's', 'Τ': 't', 'Υ': 'y', 'Φ': 'f', 'Χ': 'ch', 'Ψ': 'ps', 'Ω': 'o'
-    };
-    
-    let transliterated = businessName;
-    for (const [greek, latin] of Object.entries(greekToLatin)) {
-        transliterated = transliterated.replace(new RegExp(greek, 'g'), latin);
-    }
-    
-    slug = transliterated.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
+    // Grab all the necessary fields from the modal form inputs
+    const businessNameInput = document.getElementById('editBusinessName')?.value.trim() || '';
+    const addressInput = document.getElementById('editAddress')?.value.trim() || '';
+    const cityInput = document.getElementById('editCity')?.value.trim() || '';
+    const stateInput = document.getElementById('editState')?.value.trim() || '';
+
+    // Let the main function handle the heavy lifting and routing rules
+    slug = generateSlugFromName(businessNameInput, addressInput, cityInput, stateInput);
 }
         
         const address = document.getElementById('editAddress').value.trim() || null;
