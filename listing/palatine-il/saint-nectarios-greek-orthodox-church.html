@@ -473,8 +473,10 @@ or distribution of this code can result in legal action to the fullest extent pe
     #additionalInfoSectionWrap { order: 6; }
     #ownerInfoSection { order: 7; }
     .social-map-grid { order: 8; }
-    .related-listings-section { order: 9; }
-    .claim-listing-section { order: 10; }
+    #parentListingSection { order: 9; }
+    #childListingsSection { order: 10; }
+    .related-listings-section { order: 11; }
+    .claim-listing-section { order: 12; }
 }
 
         #listingMap,
@@ -753,6 +755,128 @@ The first Church services were held the weekend of St. Nectarios’ feastday on 
 
         <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
 
+        <div class="related-listings-section">
+            <div class="mt-8" id="parentListingSection">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Parent Listing</h2>
+                <div id="parentListingContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p class="text-gray-600 col-span-full">Loading parent listing…</p>
+                </div>
+            </div>
+            <script>
+            (async function() {
+                try {
+                    const parentId = '9f2aee56-824e-4b7b-952c-e2a464e09dd5';
+                    const response = await fetch(
+                        'https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?id=eq.' + parentId + '&visible=eq.true&select=*',
+                        { headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg' } }
+                    );
+                    if (!response.ok) throw new Error('Failed to load parent listing');
+                    const data = await response.json();
+                    const container = document.getElementById('parentListingContainer');
+                    if (!data.length) { container.innerHTML = '<p class="text-gray-600 col-span-full">Parent listing not available.</p>'; return; }
+                    const l = data[0];
+                    const listingUrl = '/listing/' + l.slug;
+                    const location = (l.city && l.state) ? l.city + ', ' + l.state : (l.city || l.state || '');
+                    const formatPhone = (phone) => {
+                        if (!phone) return '';
+                        const digits = String(phone).replace(/\D/g, '');
+                        if (digits.length === 11 && digits.startsWith('1')) return '(' + digits.slice(1,4) + ') ' + digits.slice(4,7) + '-' + digits.slice(7,11);
+                        if (digits.length === 10) return '(' + digits.slice(0,3) + ') ' + digits.slice(3,6) + '-' + digits.slice(6,10);
+                        return phone;
+                    };
+                    const getHoursBadge = (hours) => {
+                        if (!hours || typeof hours !== 'object') return '';
+                        const dayKeys = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+                        const now = new Date();
+                        const day = dayKeys[now.getDay()];
+                        const todayHours = (hours[day] || '').toLowerCase();
+                        if (!todayHours) return '';
+                        if (todayHours.includes('closed')) return '<span class="badge badge-closed">CLOSED</span>';
+                        return '<span class="badge badge-open">OPEN</span>';
+                    };
+                    const getTierBadge = (tier) => {
+                        if (tier === 'PREMIUM') return '<span class="badge badge-premium">Premium</span>';
+                        if (tier === 'FEATURED') return '<span class="badge badge-featured">Featured</span>';
+                        return '';
+                    };
+                    container.innerHTML = `<a href="${listingUrl}" class="related-listing-card block bg-white p-3">
+                        <div class="flex items-start gap-4">
+                            ${l.logo ? `<img src="${l.logo}" alt="${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">` : ''}
+                            <div class="flex-1 min-w-0 pl-3">
+                                <div class="flex flex-wrap gap-1 mb-1">${getHoursBadge(l.hours)}${getTierBadge(l.tier)}</div>
+                                <h3 class="font-bold text-gray-900 mb-1 leading-snug">${l.business_name}</h3>
+                                ${location ? `<p class="text-sm text-gray-600 mb-0.5" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>${location}</span></p>` : ''}
+                                ${l.phone ? `<p class="text-sm text-gray-600" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.3a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21L8 10.5a11 11 0 005.5 5.5l1.1-2.25a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.7.95V19a2 2 0 01-2 2h-1C9.7 21 3 14.3 3 6V5z"/></svg><span>${formatPhone(l.phone)}</span></p>` : ''}
+                            </div>
+                        </div>
+                    </a>`;
+                } catch (error) {
+                    document.getElementById('parentListingContainer').innerHTML = '<p class="text-gray-600 col-span-full">Failed to load parent listing.</p>';
+                }
+            })();
+            </script>
+        </div>
+        <div class="related-listings-section">
+            <div class="mt-8" id="childListingsSection" style="display:none;">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Child Listings</h2>
+                <div id="childListingsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <script>
+            (async function() {
+                try {
+                    const currentId = 'd60cb2dc-c526-4034-aaba-1994a2a7f7a0';
+                    const response = await fetch(
+                        'https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?parent_listing=eq.' + currentId + '&visible=eq.true&select=*',
+                        { headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg' } }
+                    );
+                    if (!response.ok) throw new Error('Failed to load child listings');
+                    const data = await response.json();
+                    if (!data.length) return; // hide section if no children
+                    document.getElementById('childListingsSection').style.display = '';
+                    const container = document.getElementById('childListingsContainer');
+                    const formatPhone = (phone) => {
+                        if (!phone) return '';
+                        const digits = String(phone).replace(/\D/g, '');
+                        if (digits.length === 11 && digits.startsWith('1')) return '(' + digits.slice(1,4) + ') ' + digits.slice(4,7) + '-' + digits.slice(7,11);
+                        if (digits.length === 10) return '(' + digits.slice(0,3) + ') ' + digits.slice(3,6) + '-' + digits.slice(6,10);
+                        return phone;
+                    };
+                    const getHoursBadge = (hours) => {
+                        if (!hours || typeof hours !== 'object') return '';
+                        const dayKeys = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+                        const now = new Date();
+                        const day = dayKeys[now.getDay()];
+                        const todayHours = (hours[day] || '').toLowerCase();
+                        if (!todayHours) return '';
+                        if (todayHours.includes('closed')) return '<span class="badge badge-closed">CLOSED</span>';
+                        return '<span class="badge badge-open">OPEN</span>';
+                    };
+                    const getTierBadge = (tier) => {
+                        if (tier === 'PREMIUM') return '<span class="badge badge-premium">Premium</span>';
+                        if (tier === 'FEATURED') return '<span class="badge badge-featured">Featured</span>';
+                        return '';
+                    };
+                    container.innerHTML = data.map(l => {
+                        const listingUrl = '/listing/' + l.slug;
+                        const location = (l.city && l.state) ? l.city + ', ' + l.state : (l.city || l.state || '');
+                        return `<a href="${listingUrl}" class="related-listing-card block bg-white p-3">
+                            <div class="flex items-start gap-4">
+                                ${l.logo ? `<img src="${l.logo}" alt="${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">` : ''}
+                                <div class="flex-1 min-w-0 pl-3">
+                                    <div class="flex flex-wrap gap-1 mb-1">${getHoursBadge(l.hours)}${getTierBadge(l.tier)}</div>
+                                    <h3 class="font-bold text-gray-900 mb-1 leading-snug">${l.business_name}</h3>
+                                    ${location ? `<p class="text-sm text-gray-600 mb-0.5" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>${location}</span></p>` : ''}
+                                    ${l.phone ? `<p class="text-sm text-gray-600" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.3a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21L8 10.5a11 11 0 005.5 5.5l1.1-2.25a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.7.95V19a2 2 0 01-2 2h-1C9.7 21 3 14.3 3 6V5z"/></svg><span>${formatPhone(l.phone)}</span></p>` : ''}
+                                </div>
+                            </div>
+                        </a>`;
+                    }).join('');
+                } catch (error) {
+                    // silently fail — section stays hidden
+                }
+            })();
+            </script>
+        </div>
         <div class="related-listings-section" id="relatedSection"></div>
 
         <div class="claim-listing-section" id="claimSection">
