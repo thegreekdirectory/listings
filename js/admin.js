@@ -1468,7 +1468,9 @@ function fillEditForm(listing) {
                             <input type="text" id="editParentListing"
                                    value="${escapeHtml(listing?.parent_listing || '')}"
                                    class="flex-1 px-4 py-2 border rounded-lg font-mono text-sm"
-                                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                                   placeholder="Search by name or paste UUID…"
+                                   oninput="handleParentListingInput(this.value)"
+                                   autocomplete="off">
                             <button type="button" onclick="checkParentListingUUID()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium whitespace-nowrap">Check</button>
                         </div>
                         <p class="text-xs mt-1" id="parentListingStatus"></p>
@@ -2173,7 +2175,7 @@ window.toggleChainFields = function() {
     }
 };
 
-// ─── Parent Listing toggle + UUID check ──────────────────────────────────────
+// ─── Parent Listing toggle + UUID check + live search ────────────────────────
 window.toggleParentListingFields = function() {
     const hasParent = document.getElementById('editHasParentListing')?.checked;
     const container = document.getElementById('parentListingFieldsContainer');
@@ -2182,42 +2184,180 @@ window.toggleParentListingFields = function() {
         container.classList.remove('hidden');
     } else {
         container.classList.add('hidden');
-        // Clear the UUID and status when unchecking
+        // Clear the UUID, dropdown, and status when unchecking
         const input = document.getElementById('editParentListing');
         if (input) input.value = '';
+        _closeParentListingDropdown();
         const status = document.getElementById('parentListingStatus');
         if (status) { status.textContent = ''; status.className = 'text-xs mt-1'; }
     }
 };
 
+// ── Internal helpers ──────────────────────────────────────────────────────────
+let _parentSearchTimer = null;
+
+function _setParentStatus(text, type) {
+    const el = document.getElementById('parentListingStatus');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'text-xs mt-1 ' + (
+        type === 'ok'      ? 'text-green-600' :
+        type === 'error'   ? 'text-red-600'   :
+        type === 'loading' ? 'text-gray-500'  : 'text-gray-500'
+    );
+}
+
+function _closeParentListingDropdown() {
+    const el = document.getElementById('parentListingDropdown');
+    if (el) el.style.display = 'none';
+}
+
+function _selectParentListing(uuid, name, city, state) {
+    const input = document.getElementById('editParentListing');
+    if (input) input.value = uuid;
+    _closeParentListingDropdown();
+    const loc = [city, state].filter(Boolean).join(', ');
+    _setParentStatus('✅ ' + name + (loc ? ' · ' + loc : ''), 'ok');
+}
+
+window._selectParentListingRow = function(uuid, name, city, state) {
+    _selectParentListing(uuid, name, city, state);
+};
+
+// ── Live search on the UUID input ────────────────────────────────────────────
+// The input's wrapper <div style="position:relative"> must contain the dropdown
+// div injected below. We inject it lazily on first keystroke so we don't have
+// to touch the HTML template.
+function _ensureParentDropdown() {
+    if (document.getElementById('parentListingDropdown')) return;
+    const input = document.getElementById('editParentListing');
+    if (!input) return;
+    const wrap = input.closest('div') || input.parentElement;
+    const dd = document.createElement('div');
+    dd.id = 'parentListingDropdown';
+    dd.style.cssText = 'position:absolute;top:100%;left:0;right:0;z-index:50;background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;display:none;';
+    // Make the wrapper position:relative so the dropdown anchors correctly
+    if (wrap && getComputedStyle(wrap).position === 'static') {
+        wrap.style.position = 'relative';
+    }
+    if (wrap) wrap.appendChild(dd);
+}
+
+window.handleParentListingInput = async function(value) {
+    const statusEl = document.getElementById('parentListingStatus');
+    _ensureParentDropdown();
+    const dd = document.getElementById('parentListingDropdown');
+
+    const trimmed = value.trim();
+    _setParentStatus('', '');
+    if (dd) dd.style.display = 'none';
+
+    if (!trimmed) return;
+
+    if (_parentSearchTimer) clearTimeout(_parentSearchTimer);
+
+    _parentSearchTimer = setTimeout(async () => {
+        _setParentStatus('Searching…', 'loading');
+
+        let listings;
+        try {
+            listings = await adminProxy('listings:list');
+            if (!Array.isArray(listings)) listings = [];
+        } catch (_) {
+            listings = [];
+        }
+
+        const currentId = String(editingListing?.id || '');
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isUuid = uuidRe.test(trimmed);
+
+        if (isUuid) {
+            // Exact UUID typed — validate inline without dropdown
+            if (trimmed === currentId) {
+                _setParentStatus('❌ A listing cannot be its own parent.', 'error');
+                return;
+            }
+            const match = listings.find(l => String(l.id) === trimmed);
+            if (match) {
+                _setParentStatus(
+                    `✅ ${match.business_name}${match.city ? ' · ' + match.city : ''}${match.state ? ', ' + match.state : ''}`,
+                    'ok'
+                );
+            } else {
+                _setParentStatus('❌ No listing found with that UUID.', 'error');
+            }
+            return;
+        }
+
+        // Name / partial search — show dropdown, fill input with UUID on select
+        const term = trimmed.toLowerCase();
+        const matches = listings
+            .filter(l => String(l.id) !== currentId &&
+                         (l.business_name.toLowerCase().includes(term) ||
+                          String(l.id).toLowerCase().includes(term)))
+            .slice(0, 6);
+
+        if (!dd) return;
+
+        if (matches.length === 0) {
+            dd.innerHTML = '<div style="padding:10px 12px;color:#6b7280;font-size:.85rem;">No listings found.</div>';
+            dd.style.display = 'block';
+            _setParentStatus('', '');
+            return;
+        }
+
+        dd.innerHTML = matches.map(l => {
+            const safeId   = escapeHtml(String(l.id));
+            const safeName = escapeHtml(l.business_name);
+            const safeCity = escapeHtml(l.city  || '');
+            const safeSt   = escapeHtml(l.state || '');
+            const loc      = [l.city, l.state].filter(Boolean).join(', ');
+            return `
+                <div onclick="window._selectParentListingRow('${safeId}','${safeName.replace(/'/g,"\\'")}','${safeCity.replace(/'/g,"\\'")}','${safeSt.replace(/'/g,"\\'")}')"
+                     style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;"
+                     onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
+                    <div style="font-weight:600;font-size:.88rem;color:#111827;">${safeName}</div>
+                    <div style="font-size:.75rem;color:#6b7280;">${escapeHtml(loc)} · <span style="font-family:monospace;">${safeId}</span></div>
+                </div>`;
+        }).join('');
+        dd.style.display = 'block';
+        _setParentStatus('', '');
+    }, 280);
+};
+
+// Close dropdown when clicking outside the input or dropdown
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#editParentListing') &&
+        !e.target.closest('#parentListingDropdown')) {
+        _closeParentListingDropdown();
+    }
+});
+
+// ── Check button (manual UUID validation) ────────────────────────────────────
 window.checkParentListingUUID = async function() {
     const input    = document.getElementById('editParentListing');
     const statusEl = document.getElementById('parentListingStatus');
     if (!input || !statusEl) return;
 
-    const uuid = input.value.trim();
-    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuid    = input.value.trim();
+    const uuidRe  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    _closeParentListingDropdown();
 
     if (!uuid) {
-        statusEl.textContent = 'Enter a UUID first.';
-        statusEl.className = 'text-xs mt-1 text-gray-500';
+        _setParentStatus('Enter a UUID first.', '');
         return;
     }
-
     if (!uuidRe.test(uuid)) {
-        statusEl.textContent = '❌ Not a valid UUID format.';
-        statusEl.className = 'text-xs mt-1 text-red-600';
+        _setParentStatus('❌ Not a valid UUID format.', 'error');
         return;
     }
-
     if (uuid === String(editingListing?.id || '')) {
-        statusEl.textContent = '❌ A listing cannot be its own parent.';
-        statusEl.className = 'text-xs mt-1 text-red-600';
+        _setParentStatus('❌ A listing cannot be its own parent.', 'error');
         return;
     }
 
-    statusEl.textContent = 'Checking…';
-    statusEl.className = 'text-xs mt-1 text-gray-500';
+    _setParentStatus('Checking…', 'loading');
 
     try {
         const listings = await adminProxy('listings:list');
@@ -2226,19 +2366,18 @@ window.checkParentListingUUID = async function() {
             : null;
 
         if (match) {
-            statusEl.textContent = `✅ ${match.business_name}${match.city ? ' · ' + match.city : ''}${match.state ? ', ' + match.state : ''}`;
-            statusEl.className = 'text-xs mt-1 text-green-600';
+            _setParentStatus(
+                `✅ ${match.business_name}${match.city ? ' · ' + match.city : ''}${match.state ? ', ' + match.state : ''}`,
+                'ok'
+            );
         } else {
-            statusEl.textContent = '❌ No listing found with that UUID.';
-            statusEl.className = 'text-xs mt-1 text-red-600';
+            _setParentStatus('❌ No listing found with that UUID.', 'error');
         }
     } catch (err) {
-        statusEl.textContent = '⚠️ Could not verify — check console.';
-        statusEl.className = 'text-xs mt-1 text-yellow-700';
+        _setParentStatus('⚠️ Could not verify — check console.', 'loading');
         console.error('checkParentListingUUID error:', err);
     }
 };
-
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 window.toggleClaimedFields = function() {
@@ -2731,15 +2870,34 @@ if (customShortlinkPath && isValidCustomShortlink(customShortlinkPath)) {
         await loadListings();
         
         console.log('🔨 Auto-generating listing page...');
-        await generateListingPage(savedListing.id);
-        
+        await generateListingPage(savedListing.id, { skipSitemap: true });
+
+        // ── Regenerate pages of listings that list this one as their parent ──
+        // Those listings' Child Listings sections must update when this listing changes.
+        try {
+            const allListingsData = await adminProxy('listings:list');
+            const childListings = Array.isArray(allListingsData)
+                ? allListingsData.filter(l => String(l.parent_listing) === String(savedListing.id))
+                : [];
+
+            if (childListings.length > 0) {
+                console.log(`🔨 Regenerating ${childListings.length} child listing page(s)…`);
+                for (const child of childListings) {
+                    await generateListingPage(child.id, { skipSitemap: true });
+                }
+            }
+        } catch (childErr) {
+            // Non-fatal: log but don't block the save flow
+            console.error('Could not regenerate child listing pages:', childErr);
+        }
+
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-        
+
         // UPDATE SITEMAP
         console.log('🗺️ Updating sitemap...');
         await updateSitemap();
         console.log('✅ Sitemap updated successfully!');
-        
+
         alert('✅ Listing saved and sitemap updated!');
         
     } catch (error) {
