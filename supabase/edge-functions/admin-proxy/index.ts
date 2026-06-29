@@ -270,22 +270,23 @@ serve(async (req: Request) => {
         break
       }
 
-      // ── SUBCATEGORIES ──────────────────────────────────────────────────
+// ── SUBCATEGORIES ──────────────────────────────────────────────────
       case 'subcategories:list': {
         const { data, error } = await supabase
           .from('category_subcategories')
-          .select('*')
+          .select('category, subcategories, schema_type_map')
           .order('category')
-          .order('name')
         if (error) throw toError(error)
         result = data
         break
       }
 
       case 'subcategories:insert': {
+        // By using .upsert instead of .insert, we handle cases where the category row already exists.
+        // It will automatically replace the old array of subcategories without throwing a constraint conflict error.
         const { data, error } = await supabase
           .from('category_subcategories')
-          .insert(payload)
+          .upsert(payload, { onConflict: 'category' })
           .select()
           .single()
         if (error) throw toError(error)
@@ -294,28 +295,20 @@ serve(async (req: Request) => {
       }
 
       case 'subcategories:update': {
-        const { id, ...updates } = payload
-        if (!id) throw new Error('subcategories:update requires id')
-        const { data, error } = await supabase
-          .from('category_subcategories')
-          .update(updates)
-          .eq('id', id)
-          .select()
-          .single()
+        const { id, category, ...updates } = payload
+        let query = supabase.from('category_subcategories')
+        
+        if (id) {
+          query = query.update(updates).eq('id', id)
+        } else if (category) {
+          query = query.update(updates).eq('category', category)
+        } else {
+          throw new Error('subcategories:update requires either id or category')
+        }
+
+        const { data, error } = await query.select().single()
         if (error) throw toError(error)
         result = data
-        break
-      }
-
-      case 'subcategories:delete': {
-        const { id } = payload
-        if (!id) throw new Error('subcategories:delete requires id')
-        const { error } = await supabase
-          .from('category_subcategories')
-          .delete()
-          .eq('id', id)
-        if (error) throw toError(error)
-        result = { deleted: true, id }
         break
       }
 
