@@ -1,2 +1,5 @@
-https://:project.pages.dev/*
+/admin
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/*
   X-Robots-Tag: noindex, nofollow
