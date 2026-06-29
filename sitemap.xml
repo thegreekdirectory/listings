@@ -55,13 +55,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/church-religious-organization</loc>
+    <loc>https://thegreekdirectory.org/category/professional-business-services</loc>
     <lastmod>2026-06-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/professional-business-services</loc>
+    <loc>https://thegreekdirectory.org/category/church-religious-organization</loc>
     <lastmod>2026-06-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -113,6 +113,12 @@
     <lastmod>2026-06-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://thegreekdirectory.org/listing/chicago-il/fulton-may-solutions</loc>
+    <lastmod>2026-06-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/chicago-il/greek-orthodox-metropolis-of-chicago</loc>
