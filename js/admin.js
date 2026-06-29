@@ -1433,7 +1433,7 @@ function fillEditForm(listing) {
                 <div id="subcategoryCheckboxes" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <!-- Chain Info -->
+<!-- Chain Info -->
             <div>
                 <label class="flex items-center gap-2 mb-4">
                     <input type="checkbox" id="editIsChain" ${listing?.is_chain ? 'checked' : ''} onchange="toggleChainFields()">
@@ -1451,6 +1451,41 @@ function fillEditForm(listing) {
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium mb-2">More Listings Title</label>
                         <input type="text" id="editMoreListingsTitleCustom" value="${escapeHtml(listing?.more_listings_title_custom || '')}" class="w-full px-4 py-2 border rounded-lg" placeholder="More Locations">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parent / Child Listing -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Parent / Child Listing</h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div style="position:relative;">
+                        <label class="block text-sm font-medium mb-2">Parent Listing UUID</label>
+                        <input type="text" id="editParentListingSearch"
+                               value="${escapeHtml(listing?.parent_listing || '')}"
+                               class="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                               placeholder="Search by name or paste UUID…"
+                               oninput="handleParentListingInput(this.value)"
+                               autocomplete="off">
+                        <div id="parentListingSearchResults" class="bp-search-results" style="position:absolute;top:100%;left:0;right:0;z-index:50;background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;display:none;"></div>
+                        <p class="text-xs mt-1" id="parentListingStatus"></p>
+                        <input type="hidden" id="editParentListing" value="${escapeHtml(listing?.parent_listing || '')}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Parent Listing Section Custom Title</label>
+                        <input type="text" id="editParentListingTitleCustom"
+                               value="${escapeHtml(listing?.parent_listing_title_custom || '')}"
+                               class="w-full px-4 py-2 border rounded-lg"
+                               placeholder="Parent Listing">
+                        <p class="text-xs text-gray-500 mt-1">Default: "Parent Listing"</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Child Listings Section Custom Title</label>
+                        <input type="text" id="editChildListingsTitleCustom"
+                               value="${escapeHtml(listing?.child_listings_custom_title || '')}"
+                               class="w-full px-4 py-2 border rounded-lg"
+                               placeholder="Child Listings">
+                        <p class="text-xs text-gray-500 mt-1">Default: "Child Listings"</p>
                     </div>
                 </div>
             </div>
@@ -2137,6 +2172,129 @@ window.toggleChainFields = function() {
     }
 };
 
+// ─── Parent Listing search / validate ────────────────────────────────────────
+let _parentListingSearchTimer = null;
+let _parentListingSearchCache = null; // reuse allListings if already loaded
+
+async function _getListingsForParentSearch() {
+    if (_parentListingSearchCache) return _parentListingSearchCache;
+    // allListings is already in scope (module-level var)
+    if (allListings && allListings.length > 0) {
+        _parentListingSearchCache = allListings;
+        return _parentListingSearchCache;
+    }
+    try {
+        const data = await adminProxy('listings:list');
+        _parentListingSearchCache = Array.isArray(data) ? data : [];
+    } catch (_) {
+        _parentListingSearchCache = [];
+    }
+    return _parentListingSearchCache;
+}
+
+function _setParentListingStatus(text, type) {
+    // type: 'ok' | 'error' | 'loading' | ''
+    const el = document.getElementById('parentListingStatus');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'text-xs mt-1 ' + (
+        type === 'ok'      ? 'text-green-600' :
+        type === 'error'   ? 'text-red-600'   :
+        type === 'loading' ? 'text-gray-500'  : 'text-gray-500'
+    );
+}
+
+function _closeParentListingDropdown() {
+    const el = document.getElementById('parentListingSearchResults');
+    if (el) el.style.display = 'none';
+}
+
+function _selectParentListing(id, name) {
+    document.getElementById('editParentListingSearch').value = name;
+    document.getElementById('editParentListing').value = id;
+    _closeParentListingDropdown();
+    _setParentListingStatus('✅ ' + name, 'ok');
+}
+
+window.handleParentListingInput = async function(value) {
+    const hiddenInput = document.getElementById('editParentListing');
+    const resultsEl   = document.getElementById('parentListingSearchResults');
+    if (!hiddenInput || !resultsEl) return;
+
+    const trimmed = value.trim();
+
+    // Clear hidden value until validated
+    hiddenInput.value = '';
+    _setParentListingStatus('', '');
+    resultsEl.style.display = 'none';
+
+    if (!trimmed) return;
+
+    if (_parentListingSearchTimer) clearTimeout(_parentListingSearchTimer);
+
+    _parentListingSearchTimer = setTimeout(async () => {
+        _setParentListingStatus('Searching…', 'loading');
+
+        const listings = await _getListingsForParentSearch();
+        const currentId = editingListing?.id || '';
+
+        // UUID regex
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isUuid = uuidRe.test(trimmed);
+
+        if (isUuid) {
+            // Exact UUID lookup
+            const match = listings.find(l => String(l.id) === trimmed && String(l.id) !== currentId);
+            if (match) {
+                hiddenInput.value = match.id;
+                _setParentListingStatus('✅ ' + match.business_name, 'ok');
+            } else {
+                hiddenInput.value = '';
+                _setParentListingStatus('❌ No listing found with that UUID.', 'error');
+            }
+            resultsEl.style.display = 'none';
+            return;
+        }
+
+        // Name search — show dropdown
+        const term = trimmed.toLowerCase();
+        const matches = listings
+            .filter(l => String(l.id) !== currentId &&
+                         (l.business_name.toLowerCase().includes(term) || String(l.id).includes(term)))
+            .slice(0, 6);
+
+        if (matches.length === 0) {
+            resultsEl.innerHTML = '<div style="padding:10px 12px;color:#6b7280;font-size:.85rem;">No listings found.</div>';
+            resultsEl.style.display = 'block';
+            _setParentListingStatus('', '');
+            return;
+        }
+
+        resultsEl.innerHTML = matches.map(l => `
+            <div onclick="window._selectParentListingRow('${escapeHtml(String(l.id))}','${escapeHtml(l.business_name.replace(/'/g,"\\'"
+))}' )"
+                 style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;"
+                 onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
+                <div style="font-weight:600;font-size:.88rem;color:#111827;">${escapeHtml(l.business_name)}</div>
+                <div style="font-size:.75rem;color:#6b7280;">${escapeHtml([l.city, l.state].filter(Boolean).join(', '))} · <span style="font-family:monospace;">${escapeHtml(String(l.id))}</span></div>
+            </div>
+        `).join('');
+        resultsEl.style.display = 'block';
+        _setParentListingStatus('', '');
+    }, 280);
+};
+
+window._selectParentListingRow = function(id, name) {
+    _selectParentListing(id, name);
+};
+
+// Close parent listing dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#editParentListingSearch') && !e.target.closest('#parentListingSearchResults')) {
+        _closeParentListingDropdown();
+    }
+});
+
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 window.toggleClaimedFields = function() {
@@ -2483,8 +2641,16 @@ const listingData = {
                 other2: document.getElementById('editOtherReview2').value.trim() || null,
                 other3_name: document.getElementById('editOtherReview3Name').value.trim() || null,
                 other3: document.getElementById('editOtherReview3').value.trim() || null
-            }
+            },
+            // Parent / Child Listing
+            parent_listing: (function() {
+                const hidden = document.getElementById('editParentListing');
+                return (hidden && hidden.value.trim()) ? hidden.value.trim() : null;
+            })(),
+            parent_listing_title_custom: document.getElementById('editParentListingTitleCustom')?.value.trim() || null,
+            child_listings_custom_title: document.getElementById('editChildListingsTitleCustom')?.value.trim() || null
         };
+        
         const customShortlinkPath = document.getElementById('editCustomShortlink')?.value.trim() || null;
         
         // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
@@ -3946,6 +4112,142 @@ function generateTemplateReplacementsPart2(listing) {
     }
     
     // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+
+    // ── Parent Listing section ────────────────────────────────────────────────
+    let parentListingSection = '';
+    if (listing.parent_listing) {
+        const parentTitle = escapeHtml(listing.parent_listing_title_custom || 'Parent Listing');
+        parentListingSection = `
+            <div class="mt-8" id="parentListingSection">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">${parentTitle}</h2>
+                <div id="parentListingContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p class="text-gray-600 col-span-full">Loading parent listing…</p>
+                </div>
+            </div>
+            <script>
+            (async function() {
+                try {
+                    const parentId = '${escapeJsonForTemplate(listing.parent_listing)}';
+                    const response = await fetch(
+                        'https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?id=eq.' + parentId + '&visible=eq.true&select=*',
+                        { headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg' } }
+                    );
+                    if (!response.ok) throw new Error('Failed to load parent listing');
+                    const data = await response.json();
+                    const container = document.getElementById('parentListingContainer');
+                    if (!data.length) { container.innerHTML = '<p class="text-gray-600 col-span-full">Parent listing not available.</p>'; return; }
+                    const l = data[0];
+                    const listingUrl = '/listing/' + l.slug;
+                    const location = (l.city && l.state) ? l.city + ', ' + l.state : (l.city || l.state || '');
+                    const formatPhone = (phone) => {
+                        if (!phone) return '';
+                        const digits = String(phone).replace(/\\D/g, '');
+                        if (digits.length === 11 && digits.startsWith('1')) return '(' + digits.slice(1,4) + ') ' + digits.slice(4,7) + '-' + digits.slice(7,11);
+                        if (digits.length === 10) return '(' + digits.slice(0,3) + ') ' + digits.slice(3,6) + '-' + digits.slice(6,10);
+                        return phone;
+                    };
+                    const getHoursBadge = (hours) => {
+                        if (!hours || typeof hours !== 'object') return '';
+                        const dayKeys = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+                        const now = new Date();
+                        const day = dayKeys[now.getDay()];
+                        const todayHours = (hours[day] || '').toLowerCase();
+                        if (!todayHours) return '';
+                        if (todayHours.includes('closed')) return '<span class="badge badge-closed">CLOSED</span>';
+                        return '<span class="badge badge-open">OPEN</span>';
+                    };
+                    const getTierBadge = (tier) => {
+                        if (tier === 'PREMIUM') return '<span class="badge badge-premium">Premium</span>';
+                        if (tier === 'FEATURED') return '<span class="badge badge-featured">Featured</span>';
+                        return '';
+                    };
+                    container.innerHTML = \`<a href="\${listingUrl}" class="related-listing-card block bg-white p-3">
+                        <div class="flex items-start gap-4">
+                            \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">\` : ''}
+                            <div class="flex-1 min-w-0 pl-3">
+                                <div class="flex flex-wrap gap-1 mb-1">\${getHoursBadge(l.hours)}\${getTierBadge(l.tier)}</div>
+                                <h3 class="font-bold text-gray-900 mb-1 leading-snug">\${l.business_name}</h3>
+                                \${location ? \`<p class="text-sm text-gray-600 mb-0.5" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>\${location}</span></p>\` : ''}
+                                \${l.phone ? \`<p class="text-sm text-gray-600" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.3a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21L8 10.5a11 11 0 005.5 5.5l1.1-2.25a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.7.95V19a2 2 0 01-2 2h-1C9.7 21 3 14.3 3 6V5z"/></svg><span>\${formatPhone(l.phone)}</span></p>\` : ''}
+                            </div>
+                        </div>
+                    </a>\`;
+                } catch (error) {
+                    document.getElementById('parentListingContainer').innerHTML = '<p class="text-gray-600 col-span-full">Failed to load parent listing.</p>';
+                }
+            })();
+            <\/script>
+        `;
+    }
+
+    // ── Child Listings section ────────────────────────────────────────────────
+    let childListingsSection = '';
+    {
+        // We always render the shell; the script decides at runtime whether any children exist.
+        const childTitle = escapeHtml(listing.child_listings_custom_title || 'Child Listings');
+        const listingId  = escapeJsonForTemplate(String(listing.id));
+        childListingsSection = `
+            <div class="mt-8" id="childListingsSection" style="display:none;">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">${childTitle}</h2>
+                <div id="childListingsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <script>
+            (async function() {
+                try {
+                    const currentId = '${listingId}';
+                    const response = await fetch(
+                        'https://luetekzqrrgdxtopzvqw.supabase.co/rest/v1/listings?parent_listing=eq.' + currentId + '&visible=eq.true&select=*',
+                        { headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg' } }
+                    );
+                    if (!response.ok) throw new Error('Failed to load child listings');
+                    const data = await response.json();
+                    if (!data.length) return; // hide section if no children
+                    document.getElementById('childListingsSection').style.display = '';
+                    const container = document.getElementById('childListingsContainer');
+                    const formatPhone = (phone) => {
+                        if (!phone) return '';
+                        const digits = String(phone).replace(/\\D/g, '');
+                        if (digits.length === 11 && digits.startsWith('1')) return '(' + digits.slice(1,4) + ') ' + digits.slice(4,7) + '-' + digits.slice(7,11);
+                        if (digits.length === 10) return '(' + digits.slice(0,3) + ') ' + digits.slice(3,6) + '-' + digits.slice(6,10);
+                        return phone;
+                    };
+                    const getHoursBadge = (hours) => {
+                        if (!hours || typeof hours !== 'object') return '';
+                        const dayKeys = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+                        const now = new Date();
+                        const day = dayKeys[now.getDay()];
+                        const todayHours = (hours[day] || '').toLowerCase();
+                        if (!todayHours) return '';
+                        if (todayHours.includes('closed')) return '<span class="badge badge-closed">CLOSED</span>';
+                        return '<span class="badge badge-open">OPEN</span>';
+                    };
+                    const getTierBadge = (tier) => {
+                        if (tier === 'PREMIUM') return '<span class="badge badge-premium">Premium</span>';
+                        if (tier === 'FEATURED') return '<span class="badge badge-featured">Featured</span>';
+                        return '';
+                    };
+                    container.innerHTML = data.map(l => {
+                        const listingUrl = '/listing/' + l.slug;
+                        const location = (l.city && l.state) ? l.city + ', ' + l.state : (l.city || l.state || '');
+                        return \`<a href="\${listingUrl}" class="related-listing-card block bg-white p-3">
+                            <div class="flex items-start gap-4">
+                                \${l.logo ? \`<img src="\${l.logo}" alt="\${l.business_name}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">\` : ''}
+                                <div class="flex-1 min-w-0 pl-3">
+                                    <div class="flex flex-wrap gap-1 mb-1">\${getHoursBadge(l.hours)}\${getTierBadge(l.tier)}</div>
+                                    <h3 class="font-bold text-gray-900 mb-1 leading-snug">\${l.business_name}</h3>
+                                    \${location ? \`<p class="text-sm text-gray-600 mb-0.5" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>\${location}</span></p>\` : ''}
+                                    \${l.phone ? \`<p class="text-sm text-gray-600" style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.3a1 1 0 01.95.68l1.5 4.49a1 1 0 01-.5 1.21L8 10.5a11 11 0 005.5 5.5l1.1-2.25a1 1 0 011.2-.5l4.5 1.5a1 1 0 01.7.95V19a2 2 0 01-2 2h-1C9.7 21 3 14.3 3 6V5z"/></svg><span>\${formatPhone(l.phone)}</span></p>\` : ''}
+                                </div>
+                            </div>
+                        </a>\`;
+                    }).join('');
+                } catch (error) {
+                    // silently fail — section stays hidden
+                }
+            })();
+            <\/script>
+        `;
+    }
     
     // Generate Related Listings section for chain businesses
     let relatedListingsSection = '';
@@ -4082,6 +4384,8 @@ function generateTemplateReplacementsPart2(listing) {
         'REVIEW_SECTION': reviewSection,
         'REVIEW_BREAK': reviewBreak,
         'MAP_SECTION': mapSection,
+        'PARENT_LISTING_SECTION': parentListingSection,
+        'CHILD_LISTINGS_SECTION': childListingsSection,
         'RELATED_LISTINGS_SECTION': relatedListingsSection,
         'CLAIM_BUTTON': claimButton,
         'SHARE_TRIGGER_BUTTON': `<a class="hero-chip justify-center gap-2 px-4 py-3 text-white" onclick="openShareModal()" style="background-color:#045093; font-size: 16px; cursor: pointer;" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.6495 0.799565C18.4834 -0.72981 16.0093 0.081426 16.0093 1.99313V3.91272C12.2371 3.86807 9.65665 5.16473 7.9378 6.97554C6.10034 8.9113 5.34458 11.3314 5.02788 12.9862C4.86954 13.8135 5.41223 14.4138 5.98257 14.6211C6.52743 14.8191 7.25549 14.7343 7.74136 14.1789C9.12036 12.6027 11.7995 10.4028 16.0093 10.5464V13.0069C16.0093 14.9186 18.4834 15.7298 19.6495 14.2004L23.3933 9.29034C24.2022 8.2294 24.2022 6.7706 23.3933 5.70966L19.6495 0.799565ZM7.48201 11.6095C9.28721 10.0341 11.8785 8.55568 16.0093 8.55568H17.0207C17.5792 8.55568 18.0319 9.00103 18.0319 9.55037L18.0317 13.0069L21.7754 8.09678C22.0451 7.74313 22.0451 7.25687 21.7754 6.90322L18.0317 1.99313V4.90738C18.0317 5.4567 17.579 5.90201 17.0205 5.90201H16.0093C11.4593 5.90201 9.41596 8.33314 9.41596 8.33314C8.47524 9.32418 7.86984 10.502 7.48201 11.6095Z" fill="#FFFFFF"/><path d="M7 1.00391H4C2.34315 1.00391 1 2.34705 1 4.00391V20.0039C1 21.6608 2.34315 23.0039 4 23.0039H20C21.6569 23.0039 23 21.6608 23 20.0039V17.0039C23 16.4516 22.5523 16.0039 22 16.0039C21.4477 16.0039 21 16.4516 21 17.0039V20.0039C21 20.5562 20.5523 21.0039 20 21.0039H4C3.44772 21.0039 3 20.5562 3 20.0039V4.00391C3 3.45162 3.44772 3.00391 4 3.00391H7C7.55228 3.00391 8 2.55619 8 2.00391C8 1.45162 7.55228 1.00391 7 1.00391Z" fill="#FFFFFF"/></svg><span>Share</span></a>`,
