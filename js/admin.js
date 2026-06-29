@@ -1433,7 +1433,7 @@ function fillEditForm(listing) {
                 <div id="subcategoryCheckboxes" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-<!-- Chain Info -->
+            <!-- Chain Info -->
             <div>
                 <label class="flex items-center gap-2 mb-4">
                     <input type="checkbox" id="editIsChain" ${listing?.is_chain ? 'checked' : ''} onchange="toggleChainFields()">
@@ -1457,19 +1457,21 @@ function fillEditForm(listing) {
 
             <!-- Parent / Child Listing -->
             <div>
-                <h3 class="text-lg font-bold mb-4">Parent / Child Listing</h3>
-                <div class="grid grid-cols-1 gap-4">
-                    <div style="position:relative;">
+                <label class="flex items-center gap-2 mb-4">
+                    <input type="checkbox" id="editHasParentListing" ${listing?.parent_listing ? 'checked' : ''} onchange="toggleParentListingFields()">
+                    <span class="text-sm font-medium">This listing has a parent listing</span>
+                </label>
+                <div id="parentListingFieldsContainer" class="${listing?.parent_listing ? '' : 'hidden'} grid grid-cols-1 gap-4">
+                    <div>
                         <label class="block text-sm font-medium mb-2">Parent Listing UUID</label>
-                        <input type="text" id="editParentListingSearch"
-                               value="${escapeHtml(listing?.parent_listing || '')}"
-                               class="w-full px-4 py-2 border rounded-lg font-mono text-sm"
-                               placeholder="Search by name or paste UUID…"
-                               oninput="handleParentListingInput(this.value)"
-                               autocomplete="off">
-                        <div id="parentListingSearchResults" class="bp-search-results" style="position:absolute;top:100%;left:0;right:0;z-index:50;background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;display:none;"></div>
+                        <div class="flex gap-2">
+                            <input type="text" id="editParentListing"
+                                   value="${escapeHtml(listing?.parent_listing || '')}"
+                                   class="flex-1 px-4 py-2 border rounded-lg font-mono text-sm"
+                                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                            <button type="button" onclick="checkParentListingUUID()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium whitespace-nowrap">Check</button>
+                        </div>
                         <p class="text-xs mt-1" id="parentListingStatus"></p>
-                        <input type="hidden" id="editParentListing" value="${escapeHtml(listing?.parent_listing || '')}">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Parent Listing Section Custom Title</label>
@@ -1489,7 +1491,6 @@ function fillEditForm(listing) {
                     </div>
                 </div>
             </div>
-
             <!-- Location -->
             <div>
                 <h3 class="text-lg font-bold mb-4">Location</h3>
@@ -2172,128 +2173,71 @@ window.toggleChainFields = function() {
     }
 };
 
-// ─── Parent Listing search / validate ────────────────────────────────────────
-let _parentListingSearchTimer = null;
-let _parentListingSearchCache = null; // reuse allListings if already loaded
-
-async function _getListingsForParentSearch() {
-    if (_parentListingSearchCache) return _parentListingSearchCache;
-    // allListings is already in scope (module-level var)
-    if (allListings && allListings.length > 0) {
-        _parentListingSearchCache = allListings;
-        return _parentListingSearchCache;
+// ─── Parent Listing toggle + UUID check ──────────────────────────────────────
+window.toggleParentListingFields = function() {
+    const hasParent = document.getElementById('editHasParentListing')?.checked;
+    const container = document.getElementById('parentListingFieldsContainer');
+    if (!container) return;
+    if (hasParent) {
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+        // Clear the UUID and status when unchecking
+        const input = document.getElementById('editParentListing');
+        if (input) input.value = '';
+        const status = document.getElementById('parentListingStatus');
+        if (status) { status.textContent = ''; status.className = 'text-xs mt-1'; }
     }
+};
+
+window.checkParentListingUUID = async function() {
+    const input    = document.getElementById('editParentListing');
+    const statusEl = document.getElementById('parentListingStatus');
+    if (!input || !statusEl) return;
+
+    const uuid = input.value.trim();
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!uuid) {
+        statusEl.textContent = 'Enter a UUID first.';
+        statusEl.className = 'text-xs mt-1 text-gray-500';
+        return;
+    }
+
+    if (!uuidRe.test(uuid)) {
+        statusEl.textContent = '❌ Not a valid UUID format.';
+        statusEl.className = 'text-xs mt-1 text-red-600';
+        return;
+    }
+
+    if (uuid === String(editingListing?.id || '')) {
+        statusEl.textContent = '❌ A listing cannot be its own parent.';
+        statusEl.className = 'text-xs mt-1 text-red-600';
+        return;
+    }
+
+    statusEl.textContent = 'Checking…';
+    statusEl.className = 'text-xs mt-1 text-gray-500';
+
     try {
-        const data = await adminProxy('listings:list');
-        _parentListingSearchCache = Array.isArray(data) ? data : [];
-    } catch (_) {
-        _parentListingSearchCache = [];
-    }
-    return _parentListingSearchCache;
-}
+        const listings = await adminProxy('listings:list');
+        const match = Array.isArray(listings)
+            ? listings.find(l => String(l.id) === uuid)
+            : null;
 
-function _setParentListingStatus(text, type) {
-    // type: 'ok' | 'error' | 'loading' | ''
-    const el = document.getElementById('parentListingStatus');
-    if (!el) return;
-    el.textContent = text;
-    el.className = 'text-xs mt-1 ' + (
-        type === 'ok'      ? 'text-green-600' :
-        type === 'error'   ? 'text-red-600'   :
-        type === 'loading' ? 'text-gray-500'  : 'text-gray-500'
-    );
-}
-
-function _closeParentListingDropdown() {
-    const el = document.getElementById('parentListingSearchResults');
-    if (el) el.style.display = 'none';
-}
-
-function _selectParentListing(id, name) {
-    document.getElementById('editParentListingSearch').value = name;
-    document.getElementById('editParentListing').value = id;
-    _closeParentListingDropdown();
-    _setParentListingStatus('✅ ' + name, 'ok');
-}
-
-window.handleParentListingInput = async function(value) {
-    const hiddenInput = document.getElementById('editParentListing');
-    const resultsEl   = document.getElementById('parentListingSearchResults');
-    if (!hiddenInput || !resultsEl) return;
-
-    const trimmed = value.trim();
-
-    // Clear hidden value until validated
-    hiddenInput.value = '';
-    _setParentListingStatus('', '');
-    resultsEl.style.display = 'none';
-
-    if (!trimmed) return;
-
-    if (_parentListingSearchTimer) clearTimeout(_parentListingSearchTimer);
-
-    _parentListingSearchTimer = setTimeout(async () => {
-        _setParentListingStatus('Searching…', 'loading');
-
-        const listings = await _getListingsForParentSearch();
-        const currentId = editingListing?.id || '';
-
-        // UUID regex
-        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        const isUuid = uuidRe.test(trimmed);
-
-        if (isUuid) {
-            // Exact UUID lookup
-            const match = listings.find(l => String(l.id) === trimmed && String(l.id) !== currentId);
-            if (match) {
-                hiddenInput.value = match.id;
-                _setParentListingStatus('✅ ' + match.business_name, 'ok');
-            } else {
-                hiddenInput.value = '';
-                _setParentListingStatus('❌ No listing found with that UUID.', 'error');
-            }
-            resultsEl.style.display = 'none';
-            return;
+        if (match) {
+            statusEl.textContent = `✅ ${match.business_name}${match.city ? ' · ' + match.city : ''}${match.state ? ', ' + match.state : ''}`;
+            statusEl.className = 'text-xs mt-1 text-green-600';
+        } else {
+            statusEl.textContent = '❌ No listing found with that UUID.';
+            statusEl.className = 'text-xs mt-1 text-red-600';
         }
-
-        // Name search — show dropdown
-        const term = trimmed.toLowerCase();
-        const matches = listings
-            .filter(l => String(l.id) !== currentId &&
-                         (l.business_name.toLowerCase().includes(term) || String(l.id).includes(term)))
-            .slice(0, 6);
-
-        if (matches.length === 0) {
-            resultsEl.innerHTML = '<div style="padding:10px 12px;color:#6b7280;font-size:.85rem;">No listings found.</div>';
-            resultsEl.style.display = 'block';
-            _setParentListingStatus('', '');
-            return;
-        }
-
-        resultsEl.innerHTML = matches.map(l => `
-            <div onclick="window._selectParentListingRow('${escapeHtml(String(l.id))}','${escapeHtml(l.business_name.replace(/'/g,"\\'"
-))}' )"
-                 style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;"
-                 onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
-                <div style="font-weight:600;font-size:.88rem;color:#111827;">${escapeHtml(l.business_name)}</div>
-                <div style="font-size:.75rem;color:#6b7280;">${escapeHtml([l.city, l.state].filter(Boolean).join(', '))} · <span style="font-family:monospace;">${escapeHtml(String(l.id))}</span></div>
-            </div>
-        `).join('');
-        resultsEl.style.display = 'block';
-        _setParentListingStatus('', '');
-    }, 280);
-};
-
-window._selectParentListingRow = function(id, name) {
-    _selectParentListing(id, name);
-};
-
-// Close parent listing dropdown when clicking outside
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('#editParentListingSearch') && !e.target.closest('#parentListingSearchResults')) {
-        _closeParentListingDropdown();
+    } catch (err) {
+        statusEl.textContent = '⚠️ Could not verify — check console.';
+        statusEl.className = 'text-xs mt-1 text-yellow-700';
+        console.error('checkParentListingUUID error:', err);
     }
-});
+};
 
 // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
@@ -2643,9 +2587,12 @@ const listingData = {
                 other3: document.getElementById('editOtherReview3').value.trim() || null
             },
             // Parent / Child Listing
+            // Parent / Child Listing
             parent_listing: (function() {
-                const hidden = document.getElementById('editParentListing');
-                return (hidden && hidden.value.trim()) ? hidden.value.trim() : null;
+                const checked = document.getElementById('editHasParentListing')?.checked;
+                if (!checked) return null;
+                const val = document.getElementById('editParentListing')?.value.trim();
+                return val || null;
             })(),
             parent_listing_title_custom: document.getElementById('editParentListingTitleCustom')?.value.trim() || null,
             child_listings_custom_title: document.getElementById('editChildListingsTitleCustom')?.value.trim() || null
