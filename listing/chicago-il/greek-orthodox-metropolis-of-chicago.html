@@ -97,7 +97,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         "@context": "https://schema.org",
         "@graph": [
             {
-                "@type": ["Church"],
+                "@type": ["LocalBusiness"],
                 "@id": "https://thegreekdirectory.org/listing/chicago-il/greek-orthodox-metropolis-of-chicago#business",
                 "name": "Greek Orthodox Metropolis of Chicago",
                 "description": "Serving and strengthening Greek Orthodox communities across the Midwest. Greek business in Chicago, IL. View address, phone, hours, and photos.",
@@ -581,7 +581,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                                     Church &amp; Religious Organization
                                 </span>
                                 <div class="subcategories-display" id="subcategoriesDisplay">
-                                    <span class="subcategory-tag">Church</span>
+                                    <span class="subcategory-tag">Metropolis</span><span class="subcategory-tag">Diocese</span>
                                 </div>
                                 <div id="statusBadges" class="flex items-center gap-2 flex-wrap">
                                     
@@ -1330,7 +1330,7 @@ function openGallery(index = 0) {
             const toggle = document.getElementById('shortenUrlToggle');
             if (toggle && input) {
                 toggle.addEventListener('change', (event) => {
-                    input.value = event.target.checked ? `https://tgd.gr/l/vJ9FdU` : `https://thegreekdirectory.org/listing/chicago-il/greek-orthodox-metropolis-of-chicago`;
+                    input.value = event.target.checked ? `https://tgd.gr/metchi` : `https://thegreekdirectory.org/listing/chicago-il/greek-orthodox-metropolis-of-chicago`;
                 });
             }
         });
