@@ -2864,42 +2864,83 @@ if (customShortlinkPath && isValidCustomShortlink(customShortlinkPath)) {
     }
 }
         
-        await saveOwnerInfo(savedListing.id, isClaimed);
         
-        document.getElementById('editModal').classList.add('hidden');
-        await loadListings();
+
+    await saveOwnerInfo(savedListing.id, isClaimed);
+    document.getElementById('editModal').classList.add('hidden');
+    await loadListings();
+
+    // Array to collect files and push everything in a single Git transaction
+    const filesToCommit = [];
+    let shortlinksVerificationRequired = false;
+
+    // 1. Prepare Parent Listing Page
+    try {
+        console.log('🔨 Preparing parent listing page content...');
+        const parentFile = await prepareListingPageGeneration(savedListing.id, { skipAnalytics: true });
+        if (parentFile) {
+            filesToCommit.push(parentFile);
+            if (!parentFile.shortlinksFound) shortlinksVerificationRequired = true;
+        }
+    } catch (parentErr) {
+        console.error('Could not prepare parent listing page:', parentErr);
+    }
+
+    // 2. Prepare Child Listing Pages
+    try {
+        const allListingsData = await adminProxy('listings:list');
+        const childListings = Array.isArray(allListingsData) ? allListingsData.filter(l => String(l.parent_listing) === String(savedListing.id)) : [];
         
-        console.log('🔨 Auto-generating listing page...');
-        await generateListingPage(savedListing.id, { skipSitemap: true });
-
-        // ── Regenerate pages of listings that list this one as their parent ──
-        // Those listings' Child Listings sections must update when this listing changes.
-        try {
-            const allListingsData = await adminProxy('listings:list');
-            const childListings = Array.isArray(allListingsData)
-                ? allListingsData.filter(l => String(l.parent_listing) === String(savedListing.id))
-                : [];
-
-            if (childListings.length > 0) {
-                console.log(`🔨 Regenerating ${childListings.length} child listing page(s)…`);
-                for (const child of childListings) {
-                    await generateListingPage(child.id, { skipSitemap: true });
+        if (childListings.length > 0) {
+            console.log(`🔨 Preparing ${childListings.length} child listing page(s)…`);
+            for (const child of childListings) {
+                try {
+                    const childFile = await prepareListingPageGeneration(child.id, { skipAnalytics: true });
+                    if (childFile) {
+                        filesToCommit.push(childFile);
+                        if (!childFile.shortlinksFound) shortlinksVerificationRequired = true;
+                    }
+                } catch (childErr) {
+                    console.error(`Could not prepare child page for listing ID ${child.id}:`, childErr);
                 }
             }
-        } catch (childErr) {
-            // Non-fatal: log but don't block the save flow
-            console.error('Could not regenerate child listing pages:', childErr);
         }
+    } catch (childErr) {
+        console.error('Could not gather child listing pages:', childErr);
+    }
 
-        // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    // 3. Batch commit to GitHub in ONE unified push
+    if (filesToCommit.length > 0) {
+        try {
+            console.log(`🚀 Committing ${filesToCommit.length} file(s) to GitHub simultaneously...`);
+            
+            await saveMultipleFilesToGitHub(
+                filesToCommit,
+                `Update parent and child pages for ${savedListing.business_name || savedListing.id}`
+            );
+            
+            console.log('✅ All pages committed successfully in a single push!');
+            
+            if (shortlinksVerificationRequired) {
+                alert('Pages generated, but shortlink integrity must be checked in Supabase.');
+            }
+        } catch (gitErr) {
+            console.error('Failed to commit pages package to GitHub:', gitErr);
+            alert('❌ Failed to push updates to GitHub: ' + gitErr.message);
+        }
+    }
 
-        // UPDATE SITEMAP
+// 4. Update the global sitemap once after the unified push finishes
+    try {
         console.log('🗺️ Updating sitemap...');
         await updateSitemap();
         console.log('✅ Sitemap updated successfully!');
+        alert('✅ Listing saved, pages pushed, and sitemap updated successfully!');
+    } catch (sitemapErr) {
+        console.error('Could not update sitemap:', sitemapErr);
+        alert('✅ Listing saved and pages pushed, but sitemap encountered an issue.');
+    }
 
-        alert('✅ Listing saved and sitemap updated!');
-        
     } catch (error) {
         console.error('Error saving listing:', error);
         alert('Failed to save listing: ' + error.message);
