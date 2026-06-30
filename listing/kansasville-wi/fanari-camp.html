@@ -117,10 +117,10 @@ or distribution of this code can result in legal action to the fullest extent pe
                 },
                 "geo": {
                     "@type": "GeoCoordinates",
-                    "latitude": "",
-                    "longitude": ""
+                    "latitude": "42.6438712",
+                    "longitude": "-88.0853054"
                 },
-                "hasMap": "",
+                "hasMap": "https://maps.google.com/?q=42.6438712,-88.0853054",
                 "areaServed": {
                     "@type": "AdministrativeArea",
                     "name": "WI"
@@ -1383,14 +1383,14 @@ function openGallery(index = 0) {
             const toggle = document.getElementById('shortenUrlToggle');
             if (toggle && input) {
                 toggle.addEventListener('change', (event) => {
-                    input.value = event.target.checked ? `https://tgd.gr/l/hF9hPd` : `https://thegreekdirectory.org/listing/kansasville-wi/fanari-camp`;
+                    input.value = event.target.checked ? `https://tgd.gr/fanari` : `https://thegreekdirectory.org/listing/kansasville-wi/fanari-camp`;
                 });
             }
         });
 
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-        const coordinatesStr = '';
+        const coordinatesStr = '42.6438712,-88.0853054';
         const fullAddress = '920 224th Ave, Kansasville, WI, 53139';
 
         async function geocodeAddress(address) {
