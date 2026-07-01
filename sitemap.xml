@@ -7,6 +7,12 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://thegreekdirectory.org/places/usa/il</loc>
+    <lastmod>2026-07-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://thegreekdirectory.org/places/usa/wi</loc>
     <lastmod>2026-07-01</lastmod>
     <changefreq>weekly</changefreq>
@@ -14,12 +20,6 @@
   </url>
   <url>
     <loc>https://thegreekdirectory.org/places/usa/nj</loc>
-    <lastmod>2026-07-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://thegreekdirectory.org/places/usa/il</loc>
     <lastmod>2026-07-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -121,7 +121,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/listing/online/greek-american-motorcycle-association</loc>
+    <loc>https://thegreekdirectory.org/listing/chicago-il/greek-american-motorcycle-association</loc>
     <lastmod>2026-07-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
