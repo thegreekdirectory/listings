@@ -3953,7 +3953,7 @@ function generateTemplateReplacements(listing) {
     
     let websiteSection = '';
     if (listing.website) {
-        const displayUrl = decodeEscapedText(listing.website).replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const displayUrl = decodeEscapedText(listing.website).replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
         websiteSection = `
             <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="#045093" viewBox="0 0 24 24">
