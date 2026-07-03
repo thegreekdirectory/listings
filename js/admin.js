@@ -630,6 +630,9 @@ function generateSlugFromName(business_name = '', address = '', city = '', state
     function processComponent(text, removeApostrophes = false) {
         let out = text || '';
         
+        // Convert "&" to "and" explicitly before other character replacements
+        out = out.replace(/&/g, 'and');
+        
         // Transliterate Greek characters to Latin
         Object.entries(greekToLatin).forEach(([gr, lt]) => {
             out = out.replace(new RegExp(gr, 'g'), lt);
@@ -660,6 +663,7 @@ function generateSlugFromName(business_name = '', address = '', city = '', state
         return `online/${finalBusinessName}`;
     }
 }
+
 async function loadSubcategories() {
     try {
         const data = await adminProxy('subcategories:list');
