@@ -14,7 +14,7 @@ const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 
 const CATEGORIES = [
-    'Automotive & Transportation', 'Beauty & Health', 'Church & Religious Organization',
+    'Automotive & Transportations', 'Beauty & Health', 'Church & Religious Organization',
     'Cultural/Fraternal Organization', 'Education & Community', 'Entertainment, Arts & Recreation',
     'Food & Hospitality', 'Grocery & Imports', 'Home & Construction', 'Industrial & Manufacturing',
     'Pets & Veterinary', 'Professional & Business Services', 'Real Estate & Development', 'Retail & Shopping'
