@@ -3913,7 +3913,7 @@ function generateTemplateReplacements(listing) {
         const endOfAHTMLLink = '';
         
         if (listing.address) {
-            addressLinkIfItExists = `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent([listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', '))}" target="_blank" rel="noopener noreferrer">`;
+            addressLinkIfItExists = `<a href="https://www.google.com/maps/dir/?api=1&destination=\${encodeURIComponent([listing.address, listing.city, listing.state, listing.zip_code].filter(Boolean).join(', '))}" target="_blank" rel="noopener noreferrer">`;
             endOfAHTMLLink = `</a>`;
         }
         
