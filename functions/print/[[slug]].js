@@ -6,7 +6,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 */
 
 // functions/print/[[slug]].js
-//
+// 
 // Cloudflare Pages Function. Route: GET /print/*
 //
 // IMPORTANT — why this is [[slug]].js (catch-all) and not [slug].js:
