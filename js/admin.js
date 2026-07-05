@@ -4130,7 +4130,6 @@ function generateTemplateReplacements(listing) {
         'IN_CITY': inCity,
         'TAGLINE': escapeHtml(normalizeTagline(decodedTagline)),
         'TAGLINE_JS': escapeJsonForTemplate(decodedTagline),
-        'VERSION_NUM': listing.version + 1,
         'DESCRIPTION': sanitizeListingDescription(decodedDescription),
         'DESCRIPTION_JS': escapeJsonForTemplate(decodedDescription),
         'CATEGORY': escapeHtml(listing.category),
