@@ -688,10 +688,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             <div class="action-cta-row">
                 <div class="action-cta-slot action-cta-slot-wide">{{SHARE_TRIGGER_BUTTON}}</div>
             </div>
-            <div class="action-cta-slot">
+            <div class="action-cta-slot action-cta-slot-wide">
     <a
         class="hero-chip justify-center gap-2 px-4 py-3 text-white"
-        onclick="openPrintView()"
+        href="/print/{{SLUG}}"
         style="background-color:#045093; font-size: 16px; cursor: pointer;"
         role="button"
         tabindex="0"
@@ -772,25 +772,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             ? window.TGDDirections.getDirectionsUrl(listing)
             : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((listing.address || '') + ' ' + (listing.city || '') + ' ' + (listing.state || ''))}`;
         window.open(directionsUrl, '_blank', 'noopener');
-    }
-        
-    function openPrintView(event) {
-        if (event) event.preventDefault();
-        const listing = window.currentListingData || {};
-        if (!listing.slug) {
-            console.error('openPrintView: window.currentListingData.slug is missing.');
-            return;
-        }
-        // IMPORTANT: do NOT encodeURIComponent(listing.slug) here. Real
-        // slugs in this system are two path segments joined by a literal
-        // slash (e.g. "niles-il/kouklas-greek-eatery" — confirmed in every
-        // real listing page's own window.currentListingData.slug value).
-        // encodeURIComponent would turn that slash into %2F, collapsing it
-        // into a single broken path segment that the print Worker's
-        // catch-all route can't split back apart. This matches how the
-        // rest of this template already treats the slug elsewhere (e.g.
-        // '/listing/' + l.slug, unencoded) — slug is a path, not a value.
-        window.open(`/print/listing/${listing.slug}`, '_blank', 'noopener');
     }
         
     function getStarredListingIds() {
