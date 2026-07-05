@@ -433,32 +433,16 @@ function sanitizeListingDescription(value) {
     while (i < raw.length) {
         const char = raw[i];
         if (char === '<') {
-            // Check first for the specific "</div><br><div>" sequence —
-            // this is a PARAGRAPH break, not a line break. Only matches
-            // the literal, non-self-closing <br> per your data (never
-            // <br/> or <br />), and allows attributes on the following
-            // <div ...> plus any whitespace the editor may have inserted.
-            const paraMatch = raw.slice(i).match(/^<\/div>\s*<br>\s*<div[^>]*>/i);
-            if (paraMatch) {
-                result += '<br><br>';
-                i += paraMatch[0].length;
-                continue;
-            }
-
             const tagMatch = raw.slice(i).match(/^<\/?([a-zA-Z][a-zA-Z0-9]*)\s*[^>]*?\/?>/);
             if (tagMatch) {
                 const tagName = tagMatch[1].toLowerCase();
                 const isClosing = tagMatch[0].startsWith('</');
 
                 if (tagName === 'br') {
-                    result += '<br>';
-                    i += tagMatch[0].length;
-                    continue;
-                }
-
-                // A lone closing </div> — not already consumed by the
-                // paragraph pattern above — is a plain new LINE.
-                if (isClosing && tagName === 'div') {
+                    // The one tag allowed to actually render: emit a real
+                    // <br> regardless of which written form matched
+                    // (<br>, <br/>, <br />, or even a stray </br>) — the
+                    // intent is always "line break here."
                     result += '<br>';
                     i += tagMatch[0].length;
                     continue;
@@ -498,12 +482,6 @@ function sanitizeListingDescription(value) {
             continue;
         }
         if (char === '&') {
-            const entityMatch = raw.slice(i).match(/^&amp;/i);
-            if (entityMatch) {
-                result += entityMatch[0];
-                i += entityMatch[0].length;
-                continue;
-            }
             result += '&amp;';
             i += 1;
             continue;
@@ -511,10 +489,7 @@ function sanitizeListingDescription(value) {
         result += char;
         i += 1;
     }
-    // The final </div> (and, symmetrically, a leading one) has no
-    // following/preceding content to justify a break — trim it so we
-    // don't leave a stray blank line at the start or end of the section.
-    return result.replace(/(<br>)+$/, '').replace(/^(<br>)+/, '');
+    return result;
 }
 
 function formatPhoneNumber(phone) {
