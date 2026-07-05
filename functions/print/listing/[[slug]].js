@@ -742,7 +742,7 @@ function buildSubcategoryTags(listing) {
 const SOCIAL_URL_BUILDERS = {
     facebook: (handle) => `facebook.com/${handle}`,
     instagram: (handle) => `instagram.com/${handle}`,
-    twitter: (handle) => `twitter.com/${handle}`,
+    twitter: (handle) => `x.com/${handle}`,
     youtube: (handle) => `youtube.com/@${handle}`,
     tiktok: (handle) => `tiktok.com/@${handle}`,
 };
@@ -750,7 +750,7 @@ const SOCIAL_URL_BUILDERS = {
 const SOCIAL_LABELS = {
     facebook: 'Facebook',
     instagram: 'Instagram',
-    twitter: 'Twitter / X',
+    twitter: 'X / Twitter',
     youtube: 'YouTube',
     tiktok: 'TikTok',
     linkedin: 'LinkedIn',
