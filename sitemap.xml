@@ -121,12 +121,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thegreekdirectory.org/category/main-category</loc>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://thegreekdirectory.org/listing/park-ridge-il/enosis-federation-illinois</loc>
     <lastmod>2026-07-04</lastmod>
     <changefreq>monthly</changefreq>
