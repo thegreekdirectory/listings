@@ -146,7 +146,10 @@ export async function onRequestGet(context) {
         // secret) without leaking anything to the visitor.
         console.error('SUPABASE_SERVICE_ROLE_KEY is not configured for this Pages project.');
         return htmlErrorResponse(
-            renderErrorPage('Print view unavailable.', 'This page is temporarily unavailable. Please try again later.'),
+            renderErrorPage(
+                'Print view unavailable.',
+                'Missing configuration: SUPABASE_SERVICE_ROLE_KEY is not set for this Pages project (Settings \u2192 Environment variables, as a Secret).'
+            ),
             500
         );
     }
@@ -155,9 +158,29 @@ export async function onRequestGet(context) {
         // The Browser Run binding is required for PDF generation. Missing
         // it is a deployment/configuration error, not a per-request one —
         // fail the same way as a missing secret, with a clear server log.
-        console.error('BROWSER binding is not configured for this Pages project. Add a [browser] binding in your wrangler config.');
+        //
+        // Common reasons this fires even when a [browser] binding looks
+        // present in your Wrangler file:
+        //  1. No [browser] binding block in the Wrangler config at all.
+        //  2. The Wrangler file exists but isn't the one Pages is actually
+        //     building from — Pages only treats a Wrangler file as the
+        //     source of truth once it has pages_build_output_dir set;
+        //     without that key, Pages can silently fall back to
+        //     dashboard-only config and ignore the file's bindings.
+        //  3. compatibility_date is earlier than 2026-03-24 — required
+        //     specifically for the .quickAction() method used below.
+        //  4. The binding was declared under a different name (e.g.
+        //     MYBROWSER instead of BROWSER) — env.BROWSER is correctly
+        //     undefined in that case; either rename the binding to BROWSER
+        //     or update every env.BROWSER reference in this file to match.
+        console.error(
+            'BROWSER binding is not configured for this Pages project. Checklist: (1) [browser] binding = "BROWSER" in your Wrangler config, (2) pages_build_output_dir is set so Pages actually reads that file, (3) compatibility_date >= 2026-03-24, (4) the binding name matches "BROWSER" exactly.'
+        );
         return htmlErrorResponse(
-            renderErrorPage('Print view unavailable.', 'This page is temporarily unavailable. Please try again later.'),
+            renderErrorPage(
+                'Print view unavailable.',
+                'Missing configuration: the BROWSER binding is not set for this Pages project. Check your Wrangler config\u2019s [browser] binding, compatibility_date (needs 2026-03-24+), and that the binding name is exactly "BROWSER".'
+            ),
             500
         );
     }
