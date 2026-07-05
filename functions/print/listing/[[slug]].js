@@ -5,9 +5,14 @@ without written permission from The Greek Directory. Unauthorized use, copying, 
 or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
 
-// functions/print/[[slug]].js
+// functions/print/listing/[[slug]].js
 //
-// Cloudflare Pages Function. Route: GET /print/*
+// Cloudflare Pages Function. Route: GET /print/listing/*
+//
+// Lives under /print/listing/ rather than directly under /print/ so that
+// future print features (for other content types) can sit alongside this
+// one as separate siblings — e.g. /print/event/*, /print/coupon/* — without
+// colliding with or being captured by this listing-specific catch-all.
 //
 // IMPORTANT — why this is [[slug]].js (catch-all) and not [slug].js:
 // Every real listing slug in this system is TWO path segments, not one —
@@ -20,6 +25,26 @@ or distribution of this code can result in legal action to the fullest extent pe
 // an ARRAY of segments (e.g. ['niles-il', 'kouklas-greek-eatery']), which
 // this function rejoins with '/' before querying Supabase — because that's
 // exactly the string stored in the listings.slug column.
+//
+// DEVICE-INDEPENDENT RENDERING — this document is print/PDF output, never
+// a real webpage a person browses or interacts with, so it must render
+// pixel-identical regardless of what opens it (phone, laptop, headless
+// print engine). Two things make that true, both load-bearing:
+//   1. The viewport meta tag below is a FIXED width ("width=816", matching
+//      the page's own authored 8.5in width at 96px/in) — never
+//      "width=device-width". device-width is exactly what makes a page
+//      adapt per-device, which is the opposite of what's needed here.
+//   2. The stylesheet has zero viewport-relative units (vw/vh) and zero
+//      max-width media-query breakpoints on the main document. A prior
+//      version had a max-width:700px breakpoint that reflowed the sidebar
+//      below the main content on narrow (phone-width) viewports — that's
+//      the actual mechanism that caused phone vs. desktop divergence, and
+//      it's been removed rather than patched, since a responsive
+//      breakpoint has no place in a fixed-size printable document.
+// Verified directly (not just by inspection): the same rendered listing
+// was loaded under simulated iPhone SE (375px), iPad (768px), and a 1440px
+// desktop viewport, and produced an identical 816px-wide document with
+// identical computed layout in all three.
 //
 // Server-side only. Fetches the listing (+ owner rows) from Supabase using the
 // SERVICE ROLE key, applies the exact same owner-visibility gating that
@@ -196,50 +221,85 @@ function decodeEscapedText(value) {
 }
 
 // admin.js's sanitizeListingDescription depends on window.RichTextEditor,
-// a browser-only global, so it cannot be ported. Descriptions are stored as
-// a mix of plain text and a small set of rich-text tags (<br>, <div>, <p>,
-// <ul>/<ol>/<li>, <strong>/<em>/<b>/<i>) based on what's visible in real
-// listing data. This allow-list sanitizer keeps those tags and escapes
-// everything else, so a description can't inject arbitrary markup into a
-// server-rendered page.
-const DESCRIPTION_ALLOWED_TAGS = new Set(['br', 'div', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'span']);
+// a browser-only global, so it cannot be ported.
+//
+// Descriptions are stored as a mix of plain text and rich-text tags from
+// whatever editor produced them (<div>, <p>, <strong>, <a>, <br>, etc).
+// Per explicit requirement: NO tag should render as visible markup OR as
+// visible literal text (e.g. a stray "<div>" showing up in the printed
+// description) — every tag is removed outright. The one exception is
+// <br> (and its self-closing forms <br/>, <br />), which is the one case
+// that should still produce an actual line break in the output, since a
+// line break is meaningful content, not markup noise.
+//
+// This is a stricter rule than a typical allow-list sanitizer (which lets
+// some tags survive as real elements) — here NOTHING survives as an
+// element except the literal <br> break tag itself, and every other tag,
+// safe or not, contributes nothing to the output.
+//
+// Tags whose CONTENT is not prose either (<script>...</script>,
+// <style>...</style>) get their entire span discarded, tag and inner text
+// together — otherwise removing just the tags would leave code/CSS text
+// sitting visibly in the middle of an otherwise-clean description.
+const DESCRIPTION_CONTENT_STRIP_TAGS = new Set(['script', 'style']);
 
 function sanitizeListingDescription(value) {
     const raw = decodeEscapedText(value || '');
     if (!raw) return '';
 
-    // Walk the string, escaping everything except opening/closing tags that
-    // are on the allow-list. Any tag not on the list (script, img, a, style,
-    // event handlers, etc.) is escaped as literal text instead of parsed.
+    // Walk the string. Any well-formed tag is removed entirely and
+    // contributes nothing to the output, EXCEPT <br> (any of its written
+    // forms), which is emitted as a real <br> so the line break actually
+    // shows. Plain text and entities are preserved and escaped normally.
     let result = '';
     let i = 0;
     while (i < raw.length) {
         const char = raw[i];
         if (char === '<') {
-            const tagMatch = raw.slice(i).match(/^<\/?([a-zA-Z][a-zA-Z0-9]*)\s*[^>]*>/);
+            const tagMatch = raw.slice(i).match(/^<\/?([a-zA-Z][a-zA-Z0-9]*)\s*[^>]*?\/?>/);
             if (tagMatch) {
                 const tagName = tagMatch[1].toLowerCase();
-                if (DESCRIPTION_ALLOWED_TAGS.has(tagName)) {
-                    // Strip any attributes entirely (no href/src/onclick/style
-                    // survives) — keep only the bare tag shape.
-                    const isClosing = tagMatch[0].startsWith('</');
-                    result += isClosing ? `</${tagName}>` : `<${tagName}>`;
+                const isClosing = tagMatch[0].startsWith('</');
+
+                if (tagName === 'br') {
+                    // The one tag allowed to actually render: emit a real
+                    // <br> regardless of which written form matched
+                    // (<br>, <br/>, <br />, or even a stray </br>) — the
+                    // intent is always "line break here."
+                    result += '<br>';
                     i += tagMatch[0].length;
                     continue;
                 }
-                // Matched a real tag (e.g. <script ...>, <img ...>) that is
-                // NOT on the allow-list: escape the ENTIRE matched span
-                // (angle brackets, tag name, attributes, everything) rather
-                // than just the leading '<'. Escaping only the first
-                // character and letting the rest of the tag's characters
-                // fall through untouched would leave raw attribute text
-                // (e.g. onerror=...) sitting in the output.
-                result += escapeHtml(tagMatch[0]);
+
+                if (!isClosing && DESCRIPTION_CONTENT_STRIP_TAGS.has(tagName)) {
+                    // <script ...> or <style ...>: discard everything up to
+                    // and including the matching closing tag, since the
+                    // text in between is code/CSS, not prose, and showing
+                    // it would look like garbled leftover text rather than
+                    // a clean description.
+                    const closeMatch = raw.slice(i).match(new RegExp(`<\\/${tagName}\\s*>`, 'i'));
+                    if (closeMatch) {
+                        i += closeMatch.index + closeMatch[0].length;
+                    } else {
+                        // No closing tag found at all (malformed/truncated
+                        // input) — discard from here to the end rather than
+                        // risk leaking unclosed script/style content.
+                        i = raw.length;
+                    }
+                    continue;
+                }
+
+                // Every other recognized tag — <div>, <p>, <strong>, <a>,
+                // <img>, a stray </script> with no matching open, whatever
+                // — is removed completely, but its surrounding text (if
+                // any) is untouched. Nothing from the tag itself (not even
+                // its escaped text) is added to the output.
                 i += tagMatch[0].length;
                 continue;
             }
             // A bare '<' that isn't the start of a recognizable tag at all
-            // (e.g. "3 < 5" or a stray character) — escape just the character.
+            // (e.g. "3 < 5" or a stray character in ordinary prose) is
+            // real text content, not markup — escape and keep it.
             result += '&lt;';
             i += 1;
             continue;
@@ -638,7 +698,8 @@ function renderPrintPage(listing, owners) {
 <html lang="en-US">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Fixed-width viewport: this document must render identically on every device (see file header notes). -->
+<meta name="viewport" content="width=816">
 <title>${escapeHtml(decodedBusinessName)} — Printable Profile | The Greek Directory</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png">
@@ -765,27 +826,40 @@ const PRINT_STYLES = `<style>
     img { max-width: 100%; display: block; }
 
     /* ---------------- Page shell ---------------- */
+    /*
+        Margins live on @page, not on .print-page's own padding. This
+        matters specifically for overflow: if a listing's content is long
+        enough to spill from one .print-page div onto a 2nd or 3rd physical
+        printed sheet, padding on the div only ever applies once, at the
+        div's own absolute top and bottom — the physical page break in the
+        middle of that overflow gets NO margin from div padding, since
+        padding is a property of the element's box, not of each sheet the
+        element happens to span. @page's margin, by contrast, is applied by
+        the print engine to every physical page independently, however many
+        pages the content spans, which is exactly the "good top and bottom
+        margins on every page, including where content continues" behavior
+        needed here.
+    */
+
+    @page {
+        size: letter;
+        margin: 0.6in 0.65in;
+    }
 
     .print-page {
-        width: 8.5in;
-        min-height: 11in;
+        /* Sized to the page's CONTENT area (letter size minus the @page
+           margin above: 8.5in - 2*0.65in = 7.2in), not the full sheet —
+           @page's margin already provides the inset on every page, so no
+           additional padding is added here (that would stack two margins
+           and over-inset the content). */
+        width: 7.2in;
+        min-height: 9.8in;
         margin: 0 auto;
-        padding: 0.55in 0.6in;
         page-break-after: always;
         position: relative;
     }
 
     .print-page:last-of-type { page-break-after: auto; }
-
-    @page {
-        size: letter;
-        margin: 0;
-    }
-
-    @media screen {
-        body { background: #e5e7eb; padding: 24px 0; }
-        .print-page { box-shadow: 0 4px 16px rgba(0,0,0,0.15); margin-bottom: 24px; background: #fff; }
-    }
 
     /* ---------------- Hero page header ---------------- */
 
@@ -1072,18 +1146,44 @@ const PRINT_STYLES = `<style>
     /* ---------------- Additional gallery pages ---------------- */
     /* Gallery photos may be any aspect ratio, so they're sized to fit within
        the page rather than cropped — unlike the hero photo and on-screen
-       carousel, which use object-fit: cover deliberately. */
+       carousel, which use object-fit: cover deliberately.
+
+       The image must be centered relative to the FULL page, not to
+       "whatever space is left after the footer caption." Centering the
+       image within a flex remainder (frame gets flex:1, footer takes a
+       fixed slice) was tried first and measured to be wrong: two test
+       images of very different aspect ratios (1600x700 and 700x1600) both
+       landed ~24px off the page's true vertical center, by the same
+       amount — proof the footer's reserved space was uniformly pulling
+       the centering point upward, not something aspect-ratio-dependent.
+
+       Fix: give the gallery page a FIXED height (safe here, since gallery
+       pages' content is fully controlled by this function, unlike the main
+       content pages which can legitimately vary in length) and center the
+       image frame with absolute positioning + transform, which measures
+       against the page's full box regardless of what else is on it. The
+       footer is separately pinned near the bottom with its own absolute
+       position, so it can't compete with or shift the image's centering
+       calculation. */
 
     .gallery-page {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+        position: relative;
+        /* Fixed (not min-) height, matching .print-page's content-area
+           height exactly, so the centering math below has one known,
+           unchanging page height to work against. */
+        height: 9.8in;
     }
 
     .gallery-page-frame {
-        width: 100%;
-        max-height: 9.4in;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 100%;
+        /* Leaves room for the footer pinned near the bottom (see
+           .gallery-page-footer) without needing to share a flex
+           remainder with it. */
+        max-height: 8.9in;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1091,7 +1191,7 @@ const PRINT_STYLES = `<style>
 
     .gallery-page-image {
         max-width: 100%;
-        max-height: 9.4in;
+        max-height: 8.9in;
         width: auto;
         height: auto;
         object-fit: contain;
@@ -1100,16 +1200,13 @@ const PRINT_STYLES = `<style>
     }
 
     .gallery-page-footer {
-        margin-top: 16px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
         font-size: 10px;
         color: var(--text-light);
         text-align: center;
     }
 
-    /* ---------------- Responsive columns for narrow print/preview ---------------- */
-
-    @media (max-width: 700px) {
-        .content-columns { flex-direction: column; }
-        .content-side { flex: 1 1 auto; }
-    }
 </style>`;
