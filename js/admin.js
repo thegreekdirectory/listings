@@ -4193,7 +4193,8 @@ function generateTemplateReplacements(listing) {
         'EMAIL_BUTTON_MOBILE': emailButtonMobile,
         'WEBSITE_BUTTON_MOBILE': websiteButtonMobile,
         'DIRECTIONS_BUTTON_MOBILE': directionsButtonMobile,
-        'CUSTOM_CTA_BUTTONS_MOBILE': customCtaButtonsMobile
+        'CUSTOM_CTA_BUTTONS_MOBILE': customCtaButtonsMobile,
+        'VERSION_NUM': listing.version + 1,
     };
 }
 
