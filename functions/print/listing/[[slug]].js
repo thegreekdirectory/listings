@@ -49,8 +49,57 @@ or distribution of this code can result in legal action to the fullest extent pe
 // Server-side only. Fetches the listing (+ owner rows) from Supabase using the
 // SERVICE ROLE key, applies the exact same owner-visibility gating that
 // js/admin.js uses when generating the static listing/*.html pages, renders
-// the print template, and returns the finished HTML. The browser never sees
-// Supabase URLs, keys, or raw JSON — only the final markup.
+// the print template server-side, converts that HTML to a real PDF using
+// Cloudflare Browser Run's /pdf Quick Action, and returns the finished PDF
+// bytes. The browser never sees Supabase URLs, keys, raw JSON, or even the
+// intermediate HTML — only the final PDF file.
+//
+// WHY A REAL PDF, NOT HTML-FOR-THE-BROWSER-TO-PRINT:
+// The original version returned HTML and relied on the VISITOR'S OWN
+// browser (via window.print() / "Save as PDF") to paginate it correctly.
+// That works on some devices and not others — confirmed directly: on an
+// iPhone 15 Plus, certain listings rendered everything up through the
+// tagline on page 1, dumped the rest of the main content onto page 2+ at
+// the wrong break point, and the dedicated one-photo-per-page gallery
+// pages didn't happen at all. The root cause is that different browsers'
+// PRINT engines (a separate code path from normal on-screen rendering) can
+// disagree about how to honor the same @page / page-break CSS — no amount
+// of additional CSS tuning can fully guarantee that every browser's print
+// engine interprets the same rules identically.
+//
+// Generating the PDF once, server-side, with Cloudflare's own headless
+// Chromium removes that entire class of bug: there is no client-side print
+// engine left to disagree with, because the pagination is already baked
+// into the file before it ever reaches any device. The pdfOptions used
+// below (format, printBackground, preferCSSPageSize) are the exact same
+// options already hand-verified locally (via Puppeteer, a close relative
+// of the Chromium build Browser Run uses) to produce correct multi-page
+// overflow margins and gallery-image centering.
+//
+// REQUIRED SETUP (both are new as of this version):
+//
+// 1. Browser Run binding — add to your Cloudflare Pages project's
+//    wrangler config (wrangler.toml or wrangler.json):
+//
+//      wrangler.toml:
+//        [browser]
+//        binding = "BROWSER"
+//
+//      wrangler.json:
+//        { "browser": { "binding": "BROWSER" } }
+//
+//    This requires a compatibility_date of 2026-03-24 or later in the same
+//    config file. No API token is needed for the binding path — Cloudflare
+//    handles auth internally between your Worker and the Browser Run
+//    service.
+//
+// 2. SUPABASE_SERVICE_ROLE_KEY — unchanged from before, still required as
+//    a Secret-type environment variable (see below).
+//
+// Cost note: Browser Run bills per browser-minute and per concurrent
+// browser, on top of the Workers Paid plan — this is a genuinely new cost
+// line that the pure-HTML version didn't have. Check current Browser Run
+// pricing before relying on this at high volume.
 //
 // Required Cloudflare Pages environment variable (Settings -> Environment
 // variables -> Production/Preview), set as a SECRET, not plaintext:
@@ -62,6 +111,16 @@ or distribution of this code can result in legal action to the fullest extent pe
 // var too, add SUPABASE_URL to context.env and swap the constant below.
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
+
+// Page dimensions this template is authored against: 8.5in x 11in (US
+// Letter) at the standard 96px/in CSS reference = 816 x 1056 px. Passed
+// explicitly to Browser Run's /pdf viewport option (in addition to the
+// HTML's own fixed-width <meta viewport> tag) so Chromium's actual
+// rendering viewport starts from the exact dimensions this template was
+// designed and tested against, rather than whatever Browser Run's own
+// default happens to be.
+const PAGE_WIDTH_PX = 816;
+const PAGE_HEIGHT_PX = 1056;
 
 // ---------------------------------------------------------------------------
 // Entry point
@@ -78,7 +137,7 @@ export async function onRequestGet(context) {
     const slug = slugSegments.map((segment) => decodeURIComponent(segment)).join('/');
 
     if (!slug || typeof slug !== 'string') {
-        return htmlResponse(renderErrorPage('Missing listing.', 'No listing slug was provided.'), 400);
+        return htmlErrorResponse(renderErrorPage('Missing listing.', 'No listing slug was provided.'), 400);
     }
 
     const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -86,7 +145,18 @@ export async function onRequestGet(context) {
         // Fail loudly in a way that's obvious to the site operator (missing
         // secret) without leaking anything to the visitor.
         console.error('SUPABASE_SERVICE_ROLE_KEY is not configured for this Pages project.');
-        return htmlResponse(
+        return htmlErrorResponse(
+            renderErrorPage('Print view unavailable.', 'This page is temporarily unavailable. Please try again later.'),
+            500
+        );
+    }
+
+    if (!env.BROWSER) {
+        // The Browser Run binding is required for PDF generation. Missing
+        // it is a deployment/configuration error, not a per-request one —
+        // fail the same way as a missing secret, with a clear server log.
+        console.error('BROWSER binding is not configured for this Pages project. Add a [browser] binding in your wrangler config.');
+        return htmlErrorResponse(
             renderErrorPage('Print view unavailable.', 'This page is temporarily unavailable. Please try again later.'),
             500
         );
@@ -97,14 +167,14 @@ export async function onRequestGet(context) {
         listing = await fetchListingBySlug(slug, serviceRoleKey);
     } catch (err) {
         console.error('Supabase listing fetch failed:', err);
-        return htmlResponse(
+        return htmlErrorResponse(
             renderErrorPage('Print view unavailable.', 'We could not load this listing right now. Please try again later.'),
             502
         );
     }
 
     if (!listing) {
-        return htmlResponse(renderErrorPage('Listing not found.', 'This listing does not exist or is not published.'), 404);
+        return htmlErrorResponse(renderErrorPage('Listing not found.', 'This listing does not exist or is not published.'), 404);
     }
 
     // Listings that are not publicly visible should not be printable, even
@@ -112,7 +182,7 @@ export async function onRequestGet(context) {
     // an unpublished listing should use the admin/business portal, not this
     // public print path.
     if (listing.visible !== true) {
-        return htmlResponse(renderErrorPage('Listing not found.', 'This listing is not currently published.'), 404);
+        return htmlErrorResponse(renderErrorPage('Listing not found.', 'This listing is not currently published.'), 404);
     }
 
     let owners = [];
@@ -126,14 +196,61 @@ export async function onRequestGet(context) {
     }
 
     const html = renderPrintPage(listing, owners);
-    return htmlResponse(html, 200, {
-        // This page's entire purpose is "load, then print" — no reason for
-        // an intermediary cache to hold stale business data.
-        'Cache-Control': 'no-store',
+
+    let pdfResponse;
+    try {
+        pdfResponse = await env.BROWSER.quickAction('pdf', {
+            html,
+            viewport: { width: PAGE_WIDTH_PX, height: PAGE_HEIGHT_PX },
+            pdfOptions: {
+                format: 'letter',
+                printBackground: true,
+                // Honor the HTML's own @page size/margin rules (already
+                // tuned and verified for correct multi-page overflow
+                // margins and centered gallery images) rather than
+                // Chromium's print defaults.
+                preferCSSPageSize: true,
+            },
+        });
+    } catch (err) {
+        console.error('Browser Run PDF generation failed:', err);
+        return htmlErrorResponse(
+            renderErrorPage('Print view unavailable.', 'We could not generate this listing\u2019s printable profile right now. Please try again later.'),
+            502
+        );
+    }
+
+    // quickAction('pdf', ...) returns a real Response already carrying the
+    // PDF bytes and a Content-Type of application/pdf. Re-wrap it only to
+    // set the filename and caching/indexing headers this route needs,
+    // rather than assuming its default headers are exactly what's wanted.
+    const pdfBytes = await pdfResponse.arrayBuffer();
+    const fileNameSafeSlug = slug.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\//g, '-');
+    return new Response(pdfBytes, {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/pdf',
+            // "inline" lets the browser's own built-in PDF viewer display
+            // it immediately (closest to the original "opens ready to
+            // print or save" experience); the person can still use their
+            // PDF viewer's own print/save/share controls from there.
+            'Content-Disposition': `inline; filename="${fileNameSafeSlug || 'listing'}.pdf"`,
+            'X-Robots-Tag': 'noindex, nofollow',
+            // This route's entire purpose is "generate fresh, then
+            // view/print/save" — no reason for an intermediary cache to
+            // hold a stale rendition of business data.
+            'Cache-Control': 'no-store',
+        },
     });
 }
 
-function htmlResponse(html, status, extraHeaders) {
+// Used only for the small set of human-facing error/status pages (missing
+// slug, listing not found, service unavailable) — these are NOT run
+// through Browser Run, since a plain HTML status message doesn't need
+// PDF conversion and should stay fast and simple to read directly in a
+// browser tab if this route is ever hit without going through Browser Run
+// (e.g. hitting the URL directly while debugging).
+function htmlErrorResponse(html, status, extraHeaders) {
     return new Response(html, {
         status,
         headers: Object.assign(
@@ -754,15 +871,6 @@ ${PRINT_STYLES}
     </main>
 
     ${galleryPages}
-
-    <script>
-        // Autoprint: open straight into the browser's print dialog once the
-        // page (including images) has finished loading, so this route can be
-        // opened directly from a "Print" button on the listing page.
-        window.addEventListener('load', function () {
-            setTimeout(function () { window.print(); }, 150);
-        });
-    </script>
 </body>
 </html>`;
 }
@@ -1148,45 +1256,55 @@ const PRINT_STYLES = `<style>
        the page rather than cropped — unlike the hero photo and on-screen
        carousel, which use object-fit: cover deliberately.
 
-       The image must be centered relative to the FULL page, not to
-       "whatever space is left after the footer caption." Centering the
-       image within a flex remainder (frame gets flex:1, footer takes a
-       fixed slice) was tried first and measured to be wrong: two test
-       images of very different aspect ratios (1600x700 and 700x1600) both
-       landed ~24px off the page's true vertical center, by the same
-       amount — proof the footer's reserved space was uniformly pulling
-       the centering point upward, not something aspect-ratio-dependent.
+       CENTERING HISTORY (why this specific technique, not an earlier one):
 
-       Fix: give the gallery page a FIXED height (safe here, since gallery
-       pages' content is fully controlled by this function, unlike the main
-       content pages which can legitimately vary in length) and center the
-       image frame with absolute positioning + transform, which measures
-       against the page's full box regardless of what else is on it. The
-       footer is separately pinned near the bottom with its own absolute
-       position, so it can't compete with or shift the image's centering
-       calculation. */
+       Attempt 1 — flex:1 on the frame, footer as a normal flex sibling.
+       Measured wrong: two test images of very different aspect ratios
+       (1600x700 and 700x1600) both landed ~24px off true page-center, by
+       the same amount regardless of aspect ratio — proof the footer's
+       reserved space was uniformly skewing the centering point.
+
+       Attempt 2 — position:absolute + transform:translate(-50%,-50%) on
+       the frame, footer separately pinned to the bottom. This measured as
+       PERFECT in the live DOM (offset ~0.008px) and in a direct Puppeteer
+       element screenshot — but when the exact same page was run through
+       Chromium's actual PDF-export pipeline (page.pdf(), the API this
+       Worker's PDF generation is built on), the wide test image rendered
+       nowhere near center — proof that transform-based positioning is not
+       reliably honored by Chromium's print/pagination engine specifically,
+       even though the underlying DOM computes it correctly. This is the
+       same category of engine-specific print/PDF discrepancy that caused
+       the original iPhone bug — it just took generating and inspecting an
+       actual PDF file (not just measuring the live DOM) to catch this one.
+
+       Fix — margin:auto centering on a flex item (this version): the
+       frame is a flex child of a fixed-height flex column, with
+       margin-top/margin-bottom: auto splitting the free space evenly
+       above and below it. This is one of the oldest, most broadly
+       print-and-paginator-safe CSS centering idioms — no transform, no
+       absolute positioning, nothing that depends on a pagination engine
+       correctly reconciling a transformed box against a fixed page size. */
 
     .gallery-page {
-        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         /* Fixed (not min-) height, matching .print-page's content-area
-           height exactly, so the centering math below has one known,
-           unchanging page height to work against. */
+           height exactly, so there's one known, unchanging amount of
+           free space for the frame's auto margins to split evenly. */
         height: 9.8in;
     }
 
     .gallery-page-frame {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        margin-top: auto;
+        margin-bottom: auto;
+        width: 100%;
         max-width: 100%;
-        /* Leaves room for the footer pinned near the bottom (see
-           .gallery-page-footer) without needing to share a flex
-           remainder with it. */
         max-height: 8.9in;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
     }
 
     .gallery-page-image {
@@ -1200,13 +1318,11 @@ const PRINT_STYLES = `<style>
     }
 
     .gallery-page-footer {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        flex-shrink: 0;
         font-size: 10px;
         color: var(--text-light);
         text-align: center;
+        padding-bottom: 4px;
     }
 
 </style>`;
