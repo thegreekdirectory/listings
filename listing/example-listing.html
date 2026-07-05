@@ -159,8 +159,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                     {
                         "@type": "ListItem",
                         "position": 2,
-                        "name": "Automotive &amp; Transportation",
-                        "item": "https://thegreekdirectory.org/automotive-transportation"
+                        "name": "Main Category",
+                        "item": "https://thegreekdirectory.org/main-category"
                     },
                     {
                         "@type": "ListItem",
@@ -550,9 +550,13 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow" id="carouselSection">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
-                    <div class="carousel-slide" style="background: url('https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg') center/cover;" role="img" aria-label="Example Listing's in Chicago, IL"></div>
+                    <div class="carousel-slide" style="background: url('https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg') center/cover;" role="img" aria-label="Example Listing's in Chicago, IL"></div><div class="carousel-slide" style="background: url('https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg') center/cover;" role="img" aria-label="Example Listing's in Chicago, IL"></div><div class="carousel-slide" style="background: url('https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg') center/cover;" role="img" aria-label="Example Listing's in Chicago, IL"></div>
                 </div>
                 
+            <button class="carousel-nav carousel-prev" onclick="prevSlide()">❮</button>
+            <button class="carousel-nav carousel-next" onclick="nextSlide()">❯</button>
+            <div class="carousel-dots"><span class="carousel-dot active" onclick="goToSlide(0)"></span><span class="carousel-dot " onclick="goToSlide(1)"></span><span class="carousel-dot " onclick="goToSlide(2)"></span></div>
+        
                 <button class="star-button" type="button" data-listing-id="f7e67c13-4e5f-4861-9a8d-14a75133570f" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
@@ -579,7 +583,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-4 flex-wrap">
                                 <span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#045093;" onclick="toggleSubcategories()">
-                                    Automotive &amp; Transportation
+                                    Main Category
                                 </span>
                                 <div class="subcategories-display" id="subcategoriesDisplay">
                                     <span class="subcategory-tag">Primary Subcategory</span><span class="subcategory-tag">Other Subcategory 1</span><span class="subcategory-tag">Other Subcategory 2</span>
@@ -749,7 +753,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <h3 class="font-semibold text-gray-900 mb-2">Example Hours
                     <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
                         <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
-                        <span class="hours-tooltip">Last updated at 2026-07-05 21:16 UTC by Business Owner.</span>
+                        <span class="hours-tooltip">Last updated at 2026-07-05 21:37 UTC by Business Owner.</span>
                     </span>
                 </h3>
                 <div class="space-y-1"><div class="flex justify-between text-sm" data-hours-day="monday"><span class="font-medium hours-day-label">Monday:</span><span class="hours-day-value">Open All Day</span></div><div class="flex justify-between text-sm" data-hours-day="tuesday"><span class="font-medium hours-day-label">Tuesday:</span><span class="hours-day-value">9:00 AM - 10:00 AM</span></div><div class="flex justify-between text-sm" data-hours-day="wednesday"><span class="font-medium hours-day-label">Wednesday:</span><span class="hours-day-value">Closed</span></div><div class="flex justify-between text-sm" data-hours-day="thursday"><span class="font-medium hours-day-label">Thursday:</span><span class="hours-day-value">Closed</span></div><div class="flex justify-between text-sm" data-hours-day="friday"><span class="font-medium hours-day-label">Friday:</span><span class="hours-day-value">9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="saturday"><span class="font-medium hours-day-label">Saturday:</span><span class="hours-day-value">Open All Day</span></div><div class="flex justify-between text-sm" data-hours-day="sunday"><span class="font-medium hours-day-label">Sunday:</span><span class="hours-day-value">11:00 AM - 8:00 PM</span></div></div>
@@ -977,6 +981,23 @@ or distribution of this code can result in legal action to the fullest extent pe
             <div class="action-cta-row">
                 <div class="action-cta-slot action-cta-slot-wide"><a class="hero-chip justify-center gap-2 px-4 py-3 text-white" onclick="openShareModal()" style="background-color:#045093; font-size: 16px; cursor: pointer;" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.6495 0.799565C18.4834 -0.72981 16.0093 0.081426 16.0093 1.99313V3.91272C12.2371 3.86807 9.65665 5.16473 7.9378 6.97554C6.10034 8.9113 5.34458 11.3314 5.02788 12.9862C4.86954 13.8135 5.41223 14.4138 5.98257 14.6211C6.52743 14.8191 7.25549 14.7343 7.74136 14.1789C9.12036 12.6027 11.7995 10.4028 16.0093 10.5464V13.0069C16.0093 14.9186 18.4834 15.7298 19.6495 14.2004L23.3933 9.29034C24.2022 8.2294 24.2022 6.7706 23.3933 5.70966L19.6495 0.799565ZM7.48201 11.6095C9.28721 10.0341 11.8785 8.55568 16.0093 8.55568H17.0207C17.5792 8.55568 18.0319 9.00103 18.0319 9.55037L18.0317 13.0069L21.7754 8.09678C22.0451 7.74313 22.0451 7.25687 21.7754 6.90322L18.0317 1.99313V4.90738C18.0317 5.4567 17.579 5.90201 17.0205 5.90201H16.0093C11.4593 5.90201 9.41596 8.33314 9.41596 8.33314C8.47524 9.32418 7.86984 10.502 7.48201 11.6095Z" fill="#FFFFFF"/><path d="M7 1.00391H4C2.34315 1.00391 1 2.34705 1 4.00391V20.0039C1 21.6608 2.34315 23.0039 4 23.0039H20C21.6569 23.0039 23 21.6608 23 20.0039V17.0039C23 16.4516 22.5523 16.0039 22 16.0039C21.4477 16.0039 21 16.4516 21 17.0039V20.0039C21 20.5562 20.5523 21.0039 20 21.0039H4C3.44772 21.0039 3 20.5562 3 20.0039V4.00391C3 3.45162 3.44772 3.00391 4 3.00391H7C7.55228 3.00391 8 2.55619 8 2.00391C8 1.45162 7.55228 1.00391 7 1.00391Z" fill="#FFFFFF"/></svg><span>Share</span></a></div>
             </div>
+            <div class="action-cta-slot">
+    <a
+        class="hero-chip justify-center gap-2 px-4 py-3 text-white"
+        onclick="openPrintView()"
+        style="background-color:#045093; font-size: 16px; cursor: pointer;"
+        role="button"
+        tabindex="0"
+        title="Print this listing"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;">
+            <path d="M6 9V2H18V9" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 18H4C3.44772 18 3 17.5523 3 17V11C3 10.4477 3.44772 10 4 10H20C20.5523 10 21 10.4477 21 11V17C21 17.5523 20.5523 18 20 18H18" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="6" y="14" width="12" height="8" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+        <span>Print</span>
+    </a>
+</div>
         </div>
     </div>
 
@@ -1024,7 +1045,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         business_name: "Example Listing\'s",
         tagline: "Lorem ipsum dolor sit amet elit. This is not a real listing.",
         description: "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer volutpat egestas scelerisque. Aenean et sem quis est consequat pulvinar ac nec erat. In hac habitasse platea dictumst. Nulla blandit justo erat, eu maximus justo convallis in. Aliquam consequat lectus a ante venenatis commodo. Proin mattis odio mi, vel fermentum odio sagittis vel. Nam quis porta purus, quis ultrices velit. Nulla nec felis at lacus porttitor pretium. Pellentesque blandit euismod quam id bibendum. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque sit amet ullamcorper libero.</p><p><br></p><p>Pellentesque molestie est id diam ullamcorper, et luctus metus scelerisque. Phasellus nulla arcu, condimentum non lorem maximus, condimentum tincidunt nibh. Nulla maximus sapien eu lectus sodales dignissim. Sed accumsan augue in malesuada pharetra. Quisque maximus, justo vitae vulputate ultricies, ante arcu porttitor lectus, at fringilla velit enim nec sem. Proin ut tristique massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Etiam aliquam lorem vitae nunc eleifend condimentum.</p><p><br></p><p>Fusce ipsum ligula, fringilla eu molestie non, malesuada sed lectus. Suspendisse placerat rutrum ipsum, sed dignissim ligula. Vestibulum vitae risus vulputate, pharetra nibh at, luctus est. Integer placerat tempor turpis at viverra. Integer dignissim posuere eleifend. Duis vel sapien sodales, hendrerit ipsum ut, maximus massa. Cras iaculis convallis nisi, nec facilisis ligula consequat quis. Sed eu dignissim lacus, ut mattis nulla. Curabitur ultrices a dui in dictum. Praesent neque justo, hendrerit id massa maximus, sagittis cursus ex. Maecenas auctor maximus odio, ac efficitur velit aliquam ac. Integer a tempor libero. Phasellus sit amet blandit neque. Maecenas egestas libero facilisis condimentum imperdiet.</p>",
-        category: 'Automotive &amp; Transportation',
+        category: 'Main Category',
         city: "Chicago",
         state: "IL",
         address: "365 DuSable Lake Shore Dr",
@@ -1032,7 +1053,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         email: "example@example.com",
         website: "https://tgd.gr/example",
         logo: 'https://thegreekdirectory.pages.dev/assets/images/letter-icon/e.svg?access=granted',
-        photos: ["https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg"],
+        photos: ["https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg","https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg","https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg"],
         slug: 'example-listing',
         version: '{{VERSION_NUM}}'
     };
@@ -1045,7 +1066,26 @@ or distribution of this code can result in legal action to the fullest extent pe
             : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((listing.address || '') + ' ' + (listing.city || '') + ' ' + (listing.state || ''))}`;
         window.open(directionsUrl, '_blank', 'noopener');
     }
-
+        
+    function openPrintView(event) {
+        if (event) event.preventDefault();
+        const listing = window.currentListingData || {};
+        if (!listing.slug) {
+            console.error('openPrintView: window.currentListingData.slug is missing.');
+            return;
+        }
+        // IMPORTANT: do NOT encodeURIComponent(listing.slug) here. Real
+        // slugs in this system are two path segments joined by a literal
+        // slash (e.g. "niles-il/kouklas-greek-eatery" — confirmed in every
+        // real listing page's own window.currentListingData.slug value).
+        // encodeURIComponent would turn that slash into %2F, collapsing it
+        // into a single broken path segment that the print Worker's
+        // catch-all route can't split back apart. This matches how the
+        // rest of this template already treats the slug elsewhere (e.g.
+        // '/listing/' + l.slug, unencoded) — slug is a path, not a value.
+        window.open(`/print/listing/${listing.slug}`, '_blank', 'noopener');
+    }
+        
     function getStarredListingIds() {
         const cookieEntry = document.cookie.split('; ').find((item) => item.startsWith('starredListings='));
         if (!cookieEntry) return [];
@@ -1140,7 +1180,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        const totalSlides = 1;
+        const totalSlides = 3;
         const businessName = "Example Listing's";
         const listingUrl = "https://thegreekdirectory.org/listing/example-listing";
         const listingId = 'f7e67c13-4e5f-4861-9a8d-14a75133570f';
@@ -1148,7 +1188,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const businessTimezone = 'America/Chicago' || 'America/Chicago';
         const hoursServerTimeEndpoint = 'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/listing-server-time';
         const hoursServerAuth = { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` };
-        const galleryPhotos = ["https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg"];
+        const galleryPhotos = ["https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg","https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg","https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg"];
         let currentGalleryIndex = 0;
         
         function toggleSubcategories() {
