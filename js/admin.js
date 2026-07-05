@@ -4130,6 +4130,7 @@ function generateTemplateReplacements(listing) {
         'IN_CITY': inCity,
         'TAGLINE': escapeHtml(normalizeTagline(decodedTagline)),
         'TAGLINE_JS': escapeJsonForTemplate(decodedTagline),
+        'VERSION_NUM': listing.version + 1,
         'DESCRIPTION': sanitizeListingDescription(decodedDescription),
         'DESCRIPTION_JS': escapeJsonForTemplate(decodedDescription),
         'CATEGORY': escapeHtml(listing.category),
@@ -4193,8 +4194,7 @@ function generateTemplateReplacements(listing) {
         'EMAIL_BUTTON_MOBILE': emailButtonMobile,
         'WEBSITE_BUTTON_MOBILE': websiteButtonMobile,
         'DIRECTIONS_BUTTON_MOBILE': directionsButtonMobile,
-        'CUSTOM_CTA_BUTTONS_MOBILE': customCtaButtonsMobile,
-        'VERSION_NUM': listing.version + 1,
+        'CUSTOM_CTA_BUTTONS_MOBILE': customCtaButtonsMobile
     };
 }
 
