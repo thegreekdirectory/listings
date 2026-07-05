@@ -1,0 +1,8 @@
+{
+  "$schema": "https://developers.cloudflare.com/pages/functions/wrangler-configuration/",
+  "pages_build_output_dir": ".",
+  "compatibility_date": "2026-03-24",
+  "browser": {
+    "binding": "BROWSER"
+  }
+}
