@@ -76,22 +76,32 @@ or distribution of this code can result in legal action to the fullest extent pe
 // of the Chromium build Browser Run uses) to produce correct multi-page
 // overflow margins and gallery-image centering.
 //
-// REQUIRED SETUP (both are new as of this version):
+// REQUIRED SETUP:
 //
-// 1. Browser Run binding — add to your Cloudflare Pages project's
-//    wrangler config (wrangler.toml or wrangler.json):
+// 1. Browser Run REST API token — NOT a Wrangler binding. Cloudflare Pages
+//    Functions do not support a `browser` binding at all (confirmed
+//    directly against Cloudflare's own Pages Functions bindings reference,
+//    which lists every supported binding type and does not include
+//    `browser` — that binding type exists only for plain, standalone
+//    Cloudflare Workers, not Pages Functions). An earlier version of this
+//    file assumed the binding would work here; it does not, and a
+//    wrangler.json declaring one will fail to build on Pages.
 //
-//      wrangler.toml:
-//        [browser]
-//        binding = "BROWSER"
+//    Instead, this calls Browser Run's /pdf REST endpoint directly over
+//    fetch(), authenticated with a bearer token:
 //
-//      wrangler.json:
-//        { "browser": { "binding": "BROWSER" } }
+//      a. Cloudflare dashboard -> My Profile -> API Tokens -> Create Token
+//         -> Custom Token -> permission "Browser Rendering - Edit".
+//      b. Add that token as a Pages Secret named CLOUDFLARE_API_TOKEN.
+//      c. Add your Cloudflare Account ID (dashboard sidebar, or
+//         Workers & Pages overview page) as CLOUDFLARE_ACCOUNT_ID — this
+//         doesn't strictly need to be a Secret (it isn't credential
+//         material by itself), but storing it as one costs nothing and
+//         keeps both values in the same place.
 //
-//    This requires a compatibility_date of 2026-03-24 or later in the same
-//    config file. No API token is needed for the binding path — Cloudflare
-//    handles auth internally between your Worker and the Browser Run
-//    service.
+//    No wrangler.json, no compatibility_date, no [browser] block needed
+//    anywhere — this is a plain authenticated HTTPS call, same shape as
+//    the Supabase REST calls already used below.
 //
 // 2. SUPABASE_SERVICE_ROLE_KEY — unchanged from before, still required as
 //    a Secret-type environment variable (see below).
@@ -101,9 +111,11 @@ or distribution of this code can result in legal action to the fullest extent pe
 // line that the pure-HTML version didn't have. Check current Browser Run
 // pricing before relying on this at high volume.
 //
-// Required Cloudflare Pages environment variable (Settings -> Environment
-// variables -> Production/Preview), set as a SECRET, not plaintext:
+// Required Cloudflare Pages environment variables (Settings -> Environment
+// variables -> Production/Preview), all set as SECRETS, not plaintext:
 //   SUPABASE_SERVICE_ROLE_KEY
+//   CLOUDFLARE_API_TOKEN
+//   CLOUDFLARE_ACCOUNT_ID
 //
 // The Supabase project URL is not secret (it's already public in every
 // listing page's client-side script), so it's inlined below as a constant
@@ -111,6 +123,11 @@ or distribution of this code can result in legal action to the fullest extent pe
 // var too, add SUPABASE_URL to context.env and swap the constant below.
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
+
+// Browser Run's REST API base — the account ID is inserted into this URL
+// at request time from env.CLOUDFLARE_ACCOUNT_ID, since it varies per
+// Cloudflare account and isn't safe to hardcode into a shared file.
+const BROWSER_RENDERING_PDF_URL_TEMPLATE = 'https://api.cloudflare.com/client/v4/accounts/{accountId}/browser-rendering/pdf';
 
 // Page dimensions this template is authored against: 8.5in x 11in (US
 // Letter) at the standard 96px/in CSS reference = 816 x 1056 px. Passed
@@ -154,32 +171,26 @@ export async function onRequestGet(context) {
         );
     }
 
-    if (!env.BROWSER) {
-        // The Browser Run binding is required for PDF generation. Missing
-        // it is a deployment/configuration error, not a per-request one —
-        // fail the same way as a missing secret, with a clear server log.
-        //
-        // Common reasons this fires even when a [browser] binding looks
-        // present in your Wrangler file:
-        //  1. No [browser] binding block in the Wrangler config at all.
-        //  2. The Wrangler file exists but isn't the one Pages is actually
-        //     building from — Pages only treats a Wrangler file as the
-        //     source of truth once it has pages_build_output_dir set;
-        //     without that key, Pages can silently fall back to
-        //     dashboard-only config and ignore the file's bindings.
-        //  3. compatibility_date is earlier than 2026-03-24 — required
-        //     specifically for the .quickAction() method used below.
-        //  4. The binding was declared under a different name (e.g.
-        //     MYBROWSER instead of BROWSER) — env.BROWSER is correctly
-        //     undefined in that case; either rename the binding to BROWSER
-        //     or update every env.BROWSER reference in this file to match.
-        console.error(
-            'BROWSER binding is not configured for this Pages project. Checklist: (1) [browser] binding = "BROWSER" in your Wrangler config, (2) pages_build_output_dir is set so Pages actually reads that file, (3) compatibility_date >= 2026-03-24, (4) the binding name matches "BROWSER" exactly.'
-        );
+    if (!env.CLOUDFLARE_API_TOKEN) {
+        // Fail loudly and specifically — same pattern as the Supabase key
+        // check above — rather than a generic message that leaves the
+        // operator guessing which of several possible secrets is missing.
+        console.error('CLOUDFLARE_API_TOKEN is not configured for this Pages project.');
         return htmlErrorResponse(
             renderErrorPage(
                 'Print view unavailable.',
-                'Missing configuration: the BROWSER binding is not set for this Pages project. Check your Wrangler config\u2019s [browser] binding, compatibility_date (needs 2026-03-24+), and that the binding name is exactly "BROWSER".'
+                'Missing configuration: CLOUDFLARE_API_TOKEN is not set for this Pages project (Settings \u2192 Environment variables, as a Secret). This token needs "Browser Rendering - Edit" permission.'
+            ),
+            500
+        );
+    }
+
+    if (!env.CLOUDFLARE_ACCOUNT_ID) {
+        console.error('CLOUDFLARE_ACCOUNT_ID is not configured for this Pages project.');
+        return htmlErrorResponse(
+            renderErrorPage(
+                'Print view unavailable.',
+                'Missing configuration: CLOUDFLARE_ACCOUNT_ID is not set for this Pages project (Settings \u2192 Environment variables).'
             ),
             500
         );
@@ -222,31 +233,57 @@ export async function onRequestGet(context) {
 
     let pdfResponse;
     try {
-        pdfResponse = await env.BROWSER.quickAction('pdf', {
-            html,
-            viewport: { width: PAGE_WIDTH_PX, height: PAGE_HEIGHT_PX },
-            pdfOptions: {
-                format: 'letter',
-                printBackground: true,
-                // Honor the HTML's own @page size/margin rules (already
-                // tuned and verified for correct multi-page overflow
-                // margins and centered gallery images) rather than
-                // Chromium's print defaults.
-                preferCSSPageSize: true,
+        const pdfEndpointUrl = BROWSER_RENDERING_PDF_URL_TEMPLATE.replace('{accountId}', env.CLOUDFLARE_ACCOUNT_ID);
+        pdfResponse = await fetch(pdfEndpointUrl, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}`,
+                'Content-Type': 'application/json',
             },
+            body: JSON.stringify({
+                html,
+                viewport: { width: PAGE_WIDTH_PX, height: PAGE_HEIGHT_PX },
+                pdfOptions: {
+                    format: 'letter',
+                    printBackground: true,
+                    // Honor the HTML's own @page size/margin rules (already
+                    // tuned and verified for correct multi-page overflow
+                    // margins and centered gallery images) rather than
+                    // Chromium's print defaults.
+                    preferCSSPageSize: true,
+                },
+            }),
         });
     } catch (err) {
-        console.error('Browser Run PDF generation failed:', err);
+        // A network-level failure reaching Cloudflare's API at all (rare,
+        // but distinct from the API responding with an error status below).
+        console.error('Browser Run PDF request failed to send:', err);
         return htmlErrorResponse(
             renderErrorPage('Print view unavailable.', 'We could not generate this listing\u2019s printable profile right now. Please try again later.'),
             502
         );
     }
 
-    // quickAction('pdf', ...) returns a real Response already carrying the
-    // PDF bytes and a Content-Type of application/pdf. Re-wrap it only to
-    // set the filename and caching/indexing headers this route needs,
-    // rather than assuming its default headers are exactly what's wanted.
+    if (!pdfResponse.ok) {
+        // A REST API failure (bad token, bad account ID, malformed
+        // request, rate limit, etc.) returns a JSON error body, NOT PDF
+        // bytes — check status explicitly rather than assume success and
+        // hand the visitor a broken "PDF" that's actually a JSON error
+        // blob with no useful message.
+        const errorBody = await pdfResponse.text().catch(() => '(could not read error body)');
+        console.error(`Browser Run PDF endpoint returned ${pdfResponse.status}:`, errorBody.slice(0, 500));
+        return htmlErrorResponse(
+            renderErrorPage('Print view unavailable.', 'We could not generate this listing\u2019s printable profile right now. Please try again later.'),
+            502
+        );
+    }
+
+    // On success, the /pdf endpoint's response body IS the PDF file itself
+    // (confirmed directly against Cloudflare's own docs, whose curl
+    // examples pipe this same response straight to --output file.pdf).
+    // Re-wrap only to set the filename and caching/indexing headers this
+    // route needs, rather than assuming Cloudflare's default headers are
+    // exactly what's wanted here.
     const pdfBytes = await pdfResponse.arrayBuffer();
     const fileNameSafeSlug = slug.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\//g, '-');
     return new Response(pdfBytes, {
