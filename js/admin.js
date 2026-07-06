@@ -2738,7 +2738,8 @@ const listingData = {
                 return val || null;
             })(),
             parent_listing_title_custom: document.getElementById('editParentListingTitleCustom')?.value.trim() || null,
-            child_listings_custom_title: document.getElementById('editChildListingsTitleCustom')?.value.trim() || null
+            child_listings_custom_title: document.getElementById('editChildListingsTitleCustom')?.value.trim() || null,
+            updated_by_role: null
         };
         
         const customShortlinkPath = document.getElementById('editCustomShortlink')?.value.trim() || null;
