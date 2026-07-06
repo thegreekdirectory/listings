@@ -4571,7 +4571,7 @@ function generateTemplateReplacementsPart2(listing) {
 // ============================================
 
 async function prepareListingPageGeneration(listingId, options = {}) {
-    const { skipAnalytics = false } = options;
+    const { skipAnalytics = false, template: preFetchedTemplate = null } = options;
     
     const listings = await adminProxy('listings:list');
     const listing = Array.isArray(listings)
@@ -4602,12 +4602,16 @@ async function prepareListingPageGeneration(listingId, options = {}) {
     }
     
     
-    const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
-    if (!templateResponse.ok) {
-        throw new Error('Failed to fetch template');
+    let template;
+    if (preFetchedTemplate != null) {
+        template = preFetchedTemplate;
+    } else {
+        const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
+        if (!templateResponse.ok) {
+            throw new Error('Failed to fetch template');
+        }
+        template = await templateResponse.text();
     }
-    
-    let template = await templateResponse.text();
     
     const shortlinkRows = await adminProxy('shortlinks:get', { listing_id: listingId });
     const validRows = Array.isArray(shortlinkRows) ? shortlinkRows : [];
@@ -5003,6 +5007,14 @@ window.generateAllListingPages = async function() {
     
     console.log(`🔨 Generating ${visibleListings.length} listing pages...`);
     
+    // Fetch the template once for the whole batch instead of once per listing
+    const templateResponse = await fetch('https://raw.githubusercontent.com/thegreekdirectory/listings/main/listing-template.html');
+    if (!templateResponse.ok) {
+        alert('Failed to fetch listing template. Generation aborted.');
+        return;
+    }
+    const sharedTemplate = await templateResponse.text();
+    
     let successful = 0;
     let failed = 0;
     const failedListings = [];
@@ -5010,7 +5022,7 @@ window.generateAllListingPages = async function() {
     
     for (const listing of visibleListings) {
         try {
-            const generatedFile = await prepareListingPageGeneration(listing.id, { skipAnalytics: true });
+            const generatedFile = await prepareListingPageGeneration(listing.id, { skipAnalytics: true, template: sharedTemplate });
             filesToCommit.push(generatedFile);
             successful++;
             console.log(`✅ Generated: ${listing.business_name}`);
