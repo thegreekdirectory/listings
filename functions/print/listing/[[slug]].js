@@ -157,6 +157,32 @@ export async function onRequestGet(context) {
         return htmlErrorResponse(renderErrorPage('Missing listing.', 'No listing slug was provided.'), 400);
     }
 
+    // LOADING SCREEN — two-request pattern within this same route/URL.
+    //
+    // The Print button links straight at this route with no query string
+    // (href="/print/listing/{{SLUG}}"), and stays that way — nothing about
+    // the button changes. A single HTTP response can't start as an HTML
+    // loading page and later become the PDF; the two have to be genuinely
+    // separate requests to this same URL.
+    //
+    // So: the FIRST hit (no ?render=1) returns an instant, tiny loading
+    // page and stops — none of the slow Supabase/Browser-Run work below
+    // has started yet. That page's own script immediately re-requests this
+    // exact URL with ?render=1 appended. THAT second request has the
+    // param present, skips this block, and falls through to every line of
+    // logic below completely unchanged — same slug parsing already done
+    // above, same Supabase calls, same PDF generation, same response.
+    //
+    // Net effect from the visitor's side: click Print -> loading screen
+    // paints instantly -> swaps to the finished PDF a few seconds later,
+    // same tab, same URL, same button.
+    const requestUrl = new URL(context.request.url);
+    const isRenderPass = requestUrl.searchParams.get('render') === '1';
+
+    if (!isRenderPass) {
+        return htmlLoadingResponse(renderLoadingPage(requestUrl));
+    }
+
     const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) {
         // Fail loudly in a way that's obvious to the site operator (missing
@@ -982,6 +1008,63 @@ function renderErrorPage(title, message) {
     </div>
 </body>
 </html>`;
+}
+
+// The instant first-paint screen shown while the real PDF (Supabase fetch +
+// Browser Run render, ~3-5s) is generated on the follow-up request. Same
+// visual language as renderErrorPage on purpose (same font stack, card,
+// brand blue) so it reads as part of the same product, not a bolted-on
+// interstitial. Deliberately plain per "a very simple loading screen" —
+// a spinner and one line of text, nothing more.
+function renderLoadingPage(currentUrl) {
+    // Build the exact same URL the visitor is already on, plus ?render=1,
+    // preserving any other existing query params rather than assuming
+    // there are none.
+    const renderUrl = new URL(currentUrl.toString());
+    renderUrl.searchParams.set('render', '1');
+
+    return `<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generating your PDF\u2026 | The Greek Directory</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f9fafb; color: #1a1a1a; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 24px; }
+    .box { max-width: 420px; text-align: center; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 40px 32px; }
+    .spinner { width: 32px; height: 32px; margin: 0 auto 16px; border: 3px solid #e5e7eb; border-top-color: #045093; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-size: 16px; font-weight: 600; color: #045093; margin: 0; }
+</style>
+</head>
+<body>
+    <div class="box">
+        <div class="spinner"></div>
+        <h1>Generating your PDF\u2026</h1>
+    </div>
+    <script>
+        // replace(), not href/assign — the loading page shouldn't leave a
+        // history entry a visitor could land back on with the Back button
+        // after the PDF has already loaded.
+        window.location.replace(${JSON.stringify(renderUrl.toString())});
+    </script>
+</body>
+</html>`;
+}
+
+// Distinct from htmlErrorResponse only in intent (loading vs. error), not
+// mechanics — same content type, same noindex, same no-store, since this
+// page is exactly as transient and non-cacheable as the error pages.
+function htmlLoadingResponse(html) {
+    return new Response(html, {
+        status: 200,
+        headers: {
+            'Content-Type': 'text/html; charset=UTF-8',
+            'X-Robots-Tag': 'noindex, nofollow',
+            'Cache-Control': 'no-store',
+        },
+    });
 }
 
 // ---------------------------------------------------------------------------
