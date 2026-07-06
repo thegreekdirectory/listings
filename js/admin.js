@@ -4555,7 +4555,8 @@ function generateTemplateReplacementsPart2(listing) {
         'HOURS_JSON': hoursJson,
         'SUGGEST_EDIT_MAILTO': suggestEditHref,
         'BUSINESS_TIMEZONE': escapeHtml(listing.timezone || 'America/Chicago'),
-        'HOURS_LOGIC_SCRIPT': hasBusinessHours ? '<script src="/js/listing-hours.js"></script>' : ''
+        'HOURS_LOGIC_SCRIPT': hasBusinessHours ? '<script src="/js/listing-hours.js"></script>' : '',
+        'VERSION_NUM': listing.version != null ? String(listing.version) : '1'
     };
 }
 
