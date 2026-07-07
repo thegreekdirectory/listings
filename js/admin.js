@@ -4222,7 +4222,7 @@ function generateTemplateReplacementsPart2(listing) {
         }
         if (owner.from_greece){
           const ownerLowerC = owner.from_greece.toLowerCase();
-          if (ownerLowerC.includes("cyprus") || ownerLowerC.includes("pontus") || ownerLowerC.includes("greece")){
+          if (ownerLowerC.includes("cyprus") || ownerLowerC.includes("pontus") || ownerLowerC.includes("greece") || ownerLowerC.includes("constantinople")){
             ownerDetails += `<p><strong>From:</strong> ${escapeHtml(decodeEscapedText(owner.from_greece))}</p>`;
           }
           else {
