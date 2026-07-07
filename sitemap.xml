@@ -67,6 +67,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://thegreekdirectory.org/category/church-religious-organization</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://thegreekdirectory.org/category/cultural-fraternal-organization</loc>
     <lastmod>2026-07-07</lastmod>
     <changefreq>weekly</changefreq>
@@ -86,12 +92,6 @@
   </url>
   <url>
     <loc>https://thegreekdirectory.org/category/entertainment-arts-recreation</loc>
-    <lastmod>2026-07-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://thegreekdirectory.org/category/church-religious-organization</loc>
     <lastmod>2026-07-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -125,6 +125,12 @@
     <lastmod>2026-07-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://thegreekdirectory.org/listing/online/greek-orthodox-archdiocese-of-america</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://thegreekdirectory.org/listing/new-york-ny/hellenic-american-cultural-foundation</loc>
@@ -891,12 +897,6 @@
   <url>
     <loc>https://thegreekdirectory.org/listing/lincolnwood-il/psistaria-greek-taverna</loc>
     <lastmod>2026-05-23</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://thegreekdirectory.org/listing/example-listing</loc>
-    <lastmod>2026-07-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
