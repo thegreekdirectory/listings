@@ -1289,7 +1289,23 @@ const PRINT_STYLES = `<style>
         min-width: 0;
     }
 
-    .print-section { margin-bottom: 18px; }
+    .print-section {
+        margin-bottom: 18px;
+        /* If this section's title lands near the bottom of a page and the
+           body content below it would spill onto the next page, push the
+           WHOLE section (title + body) to the next page instead of
+           splitting title and body apart. break-inside: avoid only takes
+           effect when the entire section actually fits within one page's
+           remaining space — a section too long to ever fit on a single
+           page (e.g. a long description) still breaks internally exactly
+           as before; this only fixes the "title stranded alone, body
+           starts fresh on the next page" case, not long sections that
+           genuinely need to split. page-break-inside is the pre-standard
+           alias some print/PDF engines still key off; both are set for
+           the same effect, not two different behaviors. */
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 
     .print-section h3 {
         font-size: 13px;
