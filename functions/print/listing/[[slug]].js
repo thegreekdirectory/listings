@@ -1291,20 +1291,6 @@ const PRINT_STYLES = `<style>
 
     .print-section {
         margin-bottom: 18px;
-        /* If this section's title lands near the bottom of a page and the
-           body content below it would spill onto the next page, push the
-           WHOLE section (title + body) to the next page instead of
-           splitting title and body apart. break-inside: avoid only takes
-           effect when the entire section actually fits within one page's
-           remaining space — a section too long to ever fit on a single
-           page (e.g. a long description) still breaks internally exactly
-           as before; this only fixes the "title stranded alone, body
-           starts fresh on the next page" case, not long sections that
-           genuinely need to split. page-break-inside is the pre-standard
-           alias some print/PDF engines still key off; both are set for
-           the same effect, not two different behaviors. */
-        break-inside: avoid;
-        page-break-inside: avoid;
     }
 
     .print-section h3 {
@@ -1316,6 +1302,27 @@ const PRINT_STYLES = `<style>
         margin-bottom: 8px;
         padding-bottom: 4px;
         border-bottom: 1px solid var(--border-color);
+        /* Glue the title to whatever content immediately follows it. If a
+           page break would otherwise land right after this h3 (i.e. the
+           title would be the last thing on the page, with the section's
+           actual content starting fresh on the next page), the print
+           engine moves the break earlier instead — before the h3 — so
+           the title and at least the start of its content begin together
+           on the next page.
+
+           This is deliberately NOT break-inside:avoid on the whole
+           .print-section (that was tried first and measured wrong: it
+           moved the ENTIRE section, however long, the moment ANY part of
+           it would spill — so a 14-row Additional Information section
+           with room for 10+ rows left on the current page got shoved
+           whole onto the next page anyway, wasting most of a page).
+           break-after:avoid here only prevents the title from being
+           stranded alone; once the section has genuinely started (title
+           + its first row placed), the remaining rows are free to
+           continue splitting across pages exactly like any other long
+           content, unaffected by this rule. */
+        break-after: avoid;
+        page-break-after: avoid;
     }
 
     .description-body {
