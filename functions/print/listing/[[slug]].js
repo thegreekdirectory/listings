@@ -255,7 +255,7 @@ export async function onRequestGet(context) {
         owners = [];
     }
 
-    const html = renderPrintPage(listing, owners);
+    const { html, footerTemplate } = renderPrintPage(listing, owners);
 
     let pdfResponse;
     try {
@@ -277,6 +277,25 @@ export async function onRequestGet(context) {
                     // margins and centered gallery images) rather than
                     // Chromium's print defaults.
                     preferCSSPageSize: true,
+                    // Running page footer (listing URL / printed date / TGD
+                    // name), rendered by the print engine itself into the
+                    // true bottom-margin gap of EVERY physical page — the
+                    // same mechanism Word/Google Docs use for a document-wide
+                    // footer, and the reason it can't be pushed onto the
+                    // wrong page by content overflow the way the old in-flow
+                    // <footer> element could be. See the footerTemplate
+                    // comment in renderPrintPage for the full rationale.
+                    displayHeaderFooter: true,
+                    footerTemplate,
+                    // This margin.bottom is passed for the footer template's
+                    // own box height, NOT to re-define page geometry —
+                    // preferCSSPageSize above already keeps @page's
+                    // margin: 0.6in 0.65in (see PRINT_STYLES) as the source
+                    // of truth for layout. The values are kept identical to
+                    // @page's on purpose: whichever one Chromium actually
+                    // honors for the physical margin, the two never
+                    // disagree, so there's no visible seam either way.
+                    margin: { top: '0.6in', bottom: '0.6in', left: '0.65in', right: '0.65in' },
                 },
             }),
         });
@@ -957,7 +976,7 @@ function renderPrintPage(listing, owners) {
     const listingUrl = `https://thegreekdirectory.org/listing/${escapeHtml(listing.slug || '')}`;
     const generatedAt = new Date().toISOString().slice(0, 10);
 
-    return `<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html lang="en-US">
 <head>
 <meta charset="UTF-8">
@@ -1009,16 +1028,46 @@ ${PRINT_STYLES}
                 ${hoursSection}
             </aside>
         </div>
-
-        <footer class="hero-footer">
-            <span>${listingUrl}</span>
-            <span>Printed ${generatedAt} — The Greek Directory</span>
-        </footer>
     </main>
 
     ${galleryPages}
 </body>
 </html>`;
+
+    // The listing URL / printed-date / TGD-name footer is deliberately NOT
+    // in-flow body content (it used to be a <footer class="hero-footer">
+    // sitting at the bottom of the .print-page div above). An in-flow
+    // footer only ever renders once, wherever the end of that div's own
+    // content happens to land — for a long listing whose content spills
+    // past one physical sheet (a case this file's own print-stylesheet
+    // comments already call out as expected: "if a listing's content is
+    // long enough to spill from one .print-page div onto a 2nd or 3rd
+    // physical printed sheet"), that means the footer would either get
+    // dragged onto whatever page the overflow lands on, or simply never
+    // repeat on the additional pages at all. Neither is "in the bottom
+    // margin gap of every page" the way Word or Google Docs handles a
+    // running page footer.
+    //
+    // Browser Run's /pdf endpoint (the same endpoint this Worker already
+    // calls below) exposes exactly the right primitive for this instead:
+    // pdfOptions.footerTemplate, gated by pdfOptions.displayHeaderFooter.
+    // This is genuinely independent of this document's own DOM — the
+    // print engine renders it fresh into the margin box of EVERY physical
+    // page, driven by its own pagination, which is what actually
+    // guarantees it can never be pushed onto the wrong page by overflow.
+    // (Confirmed directly against Cloudflare's own /pdf endpoint docs,
+    // which document this exact footerTemplate/displayHeaderFooter pair
+    // for repeating a footer across every generated page.)
+    //
+    // Because the print engine evaluates this template completely
+    // separately from the page HTML above, the listing URL / date /
+    // business name values have to be baked into this string directly —
+    // escaped the same way every other piece of listing data in this file
+    // is escaped, since footerTemplate is still HTML the print engine
+    // parses, not plain text.
+    const footerTemplate = `<div style="width: 100%; font-size: 9px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; display: flex; justify-content: space-between; box-sizing: border-box;"><span>${listingUrl}</span><span>Printed ${escapeHtml(generatedAt)} — The Greek Directory</span></div>`;
+
+    return { html, footerTemplate };
 }
 
 function renderErrorPage(title, message) {
@@ -1461,17 +1510,11 @@ const PRINT_STYLES = `<style>
         font-size: 10.5px;
     }
 
-    /* Hero footer */
-
-    .hero-footer {
-        display: flex;
-        justify-content: space-between;
-        font-size: 9.5px;
-        color: var(--text-light);
-        border-top: 1px solid var(--border-color);
-        margin-top: 28px;
-        padding-top: 8px;
-    }
+    /* The former "Hero footer" rule (.hero-footer) was removed here along
+       with its <footer> element — the listing URL / printed date / TGD
+       name now render as a genuine running page footer via
+       pdfOptions.footerTemplate (see renderPrintPage and the /pdf fetch
+       call above), not as in-flow content on this specific page. */
 
     /* ---------------- Additional gallery pages ---------------- */
     /* Gallery photos may be any aspect ratio, so they're sized to fit within
