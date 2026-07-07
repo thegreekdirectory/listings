@@ -139,6 +139,33 @@ const BROWSER_RENDERING_PDF_URL_TEMPLATE = 'https://api.cloudflare.com/client/v4
 const PAGE_WIDTH_PX = 816;
 const PAGE_HEIGHT_PX = 1056;
 
+// Running page header: "PAGE #/#", right-aligned, repeated by the print
+// engine into the top-margin gap of every physical page — this is a fixed,
+// listing-independent constant (unlike footerTemplate below, which is
+// built per-request inside renderPrintPage because it needs that listing's
+// own URL and print date).
+//
+// pageNumber/totalPages are placeholder classes Browser Run's /pdf
+// endpoint (Puppeteer's underlying page.pdf() header/footer mechanism)
+// substitutes automatically at render time — confirmed directly against
+// Cloudflare's own /pdf endpoint docs, whose own footer example writes
+// "Page <span class="pageNumber"></span> of <span class="totalPages">
+// </span>" with no adjustment, implying pageNumber already starts at 1 on
+// the first page rather than 0. Worth a quick visual check on the first
+// real render to be certain, since that specific detail isn't spelled out
+// in the docs, only implied by the unadjusted example.
+//
+// Styling here is a DELIBERATE, exact match to footerTemplate (see that
+// constant's own comment in renderPrintPage for where each value comes
+// from: font-size/color from .gallery-page-footer, font-family inherited
+// from html/body in PRINT_STYLES) — same reasoning applies here: this
+// template is evaluated by the print engine completely outside
+// PRINT_STYLES, so every value has to be repeated literally rather than
+// referenced. Only the alignment differs (right, not space-between)
+// and the content (page numbering, not the listing URL/date), since this
+// is a header, not the footer.
+const HEADER_TEMPLATE = `<div style="width: 100%; font-size: 10px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; text-align: right; box-sizing: border-box;">PAGE <span class="pageNumber"></span>/<span class="totalPages"></span></div>`;
+
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
@@ -277,26 +304,28 @@ export async function onRequestGet(context) {
                     // margins and centered gallery images) rather than
                     // Chromium's print defaults.
                     preferCSSPageSize: true,
-                    // Running page footer (listing URL / printed date / TGD
-                    // name), rendered by the print engine itself into the
-                    // true bottom-margin gap of EVERY physical page — the
-                    // same mechanism Word/Google Docs use for a document-wide
-                    // footer, and the reason it can't be pushed onto the
-                    // wrong page by content overflow the way the old in-flow
-                    // <footer> element could be. See the footerTemplate
-                    // comment in renderPrintPage for the full rationale.
+                    // Running page header ("PAGE #/#", top-right) and
+                    // footer (listing URL / printed date / TGD name), both
+                    // rendered by the print engine itself into the true
+                    // margin gap of EVERY physical page — the same
+                    // mechanism Word/Google Docs use for document-wide
+                    // running headers/footers, and the reason page numbers
+                    // can't drift or repeat wrong the way in-flow content
+                    // could if it depended on this document's own layout.
+                    // See HEADER_TEMPLATE's own comment above for the
+                    // pageNumber/totalPages placeholder details, and the
+                    // footerTemplate comment in renderPrintPage for the
+                    // footer's rationale.
                     //
-                    // headerTemplate is set to an empty element ON PURPOSE,
-                    // not left out. displayHeaderFooter is a single flag
-                    // that governs BOTH header and footer together — when
-                    // it's on and headerTemplate is left unset, Chromium's
-                    // PDF engine doesn't render nothing for the header slot,
-                    // it falls back to ITS OWN default header (the page's
-                    // <title> plus its source URL). Only a footer was ever
-                    // wanted here, so the header slot is explicitly emptied
-                    // out rather than allowed to fall back to that default.
+                    // Both headerTemplate and footerTemplate must be set
+                    // together here: displayHeaderFooter is a single flag
+                    // governing BOTH slots — leaving either template unset
+                    // doesn't render nothing for that slot, it falls back
+                    // to Chromium's OWN default (title + URL for the
+                    // header, date + page number for the footer), which is
+                    // not what either slot is meant to show here.
                     displayHeaderFooter: true,
-                    headerTemplate: '<span></span>',
+                    headerTemplate: HEADER_TEMPLATE,
                     footerTemplate,
                     // This margin.bottom is passed for the footer template's
                     // own box height, NOT to re-define page geometry —
