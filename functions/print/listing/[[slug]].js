@@ -464,10 +464,29 @@ function sanitizeListingDescription(value) {
             // the literal, non-self-closing <br> per your data (never
             // <br/> or <br />), and allows attributes on the following
             // <div ...> plus any whitespace the editor may have inserted.
-            const paraMatch = raw.slice(i).match(/^<\/div>\s*<br>\s*<div[^>]*>/i);
-            if (paraMatch) {
+            // This is checked before the shorter "<br><div>" pattern below
+            // since it's the more specific match — "</div><br><div>"
+            // contains "<br><div>" as a substring, so trying the shorter
+            // pattern first would consume only part of this sequence and
+            // leave a dangling "</div>" to fall through to the plain
+            // new-line handling instead of being absorbed into the break.
+            const paraMatchWithLeadingDiv = raw.slice(i).match(/^<\/div>\s*<br>\s*<div[^>]*>/i);
+            if (paraMatchWithLeadingDiv) {
                 result += '<br><br>';
-                i += paraMatch[0].length;
+                i += paraMatchWithLeadingDiv[0].length;
+                continue;
+            }
+
+            // Second paragraph-break case: "<br><div>" with no preceding
+            // "</div>". Same PARAGRAPH semantics as above (not a line
+            // break) — just missing the closing tag on the prior line
+            // that the pattern above requires. Same allowances as above:
+            // attributes on the following <div ...>, and whitespace the
+            // editor may have inserted between the tags.
+            const paraMatchNoLeadingDiv = raw.slice(i).match(/^<br>\s*<div[^>]*>/i);
+            if (paraMatchNoLeadingDiv) {
+                result += '<br><br>';
+                i += paraMatchNoLeadingDiv[0].length;
                 continue;
             }
 
@@ -485,6 +504,19 @@ function sanitizeListingDescription(value) {
                 // A lone closing </div> — not already consumed by the
                 // paragraph pattern above — is a plain new LINE.
                 if (isClosing && tagName === 'div') {
+                    result += '<br>';
+                    i += tagMatch[0].length;
+                    continue;
+                }
+
+                // An opening <div> — not already consumed by either
+                // paragraph pattern above, meaning there was no <br>
+                // immediately before it — is also a plain new LINE, same
+                // as the lone closing </div> case just above. Only reached
+                // when neither "</div><br><div>" nor "<br><div>" matched
+                // at this position, so this <div> is guaranteed to NOT be
+                // preceded by a <br> here.
+                if (!isClosing && tagName === 'div') {
                     result += '<br>';
                     i += tagMatch[0].length;
                     continue;
@@ -508,11 +540,13 @@ function sanitizeListingDescription(value) {
                     continue;
                 }
 
-                // Every other recognized tag — <div>, <p>, <strong>, <a>,
-                // <img>, a stray </script> with no matching open, whatever
-                // — is removed completely, but its surrounding text (if
-                // any) is untouched. Nothing from the tag itself (not even
-                // its escaped text) is added to the output.
+                // Every other recognized tag — <p>, <strong>, <a>, <img>,
+                // a stray </script> with no matching open, whatever — is
+                // removed completely, but its surrounding text (if any) is
+                // untouched. Nothing from the tag itself (not even its
+                // escaped text) is added to the output. (<div>, in both
+                // its opening and closing forms, is handled explicitly
+                // above and never reaches this branch.)
                 i += tagMatch[0].length;
                 continue;
             }
