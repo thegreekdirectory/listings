@@ -607,7 +607,8 @@ function buildOwnerCardsHtml(owners) {
                 const alreadyMentionsRegion =
                     fromGreeceLower.includes('cyprus') ||
                     fromGreeceLower.includes('pontus') ||
-                    fromGreeceLower.includes('greece');
+                    fromGreeceLower.includes('greece') ||
+                    fromGreeceLower.includes('constantinople');
                 const decodedFromGreece = decodeEscapedText(owner.from_greece);
                 details += alreadyMentionsRegion
                     ? `<p><strong>From:</strong> ${escapeHtml(decodedFromGreece)}</p>`
