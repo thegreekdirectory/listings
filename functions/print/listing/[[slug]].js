@@ -285,7 +285,18 @@ export async function onRequestGet(context) {
                     // wrong page by content overflow the way the old in-flow
                     // <footer> element could be. See the footerTemplate
                     // comment in renderPrintPage for the full rationale.
+                    //
+                    // headerTemplate is set to an empty element ON PURPOSE,
+                    // not left out. displayHeaderFooter is a single flag
+                    // that governs BOTH header and footer together — when
+                    // it's on and headerTemplate is left unset, Chromium's
+                    // PDF engine doesn't render nothing for the header slot,
+                    // it falls back to ITS OWN default header (the page's
+                    // <title> plus its source URL). Only a footer was ever
+                    // wanted here, so the header slot is explicitly emptied
+                    // out rather than allowed to fall back to that default.
                     displayHeaderFooter: true,
+                    headerTemplate: '<span></span>',
                     footerTemplate,
                     // This margin.bottom is passed for the footer template's
                     // own box height, NOT to re-define page geometry —
@@ -1065,7 +1076,19 @@ ${PRINT_STYLES}
     // escaped the same way every other piece of listing data in this file
     // is escaped, since footerTemplate is still HTML the print engine
     // parses, not plain text.
-    const footerTemplate = `<div style="width: 100%; font-size: 9px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; display: flex; justify-content: space-between; box-sizing: border-box;"><span>${listingUrl}</span><span>Printed ${escapeHtml(generatedAt)} — The Greek Directory</span></div>`;
+    //
+    // The inline style values below are a DELIBERATE, exact match to the
+    // old in-flow .hero-footer rule (removed from PRINT_STYLES), not new
+    // choices — this template is evaluated by the print engine completely
+    // outside PRINT_STYLES, so nothing there (including var(--text-light))
+    // reaches it; every value has to be repeated here literally:
+    //   font-size: 9.5px          <- .hero-footer's own font-size: 9.5px
+    //   color: #6b7280            <- var(--text-light), which PRINT_STYLES
+    //                                defines as exactly #6b7280
+    //   font-family: -apple-system, ... <- inherited from html/body in
+    //                                PRINT_STYLES, since .hero-footer never
+    //                                set its own font-family
+    const footerTemplate = `<div style="width: 100%; font-size: 9.5px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; display: flex; justify-content: space-between; box-sizing: border-box;"><span>${listingUrl}</span><span>Printed ${escapeHtml(generatedAt)} — The Greek Directory</span></div>`;
 
     return { html, footerTemplate };
 }
