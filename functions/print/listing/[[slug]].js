@@ -1077,18 +1077,21 @@ ${PRINT_STYLES}
     // is escaped, since footerTemplate is still HTML the print engine
     // parses, not plain text.
     //
-    // The inline style values below are a DELIBERATE, exact match to the
-    // old in-flow .hero-footer rule (removed from PRINT_STYLES), not new
-    // choices — this template is evaluated by the print engine completely
-    // outside PRINT_STYLES, so nothing there (including var(--text-light))
-    // reaches it; every value has to be repeated here literally:
-    //   font-size: 9.5px          <- .hero-footer's own font-size: 9.5px
+    // The inline style values below are a DELIBERATE, exact match to
+    // .gallery-page-footer (the "<Business> — Photo X of Y" caption shown
+    // on each additional gallery page) — this template is evaluated by the
+    // print engine completely outside PRINT_STYLES, so nothing there
+    // (including var(--text-light)) reaches it; every value has to be
+    // repeated here literally:
+    //   font-size: 10px           <- .gallery-page-footer's own
+    //                                font-size: 10px
     //   color: #6b7280            <- var(--text-light), which PRINT_STYLES
-    //                                defines as exactly #6b7280
+    //                                defines as exactly #6b7280 — also what
+    //                                .gallery-page-footer uses
     //   font-family: -apple-system, ... <- inherited from html/body in
-    //                                PRINT_STYLES, since .hero-footer never
-    //                                set its own font-family
-    const footerTemplate = `<div style="width: 100%; font-size: 9.5px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; display: flex; justify-content: space-between; box-sizing: border-box;"><span>${listingUrl}</span><span>Printed ${escapeHtml(generatedAt)} — The Greek Directory</span></div>`;
+    //                                PRINT_STYLES, since .gallery-page-footer
+    //                                never set its own font-family
+    const footerTemplate = `<div style="width: 100%; font-size: 10px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; display: flex; justify-content: space-between; box-sizing: border-box;"><span>${listingUrl}</span><span>Printed ${escapeHtml(generatedAt)} — The Greek Directory</span></div>`;
 
     return { html, footerTemplate };
 }
