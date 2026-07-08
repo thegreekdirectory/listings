@@ -28,7 +28,7 @@
             event.preventDefault();
             event.stopPropagation();
         }
-        const starButton = document.querySelector('.star-button[data-listing-id="{{LISTING_ID}}"]');
+        const starButton = document.querySelector(`.star-button[data-listing-id="${window.currentListingData}"]`);
         if (!starButton) return;
 
         const listingId = String(window.currentListingData.id);
@@ -53,7 +53,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const starButton = document.querySelector('.star-button[data-listing-id="{{LISTING_ID}}"]');
+        const starButton = document.querySelector(`.star-button[data-listing-id="${window.currentListingData.id}"]`);
         if (!starButton) return;
         const listingId = String(window.currentListingData.id);
         const isStarredByCookie = getStarredListingIds().includes(listingId);
@@ -424,7 +424,7 @@ function openGallery(index = 0) {
             const toggle = document.getElementById('shortenUrlToggle');
             if (toggle && input) {
                 toggle.addEventListener('change', (event) => {
-                    input.value = event.target.checked ? `{{SHORTLINK_URL}}` : `https://thegreekdirectory.org/listing/{{SLUG}}`;
+                    input.value = event.target.checked ? `${window.currentListingData.shortlink}` : `https://thegreekdirectory.org/listing/${window.currentListingData.slug}`;
                 });
             }
         });
@@ -514,7 +514,7 @@ function openGallery(index = 0) {
                     popupAnchor: [1, -34]
                 });
                 L.marker([lat, lng], { icon: listingMapPinIcon }).addTo(map)
-                    .bindPopup("<strong>{{BUSINESS_NAME}}</strong><br>{{FULL_ADDRESS}}")
+                    .bindPopup(`<strong>${window.currentListingData.business_name}</strong><br>${window.currentListingData.full_address}`)
                     .openPopup();
                 
                 setTimeout(() => {
