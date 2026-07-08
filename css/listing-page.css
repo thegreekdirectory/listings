@@ -1,4 +1,4 @@
-        /*
+/*
         Copyright (C) The Greek Directory, 2025-present. All rights reserved.
         */
         
@@ -137,6 +137,11 @@
         .subcategories-display.active { display: block; }
         .subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
         .owner-info-section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; line-height: 1.35; }
+        .listing-description ul,
+        .listing-description ol { margin-left: 1.5rem; padding-left: 1rem; }
+        .listing-description ul { list-style-type: disc; }
+        .listing-description ol { list-style-type: decimal; }
+        .listing-description li { margin: 0.25rem 0; }
         .listing-description-wrap { margin: 0 0 1.5rem; }
         .listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
         .listing-description p { margin-bottom: 1rem; }
@@ -255,8 +260,10 @@
     #additionalInfoSectionWrap { order: 6; }
     #ownerInfoSection { order: 7; }
     .social-map-grid { order: 8; }
-    .related-listings-section { order: 9; }
-    .claim-listing-section { order: 10; }
+    #parentListingSection { order: 9; }
+    #childListingsSection { order: 10; }
+    .related-listings-section { order: 11; }
+    .claim-listing-section { order: 12; }
 }
 
         #listingMap,
@@ -291,6 +298,7 @@
             .listing-description { background: #2a2a2a; border-color: #404040; }
             .listing-description.collapsed::after { background: linear-gradient(to bottom, rgba(42,42,42,0), rgba(42,42,42,1)); }
             .description-divider-line, .additional-info-table, .additional-info-row { border-color: #404040; }
+            .description-divider { background: #2a2a2a !important; border-color: #404040 !important; }
             .additional-info-row:nth-child(even), .map-fallback, .read-more-btn, .desktop-contact-card { background: #1f1f1f; color: #e5e7eb; border-color: #404040; }
             .social-google, .social-yelp, .social-tripadvisor { background: #ffffff; }
         }
