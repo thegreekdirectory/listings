@@ -940,30 +940,73 @@ function buildReviewsSection(listing) {
     `;
 }
 
+// A listing's photoList[0] doubles as the hero-banner image (cropped via
+// object-fit: cover in .hero-photo-frame — see renderPrintPage below).
+// Separately, isUnsplashPhotoUrl decides whether that SAME photo also gets
+// its own full, uncropped gallery page, the same as every other photo.
+//
+// Checked via new URL(...).origin rather than a raw string prefix check,
+// consistent with how the rest of this file parses URLs (see requestUrl /
+// renderUrl above) — this correctly matches regardless of a trailing
+// slash or path after the host, and won't be fooled by the substring
+// "images.unsplash.com" appearing somewhere unrelated in a totally
+// different URL (e.g. inside a query parameter), the way a naive
+// .includes() check could be.
+//
+// Photo URLs come from listing data (photoList), not from a source this
+// file controls, so they aren't guaranteed to be well-formed — new URL()
+// throws on a malformed string. On a throw, this returns false (treat as
+// NOT Unsplash), which is the safer default: an unparseable URL still
+// gets its own gallery page rather than being silently dropped because
+// origin-checking it failed.
+function isUnsplashPhotoUrl(photoUrl) {
+    try {
+        return new URL(photoUrl).origin === 'https://images.unsplash.com';
+    } catch {
+        return false;
+    }
+}
+
 // ---------------------------------------------------------------------------
-// Gallery pages — first photo goes on the hero page; every additional photo
-// gets its own dedicated page. Because gallery images can be any aspect
-// ratio (unlike the logo, which is always square), each gallery page sizes
-// an <img> naturally (max-width/max-height within the page's print area)
-// instead of forcing object-fit: cover like the on-screen carousel does.
+// Gallery pages — photoList[0] always appears cropped in the hero banner
+// (see heroImage in renderPrintPage). It ALSO gets its own dedicated,
+// uncropped gallery page here, the same as every other photo — UNLESS its
+// URL is hosted on https://images.unsplash.com (see isUnsplashPhotoUrl),
+// in which case it's assumed to be a generic stock/placeholder image
+// rather than a real photo of the business, and stays banner-only. Every
+// photo from index 1 onward always gets its own page, with no such
+// exception. Because gallery images can be any aspect ratio (unlike the
+// logo, which is always square), each gallery page sizes an <img>
+// naturally (max-width/max-height within the page's print area) instead
+// of forcing object-fit: cover like the on-screen carousel — and like the
+// hero banner crop — does.
 // ---------------------------------------------------------------------------
 
 function buildAdditionalGalleryPages(photoList, businessName, city, state) {
-    // photoList[0] is used as the hero image on page 1; anything after that
-    // gets its own page.
-    const remainingPhotos = photoList.slice(1);
-    if (!remainingPhotos.length) return '';
+    // Every photo from index 1 onward gets a page unconditionally; index 0
+    // gets one too, except when it's an Unsplash URL (see comment above).
+    // The true original index (photoList.indexOf-equivalent — just `i`
+    // from the source map below) is carried alongside each included photo
+    // so captioning ("Photo N of Total") reflects its REAL position in
+    // photoList, not just its position in this filtered-down list — those
+    // two differ whenever photo 0 is excluded, since photo 1 (index 1)
+    // would otherwise be miscounted as photo 1 instead of photo 2.
+    const galleryPhotos = photoList
+        .map((photoUrl, i) => ({ photoUrl, originalIndex: i }))
+        .filter(({ photoUrl, originalIndex }) => originalIndex > 0 || !isUnsplashPhotoUrl(photoUrl));
+
+    if (!galleryPhotos.length) return '';
 
     const altBase = `${escapeHtml(businessName)}${city ? ` in ${escapeHtml(city)}${state ? ', ' + escapeHtml(state) : ''}` : ''}`;
 
-    return remainingPhotos
+    return galleryPhotos
         .map(
-            (photoUrl, index) => `
+            ({ photoUrl, originalIndex }) => `
         <section class="print-page gallery-page">
             <div class="gallery-page-frame">
-                <img src="${escapeHtml(photoUrl)}" alt="${altBase} — photo ${index + 2}" class="gallery-page-image" />
+                <img src="${escapeHtml(photoUrl)}" alt="${altBase} — photo ${originalIndex + 1}" class="gallery-page-image" />
             </div>
-            <div class="gallery-page-footer">${escapeHtml(businessName)} — Photo ${index + 2} of ${photoList.length}</div>
+            <div class="gallery-page-footer">${escapeHtml(businessName)} — Photo ${originalIndex + 1} of ${photoList.length}</div>
         </section>
     `
         )
