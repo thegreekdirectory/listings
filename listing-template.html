@@ -89,8 +89,28 @@ or distribution of this code can result in legal action to the fullest extent pe
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-        <link rel="stylesheet" href="/css/index.css">
-<link rel="stylesheet" href="/src/output.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/src/output.css">
+    <style>
+/* Badge override — forces listing-page.css values regardless of CSS load order */
+.badge {
+    font-size: 11px !important;
+    padding: 3px 8px !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+    display: inline-block !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+.badge-open { background: #10b981 !important; color: white !important; }
+.badge-closed { background: #ef4444 !important; color: white !important; }
+.badge-opening-soon { background: #fbbf24 !important; color: #78350f !important; }
+.badge-closing-soon { background: #f59e0b !important; color: white !important; }
+.badge-featured { background: #fbbf24 !important; color: #78350f !important; }
+.badge-premium { background: #6b21a8 !important; color: #ede9fe !important; }
+.badge-claimed { background: #6B7280 !important; color: white !important; }
+.badge-coming-soon { background: #f97316 !important; color: #fff !important; }
+</style>
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
     
     <script type="application/ld+json">
