@@ -10,7 +10,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="version" content"12">
+    <meta name="version" content"13">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -748,7 +748,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <h3 class="font-semibold text-gray-900 mb-2">Example Hours
                     <span class="hours-tooltip-wrap" id="hoursTooltipButton" aria-label="Hours update information">
                         <svg class="hours-tooltip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 10v6" stroke-width="2" stroke-linecap="round"></path><circle cx="12" cy="7" r="1.2" fill="currentColor" stroke="none"></circle></svg>
-                        <span class="hours-tooltip">Last updated at 2026-07-07 01:24 UTC by TGD Admin.</span>
+                        <span class="hours-tooltip">Last updated at 2026-07-08 03:16 UTC by TGD Admin.</span>
                     </span>
                 </h3>
                 <div class="space-y-1"><div class="flex justify-between text-sm" data-hours-day="monday"><span class="font-medium hours-day-label">Monday:</span><span class="hours-day-value">Open All Day</span></div><div class="flex justify-between text-sm" data-hours-day="tuesday"><span class="font-medium hours-day-label">Tuesday:</span><span class="hours-day-value">9:00 AM - 10:00 AM</span></div><div class="flex justify-between text-sm" data-hours-day="wednesday"><span class="font-medium hours-day-label">Wednesday:</span><span class="hours-day-value">Closed</span></div><div class="flex justify-between text-sm" data-hours-day="thursday"><span class="font-medium hours-day-label">Thursday:</span><span class="hours-day-value">Closed</span></div><div class="flex justify-between text-sm" data-hours-day="friday"><span class="font-medium hours-day-label">Friday:</span><span class="hours-day-value">9:00 AM - 6:00 PM</span></div><div class="flex justify-between text-sm" data-hours-day="saturday"><span class="font-medium hours-day-label">Saturday:</span><span class="hours-day-value">Open All Day</span></div><div class="flex justify-between text-sm" data-hours-day="sunday"><span class="font-medium hours-day-label">Sunday:</span><span class="hours-day-value">11:00 AM - 8:00 PM</span></div></div>
@@ -1033,10 +1033,12 @@ or distribution of this code can result in legal action to the fullest extent pe
     <script src="/js/pwa/starred.js"></script>
 
     <script>
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    
+    // Store current listing data for starring
     window.currentListingData = {
         id: 'f7e67c13-4e5f-4861-9a8d-14a75133570f',
         business_name: "Example",
-        business_name_display: "Example",
         tagline: "Lorem ipsum dolor sit amet elit. This is not a real listing.",
         description: "<p>Lorem ipsum dolor sit amet consectetur adipiscing elit. Integer volutpat egestas scelerisque. Aenean et sem quis est consequat pulvinar ac nec erat. In hac habitasse platea dictumst. Nulla blandit justo erat, eu maximus justo convallis in. Aliquam consequat lectus a ante venenatis commodo. Proin mattis odio mi, vel fermentum odio sagittis vel. Nam quis porta purus, quis ultrices velit. Nulla nec felis at lacus porttitor pretium. Pellentesque blandit euismod quam id bibendum. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque sit amet ullamcorper libero.</p><p><br></p><p>Pellentesque molestie est id diam ullamcorper, et luctus metus scelerisque. Phasellus nulla arcu, condimentum non lorem maximus, condimentum tincidunt nibh. Nulla maximus sapien eu lectus sodales dignissim. Sed accumsan augue in malesuada pharetra. Quisque maximus, justo vitae vulputate ultricies, ante arcu porttitor lectus, at fringilla velit enim nec sem. Proin ut tristique massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Etiam aliquam lorem vitae nunc eleifend condimentum.</p><p><br></p><p>Fusce ipsum ligula, fringilla eu molestie non, malesuada sed lectus. Suspendisse placerat rutrum ipsum, sed dignissim ligula. Vestibulum vitae risus vulputate, pharetra nibh at, luctus est. Integer placerat tempor turpis at viverra. Integer dignissim posuere eleifend. Duis vel sapien sodales, hendrerit ipsum ut, maximus massa. Cras iaculis convallis nisi, nec facilisis ligula consequat quis. Sed eu dignissim lacus ut mattis nulla. Curabitur ultrices a dui in dictum. Praesent neque justo, hendrerit id massa maximus, sagittis cursus ex. Maecenas auctor maximus odio ac efficitur velit aliquam ac. Integer a tempor libero. Phasellus sit amet blandit neque. Maecenas egestas libero facilisis condimentum imperdiet.</p>",
         category: 'Automotive &amp; Transportation',
@@ -1049,20 +1051,578 @@ or distribution of this code can result in legal action to the fullest extent pe
         logo: 'https://thegreekdirectory.pages.dev/assets/images/letter-icon/e.svg?access=granted',
         photos: ["https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg","https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg","https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg"],
         slug: 'example-listing',
-        version: '12',
-        url: "https://thegreekdirectory.org/listing/example-listing",
-        total_photos: 3,
-        hours: {"friday":"09:00-18:00","monday":"00:00-23:59","sunday":"11:00-20:00","tuesday":"09:00-10:00","saturday":"00:00-23:59","thursday":"Closed","wednesday":"Closed"},
-        timezone: 'America/Chicago' || 'America/Chicago',
-        coordinates: '41.8774552,-87.6175194',
-        full_address: '365 DuSable Lake Shore Dr, Chicago, IL, 60601',
-        website_domain: 'tgd.gr'
-    }
-    </script>
+        version: '13'
+    };
     
-    <script src="/js/listing-hours.js"></script>
+    function openDirections(event) {
+        if (event) event.preventDefault();
+        const listing = window.currentListingData || {};
+        const directionsUrl = (window.TGDDirections && window.TGDDirections.getDirectionsUrl)
+            ? window.TGDDirections.getDirectionsUrl(listing)
+            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((listing.address || '') + ' ' + (listing.city || '') + ' ' + (listing.state || ''))}`;
+        window.open(directionsUrl, '_blank', 'noopener');
+    }
+        
+    function getStarredListingIds() {
+        const cookieEntry = document.cookie.split('; ').find((item) => item.startsWith('starredListings='));
+        if (!cookieEntry) return [];
+        try {
+            const parsed = JSON.parse(decodeURIComponent(cookieEntry.split('=')[1]));
+            return Array.isArray(parsed) ? parsed.map(String) : [];
+        } catch (error) {
+            return [];
+        }
+    }
 
-    <script src="/js/listing-page.js" defer></script>
+    function setStarredListingIds(ids) {
+        const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
+        document.cookie = `starredListings=${encodeURIComponent(JSON.stringify(ids))}; expires=${expires}; path=/; SameSite=Lax`;
+    }
+
+    async function toggleListingStar(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const starButton = document.querySelector('.star-button[data-listing-id="f7e67c13-4e5f-4861-9a8d-14a75133570f"]');
+        if (!starButton) return;
+
+        const listingId = String('f7e67c13-4e5f-4861-9a8d-14a75133570f');
+        const starredIds = getStarredListingIds();
+        const existingIndex = starredIds.indexOf(listingId);
+        const shouldStar = existingIndex === -1;
+
+        if (shouldStar) starredIds.push(listingId);
+        else starredIds.splice(existingIndex, 1);
+
+        setStarredListingIds(starredIds);
+        starButton.classList.toggle('starred', shouldStar);
+        window.dispatchEvent(new CustomEvent('tgd:starred-changed', {
+            detail: { action: shouldStar ? 'added' : 'removed', listingId, timestamp: Date.now() }
+        }));
+
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            if (shouldStar) await window.PWAStorage.addStarred(window.currentListingData);
+            else await window.PWAStorage.removeStarred(listingId);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const starButton = document.querySelector('.star-button[data-listing-id="f7e67c13-4e5f-4861-9a8d-14a75133570f"]');
+        if (!starButton) return;
+        const listingId = String('f7e67c13-4e5f-4861-9a8d-14a75133570f');
+        const isStarredByCookie = getStarredListingIds().includes(listingId);
+        if (isStarredByCookie) starButton.classList.add('starred');
+        if (window.PWAStorage) {
+            await window.PWAStorage.init();
+            const isStarred = await window.PWAStorage.isStarred(listingId);
+            if (isStarred) starButton.classList.add('starred');
+        }
+    });
+
+    function handleListingHashRoute() {
+        const hash = (window.location.hash || '').toLowerCase();
+        const targets = {
+            '#carousel': 'carouselSection',
+            '#header': 'headerSection',
+            '#description': 'descriptionSection',
+            '#map': 'locationSection',
+            '#contact': 'contactSection',
+            '#additional': 'additionalInfoSectionWrap',
+            '#owner': 'ownerInfoSection',
+            '#social': 'socialSection',
+            '#related': 'relatedSection',
+            '#claim': 'claimSection'
+        };
+        const targetId = targets[hash];
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.addEventListener('DOMContentLoaded', handleListingHashRoute);
+    window.addEventListener('hashchange', handleListingHashRoute);
+    
+    // Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+    </script>
+    <script src="/js/listing-hours.js"></script>
+    <script>
+        /*
+        Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+        */
+        
+        const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const totalSlides = 3;
+        const businessName = "Example";
+        const listingUrl = "https://thegreekdirectory.org/listing/example-listing";
+        const listingId = 'f7e67c13-4e5f-4861-9a8d-14a75133570f';
+        const hoursData = {"friday":"09:00-18:00","monday":"00:00-23:59","sunday":"11:00-20:00","tuesday":"09:00-10:00","saturday":"00:00-23:59","thursday":"Closed","wednesday":"Closed"};
+        const businessTimezone = 'America/Chicago' || 'America/Chicago';
+        const hoursServerTimeEndpoint = 'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/listing-server-time';
+        const hoursServerAuth = { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` };
+        const galleryPhotos = ["https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg","https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg","https://worldbusinesschicago.com/app/uploads/2024/08/chicago-sunset-scaled.jpg"];
+        let currentGalleryIndex = 0;
+        
+        function toggleSubcategories() {
+            const display = document.getElementById('subcategoriesDisplay');
+            display.classList.toggle('active');
+        }
+        
+        function formatPhoneDisplay(phone) {
+            if (!phone) return '';
+            const digits = phone.replace(/\D/g, '');
+            if (digits.length === 11 && digits.startsWith('1')) {
+                return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
+            }
+            if (digits.length === 10) {
+                return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+            }
+            return phone;
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.TGDLanguage && typeof window.TGDLanguage.applyStoredLanguage === 'function') {
+                window.TGDLanguage.applyStoredLanguage();
+            }
+            document.querySelectorAll('.text-gray-600, .text-gray-700').forEach(el => {
+                const phone = el.textContent.match(/\b1?\d{10}\b/);
+                if (phone) {
+                    el.textContent = el.textContent.replace(phone[0], formatPhoneDisplay(phone[0]));
+                }
+            });
+        });
+        
+        async function trackAnalytics(action, platform) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('listing_analytics')
+                    .insert({
+                        listing_id: listingId,
+                        action: action,
+                        platform: platform || null,
+                        timestamp: new Date().toISOString(),
+                        user_agent: navigator.userAgent
+                    });
+                
+                if (error) throw error;
+            } catch (e) {
+                console.log('Analytics tracking error:', e.message);
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            trackAnalytics('view');
+        });
+        
+        function trackClick(action, platform) {
+            trackAnalytics(action, platform);
+        }
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a[href^="tel:"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('call'));
+            });
+            
+            document.querySelectorAll('a[href*="maps"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('directions'));
+            });
+            
+            const websiteDomain = 'tgd.gr';
+            if (websiteDomain) {
+                document.querySelectorAll('a[href]').forEach(el => {
+                    const href = el.getAttribute('href') || '';
+                    let parsedUrl;
+                    try {
+                        parsedUrl = new URL(href, window.location.origin);
+                    } catch (error) {
+                        return;
+                    }
+                    const isWebLink = parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+                    if (!isWebLink) return;
+                    if (parsedUrl.hostname !== websiteDomain) return;
+                    el.addEventListener('click', () => trackClick('website'));
+                });
+            }
+
+            document.querySelectorAll('a[href^="mailto:"]').forEach(el => {
+                el.addEventListener('click', () => trackClick('email'));
+            });
+
+            document.querySelectorAll('[data-cta-name]').forEach(el => {
+                el.addEventListener('click', () => trackClick('custom_cta_1'));
+            });
+
+            checkAdminRedirect();
+            initializeReadMore();
+            initializeTooltipToggle('verifiedCheckmarkButton');
+            initializeTooltipToggle('hoursTooltipButton');
+            initializeListingHoursStatus();
+        });
+
+        function initializeTooltipToggle(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                button.classList.toggle('open');
+            });
+            document.addEventListener('click', () => button.classList.remove('open'));
+        }
+
+        function initializeReadMore() {
+            const description = document.getElementById('listingDescription');
+            const readMoreButton = document.getElementById('listingReadMoreBtn');
+            if (!description || !readMoreButton) return;
+            if (description.scrollHeight <= 300) return;
+
+            let expanded = false;
+            description.classList.add('collapsed');
+            readMoreButton.classList.remove('hidden');
+
+            readMoreButton.addEventListener('click', () => {
+                expanded = !expanded;
+                description.classList.toggle('collapsed', !expanded);
+                readMoreButton.textContent = expanded ? 'Read less' : 'Read more';
+            });
+        }
+        
+        function checkAdminRedirect() {
+            const path = window.location.pathname;
+            if (path.endsWith('/admin')) {
+                const slug = listingId;
+                window.location.href = `/business.html?slug=${slug}`;
+            }
+        }
+
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+                async function initializeListingHoursStatus() {
+            if (typeof window.TGDListingHours?.updateOpenClosedBadge !== 'function') return;
+            await window.TGDListingHours.updateOpenClosedBadge({
+                hoursData,
+                businessTimezone,
+                hoursServerTimeEndpoint,
+                hoursServerAuth
+            });
+        }
+
+function openGallery(index = 0) {
+            const modal = document.getElementById('galleryModal');
+            if (!modal || !galleryPhotos || galleryPhotos.length === 0) return;
+            modal.classList.add('active');
+            currentGalleryIndex = index;
+            updateGallerySlide();
+        }
+
+        function closeGallery() {
+            const modal = document.getElementById('galleryModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+        }
+
+        function updateGallerySlide() {
+            const image = document.getElementById('galleryImage');
+            const counter = document.getElementById('galleryCounter');
+            if (!image || !galleryPhotos || galleryPhotos.length === 0) return;
+            image.src = galleryPhotos[currentGalleryIndex];
+            if (counter) {
+                counter.textContent = `${currentGalleryIndex + 1} / ${galleryPhotos.length}`;
+            }
+        }
+
+        function nextGallerySlide() {
+            if (!galleryPhotos || galleryPhotos.length === 0) return;
+            currentGalleryIndex = (currentGalleryIndex + 1) % galleryPhotos.length;
+            updateGallerySlide();
+        }
+
+        function prevGallerySlide() {
+            if (!galleryPhotos || galleryPhotos.length === 0) return;
+            currentGalleryIndex = (currentGalleryIndex - 1 + galleryPhotos.length) % galleryPhotos.length;
+            updateGallerySlide();
+        }
+
+        if (totalSlides > 1) {
+            function goToSlide(index) {
+                const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
+                const track = carousel.querySelector('.carousel-track');
+                const dots = carousel.querySelectorAll('.carousel-dot');
+                
+                track.style.transform = `translateX(-${index * 100}%)`;
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+                carousel.dataset.current = index;
+            }
+
+            function nextSlide() {
+                const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
+                const current = parseInt(carousel.dataset.current || 0);
+                goToSlide((current + 1) % totalSlides);
+            }
+
+            function prevSlide() {
+                const carousel = document.getElementById('photoCarousel');
+                if (!carousel) return;
+                const current = parseInt(carousel.dataset.current || 0);
+                goToSlide((current - 1 + totalSlides) % totalSlides);
+            }
+
+            setInterval(nextSlide, 5000);
+            
+            window.goToSlide = goToSlide;
+            window.nextSlide = nextSlide;
+            window.prevSlide = prevSlide;
+        }
+
+        window.openGallery = openGallery;
+        window.closeGallery = closeGallery;
+        window.nextGallerySlide = nextGallerySlide;
+        window.prevGallerySlide = prevGallerySlide;
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            closeGallery();
+            const shareModal = document.getElementById('shareModal');
+            if (shareModal && shareModal.classList.contains('active')) {
+                closeShareModal();
+            }
+        });
+
+        function shareNative() {
+            trackClick('share', 'native');
+            if (navigator.share) {
+                navigator.share({
+                    title: businessName + ' | The Greek Directory',
+                    text: 'Check out ' + businessName + ' on The Greek Directory!',
+                    url: window.location.href.split('?')[0] + '?utm_source=native&utm_medium=share&utm_campaign=listing'
+                }).catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.log('Share failed:', err);
+                    }
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    const label = document.getElementById('shareCopyLabel');
+                    if (label) {
+                        const original = label.textContent;
+                        label.textContent = 'Link copied to clipboard!';
+                        setTimeout(() => { label.textContent = original; }, 1800);
+                    }
+                }).catch(() => {
+                    console.log('Unable to share. Please copy the URL from your browser.');
+                });
+            }
+        }
+
+        function openShareModal() {
+            const modal = document.getElementById('shareModal');
+            const source = document.getElementById('shareButtonsSection');
+            const target = document.getElementById('shareModalButtons');
+            if (!modal || !source || !target) return;
+            target.innerHTML = source.querySelector('.flex') ? source.querySelector('.flex').innerHTML : '';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            requestAnimationFrame(() => modal.classList.add('active'));
+        }
+
+        function closeShareModal() {
+            const modal = document.getElementById('shareModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function copyShareLink() {
+            const input = document.getElementById('shareLinkInput');
+            const label = document.getElementById('shareCopyLabel');
+            if (!input) return;
+            navigator.clipboard.writeText(input.value).then(() => {
+                if (label) {
+                    const original = label.textContent;
+                    label.textContent = 'Link copied to clipboard!';
+                    setTimeout(() => {
+                        label.textContent = original;
+                    }, 1800);
+                }
+            }).catch(() => {
+                input.select();
+                document.execCommand('copy');
+                if (label) {
+                    const original = label.textContent;
+                    label.textContent = 'Link copied to clipboard!';
+                    setTimeout(() => {
+                        label.textContent = original;
+                    }, 1800);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const claimSection = document.getElementById('claimSection');
+            if (claimSection) {
+                const socialSection = document.getElementById('socialSection');
+                const hasSocialOrReviews = !!document.querySelector('#socialSection h2');
+                const targetSelectors = [
+                    '#ownerInfoSection .owner-info-section',
+                    '#additionalInfoSectionWrap > div',
+                    '#locationSection',
+                    '#descriptionSection'
+                ];
+                const target = (socialSection && hasSocialOrReviews)
+                    ? socialSection
+                    : targetSelectors
+                        .map((selector) => document.querySelector(selector))
+                        .find((element) => element);
+                if (target && target.parentNode) {
+                    target.insertAdjacentElement('afterend', claimSection);
+                }
+            }
+
+            const input = document.getElementById('shareLinkInput');
+            const toggle = document.getElementById('shortenUrlToggle');
+            if (toggle && input) {
+                toggle.addEventListener('change', (event) => {
+                    input.value = event.target.checked ? `https://thegreekdirectory.org/listing/example-listing` : `https://thegreekdirectory.org/listing/example-listing`;
+                });
+            }
+        });
+
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+        const coordinatesStr = '41.8774552,-87.6175194';
+        const fullAddress = '365 DuSable Lake Shore Dr, Chicago, IL, 60601';
+
+        async function geocodeAddress(address) {
+            try {
+                const endpoint = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+                const response = await fetch(endpoint, { headers: { 'Accept': 'application/json' } });
+                if (!response.ok) return null;
+                const data = await response.json();
+                if (!Array.isArray(data) || !data.length) return null;
+                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            } catch (_) {
+                return null;
+            }
+        }
+        
+        async function initializeMap() {
+            const mapFallback = document.getElementById('mapFallback');
+            const showMapFallback = (message) => {
+                if (mapFallback) {
+                    mapFallback.textContent = message || 'Map is currently unavailable for this listing.';
+                    mapFallback.classList.add('visible');
+                }
+                const locationSection = document.getElementById('locationSection');
+                if (locationSection) locationSection.classList.add('map-unavailable');
+            };
+
+            const locationSection = document.getElementById('locationSection');
+            if (!locationSection) {
+                return;
+            }
+
+            if (!fullAddress || fullAddress === '') {
+                locationSection.remove();
+                return;
+            }
+            
+            const mapElement = document.getElementById('listingMap');
+            if (!mapElement) {
+                return;
+            }
+            
+            try {
+                let lat;
+                let lng;
+
+                if (coordinatesStr && coordinatesStr.includes(',')) {
+                    const coords = coordinatesStr.split(',');
+                    lat = parseFloat(coords[0].trim());
+                    lng = parseFloat(coords[1].trim());
+                }
+
+                if (isNaN(lat) || isNaN(lng)) {
+                    const geocoded = await geocodeAddress(fullAddress);
+                    if (!geocoded) {
+                        showMapFallback('We could not load this map right now. Please use Directions for navigation.');
+                        return;
+                    }
+                    [lat, lng] = geocoded;
+                }
+                
+                if (typeof L === 'undefined') {
+                    setTimeout(initializeMap, 500);
+                    return;
+                }
+                
+                const map = L.map('listingMap', {
+                    center: [lat, lng],
+                    zoom: 15,
+                    zoomControl: true,
+                    scrollWheelZoom: false
+                });
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '',
+                    maxZoom: 19
+                }).addTo(map);
+                
+                const listingMapPinIcon = L.divIcon({
+                    className: 'listing-map-pin',
+                    html: `<div style="width:25px;height:41px;display:flex;align-items:flex-end;justify-content:center;"><svg xmlns="http://www.w3.org/2000/svg" width="800px" height="800px" viewBox="0 0 24 24" fill="none" style="width:25px;height:41px;display:block;"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3856 23.789L11.3831 23.7871L11.3769 23.7822L11.355 23.765C11.3362 23.7501 11.3091 23.7287 11.2742 23.7008C11.2046 23.6451 11.1039 23.5637 10.9767 23.4587C10.7224 23.2488 10.3615 22.944 9.92939 22.5599C9.06662 21.793 7.91329 20.7041 6.75671 19.419C5.60303 18.1371 4.42693 16.639 3.53467 15.0528C2.64762 13.4758 2 11.7393 2 10C2 7.34784 3.05357 4.8043 4.92893 2.92893C6.8043 1.05357 9.34784 0 12 0C14.6522 0 17.1957 1.05357 19.0711 2.92893C20.9464 4.8043 22 7.34784 22 10C22 11.7393 21.3524 13.4758 20.4653 15.0528C19.5731 16.639 18.397 18.1371 17.2433 19.419C16.0867 20.7041 14.9334 21.793 14.0706 22.5599C13.6385 22.944 13.2776 23.2488 13.0233 23.4587C12.8961 23.5637 12.7954 23.6451 12.7258 23.7008C12.6909 23.7287 12.6638 23.7501 12.645 23.765L12.6231 23.7822L12.6169 23.7871L12.615 23.7885C12.615 23.7885 12.6139 23.7894 12 23L12.6139 23.7894C12.2528 24.0702 11.7467 24.0699 11.3856 23.789ZM12 23L11.3856 23.789C11.3856 23.789 11.3861 23.7894 12 23ZM15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="#045093"/></svg></div>`,
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                });
+                L.marker([lat, lng], { icon: listingMapPinIcon }).addTo(map)
+                    .bindPopup("<strong>Example</strong><br>365 DuSable Lake Shore Dr, Chicago, IL, 60601")
+                    .openPopup();
+                
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 250);
+                
+                mapElement.addEventListener('click', function() {
+                    this.classList.add('active');
+                    map.scrollWheelZoom.enable();
+                });
+
+                mapElement.addEventListener('mouseleave', function() {
+                    this.classList.remove('active');
+                    map.scrollWheelZoom.disable();
+                });
+            } catch (e) {
+                console.error('Map error:', e);
+                showMapFallback('Map failed to load. Please try again later.');
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initializeMap, 1000);
+            });
+        } else {
+            setTimeout(initializeMap, 1000);
+        }
+        
+        initializeListingHoursStatus();
+        setInterval(initializeListingHoursStatus, 60000);
+        
+        /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+    </script>
     <script>window.gtranslateSettings = {"default_language":"en","native_language_names":true,"detect_browser_language":true,"languages":["en","el"],"globe_color":"#66aaff","wrapper_selector":".gtranslate_wrapper","alt_flags":{"en":"usa"}}</script>
     <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
 </body>
