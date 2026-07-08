@@ -751,6 +751,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     window.currentListingData = {
         id: '{{LISTING_ID}}',
         business_name: "{{BUSINESS_NAME_JS}}",
+        business_name_display: "{{BUSINESS_NAME}}",
         tagline: "{{TAGLINE_JS}}",
         description: "{{DESCRIPTION_JS}}",
         category: '{{CATEGORY}}',
@@ -763,7 +764,14 @@ or distribution of this code can result in legal action to the fullest extent pe
         logo: '{{LOGO}}',
         photos: {{PHOTOS_JSON}},
         slug: '{{SLUG}}',
-        version: '{{VERSION_NUM}}'
+        version: '{{VERSION_NUM}}',
+        url: "{{LISTING_URL}}",
+        total_photos: {{TOTAL_PHOTOS}},
+        hours: {{HOURS_JSON}},
+        timezone: '{{BUSINESS_TIMEZONE}}' || 'America/Chicago',
+        coordinates: '{{COORDINATES}}',
+        full_address: '{{FULL_ADDRESS}}',
+        website_domain: '{{WEBSITE_DOMAIN}}'
     };
     
     function openDirections(event) {
@@ -799,7 +807,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const starButton = document.querySelector('.star-button[data-listing-id="{{LISTING_ID}}"]');
         if (!starButton) return;
 
-        const listingId = String('{{LISTING_ID}}');
+        const listingId = String(window.currentListingData.id);
         const starredIds = getStarredListingIds();
         const existingIndex = starredIds.indexOf(listingId);
         const shouldStar = existingIndex === -1;
@@ -823,7 +831,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     document.addEventListener('DOMContentLoaded', async () => {
         const starButton = document.querySelector('.star-button[data-listing-id="{{LISTING_ID}}"]');
         if (!starButton) return;
-        const listingId = String('{{LISTING_ID}}');
+        const listingId = String(window.currentListingData.id);
         const isStarredByCookie = getStarredListingIds().includes(listingId);
         if (isStarredByCookie) starButton.classList.add('starred');
         if (window.PWAStorage) {
@@ -869,15 +877,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        const totalSlides = {{TOTAL_PHOTOS}};
-        const businessName = "{{BUSINESS_NAME}}";
-        const listingUrl = "{{LISTING_URL}}";
-        const listingId = '{{LISTING_ID}}';
-        const hoursData = {{HOURS_JSON}};
-        const businessTimezone = '{{BUSINESS_TIMEZONE}}' || 'America/Chicago';
         const hoursServerTimeEndpoint = 'https://luetekzqrrgdxtopzvqw.supabase.co/functions/v1/listing-server-time';
         const hoursServerAuth = { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` };
-        const galleryPhotos = {{PHOTOS_JSON}};
         let currentGalleryIndex = 0;
         
         function toggleSubcategories() {
@@ -916,7 +917,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 const { data, error } = await supabaseClient
                     .from('listing_analytics')
                     .insert({
-                        listing_id: listingId,
+                        listing_id: window.currentListingData.id,
                         action: action,
                         platform: platform || null,
                         timestamp: new Date().toISOString(),
@@ -948,8 +949,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 el.addEventListener('click', () => trackClick('directions'));
             });
             
-            const websiteDomain = '{{WEBSITE_DOMAIN}}';
-            if (websiteDomain) {
+            if (window.currentListingData.website_domain) {
                 document.querySelectorAll('a[href]').forEach(el => {
                     const href = el.getAttribute('href') || '';
                     let parsedUrl;
@@ -960,7 +960,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     }
                     const isWebLink = parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
                     if (!isWebLink) return;
-                    if (parsedUrl.hostname !== websiteDomain) return;
+                    if (parsedUrl.hostname !== window.currentListingData.website_domain) return;
                     el.addEventListener('click', () => trackClick('website'));
                 });
             }
@@ -1010,7 +1010,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         function checkAdminRedirect() {
             const path = window.location.pathname;
             if (path.endsWith('/admin')) {
-                const slug = listingId;
+                const slug = window.currentListingData.id;
                 window.location.href = `/business.html?slug=${slug}`;
             }
         }
@@ -1020,8 +1020,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                 async function initializeListingHoursStatus() {
             if (typeof window.TGDListingHours?.updateOpenClosedBadge !== 'function') return;
             await window.TGDListingHours.updateOpenClosedBadge({
-                hoursData,
-                businessTimezone,
+                hoursData: window.currentListingData.hours,
+                businessTimezone: window.currentListingData.timezone,
                 hoursServerTimeEndpoint,
                 hoursServerAuth
             });
@@ -1029,7 +1029,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
 function openGallery(index = 0) {
             const modal = document.getElementById('galleryModal');
-            if (!modal || !galleryPhotos || galleryPhotos.length === 0) return;
+            if (!modal || !window.currentListingData.photos || window.currentListingData.photos.length === 0) return;
             modal.classList.add('active');
             currentGalleryIndex = index;
             updateGallerySlide();
@@ -1044,26 +1044,26 @@ function openGallery(index = 0) {
         function updateGallerySlide() {
             const image = document.getElementById('galleryImage');
             const counter = document.getElementById('galleryCounter');
-            if (!image || !galleryPhotos || galleryPhotos.length === 0) return;
-            image.src = galleryPhotos[currentGalleryIndex];
+            if (!image || !window.currentListingData.photos || window.currentListingData.photos.length === 0) return;
+            image.src = window.currentListingData.photos[currentGalleryIndex];
             if (counter) {
-                counter.textContent = `${currentGalleryIndex + 1} / ${galleryPhotos.length}`;
+                counter.textContent = `${currentGalleryIndex + 1} / ${window.currentListingData.photos.length}`;
             }
         }
 
         function nextGallerySlide() {
-            if (!galleryPhotos || galleryPhotos.length === 0) return;
-            currentGalleryIndex = (currentGalleryIndex + 1) % galleryPhotos.length;
+            if (!window.currentListingData.photos || window.currentListingData.photos.length === 0) return;
+            currentGalleryIndex = (currentGalleryIndex + 1) % window.currentListingData.photos.length;
             updateGallerySlide();
         }
 
         function prevGallerySlide() {
-            if (!galleryPhotos || galleryPhotos.length === 0) return;
-            currentGalleryIndex = (currentGalleryIndex - 1 + galleryPhotos.length) % galleryPhotos.length;
+            if (!window.currentListingData.photos || window.currentListingData.photos.length === 0) return;
+            currentGalleryIndex = (currentGalleryIndex - 1 + window.currentListingData.photos.length) % window.currentListingData.photos.length;
             updateGallerySlide();
         }
 
-        if (totalSlides > 1) {
+        if (window.currentListingData.total_photos > 1) {
             function goToSlide(index) {
                 const carousel = document.getElementById('photoCarousel');
                 if (!carousel) return;
@@ -1081,14 +1081,14 @@ function openGallery(index = 0) {
                 const carousel = document.getElementById('photoCarousel');
                 if (!carousel) return;
                 const current = parseInt(carousel.dataset.current || 0);
-                goToSlide((current + 1) % totalSlides);
+                goToSlide((current + 1) % window.currentListingData.total_photos);
             }
 
             function prevSlide() {
                 const carousel = document.getElementById('photoCarousel');
                 if (!carousel) return;
                 const current = parseInt(carousel.dataset.current || 0);
-                goToSlide((current - 1 + totalSlides) % totalSlides);
+                goToSlide((current - 1 + window.currentListingData.total_photos) % window.currentListingData.total_photos);
             }
 
             setInterval(nextSlide, 5000);
@@ -1116,8 +1116,8 @@ function openGallery(index = 0) {
             trackClick('share', 'native');
             if (navigator.share) {
                 navigator.share({
-                    title: businessName + ' | The Greek Directory',
-                    text: 'Check out ' + businessName + ' on The Greek Directory!',
+                    title: window.currentListingData.business_name_display + ' | The Greek Directory',
+                    text: 'Check out ' + window.currentListingData.business_name_display + ' on The Greek Directory!',
                     url: window.location.href.split('?')[0] + '?utm_source=native&utm_medium=share&utm_campaign=listing'
                 }).catch(err => {
                     if (err.name !== 'AbortError') {
@@ -1214,9 +1214,6 @@ function openGallery(index = 0) {
 
         /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
-        const coordinatesStr = '{{COORDINATES}}';
-        const fullAddress = '{{FULL_ADDRESS}}';
-
         async function geocodeAddress(address) {
             try {
                 const endpoint = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
@@ -1246,7 +1243,7 @@ function openGallery(index = 0) {
                 return;
             }
 
-            if (!fullAddress || fullAddress === '') {
+            if (!window.currentListingData.full_address || window.currentListingData.full_address === '') {
                 locationSection.remove();
                 return;
             }
@@ -1260,14 +1257,14 @@ function openGallery(index = 0) {
                 let lat;
                 let lng;
 
-                if (coordinatesStr && coordinatesStr.includes(',')) {
-                    const coords = coordinatesStr.split(',');
+                if (window.currentListingData.coordinates && window.currentListingData.coordinates.includes(',')) {
+                    const coords = window.currentListingData.coordinates.split(',');
                     lat = parseFloat(coords[0].trim());
                     lng = parseFloat(coords[1].trim());
                 }
 
                 if (isNaN(lat) || isNaN(lng)) {
-                    const geocoded = await geocodeAddress(fullAddress);
+                    const geocoded = await geocodeAddress(window.currentListingData.full_address);
                     if (!geocoded) {
                         showMapFallback('We could not load this map right now. Please use Directions for navigation.');
                         return;
