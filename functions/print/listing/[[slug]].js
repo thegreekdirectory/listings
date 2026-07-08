@@ -155,16 +155,17 @@ const PAGE_HEIGHT_PX = 1056;
 // real render to be certain, since that specific detail isn't spelled out
 // in the docs, only implied by the unadjusted example.
 //
-// Styling here is a DELIBERATE, exact match to footerTemplate (see that
-// constant's own comment in renderPrintPage for where each value comes
-// from: font-size/color from .gallery-page-footer, font-family inherited
-// from html/body in PRINT_STYLES) — same reasoning applies here: this
-// template is evaluated by the print engine completely outside
-// PRINT_STYLES, so every value has to be repeated literally rather than
-// referenced. Only the alignment differs (right, not space-between)
-// and the content (page numbering, not the listing URL/date), since this
+// Styling here matches footerTemplate on color and font-family (see that
+// constant's own comment in renderPrintPage for where those come from:
+// color from .gallery-page-footer, font-family inherited from html/body in
+// PRINT_STYLES). font-size is a deliberate 9px on BOTH header and footer —
+// smaller than .gallery-page-footer's own 10px on purpose, per explicit
+// request to shrink the running header/footer text specifically. Keep
+// this in sync with footerTemplate's font-size below if either changes.
+// Alignment differs from the footer (right, not space-between) and so
+// does the content (page numbering, not the listing URL/date), since this
 // is a header, not the footer.
-const HEADER_TEMPLATE = `<div style="width: 100%; font-size: 10px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; text-align: right; box-sizing: border-box;">PAGE <span class="pageNumber"></span>/<span class="totalPages"></span></div>`;
+const HEADER_TEMPLATE = `<div style="width: 100%; font-size: 9px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; text-align: right; box-sizing: border-box;">PAGE <span class="pageNumber"></span>/<span class="totalPages"></span></div>`;
 
 // ---------------------------------------------------------------------------
 // Entry point
@@ -1106,21 +1107,25 @@ ${PRINT_STYLES}
     // is escaped, since footerTemplate is still HTML the print engine
     // parses, not plain text.
     //
-    // The inline style values below are a DELIBERATE, exact match to
-    // .gallery-page-footer (the "<Business> — Photo X of Y" caption shown
-    // on each additional gallery page) — this template is evaluated by the
+    // The inline style values below match .gallery-page-footer (the
+    // "<Business> — Photo X of Y" caption shown on each additional gallery
+    // page) on color and font-family — this template is evaluated by the
     // print engine completely outside PRINT_STYLES, so nothing there
     // (including var(--text-light)) reaches it; every value has to be
     // repeated here literally:
-    //   font-size: 10px           <- .gallery-page-footer's own
-    //                                font-size: 10px
+    //   font-size: 9px            <- deliberately 1px smaller than
+    //                                .gallery-page-footer's own 10px, per
+    //                                explicit request to shrink the
+    //                                running header/footer text. Kept in
+    //                                sync with HEADER_TEMPLATE's font-size
+    //                                above — update both together.
     //   color: #6b7280            <- var(--text-light), which PRINT_STYLES
     //                                defines as exactly #6b7280 — also what
     //                                .gallery-page-footer uses
     //   font-family: -apple-system, ... <- inherited from html/body in
     //                                PRINT_STYLES, since .gallery-page-footer
     //                                never set its own font-family
-    const footerTemplate = `<div style="width: 100%; font-size: 10px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; display: flex; justify-content: space-between; box-sizing: border-box;"><span>${listingUrl}</span><span>Printed ${escapeHtml(generatedAt)} — The Greek Directory</span></div>`;
+    const footerTemplate = `<div style="width: 100%; font-size: 9px; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 0 0.65in; display: flex; justify-content: space-between; box-sizing: border-box;"><span>${listingUrl}</span><span>Printed ${escapeHtml(generatedAt)} — The Greek Directory</span></div>`;
 
     return { html, footerTemplate };
 }
