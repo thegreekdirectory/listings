@@ -10,7 +10,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="version" content"1">
+    <meta name="version" content"2">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -107,7 +107,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 "telephone": "",
                 "email": "info@enosisfederation.org",
                 "priceRange": "",
-                "image": ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/6e82ad0c-6972-41dc-3e42-3c2ee8e94400/public"],
+                "image": ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/6e82ad0c-6972-41dc-3e42-3c2ee8e94400/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/aebc7680-0950-41c6-34a6-2dd7dc349c00/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/ed835de5-9655-44ba-c9ba-3436d6333300/public"],
                 "logo": "https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/5e9926c0-1b0a-4983-8381-92bc399b9d00/public",
                 "address": {
                     "@type": "PostalAddress",
@@ -246,9 +246,13 @@ or distribution of this code can result in legal action to the fullest extent pe
         <div class="bg-white rounded-lg overflow-hidden mb-6 card-shadow" id="carouselSection">
             <div class="carousel-container h-64 md:h-96 bg-gray-200" id="photoCarousel" data-current="0">
                 <div class="carousel-track h-full">
-                    <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/6e82ad0c-6972-41dc-3e42-3c2ee8e94400/public') center/cover;" role="img" aria-label="Enosis Federation Illinois in Park Ridge, IL"></div>
+                    <div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/6e82ad0c-6972-41dc-3e42-3c2ee8e94400/public') center/cover;" role="img" aria-label="Enosis Federation Illinois in Park Ridge, IL"></div><div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/aebc7680-0950-41c6-34a6-2dd7dc349c00/public') center/cover;" role="img" aria-label="Enosis Federation Illinois in Park Ridge, IL"></div><div class="carousel-slide" style="background: url('https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/ed835de5-9655-44ba-c9ba-3436d6333300/public') center/cover;" role="img" aria-label="Enosis Federation Illinois in Park Ridge, IL"></div>
                 </div>
                 
+            <button class="carousel-nav carousel-prev" onclick="prevSlide()">❮</button>
+            <button class="carousel-nav carousel-next" onclick="nextSlide()">❯</button>
+            <div class="carousel-dots"><span class="carousel-dot active" onclick="goToSlide(0)"></span><span class="carousel-dot " onclick="goToSlide(1)"></span><span class="carousel-dot " onclick="goToSlide(2)"></span></div>
+        
                 <button class="star-button" type="button" data-listing-id="9594b7d5-94c2-4396-80e8-85ec34b8b945" onclick="toggleListingStar(event)" aria-label="Star listing">
                     <svg class="star-icon" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
                 </button>
@@ -577,11 +581,11 @@ or distribution of this code can result in legal action to the fullest extent pe
         email: "info@enosisfederation.org",
         website: "https://www.enosisfederation.org",
         logo: 'https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/5e9926c0-1b0a-4983-8381-92bc399b9d00/public',
-        photos: ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/6e82ad0c-6972-41dc-3e42-3c2ee8e94400/public"],
+        photos: ["https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/6e82ad0c-6972-41dc-3e42-3c2ee8e94400/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/aebc7680-0950-41c6-34a6-2dd7dc349c00/public","https://images.thegreekdirectory.org/cdn-cgi/imagedelivery/rheV007PEt08HUYXNuJLnQ/ed835de5-9655-44ba-c9ba-3436d6333300/public"],
         slug: 'park-ridge-il/enosis-federation-illinois',
-        version: '1',
+        version: '2',
         url: "https://thegreekdirectory.org/listing/park-ridge-il/enosis-federation-illinois",
-        total_photos: 1,
+        total_photos: 3,
         hours: {"friday":null,"monday":null,"sunday":null,"tuesday":null,"saturday":null,"thursday":null,"wednesday":null},
         timezone: 'America/Chicago' || 'America/Chicago',
         coordinates: '41.9871031,-87.8391434',
