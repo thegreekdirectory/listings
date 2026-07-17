@@ -1,0 +1,255 @@
+<!-- events.html -->
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
+
+<!--
+  NOTE ON HOW THIS FILE RELATES TO WHAT ACTUALLY GETS SERVED:
+  functions/events/index.js serves the real /events response, built from
+  THREE pieces rather than one static copy of this file: the head/hero
+  markup, the imported EVENTS_APP_SHELL_HTML constant from
+  _app-shell.js (everything from the TOOLBAR comment through the
+  closing </main>, i.e. lines ~89-213 of this file), and the
+  footer/scripts markup. The middle piece (_app-shell.js) is ALSO
+  imported by _render-region-page.js for /events/chicago and future
+  regional pages, so it lives in its own file instead of being
+  duplicated between this file and that one.
+
+  This file still contains that same middle section inline, in full, so
+  it reads as one complete page for anyone hand-editing markup here —
+  but if you edit anything between the TOOLBAR comment and the closing
+  </main> tag below, mirror that edit into
+  functions/events/_app-shell.js's EVENTS_APP_SHELL_HTML constant, or
+  the two will drift and functions/events/index.js will keep serving the
+  old version regardless of what this file says.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Events | Greek Festivals, Church Events & Gatherings | The Greek Directory</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <meta name="apple-mobile-web-app-title" content="Greek Directory">
+    <link rel="apple-touch-startup-image" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
+    <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg" type="image/x-icon">
+
+    <meta name="description" content="Find upcoming Greek festivals, church events, fundraisers, and gatherings across Chicago, Chicagoland, and Illinois — updated daily.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://thegreekdirectory.org/events">
+    <meta property="og:title" content="Events | Greek Festivals, Church Events & Gatherings">
+    <meta property="og:description" content="Browse upcoming Greek events across Chicago and Chicagoland — festivals, church events, fundraisers, and more.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="The Greek Directory">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://thegreekdirectory.org/events">
+    <meta property="og:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
+    <meta property="og:image:alt" content="Chicago skyline for Greek directory events page">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Events | Greek Festivals, Church Events & Gatherings">
+    <meta name="twitter:description" content="Find upcoming Greek events across Chicago, Chicagoland, and Illinois.">
+    <meta name="twitter:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/whitefavicon.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://static.thegreekdirectory.org/img/logo/blue.svg">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="stylesheet" href="/src/output.css">
+    <link rel="stylesheet" href="css/listings.css">
+    <link rel="stylesheet" href="css/events.css">
+    <link rel="stylesheet" href="css/index.css">
+    <script>
+        // Only load PWA CSS when running as a PWA — same gate as listings.html
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'css/pwa.css';
+            document.head.appendChild(link);
+        }
+    </script>
+
+    <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Greek Events",
+        "url": "https://thegreekdirectory.org/events",
+        "isPartOf": { "@type": "WebSite", "name": "The Greek Directory", "url": "https://thegreekdirectory.org" }
+    }
+    </script>
+</head>
+<body class="bg-gray-50">
+
+<div data-partial="header"></div>
+
+<main>
+    <div class="max-w-7xl mx-auto px-4 pt-24 pb-2">
+        <h1 class="text-2xl font-bold text-gray-900 mb-1">Events</h1>
+        <p class="text-sm text-gray-600 mb-4">Greek festivals, church events, fundraisers, and gatherings across Chicagoland — updated daily.</p>
+
+        <div class="relative mb-4 max-w-2xl mx-auto">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+            <input type="text" id="eventSearchInput" placeholder="Search events, categories, or cities..."
+                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                style="color: #045093; --tw-ring-color: #045093;">
+        </div>
+    </div>
+
+    <!-- TOOLBAR — filters trigger, view toggle (grid / list / calendar / map), sort -->
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <button id="eventFilterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 8h12M10 12h4"/></svg>
+                    <span class="text-sm font-medium">Filters</span>
+                    <span id="eventFilterCount" class="hidden inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full" style="background:#045093;">0</span>
+                </button>
+                <p id="eventResultsCount" class="text-sm text-gray-600 hidden sm:block">Loading...</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="events-view-toggle" id="eventsViewToggle">
+                    <button data-view="grid" class="active">
+                        <svg width="14" height="14" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M 5,4 C 4.446,4 4,4.446 4,5 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 14,4.446 13.554,4 13,4 Z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 26,4.446 25.554,4 25,4 Z M 5,16 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z"/></svg>
+                        Grid
+                    </button>
+                    <button data-view="list">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18v2H3zm0 6h18v2H3zm0 6h18v2H3z"/></svg>
+                        List
+                    </button>
+                    <button data-view="calendar">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        Calendar
+                    </button>
+                    <button data-view="map">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                        Map
+                    </button>
+                </div>
+                <select id="eventSortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                    <option value="soonest">Soonest</option>
+                    <option value="az">A-Z</option>
+                    <option value="furthest">Furthest Out</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER PANEL — single markup, responsive (slide-down on mobile, sidebar on desktop via CSS; see css/events.css .event-filter-panel) -->
+    <div id="eventFilterPanel" class="hidden">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-900">Filters</h3>
+                <div class="flex gap-2">
+                    <button id="eventClearFiltersBtn" class="text-sm text-blue-600 hover:text-blue-800 px-0 py-0">Clear All</button>
+                    <button id="eventCloseFilterBtn" class="text-gray-500">✕</button>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <div id="eventCategoryFilters" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">When</label>
+                    <div id="eventDateFilters" class="flex flex-wrap gap-2">
+                        <button class="toggle-option active" data-range="all">Any time</button>
+                        <button class="toggle-option" data-range="today">Today</button>
+                        <button class="toggle-option" data-range="weekend">This Weekend</button>
+                        <button class="toggle-option" data-range="week">This Week</button>
+                        <button class="toggle-option" data-range="month">This Month</button>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="eventFreeOnlyFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Free Only</span>
+                    </label>
+                </div>
+                <!-- Location Search — hidden entirely on regional pages (e.g. /events/chicago)
+                     since every result is already confined to that region's city list;
+                     js/events.js toggles this via the .event-regional-hide class when
+                     window.TGD_EVENTS_REGION is present. -->
+                <div class="location-search-container event-regional-hide">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location Search</label>
+                    <input type="text" id="eventLocationSearch" placeholder="City, State, or Zip..."
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <div id="eventLocationSearchResults" class="location-search-results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAP VIEW -->
+    <div id="eventMapContainer" class="hidden border-b relative" style="max-height: calc(100vh - 60px); overflow: hidden; position:relative; z-index:30;">
+        <div class="map-loading" id="eventMapLoading">
+            <div class="spinner"></div>
+            <p class="text-sm text-gray-600 mt-2 text-center">Loading map...</p>
+        </div>
+        <div id="eventsMap" style="height: 70vh;"></div>
+    </div>
+
+    <!-- CALENDAR VIEW -->
+    <div id="eventCalendarContainer" class="hidden max-w-7xl mx-auto px-4 py-4">
+        <div class="event-calendar">
+            <div class="event-calendar-header">
+                <button class="event-calendar-nav-btn" id="calendarPrevBtn" aria-label="Previous month">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <h3 id="calendarMonthLabel">Month Year</h3>
+                <button class="event-calendar-nav-btn" id="calendarNextBtn" aria-label="Next month">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+            <div class="event-calendar-grid" id="eventCalendarGrid"></div>
+        </div>
+        <div id="calendarDayDetail" class="hidden mt-4 bg-white rounded-lg p-4 card-shadow"></div>
+    </div>
+
+    <!-- GRID / LIST VIEW -->
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <div id="eventGridView">
+            <div id="eventsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+            <button id="eventLoadMoreBtn" class="load-more-btn hidden">Load More Events</button>
+        </div>
+        <div id="eventListView" class="hidden">
+            <div id="eventsListContainer" class="space-y-3"></div>
+            <button id="eventListLoadMoreBtn" class="load-more-btn hidden">Load More Events</button>
+        </div>
+        <div id="eventsEmptyState" class="hidden text-center py-16">
+            <p class="text-gray-500 text-lg mb-2">No events found</p>
+            <p class="text-gray-400 text-sm">Try adjusting your filters or check back soon.</p>
+        </div>
+    </div>
+</main>
+
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+<div data-partial="footer"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="js/partials-loader.js"></script>
+<script src="js/pwa/storage.js"></script>
+<script src="js/events.js"></script>
+<script src="js/pwa/app.js"></script>
+<script src="js/pwa/dock.js"></script>
+
+<!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. -->
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"c3e4a403e74b4e23b33164a17c46af38","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>window.gtranslateSettings = {"default_language":"en","native_language_names":true,"detect_browser_language":true,"languages":["en","el"],"globe_color":"#66aaff","wrapper_selector":".gtranslate_wrapper","alt_flags":{"en":"usa"}}</script>
+<script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
+</body>
+</html>
