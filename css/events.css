@@ -1,0 +1,612 @@
+/*
+Copyright (C) The Greek Directory, 2025-present. All rights reserved.
+This source code is proprietary and no part may not be used, reproduced, or distributed
+without written permission from The Greek Directory. Unauthorized use, copying, modification,
+or distribution of this code can result in legal action to the fullest extent permitted by law.
+*/
+
+/* css/events.css
+   Shared styles for the events system: individual event pages
+   (functions/events/[[slug]].js), the events homepage (events.html), and
+   regional pages (functions/events/_render-region-page.js).
+
+   Deliberately reuses the site's existing tokens rather than inventing
+   new ones: #045093 brand blue, the .card-shadow / .category-pill /
+   .hover-bounce utility classes from css/index.css, and the .badge /
+   .custom-marker / .map-popup-* primitives from css/listings.css. Only
+   classes genuinely specific to events (posters, the calendar grid,
+   ticket/RSVP chips) are defined fresh here. */
+
+/* ── Event detail page ─────────────────────────────────────────────── */
+
+.event-page-main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 76px 16px 40px;
+}
+
+.event-hero-wrap {
+    margin-bottom: 16px;
+}
+
+/* Poster, not a banner: events use a portrait flyer/poster image as their
+   primary visual, unlike listings' wide landscape hero photo — so this
+   frame is intentionally capped at a moderate width and centered rather
+   than stretched full-bleed the way listing-template.html's hero photo
+   is. */
+.event-poster-frame {
+    max-width: 420px;
+    margin: 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.event-poster-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.event-poster-placeholder {
+    aspect-ratio: 3 / 4;
+    background: linear-gradient(135deg, #045093 0%, #0a6bc2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.event-content-card {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.event-badges-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.event-badge {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    white-space: nowrap;
+}
+
+.event-badge-featured { background: #fbbf24; color: #78350f; }
+.event-badge-premium  { background: #6b21a8; color: #ede9fe; }
+.event-badge-live      { background: #16a34a; color: white; animation: event-pulse 2s infinite; }
+.event-badge-cancelled { background: #ef4444; color: white; }
+.event-badge-postponed { background: #f97316; color: white; }
+.event-badge-soldout   { background: #6b7280; color: white; }
+.event-badge-past      { background: #e5e7eb; color: #4b5563; }
+
+@keyframes event-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.event-datetime-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 16px 0;
+}
+
+.event-datetime-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.event-date-label {
+    font-weight: 600;
+    color: #111827;
+    font-size: 15px;
+}
+
+.event-time-label {
+    color: #4b5563;
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.event-recurrence-label {
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.event-location-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #374151;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.event-related-cards {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.event-related-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 14px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.event-related-card:hover {
+    border-color: #045093;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.event-related-card-static {
+    cursor: default;
+}
+
+.event-related-card-static:hover {
+    border-color: #e5e7eb;
+    box-shadow: none;
+}
+
+.event-related-card-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.event-related-card-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.event-related-card-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.event-related-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.event-related-card-sub {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.event-ticket-section {
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.event-price-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.event-price-chip {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    background: white;
+    color: #045093;
+    border: 1px solid #bfdbfe;
+}
+
+.event-price-free { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.event-price-rsvp { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+
+.event-cta-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.event-cta-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: transform 0.15s ease;
+}
+
+.event-cta-button:hover { transform: scale(1.03); }
+
+.event-cta-primary { background: #045093; color: white; }
+.event-cta-secondary { background: white; color: #045093; border: 1.5px solid #045093; }
+
+.event-capacity-note {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.event-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.event-section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 10px;
+}
+
+.event-description-body {
+    color: #374151;
+    line-height: 1.65;
+}
+
+.event-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+}
+
+.event-info-row:last-child { border-bottom: none; }
+.event-info-label { color: #6b7280; font-weight: 500; }
+.event-info-value { color: #111827; font-weight: 600; text-align: right; }
+
+.event-map {
+    height: 260px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    z-index: 1;
+}
+
+.event-directions-link {
+    color: #045093;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.event-address-line {
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.event-contact-line {
+    display: block;
+    color: #045093;
+    font-size: 14px;
+    text-decoration: none;
+    margin-bottom: 6px;
+    word-break: break-word;
+}
+
+.event-share-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #f3f4f6;
+}
+
+/* ── Events homepage / regional page shell ─────────────────────────── */
+/* These reuse #filterPanel, #mapContainer, .listing-card, .badge, and
+   .custom-marker.tier-* almost verbatim from css/listings.css (loaded
+   alongside this file on events.html) — only the event-specific card
+   face and calendar grid are defined here. */
+
+.event-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+}
+
+.event-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.event-card-poster {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: #f3f4f6;
+}
+
+.event-card-poster-placeholder {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(135deg, #045093 0%, #0a6bc2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.event-card-body {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.event-card-date {
+    font-size: 12px;
+    font-weight: 700;
+    color: #045093;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.event-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.3;
+}
+
+.event-card-location {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: auto;
+    padding-top: 6px;
+}
+
+.event-card-badges {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: flex;
+    gap: 4px;
+}
+
+.event-card-wrap {
+    position: relative;
+}
+
+/* View toggle: grid / list / calendar — a third option beyond listings'
+   grid/list pair, since a calendar is the one view type genuinely unique
+   to a chronological event feed. */
+.events-view-toggle {
+    display: flex;
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.events-view-toggle button {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.events-view-toggle button.active {
+    background: white;
+    color: #045093;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Calendar grid */
+.event-calendar {
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.event-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.event-calendar-header h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.event-calendar-nav-btn {
+    background: #f3f4f6;
+    border: none;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #045093;
+}
+
+.event-calendar-nav-btn:hover { background: #e5e7eb; }
+
+.event-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.event-calendar-weekday {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    padding-bottom: 6px;
+}
+
+.event-calendar-day {
+    min-height: 72px;
+    border-radius: 8px;
+    padding: 4px;
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: default;
+}
+
+.event-calendar-day.is-today {
+    background: #eff6ff;
+    box-shadow: inset 0 0 0 1.5px #045093;
+}
+
+.event-calendar-day.is-empty {
+    background: transparent;
+}
+
+.event-calendar-day-num {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.event-calendar-day.is-today .event-calendar-day-num {
+    color: #045093;
+}
+
+.event-calendar-dot-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+
+.event-calendar-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #045093;
+    cursor: pointer;
+}
+
+.event-calendar-dot.tier-featured { background: #fbbf24; }
+.event-calendar-dot.tier-premium { background: #6b21a8; }
+
+.event-calendar-more {
+    font-size: 10px;
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.event-calendar-day-events {
+    display: none;
+}
+
+.event-calendar-day.expanded .event-calendar-day-events {
+    display: block;
+}
+
+/* Custom map markers for events — mirrors .custom-marker.tier-* from
+   listings.css, distinguished with a small calendar glyph background
+   so an events map is visually distinct from a listings map if a
+   visitor has both open in different tabs. */
+.custom-marker.event-marker {
+    border-radius: 8px;
+}
+
+/* Map popup subtitle/link — .map-popup-content and .map-popup-title
+   (used alongside these in js/events.js) are real shared classes from
+   css/listings.css; these two are not (listings.css's only "subtitle"
+   popup class, .map-popup-tagline, is specifically a business tagline
+   field, so it isn't reused here for an event's date/time line). */
+.event-map-popup-sub {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 2px 0 6px;
+}
+
+.event-map-popup-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: #045093;
+    text-decoration: none;
+}
+
+.event-region-hero {
+    background: linear-gradient(135deg, #045093 0%, #0a6bc2 100%);
+    color: white;
+    padding: 48px 16px 32px;
+    text-align: center;
+}
+
+.event-region-hero h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.event-region-hero p {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+    .event-page-main { padding-top: 68px; }
+    .event-poster-frame { max-width: 100%; }
+    .event-calendar-day { min-height: 56px; }
+    .event-region-hero h1 { font-size: 24px; }
+}
