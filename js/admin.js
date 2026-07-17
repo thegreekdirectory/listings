@@ -754,21 +754,27 @@ function switchAdminView(view) {
     const listingsBtn    = document.getElementById('listingsViewBtn');
     const requestsBtn    = document.getElementById('requestsViewBtn');
     const suggestionsBtn = document.getElementById('tab-btn-suggestions');
+    const eventsBtn       = document.getElementById('eventsViewBtn');
     const listingsSection    = document.getElementById('listingsSection');
     const requestsSection    = document.getElementById('requestsSection');
     const suggestionsSection = document.getElementById('tab-suggestions');
+    const eventsSection      = document.getElementById('eventsSection');
     const newListingBtn  = document.getElementById('newListingBtn');
+    const newEventBtn    = document.getElementById('newEventBtn');
 
     // Hide all sections first
     listingsSection?.classList.add('hidden');
     requestsSection?.classList.add('hidden');
     suggestionsSection?.classList.add('hidden');
+    eventsSection?.classList.add('hidden');
     newListingBtn?.classList.add('hidden');
+    newEventBtn?.classList.add('hidden');
 
     // Reset all tab button styles
     if (listingsBtn)    listingsBtn.className    = 'px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-medium';
     if (requestsBtn)    requestsBtn.className    = 'px-4 py-2 bg-orange-100 text-orange-800 rounded-lg font-medium';
     if (suggestionsBtn) suggestionsBtn.className = 'px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-600 hover:bg-gray-100 relative';
+    if (eventsBtn)       eventsBtn.className     = 'px-4 py-2 bg-teal-100 text-teal-800 rounded-lg font-medium';
 
     if (view === 'requests') {
         requestsSection?.classList.remove('hidden');
@@ -778,6 +784,16 @@ function switchAdminView(view) {
         suggestionsSection?.classList.remove('hidden');
         if (suggestionsBtn) suggestionsBtn.className = 'px-4 py-2 bg-purple-600 text-white rounded-lg font-medium text-sm relative';
         loadSuggestions();
+    } else if (view === 'events') {
+        eventsSection?.classList.remove('hidden');
+        newEventBtn?.classList.remove('hidden');
+        if (eventsBtn) eventsBtn.className = 'px-4 py-2 bg-teal-600 text-white rounded-lg font-medium';
+        // Defined in js/admin-events.js, loaded after this file — see
+        // that file's own header comment for why this is a plain global
+        // call rather than an event/module import, matching how
+        // loadRequests()/loadSuggestions() are called here for their
+        // own tabs.
+        if (typeof window.loadEventsAdmin === 'function') window.loadEventsAdmin();
     } else {
         // default: listings
         listingsSection?.classList.remove('hidden');
@@ -1987,6 +2003,8 @@ async function uploadToCloudflareImages(file, assetType = 'photo') {
     if (!urlData.imageUrl) throw new Error('Upload succeeded but no image URL was returned.');
     return urlData.imageUrl;
 }
+
+window.uploadToCloudflareImages = uploadToCloudflareImages;
 
 function setMediaUploadStatus(message, isError = false) {
     const statusEl = document.getElementById('mediaUploadStatus');
