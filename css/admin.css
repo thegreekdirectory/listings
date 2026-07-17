@@ -537,7 +537,84 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
-This source code is proprietary and no part may not be used, reproduced, or distributed 
-without written permission from The Greek Directory. Unauthorized use, copying, modification, 
+This source code is proprietary and no part may not be used, reproduced, or distributed
+without written permission from The Greek Directory. Unauthorized use, copying, modification,
 or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
+
+/* Additions to css/admin.css for the Events admin form (js/admin-events.js).
+   admin.html does NOT load css/listings.css, so the two small pieces of
+   UI js/admin-events.js reuses by class name from that stylesheet
+   (.location-search-result / .location-search-results for the host/venue
+   listing autocomplete, .toggle-option for the recurrence-frequency-style
+   toggle look) need their own definitions here — kept intentionally
+   minimal (just enough to not render unstyled) rather than importing all
+   of listings.css into the admin bundle, which would risk bleeding
+   unrelated public-site styles into the admin UI.
+   Append this block to the end of css/admin.css. */
+
+.location-search-container {
+    position: relative;
+}
+
+.location-search-results {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.location-search-results.active {
+    display: block;
+}
+
+.location-search-result {
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--bg-light);
+}
+
+.location-search-result:last-child {
+    border-bottom: none;
+}
+
+.location-search-result:hover {
+    background: var(--bg-light);
+}
+
+.toggle-option {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-light);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.toggle-option:hover {
+    border-color: var(--primary-blue);
+}
+
+.toggle-option.active {
+    background: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: white;
+}
+
+.toggle-group {
+    display: inline-flex;
+    gap: 4px;
+}
