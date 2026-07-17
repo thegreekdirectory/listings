@@ -32,10 +32,10 @@
 /places/* /reserved?n=pl2 307
 
 # Event
-/events /reserved?n=e2 307
-/events/* /reserved?n=e2 307
-/event/* /reserved?n=e1 307
-/event /reserved?n=e1 307
+# /events /reserved?n=e2 307
+# /events/* /reserved?n=e2 307
+# /event/* /reserved?n=e1 307
+# /event /reserved?n=e1 307
 
 # News
 /news /reserved?n=n 307
