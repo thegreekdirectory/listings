@@ -1,3 +1,4 @@
+/*
 export async function onRequest(context) {
   const { request, next } = context;
   const url = new URL(request.url);
@@ -234,3 +235,4 @@ function appendQueryToSrcset(srcsetString, paramPair, currentHostname) {
     return parts.join(' ');
   }).join(', ');
 }
+*/
