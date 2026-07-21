@@ -67,7 +67,13 @@ async function fetchAllEvents() {
 // of duplication versus adding a build step to bridge module systems for
 // one array. If more region pages are added later, add their slugs here
 // too — see the matching REGION_SLUGS entry required in
-// functions/events/[[slug]].js.
+// functions/events/[region].js.
+//
+// Individual events use /event/<slug> (singular) — a different
+// top-level path from the /events/<region> regional pages above, not a
+// typo. See functions/event/[slug].js's own header comment for why
+// individual events and regional listing pages live under separate
+// route trees.
 const REGION_PAGE_SLUGS = ['chicago'];
 
 async function main() {
@@ -89,7 +95,7 @@ async function main() {
     events.forEach((event) => {
         if (!event.slug) return;
         const lastMod = event.updated_at ? event.updated_at.split('T')[0] : now;
-        xml += `  <url>\n    <loc>${baseUrl}/events/${event.slug}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+        xml += `  <url>\n    <loc>${baseUrl}/event/${event.slug}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
     });
 
     xml += `</urlset>`;
