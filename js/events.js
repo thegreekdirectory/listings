@@ -403,7 +403,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         return `
         <div class="event-card-wrap">
             ${badges.length ? `<div class="event-card-badges">${badges.join('')}</div>` : ''}
-            <a class="event-card card-shadow hover-bounce" href="/events/${escapeAttr(event.slug || '')}">
+            <a class="event-card card-shadow hover-bounce" href="/event/${escapeAttr(event.slug || '')}">
                 ${event.poster_image
                     ? `<img class="event-card-poster" src="${escapeAttr(event.poster_image)}" alt="${escapeAttr(event.title || '')}" loading="lazy">`
                     : `<div class="event-card-poster-placeholder"><span>${escapeHtml(event.category || 'Event')}</span></div>`}
@@ -442,7 +442,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const { dateLabel, timeLabel } = formatCardDateTime(event);
         const locationLabel = [event.city, event.state].filter(Boolean).join(', ');
         return `
-        <a class="flex items-center gap-4 bg-white rounded-lg p-3 card-shadow hover-bounce" href="/events/${escapeAttr(event.slug || '')}">
+        <a class="flex items-center gap-4 bg-white rounded-lg p-3 card-shadow hover-bounce" href="/event/${escapeAttr(event.slug || '')}">
             ${event.poster_image
                 ? `<img src="${escapeAttr(event.poster_image)}" alt="${escapeAttr(event.title || '')}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" loading="lazy">`
                 : `<div class="w-16 h-16 rounded-lg flex-shrink-0" style="background:linear-gradient(135deg,#045093,#0a6bc2);"></div>`}
@@ -580,7 +580,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <div class="map-popup-content">
                     <div class="map-popup-title">${escapeHtml(event.title || '')}</div>
                     <div class="event-map-popup-sub">${escapeHtml(dateLabel)}${timeLabel ? ` \u00b7 ${escapeHtml(timeLabel)}` : ''}</div>
-                    <a href="/events/${escapeAttr(event.slug || '')}" class="event-map-popup-link">View Event</a>
+                    <a href="/event/${escapeAttr(event.slug || '')}" class="event-map-popup-link">View Event</a>
                 </div>
             `);
             markerClusterGroup.addLayer(marker);
