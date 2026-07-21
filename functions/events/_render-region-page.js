@@ -31,7 +31,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 // filter controls that would be redundant here.
 //
 // This means a future third regional page is a ONE-LINE addition to the
-// REGION_SLUGS map in [[slug]].js plus a new city-list file — not a new
+// REGION_SLUGS map in [region].js plus a new city-list file — not a new
 // hand-built page.
 
 import { EVENTS_APP_SHELL_HTML } from './_app-shell.js';
