@@ -4,7 +4,7 @@ This source code is proprietary and no part may not be used, reproduced, or dist
 without written permission from The Greek Directory. Unauthorized use, copying, modification,
 or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
-
+ 
 // functions/event/[slug].js
 //
 // Cloudflare Pages Function. Route: GET /event/:slug (single required
