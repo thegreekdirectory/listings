@@ -7,13 +7,26 @@ or distribution of this code can result in legal action to the fullest extent pe
 
 // functions/events/index.js
 //
-// Cloudflare Pages Function. Route: GET /events (exact match only —
-// /events/chicago and /events/some-event-slug are handled by the
-// sibling [[slug]].js catch-all in this same directory; Cloudflare Pages
-// always prefers an exact-match index.js over a [[param]].js catch-all
-// at the same level, so this file and [[slug]].js coexist without
-// conflict by design, the same way functions/print/listing/[[slug]].js
-// coexists with any future functions/print/listing/index.js would).
+// Cloudflare Pages Function. Route: GET /events (exact match only).
+// Regional pages (e.g. /events/chicago) are handled by the sibling
+// functions/events/[region].js — a SINGLE required path segment, not a
+// catch-all — and individual event pages live under a completely
+// separate top-level directory, functions/event/[slug].js (singular).
+//
+// ROUTING CORRECTNESS NOTE: an earlier version of this comment claimed
+// this file and a sibling [[slug]].js (an OPTIONAL catch-all) "coexist
+// without conflict by design" based on Cloudflare's documented route-
+// specificity rules favoring fewer wildcards. That claim was never
+// actually verified against real deployed behavior, and in practice it
+// did not hold — requests to bare /events were handled by the catch-all
+// instead of this file, 404ing through its own not-found branch. This
+// has since been restructured so the question cannot come up at all:
+// [region].js matches exactly one path segment and NOTHING else, so it
+// structurally cannot match zero segments (bare /events) — there is no
+// route overlap for Cloudflare to have to resolve one way or the other,
+// regardless of how any given deploy's precedence resolution behaves.
+// See functions/event/[slug].js and functions/events/[region].js's own
+// header comments for the full reasoning.
 //
 // WHY THIS FILE EXISTS AT ALL, given events.html already contains this
 // exact markup: the spec calls for /events itself to be served by "a
