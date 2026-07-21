@@ -12,32 +12,34 @@ or distribution of this code can result in legal action to the fullest extent pe
 // switchAdminView() in js/admin.js). Loaded as a separate script rather
 // than appended into the already-268KB js/admin.js, but calls the exact
 // same adminProxy(action, payload) helper that file already defines
-// globally (window.adminProxy — see js/admin.js's own definition), so
-// this file assumes js/admin.js has already run and exposed that
-// function plus getAdminCredentials()/getGithubToken() by the time a
-// person actually opens the Events tab.
+// globally (window.adminProxy), so this file assumes js/admin.js has
+// already run and exposed that function plus window.allListings by the
+// time a person actually opens the Events tab.
 //
-// WHY A SEPARATE MODAL INSTEAD OF REUSING #editModal:
-// #editModal's Save button is wired to saveListing(), a ~250-line
-// function specific to the listings table shape (photos array upload,
-// hours JSON, GitHub static-page generation, etc). Branching that
-// function on "is this a listing or an event" would make an already
-// large function harder to safely change for BOTH listings and events
-// going forward. A dedicated #eventEditModal with its own
-// saveEvent() keeps each concern independently editable — the same
-// reasoning that already justifies requests/suggestions having their
-// own modals (#suggestionModal) rather than being shoehorned into
-// #editModal.
+// WHY A SEPARATE MODAL INSTEAD OF REUSING #editModal: see the original
+// reasoning — #editModal's Save button is wired to saveListing(), a
+// large function specific to the listings table shape. A dedicated
+// #eventEditModal keeps each concern independently editable.
 //
-// WHY THIS SECTION HAS NO "Generate Static Page" ACTION (unlike
-// listings' 🔨 button / generateListingPage()): events are rendered
-// live by functions/events/[[slug]].js on every request — see that
-// file's own header comment for why. There is no static .html file to
-// generate or commit for an event, so admin-events.js intentionally has
-// no GitHub-commit code path at all. Saving a row via events:insert /
-// events:update through admin-proxy IS the entire publish step; the
-// very next visitor to /events/<slug> sees it, once the edge cache
-// window (also handled inside that same function) lapses.
+// WHY THIS SECTION HAS NO "Generate Static Page" ACTION: events are
+// rendered live by functions/event/[slug].js on every request, not
+// baked to a static committed file the way listing pages are. Saving a
+// row via events:insert / events:update through admin-proxy IS the
+// entire publish step.
+//
+// THIS VERSION adds three things the first pass was missing:
+//   1. A unified `address` field (was: only a custom-venue-only address
+//      field, with no address at all when a venue listing was linked).
+//      Auto-filled from the selected venue listing's own address at
+//      selection time, and freely editable afterward — editing before
+//      save IS how an admin overrides it. See selectVenueListing().
+//   2. Auto-geocoding for custom venues, mirroring js/admin.js's own
+//      geocodeAddress()/saveListing() pattern exactly (Nominatim,
+//      skipped when lat/lng are already filled). See geocodeEventAddress().
+//   3. System shortlink creation (/e/XXXXXX) on new-event save, mirroring
+//      js/admin.js's saveListing() system-shortlink block exactly, and
+//      shortlink cleanup on delete, mirroring deleteListing(). See the
+//      SHORTLINK section near the bottom.
 
 (function () {
     'use strict';
@@ -45,30 +47,6 @@ or distribution of this code can result in legal action to the fullest extent pe
     let allEvents = [];
     let eventsLoaded = false;
 
-    // -------------------------------------------------------------------
-    // View switching hook
-    // -------------------------------------------------------------------
-    // switchAdminView() in js/admin.js gets a real, direct edit (see the
-    // changes .md) adding a proper `else if (view === 'events')` branch
-    // alongside its existing 'requests' / 'suggestions' / default-listings
-    // branches — NOT a JS-level wrapper around the function. A wrapper
-    // was the first approach tried here, but switchAdminView()'s
-    // structure makes that actively wrong: unrecognized view values fall
-    // through to the `else` block, which is the LISTINGS default (see
-    // that function's own comment: "default: listings"). A wrapper that
-    // calls the original function first and then tries to layer events
-    // behavior on top would still show the Listings section for a
-    // heartbeat (or in perpetuity, if something scoped inside that `else`
-    // branch cleanly, e.g. renderTable() populating listingsSection) before
-    // this file's code could hide it again — a real flash-of-wrong-content
-    // bug, not just an inefficiency. A direct branch inside the function
-    // is the only version of this that is correct on the first render.
-    //
-    // This file's job is therefore narrower than originally structured:
-    // it defines loadEventsAdmin() (called by that new branch in
-    // admin.js) and everything else events-specific — modal, table,
-    // save/delete, autocomplete — but does not touch switchAdminView's
-    // control flow at all.
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('eventsViewBtn')?.addEventListener('click', () => window.switchAdminView('events'));
         document.getElementById('newEventBtn')?.addEventListener('click', () => openEventModal(null));
@@ -79,11 +57,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         bindEventModalControls();
     });
 
-    // Called by the new `else if (view === 'events')` branch inside
-    // switchAdminView() in js/admin.js — exposed on window for that
-    // reason, the same way loadRequests()/loadSuggestions() are already
-    // plain global functions called the same way from inside that
-    // function for their own tabs.
     window.loadEventsAdmin = loadEventsAdmin;
 
     // -------------------------------------------------------------------
@@ -96,12 +69,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             tbody.innerHTML = `<tr><td colspan="8" class="py-10 px-4 text-center text-gray-500">Loading events…</td></tr>`;
         }
         try {
-            // adminProxy() already unwraps to json.data (see its own
-            // definition in js/admin.js) — events:list mirrors
-            // listings:list exactly (a plain .select() with no .single()),
-            // so this is already a plain array, the same way
-            // loadListings() consumes listings:list's result directly
-            // with no further unwrapping.
             allEvents = await window.adminProxy('events:list', {});
             if (!Array.isArray(allEvents)) allEvents = [];
             eventsLoaded = true;
@@ -130,7 +97,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             return;
         }
 
-        // Soonest-first, same convention as the public feed.
         const sorted = [...filtered].sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
 
         const tierColors = { FREE: 'bg-gray-100 text-gray-700', FEATURED: 'bg-yellow-100 text-yellow-700', PREMIUM: 'bg-purple-100 text-purple-700' };
@@ -139,7 +105,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         tbody.innerHTML = sorted.map((e) => {
             const tier = e.tier || 'FREE';
             const status = e.status || 'scheduled';
-            const eventUrl = `/events/${e.slug || ''}`;
+            // /event/<slug> — singular, matching /listing/<slug>. NOT
+            // /events/<slug> (plural is the homepage/directory namespace).
+            const eventUrl = `/event/${e.slug || ''}`;
             const startLabel = e.start_at ? new Date(e.start_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '\u2014';
 
             return `
@@ -189,6 +157,11 @@ or distribution of this code can result in legal action to the fullest extent pe
         if (!confirm(`Delete "${event?.title || 'this event'}"? This cannot be undone.`)) return;
         try {
             await window.adminProxy('events:delete', { id });
+            try {
+                await window.adminProxy('shortlinks:delete_event', { event_refer_id: id });
+            } catch (shortlinkErr) {
+                console.warn('Event deleted, but shortlink cleanup failed:', shortlinkErr);
+            }
             allEvents = allEvents.filter((e) => e.id !== id);
             renderEventsTable();
         } catch (err) {
@@ -205,17 +178,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         document.getElementById('closeEventModal')?.addEventListener('click', closeEventModalWithConfirm);
         document.getElementById('cancelEventEdit')?.addEventListener('click', closeEventModalWithConfirm);
         document.getElementById('saveEventEdit')?.addEventListener('click', saveEvent);
-
-        // Host listing / venue listing autocomplete — searches allListings
-        // (already loaded globally by js/admin.js for the Listings tab) so
-        // this never needs its own separate listings fetch.
-        document.getElementById('eventHostListingSearch')?.addEventListener('input', (e) => renderListingAutocomplete(e.target, 'eventHostListingResults', 'eventHostListingId'));
-        document.getElementById('eventVenueListingSearch')?.addEventListener('input', (e) => renderListingAutocomplete(e.target, 'eventVenueListingResults', 'eventVenueListingId'));
-
-        document.getElementById('eventCustomVenueToggle')?.addEventListener('change', (e) => {
-            document.getElementById('eventCustomVenueFields')?.classList.toggle('hidden', !e.target.checked);
-            document.getElementById('eventVenueListingField')?.classList.toggle('hidden', e.target.checked);
-        });
     }
 
     function closeEventModalWithConfirm() {
@@ -232,28 +194,30 @@ or distribution of this code can result in legal action to the fullest extent pe
         modal.dataset.eventId = id || '';
         document.getElementById('eventModalTitle').textContent = event ? 'Edit Event' : 'New Event';
         document.getElementById('eventEditFormContent').innerHTML = buildEventFormHtml(event);
-
-        // Re-bind controls that live inside the freshly-injected form HTML.
-        document.getElementById('eventCustomVenueToggle')?.addEventListener('change', (e) => {
-            document.getElementById('eventCustomVenueFields')?.classList.toggle('hidden', !e.target.checked);
-            document.getElementById('eventVenueListingField')?.classList.toggle('hidden', e.target.checked);
-        });
-        document.getElementById('eventHostListingSearch')?.addEventListener('input', (e) => renderListingAutocomplete(e.target, 'eventHostListingResults', 'eventHostListingId'));
-        document.getElementById('eventVenueListingSearch')?.addEventListener('input', (e) => renderListingAutocomplete(e.target, 'eventVenueListingResults', 'eventVenueListingId'));
+        bindFormControls();
 
         modal.classList.remove('hidden');
     };
 
+    function bindFormControls() {
+        document.getElementById('eventCustomVenueToggle')?.addEventListener('change', (e) => {
+            document.getElementById('eventCustomVenueFields')?.classList.toggle('hidden', !e.target.checked);
+            document.getElementById('eventVenueListingField')?.classList.toggle('hidden', e.target.checked);
+        });
+        document.getElementById('eventHostListingSearch')?.addEventListener('input', (e) =>
+            renderListingAutocomplete(e.target, 'eventHostListingResults', 'eventHostListingId'));
+        document.getElementById('eventVenueListingSearch')?.addEventListener('input', (e) =>
+            renderListingAutocomplete(e.target, 'eventVenueListingResults', 'eventVenueListingId', selectVenueListing));
+        document.getElementById('ev_is_recurring')?.addEventListener('change', (e) => {
+            document.getElementById('ev_recurrence_fields')?.classList.toggle('hidden', !e.target.checked);
+        });
+    }
+
     function buildEventFormHtml(event) {
         event = event || {};
         const recurrence = event.recurrence && typeof event.recurrence === 'object' ? event.recurrence : {};
-        const additionalInfo = Array.isArray(event.additional_info) ? event.additional_info : [];
-        const hasCustomVenue = !event.venue_listing_id && (event.custom_venue_name || event.custom_venue_address);
+        const hasCustomVenue = !event.venue_listing_id && Boolean(event.custom_venue_name);
 
-        // Field grouping intentionally mirrors listing-form section order
-        // (identity -> relationships -> when/where -> media -> tickets ->
-        // contact -> flexible extras) so an admin who already knows the
-        // Listings form finds the Events form immediately familiar.
         return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2">
@@ -261,7 +225,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <input type="text" id="ev_title" value="${escapeAttr(event.title)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
             </div>
             <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Slug * <span class="text-gray-400 font-normal">(used in /events/&lt;slug&gt;)</span></label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Slug * <span class="text-gray-400 font-normal">(used in /event/&lt;slug&gt;)</span></label>
                 <input type="text" id="ev_slug" value="${escapeAttr(event.slug)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm" required>
             </div>
             <div class="md:col-span-2">
@@ -305,19 +269,19 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <input type="text" id="eventVenueListingSearch" placeholder="Search listings by business name..." value="${escapeAttr(findListingNameById(event.venue_listing_id))}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" autocomplete="off">
                 <input type="hidden" id="eventVenueListingId" value="${escapeAttr(event.venue_listing_id)}">
                 <div id="eventVenueListingResults" class="location-search-results"></div>
+                <p class="text-xs text-gray-500 mt-1">Selecting a venue fills in the address/city/state/coordinates below from that listing. Edit them afterward to override.</p>
             </div>
-            <div id="eventCustomVenueFields" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 ${hasCustomVenue ? '' : 'hidden'}">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Venue Name</label>
-                    <input type="text" id="ev_custom_venue_name" value="${escapeAttr(event.custom_venue_name)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Venue Address</label>
-                    <input type="text" id="ev_custom_venue_address" value="${escapeAttr(event.custom_venue_address)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                </div>
+            <div id="eventCustomVenueFields" class="md:col-span-2 ${hasCustomVenue ? '' : 'hidden'}">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Venue Name</label>
+                <input type="text" id="ev_custom_venue_name" value="${escapeAttr(event.custom_venue_name)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="e.g. Daley Plaza">
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Address <span class="text-gray-400 font-normal">— the venue address IS the event address, unless overridden here</span></label>
+                <input type="text" id="ev_address" value="${escapeAttr(event.address)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="123 Main St">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">City <span class="text-gray-400 font-normal">(used for /events/chicago-style filtering — enter proper case, e.g. "Oak Park")</span></label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">City <span class="text-gray-400 font-normal">(proper case, e.g. "Oak Park" — used for /events/chicago-style regional pages)</span></label>
                 <input type="text" id="ev_city" value="${escapeAttr(event.city)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
             </div>
             <div>
@@ -325,7 +289,11 @@ or distribution of this code can result in legal action to the fullest extent pe
                 <input type="text" id="ev_state" value="${escapeAttr(event.state || 'IL')}" maxlength="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg uppercase">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                <input type="text" id="ev_zip_code" value="${escapeAttr(event.zip_code)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Latitude <span class="text-gray-400 font-normal">(leave blank to auto-fill from venue or auto-geocode)</span></label>
                 <input type="text" id="ev_lat" value="${escapeAttr(event.coordinates?.lat)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
             </div>
             <div>
@@ -369,11 +337,6 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <input type="date" id="ev_recurrence_until" value="${recurrence.until ? recurrence.until.split('T')[0] : ''}" class="px-3 py-2 border border-gray-300 rounded-lg">
                 </div>
             </div>
-            <script>
-                document.getElementById('ev_is_recurring')?.addEventListener('change', function(e) {
-                    document.getElementById('ev_recurrence_fields')?.classList.toggle('hidden', !e.target.checked);
-                });
-            </script>
 
             <div class="md:col-span-2 border-t pt-4 mt-2">
                 <h3 class="font-semibold text-gray-900 mb-2">Poster &amp; Media</h3>
@@ -481,8 +444,39 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
 
         const isCustomVenue = document.getElementById('eventCustomVenueToggle')?.checked;
-        const lat = parseFloat(document.getElementById('ev_lat')?.value);
-        const lng = parseFloat(document.getElementById('ev_lng')?.value);
+        const address = document.getElementById('ev_address')?.value.trim() || null;
+        const city = document.getElementById('ev_city')?.value.trim() || null;
+        const state = document.getElementById('ev_state')?.value.trim().toUpperCase() || null;
+        const zipCode = document.getElementById('ev_zip_code')?.value.trim() || null;
+
+        // ── AUTO-GEOCODING ───────────────────────────────────────────
+        // Mirrors js/admin.js's saveListing() exactly: manual lat/lng
+        // wins if present (this also covers the "venue selected" case,
+        // since selectVenueListing() already wrote the venue's own
+        // coordinates into these fields at selection time — by the time
+        // save runs, that counts as "manually filled" the same as if the
+        // admin had typed it in directly). Only geocodes via Nominatim
+        // when both are empty AND there's an address to geocode — which
+        // in practice means: a custom venue where nobody selected a
+        // listing and nobody typed coordinates by hand.
+        let lat = parseFloat(document.getElementById('ev_lat')?.value);
+        let lng = parseFloat(document.getElementById('ev_lng')?.value);
+        if (Number.isNaN(lat) || Number.isNaN(lng)) {
+            if (address && city && state) {
+                console.log('\ud83c\udf0d Auto-geocoding event address...');
+                const geocoded = await geocodeEventAddress(address, city, state, zipCode);
+                if (geocoded) {
+                    lat = geocoded.lat;
+                    lng = geocoded.lng;
+                    console.log('\u2705 Coordinates found:', geocoded);
+                } else {
+                    console.log('\u26a0\ufe0f Could not geocode event address');
+                }
+            }
+        } else {
+            console.log('\ud83d\udccd Coordinates already present (manual or venue-selected); skipping auto-geocoding.');
+        }
+        const coordinates = (!Number.isNaN(lat) && !Number.isNaN(lng)) ? { lat, lng } : null;
 
         const isRecurring = document.getElementById('ev_is_recurring')?.checked;
         const recurrence = isRecurring
@@ -504,11 +498,12 @@ or distribution of this code can result in legal action to the fullest extent pe
             host_listing_id: document.getElementById('eventHostListingId')?.value || null,
             venue_listing_id: isCustomVenue ? null : (document.getElementById('eventVenueListingId')?.value || null),
             custom_venue_name: isCustomVenue ? (document.getElementById('ev_custom_venue_name')?.value.trim() || null) : null,
-            custom_venue_address: isCustomVenue ? (document.getElementById('ev_custom_venue_address')?.value.trim() || null) : null,
 
-            city: document.getElementById('ev_city')?.value.trim() || null,
-            state: document.getElementById('ev_state')?.value.trim().toUpperCase() || null,
-            coordinates: (!Number.isNaN(lat) && !Number.isNaN(lng)) ? { lat, lng } : null,
+            address,
+            city,
+            state,
+            zip_code: zipCode,
+            coordinates,
 
             start_at: new Date(startAt).toISOString(),
             end_at: document.getElementById('ev_end_at')?.value ? new Date(document.getElementById('ev_end_at').value).toISOString() : null,
@@ -535,32 +530,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             meta_description: document.getElementById('ev_meta_description')?.value.trim() || null,
         };
 
-        // Poster upload — reuses the exact same Cloudflare Images upload
-        // flow already wired for listing photos in js/admin.js:
-        // uploadToCloudflareImages(file, assetType). That function is NOT
-        // currently exposed on window (it's a plain top-level function in
-        // admin.js, only called from within that file) — the changes .md
-        // adds a one-line `window.uploadToCloudflareImages =
-        // uploadToCloudflareImages;` export alongside admin.js's other
-        // window.* exports so this file can call it.
-        //
-        // IMPORTANT DIVERGENCE FROM THE LISTING PHOTO FLOW: that function
-        // internally reads `editingListing?.id` to tag the uploaded asset
-        // with a listing ID — a global that is listing-editing-specific
-        // and is NOT set while this events modal is open (or may be stale
-        // from a previous Listings-tab session). Passing 'event-poster' as
-        // the assetType is what the upload endpoint uses to bucket/tag the
-        // asset type itself; the listingId tag will come through empty or
-        // stale for event posters, which is a real but low-stakes gap — it
-        // only affects asset-organization metadata on Cloudflare's side,
-        // not which URL comes back or whether the poster displays
-        // correctly. Flagged plainly rather than silently accepted: if
-        // listingId-based asset organization matters here, the fix is
-        // widening uploadToCloudflareImages's signature to accept an
-        // optional explicit ownerId param instead of reading the global,
-        // which is a small change but touches a function the listings
-        // flow already depends on, so it's called out here rather than
-        // made unilaterally.
         const posterFile = document.getElementById('ev_poster_upload')?.files?.[0];
         if (posterFile && typeof window.uploadToCloudflareImages === 'function') {
             try {
@@ -577,18 +546,25 @@ or distribution of this code can result in legal action to the fullest extent pe
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving\u2026';
 
-            if (id) {
-                await window.adminProxy('events:update', { id, ...payload });
+            let savedEvent;
+            const isExisting = Boolean(id);
+
+            if (isExisting) {
+                savedEvent = await window.adminProxy('events:update', { id, ...payload });
                 const idx = allEvents.findIndex((e) => e.id === id);
                 if (idx !== -1) allEvents[idx] = { ...allEvents[idx], ...payload };
             } else {
-                // events:insert mirrors listings:insert's .single() pattern
-                // (see the changes .md's admin-proxy snippet) — the result
-                // is a plain row object, not an array, matching how
-                // adminProxy('listings:insert', ...) is consumed elsewhere
-                // in js/admin.js.
-                const newRow = await window.adminProxy('events:insert', payload);
-                if (newRow && newRow.id) allEvents.unshift(newRow);
+                savedEvent = await window.adminProxy('events:insert', payload);
+                if (savedEvent && savedEvent.id) allEvents.unshift(savedEvent);
+            }
+
+            if (!isExisting && savedEvent && savedEvent.id && savedEvent.slug) {
+                try {
+                    await createEventShortlink(savedEvent.id, savedEvent.slug, payload.title);
+                } catch (shortlinkErr) {
+                    console.error('Event saved, but shortlink creation failed:', shortlinkErr);
+                    alert('Event saved, but the shortlink could not be created. You can add one manually later.');
+                }
             }
 
             document.getElementById('eventEditModal')?.classList.add('hidden');
@@ -603,10 +579,75 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     // -------------------------------------------------------------------
-    // Listing autocomplete (host / venue) — reads window.allListings,
-    // already populated by js/admin.js's loadListings() for the Listings
-    // tab. Falls back to an empty result set gracefully if that hasn't
-    // loaded yet, rather than throwing.
+    // Geocoding — mirrors js/admin.js's geocodeAddress(address, city,
+    // state, zipCode) function signature and Nominatim call exactly.
+    // -------------------------------------------------------------------
+
+    async function geocodeEventAddress(address, city, state, zipCode) {
+        try {
+            const fullAddress = [address, city, state, zipCode].filter(Boolean).join(', ');
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`,
+                { headers: { 'User-Agent': 'TheGreekDirectory/1.0' } }
+            );
+            const data = await response.json();
+            if (data && data.length > 0) {
+                return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+            }
+            return null;
+        } catch (error) {
+            console.error('Geocoding error:', error);
+            return null;
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // System shortlink creation — mirrors js/admin.js's
+    // SYSTEM_SHORTLINK_ALPHABET / isValidSystemShortlink /
+    // generateSystemShortlinkCandidate / the retry loop in saveListing()
+    // exactly, swapped to /e/ + event_refer_id, and to the full
+    // /event/<slug> URL as the redirect target.
+    // -------------------------------------------------------------------
+
+    const EVENT_SHORTLINK_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+
+    function isValidEventShortlink(path) {
+        return typeof path === 'string'
+            && /^\/e\/[ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789]{6}$/.test(path)
+            && !/[A-Za-z]{4}/.test(path);
+    }
+
+    function generateEventShortlinkCandidate() {
+        let suffix = '';
+        for (let i = 0; i < 6; i += 1) {
+            suffix += EVENT_SHORTLINK_ALPHABET[Math.floor(Math.random() * EVENT_SHORTLINK_ALPHABET.length)];
+        }
+        return `/e/${suffix}`;
+    }
+
+    async function createEventShortlink(eventId, eventSlug, title) {
+        for (;;) {
+            const candidate = generateEventShortlinkCandidate();
+            if (!isValidEventShortlink(candidate)) continue;
+            const exists = await window.adminProxy('shortlinks:check', { path: candidate });
+            if (exists) continue;
+            try {
+                await window.adminProxy('shortlinks:insert_event', {
+                    title: `EVENT: ${title}`,
+                    path: candidate,
+                    redirect_to: `https://thegreekdirectory.org/event/${eventSlug}`,
+                    event_refer_id: eventId,
+                });
+                return candidate;
+            } catch (err) {
+                if (err?.message && err.message.includes('path_conflict')) continue;
+                throw err;
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // Listing autocomplete (host / venue)
     // -------------------------------------------------------------------
 
     function findListingNameById(id) {
@@ -615,7 +656,25 @@ or distribution of this code can result in legal action to the fullest extent pe
         return match ? match.business_name : '';
     }
 
-    function renderListingAutocomplete(inputEl, resultsId, hiddenFieldId) {
+    function selectVenueListing(listing) {
+        const addressEl = document.getElementById('ev_address');
+        const cityEl = document.getElementById('ev_city');
+        const stateEl = document.getElementById('ev_state');
+        const zipEl = document.getElementById('ev_zip_code');
+        const latEl = document.getElementById('ev_lat');
+        const lngEl = document.getElementById('ev_lng');
+
+        if (addressEl && listing.address) addressEl.value = listing.address;
+        if (cityEl && listing.city) cityEl.value = listing.city;
+        if (stateEl && listing.state) stateEl.value = listing.state;
+        if (zipEl && listing.zip_code) zipEl.value = listing.zip_code;
+        if (listing.coordinates && typeof listing.coordinates === 'object') {
+            if (latEl && listing.coordinates.lat != null) latEl.value = listing.coordinates.lat;
+            if (lngEl && listing.coordinates.lng != null) lngEl.value = listing.coordinates.lng;
+        }
+    }
+
+    function renderListingAutocomplete(inputEl, resultsId, hiddenFieldId, onSelect) {
         const resultsEl = document.getElementById(resultsId);
         const hiddenEl = document.getElementById(hiddenFieldId);
         if (!resultsEl || !hiddenEl) return;
@@ -637,23 +696,19 @@ or distribution of this code can result in legal action to the fullest extent pe
             return;
         }
 
-        // .location-search-result is the real, already-styled class used
-        // by js/listings.js's own city/state/zip autocomplete (see
-        // css/listings.css) — reused here rather than inventing a
-        // parallel class, so this dropdown looks and behaves identically
-        // to every other autocomplete already on the site.
         resultsEl.innerHTML = matches.map((l) => `
             <div class="location-search-result" data-id="${escapeAttr(l.id)}" data-name="${escapeAttr(l.business_name)}">
                 ${escapeHtml(l.business_name)} <span class="text-gray-400 text-xs">${escapeHtml(l.city || '')}${l.state ? ', ' + escapeHtml(l.state) : ''}</span>
             </div>`).join('');
         resultsEl.classList.add('active');
 
-        resultsEl.querySelectorAll('.location-search-result').forEach((item) => {
+        resultsEl.querySelectorAll('.location-search-result').forEach((item, idx) => {
             item.addEventListener('click', () => {
                 inputEl.value = item.dataset.name;
                 hiddenEl.value = item.dataset.id;
                 resultsEl.innerHTML = '';
                 resultsEl.classList.remove('active');
+                if (typeof onSelect === 'function') onSelect(matches[idx]);
             });
         });
     }
