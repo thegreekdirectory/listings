@@ -22,6 +22,21 @@ or distribution of this code can result in legal action to the fullest extent pe
 (function () {
     'use strict';
 
+    // Gallery labels are free-text admin input rendered into HTML
+    // attributes (alt, aria-label) below — this file had no local escaping
+    // helper before the gallery feature was added, unlike every other file
+    // in this system that touches admin-entered text. Added here rather
+    // than left unescaped.
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function initializeReadMore() {
         const description = document.getElementById('eventDescription');
         const readMoreButton = document.getElementById('eventReadMoreBtn');
@@ -268,6 +283,184 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     // ---------------------------------------------------------------
+    // Gallery + lightbox — no listing-page equivalent (listings use a
+    // full carousel gallery via a different, already-existing component;
+    // this is new). Desktop shows every image at once; mobile paginates
+    // 6-at-a-time via Load More / Load All, matching the same visual
+    // language as the Read More button elsewhere on this page.
+    // ---------------------------------------------------------------
+
+    const GALLERY_PAGE_SIZE = 6;
+    const LIGHTBOX_AUTO_ADVANCE_MS = 5000;
+
+    let galleryImages = [];
+    let galleryVisibleCount = 0;
+    let galleryHasClickedLoadMore = false;
+    let lightboxIndex = 0;
+    let lightboxTimer = null;
+
+    function isMobileViewport() {
+        return window.matchMedia('(max-width: 767px)').matches;
+    }
+
+    function initializeGallery() {
+        const data = window.currentEventData || {};
+        galleryImages = Array.isArray(data.gallery) ? data.gallery : [];
+        const section = document.getElementById('eventGallerySection');
+        if (!section) return;
+
+        if (!galleryImages.length) {
+            section.classList.add('hidden');
+            return;
+        }
+        section.classList.remove('hidden');
+
+        // Desktop shows everything at once — pagination is explicitly a
+        // mobile-only behavior. isMobileViewport() is read once here
+        // rather than reactively on resize: an admin resizing their
+        // browser mid-scroll re-paginating already-visible images out
+        // from under them would be a worse experience than a viewport
+        // check that's accurate at load time and stays fixed for the
+        // rest of the visit.
+        galleryVisibleCount = isMobileViewport() ? Math.min(GALLERY_PAGE_SIZE, galleryImages.length) : galleryImages.length;
+        galleryHasClickedLoadMore = false;
+
+        renderGalleryGrid();
+        renderGalleryLoadMoreButtons();
+    }
+
+    function renderGalleryGrid() {
+        const grid = document.getElementById('eventGalleryGrid');
+        if (!grid) return;
+        grid.innerHTML = galleryImages.slice(0, galleryVisibleCount).map((item, idx) => `
+            <div class="event-gallery-thumb" data-gallery-index="${idx}" role="button" tabindex="0" aria-label="${escapeHtml(item.label || 'View image')}">
+                <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.label || '')}" loading="lazy">
+            </div>`).join('');
+
+        grid.querySelectorAll('.event-gallery-thumb').forEach((thumb) => {
+            const openThis = () => openLightbox(parseInt(thumb.dataset.galleryIndex, 10));
+            thumb.addEventListener('click', openThis);
+            thumb.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openThis(); }
+            });
+        });
+    }
+
+    // Button visibility rule: whenever what's LEFT to load is 6 or fewer,
+    // show only "Load All" (Load More would do the same thing at that
+    // point, so showing both would be redundant/confusing). Otherwise,
+    // show just "Load More" on the first reveal, and both buttons once
+    // the admin has already clicked Load More at least once.
+    function renderGalleryLoadMoreButtons() {
+        const wrap = document.getElementById('eventGalleryLoadMoreWrap');
+        if (!wrap) return;
+
+        const remaining = galleryImages.length - galleryVisibleCount;
+        if (remaining <= 0) {
+            wrap.innerHTML = '';
+            return;
+        }
+
+        const buttons = [];
+        if (remaining <= GALLERY_PAGE_SIZE) {
+            buttons.push('<button type="button" id="eventGalleryLoadAllBtn">Load All</button>');
+        } else if (!galleryHasClickedLoadMore) {
+            buttons.push('<button type="button" id="eventGalleryLoadMoreBtn">Load More</button>');
+        } else {
+            buttons.push('<button type="button" id="eventGalleryLoadMoreBtn">Load More</button>');
+            buttons.push('<button type="button" id="eventGalleryLoadAllBtn">Load All</button>');
+        }
+        wrap.innerHTML = buttons.join('');
+
+        document.getElementById('eventGalleryLoadMoreBtn')?.addEventListener('click', () => {
+            galleryHasClickedLoadMore = true;
+            galleryVisibleCount = Math.min(galleryVisibleCount + GALLERY_PAGE_SIZE, galleryImages.length);
+            renderGalleryGrid();
+            renderGalleryLoadMoreButtons();
+        });
+        document.getElementById('eventGalleryLoadAllBtn')?.addEventListener('click', () => {
+            galleryVisibleCount = galleryImages.length;
+            renderGalleryGrid();
+            renderGalleryLoadMoreButtons();
+        });
+    }
+
+    function openLightbox(index) {
+        lightboxIndex = index;
+        const lightbox = document.getElementById('eventLightbox');
+        if (!lightbox) return;
+        lightbox.classList.remove('hidden');
+        lightbox.classList.add('active');
+        showLightboxImage();
+        startLightboxTimer();
+    }
+
+    function closeLightbox() {
+        const lightbox = document.getElementById('eventLightbox');
+        if (lightbox) {
+            lightbox.classList.remove('active');
+            lightbox.classList.add('hidden');
+        }
+        stopLightboxTimer();
+    }
+
+    function showLightboxImage() {
+        const img = document.getElementById('eventLightboxImage');
+        const caption = document.getElementById('eventLightboxCaption');
+        const current = galleryImages[lightboxIndex];
+        if (!current || !img) return;
+        img.src = current.url;
+        img.alt = current.label || '';
+        if (caption) caption.textContent = current.label || '';
+    }
+
+    // Wraparound via modulo naturally makes a single-image gallery a
+    // no-op on both directions (index stays 0 either way) without any
+    // special-casing — (0 + 1) % 1 === 0 and (0 - 1 + 1) % 1 === 0.
+    function lightboxNext(resetTimer) {
+        lightboxIndex = (lightboxIndex + 1) % galleryImages.length;
+        showLightboxImage();
+        if (resetTimer !== false) startLightboxTimer();
+    }
+
+    function lightboxPrev(resetTimer) {
+        lightboxIndex = (lightboxIndex - 1 + galleryImages.length) % galleryImages.length;
+        showLightboxImage();
+        if (resetTimer !== false) startLightboxTimer();
+    }
+
+    function startLightboxTimer() {
+        stopLightboxTimer();
+        lightboxTimer = setInterval(() => lightboxNext(false), LIGHTBOX_AUTO_ADVANCE_MS);
+    }
+
+    function stopLightboxTimer() {
+        if (lightboxTimer) {
+            clearInterval(lightboxTimer);
+            lightboxTimer = null;
+        }
+    }
+
+    function bindLightboxControls() {
+        document.getElementById('eventLightboxClose')?.addEventListener('click', closeLightbox);
+        document.getElementById('eventLightboxNext')?.addEventListener('click', () => lightboxNext(true));
+        document.getElementById('eventLightboxPrev')?.addEventListener('click', () => lightboxPrev(true));
+
+        const lightbox = document.getElementById('eventLightbox');
+        lightbox?.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const lb = document.getElementById('eventLightbox');
+            if (!lb || !lb.classList.contains('active')) return;
+            if (e.key === 'Escape') closeLightbox();
+            else if (e.key === 'ArrowRight') lightboxNext(true);
+            else if (e.key === 'ArrowLeft') lightboxPrev(true);
+        });
+    }
+
+    // ---------------------------------------------------------------
     // Init
     // ---------------------------------------------------------------
 
@@ -278,6 +471,8 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     document.addEventListener('DOMContentLoaded', () => {
         initializeReadMore();
+        initializeGallery();
+        bindLightboxControls();
     });
 
     if (document.readyState === 'loading') {
