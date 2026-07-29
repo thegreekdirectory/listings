@@ -4,45 +4,37 @@ This source code is proprietary and no part may not be used, reproduced, or dist
 without written permission from The Greek Directory. Unauthorized use, copying, modification,
 or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
- 
-// functions/event/[slug].js
+
+// functions/event/[[slug]].js
 //
-// Cloudflare Pages Function. Route: GET /event/:slug (single required
-// segment — NOT a catch-all). This is a fresh, separate directory from
-// functions/events/, matching /listing/<slug> vs /listings the same way
-// listings already does: singular noun + one slug segment for a single
-// item, plural noun for the browse/directory experience.
+// Cloudflare Pages Function. Route: GET /event/* — a catch-all
+// ([[slug]].js, optional/rest segment), not a single required segment.
 //
-// [slug].js (single bracket) rather than [[slug]].js (optional
-// catch-all) is deliberate: this route's ONLY job is one event per
-// request, so its match pattern should be exactly one path segment,
-// nothing more, nothing less (Cloudflare route specificity: "more
-// specific routes — those with fewer wildcards — take precedence over
-// less specific routes," and a required single segment has zero
-// ambiguity with any sibling route the way an optional catch-all does).
-// With this file's route defined as exactly one segment, it structurally
-// cannot collide with functions/events/index.js (zero segments) or
-// functions/events/[region].js (also exactly one segment, but under a
-// completely different top-level path, /events/ vs /event/) — there is
-// no overlapping match for Cloudflare to have to break a tie on, which
-// removes an entire class of routing bug rather than depending on
-// precedence rules resolving correctly.
+// WHY A CATCH-ALL HERE, when the original routing fix for /events
+// specifically moved AWAY from a catch-all to remove ambiguity: event
+// slugs are two-part, city-state/event-name (or online/event-name for
+// events with no physical address) — mirroring listings.slug exactly
+// (see generateSlugFromName() in js/admin.js, reused directly by
+// js/admin-events.js rather than reimplemented). A two-part slug means
+// the URL has two segments after /event/, e.g.
+// /event/chicago-il/some-event-name, which a single-bracket [slug].js
+// (exactly one required segment) cannot match at all.
 //
-// PRIOR VERSION NOTE: an earlier version of this system put individual
-// event pages at /events/<slug> using a [[slug]].js catch-all that ALSO
-// tried to handle /events itself (guarding against an empty slug) and
-// regional pages. That optional-catch-all shape is exactly the kind of
-// route Cloudflare route-specificity rules have to disambiguate against
-// a sibling functions/events/index.js — and in practice that
-// disambiguation did not resolve the way it was assumed to, causing
-// bare /events to 404 through this file's own not-found branch instead
-// of reaching index.js. Splitting into three mutually-exclusive,
-// non-overlapping routes (this file, functions/events/index.js,
-// functions/events/[region].js) removes the ambiguity structurally
-// instead of relying on precedence.
+// This does NOT reintroduce the original /events bug, because that bug
+// specifically required TWO sibling files in the SAME directory both
+// capable of matching the same zero-segment route (functions/events/
+// had both index.js and [[slug]].js, both able to claim bare /events).
+// functions/event/ (this directory) has no index.js and never will —
+// bare /event is not a page and the empty-slug guard below 404s it —
+// so there is nothing for this catch-all to be ambiguous WITH. Direct
+// precedent already exists in this codebase for exactly this shape:
+// functions/print/listing/[[slug]].js already reconstructs a
+// multi-segment slug from params.slug the same way (see its own
+// "params.slug is an ARRAY of path segments" comment) and has no
+// sibling index.js either.
 //
 // SERVICE ROLE: same secret as before — SUPABASE_SERVICE_ROLE_KEY, a
-// Pages Secret. Needed to resolve host_listing_id / venue_listing_id
+// Pages Secret. Needed to resolve organizer_listing_id / venue_listing_id
 // into the organizer/venue info sections in one server-side round trip
 // each, mirroring functions/print/listing/[[slug]].js's own reasoning
 // for using service-role over anon+RLS.
@@ -51,7 +43,12 @@ const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 
 export async function onRequestGet(context) {
     const { params, env } = context;
-    const slug = typeof params.slug === 'string' ? decodeURIComponent(params.slug) : '';
+    // params.slug is an ARRAY of path segments with [[slug]].js (unlike
+    // the single string a [slug].js single-segment route gives) —
+    // reconstructed by joining with '/', identical to
+    // functions/print/listing/[[slug]].js's own slugSegments handling.
+    const slugSegments = Array.isArray(params.slug) ? params.slug : params.slug ? [params.slug] : [];
+    const slug = slugSegments.map((segment) => decodeURIComponent(segment)).join('/');
 
     if (!slug) {
         return htmlErrorResponse(renderErrorPage('Event not found.', 'This event does not exist or is not published.'), 404);
@@ -81,12 +78,12 @@ export async function onRequestGet(context) {
         return htmlErrorResponse(renderErrorPage('Event not found.', 'This event does not exist or is not published.'), 404);
     }
 
-    let hostListing = null;
+    let organizerListing = null;
     let venueListing = null;
     let shortlinkPath = null;
     try {
-        [hostListing, venueListing, shortlinkPath] = await Promise.all([
-            event.host_listing_id ? fetchListingById(event.host_listing_id, serviceRoleKey) : Promise.resolve(null),
+        [organizerListing, venueListing, shortlinkPath] = await Promise.all([
+            event.organizer_listing_id ? fetchListingById(event.organizer_listing_id, serviceRoleKey) : Promise.resolve(null),
             event.venue_listing_id ? fetchListingById(event.venue_listing_id, serviceRoleKey) : Promise.resolve(null),
             fetchEventShortlinkPath(event.id, serviceRoleKey),
         ]);
@@ -100,7 +97,7 @@ export async function onRequestGet(context) {
         console.error('Supabase host/venue/shortlink fetch failed:', err);
     }
 
-    const html = renderEventPage(event, hostListing, venueListing, shortlinkPath);
+    const html = renderEventPage(event, organizerListing, venueListing, shortlinkPath);
 
     return new Response(html, {
         status: 200,
@@ -604,13 +601,13 @@ function buildCustomVenueCard(event) {
         </div>`;
 }
 
-function buildOrganizerVenueSection(event, hostListing, venueListing) {
-    const organizerCard = buildEntityInfoCard(hostListing, 'Organized by');
+function buildOrganizerVenueSection(event, organizerListing, venueListing) {
+    const organizerCard = buildEntityInfoCard(organizerListing, 'Organized by');
     const venueCard = venueListing ? buildEntityInfoCard(venueListing, 'Venue') : buildCustomVenueCard(event);
     // Same listing shown as both host and venue (e.g. a restaurant
     // hosting its own event) -> only show the card once, labeled
     // "Hosted at", rather than the same card twice under two headers.
-    const sameEntity = hostListing && venueListing && hostListing.id === venueListing.id;
+    const sameEntity = organizerListing && venueListing && organizerListing.id === venueListing.id;
 
     if (!organizerCard && !venueCard) return '';
 
@@ -662,7 +659,7 @@ function buildMapSection(event) {
 // Full page render
 // ---------------------------------------------------------------------------
 
-function renderEventPage(event, hostListing, venueListing, shortlinkPath) {
+function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
     const decodedTitle = decodeEscapedText(event.title || '');
     const decodedTagline = decodeEscapedText(event.tagline || '');
     const description = sanitizeEventDescription(event.description || '');
@@ -696,7 +693,7 @@ function renderEventPage(event, hostListing, venueListing, shortlinkPath) {
     const emailSection = buildEmailSection(event);
     const websiteSection = buildWebsiteSection(event);
     const dateTimeBlock = buildDateTimeSidebarBlock(event);
-    const organizerVenueSection = buildOrganizerVenueSection(event, hostListing, venueListing);
+    const organizerVenueSection = buildOrganizerVenueSection(event, organizerListing, venueListing);
     const additionalInfoSection = buildAdditionalInfoSection(event);
     const mapSection = buildMapSection(event);
     const shareTriggerButton = buildShareTriggerButton();
@@ -740,7 +737,8 @@ function renderEventPage(event, hostListing, venueListing, shortlinkPath) {
             coordinates: ${JSON.stringify(event.coordinates && event.coordinates.lat ? `${event.coordinates.lat},${event.coordinates.lng}` : '')},
             shortlink: ${JSON.stringify(shortlinkPath ? `https://thegreekdirectory.org${shortlinkPath}` : `https://thegreekdirectory.org/event/${event.slug}`)},
             startAtMs: ${JSON.stringify(new Date(event.start_at).getTime())},
-            endAtMs: ${JSON.stringify(event.end_at ? new Date(event.end_at).getTime() : new Date(event.start_at).getTime())}
+            endAtMs: ${JSON.stringify(event.end_at ? new Date(event.end_at).getTime() : new Date(event.start_at).getTime())},
+            gallery: ${JSON.stringify(Array.isArray(event.gallery) ? event.gallery : [])}
         };
     `;
 
@@ -786,9 +784,12 @@ ${posterImage ? `<meta name="twitter:image" content="${escapeHtml(posterImage)}"
     "eventStatus": "${schemaStatusMap[event.status] || schemaStatusMap.scheduled}",
     "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
     "location": ${locationSchema},
-    ${posterImage ? `"image": ["${escapeHtml(posterImage)}"],` : ''}
+    ${(() => {
+        const allImages = [posterImage, ...(Array.isArray(event.gallery) ? event.gallery.map((g) => g.url) : [])].filter(Boolean);
+        return allImages.length ? `"image": ${JSON.stringify(allImages)},` : '';
+    })()}
     "offers": ${offersSchema},
-    "organizer": ${hostListing ? `{"@type":"Organization","name":"${escapeHtml(hostListing.business_name || '')}","url":"https://thegreekdirectory.org/listing/${escapeHtml(hostListing.slug || '')}"}` : 'null'},
+    "organizer": ${organizerListing ? `{"@type":"Organization","name":"${escapeHtml(organizerListing.business_name || '')}","url":"https://thegreekdirectory.org/listing/${escapeHtml(organizerListing.slug || '')}"}` : 'null'},
     "url": "${eventUrl}"
 }
 </script>
@@ -814,9 +815,69 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
    since events (unlike businesses) are represented by a poster image.
    Framed the same card-shadow/rounded way the listing carousel section
    is framed, just sized for a portrait image instead of a 16:9 banner. */
-.event-poster-frame { max-width: 380px; margin: 0 auto; border-radius: 8px; overflow: hidden; }
-.event-poster-image { width: 100%; height: auto; display: block; }
-.event-poster-placeholder { aspect-ratio: 3/4; background: linear-gradient(135deg, #045093 0%, #0a6bc2 100%); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.85); font-weight: 600; font-size: 14px; }
+/* Poster now lives in the sidebar (below contact info + CTAs), not as a
+   full-width hero — sized to fit the ~320px sidebar column rather than
+   a page-width hero image. The prior big-hero poster frame and its
+   "no poster uploaded" placeholder are both gone; a missing poster here
+   just means the sidebar block is shorter, unlike the old hero position
+   which had an empty frame to visually fill. */
+.event-sidebar-poster { border-radius: 8px; overflow: hidden; }
+.event-poster-image { width: 100%; height: auto; display: block; border-radius: 8px; }
+
+/* Hero banner — same background-image/gradient-overlay treatment as
+   listings.html's .listings-hero, copied from that file's own CSS, but
+   with no text content (see the empty <section> in the body markup) —
+   individual event pages already have their own <h1> further down, so a
+   second generic heading here would be redundant. */
+.event-hero-banner {
+    position: relative;
+    height: 180px;
+    background-image: linear-gradient(rgba(4,80,147,0.55), rgba(4,80,147,0.75)), url('https://raw.githubusercontent.com/thegreekdirectory/listings/refs/heads/codex/audit-and-optimize-listings-directory-for-seo/images/chicago.jpeg');
+    background-size: cover;
+    background-position: center 65%;
+}
+@media (max-width: 767px) { .event-hero-banner { height: 120px; } }
+
+/* Gallery grid + lightbox — new, no listing-page equivalent. Grid
+   styling deliberately mirrors the same card-radius/gap language as the
+   rest of the page (8-10px radii, #e5e7eb-family borders) rather than
+   inventing a different visual system for just this section. */
+.event-gallery-section { max-width: 100%; }
+.event-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+}
+.event-gallery-thumb {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+}
+.event-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.2s ease; }
+.event-gallery-thumb:hover img { transform: scale(1.05); }
+.event-gallery-load-more-wrap { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+.event-gallery-load-more-wrap button {
+    border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px;
+    padding: 8px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.event-gallery-load-more-wrap button:hover { background: #f3f4f6; }
+
+#eventLightbox { display: none; }
+#eventLightbox.active { display: flex; }
+.event-lightbox-image { max-width: 88vw; max-height: 82vh; object-fit: contain; border-radius: 4px; }
+.event-lightbox-close { position: absolute; top: 16px; right: 20px; color: white; font-size: 32px; background: none; border: none; cursor: pointer; line-height: 1; }
+.event-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 22px; background: rgba(255,255,255,0.12); border: none; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; }
+.event-lightbox-nav:hover { background: rgba(255,255,255,0.25); }
+.event-lightbox-prev { left: 16px; }
+.event-lightbox-next { right: 16px; }
+.event-lightbox-caption { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.85); font-size: 14px; padding: 0 16px; }
+@media (max-width: 767px) {
+    .event-lightbox-nav { width: 38px; height: 38px; font-size: 18px; }
+    .event-lightbox-close { top: 10px; right: 14px; }
+}
 
 .subcategories-display { display: none; margin-top: 8px; }
 .subcategories-display.active { display: block; }
@@ -952,13 +1013,9 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 
 <div data-partial="header"></div>
 
-<main class="max-w-5xl mx-auto px-4 pt-20 pb-10">
-    <div class="event-poster-frame card-shadow mb-6">
-        ${posterImage
-            ? `<img class="event-poster-image" src="${escapeHtml(posterImage)}" alt="${escapeHtml(decodedTitle)}">`
-            : '<div class="event-poster-placeholder"><span>No poster uploaded</span></div>'}
-    </div>
+<section class="event-hero-banner" aria-hidden="true"></section>
 
+<main class="max-w-5xl mx-auto px-4 pt-6 pb-10">
     <div class="bg-white rounded-lg p-6 card-shadow">
         <div class="desktop-listing-layout">
             <div class="desktop-main-column">
@@ -1005,11 +1062,32 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
                     <div class="action-cta-row mt-4">
                         ${[ticketRsvpDesktop, directionsDesktop, shareTriggerButton].filter(Boolean).map((btn) => `<div class="action-cta-slot">${btn}</div>`).join('')}
                     </div>
+
+                    ${posterImage ? `
+                    <div class="event-sidebar-poster mt-4">
+                        <img class="event-poster-image" src="${escapeHtml(posterImage)}" alt="${escapeHtml(decodedTitle)}">
+                    </div>` : ''}
                 </div>
             </div>
         </div>
     </div>
+
+    <section id="eventGallerySection" class="event-gallery-section hidden">
+        <h2 class="text-xl font-bold text-gray-900 mb-3 mt-8">Gallery</h2>
+        <div id="eventGalleryGrid" class="event-gallery-grid"></div>
+        <div id="eventGalleryLoadMoreWrap" class="event-gallery-load-more-wrap"></div>
+    </section>
 </main>
+
+<!-- Gallery Lightbox -->
+<div id="eventLightbox" class="hidden fixed inset-0 bg-black bg-opacity-90 items-center justify-center z-50" role="dialog" aria-modal="true" aria-label="Image viewer">
+    <button id="eventLightboxClose" class="event-lightbox-close" aria-label="Close">&times;</button>
+    <button id="eventLightboxPrev" class="event-lightbox-nav event-lightbox-prev" aria-label="Previous image">&#10094;</button>
+    <img id="eventLightboxImage" class="event-lightbox-image" src="" alt="">
+    <button id="eventLightboxNext" class="event-lightbox-nav event-lightbox-next" aria-label="Next image">&#10095;</button>
+    <div id="eventLightboxCaption" class="event-lightbox-caption"></div>
+</div>
+
 
 <!-- Share Modal — identical structure/behavior to listing pages' #shareModal (see js/listing-page.js's openShareModal/closeShareModal/shareNative/copyShareLink) -->
 <div id="shareModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="if(event.target===this) closeShareModal()">
