@@ -263,7 +263,11 @@ function setupEventListeners() {
     
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
     document.getElementById('newListingBtn')?.addEventListener('click', newListing);
-    document.getElementById('refreshBtn')?.addEventListener('click', loadListings);
+    document.getElementById('refreshBtn')?.addEventListener('click', () => {
+        loadListings();
+        loadRequests();
+        if (typeof window.loadEventsAdmin === 'function') window.loadEventsAdmin();
+    });
     document.getElementById('manageSubcategoriesBtn')?.addEventListener('click', manageSubcategories);
     document.getElementById('adminSearch')?.addEventListener('input', renderTable);
     document.getElementById('saveEdit')?.addEventListener('click', saveListing);
