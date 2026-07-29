@@ -141,8 +141,12 @@ const EVENTS_PAGE_HEAD_AND_HERO_HTML = `<!-- events.html -->
 
 <main>
     <div class="max-w-7xl mx-auto px-4 pt-24 pb-2">
-        <h1 class="text-2xl font-bold text-gray-900 mb-1">Events</h1>
-        <p class="text-sm text-gray-600 mb-4">Greek festivals, church events, fundraisers, and gatherings across Chicagoland — updated daily.</p>
+        <section class="events-hero" aria-label="Events hero">
+            <div class="events-hero-content">
+                <h1>Events</h1>
+                <h2>Discover upcoming Greek events across Chicago and Chicagoland!</h2>
+            </div>
+        </section>
 
         <div class="relative mb-4 max-w-2xl mx-auto">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
