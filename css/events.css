@@ -584,6 +584,34 @@ or distribution of this code can result in legal action to the fullest extent pe
     text-decoration: none;
 }
 
+/* Homepage hero — mirrors listings.html's .listings-hero exactly (same
+   background image + gradient overlay treatment, same h1/h2 structure),
+   with copy tweaked for Events. Distinct from .event-region-hero above
+   (a plain gradient, no photo) — the user asked specifically for the
+   listings.html picture-hero style on the Events main page; regional
+   pages keep their existing simpler treatment unless asked to match too. */
+.events-hero {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    background-image: linear-gradient(rgba(4,80,147,0.55), rgba(4,80,147,0.75)), url('https://raw.githubusercontent.com/thegreekdirectory/listings/refs/heads/codex/audit-and-optimize-listings-directory-for-seo/images/chicago.jpeg');
+    background-size: cover;
+    background-position: center 65%;
+    margin-bottom: 16px;
+}
+.events-hero-content { padding: 32px 28px; color: white; }
+.events-hero-content h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
+.events-hero-content h2 { font-size: 16px; font-weight: 500; color: rgba(255,255,255,0.9); }
+@media (max-width: 640px) {
+    .events-hero { min-height: 150px; }
+    .events-hero-content { padding: 22px 18px; }
+    .events-hero-content h1 { font-size: 24px; }
+    .events-hero-content h2 { font-size: 14px; }
+}
+
 .event-region-hero {
     background: linear-gradient(135deg, #045093 0%, #0a6bc2 100%);
     color: white;
