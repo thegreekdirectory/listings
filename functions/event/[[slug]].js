@@ -8,45 +8,31 @@ or distribution of this code can result in legal action to the fullest extent pe
 // functions/event/[[slug]].js
 //
 // Cloudflare Pages Function. Route: GET /event/* — a catch-all
-// ([[slug]].js, optional/rest segment), not a single required segment.
+// ([[slug]].js), not a single required segment. Event slugs are
+// two-part: city-state/event-name, or online/event-name for events with
+// no physical address, matching listings.slug's own format exactly (see
+// generateSlugFromName() in js/admin.js, reused directly by
+// js/admin-events.js). A two-part slug means two path segments after
+// /event/, which a single-bracket [slug].js cannot match.
 //
-// WHY A CATCH-ALL HERE, when the original routing fix for /events
-// specifically moved AWAY from a catch-all to remove ambiguity: event
-// slugs are two-part, city-state/event-name (or online/event-name for
-// events with no physical address) — mirroring listings.slug exactly
-// (see generateSlugFromName() in js/admin.js, reused directly by
-// js/admin-events.js rather than reimplemented). A two-part slug means
-// the URL has two segments after /event/, e.g.
-// /event/chicago-il/some-event-name, which a single-bracket [slug].js
-// (exactly one required segment) cannot match at all.
+// This does not reintroduce the original /events routing bug: that bug
+// required two sibling files in the SAME directory both able to claim
+// the same zero-segment route (functions/events/ had both index.js and
+// [[slug]].js). functions/event/ (this directory) has no index.js and
+// never will — bare /event is not a page and 404s via the empty-slug
+// guard below. Direct precedent already exists in this codebase:
+// functions/print/listing/[[slug]].js reconstructs a multi-segment slug
+// the same way and has no sibling index.js either.
 //
-// This does NOT reintroduce the original /events bug, because that bug
-// specifically required TWO sibling files in the SAME directory both
-// capable of matching the same zero-segment route (functions/events/
-// had both index.js and [[slug]].js, both able to claim bare /events).
-// functions/event/ (this directory) has no index.js and never will —
-// bare /event is not a page and the empty-slug guard below 404s it —
-// so there is nothing for this catch-all to be ambiguous WITH. Direct
-// precedent already exists in this codebase for exactly this shape:
-// functions/print/listing/[[slug]].js already reconstructs a
-// multi-segment slug from params.slug the same way (see its own
-// "params.slug is an ARRAY of path segments" comment) and has no
-// sibling index.js either.
-//
-// SERVICE ROLE: same secret as before — SUPABASE_SERVICE_ROLE_KEY, a
-// Pages Secret. Needed to resolve organizer_listing_id / venue_listing_id
-// into the organizer/venue info sections in one server-side round trip
-// each, mirroring functions/print/listing/[[slug]].js's own reasoning
-// for using service-role over anon+RLS.
+// SERVICE ROLE: SUPABASE_SERVICE_ROLE_KEY, a Pages Secret — needed to
+// resolve organizer_listing_id / venue_listing_id into the organizer/
+// venue info sections and the event's shortlink in server-side round
+// trips, mirroring functions/print/listing/[[slug]].js's own reasoning.
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 
 export async function onRequestGet(context) {
     const { params, env } = context;
-    // params.slug is an ARRAY of path segments with [[slug]].js (unlike
-    // the single string a [slug].js single-segment route gives) —
-    // reconstructed by joining with '/', identical to
-    // functions/print/listing/[[slug]].js's own slugSegments handling.
     const slugSegments = Array.isArray(params.slug) ? params.slug : params.slug ? [params.slug] : [];
     const slug = slugSegments.map((segment) => decodeURIComponent(segment)).join('/');
 
@@ -88,13 +74,7 @@ export async function onRequestGet(context) {
             fetchEventShortlinkPath(event.id, serviceRoleKey),
         ]);
     } catch (err) {
-        // Organizer/venue cards and the shortened share link are all
-        // rich-but-not-essential parts of the page; tolerate a failed
-        // lookup the same way the print function tolerates a failed
-        // owners lookup, rather than failing the whole page render over
-        // it. A failed shortlink lookup just means the share modal's
-        // "Use short link" toggle falls back to the full canonical URL.
-        console.error('Supabase host/venue/shortlink fetch failed:', err);
+        console.error('Supabase organizer/venue/shortlink fetch failed:', err);
     }
 
     const html = renderEventPage(event, organizerListing, venueListing, shortlinkPath);
@@ -105,26 +85,10 @@ export async function onRequestGet(context) {
     });
 }
 
-// ---------------------------------------------------------------------------
-// CACHE HEADERS — unchanged reasoning from the prior version: short cache
-// for events happening within 24h or in an unstable status (cancelled /
-// postponed / sold_out), longer cache otherwise, always with
-// stale-while-revalidate so a cache-window lapse never makes one visitor
-// eat a synchronous Supabase round trip.
-// ---------------------------------------------------------------------------
 function buildCacheHeaders(event) {
     const now = Date.now();
     const startMs = new Date(event.start_at).getTime();
     const msUntilStart = startMs - now;
-    // Bounded on both ends: only genuinely imminent/in-progress events
-    // (starting within the next 24h, and not already fully in the past)
-    // get the short cache window. A PAST event is just as stable as a
-    // far-future one — nothing about it changes on its own — so it
-    // belongs in the long-cache bucket too, not the short one. An
-    // earlier version of this check only bounded the upper end
-    // (msUntilStart < 24h), which any negative number (i.e. every past
-    // event, no matter how old) also satisfies, silently short-caching
-    // the entire archive of past events for no real benefit.
     const isImminentOrLive = Number.isFinite(msUntilStart) && msUntilStart >= -24 * 60 * 60 * 1000 && msUntilStart < 24 * 60 * 60 * 1000;
     const isUnstableStatus = event.status === 'cancelled' || event.status === 'postponed' || event.status === 'sold_out';
 
@@ -149,10 +113,6 @@ function htmlErrorResponse(html, status) {
     });
 }
 
-// ---------------------------------------------------------------------------
-// Supabase REST access (service role)
-// ---------------------------------------------------------------------------
-
 async function supabaseRestGet(path, serviceRoleKey) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
         headers: {
@@ -174,10 +134,6 @@ async function fetchEventBySlug(slug, serviceRoleKey) {
     return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 }
 
-// Expanded select vs. the prior version: hours + tier + category are new,
-// needed to render a real organizer/venue INFO CARD (badges, not just a
-// name chip) matching the "related listing card" pattern used elsewhere
-// on the site.
 async function fetchListingById(id, serviceRoleKey) {
     const encodedId = encodeURIComponent(id);
     const rows = await supabaseRestGet(
@@ -187,17 +143,6 @@ async function fetchListingById(id, serviceRoleKey) {
     return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 }
 
-// System shortlink for this event (created at admin save-time — see
-// js/admin-events.js's saveEvent()), looked up here at REQUEST time
-// rather than baked into stored content at save time. This is a direct
-// consequence of this page being live-rendered rather than
-// static-generated-and-committed the way listing pages are: listing
-// pages bake '{{SHORTLINK_URL}}' into the committed HTML once, at save
-// time, because that HTML is written once and reused for every visitor
-// until the next save. This page has no such fixed artifact to bake a
-// value into — it runs fresh per request — so resolving the shortlink
-// here, alongside the host/venue listing lookups, is the correct
-// architectural fit for a live-rendered page, not a workaround.
 async function fetchEventShortlinkPath(eventId, serviceRoleKey) {
     const encodedId = encodeURIComponent(eventId);
     const rows = await supabaseRestGet(
@@ -206,13 +151,6 @@ async function fetchEventShortlinkPath(eventId, serviceRoleKey) {
     );
     return Array.isArray(rows) && rows.length > 0 ? rows[0].path : null;
 }
-
-// ---------------------------------------------------------------------------
-// HTML escaping / decoding / description sanitizing — identical to the
-// prior version and to functions/print/listing/[[slug]].js's own
-// helpers of the same name, duplicated here for the same
-// self-containment reason (each Pages Function bundles independently).
-// ---------------------------------------------------------------------------
 
 function escapeHtml(text) {
     if (text === null || text === undefined || text === '') return '';
@@ -278,10 +216,6 @@ function sanitizeEventDescription(value) {
     return result;
 }
 
-// ---------------------------------------------------------------------------
-// Date/time formatting + live status
-// ---------------------------------------------------------------------------
-
 function formatEventDateTime(startAt, endAt, timezone, allDay) {
     if (!startAt) return { dateLabel: '', timeLabel: '', isoStart: '', isoEnd: '' };
     const start = new Date(startAt);
@@ -324,12 +258,6 @@ function getEventTimingState(event) {
     return 'upcoming';
 }
 
-// Reuses the EXACT SAME badge classes as listing pages wherever the
-// semantics genuinely match: badge-open (green) for "happening now" is
-// the same visual language as a listing being open right now;
-// badge-closed (red) for "cancelled" mirrors a listing being closed.
-// Only postponed/sold_out/past get new classes, since those have no
-// listing equivalent at all.
 const TIMING_BADGE_HTML = {
     happening_now: '<span class="badge badge-open">HAPPENING NOW</span>',
     cancelled: '<span class="badge badge-closed">CANCELLED</span>',
@@ -373,15 +301,6 @@ function formatPhoneNumber(phone) {
     if (digits.length === 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
     return phone;
 }
-
-// ---------------------------------------------------------------------------
-// Sidebar info rows — address/phone/email/website. SVG icons copied
-// EXACTLY from js/admin.js's generateTemplateReplacements() (the same
-// function that builds these rows for listing pages): same paths, same
-// w-5 h-5 sizing, same stroke="#045093" brand-blue treatment. Not
-// reinvented — copied verbatim so the event sidebar is visually
-// identical to the listing sidebar, not just similar.
-// ---------------------------------------------------------------------------
 
 function buildAddressSection(event) {
     const hasStreetAddress = typeof event.address === 'string' && event.address.trim().length > 0;
@@ -444,10 +363,6 @@ function buildWebsiteSection(event) {
         </div>`;
 }
 
-// Date/time row — event-specific, no listing equivalent, but styled to
-// match (same icon-plus-text row shape as the address/phone/email rows
-// above). Placed first in the sidebar since when something happens is
-// usually the single most important fact about an event.
 function buildDateTimeSidebarBlock(event) {
     const { dateLabel, timeLabel } = formatEventDateTime(event.start_at, event.end_at, event.timezone, event.all_day);
     const recurrenceLabel = describeRecurrence(event.recurrence);
@@ -461,14 +376,6 @@ function buildDateTimeSidebarBlock(event) {
             </div>
         </div>`;
 }
-
-// ---------------------------------------------------------------------------
-// CTA buttons — same visual language, colors, and icon set as listing
-// pages' Call/Email/Website/Directions buttons (green/gray/blue/dark,
-// hover-bounce, rounded-lg). Get Tickets / RSVP are the two genuinely
-// new event-specific CTAs, styled to match that same family rather than
-// inventing a different visual language for them.
-// ---------------------------------------------------------------------------
 
 function buildTicketRsvpButtons(event, mobile) {
     const buttons = [];
@@ -490,6 +397,40 @@ function buildTicketRsvpButtons(event, mobile) {
     return buttons.join('\n');
 }
 
+// Call / Email / Website CTA buttons — colors/icons re-verified directly
+// against js/admin.js's own phoneButton/emailButton/websiteButton rather
+// than reconstructed from memory: Call is bg-green-600, Email is
+// bg-gray-500 (not 600), Website is bg-blue-600.
+function buildCallCtaButton(event, mobile) {
+    if (!event.contact_phone) return '';
+    const iconClass = mobile ? 'w-4 h-4' : 'w-5 h-5';
+    const icon = `<svg class="${iconClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>`;
+    if (mobile) {
+        return `<a href="tel:${escapeHtml(event.contact_phone)}" class="mobile-cta-button hover-bounce" style="background:#16a34a;">${icon}<span>Call</span></a>`;
+    }
+    return `<a href="tel:${escapeHtml(event.contact_phone)}" class="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium hover-bounce">${icon}Call</a>`;
+}
+
+function buildEmailCtaButton(event, mobile) {
+    if (!event.contact_email) return '';
+    const iconClass = mobile ? 'w-4 h-4' : 'w-5 h-5';
+    const icon = `<svg class="${iconClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>`;
+    if (mobile) {
+        return `<a href="mailto:${escapeHtml(event.contact_email)}" target="_blank" class="mobile-cta-button hover-bounce" style="background:#6b7280;">${icon}<span>Email</span></a>`;
+    }
+    return `<a href="mailto:${escapeHtml(event.contact_email)}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 font-medium hover-bounce">${icon}Email</a>`;
+}
+
+function buildWebsiteCtaButton(event, mobile) {
+    if (!event.website) return '';
+    const iconClass = mobile ? 'w-4 h-4' : 'w-5 h-5';
+    const icon = `<svg class="${iconClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>`;
+    if (mobile) {
+        return `<a href="${escapeHtml(event.website)}" target="_blank" class="mobile-cta-button hover-bounce" style="background:#2563eb;">${icon}<span>Website</span></a>`;
+    }
+    return `<a href="${escapeHtml(event.website)}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium hover-bounce">${icon}Website</a>`;
+}
+
 function buildDirectionsButton(event, mobile) {
     const hasStreetAddress = typeof event.address === 'string' && event.address.trim().length > 0;
     if (!hasStreetAddress && !event.city) return '';
@@ -503,17 +444,10 @@ function buildDirectionsButton(event, mobile) {
     return `<a href="${href}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium hover-bounce" onclick="openDirections(event);">${icon}Directions</a>`;
 }
 
-// Exact same forward-arrow icon as listing pages' {{SHARE_TRIGGER_BUTTON}}
-// (copied verbatim from js/admin.js's generateTemplateReplacementsPart2).
 function buildShareTriggerButton() {
     return `<a class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover-bounce" onclick="openShareModal()" style="background-color:#045093; cursor: pointer;" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.6495 0.799565C18.4834 -0.72981 16.0093 0.081426 16.0093 1.99313V3.91272C12.2371 3.86807 9.65665 5.16473 7.9378 6.97554C6.10034 8.9113 5.34458 11.3314 5.02788 12.9862C4.86954 13.8135 5.41223 14.4138 5.98257 14.6211C6.52743 14.8191 7.25549 14.7343 7.74136 14.1789C9.12036 12.6027 11.7995 10.4028 16.0093 10.5464V13.0069C16.0093 14.9186 18.4834 15.7298 19.6495 14.2004L23.3933 9.29034C24.2022 8.2294 24.2022 6.7706 23.3933 5.70966L19.6495 0.799565ZM7.48201 11.6095C9.28721 10.0341 11.8785 8.55568 16.0093 8.55568H17.0207C17.5792 8.55568 18.0319 9.00103 18.0319 9.55037L18.0317 13.0069L21.7754 8.09678C22.0451 7.74313 22.0451 7.25687 21.7754 6.90322L18.0317 1.99313V4.90738C18.0317 5.4567 17.579 5.90201 17.0205 5.90201H16.0093C11.4593 5.90201 9.41596 8.33314 9.41596 8.33314C8.47524 9.32418 7.86984 10.502 7.48201 11.6095Z" fill="#FFFFFF"/><path d="M7 1.00391H4C2.34315 1.00391 1 2.34705 1 4.00391V20.0039C1 21.6608 2.34315 23.0039 4 23.0039H20C21.6569 23.0039 23 21.6608 23 20.0039V17.0039C23 16.4516 22.5523 16.0039 22 16.0039C21.4477 16.0039 21 16.4516 21 17.0039V20.0039C21 20.5562 20.5523 21.0039 20 21.0039H4C3.44772 21.0039 3 20.5562 3 20.0039V4.00391C3 3.45162 3.44772 3.00391 4 3.00391H7C7.55228 3.00391 8 2.55619 8 2.00391C8 1.45162 7.55228 1.00391 7 1.00391Z" fill="#FFFFFF"/></svg><span>Share</span></a>`;
 }
 
-// Hidden source section for the share modal (openShareModal() in
-// event-page.js copies this div's inner .flex content into
-// #shareModalButtons — the exact same technique listing pages use, see
-// js/listing-page.js's openShareModal()). Icons copied verbatim from
-// listing-template.html's own hidden share-buttons-section.
 function buildShareButtonsHiddenSection(event, eventUrl) {
     const encodedTitle = encodeURIComponent(decodeEscapedText(event.title || ''));
     const encodedUrl = encodeURIComponent(eventUrl);
@@ -542,14 +476,6 @@ function buildShareButtonsHiddenSection(event, eventUrl) {
         </div>`;
 }
 
-// ---------------------------------------------------------------------------
-// Organizer / Venue sections — full info cards (logo, badges, name,
-// location, phone), not small link chips. Mirrors the "related listing
-// card" pattern already used elsewhere on the site (see
-// js/admin.js's parent-listing-section renderer) so an event's
-// organizer/venue reads as a real, substantial part of the page.
-// ---------------------------------------------------------------------------
-
 function getListingHoursBadge(listing) {
     if (!listing || !listing.hours || typeof listing.hours !== 'object') return '';
     const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -566,7 +492,7 @@ function getListingTierBadge(listing) {
     return '';
 }
 
-function buildEntityInfoCard(listing, label) {
+function buildEntityInfoCard(listing) {
     if (!listing) return '';
     const location = [listing.city, listing.state].filter(Boolean).join(', ');
     const badges = `${getListingHoursBadge(listing)}${getListingTierBadge(listing)}`;
@@ -585,8 +511,6 @@ function buildEntityInfoCard(listing, label) {
         </a>`;
 }
 
-// Custom-venue variant: no linked listing at all, so a plain
-// non-clickable block using the same card shell instead of a live link.
 function buildCustomVenueCard(event) {
     if (!event.custom_venue_name && !event.address) return '';
     return `
@@ -602,11 +526,8 @@ function buildCustomVenueCard(event) {
 }
 
 function buildOrganizerVenueSection(event, organizerListing, venueListing) {
-    const organizerCard = buildEntityInfoCard(organizerListing, 'Organized by');
-    const venueCard = venueListing ? buildEntityInfoCard(venueListing, 'Venue') : buildCustomVenueCard(event);
-    // Same listing shown as both host and venue (e.g. a restaurant
-    // hosting its own event) -> only show the card once, labeled
-    // "Hosted at", rather than the same card twice under two headers.
+    const organizerCard = buildEntityInfoCard(organizerListing);
+    const venueCard = venueListing ? buildEntityInfoCard(venueListing) : buildCustomVenueCard(event);
     const sameEntity = organizerListing && venueListing && organizerListing.id === venueListing.id;
 
     if (!organizerCard && !venueCard) return '';
@@ -625,10 +546,6 @@ function buildOrganizerVenueSection(event, organizerListing, venueListing) {
     return `<div id="organizerVenueSection">${parts.join('')}</div>`;
 }
 
-// ---------------------------------------------------------------------------
-// Additional info + map sections
-// ---------------------------------------------------------------------------
-
 function buildAdditionalInfoSection(event) {
     const info = Array.isArray(event.additional_info) ? event.additional_info : [];
     const rows = info
@@ -639,11 +556,6 @@ function buildAdditionalInfoSection(event) {
     return `<div class="mb-6" id="additionalInfoSectionWrap"><h3 class="font-semibold text-gray-900 mb-2">Additional Information</h3><div class="additional-info-table">${rows}</div></div>`;
 }
 
-// Map container only — actual Leaflet init (exact same teardrop pin SVG
-// and click-to-scroll-zoom behavior as listing pages) happens client
-// side in js/event-page.js, reading window.currentEventData, exactly
-// mirroring how listing pages' #listingMap is populated by
-// initializeMap() in js/listing-page.js rather than server-rendered.
 function buildMapSection(event) {
     const hasStreetAddress = typeof event.address === 'string' && event.address.trim().length > 0;
     if (!hasStreetAddress && !(event.city && event.state)) return '';
@@ -654,10 +566,6 @@ function buildMapSection(event) {
             <div id="mapFallback" class="map-fallback" role="status" aria-live="polite"></div>
         </div>`;
 }
-
-// ---------------------------------------------------------------------------
-// Full page render
-// ---------------------------------------------------------------------------
 
 function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
     const decodedTitle = decodeEscapedText(event.title || '');
@@ -720,10 +628,6 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
         ? `{"@type":"Place","name":"${escapeHtml(event.custom_venue_name || venueListing?.business_name || locationLabel)}","address":{"@type":"PostalAddress","streetAddress":"${escapeHtml(event.address || '')}","addressLocality":"${escapeHtml(event.city || '')}","addressRegion":"${escapeHtml(event.state || '')}","addressCountry":"US"}}`
         : 'null';
 
-    // window.currentEventData — mirrors window.currentListingData exactly
-    // in spirit: one global the client-side script (js/event-page.js)
-    // reads for the map, share modal, directions, and shorten-url toggle,
-    // instead of re-parsing the DOM for this data.
     const currentEventDataScript = `
         window.currentEventData = {
             id: ${JSON.stringify(event.id)},
@@ -735,7 +639,7 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
             zip_code: ${JSON.stringify(event.zip_code || '')},
             full_address: ${JSON.stringify([event.address, event.city, event.state, event.zip_code].filter(Boolean).join(', '))},
             coordinates: ${JSON.stringify(event.coordinates && event.coordinates.lat ? `${event.coordinates.lat},${event.coordinates.lng}` : '')},
-            shortlink: ${JSON.stringify(shortlinkPath ? `https://thegreekdirectory.org${shortlinkPath}` : `https://thegreekdirectory.org/event/${event.slug}`)},
+            shortlink: ${JSON.stringify(shortlinkPath ? `https://tgd.gr${shortlinkPath}` : `https://thegreekdirectory.org/event/${event.slug}`)},
             startAtMs: ${JSON.stringify(new Date(event.start_at).getTime())},
             endAtMs: ${JSON.stringify(event.end_at ? new Date(event.end_at).getTime() : new Date(event.start_at).getTime())},
             gallery: ${JSON.stringify(Array.isArray(event.gallery) ? event.gallery : [])}
@@ -811,24 +715,122 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .action-cta-btn.hover-bounce:hover { transform: scale(1.04); }
 a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 
-/* Poster hero — a portrait flyer/poster, not a landscape banner carousel,
-   since events (unlike businesses) are represented by a poster image.
-   Framed the same card-shadow/rounded way the listing carousel section
-   is framed, just sized for a portrait image instead of a 16:9 banner. */
-/* Poster now lives in the sidebar (below contact info + CTAs), not as a
-   full-width hero — sized to fit the ~320px sidebar column rather than
-   a page-width hero image. The prior big-hero poster frame and its
-   "no poster uploaded" placeholder are both gone; a missing poster here
-   just means the sidebar block is shorter, unlike the old hero position
-   which had an empty frame to visually fill. */
-.event-sidebar-poster { border-radius: 8px; overflow: hidden; }
-.event-poster-image { width: 100%; height: auto; display: block; border-radius: 8px; }
+/* Poster — positioned in the main column, between the Organizer/Venue
+   section and the Map (not the sidebar, and not a page-width hero above
+   the content — both tried in earlier rounds). Posters can be any
+   aspect ratio, vertical flyers or horizontal banners, so this
+   deliberately does NOT force a fixed aspect-ratio/crop; height stays
+   natural, width is capped and centered. */
+.event-main-poster-wrap { text-align: center; margin: 20px 0; }
+.event-main-poster-wrap img { max-width: 100%; width: auto; max-height: 640px; border-radius: 10px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+@media (max-width: 767px) { .event-main-poster-wrap img { max-height: 480px; width: 100%; height: auto; } }
 
-/* Hero banner — same background-image/gradient-overlay treatment as
-   listings.html's .listings-hero, copied from that file's own CSS, but
-   with no text content (see the empty <section> in the body markup) —
-   individual event pages already have their own <h1> further down, so a
-   second generic heading here would be redundant. */
+.subcategories-display { display: none; margin-top: 8px; }
+.subcategories-display.active { display: block; }
+.subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
+
+.listing-description ul, .listing-description ol { margin-left: 1.5rem; padding-left: 1rem; }
+.listing-description ul { list-style-type: disc; }
+.listing-description ol { list-style-type: decimal; }
+.listing-description li { margin: 0.25rem 0; }
+.listing-description-wrap { margin: 0 0 1.5rem; }
+.listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
+.listing-description p { margin-bottom: 1rem; }
+.listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
+.listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
+.description-divider { display: flex; align-items: center; border: 1px solid #d1d5db; border-top: 0; border-radius: 0 0 10px 10px; padding: 10px; background: #ffffff; }
+.description-divider-line { flex: 1; border-top: 1px solid #d1d5db; min-width: 0; }
+.read-more-btn { margin: 0 12px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+.entity-info-section { margin-top: 24px; }
+.entity-info-section h3 { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 10px; }
+.entity-info-card { display: flex; gap: 14px; align-items: flex-start; border: 2px solid #045093; border-radius: 10px; padding: 14px; text-decoration: none; color: inherit; transition: box-shadow 0.15s ease; }
+.entity-info-card:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+.entity-info-card-logo { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: #f3f4f6; }
+.entity-info-card-body { min-width: 0; flex: 1; }
+.entity-info-card-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px; }
+.entity-info-card-name { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+.entity-info-card-line { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #4b5563; margin-top: 2px; }
+.entity-info-card-static { border-color: #e5e7eb; cursor: default; }
+.entity-info-card-static:hover { box-shadow: none; }
+
+.additional-info-table { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.additional-info-row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr); gap: 16px; padding: 10px 14px; border-bottom: 1px solid #f3f4f6; }
+.additional-info-row:last-child { border-bottom: none; }
+.additional-info-row:nth-child(even) { background: #f9fafb; }
+
+.map-fallback { display: none; margin-top: 12px; padding: 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 14px; }
+.map-fallback.visible { display: block; }
+.location-section.map-unavailable #eventMap { display: none; }
+#eventMap { width: 100%; height: 400px; border-radius: 8px; pointer-events: none; }
+#eventMap.active { pointer-events: auto; }
+#eventMap, #eventMap .leaflet-pane, #eventMap .leaflet-top, #eventMap .leaflet-bottom, #eventMap .leaflet-control { z-index: 1 !important; }
+
+.event-datetime-block { display: flex; align-items: flex-start; gap: 10px; background: #f9fafb; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+.event-datetime-icon { flex-shrink: 0; margin-top: 2px; }
+.event-date-label { font-weight: 700; color: #111827; font-size: 15px; }
+.event-time-label { color: #4b5563; font-size: 14px; margin-top: 2px; }
+.event-recurrence-label { color: #6b7280; font-size: 13px; margin-top: 4px; font-style: italic; }
+.event-price-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.event-price-chip { font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 9999px; background: white; color: #045093; border: 1px solid #bfdbfe; }
+.event-price-free { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.event-price-rsvp { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.event-capacity-note { font-size: 13px; color: #6b7280; margin-top: 6px; }
+
+.mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
+/* Replaces a Tailwind md:hidden dependency that risked never compiling
+   (functions/**/*.js is not in tailwind.config.js's content globs) —
+   hidden at >=768px since the sidebar's own CTA row covers the same
+   buttons on desktop. */
+@media (min-width: 768px) { .mobile-cta-wrap { display: none; } }
+.mobile-cta-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+
+.desktop-listing-layout { display: block; }
+.desktop-main-column, .desktop-side-column { min-width: 0; }
+.desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
+
+/* Matches listing-template.html's own .action-cta-row/.action-cta-slot
+   exactly — the Suggest-Edit/Claim/Share row pattern near the BOTTOM of
+   real listing pages, used here only for the bottom Share section. The
+   sidebar's own Call/Email/Website/Directions buttons use a plain
+   flex flex-wrap gap-3 instead (see .desktop-contact-card usage below),
+   matching the real sidebar pattern rather than an earlier invented
+   min-width+stretch combination that could crowd/overlap with more than
+   2-3 buttons in a narrow column. */
+.action-cta-row { display: flex; gap: 0.5rem; }
+.action-cta-slot { flex: 1 1 0; display: flex; }
+.action-cta-slot > * { width: 100%; min-height: 44px; }
+.action-cta-slot-wide { max-width: 620px; margin: 0 auto; }
+@media (max-width: 767px) {
+    .action-cta-row { flex-direction: column; }
+    .action-cta-slot-wide { max-width: none; margin: 0; }
+}
+
+/* Bottom Share section — matches where listing pages actually put their
+   own Share button (near the page bottom, outside the main content
+   card — confirmed directly in listing-template.html's
+   #shareBottomSection). Sits after the gallery, outside the white card. */
+.event-share-bottom-section { max-width: 900px; margin: 24px auto 0; padding: 0 16px; }
+
+.share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; border: none; outline: none; box-shadow: none; }
+.share-button:hover { transform: scale(1.1); }
+.social-facebook { background: #1877F2; color: white; }
+.social-twitter { background: #000000; color: white; }
+.social-linkedin { background: #0077B5; color: white; }
+.social-other { background: #045093; color: white; }
+.share-sms { background: #10b981; color: white; }
+.share-email { background: #ea580c; color: white; }
+
+.claim-listing-section { margin-top: 1.5rem; }
+#shareModal { opacity: 0; transition: opacity 0.2s ease; }
+#shareModal .share-modal-panel { transform: scale(0.96); transition: transform 0.2s ease; border-radius: 1rem; overflow: hidden; }
+#shareModal.active { opacity: 1; }
+#shareModal.active .share-modal-panel { transform: scale(1); }
+#shareModalButtons { margin-top: -4px; }
+
+/* Hero banner — same background image + gradient overlay treatment as
+   listings.html's .listings-hero, but with no text — the page already
+   has its own <h1> further down. */
 .event-hero-banner {
     position: relative;
     height: 180px;
@@ -838,10 +840,7 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 }
 @media (max-width: 767px) { .event-hero-banner { height: 120px; } }
 
-/* Gallery grid + lightbox — new, no listing-page equivalent. Grid
-   styling deliberately mirrors the same card-radius/gap language as the
-   rest of the page (8-10px radii, #e5e7eb-family borders) rather than
-   inventing a different visual system for just this section. */
+/* Gallery grid + lightbox */
 .event-gallery-section { max-width: 100%; }
 .event-gallery-grid {
     display: grid;
@@ -879,93 +878,6 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
     .event-lightbox-close { top: 10px; right: 14px; }
 }
 
-.subcategories-display { display: none; margin-top: 8px; }
-.subcategories-display.active { display: block; }
-.subcategory-tag { display: inline-block; background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin: 4px 4px 4px 0; }
-
-.listing-description ul, .listing-description ol { margin-left: 1.5rem; padding-left: 1rem; }
-.listing-description ul { list-style-type: disc; }
-.listing-description ol { list-style-type: decimal; }
-.listing-description li { margin: 0.25rem 0; }
-.listing-description-wrap { margin: 0 0 1.5rem; }
-.listing-description { margin: 0; padding: 1.25rem; border: 1px solid #d1d5db; border-bottom: 0; border-radius: 10px 10px 0 0; background: #fff; line-height: 1.8; color: #1f2937; }
-.listing-description p { margin-bottom: 1rem; }
-.listing-description.collapsed { max-height: 280px; overflow: hidden; position: relative; }
-.listing-description.collapsed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); }
-.description-divider { display: flex; align-items: center; border: 1px solid #d1d5db; border-top: 0; border-radius: 0 0 10px 10px; padding: 10px; background: #ffffff; }
-.description-divider-line { flex: 1; border-top: 1px solid #d1d5db; min-width: 0; }
-.read-more-btn { margin: 0 12px; border: 1px solid #d1d5db; background: #f9fafb; color: #1f2937; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; }
-
-/* Organizer / Venue sections — full info cards, not small link chips.
-   Mirrors the "related listing card" pattern used elsewhere on the site
-   (logo, badges, name, location, phone), since an organizer or venue IS
-   a directory listing (or, for a custom venue, a plain equivalent block). */
-.entity-info-section { margin-top: 24px; }
-.entity-info-section h3 { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 10px; }
-.entity-info-card { display: flex; gap: 14px; align-items: flex-start; border: 2px solid #045093; border-radius: 10px; padding: 14px; text-decoration: none; color: inherit; transition: box-shadow 0.15s ease; }
-.entity-info-card:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
-.entity-info-card-logo { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: #f3f4f6; }
-.entity-info-card-body { min-width: 0; flex: 1; }
-.entity-info-card-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px; }
-.entity-info-card-name { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 2px; }
-.entity-info-card-line { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #4b5563; margin-top: 2px; }
-.entity-info-card-static { border-color: #e5e7eb; cursor: default; }
-.entity-info-card-static:hover { box-shadow: none; }
-
-.additional-info-table { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-.additional-info-row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr); gap: 16px; padding: 10px 14px; border-bottom: 1px solid #f3f4f6; }
-.additional-info-row:last-child { border-bottom: none; }
-.additional-info-row:nth-child(even) { background: #f9fafb; }
-
-.map-fallback { display: none; margin-top: 12px; padding: 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #4b5563; font-size: 14px; }
-.map-fallback.visible { display: block; }
-.location-section.map-unavailable #eventMap { display: none; }
-#eventMap { width: 100%; height: 400px; border-radius: 8px; pointer-events: none; }
-#eventMap.active { pointer-events: auto; }
-#eventMap, #eventMap .leaflet-pane, #eventMap .leaflet-top, #eventMap .leaflet-bottom, #eventMap .leaflet-control { z-index: 1 !important; }
-
-/* Ticket / RSVP + date-time block — event-specific, no listing
-   equivalent, styled to match the same visual language (rounded pill
-   chips, brand blue accents) as everything else on the page. */
-.event-datetime-block { display: flex; align-items: flex-start; gap: 10px; background: #f9fafb; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
-.event-datetime-icon { flex-shrink: 0; margin-top: 2px; }
-.event-date-label { font-weight: 700; color: #111827; font-size: 15px; }
-.event-time-label { color: #4b5563; font-size: 14px; margin-top: 2px; }
-.event-recurrence-label { color: #6b7280; font-size: 13px; margin-top: 4px; font-style: italic; }
-.event-price-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-.event-price-chip { font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 9999px; background: white; color: #045093; border: 1px solid #bfdbfe; }
-.event-price-free { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-.event-price-rsvp { background: #fef3c7; color: #92400e; border-color: #fde68a; }
-.event-capacity-note { font-size: 13px; color: #6b7280; margin-top: 6px; }
-
-.mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
-.mobile-cta-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
-
-.desktop-listing-layout { display: block; }
-.desktop-main-column, .desktop-side-column { min-width: 0; }
-.desktop-contact-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px; }
-.action-cta-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.action-cta-slot { flex: 1 1 0; display: flex; min-width: 140px; }
-.action-cta-slot > * { width: 100%; min-height: 44px; }
-
-.share-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: all 0.3s; text-decoration: none; cursor: pointer; border: none; outline: none; box-shadow: none; }
-.share-button:hover { transform: scale(1.1); }
-.social-facebook { background: #1877F2; color: white; }
-.social-twitter { background: #000000; color: white; }
-.social-linkedin { background: #0077B5; color: white; }
-.social-other { background: #045093; color: white; }
-.share-sms { background: #10b981; color: white; }
-.share-email { background: #ea580c; color: white; }
-
-.claim-listing-section { margin-top: 1.5rem; }
-#shareModal { opacity: 0; transition: opacity 0.2s ease; }
-#shareModal .share-modal-panel { transform: scale(0.96); transition: transform 0.2s ease; border-radius: 1rem; overflow: hidden; }
-#shareModal.active { opacity: 1; }
-#shareModal.active .share-modal-panel { transform: scale(1); }
-#shareModalButtons { margin-top: -4px; }
-
-.star-icon-unused { display: none; }
-
 @media (min-width: 1024px) {
     .desktop-listing-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
     .desktop-side-column { position: sticky; top: 72px; margin-top: 0; }
@@ -982,6 +894,7 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
     .desktop-side-column { position: static; order: 5; margin-top: 0; }
     #additionalInfoSectionWrap { order: 6; }
     #organizerVenueSection { order: 7; }
+    .event-main-poster-wrap { order: 7; }
     .claim-listing-section { order: 8; }
 }
 
@@ -1029,9 +942,12 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
                     ${decodedTagline ? `<h2 class="text-gray-600 italic text-xl font-semibold mb-2">${escapeHtml(decodedTagline)}</h2>` : ''}
                 </div>
 
-                <div class="mobile-cta-wrap md:hidden">
+                <div class="mobile-cta-wrap">
                     <div class="mobile-cta-bar">
                         ${ticketRsvpMobile}
+                        ${buildCallCtaButton(event, true)}
+                        ${buildEmailCtaButton(event, true)}
+                        ${buildWebsiteCtaButton(event, true)}
                         ${directionsMobile}
                     </div>
                 </div>
@@ -1047,26 +963,31 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
                 </div>` : ''}
 
                 ${organizerVenueSection}
+
+                ${posterImage ? `
+                <div class="event-main-poster-wrap">
+                    <img src="${escapeHtml(posterImage)}" alt="${escapeHtml(decodedTitle)}">
+                </div>` : ''}
+
                 ${mapSection}
                 ${additionalInfoSection}
                 ${shareButtonsHidden}
             </div>
 
-            <div class="desktop-side-column hidden md:block">
+            <div class="desktop-side-column">
                 <div class="desktop-contact-card">
                     ${dateTimeBlock}
                     ${priceRow.length ? `<div class="event-price-row">${priceRow.join('')}</div>${capacityNote}` : capacityNote}
 
-                    ${hasSidebarContact ? `<div class="space-y-3 mb-4 mt-4">${addressSection}${phoneSection}${emailSection}${websiteSection}</div>` : ''}
+                    ${hasSidebarContact ? `<div class="space-y-3 mb-6 mt-4">${addressSection}${phoneSection}${emailSection}${websiteSection}</div>` : ''}
 
-                    <div class="action-cta-row mt-4">
-                        ${[ticketRsvpDesktop, directionsDesktop, shareTriggerButton].filter(Boolean).map((btn) => `<div class="action-cta-slot">${btn}</div>`).join('')}
+                    <div class="flex flex-wrap gap-3 mb-2">
+                        ${ticketRsvpDesktop}
+                        ${buildCallCtaButton(event, false)}
+                        ${buildEmailCtaButton(event, false)}
+                        ${buildWebsiteCtaButton(event, false)}
+                        ${directionsDesktop}
                     </div>
-
-                    ${posterImage ? `
-                    <div class="event-sidebar-poster mt-4">
-                        <img class="event-poster-image" src="${escapeHtml(posterImage)}" alt="${escapeHtml(decodedTitle)}">
-                    </div>` : ''}
                 </div>
             </div>
         </div>
@@ -1077,6 +998,12 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
         <div id="eventGalleryGrid" class="event-gallery-grid"></div>
         <div id="eventGalleryLoadMoreWrap" class="event-gallery-load-more-wrap"></div>
     </section>
+
+    <div class="event-share-bottom-section">
+        <div class="action-cta-row">
+            <div class="action-cta-slot action-cta-slot-wide">${shareTriggerButton}</div>
+        </div>
+    </div>
 </main>
 
 <!-- Gallery Lightbox -->
@@ -1088,8 +1015,7 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
     <div id="eventLightboxCaption" class="event-lightbox-caption"></div>
 </div>
 
-
-<!-- Share Modal — identical structure/behavior to listing pages' #shareModal (see js/listing-page.js's openShareModal/closeShareModal/shareNative/copyShareLink) -->
+<!-- Share Modal -->
 <div id="shareModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="if(event.target===this) closeShareModal()">
     <div class="share-modal-panel bg-white max-w-md w-full p-6">
         <div class="flex items-center justify-between mb-4">
