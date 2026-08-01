@@ -8,71 +8,42 @@ or distribution of this code can result in legal action to the fullest extent pe
 // js/admin-events.js
 //
 // Events section of the Admin Portal. Depends on js/admin.js having
-// already run (window.adminProxy, window.allListings, and — new in this
-// round — several previously-listings-only globals this file now calls
-// DIRECTLY rather than reimplementing: generateSlugFromName,
-// isValidCustomShortlink, createPhoneInput/getPhoneValue/
-// normalizePhoneE164, userCountry, uploadToCloudflareImages,
-// window.RichTextEditor. All of these are plain top-level declarations
-// in admin.js's classic-script scope, not module-scoped, so they're
-// reachable from here the same way admin.js's own later code reaches
-// them — see each call site below for why reuse was possible instead of
-// duplicating listings' own logic a second time.
+// already run (window.adminProxy, window.allListings, and several
+// previously-listings-only globals this file calls directly:
+// generateSlugFromName, isValidCustomShortlink,
+// createPhoneInput/getPhoneValue/normalizePhoneE164, userCountry,
+// uploadToCloudflareImages, window.RichTextEditor).
 //
-// THIS ROUND (in order of what changed):
-//   1. Slug: auto-generated at save time via the REAL generateSlugFromName()
-//      reused directly — same city-state/name or online/name format as
-//      listings, not a simplified flat version. Plus a Check button
-//      mirroring checkSlugAvailability() exactly.
-//   2. Host -> Organizer, including the DB column
-//      (organizer_listing_id, migrated live). Tier now auto-defaults from
-//      the selected organizer listing's own tier (VERIFIED, which events
-//      has no equivalent for, maps to FREE).
-//   3. Organizer/Venue search rebuilt to match handleParentListingInput()
-//      exactly (search-by-name-or-paste-UUID with live validation),
-//      replacing the earlier simpler autocomplete.
-//   4. Custom shortlink field + live checker + save-time logic, mirroring
-//      the listing form's editCustomShortlink exactly.
-//   5. Description now uses window.RichTextEditor, matching listings.
-//   6. Phone now uses createPhoneInput/getPhoneValue (country dropdown,
-//      digits-only, E.164 on save), matching listings exactly — not
-//      reimplemented, called directly.
-//   7. Custom schema properties textarea (the column already existed on
-//      events; this round adds the missing UI for it).
-//   8. Category is now a real controlled vocabulary sourced from the new
-//      event_category_subcategories table (category dropdown +
-//      subcategory checkboxes), with a "🎭 Event Categories" management
-//      button mirroring manageSubcategories()'s prompt()-based flow.
-//   9. Poster upload rebuilt to match the dashed-dropzone pattern used
-//      for listing photos exactly.
-//   10. New event gallery: multiple images, each with an editable label
-//       (doubles as alt text), stored as events.gallery jsonb.
+// Incorporates fixes found after real use on the live site:
+//   - loadEventCategories() is called from loadEventsAdmin() (which only
+//     ever runs post-login), NOT from an unconditional DOMContentLoaded
+//     listener — the earlier version fired before authentication,
+//     producing "Invalid GitHub token".
+//   - uploadToCloudflareImages' assetType is 'photo' (validated
+//     server-side against a fixed enum: logo/photo/video) — an earlier
+//     version used invented values ('event-poster'/'event-gallery')
+//     that the server rejected with a 400.
+//   - Organizer/Venue search fields show the selected listing's UUID in
+//     the visible input (not the business name) after selection — the
+//     status line below still shows the business name for confirmation.
+//   - Custom shortlink field's domain prefix is tgd.gr, not the main
+//     domain — shortlinks live there, confirmed directly rather than
+//     assumed.
+//   - Poster and gallery both have visible URL inputs as an alternative
+//     to uploading.
 
 (function () {
     'use strict';
 
     let allEvents = [];
     let eventsLoaded = false;
+    let eventCategoriesLoaded = false;
 
-    // Category/subcategory state — this file's own equivalent of
-    // admin.js's CATEGORIES/SUBCATEGORIES globals. Unlike listings
-    // (where top-level CATEGORIES is a fixed hardcoded array and only
-    // SUBCATEGORIES loads dynamically), events source BOTH from
-    // event_category_subcategories, since that table's own category
-    // column IS the source of truth for what categories exist at all.
     let eventCategories = [];
     let eventSubcategoriesByCategory = {};
     let selectedEventSubcategories = [];
-
-    // Gallery state — an in-memory array of {url, label} rebuilt fresh
-    // each time the modal opens, rendered as removable rows, serialized
-    // into events.gallery at save time.
     let currentGalleryItems = [];
 
-    // Organizer/venue search state — mirrors admin.js's own
-    // parentListingSearchTimer debounce pattern (see
-    // handleParentListingInput()), one timer per field since both can be
-    // typed into independently.
     let organizerSearchTimer = null;
     let venueSearchTimer = null;
     let customShortlinkCheckTimer = null;
@@ -88,7 +59,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         });
 
         bindEventModalControls();
-        loadEventCategories();
+        // loadEventCategories() is intentionally NOT called here — see
+        // loadEventsAdmin() below for why.
     });
 
     window.loadEventsAdmin = loadEventsAdmin;
@@ -114,13 +86,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
     }
 
-    // Mirrors window.manageSubcategories() exactly in interaction shape
-    // (plain prompt() dialogs, not a rich modal — matching the real
-    // listings pattern rather than building something fancier that
-    // wouldn't actually be "just like listings"), but accommodates
-    // events' categories being dynamic rather than fixed: typing a name
-    // not already in the list creates it, since event_subcategories:insert
-    // is an upsert either way.
     window.manageEventCategories = async function manageEventCategories() {
         const existingList = eventCategories.length ? eventCategories.join('\n') : '(none yet)';
         const category = prompt('Enter a category to add or edit (existing categories below).\nTyping a new name creates it:\n\n' + existingList);
@@ -137,7 +102,6 @@ or distribution of this code can result in legal action to the fullest extent pe
                 eventCategories.push(trimmed);
                 eventCategories.sort();
             }
-            // If the modal happens to be open, refresh the dropdown in place.
             const categorySelect = document.getElementById('ev_category');
             if (categorySelect) {
                 const previousValue = categorySelect.value;
@@ -196,6 +160,15 @@ or distribution of this code can result in legal action to the fullest extent pe
     // -------------------------------------------------------------------
 
     async function loadEventsAdmin() {
+        // Categories load here (once per session), not at page load —
+        // this function only ever runs after a successful login and
+        // switching to the Events tab, both of which guarantee
+        // adminProxy() already has a valid token.
+        if (!eventCategoriesLoaded) {
+            await loadEventCategories();
+            eventCategoriesLoaded = true;
+        }
+
         const tbody = document.getElementById('eventsTableBody');
         if (tbody && !eventsLoaded) {
             tbody.innerHTML = `<tr><td colspan="8" class="py-10 px-4 text-center text-gray-500">Loading events…</td></tr>`;
@@ -237,10 +210,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         tbody.innerHTML = sorted.map((e) => {
             const tier = e.tier || 'FREE';
             const status = e.status || 'scheduled';
-            // event.slug now includes the city-state/ or online/ prefix
-            // (see generateSlugFromName() reuse in saveEvent()) — this
-            // interpolation needs no special handling for that, exactly
-            // like js/listings.js's own `/listing/${l.slug}` doesn't.
             const eventUrl = `/event/${e.slug || ''}`;
             const startLabel = e.start_at ? new Date(e.start_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '\u2014';
 
@@ -291,10 +260,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         if (!confirm(`Delete "${event?.title || 'this event'}"? This cannot be undone.`)) return;
         try {
             await window.adminProxy('events:delete', { id });
-            // Cleans up BOTH the system and custom shortlink rows for
-            // this event (shortlinks:delete_event deletes by
-            // event_refer_id alone, not scoped by event_custom, so one
-            // call removes both).
             try {
                 await window.adminProxy('shortlinks:delete_event', { event_refer_id: id });
             } catch (shortlinkErr) {
@@ -330,10 +295,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         if (!modal) return;
 
         modal.dataset.eventId = id || '';
+        modal.dataset.hasCustomShortlink = '';
         document.getElementById('eventModalTitle').textContent = event ? 'Edit Event' : 'New Event';
 
-        // Reset per-open state — otherwise a previous event's gallery/
-        // subcategory selections would leak into a freshly-opened one.
         currentGalleryItems = Array.isArray(event?.gallery) ? event.gallery.map((item) => ({ ...item })) : [];
         selectedEventSubcategories = Array.isArray(event?.subcategories) ? [...event.subcategories] : [];
         adminEventDescriptionEditor = null;
@@ -342,11 +306,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         bindFormControls(event);
         renderGalleryItems();
 
-        // Existing custom shortlink (if any) — populates the field so
-        // editing doesn't show blank when one already exists. System
-        // shortlinks are never shown/editable here, matching listings'
-        // own editCustomShortlink (which only ever displays the CUSTOM
-        // one, never the system one).
         if (event?.id) {
             try {
                 const existingShortlinks = await window.adminProxy('shortlinks:get_event', { event_id: event.id });
@@ -378,20 +337,13 @@ or distribution of this code can result in legal action to the fullest extent pe
         document.getElementById('ev_category')?.addEventListener('change', updateEventSubcategoryCheckboxes);
         updateEventSubcategoryCheckboxes();
 
-        // Organizer / Venue — search-by-name-or-paste-UUID, mirroring
-        // js/admin.js's handleParentListingInput()/checkParentListingUUID()
-        // exactly (see those functions' own comments for the full pattern
-        // this replicates). Two independent instances.
         bindListingSearchField('eventOrganizerSearch', 'eventOrganizerId', 'eventOrganizerStatus', 'organizer', selectOrganizerListing);
         bindListingSearchField('eventVenueSearch', 'eventVenueId', 'eventVenueStatus', 'venue', selectVenueListing);
         document.getElementById('eventOrganizerCheckBtn')?.addEventListener('click', () => checkListingUUID('eventOrganizerId', 'eventOrganizerStatus', selectOrganizerListing));
         document.getElementById('eventVenueCheckBtn')?.addEventListener('click', () => checkListingUUID('eventVenueId', 'eventVenueStatus', selectVenueListing));
 
-        // Slug
         document.getElementById('eventSlugCheckBtn')?.addEventListener('click', checkEventSlugAvailability);
 
-        // Custom shortlink — live debounced validity/availability check,
-        // mirroring the listing form's editCustomShortlink input listener.
         document.getElementById('ev_custom_shortlink')?.addEventListener('input', (e) => {
             clearTimeout(customShortlinkCheckTimer);
             const raw = e.target.value.trim();
@@ -399,35 +351,40 @@ or distribution of this code can result in legal action to the fullest extent pe
             customShortlinkCheckTimer = setTimeout(() => checkCustomShortlink(raw), 400);
         });
 
-        // Rich text description editor
         if (window.RichTextEditor && typeof window.RichTextEditor.mount === 'function') {
             adminEventDescriptionEditor = window.RichTextEditor.mount({ inputId: 'ev_description' });
         }
 
-        // Phone — built entirely by createPhoneInput(), reused directly.
         const phoneContainer = document.getElementById('eventPhoneContainer');
         if (phoneContainer && typeof window.createPhoneInput === 'function') {
             phoneContainer.innerHTML = window.createPhoneInput(event?.contact_phone || '', window.userCountry || 'USA');
         } else if (phoneContainer) {
-            // createPhoneInput isn't exposed on window by default (same
-            // situation as uploadToCloudflareImages before it) — the
-            // changes doc adds the export. Fall back to a plain input so
-            // the form doesn't silently lose the field if that export is
-            // missed.
             phoneContainer.innerHTML = `<input type="tel" id="ev_contact_phone_fallback" value="${escapeAttr(event?.contact_phone)}" placeholder="Phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg">`;
         }
 
-        // Poster / gallery uploads
         document.getElementById('ev_poster_upload')?.addEventListener('change', handlePosterUpload);
         document.getElementById('ev_gallery_upload')?.addEventListener('change', handleGalleryUpload);
+        document.getElementById('ev_poster_image')?.addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            const previewWrap = document.getElementById('eventPosterPreviewWrap');
+            const preview = document.getElementById('eventPosterPreview');
+            if (preview) preview.src = url;
+            if (previewWrap) previewWrap.classList.toggle('hidden', !url);
+        });
+        document.getElementById('ev_gallery_url_add_btn')?.addEventListener('click', () => {
+            const input = document.getElementById('ev_gallery_url_input');
+            const url = input?.value.trim();
+            if (!url) return;
+            currentGalleryItems.push({ url, label: '' });
+            renderGalleryItems();
+            if (input) input.value = '';
+        });
     }
 
     function buildEventFormHtml(event) {
         event = event || {};
         const recurrence = event.recurrence && typeof event.recurrence === 'object' ? event.recurrence : {};
         const hasCustomVenue = !event.venue_listing_id && Boolean(event.custom_venue_name);
-        const organizerListing = event.organizer_listing_id ? findListingById(event.organizer_listing_id) : null;
-        const venueListing = event.venue_listing_id ? findListingById(event.venue_listing_id) : null;
 
         return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -448,7 +405,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Custom Shortlink <span class="text-gray-400 font-normal">(optional — a system shortlink is always created automatically on save)</span></label>
                 <div class="flex items-center gap-2">
-                    <span class="text-gray-500 text-sm">thegreekdirectory.org/</span>
+                    <span class="text-gray-500 text-sm">tgd.gr/</span>
                     <input type="text" id="ev_custom_shortlink" placeholder="your-custom-path" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm">
                 </div>
                 <p id="eventShortlinkStatus" class="text-xs mt-1"></p>
@@ -489,11 +446,11 @@ or distribution of this code can result in legal action to the fullest extent pe
             <div class="md:col-span-2 relative">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Organizer <span class="text-gray-400 font-normal">— search by business name or paste a listing UUID</span></label>
                 <div class="flex gap-2">
-                    <input type="text" id="eventOrganizerSearch" placeholder="Search by name or paste UUID…" value="${escapeAttr(organizerListing ? organizerListing.business_name : (event.organizer_listing_id || ''))}" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg" autocomplete="off">
+                    <input type="text" id="eventOrganizerSearch" placeholder="Search by name or paste UUID…" value="${escapeAttr(event.organizer_listing_id || '')}" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg" autocomplete="off">
                     <button type="button" id="eventOrganizerCheckBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 whitespace-nowrap">Check</button>
                 </div>
                 <input type="hidden" id="eventOrganizerId" value="${escapeAttr(event.organizer_listing_id)}">
-                <p id="eventOrganizerStatus" class="text-xs mt-1">${organizerListing ? `<span class="text-green-600">\u2713 ${escapeHtml(organizerListing.business_name)}</span>` : ''}</p>
+                <p id="eventOrganizerStatus" class="text-xs mt-1">${renderInitialListingStatus(event.organizer_listing_id)}</p>
             </div>
             <div class="md:col-span-2">
                 <label class="flex items-center gap-2 cursor-pointer">
@@ -504,11 +461,11 @@ or distribution of this code can result in legal action to the fullest extent pe
             <div id="eventVenueListingField" class="md:col-span-2 relative ${hasCustomVenue ? 'hidden' : ''}">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Venue <span class="text-gray-400 font-normal">— search by business name or paste a listing UUID</span></label>
                 <div class="flex gap-2">
-                    <input type="text" id="eventVenueSearch" placeholder="Search by name or paste UUID…" value="${escapeAttr(venueListing ? venueListing.business_name : (event.venue_listing_id || ''))}" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg" autocomplete="off">
+                    <input type="text" id="eventVenueSearch" placeholder="Search by name or paste UUID…" value="${escapeAttr(event.venue_listing_id || '')}" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg" autocomplete="off">
                     <button type="button" id="eventVenueCheckBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 whitespace-nowrap">Check</button>
                 </div>
                 <input type="hidden" id="eventVenueId" value="${escapeAttr(event.venue_listing_id)}">
-                <p id="eventVenueStatus" class="text-xs mt-1">${venueListing ? `<span class="text-green-600">\u2713 ${escapeHtml(venueListing.business_name)}</span>` : ''} Selecting a venue fills in the address/city/state/coordinates below. Edit them afterward to override.</p>
+                <p id="eventVenueStatus" class="text-xs mt-1">${renderInitialListingStatus(event.venue_listing_id)} Selecting a venue fills in the address/city/state/coordinates below. Edit them afterward to override.</p>
             </div>
             <div id="eventCustomVenueFields" class="md:col-span-2 ${hasCustomVenue ? '' : 'hidden'}">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Venue Name</label>
@@ -583,7 +540,8 @@ or distribution of this code can result in legal action to the fullest extent pe
             </div>
             <div class="md:col-span-2">
                 ${buildDropzoneHtml('ev_poster_upload', 'Click to upload poster', false)}
-                <input type="hidden" id="ev_poster_image" value="${escapeAttr(event.poster_image)}">
+                <label class="block text-xs font-medium text-gray-600 mt-3 mb-1">Or paste an image URL directly</label>
+                <input type="text" id="ev_poster_image" value="${escapeAttr(event.poster_image)}" placeholder="https://images.thegreekdirectory.org/..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                 <div id="eventPosterPreviewWrap" class="mt-2 ${event.poster_image ? '' : 'hidden'}">
                     <img id="eventPosterPreview" src="${escapeAttr(event.poster_image)}" class="w-24 h-24 object-cover rounded-lg border" alt="Poster preview">
                 </div>
@@ -597,6 +555,10 @@ or distribution of this code can result in legal action to the fullest extent pe
             <div class="md:col-span-2">
                 ${buildDropzoneHtml('ev_gallery_upload', 'Click to upload gallery images', true)}
                 <p id="eventGalleryUploadStatus" class="text-xs mt-1 mb-2"></p>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="ev_gallery_url_input" placeholder="Or paste an image URL directly…" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    <button type="button" id="ev_gallery_url_add_btn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 whitespace-nowrap">Add</button>
+                </div>
                 <div id="eventGalleryItems" class="space-y-2"></div>
             </div>
 
@@ -683,10 +645,11 @@ or distribution of this code can result in legal action to the fullest extent pe
         </div>`;
     }
 
-    // Dashed dropzone matching the listing photo/logo upload pattern
-    // exactly (same icon, same copy style, same hidden file input
-    // underneath a clickable label) — see attachMediaUploadHandlers()/
-    // the editLogoUpload markup in js/admin.js for the source of this.
+    function renderInitialListingStatus(listingId) {
+        const listing = findListingById(listingId);
+        return listing ? `<span class="text-green-600">\u2713 ${escapeHtml(listing.business_name)}</span>` : '';
+    }
+
     function buildDropzoneHtml(inputId, label, multiple) {
         return `
             <label for="${inputId}" class="flex flex-col items-center justify-center gap-1 w-full border-2 border-dashed border-gray-300 rounded-lg py-6 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
@@ -698,15 +661,10 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     // -------------------------------------------------------------------
-    // Organizer / Venue search — mirrors js/admin.js's
-    // handleParentListingInput() / checkParentListingUUID() exactly:
-    // typing a name shows a live dropdown of matches (fresh
-    // listings:list fetch, not a stale cached array); pasting a raw UUID
-    // validates it directly against a fresh fetch instead of searching.
-    // Two independent instances (organizer, venue) via the same shared
-    // functions, parameterized by field IDs and an onSelect callback for
-    // whatever extra auto-fill that field needs (tier for organizer,
-    // address/coordinates for venue).
+    // Organizer / Venue search — search by name (live dropdown) or paste
+    // a UUID directly (validated via Check). The visible field shows the
+    // UUID itself after selection, not the business name — the status
+    // line below shows the business name for human confirmation.
     // -------------------------------------------------------------------
 
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -714,7 +672,6 @@ or distribution of this code can result in legal action to the fullest extent pe
     function bindListingSearchField(searchInputId, hiddenFieldId, statusId, kind, onSelect) {
         const input = document.getElementById(searchInputId);
         if (!input) return;
-        const timerRef = kind === 'organizer' ? 'organizerSearchTimer' : 'venueSearchTimer';
 
         input.addEventListener('input', () => {
             const value = input.value.trim();
@@ -729,8 +686,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             }
 
             if (UUID_RE.test(value)) {
-                // Looks like a pasted UUID — don't search, just clear any
-                // dropdown; the Check button (or blur) validates it.
                 removeSearchDropdown(searchInputId);
                 return;
             }
@@ -747,9 +702,6 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     async function searchListingsByName(searchInputId, hiddenFieldId, statusId, query, onSelect) {
         try {
-            // Fresh fetch rather than window.allListings, matching
-            // handleParentListingInput()'s own reasoning: catches
-            // very-recently-created listings a stale local array might miss.
             const listings = await window.adminProxy('listings:list', {});
             const matches = (Array.isArray(listings) ? listings : [])
                 .filter((l) => (l.business_name || '').toLowerCase().includes(query.toLowerCase()))
@@ -777,8 +729,11 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         dropdown.querySelectorAll('.location-search-result').forEach((row, idx) => {
             row.addEventListener('mousedown', (e) => {
-                e.preventDefault(); // fires before input's blur clears the dropdown
-                input.value = matches[idx].business_name;
+                e.preventDefault();
+                // Visible field shows the UUID (not the business name)
+                // after selection — the status line below shows the
+                // matched business name for human confirmation.
+                input.value = matches[idx].id;
                 document.getElementById(hiddenFieldId).value = matches[idx].id;
                 setStatusText(statusId, `\u2713 ${matches[idx].business_name}`, 'text-green-600');
                 removeSearchDropdown(searchInputId);
@@ -807,7 +762,8 @@ or distribution of this code can result in legal action to the fullest extent pe
             const match = (Array.isArray(listings) ? listings : []).find((l) => l.id === raw);
             if (match) {
                 document.getElementById(hiddenFieldId).value = match.id;
-                input.value = match.business_name;
+                // input already holds the UUID just typed/pasted — left
+                // as-is rather than overwritten with the business name.
                 setStatusText(statusId, `\u2713 ${match.business_name}`, 'text-green-600');
                 if (typeof onSelect === 'function') onSelect(match);
             } else {
@@ -830,26 +786,16 @@ or distribution of this code can result in legal action to the fullest extent pe
         return window.allListings.find((l) => l.id === id) || null;
     }
 
-    // -------------------------------------------------------------------
-    // Organizer -> Tier auto-default. events.tier's CHECK constraint only
-    // allows FREE/FEATURED/PREMIUM (no VERIFIED — see the original events
-    // migration comment) so a listing's VERIFIED tier, which has no event
-    // equivalent, maps down to FREE rather than being copied through
-    // as-is, which would fail the save with a constraint violation.
-    // -------------------------------------------------------------------
-
     function selectOrganizerListing(listing) {
         const tierSelect = document.getElementById('ev_tier');
         if (!tierSelect) return;
         const listingTier = listing?.tier;
+        // events.tier's CHECK constraint only allows FREE/FEATURED/PREMIUM
+        // — VERIFIED (listing-only) maps to FREE.
         const mappedTier = (listingTier === 'FEATURED' || listingTier === 'PREMIUM') ? listingTier : 'FREE';
         tierSelect.value = mappedTier;
     }
 
-    // "The venue address IS the event address, unless overridden": fires
-    // only for the Venue field, never Organizer — an organizer doesn't
-    // imply a location the way a venue does. Fields stay editable after,
-    // so typing something different before save is the override.
     function selectVenueListing(listing) {
         const addressEl = document.getElementById('ev_address');
         const cityEl = document.getElementById('ev_city');
@@ -869,15 +815,11 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     // -------------------------------------------------------------------
-    // Slug availability check — mirrors window.checkSlugAvailability()
-    // exactly: fresh events:list fetch, excludes the event currently
-    // being edited so re-saving without changing the slug doesn't
-    // falsely flag itself as a duplicate.
+    // Slug availability check
     // -------------------------------------------------------------------
 
     async function checkEventSlugAvailability() {
         const slugInput = document.getElementById('ev_slug');
-        const statusEl = document.getElementById('eventSlugStatus');
         const modal = document.getElementById('eventEditModal');
         const currentEventId = modal?.dataset.eventId || null;
         const slug = slugInput?.value.trim();
@@ -904,14 +846,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         setStatusText('eventShortlinkStatus', text, colorClass);
     }
 
-    // -------------------------------------------------------------------
-    // Custom shortlink live check — mirrors the listing form's
-    // editCustomShortlink input listener exactly: validates shape via the
-    // shared, already-generic isValidCustomShortlink() (reused directly,
-    // not reimplemented — it has no /l/ or /e/ prefix baked in), then
-    // checks availability via the generic shortlinks:check.
-    // -------------------------------------------------------------------
-
     async function checkCustomShortlink(rawValue) {
         const path = '/' + rawValue.replace(/^\/+/, '');
         if (typeof window.isValidCustomShortlink === 'function' && !window.isValidCustomShortlink(path)) {
@@ -927,9 +861,10 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     // -------------------------------------------------------------------
-    // Poster upload — single file, matching handleLogoUpload's shape:
-    // upload immediately on selection, store the resulting URL in the
-    // hidden ev_poster_image field, show a small preview.
+    // Poster / gallery uploads — assetType is 'photo' (validated
+    // server-side against a fixed enum: logo/photo/video). Invented
+    // values like 'event-poster'/'event-gallery' were rejected with a
+    // 400; 'photo' is the correct fit and that function's own default.
     // -------------------------------------------------------------------
 
     async function handlePosterUpload(e) {
@@ -938,8 +873,9 @@ or distribution of this code can result in legal action to the fullest extent pe
         const statusEl = document.getElementById('eventPosterUploadStatus');
         if (statusEl) statusEl.textContent = '\u23f3 Uploading poster\u2026';
         try {
-            const url = await window.uploadToCloudflareImages(file, 'event-poster');
-            document.getElementById('ev_poster_image').value = url;
+            const url = await window.uploadToCloudflareImages(file, 'photo');
+            const urlInput = document.getElementById('ev_poster_image');
+            if (urlInput) urlInput.value = url;
             const previewWrap = document.getElementById('eventPosterPreviewWrap');
             const preview = document.getElementById('eventPosterPreview');
             if (preview) preview.src = url;
@@ -951,13 +887,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         }
     }
 
-    // -------------------------------------------------------------------
-    // Gallery upload — multiple files, sequential (one at a time, same
-    // for..of + await shape as handlePhotosUpload), each appended to
-    // currentGalleryItems with an empty label the admin fills in
-    // afterward, then re-rendered as removable rows.
-    // -------------------------------------------------------------------
-
     async function handleGalleryUpload(e) {
         const files = Array.from(e.target.files || []);
         if (!files.length) return;
@@ -966,7 +895,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         for (let i = 0; i < files.length; i += 1) {
             if (statusEl) statusEl.textContent = `\u23f3 Uploading image ${i + 1} of ${files.length}\u2026`;
             try {
-                const url = await window.uploadToCloudflareImages(files[i], 'event-gallery');
+                const url = await window.uploadToCloudflareImages(files[i], 'photo');
                 currentGalleryItems.push({ url, label: '' });
             } catch (err) {
                 console.error('Gallery image upload failed:', err);
@@ -1030,12 +959,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         const state = document.getElementById('ev_state')?.value.trim().toUpperCase() || null;
         const zipCode = document.getElementById('ev_zip_code')?.value.trim() || null;
 
-        // Slug — auto-generated at save time ONLY when left blank,
-        // mirroring saveListing()'s exact "if empty, generate" call site,
-        // reusing generateSlugFromName() DIRECTLY (not a simplified
-        // events-only reimplementation) so the format — city-state/name,
-        // or online/name when there's no address — matches listings
-        // exactly, including the Greek transliteration table.
         let slug = document.getElementById('ev_slug')?.value.trim();
         if (!slug) {
             if (typeof window.generateSlugFromName === 'function') {
@@ -1046,7 +969,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             }
         }
 
-        // ── AUTO-GEOCODING ───────────────────────────────────────────
         let lat = parseFloat(document.getElementById('ev_lat')?.value);
         let lng = parseFloat(document.getElementById('ev_lng')?.value);
         if (Number.isNaN(lat) || Number.isNaN(lng)) {
@@ -1075,9 +997,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             }
             : {};
 
-        // Description — prefer the mounted rich text editor's sanitized
-        // HTML, falling back to the raw textarea only if the editor
-        // failed to mount, matching saveListing()'s exact fallback chain.
         const descriptionRaw = adminEventDescriptionEditor
             ? adminEventDescriptionEditor.getHtml()
             : (document.getElementById('ev_description')?.value.trim() || '');
@@ -1085,10 +1004,6 @@ or distribution of this code can result in legal action to the fullest extent pe
             ? window.RichTextEditor.sanitizeRichTextHtml(descriptionRaw)
             : descriptionRaw;
 
-        // Phone — getPhoneValue reads the country dropdown + digits and
-        // returns E.164 already normalized (or getPhoneValue may not
-        // exist if createPhoneInput's window export is missing; the
-        // fallback plain input from bindFormControls() covers that case).
         const phoneContainer = document.getElementById('eventPhoneContainer');
         const phone = (phoneContainer && typeof window.getPhoneValue === 'function')
             ? window.getPhoneValue(phoneContainer)
@@ -1156,8 +1071,6 @@ or distribution of this code can result in legal action to the fullest extent pe
                 if (savedEvent && savedEvent.id) allEvents.unshift(savedEvent);
             }
 
-            // System shortlink — only for new events, matching listings'
-            // own "only for new listings" behavior.
             if (!isExisting && savedEvent && savedEvent.id && savedEvent.slug) {
                 try {
                     await createEventShortlink(savedEvent.id, savedEvent.slug, payload.title);
@@ -1167,11 +1080,6 @@ or distribution of this code can result in legal action to the fullest extent pe
                 }
             }
 
-            // Custom shortlink — create-only through this UI, exactly
-            // matching the listing form's own editCustomShortlink
-            // behavior (see saveListing()'s custom shortlink block):
-            // once a custom shortlink exists, changing it requires manual
-            // DB intervention rather than being editable here.
             const customShortlinkRaw = document.getElementById('ev_custom_shortlink')?.value.trim();
             const alreadyHasCustom = modal?.dataset.hasCustomShortlink === 'true';
             if (customShortlinkRaw && !alreadyHasCustom && savedEvent && savedEvent.id) {
@@ -1193,7 +1101,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     alert('Event saved, but the custom shortlink was not created — invalid format.');
                 }
             } else if (customShortlinkRaw && alreadyHasCustom) {
-                console.log('Custom shortlink field left unchanged (editing an existing custom shortlink through this UI is not supported — matches the listing form\u2019s own behavior). Change it directly in Supabase if needed.');
+                console.log('Custom shortlink field left unchanged (editing an existing custom shortlink through this UI is not supported). Change it directly in Supabase if needed.');
             }
 
             document.getElementById('eventEditModal')?.classList.add('hidden');
@@ -1208,8 +1116,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     // -------------------------------------------------------------------
-    // Geocoding — mirrors js/admin.js's geocodeAddress() signature and
-    // Nominatim call exactly.
+    // Geocoding
     // -------------------------------------------------------------------
 
     async function geocodeEventAddress(address, city, state, zipCode) {
@@ -1231,10 +1138,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     // -------------------------------------------------------------------
-    // System shortlink creation — mirrors js/admin.js's
-    // SYSTEM_SHORTLINK_ALPHABET / isValidSystemShortlink /
-    // generateSystemShortlinkCandidate / the retry loop in saveListing()
-    // exactly, swapped to /e/ + event_refer_id + event_custom: false.
+    // System shortlink creation
     // -------------------------------------------------------------------
 
     const EVENT_SHORTLINK_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
