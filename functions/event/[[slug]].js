@@ -778,11 +778,14 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 .event-capacity-note { font-size: 13px; color: #6b7280; margin-top: 6px; }
 
 .mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
-/* Replaces a Tailwind md:hidden dependency that risked never compiling
-   (functions/**/*.js is not in tailwind.config.js's content globs) —
-   hidden at >=768px since the sidebar's own CTA row covers the same
-   buttons on desktop. */
-@media (min-width: 768px) { .mobile-cta-wrap { display: none; } }
+/* Hidden by default (not inside any media query) — mobile visibility is
+   the single exception, applied inside @media (max-width: 767px) below.
+   An earlier version used two separate conditional rules (one hiding at
+   >=768px, one showing at <=767px) — logically equivalent on paper, but
+   simpler is safer here: one unconditional "off" state plus one
+   mobile-scoped override leaves no second rule that could fail to apply
+   and no cascade order between two conditionals to reason about. */
+.mobile-cta-wrap { display: none; }
 .mobile-cta-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
 
 .desktop-listing-layout { display: block; }
@@ -928,7 +931,7 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 
 <section class="event-hero-banner" aria-hidden="true"></section>
 
-<main class="max-w-5xl mx-auto px-4 pt-6 pb-10">
+<main class="max-w-6xl mx-auto px-4 py-8">
     <div class="bg-white rounded-lg p-6 card-shadow">
         <div class="desktop-listing-layout">
             <div class="desktop-main-column">
