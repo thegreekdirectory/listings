@@ -1019,24 +1019,28 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 </div>
 
 <!-- Share Modal -->
-<div id="shareModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="if(event.target===this) closeShareModal()">
-    <div class="share-modal-panel bg-white max-w-md w-full p-6">
+<div id="shareModal" class="hidden fixed inset-0 z-50 items-center justify-center p-4" style="background:rgba(0,0,0,0.45);" onclick="closeShareModal()">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md share-modal-panel" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-bold text-gray-900">Share this event</h3>
-            <button onclick="closeShareModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            <h3 class="text-lg font-bold text-gray-900">Share</h3>
+            <a onclick="closeShareModal()" style="cursor: pointer">✕</a>
         </div>
-        <div id="shareModalButtons" class="flex flex-wrap gap-2 mb-4"></div>
-        <div class="flex items-center gap-2 mb-2">
-            <input type="text" id="shareLinkInput" readonly value="${eventUrl}" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50">
-            <button onclick="copyShareLink()" class="px-4 py-2 text-white rounded-lg text-sm font-medium hover-bounce" style="background-color:#045093;">Copy</button>
+        <div id="shareModalButtons" class="flex flex-wrap gap-2 mb-3"></div>
+        <div class="mb-4">
+            <label id="shareCopyLabel" class="block text-sm font-medium text-gray-700 mb-2">Copy link</label>
+            <div class="flex gap-2">
+                <input id="shareLinkInput" readonly class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" value="${eventUrl}">
+                <a id="copyShareLinkBtn" type="button" class="px-4 py-2 rounded-lg text-white font-semibold hover-bounce" style="background:#045093; cursor: pointer;" onclick="copyShareLink()">Copy Link</a>
+            </div>
         </div>
-        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-            <input type="checkbox" id="shortenUrlToggle" class="w-4 h-4">
-            <span>Use short link</span>
+        <label class="flex items-center gap-2 text-sm text-gray-700">
+            <input id="shortenUrlToggle" type="checkbox">
+            <span>Shorten URL</span>
         </label>
-        <p id="shareCopyLabel" class="text-sm text-green-600 mt-2 h-4"></p>
     </div>
 </div>
+
+
 
 <div data-partial="footer"></div>
 
