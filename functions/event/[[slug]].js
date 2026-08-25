@@ -706,6 +706,31 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
         sold_out: 'https://schema.org/EventScheduled',
     };
 
+    // No default-duration convention exists anywhere else in this
+    // codebase for a missing end_at (a genuinely common, optional field
+    // per the admin form — see js/admin-events.js's ev_end_at input,
+    // which has no "required" attribute). Falling back to startAtMs
+    // itself would make the "happening now" window a zero-duration
+    // instant, and js/event-page.js's updateLiveStatusBadge() would then
+    // show "PAST EVENT" the moment the event started, for its entire
+    // actual remaining real-world duration. A 3-hour assumed default is
+    // a reasonable stand-in for a typical community/social event with
+    // no specified end time.
+    //
+    // IMPORTANT: this comment lives HERE, outside the template literal
+    // below, rather than inline next to the endAtMs line itself. This
+    // whole block is emitted verbatim into a real <script> tag on the
+    // rendered page (see currentEventDataScript's usage further down) —
+    // a comment placed inside that string is not just unnecessary
+    // payload shipped to every visitor, a stray backtick in prose text
+    // (as an earlier version of this exact comment had, in the word
+    // `required`) will prematurely close the template literal and break
+    // the build. That exact mistake shipped once already: esbuild's
+    // build-time parser caught it ("Expected ';' but found 'required'"),
+    // but `node --check` did not, since the OUTER file was syntactically
+    // valid — the break only surfaces once the string's own contents get
+    // parsed as JS again, which is exactly what happens when this
+    // literal is emitted as a real <script> tag.
     const currentEventDataScript = `
         window.currentEventData = {
             id: ${JSON.stringify(event.id)},
@@ -719,17 +744,6 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
             coordinates: ${JSON.stringify(event.coordinates && event.coordinates.lat ? `${event.coordinates.lat},${event.coordinates.lng}` : '')},
             shortlink: ${JSON.stringify(shortlinkPath ? `https://tgd.gr${shortlinkPath}` : `https://thegreekdirectory.org/event/${event.slug}`)},
             startAtMs: ${JSON.stringify(new Date(event.start_at).getTime())},
-            // No default-duration convention exists anywhere else in this
-            // codebase for a missing end_at (a genuinely common, optional
-            // field per the admin form — see js/admin-events.js's
-            // ev_end_at input, which has no `required` attribute). Falling
-            // back to startAtMs itself would make the "happening now"
-            // window a zero-duration instant, and js/event-page.js's
-            // updateLiveStatusBadge() would then show "PAST EVENT" the
-            // moment the event started, for its entire actual remaining
-            // real-world duration. A 3-hour assumed default is a
-            // reasonable stand-in for a typical community/social event
-            // with no specified end time.
             endAtMs: ${JSON.stringify(event.end_at ? new Date(event.end_at).getTime() : new Date(event.start_at).getTime() + 3 * 60 * 60 * 1000)},
             gallery: ${JSON.stringify(Array.isArray(event.gallery) ? event.gallery : [])}
         };
@@ -1139,7 +1153,7 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
        color and need their own override. */
     .entity-info-card-name { color: #e5e7eb; }
     .entity-info-card-line { color: #9ca3af; }
-    /* Hardcoded literal `white` background (not a Tailwind .bg-white
+    /* Hardcoded literal white background (not a Tailwind .bg-white
        utility, so the generic rule above doesn't reach it). */
     .event-price-chip { background: #1f1f1f; color: #7ab8f5; border-color: #045093; }
     /* These three sit inside .event-datetime-block, but each sets its
