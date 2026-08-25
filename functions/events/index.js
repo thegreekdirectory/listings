@@ -5,6 +5,8 @@ without written permission from The Greek Directory. Unauthorized use, copying, 
 or distribution of this code can result in legal action to the fullest extent permitted by law.
 */
 
+import { EVENTS_APP_SHELL_HTML } from './_app-shell.js';
+
 // functions/events/index.js
 //
 // Cloudflare Pages Function. Route: GET /events (exact match only).
@@ -62,9 +64,80 @@ or distribution of this code can result in legal action to the fullest extent pe
 // forking data-fetching logic between a server context and a browser
 // context.
 
-import { EVENTS_APP_SHELL_HTML } from './_app-shell.js';
+const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
 
-const EVENTS_PAGE_HEAD_AND_HERO_HTML = `<!-- events.html -->
+// Fetches a bounded set of upcoming, visible events for the ItemList
+// schema below — the anon key, same privilege level js/events.js
+// already uses client-side for this exact same public data (this
+// function is NOT the source of the live event list the visitor sees;
+// js/events.js still owns that, hydrating in the browser exactly as
+// before — this fetch exists purely to give crawlers that don't execute
+// JS a real structured signal of what's on the page, since previously
+// the static HTML had none at all).
+async function fetchUpcomingEventsForSchema() {
+    try {
+        const nowIso = new Date().toISOString();
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/events?visible=eq.true&status=neq.cancelled&start_at=gte.${encodeURIComponent(nowIso)}&order=start_at.asc&limit=20&select=slug,title,start_at`,
+            { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, Accept: 'application/json' } }
+        );
+        if (!response.ok) return [];
+        const rows = await response.json();
+        return Array.isArray(rows) ? rows : [];
+    } catch {
+        // A schema fetch failing should never take the whole page down —
+        // the page still renders correctly, just without this one
+        // enhancement, and js/events.js's own client-side load is
+        // entirely unaffected either way.
+        return [];
+    }
+}
+
+function buildEventsItemListSchema(events) {
+    if (!events.length) return null;
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        itemListElement: events.map((event, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: `https://thegreekdirectory.org/event/${event.slug}`,
+            name: event.title,
+        })),
+    };
+}
+
+function buildEventsPageHeadAndHero(upcomingEvents) {
+    const itemListSchema = buildEventsItemListSchema(upcomingEvents);
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://thegreekdirectory.org/' },
+            { '@type': 'ListItem', position: 2, name: 'Events', item: 'https://thegreekdirectory.org/events' },
+        ],
+    };
+    const websiteSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'The Greek Directory',
+        url: 'https://thegreekdirectory.org',
+        potentialAction: {
+            '@type': 'SearchAction',
+            target: 'https://thegreekdirectory.org/search?q={search_term_string}',
+            'query-input': 'required name=search_term_string',
+        },
+    };
+    const organizationSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'The Greek Directory',
+        url: 'https://thegreekdirectory.org',
+        logo: 'https://static.thegreekdirectory.org/img/logo/blue.svg',
+    };
+
+    return `<!-- events.html -->
 <!-- Copyright (C) The Greek Directory, 2025-present. All rights reserved. This source code is proprietary and no part may not be used, reproduced, or distributed without written permission from The Greek Directory. For more information, visit https://thegreekdirectory.org/legal. -->
 
 <!DOCTYPE html>
@@ -94,8 +167,13 @@ const EVENTS_PAGE_HEAD_AND_HERO_HTML = `<!-- events.html -->
     <meta property="og:locale" content="en_US">
     <meta property="og:url" content="https://thegreekdirectory.org/events">
     <meta property="og:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
+    <meta property="og:image:secure_url" content="https://thegreekdirectory.org/images/chicago.jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:alt" content="Chicago skyline for Greek directory events page">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@greekdirectory">
     <meta name="twitter:title" content="Events | Greek Festivals, Church Events & Gatherings">
     <meta name="twitter:description" content="Find upcoming Greek events across Chicago, Chicagoland, and Illinois.">
     <meta name="twitter:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
@@ -134,6 +212,10 @@ const EVENTS_PAGE_HEAD_AND_HERO_HTML = `<!-- events.html -->
         "isPartOf": { "@type": "WebSite", "name": "The Greek Directory", "url": "https://thegreekdirectory.org" }
     }
     </script>
+    ${itemListSchema ? `<script type="application/ld+json">${JSON.stringify(itemListSchema)}</script>` : ''}
+    <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>
+    <script type="application/ld+json">${JSON.stringify(websiteSchema)}</script>
+    <script type="application/ld+json">${JSON.stringify(organizationSchema)}</script>
 </head>
 <body class="bg-gray-50">
 
@@ -157,6 +239,7 @@ const EVENTS_PAGE_HEAD_AND_HERO_HTML = `<!-- events.html -->
     </div>
 
 `;
+}
 
 const EVENTS_PAGE_FOOTER_AND_SCRIPTS_HTML = `</main>
 
@@ -182,7 +265,8 @@ const EVENTS_PAGE_FOOTER_AND_SCRIPTS_HTML = `</main>
 `;
 
 export async function onRequestGet() {
-    const html = EVENTS_PAGE_HEAD_AND_HERO_HTML + EVENTS_APP_SHELL_HTML + EVENTS_PAGE_FOOTER_AND_SCRIPTS_HTML;
+    const upcomingEvents = await fetchUpcomingEventsForSchema();
+    const html = buildEventsPageHeadAndHero(upcomingEvents) + EVENTS_APP_SHELL_HTML + EVENTS_PAGE_FOOTER_AND_SCRIPTS_HTML;
 
     return new Response(html, {
         status: 200,
@@ -195,7 +279,13 @@ export async function onRequestGet() {
             // revalidation for up to a day. Any actual content change
             // (new event added, status flipped) reaches visitors through
             // js/events.js's live Supabase read on every pageview
-            // regardless of how long this shell is cached for.
+            // regardless of how long this shell is cached for. The
+            // ItemList schema embedded in the shell is fetched fresh on
+            // each cache-miss/revalidation, same cadence as the rest of
+            // this response — a brief staleness there is an acceptable
+            // tradeoff for a component whose job is giving crawlers a
+            // structural signal, not being the visitor-facing source of
+            // truth.
             'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
         },
     });
