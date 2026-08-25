@@ -84,6 +84,11 @@ function renderNotFoundPage() {
     h1 { color: #111827; font-size: 24px; margin-bottom: 8px; }
     p { color: #6b7280; margin-bottom: 24px; }
     a { display: inline-block; background: #045093; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+    @media (prefers-color-scheme: dark) {
+        body { background: #1a1a1a; }
+        h1 { color: #e5e7eb; }
+        p { color: #9ca3af; }
+    }
 </style>
 </head>
 <body>
