@@ -28,6 +28,22 @@ or distribution of this code can result in legal action to the fullest extent pe
 // resolve organizer_listing_id / venue_listing_id into the organizer/
 // venue info sections and the event's shortlink in server-side round
 // trips, mirroring functions/print/listing/[[slug]].js's own reasoning.
+//
+// A SIBLING NESTED ROUTE EXISTS: functions/event/ics/[[slug]].js serves
+// GET /event/ics/* (the single-event .ics download used by this page's
+// own Add to Calendar dropdown, see buildAddToCalendarButton below).
+// This does NOT recreate the historical /events routing conflict
+// described above — that conflict was two files at the SAME directory
+// level both able to claim the same zero-segment route. Here,
+// /event/ics/* (functions/event/ics/[[slug]].js) and /event/*
+// (this file) are DIFFERENT routes matching different URL prefixes;
+// Cloudflare's own documented routing precedence ("more specific routes
+// — those with fewer wildcards — take precedence over less specific
+// routes") means a request to /event/ics/anything resolves to the
+// nested file, never to this one, regardless of file/declaration order.
+// Confirmed via Cloudflare's Workers routing docs' own worked example
+// of the identical shape: "example.com/hello/* would take precedence
+// over example.com/*".
 
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 
@@ -248,7 +264,12 @@ function formatEventDateTime(startAt, endAt, timezone, allDay) {
 function getEventTimingState(event) {
     const now = Date.now();
     const start = new Date(event.start_at).getTime();
-    const end = event.end_at ? new Date(event.end_at).getTime() : start;
+    // Same fix, same reasoning as currentEventDataScript's endAtMs below —
+    // this is the server-rendered counterpart, seen on first paint by
+    // every visitor (and by crawlers, who never run the client-side
+    // updateLiveStatusBadge() at all) before any client JS executes. Kept
+    // consistent with that fix's 3-hour default so the two never disagree.
+    const end = event.end_at ? new Date(event.end_at).getTime() : start + 3 * 60 * 60 * 1000;
 
     if (event.status === 'cancelled') return 'cancelled';
     if (event.status === 'postponed') return 'postponed';
@@ -444,6 +465,60 @@ function buildDirectionsButton(event, mobile) {
     return `<a href="${href}" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium hover-bounce" onclick="openDirections(event);">${icon}Directions</a>`;
 }
 
+function buildAddToCalendarButton(event, mobile, isoStart, isoEnd, locationLabel, decodedTitle, decodedTagline, eventUrl) {
+    const iconClass = mobile ? 'w-4 h-4' : 'w-5 h-5';
+    const icon = `<svg class="${iconClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>`;
+    const chevronIcon = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>`;
+
+    // Google's dates param wants basic UTC form with no punctuation
+    // (matches _ics.js's own toIcsUtcDate exactly, but this page doesn't
+    // load that module — it's a tiny inline transform, not worth an
+    // import for one call site).
+    const toGoogleDate = (iso) => (iso ? iso.replace(/[-:]/g, '').replace(/\.\d{3}/, '') : '');
+    const googleStart = toGoogleDate(isoStart);
+    const googleEnd = toGoogleDate(isoEnd) || googleStart; // Google requires both ends of the dates= param
+    const googleDetails = [decodedTagline, `Details: ${eventUrl}`].filter(Boolean).join('\n\n');
+    const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(decodedTitle)}&dates=${googleStart}/${googleEnd}&details=${encodeURIComponent(googleDetails)}&location=${encodeURIComponent(locationLabel)}`;
+
+    // Outlook's deeplink/compose endpoint — real, documented instability
+    // found while researching this (some sources report the "0/"
+    // segment was removed at some point; the majority, including the
+    // most recent working examples found, still show it present). Kept
+    // as one of five options here, not a single point of failure for
+    // the whole feature if Microsoft changes this again.
+    const outlookUrl = `https://outlook.office.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${encodeURIComponent(decodedTitle)}&startdt=${encodeURIComponent(isoStart)}&enddt=${encodeURIComponent(isoEnd || isoStart)}&body=${encodeURIComponent(decodedTagline || '')}&location=${encodeURIComponent(locationLabel)}`;
+
+    // Yahoo's format, confirmed via multiple cross-corroborated sources
+    // including a production PHP library's implementation.
+    const yahooUrl = `https://calendar.yahoo.com/?v=60&title=${encodeURIComponent(decodedTitle)}&st=${googleStart}&et=${googleEnd}&desc=${encodeURIComponent(decodedTagline || '')}&in_loc=${encodeURIComponent(locationLabel)}`;
+
+    // Apple Calendar has no URL-based event-creation format at all
+    // (confirmed via research) — both this and "Other/Generic iCal" need
+    // an actual downloaded .ics file, so they share the same endpoint.
+    const icsDownloadUrl = `/event/ics/${escapeHtml(event.slug || '')}`;
+
+    const menuId = mobile ? 'addToCalendarMenuMobile' : 'addToCalendarMenuDesktop';
+    const menuHtml = `
+        <div class="add-to-calendar-menu hidden" id="${menuId}">
+            <a href="${googleUrl}" target="_blank" rel="noopener">Google Calendar</a>
+            <a href="${icsDownloadUrl}">Apple Calendar (.ics)</a>
+            <a href="${outlookUrl}" target="_blank" rel="noopener">Outlook</a>
+            <a href="${yahooUrl}" target="_blank" rel="noopener">Yahoo Calendar</a>
+            <a href="${icsDownloadUrl}">Other (.ics file)</a>
+        </div>`;
+
+    if (mobile) {
+        return `<div class="add-to-calendar-wrap">
+            <button type="button" class="mobile-cta-button hover-bounce" style="background:#7c3aed; width:100%;" onclick="toggleAddToCalendarMenu('${menuId}')">${icon}<span>Add to Calendar</span>${chevronIcon}</button>
+            ${menuHtml}
+        </div>`;
+    }
+    return `<div class="add-to-calendar-wrap">
+        <button type="button" class="flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium hover-bounce" onclick="toggleAddToCalendarMenu('${menuId}')">${icon}Add to Calendar${chevronIcon}</button>
+        ${menuHtml}
+    </div>`;
+}
+
 function buildShareTriggerButton() {
     return `<a class="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium hover-bounce" onclick="openShareModal()" style="background-color:#045093; cursor: pointer;" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.6495 0.799565C18.4834 -0.72981 16.0093 0.081426 16.0093 1.99313V3.91272C12.2371 3.86807 9.65665 5.16473 7.9378 6.97554C6.10034 8.9113 5.34458 11.3314 5.02788 12.9862C4.86954 13.8135 5.41223 14.4138 5.98257 14.6211C6.52743 14.8191 7.25549 14.7343 7.74136 14.1789C9.12036 12.6027 11.7995 10.4028 16.0093 10.5464V13.0069C16.0093 14.9186 18.4834 15.7298 19.6495 14.2004L23.3933 9.29034C24.2022 8.2294 24.2022 6.7706 23.3933 5.70966L19.6495 0.799565ZM7.48201 11.6095C9.28721 10.0341 11.8785 8.55568 16.0093 8.55568H17.0207C17.5792 8.55568 18.0319 9.00103 18.0319 9.55037L18.0317 13.0069L21.7754 8.09678C22.0451 7.74313 22.0451 7.25687 21.7754 6.90322L18.0317 1.99313V4.90738C18.0317 5.4567 17.579 5.90201 17.0205 5.90201H16.0093C11.4593 5.90201 9.41596 8.33314 9.41596 8.33314C8.47524 9.32418 7.86984 10.502 7.48201 11.6095Z" fill="#FFFFFF"/><path d="M7 1.00391H4C2.34315 1.00391 1 2.34705 1 4.00391V20.0039C1 21.6608 2.34315 23.0039 4 23.0039H20C21.6569 23.0039 23 21.6608 23 20.0039V17.0039C23 16.4516 22.5523 16.0039 22 16.0039C21.4477 16.0039 21 16.4516 21 17.0039V20.0039C21 20.5562 20.5523 21.0039 20 21.0039H4C3.44772 21.0039 3 20.5562 3 20.0039V4.00391C3 3.45162 3.44772 3.00391 4 3.00391H7C7.55228 3.00391 8 2.55619 8 2.00391C8 1.45162 7.55228 1.00391 7 1.00391Z" fill="#FFFFFF"/></svg><span>Share</span></a>`;
 }
@@ -513,14 +588,16 @@ function buildEntityInfoCard(listing) {
 
 function buildCustomVenueCard(event) {
     if (!event.custom_venue_name && !event.address) return '';
+    const cityStateZip = [event.city, [event.state, event.zip_code].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    const fullAddressLine = [event.address, cityStateZip].filter(Boolean).join(', ');
     return `
         <div class="entity-info-card entity-info-card-static">
-            <div class="entity-info-card-logo" style="display:flex;align-items:center;justify-content:center;background:#e5e7eb;color:#6b7280;">
+            <div class="entity-info-card-logo" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#045093,#0a6bc2);color:white;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7"/></svg>
             </div>
             <div class="entity-info-card-body">
                 <div class="entity-info-card-name">${escapeHtml(event.custom_venue_name || 'Venue')}</div>
-                ${event.address ? `<div class="entity-info-card-line"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>${escapeHtml(event.address)}${event.city ? ', ' + escapeHtml(event.city) : ''}${event.state ? ', ' + escapeHtml(event.state) : ''}</span></div>` : ''}
+                ${fullAddressLine ? `<div class="entity-info-card-line"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#045093" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>${escapeHtml(fullAddressLine)}</span></div>` : ''}
             </div>
         </div>`;
 }
@@ -578,6 +655,13 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
     const posterImage = event.poster_image || '';
     const locationLabel = [event.city, event.state].filter(Boolean).join(', ');
     const hasStreetAddress = typeof event.address === 'string' && event.address.trim().length > 0;
+    // Deduped, escaped subcategory tags for the category-pill toggle
+    // (item #6) — matches js/admin.js's subcategoriesTags pattern for
+    // listings, minus the primary-subcategory-first sort, since events
+    // has no primary_subcategory column.
+    const subcategoryTagsHtml = Array.isArray(event.subcategories)
+        ? [...new Set(event.subcategories.filter(Boolean))].map((sub) => `<span class="subcategory-tag">${escapeHtml(sub)}</span>`).join('')
+        : '';
 
     const tierBadge = event.tier === 'PREMIUM'
         ? '<span class="badge badge-premium">Premium</span>'
@@ -610,6 +694,8 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
     const ticketRsvpMobile = buildTicketRsvpButtons(event, true);
     const directionsDesktop = buildDirectionsButton(event, false);
     const directionsMobile = buildDirectionsButton(event, true);
+    const addToCalendarDesktop = buildAddToCalendarButton(event, false, isoStart, isoEnd, locationLabel, decodedTitle, decodedTagline, eventUrl);
+    const addToCalendarMobile = buildAddToCalendarButton(event, true, isoStart, isoEnd, locationLabel, decodedTitle, decodedTagline, eventUrl);
 
     const hasSidebarContact = Boolean(addressSection || phoneSection || emailSection || websiteSection);
 
@@ -619,14 +705,6 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
         postponed: 'https://schema.org/EventPostponed',
         sold_out: 'https://schema.org/EventScheduled',
     };
-    const offersSchema = event.is_free
-        ? '{"@type":"Offer","price":"0","priceCurrency":"USD","availability":"https://schema.org/InStock"}'
-        : event.ticket_url
-            ? `{"@type":"Offer","url":"${escapeHtml(event.ticket_url)}","availability":"${event.status === 'sold_out' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock'}"}`
-            : 'null';
-    const locationSchema = hasStreetAddress || event.city
-        ? `{"@type":"Place","name":"${escapeHtml(event.custom_venue_name || venueListing?.business_name || locationLabel)}","address":{"@type":"PostalAddress","streetAddress":"${escapeHtml(event.address || '')}","addressLocality":"${escapeHtml(event.city || '')}","addressRegion":"${escapeHtml(event.state || '')}","addressCountry":"US"}}`
-        : 'null';
 
     const currentEventDataScript = `
         window.currentEventData = {
@@ -641,10 +719,120 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
             coordinates: ${JSON.stringify(event.coordinates && event.coordinates.lat ? `${event.coordinates.lat},${event.coordinates.lng}` : '')},
             shortlink: ${JSON.stringify(shortlinkPath ? `https://tgd.gr${shortlinkPath}` : `https://thegreekdirectory.org/event/${event.slug}`)},
             startAtMs: ${JSON.stringify(new Date(event.start_at).getTime())},
-            endAtMs: ${JSON.stringify(event.end_at ? new Date(event.end_at).getTime() : new Date(event.start_at).getTime())},
+            // No default-duration convention exists anywhere else in this
+            // codebase for a missing end_at (a genuinely common, optional
+            // field per the admin form — see js/admin-events.js's
+            // ev_end_at input, which has no `required` attribute). Falling
+            // back to startAtMs itself would make the "happening now"
+            // window a zero-duration instant, and js/event-page.js's
+            // updateLiveStatusBadge() would then show "PAST EVENT" the
+            // moment the event started, for its entire actual remaining
+            // real-world duration. A 3-hour assumed default is a
+            // reasonable stand-in for a typical community/social event
+            // with no specified end time.
+            endAtMs: ${JSON.stringify(event.end_at ? new Date(event.end_at).getTime() : new Date(event.start_at).getTime() + 3 * 60 * 60 * 1000)},
             gallery: ${JSON.stringify(Array.isArray(event.gallery) ? event.gallery : [])}
         };
     `;
+
+    // Builds the Event JSON-LD as a real object with true conditional key
+    // omission — a field with no data is never added, not set to an
+    // empty string — then serializes with JSON.stringify, which also
+    // handles all escaping correctly (safer than the hand-templated
+    // string interpolation this replaces, which had no escaping at all
+    // for several fields and no properties at all for phone/email).
+    function buildEventJsonLd() {
+        const schema = {
+            '@context': 'https://schema.org',
+            '@type': 'Event',
+            name: decodedTitle,
+            description: event.meta_description || decodedTagline || decodedTitle,
+            startDate: isoStart,
+            eventStatus: schemaStatusMap[event.status] || schemaStatusMap.scheduled,
+            eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+            url: eventUrl,
+        };
+
+        if (isoEnd) {
+            schema.endDate = isoEnd;
+            // ISO 8601 duration (e.g. "PT2H30M") — only when both ends
+            // are known and end is genuinely after start.
+            const durationMs = new Date(isoEnd).getTime() - new Date(isoStart).getTime();
+            if (durationMs > 0) {
+                const totalMinutes = Math.round(durationMs / 60000);
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                schema.duration = `PT${hours > 0 ? hours + 'H' : ''}${minutes > 0 ? minutes + 'M' : ''}` || 'PT0M';
+            }
+        }
+
+        // Venue — a real Place with a real address whether the venue is
+        // a directory listing or a custom (non-listing) venue, mirroring
+        // buildCustomVenueCard's own field set for the latter case.
+        const venueName = venueListing?.business_name || event.custom_venue_name;
+        const venueAddress = venueListing
+            ? { streetAddress: venueListing.address, addressLocality: venueListing.city, addressRegion: venueListing.state }
+            : { streetAddress: event.address, addressLocality: event.city, addressRegion: event.state, postalCode: event.zip_code };
+        const hasVenueAddress = Object.values(venueAddress).some(Boolean);
+        if (venueName || hasVenueAddress) {
+            schema.location = {
+                '@type': 'Place',
+                name: venueName || locationLabel || 'Venue',
+            };
+            if (hasVenueAddress) {
+                schema.location.address = {
+                    '@type': 'PostalAddress',
+                    addressCountry: 'US',
+                    ...Object.fromEntries(Object.entries(venueAddress).filter(([, v]) => v)),
+                };
+            }
+        }
+
+        const allImages = [posterImage, ...(Array.isArray(event.gallery) ? event.gallery.map((g) => g.url) : [])].filter(Boolean);
+        if (allImages.length) schema.image = allImages;
+
+        if (event.is_free) {
+            schema.isAccessibleForFree = true;
+            schema.offers = { '@type': 'Offer', price: '0', priceCurrency: 'USD', availability: 'https://schema.org/InStock', url: eventUrl };
+        } else if (event.ticket_url) {
+            schema.isAccessibleForFree = false;
+            schema.offers = {
+                '@type': 'Offer',
+                url: event.ticket_url,
+                availability: event.status === 'sold_out' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+            };
+            if (event.price_range) schema.offers.priceSpecification = { '@type': 'PriceSpecification', price: event.price_range };
+        }
+
+        if (organizerListing) {
+            schema.organizer = {
+                '@type': 'Organization',
+                name: organizerListing.business_name,
+                url: `https://thegreekdirectory.org/listing/${organizerListing.slug}`,
+            };
+            // No separate concept of a "performer" exists in this schema
+            // (events don't have a distinct headliner field) — when the
+            // organizer IS effectively presenting the event themselves
+            // (no distinct venue-as-performer scenario applies here),
+            // schema.org allows reusing the organizing Organization as
+            // performer too, which is the closest accurate mapping
+            // available from the current data model.
+            schema.performer = schema.organizer;
+        }
+
+        if (event.contact_phone) schema.telephone = event.contact_phone;
+        if (event.contact_email) schema.email = event.contact_email;
+        if (event.capacity) {
+            schema.maximumAttendeeCapacity = event.capacity;
+            if (event.registered_count != null) {
+                schema.remainingAttendeeCapacity = Math.max(event.capacity - event.registered_count, 0);
+            }
+        }
+
+        schema.inLanguage = 'en-US';
+
+        return JSON.stringify(schema);
+    }
 
     return `<!DOCTYPE html>
 <html lang="en-US">
@@ -664,8 +852,15 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="The Greek Directory">
 <meta property="og:url" content="${eventUrl}">
-${posterImage ? `<meta property="og:image" content="${escapeHtml(posterImage)}">` : ''}
+<meta property="og:locale" content="en_US">
+${posterImage ? `<meta property="og:image" content="${escapeHtml(posterImage)}">
+<meta property="og:image:secure_url" content="${escapeHtml(posterImage)}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:alt" content="${escapeHtml(decodedTitle)}">` : ''}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@greekdirectory">
 <meta name="twitter:title" content="${escapeHtml(decodedTitle)} | The Greek Directory">
 <meta name="twitter:description" content="${escapeHtml(event.meta_description || decodedTagline || decodedTitle)}">
 ${posterImage ? `<meta name="twitter:image" content="${escapeHtml(posterImage)}">` : ''}
@@ -677,31 +872,40 @@ ${posterImage ? `<meta name="twitter:image" content="${escapeHtml(posterImage)}"
 <link rel="stylesheet" href="/css/index.css">
 <link rel="stylesheet" href="/src/output.css">
 
-<script type="application/ld+json">
-{
-    "@context": "https://schema.org",
-    "@type": "Event",
-    "name": "${escapeHtml(decodedTitle)}",
-    "description": "${escapeHtml(event.meta_description || decodedTagline || decodedTitle)}",
-    "startDate": "${isoStart}",
-    ${isoEnd ? `"endDate": "${isoEnd}",` : ''}
-    "eventStatus": "${schemaStatusMap[event.status] || schemaStatusMap.scheduled}",
-    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-    "location": ${locationSchema},
-    ${(() => {
-        const allImages = [posterImage, ...(Array.isArray(event.gallery) ? event.gallery.map((g) => g.url) : [])].filter(Boolean);
-        return allImages.length ? `"image": ${JSON.stringify(allImages)},` : '';
-    })()}
-    "offers": ${offersSchema},
-    "organizer": ${organizerListing ? `{"@type":"Organization","name":"${escapeHtml(organizerListing.business_name || '')}","url":"https://thegreekdirectory.org/listing/${escapeHtml(organizerListing.slug || '')}"}` : 'null'},
-    "url": "${eventUrl}"
-}
-</script>
+<script type="application/ld+json">${buildEventJsonLd()}</script>
+<script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://thegreekdirectory.org/' },
+        { '@type': 'ListItem', position: 2, name: 'Events', item: 'https://thegreekdirectory.org/events' },
+        { '@type': 'ListItem', position: 3, name: decodedTitle, item: eventUrl },
+    ],
+})}</script>
+<script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'The Greek Directory',
+    url: 'https://thegreekdirectory.org',
+    potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://thegreekdirectory.org/search?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+    },
+})}</script>
+<script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'The Greek Directory',
+    url: 'https://thegreekdirectory.org',
+    logo: 'https://static.thegreekdirectory.org/img/logo/blue.svg',
+})}</script>
 
 <style>
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
 .card-shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); }
-.category-pill { cursor: default; position: relative; }
+.category-pill { cursor: pointer; position: relative; transition: opacity 0.2s; }
+.category-pill:hover { opacity: 0.8; }
 .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }
 .badge-open { background: #10b981; color: white; }
 .badge-closed { background: #ef4444; color: white; }
@@ -778,6 +982,12 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 .event-capacity-note { font-size: 13px; color: #6b7280; margin-top: 6px; }
 
 .mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
+.add-to-calendar-wrap { position: relative; }
+.add-to-calendar-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 20; overflow: hidden; min-width: 200px; }
+.add-to-calendar-menu.active { display: block; }
+.add-to-calendar-menu a { display: block; padding: 10px 14px; font-size: 14px; color: #111827; text-decoration: none; border-bottom: 1px solid #f3f4f6; }
+.add-to-calendar-menu a:last-child { border-bottom: none; }
+.add-to-calendar-menu a:hover { background: #f3f4f6; }
 /* Hidden by default (not inside any media query) — mobile visibility is
    the single exception, applied inside @media (max-width: 767px) below.
    An earlier version used two separate conditional rules (one hiding at
@@ -921,6 +1131,34 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
     .description-divider { background: #2a2a2a !important; border-color: #404040 !important; }
     .additional-info-row:nth-child(even), .map-fallback, .read-more-btn, .desktop-contact-card, .event-datetime-block { background: #1f1f1f; color: #e5e7eb; border-color: #404040; }
     .entity-info-card-static { border-color: #404040; }
+    /* Subcategory tag — exact match of listing-page.css's own dark-mode
+       fix for the same component, kept in sync intentionally. */
+    .subcategory-tag { background: #404040; color: #e5e5e5; }
+    /* entity-info-card itself uses color:inherit (already covered by
+       body/.bg-white above) — only its two children set an explicit
+       color and need their own override. */
+    .entity-info-card-name { color: #e5e7eb; }
+    .entity-info-card-line { color: #9ca3af; }
+    /* Hardcoded literal `white` background (not a Tailwind .bg-white
+       utility, so the generic rule above doesn't reach it). */
+    .event-price-chip { background: #1f1f1f; color: #7ab8f5; border-color: #045093; }
+    /* These three sit inside .event-datetime-block, but each sets its
+       own explicit color — CSS inheritance never overrides an element's
+       own explicit color property, so the parent's dark override above
+       doesn't reach them without these. */
+    .event-date-label { color: #e5e7eb; }
+    .event-time-label { color: #b0b0b0; }
+    .event-recurrence-label { color: #9ca3af; }
+    /* No existing dark-mode precedent for this badge anywhere else in
+       the codebase (listings don't have a "past" concept) — designed
+       to match the established pattern used for other muted/neutral
+       surfaces in this same block. */
+    .badge-past { background: #404040; color: #b0b0b0; }
+    .entity-info-card-logo { background: #333; }
+    .event-capacity-note { color: #9ca3af; }
+    .add-to-calendar-menu { background: #2a2a2a; border-color: #404040; }
+    .add-to-calendar-menu a { color: #e5e7eb; border-bottom-color: #404040; }
+    .add-to-calendar-menu a:hover { background: #333; }
 }
 
 </style>
@@ -937,7 +1175,8 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
             <div class="desktop-main-column">
                 <div class="listing-main-header">
                     <div class="flex items-center gap-2 mb-3 flex-wrap">
-                        ${event.category ? `<span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#045093;">${escapeHtml(event.category)}</span>` : ''}
+                        ${event.category ? `<span class="text-sm font-semibold px-3 py-1 rounded-full text-white category-pill" style="background-color:#045093;${subcategoryTagsHtml ? '' : 'cursor:default;'}" ${subcategoryTagsHtml ? 'onclick="toggleSubcategories()"' : ''}>${escapeHtml(event.category)}</span>` : ''}
+                        ${subcategoryTagsHtml ? `<div class="subcategories-display" id="eventSubcategoriesDisplay">${subcategoryTagsHtml}</div>` : ''}
                         ${tierBadge}
                         ${timingBadge}
                     </div>
@@ -952,6 +1191,7 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
                         ${buildEmailCtaButton(event, true)}
                         ${buildWebsiteCtaButton(event, true)}
                         ${directionsMobile}
+                        ${addToCalendarMobile}
                     </div>
                 </div>
 
@@ -990,6 +1230,7 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
                         ${buildEmailCtaButton(event, false)}
                         ${buildWebsiteCtaButton(event, false)}
                         ${directionsDesktop}
+                        ${addToCalendarDesktop}
                     </div>
                 </div>
             </div>
@@ -1001,6 +1242,14 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
         <div id="eventGalleryGrid" class="event-gallery-grid"></div>
         <div id="eventGalleryLoadMoreWrap" class="event-gallery-load-more-wrap"></div>
     </section>
+
+    <div class="claim-listing-section">
+        <div class="action-cta-row">
+            <div class="action-cta-slot action-cta-slot-wide">
+                <a href="/edit/event?id=${escapeHtml(event.id)}" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;" target="_blank"><svg width="1em" height="1em" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path d="m104.175 90.97-4.252 38.384 38.383-4.252L247.923 15.427V2.497L226.78-18.646h-12.93zm98.164-96.96 31.671 31.67" style="fill:none;stroke:#FFFFFF;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;" transform="translate(-77.923 40.646)"/><path d="m195.656 33.271-52.882 52.882" style="fill:none;stroke:#FFFFFF;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:5;" transform="translate(-77.923 40.646)"/></svg><span>Suggest Edit</span></a>
+            </div>
+        </div>
+    </div>
 
     <div class="event-share-bottom-section">
         <div class="action-cta-row">
@@ -1068,6 +1317,11 @@ function renderErrorPage(title, message) {
     h1 { color: #111827; font-size: 24px; margin-bottom: 8px; }
     p { color: #6b7280; margin-bottom: 24px; }
     a { display: inline-block; background: #045093; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+    @media (prefers-color-scheme: dark) {
+        body { background: #1a1a1a; }
+        h1 { color: #e5e7eb; }
+        p { color: #9ca3af; }
+    }
 </style>
 </head>
 <body>
