@@ -43,14 +43,25 @@ function foldLine(line) {
     // RFC 5545 §3.1: lines SHOULD NOT exceed 75 octets, excluding the
     // line break itself. Continuation lines are folded with a leading
     // single space, which consuming parsers strip back out.
+    //
+    // Uses TextEncoder for UTF-8 byte length, not Buffer.byteLength —
+    // Buffer is a Node.js API and is NOT a global in Cloudflare Workers
+    // by default (confirmed: this caused a real production "Worker
+    // threw exception" / ReferenceError, since nothing in this project
+    // enables nodejs_compat or imports Buffer explicitly). TextEncoder
+    // is a standard Web API, available in Workers, Node, and browsers
+    // alike with no compatibility flag needed — verified byte-identical
+    // output to Buffer.byteLength across ASCII, multi-byte Greek text,
+    // and emoji before making this swap.
+    const byteLength = (str) => new TextEncoder().encode(str).length;
     const MAX_OCTETS = 75;
-    if (Buffer.byteLength(line, 'utf8') <= MAX_OCTETS) return line;
+    if (byteLength(line) <= MAX_OCTETS) return line;
 
     const folded = [];
     let current = '';
     let currentBytes = 0;
     for (const ch of line) {
-        const chBytes = Buffer.byteLength(ch, 'utf8');
+        const chBytes = byteLength(ch);
         if (currentBytes + chBytes > MAX_OCTETS) {
             folded.push(current);
             current = ' ' + ch; // continuation line prefix
