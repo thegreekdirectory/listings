@@ -36,7 +36,76 @@ or distribution of this code can result in legal action to the fullest extent pe
 
 import { EVENTS_APP_SHELL_HTML } from './_app-shell.js';
 
+const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZXRla3pxcnJnZHh0b3B6dnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDc2NDcsImV4cCI6MjA4MzkyMzY0N30.TIrNG8VGumEJc_9JvNHW-Q-UWfUGpPxR0v8POjWZJYg';
+
+// Region-scoped version of functions/events/index.js's own
+// fetchUpcomingEventsForSchema — same anon-key privilege level, same
+// purpose (a real ItemList for crawlers that don't execute JS), but
+// bounded to the region's own city list via Postgres's `in.(...)`
+// filter syntax, matching what get_events_by_cities() does for the
+// client-side load.
+async function fetchUpcomingEventsForRegion(region) {
+    try {
+        const nowIso = new Date().toISOString();
+        const citiesFilter = region.cities.map((c) => `"${c.replace(/"/g, '\\"')}"`).join(',');
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/events?visible=eq.true&status=neq.cancelled&state=eq.${encodeURIComponent(region.state)}&city=in.(${citiesFilter})&start_at=gte.${encodeURIComponent(nowIso)}&order=start_at.asc&limit=20&select=slug,title,start_at`,
+            { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, Accept: 'application/json' } }
+        );
+        if (!response.ok) return [];
+        const rows = await response.json();
+        return Array.isArray(rows) ? rows : [];
+    } catch {
+        return [];
+    }
+}
+
+function buildEventsItemListSchema(events) {
+    if (!events.length) return null;
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        itemListElement: events.map((event, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: `https://thegreekdirectory.org/event/${event.slug}`,
+            name: event.title,
+        })),
+    };
+}
+
 export async function renderRegionPage({ region, regionSlug, env, request }) {
+    const upcomingEvents = await fetchUpcomingEventsForRegion(region);
+    const itemListSchema = buildEventsItemListSchema(upcomingEvents);
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://thegreekdirectory.org/' },
+            { '@type': 'ListItem', position: 2, name: 'Events', item: 'https://thegreekdirectory.org/events' },
+            { '@type': 'ListItem', position: 3, name: `${region.label} Greek Events`, item: `https://thegreekdirectory.org/events/${regionSlug}` },
+        ],
+    };
+    const websiteSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'The Greek Directory',
+        url: 'https://thegreekdirectory.org',
+        potentialAction: {
+            '@type': 'SearchAction',
+            target: 'https://thegreekdirectory.org/search?q={search_term_string}',
+            'query-input': 'required name=search_term_string',
+        },
+    };
+    const organizationSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'The Greek Directory',
+        url: 'https://thegreekdirectory.org',
+        logo: 'https://static.thegreekdirectory.org/img/logo/blue.svg',
+    };
+
     const html = `<!DOCTYPE html>
 <html lang="en-US">
 <head>
@@ -54,7 +123,19 @@ export async function renderRegionPage({ region, regionSlug, env, request }) {
 <meta property="og:description" content="Find upcoming Greek events, festivals, and gatherings across ${escapeHtml(region.label)} — updated daily.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="The Greek Directory">
+<meta property="og:locale" content="en_US">
 <meta property="og:url" content="https://thegreekdirectory.org/events/${escapeHtml(regionSlug)}">
+<meta property="og:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
+<meta property="og:image:secure_url" content="https://thegreekdirectory.org/images/chicago.jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:alt" content="${escapeHtml(region.label)} skyline for Greek directory events page">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@greekdirectory">
+<meta name="twitter:title" content="${escapeHtml(region.label)} Greek Events | The Greek Directory">
+<meta name="twitter:description" content="Find upcoming Greek events, festivals, and gatherings across ${escapeHtml(region.label)} — updated daily.">
+<meta name="twitter:image" content="https://thegreekdirectory.org/images/chicago.jpeg">
 
 <link rel="preconnect" href="https://images.thegreekdirectory.org">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -76,6 +157,10 @@ export async function renderRegionPage({ region, regionSlug, env, request }) {
     "isPartOf": { "@type": "WebSite", "name": "The Greek Directory", "url": "https://thegreekdirectory.org" }
 }
 </script>
+${itemListSchema ? `<script type="application/ld+json">${JSON.stringify(itemListSchema)}</script>` : ''}
+<script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>
+<script type="application/ld+json">${JSON.stringify(websiteSchema)}</script>
+<script type="application/ld+json">${JSON.stringify(organizationSchema)}</script>
 </head>
 <body class="bg-gray-50">
 
