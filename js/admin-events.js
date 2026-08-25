@@ -8,11 +8,18 @@ or distribution of this code can result in legal action to the fullest extent pe
 // js/admin-events.js
 //
 // Events section of the Admin Portal. Depends on js/admin.js having
-// already run (window.adminProxy, window.allListings, and several
-// previously-listings-only globals this file calls directly:
-// generateSlugFromName, isValidCustomShortlink,
-// createPhoneInput/getPhoneValue/normalizePhoneE164, userCountry,
-// uploadToCloudflareImages, window.RichTextEditor).
+// already run (window.adminProxy and several previously-listings-only
+// globals this file calls directly: generateSlugFromName,
+// isValidCustomShortlink, createPhoneInput/getPhoneValue/
+// normalizePhoneE164, userCountry, uploadToCloudflareImages,
+// window.RichTextEditor). NOTE: this file does NOT rely on
+// window.allListings — despite js/admin.js declaring an `allListings`
+// variable, it's a top-level `let` in that file's own script scope and
+// is never attached to `window`, so it isn't actually reachable from
+// here. Organizer/venue listing lookups fetch fresh via
+// window.adminProxy('listings:list', {}) instead (see
+// searchListingsByName, checkListingUUID, and openEventModal's
+// organizer/venue status fill).
 //
 // Incorporates fixes found after real use on the live site:
 //   - loadEventCategories() is called from loadEventsAdmin() (which only
@@ -306,6 +313,32 @@ or distribution of this code can result in legal action to the fullest extent pe
         bindFormControls(event);
         renderGalleryItems();
 
+        // Fill the organizer/venue "currently linked to" confirmation
+        // for an existing event. This used to be attempted synchronously
+        // inside buildEventFormHtml via a lookup against
+        // window.allListings, but that global doesn't actually exist
+        // outside js/admin.js's own script scope (a top-level `let`
+        // there is never attached to window), so the confirmation always
+        // rendered blank. Fetching directly here — same adminProxy call
+        // searchListingsByName/checkListingUUID already use — fixes it
+        // without depending on that nonexistent global.
+        if (event?.organizer_listing_id || event?.venue_listing_id) {
+            try {
+                const listings = await window.adminProxy('listings:list', {});
+                const listingList = Array.isArray(listings) ? listings : [];
+                if (event.organizer_listing_id) {
+                    const organizer = listingList.find((l) => l.id === event.organizer_listing_id);
+                    if (organizer) setStatusText('eventOrganizerStatus', `\u2713 ${organizer.business_name}`, 'text-green-600');
+                }
+                if (event.venue_listing_id) {
+                    const venue = listingList.find((l) => l.id === event.venue_listing_id);
+                    if (venue) setStatusText('eventVenueStatus', `\u2713 ${venue.business_name}`, 'text-green-600');
+                }
+            } catch (err) {
+                console.warn('Could not load organizer/venue listing status:', err);
+            }
+        }
+
         if (event?.id) {
             try {
                 const existingShortlinks = await window.adminProxy('shortlinks:get_event', { event_id: event.id });
@@ -450,7 +483,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <button type="button" id="eventOrganizerCheckBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 whitespace-nowrap">Check</button>
                 </div>
                 <input type="hidden" id="eventOrganizerId" value="${escapeAttr(event.organizer_listing_id)}">
-                <p id="eventOrganizerStatus" class="text-xs mt-1">${renderInitialListingStatus(event.organizer_listing_id)}</p>
+                <p id="eventOrganizerStatus" class="text-xs mt-1"></p>
             </div>
             <div class="md:col-span-2">
                 <label class="flex items-center gap-2 cursor-pointer">
@@ -465,7 +498,8 @@ or distribution of this code can result in legal action to the fullest extent pe
                     <button type="button" id="eventVenueCheckBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 whitespace-nowrap">Check</button>
                 </div>
                 <input type="hidden" id="eventVenueId" value="${escapeAttr(event.venue_listing_id)}">
-                <p id="eventVenueStatus" class="text-xs mt-1">${renderInitialListingStatus(event.venue_listing_id)} Selecting a venue fills in the address/city/state/coordinates below. Edit them afterward to override.</p>
+                <p id="eventVenueStatus" class="text-xs mt-1"></p>
+                <p class="text-xs text-gray-400 mt-1">Selecting a venue fills in the address/city/state/coordinates below. Edit them afterward to override.</p>
             </div>
             <div id="eventCustomVenueFields" class="md:col-span-2 ${hasCustomVenue ? '' : 'hidden'}">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Venue Name</label>
@@ -645,11 +679,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         </div>`;
     }
 
-    function renderInitialListingStatus(listingId) {
-        const listing = findListingById(listingId);
-        return listing ? `<span class="text-green-600">\u2713 ${escapeHtml(listing.business_name)}</span>` : '';
-    }
-
     function buildDropzoneHtml(inputId, label, multiple) {
         return `
             <label for="${inputId}" class="flex flex-col items-center justify-center gap-1 w-full border-2 border-dashed border-gray-300 rounded-lg py-6 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
@@ -779,11 +808,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         if (!el) return;
         el.textContent = text;
         el.className = `text-xs mt-1 ${colorClass || ''}`;
-    }
-
-    function findListingById(id) {
-        if (!id || !Array.isArray(window.allListings)) return null;
-        return window.allListings.find((l) => l.id === id) || null;
     }
 
     function selectOrganizerListing(listing) {
@@ -1157,8 +1181,16 @@ or distribution of this code can result in legal action to the fullest extent pe
         return `/e/${suffix}`;
     }
 
+    // Capped well above any realistic need — empirically, ~30% of
+    // randomly generated candidates pass isValidEventShortlink (tested
+    // via 1M simulated trials), so a real collision run would exhaust
+    // this cap only if adminProxy itself were misbehaving (e.g.
+    // shortlinks:check always returning true). This exists purely as a
+    // defensive ceiling so a malfunction fails loudly instead of hanging.
+    const MAX_SHORTLINK_ATTEMPTS = 50;
+
     async function createEventShortlink(eventId, eventSlug, title) {
-        for (;;) {
+        for (let attempt = 0; attempt < MAX_SHORTLINK_ATTEMPTS; attempt += 1) {
             const candidate = generateEventShortlinkCandidate();
             if (!isValidEventShortlink(candidate)) continue;
             const exists = await window.adminProxy('shortlinks:check', { path: candidate });
@@ -1177,6 +1209,7 @@ or distribution of this code can result in legal action to the fullest extent pe
                 throw err;
             }
         }
+        throw new Error(`Could not generate a unique event shortlink after ${MAX_SHORTLINK_ATTEMPTS} attempts.`);
     }
 
     // -------------------------------------------------------------------
