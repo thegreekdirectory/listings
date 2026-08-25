@@ -95,9 +95,22 @@ function extractFields(form) {
     };
 }
 
+function isValidDateInput(v) {
+    return !Number.isNaN(new Date(v).getTime());
+}
+
 function validateSubmission(f) {
     if (!f.title) return 'Please enter the event name.';
     if (!f.start_at) return 'Please enter when the event starts.';
+    // Validated here, before insertEventRequest, so a malformed date
+    // gets a clear, specific message instead of insertEventRequest's
+    // `new Date(f.start_at).toISOString()` throwing partway through
+    // building the payload (see functions/edit/event.js's matching fix
+    // for the same underlying pattern, which is XSS-relevant there;
+    // this file's rendering is already escaped, so this half is a pure
+    // UX/robustness improvement rather than a security fix).
+    if (!isValidDateInput(f.start_at)) return 'Please enter a valid start date/time.';
+    if (f.end_at && !isValidDateInput(f.end_at)) return 'Please enter a valid end date/time.';
     if (!f.submitter_name) return 'Please enter your name.';
     if (!f.submitter_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.submitter_email)) return 'Please enter a valid email address.';
     return null;
