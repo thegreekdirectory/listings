@@ -141,9 +141,19 @@ function extractFields(form) {
     };
 }
 
+function isValidDateInput(v) {
+    return !Number.isNaN(new Date(v).getTime());
+}
+
 function validateSuggestion(f) {
     if (!f.suggester_name) return 'Please enter your name.';
     if (!f.suggester_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.suggester_email)) return 'Please enter a valid email address.';
+    // Validated here, before insertEventSuggestion, so a malformed date
+    // (whether a genuine typo or an XSS-probing string) gets a clear,
+    // specific message instead of insertEventSuggestion's dateOrNull
+    // throwing partway through building the payload.
+    if (f.start_at && !isValidDateInput(f.start_at)) return 'Please enter a valid start date/time.';
+    if (f.end_at && !isValidDateInput(f.end_at)) return 'Please enter a valid end date/time.';
     return null;
 }
 
@@ -258,7 +268,21 @@ function renderForm(event, eventId, f, errorMessage) {
     // a validation-error re-render) wins over the event's current stored
     // value, which wins over blank — so a rejected submission never
     // loses what was already entered.
-    const val = (name, eventKey) => escapeHtml(f?.[name] || event?.[eventKey ?? name] || '');
+    // formatEventValue lets a caller reshape the event's stored value
+    // (e.g. an ISO timestamp into a datetime-local string) before it's
+    // used as the fallback — the visitor-typed value f?.[name] always
+    // wins when present and is NEVER passed through the formatter,
+    // since it's already in the right input format as typed. Both
+    // branches are escaped, unlike the previous ad-hoc start_at/end_at
+    // expressions this replaces, which read straight from f?.start_at
+    // unescaped and were reflected-XSS-reachable via a POST that fails
+    // date parsing (see insertEventSuggestion's dateOrNull below).
+    const val = (name, eventKey, formatEventValue) => {
+        if (f?.[name]) return escapeHtml(f[name]);
+        const raw = event?.[eventKey ?? name];
+        const formatted = formatEventValue ? formatEventValue(raw) : raw;
+        return escapeHtml(formatted || '');
+    };
     return pageShell('Suggest an Edit', `
         <form class="submit-form" method="POST" action="/edit/event?id=${escapeHtml(eventId)}">
             <h1>Suggest an Edit</h1>
@@ -285,10 +309,10 @@ function renderForm(event, eventId, f, errorMessage) {
                 <h2>When &amp; Where</h2>
                 <div class="form-row">
                     <label>Starts
-                        <input type="datetime-local" name="start_at" value="${f?.start_at || toDatetimeLocalValue(event.start_at)}">
+                        <input type="datetime-local" name="start_at" value="${val('start_at', null, toDatetimeLocalValue)}">
                     </label>
                     <label>Ends
-                        <input type="datetime-local" name="end_at" value="${f?.end_at || toDatetimeLocalValue(event.end_at)}">
+                        <input type="datetime-local" name="end_at" value="${val('end_at', null, toDatetimeLocalValue)}">
                     </label>
                 </div>
                 <label>Venue Name
