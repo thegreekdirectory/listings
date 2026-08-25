@@ -633,8 +633,65 @@ or distribution of this code can result in legal action to the fullest extent pe
 }
 
 @media (max-width: 767px) {
-    .event-page-main { padding-top: 68px; }
-    .event-poster-frame { max-width: 100%; }
+    /* .event-page-main / .event-poster-frame removed — confirmed dead
+       code, part of this file's unused "Event detail page" design
+       system (see the header comment at the top of this file); the live
+       individual event page (functions/event/[[slug]].js) has its own
+       separate inline <style> block and never references these classes. */
     .event-calendar-day { min-height: 56px; }
     .event-region-hero h1 { font-size: 24px; }
+}
+
+/* ICS feed subscribe dropdown (toolbar "Subscribe" button) — same
+   visual design as functions/event/[[slug]].js's own Add to Calendar
+   dropdown, kept consistent across both surfaces intentionally. That
+   page has its own copy since it's a self-contained inline <style>
+   block with no shared stylesheet; this is the collection-page
+   equivalent. */
+.add-to-calendar-wrap { position: relative; }
+.add-to-calendar-menu { position: absolute; top: calc(100% + 6px); right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 20; overflow: hidden; min-width: 220px; }
+.add-to-calendar-menu.active { display: block; }
+.add-to-calendar-menu a, .add-to-calendar-menu button { display: block; width: 100%; text-align: left; padding: 10px 14px; font-size: 14px; color: #111827; text-decoration: none; border: none; background: none; border-bottom: 1px solid #f3f4f6; cursor: pointer; font-family: inherit; }
+.add-to-calendar-menu a:last-child, .add-to-calendar-menu button:last-child { border-bottom: none; }
+.add-to-calendar-menu a:hover, .add-to-calendar-menu button:hover { background: #f3f4f6; }
+
+/* ============================================
+   DARK MODE — collection pages (/events, /events/<region>)
+   This file previously had no dark-mode coverage at all. listings.css's
+   own dark block (loaded alongside this file on every collection page)
+   only touches ITS OWN class names — none of the events-specific classes
+   below. Colors chosen to match the existing dark palette used elsewhere
+   in this codebase (css/listing-page.css, css/index.css, and the
+   individual event page's own dark block): #1a1a1a page background,
+   #2a2a2a card surfaces, #e5e7eb primary text, #9ca3af/#b0b0b0 secondary
+   text, #404040 borders.
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    .event-card { background: #2a2a2a; }
+    .event-card-title { color: #e5e7eb; }
+    .event-card-location { color: #9ca3af; }
+    .event-card-poster { background: #1f1f1f; }
+
+    .events-view-toggle { background: #1f1f1f; }
+    .events-view-toggle button { color: #9ca3af; }
+    .events-view-toggle button.active { background: #2a2a2a; color: #7ab8f5; }
+
+    .event-calendar { background: #2a2a2a; }
+    .event-calendar-header h3 { color: #e5e7eb; }
+    .event-calendar-nav-btn { background: #1f1f1f; color: #e5e7eb; }
+    .event-calendar-nav-btn:hover { background: #333; }
+    .event-calendar-weekday { color: #6b7280; }
+    .event-calendar-day { background: #1f1f1f; }
+    .event-calendar-day.is-today { background: #1e3a5f; }
+    .event-calendar-day-num { color: #b0b0b0; }
+    .event-calendar-more { color: #6b7280; }
+
+    /* events.js's own class names for map popup text — distinct from
+       listings.css's generic .map-popup-* classes, so not reached by
+       listings.css's own dark-mode rules for those. */
+    .event-map-popup-sub { color: #9ca3af; }
+    .event-map-popup-link { color: #7ab8f5; }
+    .add-to-calendar-menu { background: #2a2a2a; border-color: #404040; }
+    .add-to-calendar-menu a, .add-to-calendar-menu button { color: #e5e7eb; border-bottom-color: #404040; }
+    .add-to-calendar-menu a:hover, .add-to-calendar-menu button:hover { background: #333; }
 }
