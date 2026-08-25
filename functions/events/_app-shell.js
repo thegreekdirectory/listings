@@ -68,6 +68,18 @@ export const EVENTS_APP_SHELL_HTML = `    <!-- TOOLBAR — filters trigger, view
                     <option value="az">A-Z</option>
                     <option value="furthest">Furthest Out</option>
                 </select>
+                <div class="add-to-calendar-wrap">
+                    <button id="eventSubscribeFeedBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm" onclick="toggleFeedSubscribeMenu()">
+                        <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16M5 19a1 1 0 100 2 1 1 0 000-2z"/></svg>
+                        <span class="text-sm font-medium">Subscribe</span>
+                    </button>
+                    <div class="add-to-calendar-menu hidden" id="feedSubscribeMenu">
+                        <a href="https://calendar.google.com/calendar/render?cid=webcal://thegreekdirectory.org/events/feed.ics" target="_blank" rel="noopener">Add to Google Calendar</a>
+                        <a href="webcal://thegreekdirectory.org/events/feed.ics">Add to Apple Calendar</a>
+                        <a href="https://outlook.office.com/calendar/0/addfromweb?url=webcal://thegreekdirectory.org/events/feed.ics" target="_blank" rel="noopener">Add to Outlook Web</a>
+                        <button type="button" onclick="copyFeedLink()">Copy feed link</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -95,12 +107,22 @@ export const EVENTS_APP_SHELL_HTML = `    <!-- TOOLBAR — filters trigger, view
                         <button class="toggle-option" data-range="weekend">This Weekend</button>
                         <button class="toggle-option" data-range="week">This Week</button>
                         <button class="toggle-option" data-range="month">This Month</button>
+                        <button class="toggle-option" data-range="custom">Custom Range</button>
+                    </div>
+                    <div id="eventCustomDateRow" class="hidden flex items-center gap-2 mt-2">
+                        <input type="date" id="eventCustomDateStart" class="px-3 py-2 border border-gray-300 rounded-lg text-sm" aria-label="Start date">
+                        <span class="text-gray-400 text-sm">to</span>
+                        <input type="date" id="eventCustomDateEnd" class="px-3 py-2 border border-gray-300 rounded-lg text-sm" aria-label="End date">
                     </div>
                 </div>
                 <div class="space-y-2">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="eventFreeOnlyFilter" class="w-4 h-4">
                         <span class="text-sm font-medium text-gray-700">Free Only</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="eventHideUnavailableFilter" class="w-4 h-4">
+                        <span class="text-sm font-medium text-gray-700">Hide cancelled / postponed / sold out</span>
                     </label>
                 </div>
                 <!-- Location Search — hidden entirely on regional pages (e.g. /events/chicago)
