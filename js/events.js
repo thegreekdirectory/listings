@@ -48,7 +48,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         search: '',
         categories: new Set(),
         dateRange: 'all',
+        customDateStart: '',
+        customDateEnd: '',
         freeOnly: false,
+        hideUnavailable: false,
     };
 
     // -------------------------------------------------------------------
@@ -56,6 +59,90 @@ or distribution of this code can result in legal action to the fullest extent pe
     // -------------------------------------------------------------------
 
     document.addEventListener('DOMContentLoaded', init);
+
+    // -------------------------------------------------------------------
+    // Query parameters — filters, view, and sort all round-trip through
+    // the URL so a filtered view can be refreshed, shared, or reached via
+    // the back button. Uses replaceState (not pushState): every filter
+    // tweak replacing the current history entry, rather than creating a
+    // new one per click, keeps the back button meaningful (leaves the
+    // page, doesn't step through 15 individual filter toggles first).
+    // -------------------------------------------------------------------
+
+    const QUERY_PARAM_KEYS = ['q', 'cat', 'when', 'from', 'to', 'free', 'avail', 'view', 'sort'];
+
+    function syncQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        QUERY_PARAM_KEYS.forEach((key) => params.delete(key));
+
+        if (state.search) params.set('q', state.search);
+        if (state.categories.size > 0) params.set('cat', [...state.categories].join(','));
+        if (state.dateRange !== 'all') params.set('when', state.dateRange);
+        if (state.dateRange === 'custom' && state.customDateStart) params.set('from', state.customDateStart);
+        if (state.dateRange === 'custom' && state.customDateEnd) params.set('to', state.customDateEnd);
+        if (state.freeOnly) params.set('free', '1');
+        if (state.hideUnavailable) params.set('avail', '1');
+        if (currentView !== 'grid') params.set('view', currentView);
+        if (currentSort !== 'soonest') params.set('sort', currentSort);
+
+        const query = params.toString();
+        const newUrl = window.location.pathname + (query ? `?${query}` : '');
+        history.replaceState(null, '', newUrl);
+    }
+
+    // Restores state{}/currentView/currentSort from the URL. Returns the
+    // restored category list separately (rather than touching DOM
+    // buttons directly) because the category filter buttons don't exist
+    // yet at this point — renderCategoryFilters() builds them
+    // asynchronously later in init(), after an RPC round-trip.
+    function readQueryParamsIntoState() {
+        const params = new URLSearchParams(window.location.search);
+        const restoredCategories = params.get('cat') ? params.get('cat').split(',').filter(Boolean) : [];
+
+        state.search = params.get('q') || '';
+        state.categories = new Set(restoredCategories);
+        state.dateRange = params.get('when') || 'all';
+        state.customDateStart = params.get('from') || '';
+        state.customDateEnd = params.get('to') || '';
+        state.freeOnly = params.get('free') === '1';
+        state.hideUnavailable = params.get('avail') === '1';
+
+        const view = params.get('view');
+        if (view && VIEW_CONTAINERS[view]) currentView = view;
+
+        const sort = params.get('sort');
+        if (sort && ['soonest', 'az', 'furthest'].includes(sort)) currentSort = sort;
+
+        return restoredCategories;
+    }
+
+    // Applies everything restoreable immediately (search box, date
+    // toggle, custom date inputs, checkboxes, sort select) — anything
+    // that already exists in the DOM at init() time. Category buttons
+    // are handled separately in renderCategoryFilters() itself.
+    function restoreDomControlsFromState() {
+        const searchInput = document.getElementById('eventSearchInput');
+        if (searchInput && state.search) searchInput.value = state.search;
+
+        document.querySelectorAll('#eventDateFilters .toggle-option').forEach((b) => {
+            b.classList.toggle('active', b.dataset.range === state.dateRange);
+        });
+        if (state.dateRange === 'custom') {
+            document.getElementById('eventCustomDateRow')?.classList.remove('hidden');
+            const startInput = document.getElementById('eventCustomDateStart');
+            const endInput = document.getElementById('eventCustomDateEnd');
+            if (startInput) startInput.value = state.customDateStart;
+            if (endInput) endInput.value = state.customDateEnd;
+        }
+
+        const freeCheckbox = document.getElementById('eventFreeOnlyFilter');
+        if (freeCheckbox) freeCheckbox.checked = state.freeOnly;
+        const hideUnavailableCheckbox = document.getElementById('eventHideUnavailableFilter');
+        if (hideUnavailableCheckbox) hideUnavailableCheckbox.checked = state.hideUnavailable;
+
+        const sortSelect = document.getElementById('eventSortSelect');
+        if (sortSelect) sortSelect.value = currentSort;
+    }
 
     async function init() {
         if (!window.supabase || typeof window.supabase.createClient !== 'function') {
@@ -68,12 +155,15 @@ or distribution of this code can result in legal action to the fullest extent pe
             applyRegionalPageMode();
         }
 
+        const restoredCategories = readQueryParamsIntoState();
+        restoreDomControlsFromState();
+
         bindToolbarEvents();
         bindFilterPanelEvents();
         setView(currentView, { skipSave: true });
 
         await loadEvents();
-        renderCategoryFilters();
+        renderCategoryFilters(restoredCategories);
         applyFiltersAndRender();
     }
 
@@ -165,13 +255,30 @@ or distribution of this code can result in legal action to the fullest extent pe
             applyFiltersAndRender();
         });
 
+        document.getElementById('eventHideUnavailableFilter')?.addEventListener('change', (e) => {
+            state.hideUnavailable = e.target.checked;
+            applyFiltersAndRender();
+        });
+
         document.querySelectorAll('#eventDateFilters .toggle-option').forEach((btn) => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('#eventDateFilters .toggle-option').forEach((b) => b.classList.remove('active'));
                 btn.classList.add('active');
                 state.dateRange = btn.dataset.range;
+                document.getElementById('eventCustomDateRow')?.classList.toggle('hidden', btn.dataset.range !== 'custom');
                 applyFiltersAndRender();
             });
+        });
+
+        const customDateStart = document.getElementById('eventCustomDateStart');
+        const customDateEnd = document.getElementById('eventCustomDateEnd');
+        customDateStart?.addEventListener('change', () => {
+            state.customDateStart = customDateStart.value;
+            applyFiltersAndRender();
+        });
+        customDateEnd?.addEventListener('change', () => {
+            state.customDateEnd = customDateEnd.value;
+            applyFiltersAndRender();
         });
 
         const locationInput = document.getElementById('eventLocationSearch');
@@ -204,12 +311,22 @@ or distribution of this code can result in legal action to the fullest extent pe
         state.search = '';
         state.categories.clear();
         state.dateRange = 'all';
+        state.customDateStart = '';
+        state.customDateEnd = '';
         state.freeOnly = false;
+        state.hideUnavailable = false;
 
         const searchInput = document.getElementById('eventSearchInput');
         if (searchInput) searchInput.value = '';
         const freeCheckbox = document.getElementById('eventFreeOnlyFilter');
         if (freeCheckbox) freeCheckbox.checked = false;
+        const hideUnavailableCheckbox = document.getElementById('eventHideUnavailableFilter');
+        if (hideUnavailableCheckbox) hideUnavailableCheckbox.checked = false;
+        const customStartInput = document.getElementById('eventCustomDateStart');
+        if (customStartInput) customStartInput.value = '';
+        const customEndInput = document.getElementById('eventCustomDateEnd');
+        if (customEndInput) customEndInput.value = '';
+        document.getElementById('eventCustomDateRow')?.classList.add('hidden');
         document.querySelectorAll('#eventDateFilters .toggle-option').forEach((b) => b.classList.remove('active'));
         document.querySelector('#eventDateFilters .toggle-option[data-range="all"]')?.classList.add('active');
         document.querySelectorAll('#eventCategoryFilters .toggle-option').forEach((b) => b.classList.remove('active'));
@@ -220,6 +337,46 @@ or distribution of this code can result in legal action to the fullest extent pe
     // -------------------------------------------------------------------
     // View switching
     // -------------------------------------------------------------------
+
+    const FEED_URL = 'https://thegreekdirectory.org/events/feed.ics';
+
+    function toggleFeedSubscribeMenu() {
+        const menu = document.getElementById('feedSubscribeMenu');
+        if (!menu) return;
+        menu.classList.toggle('active');
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.add-to-calendar-wrap')) return;
+        document.getElementById('feedSubscribeMenu')?.classList.remove('active');
+    });
+
+    function copyFeedLink() {
+        const button = document.querySelector('#feedSubscribeMenu button');
+        const flash = (text) => {
+            if (!button) return;
+            const original = button.textContent;
+            button.textContent = text;
+            setTimeout(() => { button.textContent = original; }, 1800);
+        };
+        navigator.clipboard.writeText(FEED_URL).then(() => {
+            flash('Copied!');
+        }).catch(() => {
+            // Fallback for older browsers / non-HTTPS contexts, matching
+            // js/event-page.js's own copyShareLink pattern — there's no
+            // visible <input> here to .select(), so a temporary
+            // off-screen one is created just for the copy operation.
+            const tempInput = document.createElement('input');
+            tempInput.value = FEED_URL;
+            tempInput.style.position = 'fixed';
+            tempInput.style.left = '-9999px';
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            flash('Copied!');
+        });
+    }
 
     const VIEW_CONTAINERS = {
         grid: 'eventGridView',
@@ -242,8 +399,12 @@ or distribution of this code can result in legal action to the fullest extent pe
             btn.classList.toggle('active', btn.dataset.view === view);
         });
 
+        if (view === 'grid') renderGrid();
+        if (view === 'list') renderList();
         if (view === 'calendar') renderCalendar();
         if (view === 'map') renderMap();
+
+        if (!opts.skipSave) syncQueryParams();
     }
 
     // -------------------------------------------------------------------
@@ -276,6 +437,19 @@ or distribution of this code can result in legal action to the fullest extent pe
             return start.getMonth() === now.getMonth() && start.getFullYear() === now.getFullYear();
         }
 
+        if (range === 'custom') {
+            if (state.customDateStart) {
+                const rangeStart = new Date(state.customDateStart + 'T00:00:00');
+                if (start < rangeStart) return false;
+            }
+            if (state.customDateEnd) {
+                // Inclusive of the whole end day, not just up to midnight.
+                const rangeEnd = new Date(state.customDateEnd + 'T23:59:59.999');
+                if (start > rangeEnd) return false;
+            }
+            return true;
+        }
+
         return true;
     }
 
@@ -290,6 +464,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             }
             if (state.categories.size > 0 && !state.categories.has(event.category)) return false;
             if (state.freeOnly && !event.is_free) return false;
+            if (state.hideUnavailable && ['cancelled', 'postponed', 'sold_out'].includes(event.status)) return false;
             if (!matchesDateRange(event, state.dateRange)) return false;
             return true;
         });
@@ -309,10 +484,15 @@ or distribution of this code can result in legal action to the fullest extent pe
         else if (currentView === 'list') renderList();
         else if (currentView === 'calendar') renderCalendar();
         else if (currentView === 'map') renderMap();
+
+        syncQueryParams();
     }
 
     function updateFilterCount() {
-        const count = state.categories.size + (state.freeOnly ? 1 : 0) + (state.dateRange !== 'all' ? 1 : 0);
+        const count = state.categories.size
+            + (state.freeOnly ? 1 : 0)
+            + (state.hideUnavailable ? 1 : 0)
+            + (state.dateRange !== 'all' ? 1 : 0);
         const badge = document.getElementById('eventFilterCount');
         if (!badge) return;
         badge.textContent = String(count);
@@ -340,7 +520,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     // Category filter chips — built dynamically from get_event_category_counts()
     // -------------------------------------------------------------------
 
-    async function renderCategoryFilters() {
+    async function renderCategoryFilters(restoredCategories) {
         const container = document.getElementById('eventCategoryFilters');
         if (!container) return;
 
@@ -352,7 +532,13 @@ or distribution of this code can result in legal action to the fullest extent pe
             .map((row) => `<button class="toggle-option" data-category="${escapeAttr(row.category)}">${escapeHtml(row.category)} (${row.count})</button>`)
             .join('');
 
+        const restoredSet = new Set(restoredCategories || []);
         container.querySelectorAll('button[data-category]').forEach((btn) => {
+            // state.categories was already populated by readQueryParamsIntoState()
+            // earlier in init() — this only needs to reflect that in the
+            // buttons themselves, which didn't exist yet at that point.
+            if (restoredSet.has(btn.dataset.category)) btn.classList.add('active');
+
             btn.addEventListener('click', () => {
                 const cat = btn.dataset.category;
                 if (state.categories.has(cat)) {
@@ -403,7 +589,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         return `
         <div class="event-card-wrap">
             ${badges.length ? `<div class="event-card-badges">${badges.join('')}</div>` : ''}
-            <a class="event-card card-shadow hover-bounce" href="/event/${escapeAttr(event.slug || '')}">
+            <a class="event-card card-shadow" href="/event/${escapeAttr(event.slug || '')}">
                 ${event.poster_image
                     ? `<img class="event-card-poster" src="${escapeAttr(event.poster_image)}" alt="${escapeAttr(event.title || '')}" loading="lazy">`
                     : `<div class="event-card-poster-placeholder"><span>${escapeHtml(event.category || 'Event')}</span></div>`}
@@ -620,4 +806,7 @@ or distribution of this code can result in legal action to the fullest extent pe
     function escapeAttr(text) {
         return escapeHtml(text);
     }
+
+    window.toggleFeedSubscribeMenu = toggleFeedSubscribeMenu;
+    window.copyFeedLink = copyFeedLink;
 })();
