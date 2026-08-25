@@ -37,6 +37,39 @@ or distribution of this code can result in legal action to the fullest extent pe
             .replace(/'/g, '&#39;');
     }
 
+    // Mirrors js/listing-page.js's toggleSubcategories() exactly, just
+    // targeting this page's own element ID.
+    function toggleSubcategories() {
+        const el = document.getElementById('eventSubcategoriesDisplay');
+        if (el) el.classList.toggle('active');
+    }
+
+    // Toggles the Add to Calendar dropdown (mobile and desktop each have
+    // their own menu instance, addToCalendarMenuMobile/Desktop, since
+    // both CTA rows render simultaneously and only one is visible at a
+    // given viewport width — see buildAddToCalendarButton in
+    // functions/event/[[slug]].js). Closes on an outside click, unlike
+    // toggleSubcategories' plain toggle, since a dropdown menu that only
+    // closes via its own trigger is a common, annoying UI papercut.
+    function toggleAddToCalendarMenu(menuId) {
+        const menu = document.getElementById(menuId);
+        if (!menu) return;
+        const isOpening = !menu.classList.contains('active');
+        // Close the OTHER instance too (mobile/desktop) if it happened
+        // to be open — shouldn't normally both be open at once given
+        // only one CTA row is visible per viewport width, but a resize
+        // between opening and clicking could leave a stale one open.
+        document.querySelectorAll('.add-to-calendar-menu.active').forEach((el) => {
+            if (el.id !== menuId) el.classList.remove('active');
+        });
+        menu.classList.toggle('active', isOpening);
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.add-to-calendar-wrap')) return;
+        document.querySelectorAll('.add-to-calendar-menu.active').forEach((el) => el.classList.remove('active'));
+    });
+
     function initializeReadMore() {
         const description = document.getElementById('eventDescription');
         const readMoreButton = document.getElementById('eventReadMoreBtn');
@@ -468,6 +501,8 @@ or distribution of this code can result in legal action to the fullest extent pe
     window.closeShareModal = closeShareModal;
     window.shareNative = shareNative;
     window.copyShareLink = copyShareLink;
+    window.toggleSubcategories = toggleSubcategories;
+    window.toggleAddToCalendarMenu = toggleAddToCalendarMenu;
 
     document.addEventListener('DOMContentLoaded', () => {
         initializeReadMore();
