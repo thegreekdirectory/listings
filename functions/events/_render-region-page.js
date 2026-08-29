@@ -183,7 +183,6 @@ ${EVENTS_APP_SHELL_HTML}
 
 <div data-partial="footer"></div>
 
-<script src="/js/partials-loader.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
