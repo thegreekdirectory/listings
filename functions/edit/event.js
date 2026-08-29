@@ -232,7 +232,6 @@ function pageShell(title, bodyHtml) {
 ${bodyHtml}
 </main>
 <div data-partial="footer"></div>
-<script src="/js/partials-loader.js"></script>
 </body>
 </html>`;
 }

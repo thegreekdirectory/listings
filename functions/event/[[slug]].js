@@ -1308,7 +1308,6 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 <div data-partial="footer"></div>
 
 <script>${currentEventDataScript}</script>
-<script src="/js/partials-loader.js"></script>
 <script src="/js/pwa/directions.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/js/event-page.js"></script>
