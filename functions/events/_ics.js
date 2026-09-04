@@ -99,6 +99,26 @@ function toIcsUtcDate(dateInput) {
 // by the caller, since resolving the FK to a listing is caller-specific
 // (the feed resolves many at once via a join-like batch fetch; the
 // single-event page already has organizerListing/venueListing in scope).
+
+
+function stripHtml(htmlString) {
+  // Create a new DOMParser instance
+  const parser = new DOMParser();
+  
+  // Parse the text as HTML
+  const doc = parser.parseFromString(htmlString, 'text/html');
+  
+  // Extract and return just the text content
+  return doc.body.textContent || "";
+}
+
+// Example usage:
+const messyText = "<p>Hello &amp; welcome!</p>";
+const cleanText = stripHtml(messyText);
+
+console.log(cleanText); // Output: "Hello & welcome!"
+
+
 function buildVEvent({ event, organizerName, venueName, venueAddress, siteBaseUrl }) {
     const now = new Date();
     const lines = [];
@@ -123,7 +143,7 @@ function buildVEvent({ event, organizerName, venueName, venueAddress, siteBaseUr
 
     const descriptionParts = [];
     if (event.tagline) descriptionParts.push(event.tagline);
-    if (event.description) descriptionParts.push(event.description);
+    if (event.description) descriptionParts.push(stripHtml(event.description));
     if (organizerName) descriptionParts.push(`Organized by ${organizerName}`);
     if (siteBaseUrl) descriptionParts.push(`Details: ${siteBaseUrl}/event/${event.slug}`);
     if (descriptionParts.length) {
