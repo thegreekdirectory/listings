@@ -112,12 +112,6 @@ function stripHtml(htmlString) {
   return doc.body.textContent || "";
 }
 
-// Example usage:
-const messyText = "<p>Hello &amp; welcome!</p>";
-const cleanText = stripHtml(messyText);
-
-console.log(cleanText); // Output: "Hello & welcome!"
-
 
 function buildVEvent({ event, organizerName, venueName, venueAddress, siteBaseUrl }) {
     const now = new Date();
