@@ -101,16 +101,21 @@ function toIcsUtcDate(dateInput) {
 // single-event page already has organizerListing/venueListing in scope).
 
 
-function stripHtml(htmlString) {
-  // Create a new DOMParser instance
-  const parser = new DOMParser();
+async function stripHtml(htmlString) {
+  let text = '';
   
-  // Parse the text as HTML
-  const doc = parser.parseFromString(htmlString, 'text/html');
+  const rewriter = new HTMLRewriter().on('*', {
+    text(element) {
+      text += element.text;
+    }
+  });
+
+  // Transform stream parses tags and automatically decodes HTML entities
+  await rewriter.transform(new Response(htmlString)).text();
   
-  // Extract and return just the text content
-  return doc.body.textContent || "";
+  return text;
 }
+
 
 
 function buildVEvent({ event, organizerName, venueName, venueAddress, siteBaseUrl }) {
