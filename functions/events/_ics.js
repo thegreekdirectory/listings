@@ -123,6 +123,7 @@ function buildVEvent({ event, organizerName, venueName, venueAddress, siteBaseUr
 
     const descriptionParts = [];
     if (event.tagline) descriptionParts.push(event.tagline);
+    if (event.description) descriptionParts.push(event.description);
     if (organizerName) descriptionParts.push(`Organized by ${organizerName}`);
     if (siteBaseUrl) descriptionParts.push(`Details: ${siteBaseUrl}/event/${event.slug}`);
     if (descriptionParts.length) {
