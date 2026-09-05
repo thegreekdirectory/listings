@@ -1095,8 +1095,48 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 #eventLightbox.active { display: flex; }
 .event-lightbox-image { max-width: 88vw; max-height: 82vh; object-fit: contain; border-radius: 4px; }
 .event-lightbox-close { position: absolute; top: 16px; right: 20px; color: white; font-size: 32px; background: none; border: none; cursor: pointer; line-height: 1; }
-.event-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 22px; background: rgba(255,255,255,0.12); border: none; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; }
-.event-lightbox-nav:hover { background: rgba(255,255,255,0.25); }
+.event-lightbox-close { 
+  position: absolute; 
+  top: 16px; 
+  right: 20px; 
+  color: white; 
+  font-size: 32px; 
+  background: none; 
+  border: none; 
+  cursor: pointer; 
+  line-height: 1; 
+  transition: none;
+  transform: none;
+  animation: none;
+}
+
+.event-lightbox-close:hover {
+  transform: none;
+  animation: none;
+}
+
+.event-lightbox-nav { 
+  position: absolute; 
+  top: 50%; 
+  transform: translateY(-50%); 
+  color: white; 
+  font-size: 22px; 
+  background: rgba(255,255,255,0.12); 
+  border: none; 
+  border-radius: 50%; 
+  width: 44px; 
+  height: 44px; 
+  cursor: pointer; 
+  transition: background-color 0.2s ease;
+  animation: none;
+}
+
+.event-lightbox-nav:hover { 
+  background: rgba(255,255,255,0.25); 
+  transform: translateY(-50%);
+  animation: none;
+}
+
 .event-lightbox-prev { left: 16px; }
 .event-lightbox-next { right: 16px; }
 .event-lightbox-caption { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.85); font-size: 14px; padding: 0 16px; }
