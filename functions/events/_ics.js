@@ -101,19 +101,24 @@ function toIcsUtcDate(dateInput) {
 // single-event page already has organizerListing/venueListing in scope).
 
 
-async function stripHtml(htmlString) {
-  let text = '';
-  
-  const rewriter = new HTMLRewriter().on('*', {
-    text(element) {
-      text += element.text;
-    }
-  });
+function stripHtml(html) {
+    if (!html) return '';
 
-  // Transform stream parses tags and automatically decodes HTML entities
-  await rewriter.transform(new Response(htmlString)).text();
-  
-  return text;
+    // Remove HTML tags
+    let text = html.replace(/<\/?[^>]+(>|$)/g, "");
+
+    // Map of common HTML entities to decode
+    const entities = {
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&quot;': '"',
+        '&#39;': "'",
+        '&apos;': "'"
+    };
+
+    // Replace the entities found in the text
+    return text.replace(/&amp;|&lt;|&gt;|&quot;|&#39;|&apos;/g, match => entities[match]);
 }
 
 
