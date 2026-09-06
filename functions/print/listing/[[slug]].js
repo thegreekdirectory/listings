@@ -1076,8 +1076,8 @@ ${PRINT_STYLES}
     <main class="print-page hero-page">
         <header class="hero-header">
             <div class="hero-header-top">
-                <img class="brand-mark" src="https://static.thegreekdirectory.org/img/logo/blue.svg" alt="The Greek Directory">
-                <span class="hero-header-label">Business Profile</span>
+                <img class="brand-mark" src="https://static.thegreekdirectory.org/img/logo/app1.png" alt="The Greek Directory">
+                <span class="hero-header-label">Listing Profile</span>
             </div>
             ${heroImage ? `<div class="hero-photo-frame"><img class="hero-photo" src="${escapeHtml(heroImage)}" alt="${escapeHtml(decodedBusinessName)}"></div>` : ''}
         </header>
