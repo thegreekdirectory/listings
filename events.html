@@ -95,7 +95,7 @@
 <div data-partial="header"></div>
 
 <main>
-    <div class="max-w-7xl mx-auto px-4 pt-24 pb-2">
+    <div class="max-w-7xl mx-auto px-4 pt-4">
         <section class="events-hero" aria-label="Events hero">
             <div class="events-hero-content">
                 <h1>Events</h1>
@@ -122,7 +122,7 @@
                 </button>
                 <p id="eventResultsCount" class="text-sm text-gray-600 hidden sm:block">Loading...</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <div class="events-view-toggle" id="eventsViewToggle">
                     <button data-view="grid" class="active">
                         <svg width="14" height="14" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M 5,4 C 4.446,4 4,4.446 4,5 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 14,4.446 13.554,4 13,4 Z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 26,4.446 25.554,4 25,4 Z M 5,16 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z"/></svg>
@@ -155,7 +155,7 @@
                         <a href="https://calendar.google.com/calendar/render?cid=webcal://thegreekdirectory.org/events/feed.ics" target="_blank" rel="noopener">Add to Google Calendar</a>
                         <a href="webcal://thegreekdirectory.org/events/feed.ics">Add to Apple Calendar</a>
                         <a href="https://outlook.office.com/calendar/0/addfromweb?url=webcal://thegreekdirectory.org/events/feed.ics" target="_blank" rel="noopener">Add to Outlook Web</a>
-                        <button type="button" onclick="copyFeedLink()">Copy feed link</button>
+                        <button type="button" class="event-no-bounce" onclick="copyFeedLink()">Copy feed link</button>
                     </div>
                 </div>
             </div>
@@ -223,6 +223,16 @@
         </div>
     </div>
 
+    <!-- Overlay slot the filter panel moves into for Calendar/Map (see
+         the GRID / LIST VIEW comment further below for the full
+         reasoning). Placed here — immediately after the panel's own
+         static position and before Map/Calendar — specifically so the
+         panel renders ABOVE those views once it moves here, not below
+         them: later DOM siblings paint below earlier ones in normal
+         document flow, so this slot's position in the DOM is what
+         actually determines stacking order here, not any z-index. -->
+    <div id="eventFilterPanelOverlaySlot"></div>
+
     <!-- MAP VIEW -->
     <div id="eventMapContainer" class="hidden border-b relative" style="max-height: calc(100vh - 60px); overflow: hidden; position:relative; z-index:30;">
         <div class="map-loading" id="eventMapLoading">
@@ -282,21 +292,47 @@
          persistent sidebar here specifically. Calendar and Map (above)
          are deliberately OUTSIDE this wrapper — js/events.js's
          updateFilterPanelPosition() moves #eventFilterPanel back to
-         #eventFilterPanelOverlaySlot (right after the toolbar, its
-         original position) whenever Calendar or Map is the active view,
-         so the panel becomes a normal slide-down/overlay there instead,
-         per "default is Side View, but when it's in Calendar or Map it
-         toggles on top." One panel, moved between two slots — not a
-         second duplicated filter form — since Listings' own actual
-         second-form approach (#desktopFilterPanel, with a fully
-         parallel set of "2"-suffixed ids) is unused dead markup in that
-         codebase already (no JS references it), not a pattern worth
+         #eventFilterPanelOverlaySlot (now placed right after the static
+         #eventFilterPanel block above, i.e. before Map/Calendar in the
+         DOM — moved there from originally sitting AFTER both, which was
+         the confirmed cause of a reported bug: the panel rendered below
+         Map/Calendar instead of above them, since later DOM siblings
+         paint below earlier ones in normal flow) whenever Calendar or Map
+         is the active view, so the panel becomes a normal slide-down/
+         overlay there instead, per "default is Side View, but when it's
+         in Calendar or Map it toggles on top." One panel, moved between
+         two slots — not a second duplicated filter form — since Listings'
+         own actual second-form approach (#desktopFilterPanel, with a
+         fully parallel set of "2"-suffixed ids) is unused dead markup in
+         that codebase already (no JS references it), not a pattern worth
          repeating here for a single settings panel this size. -->
-    <div id="eventFilterPanelOverlaySlot"></div>
     <div class="max-w-7xl mx-auto px-4 py-4">
         <div class="desktop-layout" id="eventDesktopLayout">
             <div class="desktop-filters" id="eventDesktopFiltersSlot"></div>
             <div class="desktop-content">
+                <!-- Desktop-width "# events found" + Filters-toggle pairing —
+                     mirrors listings.html's own #resultsCount +
+                     desktopFilterToggleBtn placement inside .desktop-content
+                     exactly (to the left of the toggle button, both sitting
+                     in the content column rather than the main toolbar).
+                     Only relevant at >=1024px, where the sidebar concept
+                     exists at all — hidden below that via
+                     .events-desktop-filters-row (see css/events.css),
+                     since the main toolbar's #eventFilterBtn already
+                     covers Filters at narrower widths where there's no
+                     sidebar to show/hide. Shown only while the sidebar is
+                     HIDDEN (sidebarFiltersVisible === false) — once shown,
+                     the sidebar's own "Hide filters" control (inside
+                     #eventFilterPanel's header row) takes over, matching
+                     Listings' desktopFilterToggleBtn only appearing in the
+                     "sidebar not active" branch of checkFilterPosition(). -->
+                <div class="events-desktop-filters-row flex items-center justify-between mb-3" id="eventDesktopFiltersRow">
+                    <p class="text-sm text-gray-600" id="eventDesktopResultsCount"></p>
+                    <button id="eventShowFiltersBtn" class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 8h12M10 12h4"/></svg>
+                        Filters
+                    </button>
+                </div>
                 <div id="eventGridView">
                     <div id="eventsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
                     <button id="eventLoadMoreBtn" class="load-more-btn hidden">Load More Events</button>
