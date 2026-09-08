@@ -22,6 +22,26 @@ or distribution of this code can result in legal action to the fullest extent pe
 (function () {
     'use strict';
 
+    // Strip ?shareimg=<n> from the visible URL as early as possible —
+    // it exists only to tell the SERVER (functions/event/[[slug]].js)
+    // which gallery image to use for og:image/twitter:image on THIS
+    // load; once the page has rendered with those tags already baked
+    // in, the param has done its job and leaving it in the address bar
+    // would be confusing (a visitor copying the URL from their own
+    // browser bar would unknowingly re-share a specific old photo
+    // instead of the event itself). history.replaceState doesn't
+    // require the DOM to be ready, so this runs immediately at script
+    // execution rather than waiting for DOMContentLoaded — the goal is
+    // to close the window where the param is visible in the address bar
+    // as much as possible, not just "before the user notices."
+    // replaceState (not pushState) since this is a correction to the
+    // current entry, not a new navigation the back button should stop
+    // at.
+    if (new URLSearchParams(window.location.search).has('shareimg')) {
+        const cleanUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState(null, '', cleanUrl);
+    }
+
     // Gallery labels are free-text admin input rendered into HTML
     // attributes (alt, aria-label) below — this file had no local escaping
     // helper before the gallery feature was added, unlike every other file
@@ -131,6 +151,41 @@ or distribution of this code can result in legal action to the fullest extent pe
             });
         } else {
             navigator.clipboard.writeText(window.location.href).then(() => {
+                flashCopyLabel('Link copied to clipboard!');
+            }).catch(() => {
+                console.log('Unable to share. Please copy the URL from your browser.');
+            });
+        }
+    }
+
+    // Gallery lightbox's own share button — same navigator.share/
+    // clipboard-fallback pattern as shareNative() above, but the shared
+    // URL carries ?shareimg=<1-indexed position> so the server
+    // (functions/event/[[slug]].js) picks that specific gallery image
+    // for the page's og:image/twitter:image instead of the event
+    // poster — see that file's own comment on the shareImgIndex
+    // parameter for the full validation rules this URL needs to satisfy
+    // (1-indexed, integer, within gallery.length) to actually take
+    // effect; an out-of-range or malformed value there just falls back
+    // to the poster same as no param at all, so there's no failure mode
+    // here worth guarding against client-side beyond what's already
+    // naturally true (lightboxIndex is always a valid array index into
+    // galleryImages by construction — see showLightboxImage()).
+    function shareGalleryImage() {
+        const data = window.currentEventData || {};
+        const baseUrl = window.location.href.split('?')[0];
+        const shareUrl = `${baseUrl}?shareimg=${lightboxIndex + 1}`;
+
+        if (navigator.share) {
+            navigator.share({
+                title: data.title + ' | The Greek Directory',
+                text: 'Check out this photo from ' + data.title + ' on The Greek Directory!',
+                url: shareUrl,
+            }).catch((err) => {
+                if (err.name !== 'AbortError') console.log('Share failed:', err);
+            });
+        } else {
+            navigator.clipboard.writeText(shareUrl).then(() => {
                 flashCopyLabel('Link copied to clipboard!');
             }).catch(() => {
                 console.log('Unable to share. Please copy the URL from your browser.');
@@ -501,6 +556,7 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     function bindLightboxControls() {
         document.getElementById('eventLightboxClose')?.addEventListener('click', closeLightbox);
+        document.getElementById('eventLightboxShare')?.addEventListener('click', shareGalleryImage);
         document.getElementById('eventLightboxNext')?.addEventListener('click', () => lightboxNext(true));
         document.getElementById('eventLightboxPrev')?.addEventListener('click', () => lightboxPrev(true));
 
