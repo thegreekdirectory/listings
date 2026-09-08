@@ -87,6 +87,8 @@ or distribution of this code can result in legal action to the fullest extent pe
 .event-badge-postponed { background: #f97316; color: white; }
 .event-badge-soldout   { background: #6b7280; color: white; }
 .event-badge-past      { background: #e5e7eb; color: #4b5563; }
+.event-badge-free      { background: #16a34a; color: white; }
+.event-badge-price     { background: #eff6ff; color: #045093; }
 
 @keyframes event-pulse {
     0%, 100% { opacity: 1; }
@@ -409,9 +411,18 @@ or distribution of this code can result in legal action to the fullest extent pe
     left: 8px;
     display: flex;
     gap: 4px;
+    flex-wrap: wrap;
 }
 
-.event-card-wrap {
+/* Replaces the old .event-card-wrap (which used to be the sibling
+   wrapper around both the badges div and the <a class="event-card"> —
+   removed now that badges live inside the card itself, see
+   buildEventCardHtml in js/events.js). This wraps just the poster/
+   placeholder image so .event-card-badges (position:absolute) has the
+   right positioning context without being relative to the WHOLE card
+   (which would let a tall card body push the badges away from the
+   image's own top-left corner). */
+.event-card-media {
     position: relative;
 }
 
@@ -445,6 +456,22 @@ or distribution of this code can result in legal action to the fullest extent pe
     background: white;
     color: #045093;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Hidden below 1024px unconditionally (see the @media (min-width:
+   1024px) block further down for where it's turned on) — no sidebar
+   concept exists at narrower widths, so this row would just duplicate
+   the main toolbar's #eventFilterBtn. Also hidden whenever the sidebar
+   IS currently visible (JS toggles body.events-sidebar-mode — see
+   updateFilterPanelPosition() in js/events.js), since this row's whole
+   purpose is to be the way back IN once the sidebar has been hidden;
+   showing both the sidebar and this row's own "Filters" button at once
+   would be two controls for the same thing on screen simultaneously. */
+.events-desktop-filters-row {
+    display: none;
+}
+body.events-sidebar-mode .events-desktop-filters-row {
+    display: none !important;
 }
 
 /* Calendar grid */
@@ -683,6 +710,26 @@ or distribution of this code can result in legal action to the fullest extent pe
        than a labeled toggle with the labels just cut off. */
     .events-view-toggle-label { display: none; }
     .events-view-toggle button { padding: 6px 8px; }
+
+    /* Phone-width Grid column count, set via updateEventsGridColumns()
+       in js/events.js. Base Tailwind grid-cols-1 (from the markup) is
+       the plain default — 1 column — when neither of these classes is
+       present, which only happens outside this same media query (this
+       function only ever adds one of the two, never neither, at phone
+       width) or in the brief instant before JS first runs. !important
+       used here even though css/events.css already loads after
+       src/output.css on this page (so source order alone would already
+       make these win over grid-cols-1's equal specificity) — matching
+       js/listings.js's own .listings-2-col/.listings-3-col, which use
+       !important for the identical override regardless of their own
+       file's load order, since relying on load order alone is exactly
+       the kind of fragile assumption that produced a real bug earlier
+       in this same file (.event-list-row's hover fix needed extra
+       specificity specifically because a load-order assumption turned
+       out to be backwards) — !important removes that fragility rather
+       than trusting today's <link> order to hold indefinitely. */
+    .event-grid-2-col { grid-template-columns: repeat(2, 1fr) !important; }
+    .event-grid-3-col { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
 /* ICS feed subscribe dropdown (toolbar "Subscribe" button) — same
@@ -715,6 +762,17 @@ or distribution of this code can result in legal action to the fullest extent pe
     .event-card-location { color: #9ca3af; }
     .event-card-poster { background: #1f1f1f; }
 
+    /* .event-badge-free is a solid, saturated color already (matching
+       the established pattern every other badge variant already
+       follows — none of them get a dark override either, since a solid
+       high-contrast color reads fine on both light and dark cards).
+       .event-badge-price is the one exception: it uses a light,
+       near-white background (#eff6ff) specifically to read as a plain
+       informational tag rather than a status alert, and that choice
+       needs a dark counterpart or it would look washed-out/wrong on a
+       dark card. */
+    .event-badge-price { background: #1f3a5f; color: #7ab8f5; }
+
     .events-view-toggle { background: #1f1f1f; }
     .events-view-toggle button { color: #9ca3af; }
     .events-view-toggle button.active { background: #2a2a2a; color: #7ab8f5; }
@@ -737,6 +795,77 @@ or distribution of this code can result in legal action to the fullest extent pe
     .add-to-calendar-menu { background: #2a2a2a; border-color: #404040; }
     .add-to-calendar-menu a, .add-to-calendar-menu button { color: #e5e7eb; border-bottom-color: #404040; }
     .add-to-calendar-menu a:hover, .add-to-calendar-menu button:hover { background: #333; }
+
+    /* Filter sidebar/overlay — #eventFilterPanel itself and everything
+       inside it. Confirmed zero dark-mode coverage existed for any of
+       this anywhere (css/listings.css never styled its own dead
+       #desktopFilterPanel for dark mode either, since nothing ever
+       activates that code path there) — genuinely new coverage, not a
+       fix to a stale rule. Text-color rules target Tailwind's own
+       .text-gray-700/.text-gray-900/.text-gray-500/.text-gray-600
+       utility classes (used directly in the panel's markup in
+       functions/events/_app-shell.js) with the same override technique
+       functions/event/[[slug]].js's own dark block already uses for
+       those same classes on the individual event page, so both pages
+       darken Tailwind gray text consistently. */
+    #eventFilterPanel { background: #2a2a2a; }
+    #eventFilterPanel .text-gray-900 { color: #e5e7eb; }
+    #eventFilterPanel .text-gray-700 { color: #b0b0b0; }
+    #eventFilterPanel .text-gray-500 { color: #9ca3af; }
+    #eventFilterPanel .text-gray-600 { color: #9ca3af; }
+    #eventFilterPanel .border-gray-300 { border-color: #404040; }
+    #eventFilterPanel .text-blue-600 { color: #7ab8f5; }
+    #eventFilterPanel .text-blue-600:hover { color: #a5c9f7; }
+
+    #eventFilterPanel .toggle-option { background: #1f1f1f; color: #b0b0b0; }
+    #eventFilterPanel .toggle-option:not(:last-child) { border-right-color: #404040; }
+    #eventFilterPanel .toggle-option:hover { background: #333; }
+    #eventFilterPanel .toggle-option.active { background: #045093; color: white; }
+    /* .toggle-option is also used outside the panel proper for
+       #eventCategoryFilters/#eventDateFilters (same class, same
+       need) — the #eventFilterPanel-scoped selectors above already
+       cover both since both containers are descendants of the panel. */
+
+    #eventFilterPanel input[type="checkbox"] { accent-color: #045093; }
+    #eventFilterPanel .location-search-container input {
+        background: #1f1f1f;
+        color: #e5e7eb;
+        border-color: #404040;
+    }
+    #eventFilterPanel .location-search-results {
+        background: #2a2a2a;
+        border-color: #404040;
+    }
+    #eventFilterPanel .location-search-result:hover { background: #333; }
+    #eventFilterPanel .location-search-result.active { background: #045093; color: white; }
+
+    /* Map control buttons (Split View / Current Location / Reload, and
+       their identical Split-View-mode counterparts) — confirmed zero
+       dark coverage exists anywhere (css/listings.css doesn't style
+       .map-control-btn for dark mode either). The button itself just
+       needs a dark background/border; each icon's actual fill/stroke
+       color is set as an inline SVG attribute in the markup
+       (functions/events/_app-shell.js / js/events.js), which a CSS
+       fill/stroke property genuinely can override — confirmed by
+       css/listings.css's own .map-control-btn.locate-active svg rule
+       already doing exactly this for the active state. Targeting the
+       descendant svg directly (not by id) covers all three icons
+       uniformly regardless of which of fill or stroke each one actually
+       uses to draw itself (Split View + Current Location use fill,
+       Reload/reset is an outline icon using stroke with fill:none). */
+    .map-control-btn { background: #2a2a2a; border-color: #404040; color: #e5e7eb; }
+    .map-control-btn:hover { background: #333; border-color: #045093; }
+    /* fill and stroke set separately (not a shared shorthand/rule) and
+       fill is scoped to :not([fill="none"]) specifically — the
+       Reload/reset icon deliberately draws itself as fill:none (a
+       stroke-only outline icon); a blanket "fill: <color>" on every
+       .map-control-btn svg would override that none with an actual
+       fill color and turn the outline icon into a solid shape. stroke
+       has no such conflict (every one of these three icons either has
+       no stroke at all — harmless to set one that's never drawn — or
+       already uses stroke on purpose), so it can be set unconditionally. */
+    .map-control-btn svg:not([fill="none"]) { fill: #7ab8f5; }
+    .map-control-btn svg { stroke: #7ab8f5; }
 }
 
 /* Both .load-more-btn (css/listings.css, display:block) and .hidden
@@ -818,6 +947,15 @@ or distribution of this code can result in legal action to the fullest extent pe
         flex: 1;
         min-width: 0;
     }
+    /* "# events found" + Filters-toggle row, shown at desktop widths
+       only — below 1024px there's no sidebar concept at all (the
+       filter panel is always a full-overlay there), so the main
+       toolbar's #eventFilterBtn already covers Filters and this row
+       would be redundant. Hidden by default (base rule below, outside
+       any media query) and shown here specifically. */
+    .events-desktop-filters-row {
+        display: flex;
+    }
     /* #eventFilterPanel while it's sitting inside the sidebar slot —
        "sidebar mode." Same sticky/bordered/self-contained-scroll
        treatment as Listings' #filterPanel.desktop-sidebar rule, applied
@@ -825,8 +963,19 @@ or distribution of this code can result in legal action to the fullest extent pe
        on the panel itself, since which slot the panel is IN is already
        the signal for which mode it's in — no second class needed to
        track the same state a second way. */
+    /* NOT display:block !important anymore — that unconditionally forced
+       the panel visible the instant it entered this slot, which is
+       exactly wrong now that filters are hidden by default (issue: "the
+       big space that won't go away" root cause traced to this same
+       always-visible assumption, and the new "hidden by default, shown
+       via a button" requirement needs the panel's actual .hidden class
+       to matter here, not be overridden). Position/sizing (sticky,
+       height, border, background) stay unconditional — those describe
+       what the panel looks like WHEN shown, not whether it's shown.
+       Actual visibility is governed by the plain .hidden rule from
+       src/output.css (display:none) still applying at this same
+       specificity level now that nothing here fights it. */
     #eventDesktopFiltersSlot #eventFilterPanel {
-        display: block !important;
         position: sticky;
         top: 80px;
         height: fit-content;
@@ -835,6 +984,25 @@ or distribution of this code can result in legal action to the fullest extent pe
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         background: white;
+    }
+    /* Dark-mode override for the rule directly above, NOT placed inside
+       the main @media (prefers-color-scheme: dark) block earlier in
+       this file — that block comes BEFORE this unconditional sidebar
+       rule in source order, and both selectors have identical
+       specificity, so a dark override placed there would be overwritten
+       by this rule's own "background: white" the instant this rule is
+       reached, regardless of dark mode being active. Placing the
+       override here, after the rule it corrects, is what actually makes
+       it win — same reasoning as this file's other cascade-order fixes
+       (.load-more-btn.hidden, .event-list-row.hover-bounce:hover
+       further below) that call out exactly this kind of position-
+       dependent bug rather than assuming any override "in a dark-mode
+       block" automatically applies. */
+    @media (prefers-color-scheme: dark) {
+        #eventDesktopFiltersSlot #eventFilterPanel {
+            background: #2a2a2a;
+            border-color: #404040;
+        }
     }
     /* Suppress the mobile-style page-width wrapper and Close (✕) button
        once inside the sidebar — a persistent sidebar doesn't need a
@@ -846,9 +1014,15 @@ or distribution of this code can result in legal action to the fullest extent pe
         margin: 0;
         padding: 16px;
     }
-    #eventDesktopFiltersSlot #eventCloseFilterBtn {
-        display: none;
-    }
+    /* #eventCloseFilterBtn ("✕") is no longer hidden in sidebar mode —
+       previously hidden here on the reasoning that "a persistent
+       sidebar doesn't need a close button," which held when the
+       sidebar was always-shown by default. Now that filters are hidden
+       by default and the sidebar is something the user explicitly
+       shows, the same ✕ button needs to be able to hide it again — see
+       bindFilterPanelEvents() in js/events.js, which branches this
+       button's click handler by current sidebar-vs-overlay context
+       rather than having a separate dedicated "hide sidebar" button. */
     /* Toggled on <body> by updateFilterPanelPosition() (js/events.js)
        whenever the panel is in sidebar mode — see that function's own
        comment for why the button needs hiding here specifically. */
@@ -868,3 +1042,34 @@ or distribution of this code can result in legal action to the fullest extent pe
     height: 100%;
     max-height: none;
 }
+
+/* Split-view listing row hover overexpansion — same root cause and same
+   fix pattern as .event-list-row.hover-bounce:hover elsewhere in this
+   file: this row's markup carries "bg-white rounded-lg shadow" (three
+   classes), which matches css/index.css's global
+   ".bg-white.rounded-lg.shadow:hover { transform: scale(1.1) }" rule
+   verbatim — the same 10%-scale bounce meant for small buttons/icons,
+   confirmed by the person as "the same issue as the other ones HAD."
+   Unlike .event-list-row.hover-bounce:hover (which could win purely on
+   having MORE classes than what it needed to beat), that global rule's
+   selector already has 3 classes + 1 pseudo-class (specificity 0,0,4,0);
+   this row's own two added classes together give only 2 classes + 1
+   pseudo-class (0,0,3,0) — genuinely lower specificity, so it would lose
+   the cascade even placed later in the file. !important is the correct,
+   deliberate tool here rather than a shortcut — same as
+   css/listings.css's own .map-control-btn.active rule, which uses
+   !important for the identical reason (a local override that must beat
+   a broader global rule it can't out-specify by class count alone). */
+.event-split-item.split-listing-item:hover { transform: scale(1.02) !important; }
+
+/* "Copy feed link" in the Subscribe dropdown is a bare <button> with no
+   other distinguishing class, which matches css/index.css's global
+   "button:hover { transform: scale(1.1) }" rule (a plain element-type
+   selector) — every other item in this same dropdown is an <a> tag, not
+   a <button>, so this was the one link in the menu that bounced.
+   .event-no-bounce:hover is a CLASS selector, which outranks an
+   element-type selector in CSS specificity regardless of which comes
+   first in the cascade or how many element-type selectors are chained —
+   no !important needed here, unlike some of this file's other overrides
+   that had to beat higher-specificity global rules. */
+.event-no-bounce:hover { transform: none; }
