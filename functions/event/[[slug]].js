@@ -468,7 +468,27 @@ function buildDirectionsButton(event, mobile) {
 function buildAddToCalendarButton(event, mobile, isoStart, isoEnd, locationLabel, decodedTitle, decodedTagline, eventUrl) {
     const iconClass = mobile ? 'w-4 h-4' : 'w-5 h-5';
     const icon = `<svg class="${iconClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>`;
-    const chevronIcon = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>`;
+    // Explicit width/height attributes, NOT a "w-3 h-3" Tailwind class
+    // pair — those utilities are never emitted into the compiled
+    // src/output.css because Tailwind only generates classes it detects
+    // scanning the codebase, and no other component anywhere on the site
+    // happens to use w-3/h-3. Confirmed by checking output.css directly:
+    // w-4/w-5/h-4/h-5 (used by every OTHER cta icon on this page) are
+    // present, w-3/h-3 are not. With the class absent, the browser falls
+    // back to an SVG element's un-sized replaced-element default (~300x150
+    // CSS px per the SVG2/CSS spec) — a chevron rendered at that size next
+    // to a real button is the exact "svg is huge" bug reported. 12px
+    // matches what w-3/h-3 (0.75rem = 12px at the default 16px root) would
+    // have produced had the class actually compiled, so this looks
+    // identical to what was intended, just via attributes that don't
+    // depend on the Tailwind build's content-scanning at all. Every other
+    // hand-attributed icon in this same file (see buildShareTriggerButton,
+    // the Suggest Edit icon below) already uses this exact
+    // width/height-attribute pattern rather than a class for the same
+    // reason — kept consistent with that precedent rather than
+    // reintroducing a class-based size that silently depends on what
+    // Tailwind happened to scan elsewhere.
+    const chevronIcon = `<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" style="display:block;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>`;
 
     // Google's dates param wants basic UTC form with no punctuation
     // (matches _ics.js's own toIcsUtcDate exactly, but this page doesn't
@@ -940,8 +960,20 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
    deliberately does NOT force a fixed aspect-ratio/crop; height stays
    natural, width is capped and centered. */
 .event-main-poster-wrap { text-align: center; margin: 20px 0; }
-.event-main-poster-wrap img { max-width: 100%; width: auto; max-height: 640px; border-radius: 10px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-@media (max-width: 767px) { .event-main-poster-wrap img { max-height: 480px; width: 100%; height: auto; } }
+/* width/height both explicitly "auto" (not just width) plus object-fit:
+   contain, belt-and-suspenders against the reported warp-on-resize bug:
+   width:auto alone should already preserve ratio against a max-height
+   cap, but leaving height at its browser-default value rather than
+   stating "auto" ourselves risks inheriting a stretched box size from
+   any ancestor rule that sets width/height together (as this same file's
+   own .desktop-main-column > * { width:100% } mobile rule does one
+   breakpoint away) — object-fit:contain is the actual guarantee: even if
+   something upstream forces this element's box to a size that doesn't
+   match the image's intrinsic ratio, contain scales the image to fit
+   inside that box without distorting it, which auto/auto sizing alone
+   does not defend against once a box size is externally forced. */
+.event-main-poster-wrap img { max-width: 100%; width: auto; height: auto; max-height: 640px; object-fit: contain; border-radius: 10px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+@media (max-width: 767px) { .event-main-poster-wrap img { max-height: 480px; width: 100%; height: auto; object-fit: contain; } }
 
 .subcategories-display { display: none; margin-top: 8px; }
 .subcategories-display.active { display: block; }
@@ -962,7 +994,23 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 
 .entity-info-section { margin-top: 24px; }
 .entity-info-section h3 { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 10px; }
-.entity-info-card { display: flex; gap: 14px; align-items: flex-start; border: 2px solid #045093; border-radius: 10px; padding: 14px; text-decoration: none; color: inherit; transition: box-shadow 0.15s ease; }
+/* transition includes "transform", not just "box-shadow" — this card
+   also carries the shared .hover-bounce class (transition: all 0.3s;
+   transform: scale(1.1) on hover), but CSS transition is a single
+   shorthand property: this rule and .hover-bounce's rule have equal
+   specificity (one class each), so whichever is later in the cascade
+   REPLACES the other's transition entirely rather than merging with
+   it — this <style> block is inline in <head>, after every external
+   stylesheet including css/index.css (where .hover-bounce lives), so
+   this rule was winning outright and .hover-bounce's transform was
+   left with no transition definition at all: it still applied on
+   hover (transform: scale(1.1) is a normal, unrelated declaration),
+   just instantly rather than eased — confirmed reported bug ("jumps to
+   the final state instead of being fluid"). Matching hover-bounce's
+   own timing (0.3s, default ease) rather than inventing a different
+   duration keeps this card feeling identical to every other bouncy
+   element on the page, per the request. */
+.entity-info-card { display: flex; gap: 14px; align-items: flex-start; border: 2px solid #045093; border-radius: 10px; padding: 14px; text-decoration: none; color: inherit; transition: box-shadow 0.15s ease, transform 0.3s; }
 .entity-info-card:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
 .entity-info-card-logo { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: #f3f4f6; }
 .entity-info-card-body { min-width: 0; flex: 1; }
@@ -998,6 +1046,17 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 .mobile-cta-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
 .add-to-calendar-wrap { position: relative; }
 .add-to-calendar-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 20; overflow: hidden; min-width: 200px; }
+/* Applied by toggleAddToCalendarMenu() in js/event-page.js when there
+   isn't enough room below the button to show the whole menu before the
+   viewport bottom — confirmed reported bug: on the sticky desktop
+   sidebar specifically, a button positioned low in the viewport opens a
+   5-item menu downward past the fold, and since the sidebar is
+   position:sticky, scrolling the page doesn't reliably bring the menu's
+   own tail into view the way it would for a plain in-flow element.
+   Flipping the menu to open upward (anchored to the button's top edge
+   instead of its bottom) keeps the whole thing on-screen without
+   needing the page to scroll at all. */
+.add-to-calendar-menu.opens-up { top: auto; bottom: calc(100% + 6px); }
 .add-to-calendar-menu.active { display: block; }
 .add-to-calendar-menu a { display: block; padding: 10px 14px; font-size: 14px; color: #111827; text-decoration: none; border-bottom: 1px solid #f3f4f6; }
 .add-to-calendar-menu a:last-child { border-bottom: none; }
@@ -1131,6 +1190,30 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
   animation: none;
 }
 
+/* Invisible hit-area buffer around the visible 44px circle. The lightbox
+   closes on any click whose e.target is the outer #eventLightbox
+   backdrop itself (see bindLightboxControls in js/event-page.js) — a
+   click that lands just outside the button's own 44px circle but still
+   visually "on the button" (a near-miss, e.g. clicking the button's own
+   drop-shadow/glow area) has e.target === the backdrop, not the button,
+   and closes the lightbox instead of navigating. This pseudo-element
+   extends the BUTTON's own hit area outward by 12px on every side
+   without changing what the button looks like — it's transparent and
+   sits behind the button's own background/icon (z-index below the
+   button's normal stacking), so it only affects click/tap targeting,
+   not appearance. Kept as a buffer around the button rather than, say,
+   shrinking the backdrop's close-sensitive area globally, since the
+   ask was specifically about the buttons' own margin of error. */
+.event-lightbox-nav::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  bottom: -12px;
+  left: -12px;
+  border-radius: 50%;
+}
+
 .event-lightbox-nav:hover { 
   background: rgba(255,255,255,0.25); 
   transform: translateY(-50%);
@@ -1166,6 +1249,13 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 }
 
 @media (prefers-color-scheme: dark) {
+    /* Declares to the browser that this page has ITS OWN dark styling,
+       so it stops silently auto-dark-styling native form controls
+       (inputs, selects, scrollbars) with its own heuristics on top of
+       ours — the root cause of the white-on-white #shareLinkInput bug
+       fixed below. Scoped to this media query (not a page-wide :root
+       rule) so it only takes effect exactly when our own dark rules do. */
+    :root { color-scheme: dark; }
     body { background: #1a1a1a; color: #e5e7eb; }
     header { background: #2a2a2a !important; border-color: #3a3a3a; }
     .bg-white { background: #2a2a2a !important; }
@@ -1179,7 +1269,12 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
     .leaflet-container { background: #1a1a1a; }
     .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
     .leaflet-popup-tip { background: #2a2a2a !important; }
-    .listing-description { background: #2a2a2a; border-color: #404040; }
+    /* color explicitly set (not just background) — this element's
+       light-mode rule sets color:#1f2937 directly on itself, so it does
+       NOT fall back to inherit body's dark color:#e5e7eb the way plain
+       text without its own color declaration would. Confirmed reported
+       bug: description rendered as near-black text on a dark card. */
+    .listing-description { background: #2a2a2a; border-color: #404040; color: #e5e7eb; }
     .listing-description.collapsed::after { background: linear-gradient(to bottom, rgba(42,42,42,0), rgba(42,42,42,1)); }
     .description-divider-line, .additional-info-table, .additional-info-row { border-color: #404040; }
     .description-divider { background: #2a2a2a !important; border-color: #404040 !important; }
@@ -1193,6 +1288,11 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
        color and need their own override. */
     .entity-info-card-name { color: #e5e7eb; }
     .entity-info-card-line { color: #9ca3af; }
+    /* "Organized By" / "Venue" (and "Hosted At") section headings —
+       .entity-info-section h3 sets color:#111827 directly in light
+       mode, same non-inheriting situation as .listing-description
+       above. Confirmed reported bug: these titles stayed near-black. */
+    .entity-info-section h3 { color: #e5e7eb; }
     /* Hardcoded literal white background (not a Tailwind .bg-white
        utility, so the generic rule above doesn't reach it). */
     .event-price-chip { background: #1f1f1f; color: #7ab8f5; border-color: #045093; }
@@ -1213,6 +1313,20 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
     .add-to-calendar-menu { background: #2a2a2a; border-color: #404040; }
     .add-to-calendar-menu a { color: #e5e7eb; border-bottom-color: #404040; }
     .add-to-calendar-menu a:hover { background: #333; }
+    /* Share modal's "Copy link" field. The modal panel itself picks up
+       the generic ".bg-white { background:#2a2a2a !important }" rule
+       above, but #shareLinkInput is a plain <input> with no bg-white
+       class of its own, and browsers do not inherit form-control
+       color/background from ancestors by default — instead, when the
+       OS/browser is in dark mode and the page never declares
+       color-scheme, Chromium-based browsers auto-invert native <input>
+       TEXT color to a light shade while leaving the box's own
+       (unset/white) background alone, producing literal white-on-white:
+       confirmed reported bug ("background is white and text is
+       white"). Setting both explicitly, rather than only one, is what
+       actually fixes it — leaving background alone and only fixing
+       color would still auto-invert differently across browsers. */
+    #shareLinkInput { background: #1f1f1f; color: #e5e7eb; border-color: #404040; }
 }
 
 </style>
