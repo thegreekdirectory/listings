@@ -222,7 +222,7 @@ function buildEventsPageHeadAndHero(upcomingEvents) {
 <div data-partial="header"></div>
 
 <main>
-    <div class="max-w-7xl mx-auto px-4 pt-24 pb-2">
+    <div class="max-w-7xl mx-auto px-4 pt-4">
         <section class="events-hero" aria-label="Events hero">
             <div class="events-hero-content">
                 <h1>Events</h1>
