@@ -566,50 +566,80 @@ or distribution of this code can result in legal action to the fullest extent pe
     border-radius: 8px;
 }
 
-/* Map popup subtitle/link — .map-popup-content and .map-popup-title
-   (used alongside these in js/events.js) are real shared classes from
-   css/listings.css; these two are not (listings.css's only "subtitle"
-   popup class, .map-popup-tagline, is specifically a business tagline
-   field, so it isn't reused here for an event's date/time line). */
-.event-map-popup-sub {
-    font-size: 12px;
-    color: #6b7280;
-    margin: 2px 0 6px;
-}
-
-.event-map-popup-link {
-    font-size: 12px;
-    font-weight: 600;
-    color: #045093;
-    text-decoration: none;
-}
+/* Map popup subtitle/link classes removed — buildEventMapPopupContent()
+   (js/events.js) was rewritten for full visual parity with Listings'
+   own map popup (buildMapPopupContent() in js/listings.js) and now
+   reuses .map-popup-tagline directly for the date/time line, the same
+   real shared class Listings uses for its tagline line, rather than a
+   parallel event-specific class with duplicated styling. .map-popup,
+   .map-popup-content, .map-popup-title, .map-popup-badges, and
+   .map-popup-details (all from css/listings.css) are reused the same
+   way — matching class names is what makes several !important-layered
+   listings.css rules (e.g. .map-popup-title's forced inline-flex,
+   .map-popup-details svg's forced stroke color) actually apply to the
+   events popup too, not just visually-copied inline styles. */
 
 /* Homepage hero — mirrors listings.html's .listings-hero exactly (same
    background image + gradient overlay treatment, same h1/h2 structure),
    with copy tweaked for Events. Distinct from .event-region-hero above
    (a plain gradient, no photo) — the user asked specifically for the
    listings.html picture-hero style on the Events main page; regional
-   pages keep their existing simpler treatment unless asked to match too. */
+   pages keep their existing simpler treatment unless asked to match too.
+
+   Below is copied from listings.html's own <style> block property-for-
+   property (selector names only renamed events-hero/events-hero-content
+   to match this file's existing naming) after a follow-up request asked
+   for an EXACT match "in every aspect" — the version above this comment
+   got the general picture-hero idea right but several concrete values
+   still differed from Listings': overlay was blue-tinted
+   (rgba(4,80,147,...)) rather than Listings' neutral black
+   (rgba(0,0,0,...)), border-radius/min-height/background-position/
+   padding/font-sizing/mobile-breakpoint were all separately-chosen
+   values rather than Listings' actual ones. Using clamp() for h1/h2
+   font-size (not a fixed px + a separate mobile override) is itself
+   part of matching exactly — Listings scales continuously with viewport
+   width rather than jumping between two fixed sizes at one breakpoint. */
 .events-hero {
     position: relative;
-    border-radius: 12px;
     overflow: hidden;
-    min-height: 200px;
+    border-radius: 1rem;
+    min-height: 220px;
     display: flex;
-    align-items: center;
-    background-image: linear-gradient(rgba(4,80,147,0.55), rgba(4,80,147,0.75)), url('https://raw.githubusercontent.com/thegreekdirectory/listings/refs/heads/codex/audit-and-optimize-listings-directory-for-seo/images/chicago.jpeg');
+    align-items: flex-end;
+    margin-bottom: 1rem;
+    background-image:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.72) 100%),
+        url('https://raw.githubusercontent.com/thegreekdirectory/listings/refs/heads/codex/audit-and-optimize-listings-directory-for-seo/images/chicago.jpeg');
     background-size: cover;
-    background-position: center 65%;
-    margin-bottom: 16px;
+    background-position: center center;
+    background-repeat: no-repeat;
 }
-.events-hero-content { padding: 32px 28px; color: white; }
-.events-hero-content h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
-.events-hero-content h2 { font-size: 16px; font-weight: 500; color: rgba(255,255,255,0.9); }
+.events-hero-content {
+    color: #fff;
+    padding: 1.5rem;
+    max-width: 56rem;
+}
+.events-hero-content h1 {
+    font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+    line-height: 1.1;
+    margin: 0 0 0.5rem;
+    color: #fff;
+}
+.events-hero-content h2 {
+    font-size: clamp(1rem, 1.9vw, 1.25rem);
+    line-height: 1.35;
+    font-weight: 500;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.94);
+}
 @media (max-width: 640px) {
-    .events-hero { min-height: 150px; }
-    .events-hero-content { padding: 22px 18px; }
-    .events-hero-content h1 { font-size: 24px; }
-    .events-hero-content h2 { font-size: 14px; }
+    .events-hero {
+        min-height: 185px;
+        border-radius: 0.75rem;
+    }
+    .events-hero-content {
+        padding: 1rem;
+    }
 }
 
 .event-region-hero {
@@ -640,6 +670,19 @@ or distribution of this code can result in legal action to the fullest extent pe
        separate inline <style> block and never references these classes. */
     .event-calendar-day { min-height: 56px; }
     .event-region-hero h1 { font-size: 24px; }
+    /* Grid/List/Calendar/Map toggle: icons only, no text labels. Four
+       labeled buttons ("Grid" / "List" / "Calendar" / "Map") next to the
+       Filters button and the sort <select> don't fit a phone-width
+       toolbar without wrapping or squeezing; the labels are the part
+       that can go without losing the toggle's function, since the four
+       icons are already visually distinct from each other (grid squares,
+       horizontal lines, calendar, map pin) and match the icon vocabulary
+       used elsewhere on the site. Padding tightened from 6px 10px to
+       6px 8px on the buttons themselves so four icon-only buttons at
+       roughly equal width look like an intentional icon-toggle rather
+       than a labeled toggle with the labels just cut off. */
+    .events-view-toggle-label { display: none; }
+    .events-view-toggle button { padding: 6px 8px; }
 }
 
 /* ICS feed subscribe dropdown (toolbar "Subscribe" button) — same
@@ -686,12 +729,142 @@ or distribution of this code can result in legal action to the fullest extent pe
     .event-calendar-day-num { color: #b0b0b0; }
     .event-calendar-more { color: #6b7280; }
 
-    /* events.js's own class names for map popup text — distinct from
-       listings.css's generic .map-popup-* classes, so not reached by
-       listings.css's own dark-mode rules for those. */
-    .event-map-popup-sub { color: #9ca3af; }
-    .event-map-popup-link { color: #7ab8f5; }
+    /* .map-popup-title / .map-popup-tagline / .map-popup-details dark
+       coverage now comes from css/listings.css's own dark-mode block
+       (loaded on every events page too) since the popup was rewritten
+       to use those real shared classes — no separate event-specific
+       dark rule needed here anymore. */
     .add-to-calendar-menu { background: #2a2a2a; border-color: #404040; }
     .add-to-calendar-menu a, .add-to-calendar-menu button { color: #e5e7eb; border-bottom-color: #404040; }
     .add-to-calendar-menu a:hover, .add-to-calendar-menu button:hover { background: #333; }
+}
+
+/* Both .load-more-btn (css/listings.css, display:block) and .hidden
+   (src/output.css, display:none) are single-class selectors — equal
+   specificity, so cascade ORDER decides, and output.css loads before
+   listings.css in every page that includes both (events.html,
+   functions/events/index.js) — meaning .load-more-btn's display:block
+   always won outright whenever both classes were present on the same
+   element, regardless of which was added/removed last in JS. Confirmed
+   reported bug: the button stayed visible with no more events to load,
+   because toggling the "hidden" class in js/events.js (loadMoreOffset
+   >= filteredEvents.length) was having no visual effect at all. This
+   file (css/events.css) loads LAST of the three, so this rule is what
+   actually wins now. */
+.load-more-btn.hidden { display: none; }
+
+/* .event-list-row shares .hover-bounce's transition (transition: all
+   0.3s — NOT redefined here, so it's untouched and still fluid) but
+   overrides just the transform VALUE. .hover-bounce:hover's generic
+   scale(1.1) — a 10% size increase — was designed for small square
+   elements (icon buttons, small cards) where a 10% grow reads as a
+   subtle bounce; applied to a ~full-width row (used by both the List
+   view and the Calendar view's day-detail popover — both call
+   buildEventListRowHtml, see js/events.js) the same 10% growth becomes
+   a large, jarring jump in absolute pixels. Confirmed reported bug:
+   "expands wayyyy too much" while still keeping "the current
+   fluidity." A more modest scale (matching .related-listing-card:hover
+   and .action-cta-btn.hover-bounce:hover, both 1.03–1.04, used
+   elsewhere on the site for exactly this same full-width-row
+   situation) keeps the same eased transition but with a size change
+   proportional to the element's own width.
+
+   NOTE ON SPECIFICITY: this can't just rely on being a same-specificity
+   selector that "loads later," the way the earlier .load-more-btn.hidden
+   fix in this same file safely could — checking the actual <link> order
+   in both events.html and functions/events/index.js shows css/index.css
+   (where .hover-bounce lives) is loaded AFTER css/events.css on this
+   page, the opposite of what a source-order-only override would need.
+   The .event-list-row.hover-bounce compound selector below has two
+   classes instead of one, which beats .hover-bounce's single-class
+   selector on specificity alone regardless of file load order — a more
+   robust fix than depending on this page's current stylesheet ordering,
+   which could plausibly change again in a later edit. */
+.event-list-row.hover-bounce:hover { transform: scale(1.02); }
+
+/* ============================================
+   ADVANCED FILTER SYSTEM — Side View by default
+   ============================================
+   #eventDesktopLayout ID-scoped (NOT the bare .desktop-layout class,
+   which is also used — unrelated — by listings.html/css/listings.css;
+   scoping to this page's own id keeps the two systems from ever
+   interacting even though both files load together here). Unlike
+   Listings' own left-sidebar mode (an opt-in user preference that
+   defaults OFF — see js/listings.js's "let filterPosition = 'top'"),
+   this is the default and only desktop layout for Events' Grid/List
+   views specifically, per the request: "default is Side View, but
+   when it's in Calendar or Map it toggles on top." Calendar/Map are
+   structurally OUTSIDE #eventDesktopLayout (see
+   functions/events/_app-shell.js) and js/events.js's
+   updateFilterPanelPosition() moves #eventFilterPanel out of the
+   sidebar slot and back to its original overlay position whenever
+   either of those views is active, so no view-specific CSS branch is
+   needed here — the plain mobile/overlay rules below already apply
+   correctly whenever the panel is in that slot. */
+@media (min-width: 1024px) {
+    #eventDesktopLayout {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+    }
+    #eventDesktopFiltersSlot {
+        width: 280px;
+        flex-shrink: 0;
+    }
+    #eventDesktopFiltersSlot:empty {
+        display: none;
+    }
+    .desktop-content {
+        flex: 1;
+        min-width: 0;
+    }
+    /* #eventFilterPanel while it's sitting inside the sidebar slot —
+       "sidebar mode." Same sticky/bordered/self-contained-scroll
+       treatment as Listings' #filterPanel.desktop-sidebar rule, applied
+       here via a plain descendant selector rather than a class toggle
+       on the panel itself, since which slot the panel is IN is already
+       the signal for which mode it's in — no second class needed to
+       track the same state a second way. */
+    #eventDesktopFiltersSlot #eventFilterPanel {
+        display: block !important;
+        position: sticky;
+        top: 80px;
+        height: fit-content;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: white;
+    }
+    /* Suppress the mobile-style page-width wrapper and Close (✕) button
+       once inside the sidebar — a persistent sidebar doesn't need a
+       close button the way a slide-down overlay does, and the
+       max-w-7xl/mx-auto/px-4 wrapper below was sized for full page
+       width, not a 280px column. */
+    #eventDesktopFiltersSlot #eventFilterPanel > div {
+        max-width: none;
+        margin: 0;
+        padding: 16px;
+    }
+    #eventDesktopFiltersSlot #eventCloseFilterBtn {
+        display: none;
+    }
+    /* Toggled on <body> by updateFilterPanelPosition() (js/events.js)
+       whenever the panel is in sidebar mode — see that function's own
+       comment for why the button needs hiding here specifically. */
+    body.events-sidebar-mode #eventFilterBtn {
+        display: none;
+    }
+}
+
+/* .split-view-map is a real shared class (css/listings.css) reused here
+   too, but that file's own height rule for the map div inside it is
+   scoped to the specific IDs #map/#splitMap (css/listings.css:740-744)
+   and won't match #splitEventsMap — confirmed by checking that
+   selector directly rather than assuming class-based rules always cover
+   descendant-ID-scoped ones too. Without this, #splitEventsMap has no
+   explicit height inside its flex parent and collapses to 0. */
+.split-view-map #splitEventsMap {
+    height: 100%;
+    max-height: none;
 }
