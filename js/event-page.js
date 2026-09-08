@@ -60,9 +60,34 @@ or distribution of this code can result in legal action to the fullest extent pe
         // only one CTA row is visible per viewport width, but a resize
         // between opening and clicking could leave a stale one open.
         document.querySelectorAll('.add-to-calendar-menu.active').forEach((el) => {
-            if (el.id !== menuId) el.classList.remove('active');
+            if (el.id !== menuId) { el.classList.remove('active'); el.classList.remove('opens-up'); }
         });
         menu.classList.toggle('active', isOpening);
+
+        // Smart flip: measure whether the menu actually fits between the
+        // button and the viewport bottom BEFORE deciding which way it
+        // opens. Done on every open (not just once) since the button's
+        // position relative to the viewport can change between opens —
+        // most relevantly, the desktop CTA card sits in a position:sticky
+        // sidebar, so the same button can be near the top of the viewport
+        // on one open and near the bottom on another, purely from page
+        // scroll position, with nothing about the button itself changing.
+        // offsetHeight is read with the menu already toggled to .active
+        // above (display:block) — an element with display:none reports
+        // offsetHeight 0, which would make this always think the menu
+        // fits regardless of its real size.
+        if (isOpening) {
+            const wrap = menu.closest('.add-to-calendar-wrap');
+            const anchor = wrap ? wrap.querySelector('button, a') : null;
+            if (anchor) {
+                const anchorRect = anchor.getBoundingClientRect();
+                const spaceBelow = window.innerHeight - anchorRect.bottom;
+                const menuHeight = menu.offsetHeight;
+                menu.classList.toggle('opens-up', spaceBelow < menuHeight + 12);
+            }
+        } else {
+            menu.classList.remove('opens-up');
+        }
     }
 
     document.addEventListener('click', (e) => {
