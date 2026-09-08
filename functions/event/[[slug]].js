@@ -48,9 +48,26 @@ or distribution of this code can result in legal action to the fullest extent pe
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 
 export async function onRequestGet(context) {
-    const { params, env } = context;
+    const { params, env, request } = context;
     const slugSegments = Array.isArray(params.slug) ? params.slug : params.slug ? [params.slug] : [];
     const slug = slugSegments.map((segment) => decodeURIComponent(segment)).join('/');
+
+    // ?shareimg=<n> — set by the gallery share button (js/event-page.js)
+    // so the native share sheet's link preview shows whichever gallery
+    // image the visitor was actually looking at, rather than always the
+    // event poster. 1-indexed to match how the button numbers images
+    // for the person (matching the request's own example: "shareimg=19
+    // when there's only 16 images" implies counting from 1, not 0 — a
+    // 0-indexed scheme would call that same 16-image gallery's last
+    // valid index 15, not 16, and the request's phrasing treats 16 as
+    // the valid ceiling). Parsed here, right at the request boundary,
+    // rather than deep inside renderEventPage()/buildEventHead() — those
+    // functions already take a lot of parameters, and validating a raw
+    // query string value is a concern of handling the REQUEST, not of
+    // building the page from already-clean event data.
+    const requestUrl = new URL(request.url);
+    const shareImgParam = requestUrl.searchParams.get('shareimg');
+    const shareImgIndex = shareImgParam !== null ? parseInt(shareImgParam, 10) : null;
 
     if (!slug) {
         return htmlErrorResponse(renderErrorPage('Event not found.', 'This event does not exist or is not published.'), 404);
@@ -93,7 +110,7 @@ export async function onRequestGet(context) {
         console.error('Supabase organizer/venue/shortlink fetch failed:', err);
     }
 
-    const html = renderEventPage(event, organizerListing, venueListing, shortlinkPath);
+    const html = renderEventPage(event, organizerListing, venueListing, shortlinkPath, shareImgIndex);
 
     return new Response(html, {
         status: 200,
@@ -521,7 +538,7 @@ function buildAddToCalendarButton(event, mobile, isoStart, isoEnd, locationLabel
     const menuHtml = `
         <div class="add-to-calendar-menu hidden" id="${menuId}">
             <a href="${googleUrl}" target="_blank" rel="noopener">Google Calendar</a>
-            <a href="${icsDownloadUrl}">Apple Calendar (.ics)</a>
+            <a href="${icsDownloadUrl}">Apple Calendar</a>
             <a href="${outlookUrl}" target="_blank" rel="noopener">Outlook</a>
             <a href="${yahooUrl}" target="_blank" rel="noopener">Yahoo Calendar</a>
             <a href="${icsDownloadUrl}">Other (.ics file)</a>
@@ -664,7 +681,7 @@ function buildMapSection(event) {
         </div>`;
 }
 
-function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
+function renderEventPage(event, organizerListing, venueListing, shortlinkPath, shareImgIndex) {
     const decodedTitle = decodeEscapedText(event.title || '');
     const decodedTagline = decodeEscapedText(event.tagline || '');
     const description = sanitizeEventDescription(event.description || '');
@@ -673,6 +690,26 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
     const timingBadge = TIMING_BADGE_HTML[timingState] || '';
     const eventUrl = `https://thegreekdirectory.org/event/${escapeHtml(event.slug || '')}`;
     const posterImage = event.poster_image || '';
+    // og:image override for the gallery share button (js/event-page.js) —
+    // ?shareimg=<n> picks gallery[n-1].url instead of the poster for the
+    // OG tags specifically, so a native share sheet's link preview shows
+    // whichever image the visitor was actually looking at. Every
+    // invalid case falls through to the plain poster, per spec: absent
+    // param (shareImgIndex is null from the caller), NaN (a non-numeric
+    // value like "shareimg=abc" — parseInt there already produced NaN
+    // before this function ever saw it), zero or negative (not a valid
+    // 1-indexed position), and out-of-range high (e.g. shareimg=19 on a
+    // 16-image gallery — Number.isInteger + the upper-bound check below
+    // together cover all of these without special-casing each one).
+    const gallery = Array.isArray(event.gallery) ? event.gallery : [];
+    const ogImage = (
+        shareImgIndex !== null
+        && Number.isInteger(shareImgIndex)
+        && shareImgIndex >= 1
+        && shareImgIndex <= gallery.length
+        && gallery[shareImgIndex - 1]
+        && gallery[shareImgIndex - 1].url
+    ) ? gallery[shareImgIndex - 1].url : posterImage;
     const locationLabel = [event.city, event.state].filter(Boolean).join(', ');
     const hasStreetAddress = typeof event.address === 'string' && event.address.trim().length > 0;
     // Deduped, escaped subcategory tags for the category-pill toggle
@@ -887,8 +924,8 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath) {
 <meta property="og:site_name" content="The Greek Directory">
 <meta property="og:url" content="${eventUrl}">
 <meta property="og:locale" content="en_US">
-${posterImage ? `<meta property="og:image" content="${escapeHtml(posterImage)}">
-<meta property="og:image:secure_url" content="${escapeHtml(posterImage)}">
+${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">
+<meta property="og:image:secure_url" content="${escapeHtml(ogImage)}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/jpeg">
@@ -897,7 +934,7 @@ ${posterImage ? `<meta property="og:image" content="${escapeHtml(posterImage)}">
 <meta name="twitter:site" content="@greekdirectory">
 <meta name="twitter:title" content="${escapeHtml(decodedTitle)} | The Greek Directory">
 <meta name="twitter:description" content="${escapeHtml(event.meta_description || decodedTagline || decodedTitle)}">
-${posterImage ? `<meta name="twitter:image" content="${escapeHtml(posterImage)}">` : ''}
+${ogImage ? `<meta name="twitter:image" content="${escapeHtml(ogImage)}">` : ''}
 
 <link rel="stylesheet" href="/css/pwa.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -1174,6 +1211,43 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
   animation: none;
 }
 
+/* Gallery share button — sits to the left of the existing close button
+   (both top:16px, right offset staggered so they don't overlap: close
+   is right:20px at ~32px wide including its click area, share needs to
+   clear that plus a gap). Sized/styled identically to .event-lightbox-
+   nav's circular icon-button treatment (44px, translucent white
+   background, no hover-bounce) rather than matching .event-lightbox-
+   close's bare "×" glyph styling — a share icon needs a visible tap
+   target the way the prev/next arrows do, unlike the close "×" which
+   is legible as a large glyph on its own with no background needed. */
+.event-lightbox-share {
+  position: absolute;
+  top: 16px;
+  right: 72px;
+  color: white;
+  background: rgba(255,255,255,0.12);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  animation: none;
+}
+
+.event-lightbox-share:hover {
+  background: rgba(255,255,255,0.25);
+  transform: none;
+  animation: none;
+}
+
+@media (max-width: 767px) {
+  .event-lightbox-share { top: 10px; right: 62px; width: 36px; height: 36px; }
+}
+
 .event-lightbox-nav { 
   position: absolute; 
   top: 50%; 
@@ -1267,6 +1341,23 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
     .shadow-sm, .shadow, .shadow-lg, .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
     img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
     .leaflet-container { background: #1a1a1a; }
+    /* OpenStreetMap tiles are raster images — no CSS property changes
+       their own pixel colors, so the .leaflet-container background
+       above only shows through in gaps/while tiles are loading; the map
+       itself stayed visually light-mode regardless. The standard fix
+       for this is a CSS filter on just the tile pane: invert(1) flips
+       every tile's colors (light roads/water become dark, dark text
+       becomes light) and hue-rotate(180deg) corrects the resulting
+       color-wheel shift so blues stay blue instead of becoming orange
+       (invert alone would turn a blue lake orange). Scoped to
+       .leaflet-tile-pane specifically, NOT the whole map/container —
+       markers and popups live in separate Leaflet panes
+       (.leaflet-marker-pane, .leaflet-popup-pane) that this filter
+       never touches, so the custom pin icon and popup content keep
+       their real colors instead of also being inverted. brightness/
+       contrast tuned down slightly from the raw invert so the result
+       reads as a dark map rather than a jarring photo-negative. */
+    .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9); }
     .leaflet-popup-content-wrapper { background: #2a2a2a !important; color: #e5e5e5 !important; }
     .leaflet-popup-tip { background: #2a2a2a !important; }
     /* color explicitly set (not just background) — this element's
@@ -1414,7 +1505,7 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
     <div class="claim-listing-section">
         <div class="action-cta-row">
             <div class="action-cta-slot action-cta-slot-wide">
-                <a href="/edit/event?id=${escapeHtml(event.id)}" class="action-cta-btn inline-flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;" target="_blank"><svg width="1em" height="1em" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path d="m104.175 90.97-4.252 38.384 38.383-4.252L247.923 15.427V2.497L226.78-18.646h-12.93zm98.164-96.96 31.671 31.67" style="fill:none;stroke:#FFFFFF;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;" transform="translate(-77.923 40.646)"/><path d="m195.656 33.271-52.882 52.882" style="fill:none;stroke:#FFFFFF;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:5;" transform="translate(-77.923 40.646)"/></svg><span>Suggest Edit</span></a>
+                <a href="/edit/event?id=${escapeHtml(event.id)}" class="action-cta-btn inline-flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold hover-bounce" style="background-color:#045093;" target="_blank"><svg width="1em" height="1em" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" fill="none" aria-hidden="true" style="display:block;flex-shrink:0;"><path d="m104.175 90.97-4.252 38.384 38.383-4.252L247.923 15.427V2.497L226.78-18.646h-12.93zm98.164-96.96 31.671 31.67" style="fill:none;stroke:#FFFFFF;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;" transform="translate(-77.923 40.646)"/><path d="m195.656 33.271-52.882 52.882" style="fill:none;stroke:#FFFFFF;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:5;" transform="translate(-77.923 40.646)"/></svg><span>Suggest Edit</span></a>
             </div>
         </div>
     </div>
@@ -1429,6 +1520,9 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 <!-- Gallery Lightbox -->
 <div id="eventLightbox" class="hidden fixed inset-0 bg-black bg-opacity-90 items-center justify-center z-50" role="dialog" aria-modal="true" aria-label="Image viewer">
     <button id="eventLightboxClose" class="event-lightbox-close" aria-label="Close">&times;</button>
+    <button id="eventLightboxShare" class="event-lightbox-share" aria-label="Share this image" title="Share">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342a3 3 0 100-2.684m0 2.684a3 3 0 100 2.684m0-2.684l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 5.658a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+    </button>
     <button id="eventLightboxPrev" class="event-lightbox-nav event-lightbox-prev" aria-label="Previous image">&#10094;</button>
     <img id="eventLightboxImage" class="event-lightbox-image" src="" alt="">
     <button id="eventLightboxNext" class="event-lightbox-nav event-lightbox-next" aria-label="Next image">&#10095;</button>
