@@ -58,6 +58,18 @@ or distribution of this code can result in legal action to the fullest extent pe
     let userLocationMarker = null;
     let splitUserLocationMarker = null;
 
+    // Sidebar-filters visibility for Grid/List views specifically —
+    // hidden by default per request; a "Filters" button + results count
+    // (mirroring Listings' own #resultsCount + desktopFilterToggleBtn
+    // pairing inside .desktop-content) shows when hidden, and a "Hide
+    // filters" control inside the sidebar itself hides it again. This is
+    // separate from whether the panel is currently sitting in the sidebar
+    // slot vs. the overlay slot (that's the view-driven placement handled
+    // by updateFilterPanelPosition() below) — this is specifically
+    // whether the Grid/List sidebar is shown or collapsed once it IS the
+    // relevant slot.
+    let sidebarFiltersVisible = false;
+
     // Regional-page mode — set as a global by _render-region-page.js
     // before this script loads. See that file's header comment.
     const REGION = window.TGD_EVENTS_REGION || null;
@@ -179,10 +191,29 @@ or distribution of this code can result in legal action to the fullest extent pe
         bindToolbarEvents();
         bindFilterPanelEvents();
         setView(currentView, { skipSave: true });
+        updateEventsGridColumns();
+        window.addEventListener('resize', updateEventsGridColumns);
 
         await loadEvents();
         renderCategoryFilters(restoredCategories);
         applyFiltersAndRender();
+
+        // Same sequence as js/listings.js's own DOMContentLoaded handler:
+        // the IP estimate always runs (no permission needed for it), and
+        // separately, precise browser geolocation only auto-requests if
+        // the shared tgd_location_permission cookie (or the browser's own
+        // Permissions API) says it was already granted — never asks for
+        // permission out of the blue on a first-ever visit.
+        estimateEventsLocationByIP();
+
+        let shouldAutoRequestPreciseLocation = getStoredLocationPermission() === true;
+        const browserPermission = await syncEventsLocationPermissionFromBrowser();
+        if (!shouldAutoRequestPreciseLocation) {
+            shouldAutoRequestPreciseLocation = browserPermission === true || getStoredLocationPermission() === true;
+        }
+        if (shouldAutoRequestPreciseLocation) {
+            requestEventsPreciseLocation();
+        }
     }
 
     // Hides the location-search filter (redundant on a page already
@@ -225,12 +256,20 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     function bindToolbarEvents() {
         const filterBtn = document.getElementById('eventFilterBtn');
-        const filterPanel = document.getElementById('eventFilterPanel');
         const closeFilterBtn = document.getElementById('eventCloseFilterBtn');
         const clearFiltersBtn = document.getElementById('eventClearFiltersBtn');
+        const showFiltersBtn = document.getElementById('eventShowFiltersBtn');
 
-        filterBtn?.addEventListener('click', () => filterPanel?.classList.toggle('hidden'));
-        closeFilterBtn?.addEventListener('click', () => filterPanel?.classList.add('hidden'));
+        // All three buttons now go through the same
+        // setSidebarFiltersVisible() — since sidebarFiltersVisible
+        // drives .hidden identically whether the panel is currently in
+        // the sidebar slot or the overlay slot (see
+        // updateFilterPanelPosition() below), there's no need to branch
+        // by which slot the panel happens to be in right now the way an
+        // earlier version of this function did.
+        filterBtn?.addEventListener('click', () => setSidebarFiltersVisible(!sidebarFiltersVisible));
+        closeFilterBtn?.addEventListener('click', () => setSidebarFiltersVisible(false));
+        showFiltersBtn?.addEventListener('click', () => setSidebarFiltersVisible(true));
         clearFiltersBtn?.addEventListener('click', clearAllFilters);
 
         const viewToggle = document.getElementById('eventsViewToggle');
@@ -464,6 +503,22 @@ or distribution of this code can result in legal action to the fullest extent pe
     // no-op moveTo when already in the target slot — appendChild on a
     // node already in that exact position is a harmless no-op, not a
     // detach/reattach that would lose scroll position or focus).
+    //
+    // Also OWNS the panel's .hidden class directly on every call, driven
+    // by ONE shared sidebarFiltersVisible flag regardless of which slot
+    // the panel currently occupies — rather than trusting whatever
+    // .hidden state happened to be left over from a different view's
+    // interaction. Confirmed root cause of a reported bug ("switching
+    // between Calendar/Map to another mode with filters open... filters
+    // disappear but there's still a big space that won't go away"): the
+    // panel's visibility used to depend on .hidden's state from a
+    // separate code path (the mobile overlay's Filters/✕ buttons), which
+    // could easily be stale relative to whichever slot the panel had
+    // just moved into. Using one flag for both contexts also directly
+    // satisfies "filters should be kept on when switching" — opening
+    // Filters in Map and switching to Grid (or vice versa) keeps the
+    // same open/closed state rather than each view tracking it
+    // separately and disagreeing with each other.
     function updateFilterPanelPosition(view) {
         const panel = document.getElementById('eventFilterPanel');
         const sidebarSlot = document.getElementById('eventDesktopFiltersSlot');
@@ -476,17 +531,59 @@ or distribution of this code can result in legal action to the fullest extent pe
             targetSlot.appendChild(panel);
         }
 
-        // .events-sidebar-mode on <body> is a pure CSS hook (see
-        // css/events.css) that hides the "Filters" toolbar button at
-        // desktop widths while the panel is sitting in the sidebar —
-        // clicking it would otherwise appear to do nothing, since a
-        // persistent sticky sidebar isn't something the button's
-        // show/hide toggle logic (bindToolbarEvents' plain
-        // classList.toggle('hidden')) is meant to control. Mirrors
-        // js/listings.js's own checkFilterPosition(), which hides
-        // #desktopFilterToggleBtn the same way once its (opt-in, off by
-        // default there) left-sidebar mode is active.
-        document.body.classList.toggle('events-sidebar-mode', wantsSidebar);
+        panel.classList.toggle('hidden', !sidebarFiltersVisible);
+
+        // .events-sidebar-mode on <body> now means "the sidebar is
+        // actually visible right now" (view is Grid/List AND the user
+        // hasn't hidden it) — used by css/events.css to hide BOTH the
+        // main toolbar's #eventFilterBtn (redundant once the sidebar
+        // itself is on screen) and the new .events-desktop-filters-row
+        // "Filters" button (same reasoning: don't show two different
+        // ways to reach the same panel at once).
+        document.body.classList.toggle('events-sidebar-mode', wantsSidebar && sidebarFiltersVisible);
+
+        // .events-desktop-filters-row's own Filters button + results
+        // count are the way IN when the sidebar is hidden — only
+        // relevant/shown for Grid/List (see the CSS's own 1024px gate
+        // for the width condition); toggled here so it doesn't need its
+        // own separate call site.
+        const desktopRow = document.getElementById('eventDesktopFiltersRow');
+        if (desktopRow) desktopRow.classList.toggle('hidden', !wantsSidebar);
+    }
+
+    // Shows or hides the filter panel — used for BOTH the Grid/List
+    // sidebar and the Calendar/Map overlay, since both are now driven by
+    // the same sidebarFiltersVisible flag (see updateFilterPanelPosition
+    // above). Called from #eventShowFiltersBtn / #eventFilterBtn (always
+    // shows) and #eventCloseFilterBtn (always hides).
+    function setSidebarFiltersVisible(visible) {
+        sidebarFiltersVisible = visible;
+        updateFilterPanelPosition(currentView);
+        updateEventsGridColumns();
+    }
+
+    // Phone-width column count for the Grid view specifically: 1 column
+    // normally, 2 while the filter panel is shown, 3 while it's hidden —
+    // per request. Below the existing 767px mobile breakpoint used
+    // throughout this file/css/events.css (not Tailwind's own "sm"
+    // 640px, and not the desktop 1024px sidebar breakpoint — "phone or
+    // similar-to-phone" maps to this file's established mobile
+    // threshold). Above 767px, .eventsContainer's own Tailwind
+    // grid-cols-1/sm:grid-cols-2/lg:grid-cols-3/xl:grid-cols-4 classes
+    // keep governing column count exactly as before — these three new
+    // classes only apply inside the same max-width:767px media query
+    // that already exists in css/events.css, so they can't affect wider
+    // viewports at all regardless of which one is applied. Uses the
+    // classic "set the class, let CSS resolve which media query and
+    // class combination wins" split (matching js/listings.js's own
+    // listings-2-col/listings-3-col pattern) rather than computing column
+    // count in JS — CSS media queries already know the viewport width
+    // and #eventsContainer's own display doesn't need to change.
+    function updateEventsGridColumns() {
+        const container = document.getElementById('eventsContainer');
+        if (!container) return;
+        container.classList.remove('event-grid-2-col', 'event-grid-3-col');
+        container.classList.add(sidebarFiltersVisible ? 'event-grid-2-col' : 'event-grid-3-col');
     }
 
     // -------------------------------------------------------------------
@@ -582,10 +679,20 @@ or distribution of this code can result in legal action to the fullest extent pe
     }
 
     function updateResultsCount() {
-        const el = document.getElementById('eventResultsCount');
-        if (!el) return;
         const n = filteredEvents.length;
-        el.textContent = `${n} event${n === 1 ? '' : 's'}${REGION ? ` in ${REGION.label}` : ''}`;
+        const label = `${n} event${n === 1 ? '' : 's'}${REGION ? ` in ${REGION.label}` : ''}`;
+        // Two separate elements share this same count text: the main
+        // toolbar's #eventResultsCount (used at mobile width and
+        // whenever the sidebar is hidden) and the new desktop-only
+        // #eventDesktopResultsCount inside .events-desktop-filters-row
+        // (Listings' own equivalent pairing — "# events found... to the
+        // left of the filters button" — lives in .desktop-content, not
+        // the main toolbar, hence the second element rather than moving
+        // the original one and breaking its mobile-width role).
+        const el = document.getElementById('eventResultsCount');
+        if (el) el.textContent = label;
+        const desktopEl = document.getElementById('eventDesktopResultsCount');
+        if (desktopEl) desktopEl.textContent = label;
     }
 
     function showEmptyState(show, customMessage) {
@@ -672,6 +779,19 @@ or distribution of this code can result in legal action to the fullest extent pe
         if (event.status === 'cancelled') badges.push('<span class="event-badge event-badge-cancelled">Cancelled</span>');
         else if (event.status === 'postponed') badges.push('<span class="event-badge event-badge-postponed">Postponed</span>');
         else if (event.status === 'sold_out') badges.push('<span class="event-badge event-badge-soldout">Sold Out</span>');
+        // Price/free badge — free events always get a "Free" badge; paid
+        // events only get a badge if a price_range was actually entered
+        // (matching the request precisely: "If there is no price range,
+        // don't show it at all" — a paid event with no price_range value
+        // gets no price badge whatsoever, not an empty or placeholder
+        // one). Separate from the .event-price-chip already used
+        // elsewhere in this file (buildEventListRowHtml) — that's a
+        // differently-styled inline chip, not part of the .event-badge
+        // family used by Grid/List/map-popup/split-view; the request
+        // specifically asked for "another events badge," i.e. one more
+        // member of that same badge family, not reusing the chip style.
+        if (event.is_free) badges.push('<span class="event-badge event-badge-free">Free</span>');
+        else if (event.price_range) badges.push(`<span class="event-badge event-badge-price">${escapeHtml(event.price_range)}</span>`);
         return badges;
     }
 
@@ -681,20 +801,32 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         const locationLabel = [event.city, event.state].filter(Boolean).join(', ');
 
+        // Badges now render INSIDE the <a class="event-card"> (as a child
+        // of the poster/placeholder wrapper), not as a sibling .event-card-
+        // badges div outside it — confirmed reported bug: .event-card:hover
+        // sets a transform, and any element with a non-none transform forms
+        // a new CSS stacking context, which then paints ABOVE previously-
+        // painted DOM siblings regardless of source order. The badges div
+        // used to come right before <a class="event-card"> in the markup,
+        // so the instant the card gained its hover stacking context it
+        // visually covered its own badges. Listings avoids this entirely by
+        // nesting its own badges inside the <a> (see js/listings.js's own
+        // card builder, ".absolute top-2 left-2..." sits inside the image
+        // wrapper which is itself inside the <a>) — same fix applied here.
         return `
-        <div class="event-card-wrap">
-            ${badges.length ? `<div class="event-card-badges">${badges.join('')}</div>` : ''}
-            <a class="event-card card-shadow" href="/event/${escapeAttr(event.slug || '')}">
+        <a class="event-card card-shadow" href="/event/${escapeAttr(event.slug || '')}">
+            <div class="event-card-media">
                 ${event.poster_image
                     ? `<img class="event-card-poster" src="${escapeAttr(event.poster_image)}" alt="${escapeAttr(event.title || '')}" loading="lazy">`
                     : `<div class="event-card-poster-placeholder"><span>${escapeHtml(event.category || 'Event')}</span></div>`}
-                <div class="event-card-body">
-                    <span class="event-card-date">${escapeHtml(dateLabel)}${timeLabel ? ` \u00b7 ${escapeHtml(timeLabel)}` : ''}</span>
-                    <span class="event-card-title">${escapeHtml(event.title || '')}</span>
-                    ${locationLabel ? `<span class="event-card-location">${escapeHtml(event.custom_venue_name || locationLabel)}</span>` : ''}
-                </div>
-            </a>
-        </div>`;
+                ${badges.length ? `<div class="event-card-badges">${badges.join('')}</div>` : ''}
+            </div>
+            <div class="event-card-body">
+                <span class="event-card-date">${escapeHtml(dateLabel)}${timeLabel ? ` \u00b7 ${escapeHtml(timeLabel)}` : ''}</span>
+                <span class="event-card-title">${escapeHtml(event.title || '')}</span>
+                ${locationLabel ? `<span class="event-card-location">${escapeHtml(event.custom_venue_name || locationLabel)}</span>` : ''}
+            </div>
+        </a>`;
     }
 
     // -------------------------------------------------------------------
@@ -819,27 +951,145 @@ or distribution of this code can result in legal action to the fullest extent pe
     // using events' coordinates jsonb field instead of listings.coordinates.
     // -------------------------------------------------------------------
 
-    // "Current Location" — a focused port of js/listings.js's
-    // requestPreciseLocation()/addUserLocationMarker(): precise
-    // browser-geolocation-on-click, recentering the map and dropping a
-    // marker. Deliberately NOT porting that file's estimateLocationByIP()
-    // / estimatedUserLocation / radius-filter integration alongside it —
-    // those exist there to feed a distance-based sort/radius filter
-    // events has no equivalent of (confirmed: no radius filter anywhere
-    // in this file or in #eventFilterPanel), so porting the automatic
-    // IP-estimation-on-load machinery too would be introducing a new,
-    // unrequested sorting feature rather than the "Current Location...
-    // functionality EXACTLY like in Listings" that was actually asked
-    // for — the button's own click-to-locate behavior, not everything
-    // else that happens to reference userLocation in that file.
-    const LOCATION_PERMISSION_STORAGE_KEY = 'tgd_events_location_permission';
+    // "Current Location" / approximate-location system — full port of
+    // js/listings.js's own requestPreciseLocation() / estimateLocationByIP()
+    // / getPreferredMapCenter() / updateEstimatedLocationCircle() /
+    // storeLocationPermission() pairing. An earlier pass on this file
+    // deliberately left out estimateLocationByIP()/the estimated-location
+    // circle, reasoning it existed only to feed Listings' distance-based
+    // sort/radius filter (which events has no equivalent of) — a
+    // follow-up request made clear the approximate-location bubble is
+    // wanted as its own thing here too ("the first thing that pops up...
+    // should be current location (if given) or the approximate location
+    // bubble exactly like in listings"), so this now ports that half of
+    // the system as well.
+    //
+    // Uses the SAME cookie name Listings uses (tgd_location_permission),
+    // not a separate events-only key — per "using the same cookie", so a
+    // permission grant on one page carries over to the other rather than
+    // asking twice for what is, from the visitor's perspective, one
+    // permission for one site.
+    const LOCATION_PERMISSION_COOKIE = 'tgd_location_permission';
+    const LOCATION_PERMISSION_STORAGE_KEY = 'tgd_location_permission';
 
-    function storeEventsLocationPermission(granted) {
+    function setSharedCookie(name, value, days) {
+        const expires = new Date(Date.now() + days * 864e5).toUTCString();
+        document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+    }
+
+    function getSharedCookie(name) {
+        const nameEQ = `${name}=`;
+        const cookies = document.cookie.split('; ');
+        for (let i = 0; i < cookies.length; i++) {
+            if (cookies[i].indexOf(nameEQ) === 0) return decodeURIComponent(cookies[i].substring(nameEQ.length));
+        }
+        return '';
+    }
+
+    function getStoredLocationPermission() {
+        const stored = getSharedCookie(LOCATION_PERMISSION_COOKIE);
+        if (stored === 'true') return true;
+        if (stored === 'false') return false;
         try {
-            localStorage.setItem(LOCATION_PERMISSION_STORAGE_KEY, granted ? 'true' : 'false');
+            const localStored = localStorage.getItem(LOCATION_PERMISSION_STORAGE_KEY);
+            if (localStored === 'true') return true;
+            if (localStored === 'false') return false;
         } catch (_) {
             // no-op — private browsing / storage disabled
         }
+        return null;
+    }
+
+    function storeEventsLocationPermission(granted) {
+        setSharedCookie(LOCATION_PERMISSION_COOKIE, granted ? 'true' : 'false', 365);
+        try {
+            localStorage.setItem(LOCATION_PERMISSION_STORAGE_KEY, granted ? 'true' : 'false');
+        } catch (_) {
+            // no-op
+        }
+    }
+
+    async function syncEventsLocationPermissionFromBrowser() {
+        if (!navigator.permissions || typeof navigator.permissions.query !== 'function') return null;
+        try {
+            const status = await navigator.permissions.query({ name: 'geolocation' });
+            if (status.state === 'granted') { storeEventsLocationPermission(true); return true; }
+            if (status.state === 'denied') { storeEventsLocationPermission(false); return false; }
+        } catch (_) {
+            return null;
+        }
+        return null;
+    }
+
+    let estimatedLocationCircle = null;
+    let splitEstimatedLocationCircle = null;
+
+    function getPreferredEventsMapCenter() {
+        const location = userLocation || estimatedUserLocation;
+        if (location && typeof location.lat === 'number' && typeof location.lng === 'number') {
+            return { lat: location.lat, lng: location.lng, estimated: location.estimated };
+        }
+        return null;
+    }
+
+    function centerEventsMapOnPreferredLocation(mapInstance, zoomLevel) {
+        if (!mapInstance) return;
+        const preferred = getPreferredEventsMapCenter();
+        if (preferred) mapInstance.setView([preferred.lat, preferred.lng], zoomLevel || 13);
+        else mapInstance.setView([41.8781, -87.6298], 9);
+    }
+
+    function updateEstimatedEventsLocationCircle(mapInstance, existingCircle) {
+        if (!mapInstance || userLocation || !estimatedUserLocation) return existingCircle;
+        if (existingCircle) return existingCircle;
+        return window.L.circle([estimatedUserLocation.lat, estimatedUserLocation.lng], {
+            radius: 10000,
+            color: '#045093',
+            fillColor: '#045093',
+            fillOpacity: 0.15,
+            weight: 2,
+        }).addTo(mapInstance);
+    }
+
+    function clearEstimatedEventsLocationCircle(mapInstance, existingCircle) {
+        if (mapInstance && existingCircle) mapInstance.removeLayer(existingCircle);
+        return null;
+    }
+
+    // Runs unconditionally on page load (no permission needed — a plain
+    // IP lookup, not device geolocation), same as Listings' own
+    // estimateLocationByIP() call in its DOMContentLoaded handler. Gives
+    // the approximate-location bubble when precise location isn't (yet,
+    // or ever) granted.
+    async function estimateEventsLocationByIP() {
+        try {
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            if (data.latitude && data.longitude) {
+                estimatedUserLocation = {
+                    lat: data.latitude,
+                    lng: data.longitude,
+                    city: data.city,
+                    state: data.region_code,
+                    country: data.country_code,
+                    estimated: true,
+                };
+                if (!userLocation) {
+                    if (map) {
+                        estimatedLocationCircle = updateEstimatedEventsLocationCircle(map, estimatedLocationCircle);
+                        centerEventsMapOnPreferredLocation(map, 11);
+                    }
+                    if (window.splitEventsMap) {
+                        splitEstimatedLocationCircle = updateEstimatedEventsLocationCircle(window.splitEventsMap, splitEstimatedLocationCircle);
+                        centerEventsMapOnPreferredLocation(window.splitEventsMap, 11);
+                    }
+                }
+                return estimatedUserLocation;
+            }
+        } catch (e) {
+            console.error('IP location estimation failed:', e);
+        }
+        return null;
     }
 
     function requestEventsPreciseLocation() {
@@ -854,11 +1104,13 @@ or distribution of this code can result in legal action to the fullest extent pe
             locationButtonActive = true;
             updateLocateButtonActiveState();
             if (map) {
-                map.setView([userLocation.lat, userLocation.lng], 13);
+                estimatedLocationCircle = clearEstimatedEventsLocationCircle(map, estimatedLocationCircle);
+                centerEventsMapOnPreferredLocation(map, 13);
                 addEventsUserLocationMarker(map, false);
             }
             if (window.splitEventsMap) {
-                window.splitEventsMap.setView([userLocation.lat, userLocation.lng], 13);
+                splitEstimatedLocationCircle = clearEstimatedEventsLocationCircle(window.splitEventsMap, splitEstimatedLocationCircle);
+                centerEventsMapOnPreferredLocation(window.splitEventsMap, 13);
                 addEventsUserLocationMarker(window.splitEventsMap, true);
             }
         };
@@ -902,6 +1154,8 @@ or distribution of this code can result in legal action to the fullest extent pe
         if (!mapInstance || !userLocation) return;
         const existing = isSplit ? splitUserLocationMarker : userLocationMarker;
         if (existing) mapInstance.removeLayer(existing);
+        if (isSplit) splitEstimatedLocationCircle = clearEstimatedEventsLocationCircle(mapInstance, splitEstimatedLocationCircle);
+        else estimatedLocationCircle = clearEstimatedEventsLocationCircle(mapInstance, estimatedLocationCircle);
         const userIcon = window.L.divIcon({
             html: '<div style="width: 16px; height: 16px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>',
             className: '', iconSize: [22, 22], iconAnchor: [11, 11],
@@ -941,18 +1195,39 @@ or distribution of this code can result in legal action to the fullest extent pe
         return [coords.lat, coords.lng];
     }
 
+    // On first-ever init (map is null), the map centers on the visitor's
+    // preferred location (precise if granted, IP-estimate otherwise, per
+    // getPreferredEventsMapCenter()) rather than unconditionally jumping
+    // to a Chicago default — confirmed reported bug/request: "the first
+    // thing that pops up when switching to map view should be current
+    // location (if given) or the approximate location bubble exactly
+    // like in listings." Every render after that first init still fits
+    // bounds to the actual filtered events (unchanged from before) —
+    // this only changes what the map shows in the instant before that
+    // fit-bounds call resolves, which matters because fitBounds animates
+    // from wherever the map currently is, so starting from the user's
+    // own area produces a shorter, more relevant pan than starting from
+    // a fixed Chicago point every time regardless of who's looking or
+    // where.
     function renderMap() {
         const container = document.getElementById('eventsMap');
         const loading = document.getElementById('eventMapLoading');
         if (!container || !window.L) return;
 
         if (!map) {
-            map = window.L.map(container, { scrollWheelZoom: true }).setView([41.8781, -87.6298], 9); // Chicago default
+            const preferred = getPreferredEventsMapCenter();
+            map = window.L.map(container, { scrollWheelZoom: true }).setView(
+                preferred ? [preferred.lat, preferred.lng] : [41.8781, -87.6298],
+                preferred ? 13 : 9
+            );
             window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
             }).addTo(map);
             markerClusterGroup = window.L.markerClusterGroup();
             map.addLayer(markerClusterGroup);
+
+            if (userLocation) addEventsUserLocationMarker(map, false);
+            else estimatedLocationCircle = updateEstimatedEventsLocationCircle(map, estimatedLocationCircle);
         }
 
         markerClusterGroup.clearLayers();
@@ -1094,7 +1369,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             `;
 
             return `
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 relative split-listing-item ${isSelected ? 'selected-listing' : ''}" style="margin-right: 8px; display: flex; gap: 12px;">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-3 relative split-listing-item event-split-item ${isSelected ? 'selected-listing' : ''}" style="margin-right: 8px; display: flex; gap: 12px;">
                     ${hasCoordinates ? `
                         <button type="button" class="split-listing-content" onclick="if(typeof selectSplitEvent === 'function') selectSplitEvent('${escapeAttr(event.id)}', ${event.coordinates.lat}, ${event.coordinates.lng});">
                             ${posterHtml}
@@ -1133,10 +1408,11 @@ or distribution of this code can result in legal action to the fullest extent pe
         const splitMapDiv = document.getElementById('splitEventsMap');
         if (!splitMapDiv || !window.L) return;
 
+        const preferred = getPreferredEventsMapCenter();
         window.splitEventsMap = window.L.map('splitEventsMap', {
             preferCanvas: true,
-            center: userLocation ? [userLocation.lat, userLocation.lng] : [41.8781, -87.6298],
-            zoom: userLocation ? 13 : 9,
+            center: preferred ? [preferred.lat, preferred.lng] : [41.8781, -87.6298],
+            zoom: preferred ? 13 : 9,
             zoomControl: true,
             scrollWheelZoom: false,
             touchZoom: true,
@@ -1178,6 +1454,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         window.splitEventsMap.addLayer(window.splitEventsMarkerClusterGroup);
 
         if (userLocation) addEventsUserLocationMarker(window.splitEventsMap, true);
+        else splitEstimatedLocationCircle = updateEstimatedEventsLocationCircle(window.splitEventsMap, splitEstimatedLocationCircle);
         updateSplitEventsMapMarkers();
     }
 
