@@ -191,8 +191,6 @@ or distribution of this code can result in legal action to the fullest extent pe
         bindToolbarEvents();
         bindFilterPanelEvents();
         setView(currentView, { skipSave: true });
-        updateEventsGridColumns();
-        window.addEventListener('resize', updateEventsGridColumns);
 
         await loadEvents();
         renderCategoryFilters(restoredCategories);
@@ -408,7 +406,44 @@ or distribution of this code can result in legal action to the fullest extent pe
     function toggleFeedSubscribeMenu() {
         const menu = document.getElementById('feedSubscribeMenu');
         if (!menu) return;
-        menu.classList.toggle('active');
+        const isOpening = !menu.classList.contains('active');
+        menu.classList.toggle('active', isOpening);
+
+        // Viewport-aware open direction — measured fresh on every open
+        // (not cached), since the button's position relative to the
+        // viewport can change between opens from page scroll or a
+        // resize, same reasoning as js/event-page.js's own
+        // toggleAddToCalendarMenu(). offsetWidth/offsetHeight are read
+        // AFTER toggling .active above (display:block) — an element
+        // with display:none reports 0 for both, which would make this
+        // always think the menu fits regardless of its real size.
+        if (isOpening) {
+            const wrap = menu.closest('.add-to-calendar-wrap');
+            const anchor = wrap ? wrap.querySelector('button') : null;
+            if (anchor) {
+                const anchorRect = anchor.getBoundingClientRect();
+                const menuWidth = menu.offsetWidth;
+                const menuHeight = menu.offsetHeight;
+
+                // Horizontal: the menu's default right:0 anchors its
+                // RIGHT edge to the button's right edge and extends
+                // LEFTWARD — so the projected left edge is the button's
+                // own right edge minus the menu's width. If that would
+                // land left of the viewport (x < 0), flip to opens-left
+                // (anchor the button's LEFT edge instead, extending
+                // rightward).
+                const projectedLeftEdge = anchorRect.right - menuWidth;
+                menu.classList.toggle('opens-left', projectedLeftEdge < 0);
+
+                // Vertical: same up/down space check as the individual
+                // event page's version.
+                const spaceBelow = window.innerHeight - anchorRect.bottom;
+                menu.classList.toggle('opens-up', spaceBelow < menuHeight + 12);
+            }
+        } else {
+            menu.classList.remove('opens-left');
+            menu.classList.remove('opens-up');
+        }
     }
 
     document.addEventListener('click', (e) => {
@@ -559,31 +594,6 @@ or distribution of this code can result in legal action to the fullest extent pe
     function setSidebarFiltersVisible(visible) {
         sidebarFiltersVisible = visible;
         updateFilterPanelPosition(currentView);
-        updateEventsGridColumns();
-    }
-
-    // Phone-width column count for the Grid view specifically: 1 column
-    // normally, 2 while the filter panel is shown, 3 while it's hidden —
-    // per request. Below the existing 767px mobile breakpoint used
-    // throughout this file/css/events.css (not Tailwind's own "sm"
-    // 640px, and not the desktop 1024px sidebar breakpoint — "phone or
-    // similar-to-phone" maps to this file's established mobile
-    // threshold). Above 767px, .eventsContainer's own Tailwind
-    // grid-cols-1/sm:grid-cols-2/lg:grid-cols-3/xl:grid-cols-4 classes
-    // keep governing column count exactly as before — these three new
-    // classes only apply inside the same max-width:767px media query
-    // that already exists in css/events.css, so they can't affect wider
-    // viewports at all regardless of which one is applied. Uses the
-    // classic "set the class, let CSS resolve which media query and
-    // class combination wins" split (matching js/listings.js's own
-    // listings-2-col/listings-3-col pattern) rather than computing column
-    // count in JS — CSS media queries already know the viewport width
-    // and #eventsContainer's own display doesn't need to change.
-    function updateEventsGridColumns() {
-        const container = document.getElementById('eventsContainer');
-        if (!container) return;
-        container.classList.remove('event-grid-2-col', 'event-grid-3-col');
-        container.classList.add(sidebarFiltersVisible ? 'event-grid-2-col' : 'event-grid-3-col');
     }
 
     // -------------------------------------------------------------------
@@ -681,14 +691,16 @@ or distribution of this code can result in legal action to the fullest extent pe
     function updateResultsCount() {
         const n = filteredEvents.length;
         const label = `${n} event${n === 1 ? '' : 's'}${REGION ? ` in ${REGION.label}` : ''}`;
-        // Two separate elements share this same count text: the main
-        // toolbar's #eventResultsCount (used at mobile width and
-        // whenever the sidebar is hidden) and the new desktop-only
-        // #eventDesktopResultsCount inside .events-desktop-filters-row
-        // (Listings' own equivalent pairing — "# events found... to the
-        // left of the filters button" — lives in .desktop-content, not
-        // the main toolbar, hence the second element rather than moving
-        // the original one and breaking its mobile-width role).
+        // #eventResultsCount (the main toolbar's mobile-width count) was
+        // removed from the markup — listings.html has no results count in
+        // its own mobile toolbar either, only in its desktop
+        // #normalViewControls, which #eventDesktopResultsCount below
+        // already mirrors ("# events found... to the left of the filters
+        // button" — that pairing lives in .desktop-content on Listings,
+        // not its mobile row). getElementById here now always returns
+        // null and the assignment is skipped via the existing guard —
+        // left in rather than removed outright in case a future toolbar
+        // revision reintroduces that element.
         const el = document.getElementById('eventResultsCount');
         if (el) el.textContent = label;
         const desktopEl = document.getElementById('eventDesktopResultsCount');
@@ -801,32 +813,41 @@ or distribution of this code can result in legal action to the fullest extent pe
 
         const locationLabel = [event.city, event.state].filter(Boolean).join(', ');
 
-        // Badges now render INSIDE the <a class="event-card"> (as a child
-        // of the poster/placeholder wrapper), not as a sibling .event-card-
-        // badges div outside it — confirmed reported bug: .event-card:hover
-        // sets a transform, and any element with a non-none transform forms
-        // a new CSS stacking context, which then paints ABOVE previously-
-        // painted DOM siblings regardless of source order. The badges div
-        // used to come right before <a class="event-card"> in the markup,
-        // so the instant the card gained its hover stacking context it
-        // visually covered its own badges. Listings avoids this entirely by
-        // nesting its own badges inside the <a> (see js/listings.js's own
-        // card builder, ".absolute top-2 left-2..." sits inside the image
-        // wrapper which is itself inside the <a>) — same fix applied here.
+        // Rebuilt to match js/listings.js's generateListingCardHtml grid-
+        // view structure/classes exactly (per request: "the event tiles
+        // should be exactly the same size as how they are in listings"),
+        // not just similar. Concrete mismatches this replaces: a fixed
+        // h-48 (192px) image area instead of aspect-ratio:4/3 (Listings'
+        // own image height never changes as column count/card width
+        // changes; the old aspect-ratio approach did, meaning cards were
+        // never actually the same height as Listings' at a given column
+        // count even when width matched), rounded-lg (8px, matching
+        // Listings' own corner radius) instead of the old .event-card's
+        // 10px, p-4 (16px all around, matching Listings' listing body
+        // padding) instead of 12px 14px 14px, and the real "shadow
+        // hover:shadow-lg transition-shadow" Tailwind utilities Listings
+        // actually uses instead of "card-shadow" — a class that turned
+        // out to be undefined anywhere in this codebase's CSS, so it was
+        // rendering with NO shadow at all previously. Badges still live
+        // inside the <a> (not as an outside sibling) for the same
+        // stacking-context reason as before — that fix stays, just
+        // applied to the new markup shape.
         return `
-        <a class="event-card card-shadow" href="/event/${escapeAttr(event.slug || '')}">
-            <div class="event-card-media">
-                ${event.poster_image
-                    ? `<img class="event-card-poster" src="${escapeAttr(event.poster_image)}" alt="${escapeAttr(event.title || '')}" loading="lazy">`
-                    : `<div class="event-card-poster-placeholder"><span>${escapeHtml(event.category || 'Event')}</span></div>`}
-                ${badges.length ? `<div class="event-card-badges">${badges.join('')}</div>` : ''}
-            </div>
-            <div class="event-card-body">
-                <span class="event-card-date">${escapeHtml(dateLabel)}${timeLabel ? ` \u00b7 ${escapeHtml(timeLabel)}` : ''}</span>
-                <span class="event-card-title">${escapeHtml(event.title || '')}</span>
-                ${locationLabel ? `<span class="event-card-location">${escapeHtml(event.custom_venue_name || locationLabel)}</span>` : ''}
-            </div>
-        </a>`;
+        <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden block relative hover-bounce listing-card-hover">
+            <a href="/event/${escapeAttr(event.slug || '')}" class="block">
+                <div class="h-48 bg-gray-200 relative">
+                    ${event.poster_image
+                        ? `<img src="${escapeAttr(event.poster_image)}" alt="${escapeAttr(event.title || '')}" class="w-full h-full object-cover" loading="lazy">`
+                        : `<div class="w-full h-full flex items-center justify-center text-gray-400 event-card-poster-placeholder"><span>${escapeHtml(event.category || 'Event')}</span></div>`}
+                    ${badges.length ? `<div class="absolute top-2 left-2 flex gap-2 flex-wrap">${badges.join('')}</div>` : ''}
+                </div>
+                <div class="p-4">
+                    <span class="event-card-date">${escapeHtml(dateLabel)}${timeLabel ? ` \u00b7 ${escapeHtml(timeLabel)}` : ''}</span>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">${escapeHtml(event.title || '')}</h3>
+                    ${locationLabel ? `<p class="text-sm text-gray-600 truncate">${escapeHtml(event.custom_venue_name || locationLabel)}</p>` : ''}
+                </div>
+            </a>
+        </div>`;
     }
 
     // -------------------------------------------------------------------
