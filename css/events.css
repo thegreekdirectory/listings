@@ -339,33 +339,9 @@ or distribution of this code can result in legal action to the fullest extent pe
    alongside this file on events.html) — only the event-specific card
    face and calendar grid are defined here. */
 
-.event-card {
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
-    display: flex;
-    flex-direction: column;
-    text-decoration: none;
-    color: inherit;
-    height: 100%;
-}
-
-.event-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-.event-card-poster {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    background: #f3f4f6;
-}
-
 .event-card-poster-placeholder {
     width: 100%;
-    aspect-ratio: 4 / 3;
+    height: 100%;
     background: linear-gradient(135deg, #045093 0%, #0a6bc2 100%);
     display: flex;
     align-items: center;
@@ -373,14 +349,6 @@ or distribution of this code can result in legal action to the fullest extent pe
     color: rgba(255, 255, 255, 0.7);
     font-size: 12px;
     font-weight: 600;
-}
-
-.event-card-body {
-    padding: 12px 14px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
 }
 
 .event-card-date {
@@ -391,39 +359,22 @@ or distribution of this code can result in legal action to the fullest extent pe
     letter-spacing: 0.02em;
 }
 
-.event-card-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #111827;
-    line-height: 1.3;
-}
-
-.event-card-location {
-    font-size: 13px;
-    color: #6b7280;
-    margin-top: auto;
-    padding-top: 6px;
-}
-
-.event-card-badges {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    display: flex;
-    gap: 4px;
+/* Toolbar row — Filters button first, view toggle immediately after it
+   (both wrap together as a unit on narrow viewports since they're
+   adjacent siblings, not two separately-wrapping flex groups the way an
+   earlier version of this row had them split — confirmed reported bug:
+   "the view options... should be to the right of the Filters button when
+   on a mobile(-like) viewport"). flex-wrap (not overflow-x-auto, unlike
+   listings.html's own #mobileControls, which genuinely does allow
+   horizontal scroll as its own designed fallback) is kept here
+   specifically because a PRIOR request already asked for wrapping over
+   horizontal scrolling on this exact row — the two requests don't
+   conflict (this one is about ORDER, not about scroll-vs-wrap), so both
+   fixes coexist: Filters+the view toggle now wrap together as the first
+   line when space runs out, with Sort/Subscribe wrapping to their own
+   line after. */
+.events-toolbar-row {
     flex-wrap: wrap;
-}
-
-/* Replaces the old .event-card-wrap (which used to be the sibling
-   wrapper around both the badges div and the <a class="event-card"> —
-   removed now that badges live inside the card itself, see
-   buildEventCardHtml in js/events.js). This wraps just the poster/
-   placeholder image so .event-card-badges (position:absolute) has the
-   right positioning context without being relative to the WHOLE card
-   (which would let a tall card body push the badges away from the
-   image's own top-left corner). */
-.event-card-media {
-    position: relative;
 }
 
 /* View toggle: grid / list / calendar — a third option beyond listings'
@@ -710,26 +661,6 @@ body.events-sidebar-mode .events-desktop-filters-row {
        than a labeled toggle with the labels just cut off. */
     .events-view-toggle-label { display: none; }
     .events-view-toggle button { padding: 6px 8px; }
-
-    /* Phone-width Grid column count, set via updateEventsGridColumns()
-       in js/events.js. Base Tailwind grid-cols-1 (from the markup) is
-       the plain default — 1 column — when neither of these classes is
-       present, which only happens outside this same media query (this
-       function only ever adds one of the two, never neither, at phone
-       width) or in the brief instant before JS first runs. !important
-       used here even though css/events.css already loads after
-       src/output.css on this page (so source order alone would already
-       make these win over grid-cols-1's equal specificity) — matching
-       js/listings.js's own .listings-2-col/.listings-3-col, which use
-       !important for the identical override regardless of their own
-       file's load order, since relying on load order alone is exactly
-       the kind of fragile assumption that produced a real bug earlier
-       in this same file (.event-list-row's hover fix needed extra
-       specificity specifically because a load-order assumption turned
-       out to be backwards) — !important removes that fragility rather
-       than trusting today's <link> order to hold indefinitely. */
-    .event-grid-2-col { grid-template-columns: repeat(2, 1fr) !important; }
-    .event-grid-3-col { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
 /* ICS feed subscribe dropdown (toolbar "Subscribe" button) — same
@@ -740,6 +671,31 @@ body.events-sidebar-mode .events-desktop-filters-row {
    equivalent. */
 .add-to-calendar-wrap { position: relative; }
 .add-to-calendar-menu { position: absolute; top: calc(100% + 6px); right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 20; overflow: hidden; min-width: 220px; }
+/* Viewport-aware open direction, set by toggleFeedSubscribeMenu() in
+   js/events.js — confirmed reported bug: "open the options into the
+   view of the user, not into an unviewable part of the screen or
+   somewhere that would cause horizontal scrolling." The default
+   right:0 anchors the menu's RIGHT edge to the button's right edge and
+   extends leftward, which is already the safer default for a button
+   sitting near the right side of the screen — the actual clipping risk
+   is the opposite case: the Subscribe button sitting near the LEFT
+   edge of a narrow viewport (a real possibility after this same file's
+   toolbar was restructured so Filters + the view toggle wrap together
+   as a unit, which can push Sort/Subscribe onto their own line
+   starting near screen-left), where extending a 220px-wide menu
+   further left than the button's own left edge pushes part of it past
+   x=0 — genuinely off-screen, and past the point where the BROWSER
+   itself would introduce horizontal scroll to accommodate it, since
+   position:absolute content isn't clipped by the viewport the way
+   overflow:hidden content is. .opens-left flips the anchor to the
+   button's LEFT edge instead, extending rightward, mirroring the
+   vertical .opens-up flip on the individual event page's own
+   toggleAddToCalendarMenu() (js/event-page.js) — same "measure real
+   available space before deciding, on every open, since position
+   relative to the viewport can change between opens" reasoning applies
+   on this axis too. */
+.add-to-calendar-menu.opens-left { right: auto; left: 0; }
+.add-to-calendar-menu.opens-up { top: auto; bottom: calc(100% + 6px); }
 .add-to-calendar-menu.active { display: block; }
 .add-to-calendar-menu a, .add-to-calendar-menu button { display: block; width: 100%; text-align: left; padding: 10px 14px; font-size: 14px; color: #111827; text-decoration: none; border: none; background: none; border-bottom: 1px solid #f3f4f6; cursor: pointer; font-family: inherit; }
 .add-to-calendar-menu a:last-child, .add-to-calendar-menu button:last-child { border-bottom: none; }
@@ -757,10 +713,15 @@ body.events-sidebar-mode .events-desktop-filters-row {
    text, #404040 borders.
    ============================================ */
 @media (prefers-color-scheme: dark) {
-    .event-card { background: #2a2a2a; }
-    .event-card-title { color: #e5e7eb; }
-    .event-card-location { color: #9ca3af; }
-    .event-card-poster { background: #1f1f1f; }
+    /* Grid card dark-mode coverage (previously .event-card/.event-card-
+       title/.event-card-location/.event-card-poster, each with its own
+       hand-written override here) now comes free from css/listings.css's
+       own global .bg-white/.text-gray-900/.text-gray-600/.bg-gray-200
+       dark-mode block (loaded on every events page too) — the card was
+       rebuilt to use those exact Tailwind utility classes directly
+       (matching js/listings.js's own card structure) instead of a
+       bespoke class set, so it inherits that coverage the same way the
+       map popup already does; nothing bespoke needed here anymore. */
 
     /* .event-badge-free is a solid, saturated color already (matching
        the established pattern every other badge variant already
