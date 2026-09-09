@@ -111,52 +111,63 @@
         </div>
     </div>
 
-    <!-- TOOLBAR — filters trigger, view toggle (grid / list / calendar / map), sort -->
+    <!-- TOOLBAR — filters trigger, view toggle (grid / list / calendar / map), sort.
+         Restructured to match listings.html's own #mobileControls pattern:
+         a single row (not two separately-wrapping flex groups) with
+         Filters first, then the view toggle immediately to its right —
+         "the view options... should be to the right of the Filters
+         button when on a mobile(-like) viewport." #eventResultsCount
+         removed from this row entirely: listings.html has no results
+         count in its own #mobileControls at all (its one and only
+         #resultsCount lives in the desktop-only #normalViewControls,
+         which #eventDesktopFiltersRow below already mirrors) — showing
+         one here would be adding something Listings doesn't have in
+         this position, not matching it. Sort and Subscribe keep their
+         place after the view toggle since Listings has no equivalent
+         controls to pattern-match against for those two specifically
+         (its own mobile row is Filters/Hide-Starred/Map/Refresh, none of
+         which are one-to-one events equivalents); this file already
+         diverges from Listings there by necessity, not by choice. -->
     <div class="max-w-7xl mx-auto px-4">
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-gray-200">
-            <div class="flex items-center gap-2">
-                <button id="eventFilterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 8h12M10 12h4"/></svg>
-                    <span class="text-sm font-medium">Filters</span>
-                    <span id="eventFilterCount" class="hidden inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full" style="background:#045093;">0</span>
+        <div class="flex items-center gap-2 pb-3 border-b border-gray-200 events-toolbar-row">
+            <button id="eventFilterBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 8h12M10 12h4"/></svg>
+                <span class="text-sm font-medium">Filters</span>
+                <span id="eventFilterCount" class="hidden inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full" style="background:#045093;">0</span>
+            </button>
+            <div class="events-view-toggle" id="eventsViewToggle">
+                <button data-view="grid" class="active">
+                    <svg width="14" height="14" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M 5,4 C 4.446,4 4,4.446 4,5 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 14,4.446 13.554,4 13,4 Z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 26,4.446 25.554,4 25,4 Z M 5,16 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z"/></svg>
+                    <span class="events-view-toggle-label">Grid</span>
                 </button>
-                <p id="eventResultsCount" class="text-sm text-gray-600 hidden sm:block">Loading...</p>
+                <button data-view="list">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18v2H3zm0 6h18v2H3zm0 6h18v2H3z"/></svg>
+                    <span class="events-view-toggle-label">List</span>
+                </button>
+                <button data-view="calendar">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    <span class="events-view-toggle-label">Calendar</span>
+                </button>
+                <button data-view="map">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                    <span class="events-view-toggle-label">Map</span>
+                </button>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <div class="events-view-toggle" id="eventsViewToggle">
-                    <button data-view="grid" class="active">
-                        <svg width="14" height="14" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M 5,4 C 4.446,4 4,4.446 4,5 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 14,4.446 13.554,4 13,4 Z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 26,4.446 25.554,4 25,4 Z M 5,16 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z"/></svg>
-                        <span class="events-view-toggle-label">Grid</span>
-                    </button>
-                    <button data-view="list">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18v2H3zm0 6h18v2H3zm0 6h18v2H3z"/></svg>
-                        <span class="events-view-toggle-label">List</span>
-                    </button>
-                    <button data-view="calendar">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg>
-                        <span class="events-view-toggle-label">Calendar</span>
-                    </button>
-                    <button data-view="map">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                        <span class="events-view-toggle-label">Map</span>
-                    </button>
-                </div>
-                <select id="eventSortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                    <option value="soonest">Soonest</option>
-                    <option value="az">A-Z</option>
-                    <option value="furthest">Furthest Out</option>
-                </select>
-                <div class="add-to-calendar-wrap">
-                    <button id="eventSubscribeFeedBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm" onclick="toggleFeedSubscribeMenu()">
-                        <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16M5 19a1 1 0 100 2 1 1 0 000-2z"/></svg>
-                        <span class="text-sm font-medium">Subscribe</span>
-                    </button>
-                    <div class="add-to-calendar-menu hidden" id="feedSubscribeMenu">
-                        <a href="https://calendar.google.com/calendar/render?cid=webcal://thegreekdirectory.org/events/feed.ics" target="_blank" rel="noopener">Add to Google Calendar</a>
-                        <a href="webcal://thegreekdirectory.org/events/feed.ics">Add to Apple Calendar</a>
-                        <a href="https://outlook.office.com/calendar/0/addfromweb?url=webcal://thegreekdirectory.org/events/feed.ics" target="_blank" rel="noopener">Add to Outlook Web</a>
-                        <button type="button" class="event-no-bounce" onclick="copyFeedLink()">Copy feed link</button>
-                    </div>
+            <select id="eventSortSelect" class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                <option value="soonest">Soonest</option>
+                <option value="az">A-Z</option>
+                <option value="furthest">Furthest Out</option>
+            </select>
+            <div class="add-to-calendar-wrap">
+                <button id="eventSubscribeFeedBtn" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap shadow-sm" onclick="toggleFeedSubscribeMenu()">
+                    <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16M5 19a1 1 0 100 2 1 1 0 000-2z"/></svg>
+                    <span class="text-sm font-medium">Subscribe</span>
+                </button>
+                <div class="add-to-calendar-menu hidden" id="feedSubscribeMenu">
+                    <a href="https://calendar.google.com/calendar/render?cid=webcal://thegreekdirectory.org/events/feed.ics" target="_blank" rel="noopener">Add to Google Calendar</a>
+                    <a href="webcal://thegreekdirectory.org/events/feed.ics">Add to Apple Calendar</a>
+                    <a href="https://outlook.office.com/calendar/0/addfromweb?url=webcal://thegreekdirectory.org/events/feed.ics" target="_blank" rel="noopener">Add to Outlook Web</a>
+                    <button type="button" class="event-no-bounce" onclick="copyFeedLink()">Copy feed link</button>
                 </div>
             </div>
         </div>
@@ -334,7 +345,7 @@
                     </button>
                 </div>
                 <div id="eventGridView">
-                    <div id="eventsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+                    <div id="eventsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                     <button id="eventLoadMoreBtn" class="load-more-btn hidden">Load More Events</button>
                 </div>
                 <div id="eventListView" class="hidden">
