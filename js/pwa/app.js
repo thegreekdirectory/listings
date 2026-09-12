@@ -142,11 +142,11 @@ class PWAApp {
 
         const splash = document.createElement('div');
             splash.className = 'pwa-splash';
+            // Light and dark mode currently use the same key artwork, so this is a
+            // plain <img> rather than a <picture>/<source media> pair — if a distinct
+            // dark-mode variant is introduced later, reintroduce the source element then.
             splash.innerHTML = `
-                <picture>
-                    <source srcset="https://static.thegreekdirectory.org/img/logo/white.svg" media="(prefers-color-scheme: dark)">
-                    <img src="https://static.thegreekdirectory.org/img/logo/blue.svg" alt="The Greek Directory" class="pwa-splash-logo">
-                </picture>
+                <img src="https://static.thegreekdirectory.org/img/logo/blueonekey.svg" alt="The Greek Directory" class="pwa-splash-logo">
             `;
             document.body.appendChild(splash);
             
