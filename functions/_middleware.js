@@ -12,10 +12,19 @@ export async function onRequest(context) {
   const SECRET_PARAM = "access"; //[cite: 2]
   const SECRET_VALUE = "granted"; //[cite: 2]
   const COOKIE_NAME = "access_cookie"; //[cite: 2]
+  const LANGUAGE_COOKIE_NAME = "tgd_language";
 
   const cookieHeader = request.headers.get("Cookie") || ""; //[cite: 2]
   const hasCookie = cookieHeader.includes(`${COOKIE_NAME}=${SECRET_VALUE}`); //[cite: 2]
   const hasQuery = url.searchParams.get(SECRET_PARAM) === SECRET_VALUE; //[cite: 2]
+
+  // Server-side language preference: only "el" ever toggles anything.
+  // A missing cookie, "en", or any other/garbage value is treated as English
+  // and left completely alone — matching the client-side default elsewhere
+  // in the codebase (localStorage.getItem('tgd_language') || 'en').
+  const languageCookieMatch = cookieHeader.match(/(?:^|;\s*)tgd_language=([^;]*)/);
+  const preferredLanguage = languageCookieMatch ? decodeURIComponent(languageCookieMatch[1]) : null;
+  const isGreekPreferred = preferredLanguage === "el";
 
   // 1. Check if the current request has the secret query param OR the cookie
   if (!hasQuery && !hasCookie) { //[cite: 2]
@@ -41,8 +50,25 @@ export async function onRequest(context) {
     const headerRes = await env.ASSETS.fetch(new URL('/partials/header.html', request.url)); //[cite: 1]
     const footerRes = await env.ASSETS.fetch(new URL('/partials/footer.html', request.url)); //[cite: 1]
     
-    const headerHtml = headerRes.ok ? await headerRes.text() : "";
+    let headerHtml = headerRes.ok ? await headerRes.text() : "";
     const footerHtml = footerRes.ok ? await footerRes.text() : "";
+
+    // If the visitor's saved preference is Greek, pre-check both language
+    // toggles (desktop header + hamburger menu) so they render in the
+    // Greek-selected position on first paint — no flash from unchecked to
+    // checked while client JS boots. English or a missing/invalid cookie
+    // means "do nothing": the toggles stay exactly as authored (unchecked).
+    if (isGreekPreferred && headerHtml) {
+      headerHtml = headerHtml
+        .replace(
+          '<input type="checkbox" id="lang-toggle-header" class="lang-input">',
+          '<input type="checkbox" id="lang-toggle-header" class="lang-input" checked>'
+        )
+        .replace(
+          '<input type="checkbox" id="lang-toggle-menu" class="lang-input">',
+          '<input type="checkbox" id="lang-toggle-menu" class="lang-input" checked>'
+        );
+    }
 
     const rewriter = new HTMLRewriter()
       .on('[data-partial="header"]', { //[cite: 1]
