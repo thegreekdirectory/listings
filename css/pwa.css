@@ -259,6 +259,20 @@ body.theme-dark .hover\:bg-gray-200:hover {
 .pwa-splash-logo {
     width: 120px;
     height: auto;
+    animation: pwa-splash-spin 1.333s linear infinite;
+}
+
+/* 45 RPM = 1 revolution / 1.333s (60s / 45). Runs until the splash
+   itself is removed from the DOM by app.js, so no explicit stop point
+   is needed here — the whole element (and its animation) disappears
+   together with the fade-out removal. */
+@keyframes pwa-splash-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 body.theme-dark .pwa-splash {
@@ -337,6 +351,18 @@ body.theme-dark .pwa-dock-item.active {
     color: #60a5fa;
 }
 
+/* The "More" trigger is a real <button> (the other dock items are <a> tags),
+   so without this reset it picks up the browser's native button chrome
+   (background/border) instead of sitting flush like its siblings. */
+button.pwa-dock-item {
+    background: transparent;
+    border: none;
+    -webkit-appearance: none;
+    appearance: none;
+    font: inherit;
+    cursor: pointer;
+}
+
 /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
 .pwa-dock-icon {
@@ -344,6 +370,35 @@ body.theme-dark .pwa-dock-item.active {
     margin-bottom: 2px;
     position: relative;
 }
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
+
+/* The Listings dock icon is a hosted raster image baked in a fixed blue
+   (not a currentColor SVG like the other dock icons), so its inactive/
+   dark-mode color treatment is approximated with CSS filters rather than
+   a color attribute. Values were solved numerically against the icon's
+   sampled ink color (~#014892) to match the other dock icons' inactive
+   gray (#6b7280 light / #9ca3af dark) and active dark-mode blue (#60a5fa)
+   as closely as a filter chain can get (within 1-3 RGB units per channel). */
+.pwa-dock-listings-icon {
+    display: block;
+    width: 22px;
+    height: 22px;
+}
+
+.pwa-dock-listings-icon[data-active="false"] {
+    filter: grayscale(0.92) brightness(1.85);
+}
+
+body.theme-dark .pwa-dock-listings-icon[data-active="false"] {
+    filter: grayscale(0.95) brightness(2.65);
+}
+
+body.theme-dark .pwa-dock-listings-icon[data-active="true"] {
+    filter: hue-rotate(3deg) saturate(0.43) brightness(2.5);
+}
+
+/* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
 .pwa-dock-label {
     font-size: 10px;
