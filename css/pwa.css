@@ -379,11 +379,14 @@ button.pwa-dock-item {
    a color attribute. Values were solved numerically against the icon's
    sampled ink color (~#014892) to match the other dock icons' inactive
    gray (#6b7280 light / #9ca3af dark) and active dark-mode blue (#60a5fa)
-   as closely as a filter chain can get (within 1-3 RGB units per channel). */
+   as closely as a filter chain can get (within 1-3 RGB units per channel).
+   Height is fixed to match the other 22px dock icons; width is auto so
+   the source artwork's real aspect ratio (~1.14:1, not square) is kept
+   instead of being stretched into a forced square. */
 .pwa-dock-listings-icon {
     display: block;
-    width: 22px;
     height: 22px;
+    width: auto;
 }
 
 .pwa-dock-listings-icon[data-active="false"] {
