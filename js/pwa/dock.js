@@ -24,16 +24,15 @@ class PWADock {
         // All available apps
         this.availableApps = [
             { id: 'home', label: 'Home', icon: 'home', path: '/', required: true },
-            { id: 'categories', label: 'Categories', icon: 'categories', path: '/categories', required: false },
-            { id: 'search', label: 'Search', icon: 'search', path: '/listings', required: false },
+            { id: 'search', label: 'Listings', icon: 'search', path: '/listings', required: false },
             { id: 'events', label: 'Events', icon: 'events', path: '/events', required: false },
             { id: 'map', label: 'Map', icon: 'map', path: '/map', required: false },
             { id: 'starred', label: 'Starred', icon: 'starred', path: '/starred', required: false },
             { id: 'settings', label: 'Settings', icon: 'settings', path: '/settings', required: true }
         ];
         
-        // Default dock order with Categories
-        this.defaultDockOrder = ['home', 'search', 'map', 'starred', 'settings'];
+        // Default dock order: Home, Listings, Events, Starred, Settings
+        this.defaultDockOrder = ['home', 'search', 'events', 'starred', 'settings'];
         
         // Load saved dock configuration or use default
         this.loadDockConfig();
@@ -301,11 +300,23 @@ class PWADock {
         const stroke = '#045093';
         const fill = isActive ? '#045093' : 'transparent';
         const common = 'width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"';
+
+        // "Listings" (formerly Search) uses two hosted raster icons (outline / filled)
+        // rather than an inline currentColor SVG like the other dock icons, so its
+        // active/inactive and light/dark treatment is done via the "pwa-dock-listings-icon"
+        // CSS class + data-active attribute (see css/pwa.css) instead of the fill/stroke
+        // substitution used below.
+        const listingsSrc = isActive
+            ? 'https://static.thegreekdirectory.org/img/icons/listings-pwa-2.svg'
+            : 'https://static.thegreekdirectory.org/img/icons/listings-pwa-1.svg';
+        const listingsIcon = `<img src="${listingsSrc}" alt="" width="22" height="22" class="pwa-dock-listings-icon" data-active="${isActive}">`;
+
         const icons = {
             home: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1z"/></svg>`,
-            categories: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
-            search: `<svg ${common} fill="none" stroke="${stroke}" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>`,
-            events: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`,
+            search: listingsIcon,
+            events: isActive
+                ? `<svg ${common} fill="currentColor" style="color:${stroke}"><rect x="9" y="13" width="46" height="43" rx="5"/><rect x="17" y="7" width="7" height="13" rx="3.5"/><rect x="40" y="7" width="7" height="13" rx="3.5"/><path fill="#fff" d="M13 27h38v25H13V27Z"/><path d="m32 31 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L32 31Z"/></svg>`
+                : `<svg ${common} fill="none" style="color:${stroke}"><rect x="9" y="13" width="46" height="43" rx="5" stroke="currentColor" stroke-width="4"/><path d="M9 25h46" stroke="currentColor" stroke-width="4"/><path d="M20 9v9M44 9v9" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="m32 31 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L32 31Z" fill="currentColor"/></svg>`,
             map: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><path d="M9 4L3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg>`,
             starred: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><path d="M12 3.5l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8L6.6 20l1-6L3.3 9.8l6-.9z"/></svg>`,
             settings: `<svg ${common} fill="none" stroke="${stroke}" stroke-width="1.8"><circle cx="12" cy="12" r="3.2" fill="${fill}"/><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.7z"/></svg>`,
