@@ -301,21 +301,11 @@ class PWADock {
         const fill = isActive ? '#045093' : 'transparent';
         const common = 'width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"';
 
-        // "Listings" (formerly Search) uses two hosted raster icons (outline / filled)
-        // rather than an inline currentColor SVG like the other dock icons, so its
-        // active/inactive and light/dark treatment is done via the "pwa-dock-listings-icon"
-        // CSS class + data-active attribute (see css/pwa.css) instead of the fill/stroke
-        // substitution used below. The source artwork is not perfectly square (~1.14:1,
-        // slightly wider than tall), so sizing is fixed-height/auto-width in CSS rather
-        // than forcing a fixed width/height pair here, which would stretch it.
-        const listingsSrc = isActive
-            ? 'https://static.thegreekdirectory.org/img/icons/listings-pwa-2.svg'
-            : 'https://static.thegreekdirectory.org/img/icons/listings-pwa-1.svg';
-        const listingsIcon = `<img src="${listingsSrc}" alt="" class="pwa-dock-listings-icon" data-active="${isActive}">`;
-
         const icons = {
             home: `<svg ${common} fill="${fill}" stroke="${stroke}" stroke-width="1.8"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1z"/></svg>`,
-            search: listingsIcon,
+            search: isActive
+                ? `<svg ${common} fill="${stroke}"><path d="M0 0h24v24H0z" fill="none"/><path d="M21 13v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-7H2v-2l1-5h18l1 5v2h-1zM5 13v6h14v-6H5zm1 1h8v3H6v-3zM3 3h18v2H3V3z"/></svg>`
+                : `<svg ${common} fill="${stroke}"><path d="M0 0h24v24H0z" fill="none"/><path d="M21 13v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-7H2v-2l1-5h18l1 5v2h-1zM5 13v6h14v-6H5zm-.96-2h15.92l-.6-3H4.64l-.6 3zM6 14h8v3H6v-3zM3 3h18v2H3V3z"/></svg>`,
             events: isActive
                 ? `<svg width="22" height="22" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="currentColor" style="color:${stroke}"><rect x="9" y="13" width="46" height="43" rx="5"/><rect x="17" y="7" width="7" height="13" rx="3.5"/><rect x="40" y="7" width="7" height="13" rx="3.5"/><path fill="#fff" d="M13 27h38v25H13V27Z"/><path d="m32 31 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L32 31Z"/></svg>`
                 : `<svg width="22" height="22" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none" style="color:${stroke}"><rect x="9" y="13" width="46" height="43" rx="5" stroke="currentColor" stroke-width="4"/><path d="M9 25h46" stroke="currentColor" stroke-width="4"/><path d="M20 9v9M44 9v9" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="m32 31 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L32 31Z" fill="currentColor"/></svg>`,
