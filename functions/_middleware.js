@@ -1,25 +1,36 @@
 export async function onRequest(context) {
+  // Extract env to use env.ASSETS.fetch for internal static files
+  const { request, next, env } = context;
+  const url = new URL(request.url);
 
+  // --- Redirect any mixed-case or uppercase path to lowercase ---
+  if (url.pathname !== url.pathname.toLowerCase()) {
+    url.pathname = url.pathname.toLowerCase();
+    return Response.redirect(url.toString(), 301);
+  }
+
+  // 1. Get the actual response
+  const response = await next();
   
-  // 3. Process HTML responses with HTMLRewriter for server-side partials
+  // 2. Process HTML responses with HTMLRewriter for server-side partials
   const contentType = response.headers.get("Content-Type") || "";
   let finalResponse;
 
   if (contentType.includes("text/html")) {
     // Fetch the partials internally
-    const headerRes = await env.ASSETS.fetch(new URL('/partials/header.html', request.url)); //[cite: 1]
-    const footerRes = await env.ASSETS.fetch(new URL('/partials/footer.html', request.url)); //[cite: 1]
+    const headerRes = await env.ASSETS.fetch(new URL('/partials/header.html', request.url));
+    const footerRes = await env.ASSETS.fetch(new URL('/partials/footer.html', request.url));
     
     const headerHtml = headerRes.ok ? await headerRes.text() : "";
     const footerHtml = footerRes.ok ? await footerRes.text() : "";
 
     const rewriter = new HTMLRewriter()
-      .on('[data-partial="header"]', { //[cite: 1]
+      .on('[data-partial="header"]', {
         element(element) {
           if (headerHtml) element.setInnerContent(headerHtml, { html: true });
         }
       })
-      .on('[data-partial="footer"]', { //[cite: 1]
+      .on('[data-partial="footer"]', {
         element(element) {
           if (footerHtml) element.setInnerContent(footerHtml, { html: true });
         }
@@ -36,7 +47,7 @@ export async function onRequest(context) {
                 document.dispatchEvent(new CustomEvent('tgd:partials-loaded')); 
               });
             </script>
-          `, { html: true }); //[cite: 1]
+          `, { html: true });
         }
       });
 
@@ -46,9 +57,6 @@ export async function onRequest(context) {
     // Leave non-HTML responses untouched
     finalResponse = new Response(response.body, response);
   }
-
-  // 4. Attach the access cookie to the response so the user stays authenticated for 1 year
-  finalResponse.headers.append("Set-Cookie", `${COOKIE_NAME}=${SECRET_VALUE}; Path=/; Max-Age=31536000; SameSite=Lax`); //[cite: 2]
   
   return finalResponse;
 }
