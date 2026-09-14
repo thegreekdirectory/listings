@@ -269,6 +269,25 @@ function applySortToListings(listings, sortValue) {
     }
 }
 
+function syncStarredButtonsVisualState() {
+    const headerStarBtn = document.getElementById('headerStarBtn');
+    const hideStarredBtn = document.getElementById('hideStarredBtn');
+    const starToggleBtnDesktop = document.getElementById('starToggleBtnDesktop');
+
+    if (hideStarredBtn) {
+        hideStarredBtn.classList.toggle('hidden', !viewingStarredOnly);
+    }
+
+    if (headerStarBtn) {
+        headerStarBtn.style.backgroundColor = viewingStarredOnly ? '#fbbf24' : '';
+        headerStarBtn.style.color = viewingStarredOnly ? '#78350f' : '';
+    }
+
+    if (starToggleBtnDesktop) {
+        starToggleBtnDesktop.classList.toggle('starred', viewingStarredOnly);
+    }
+}
+
 function toggleStarredView(forceState = null, options = {}) {
     const { suppressEmptyAlert = false } = options;
 
@@ -286,17 +305,7 @@ function toggleStarredView(forceState = null, options = {}) {
 
     viewingStarredOnly = nextState;
 
-    const headerStarBtn = document.getElementById('headerStarBtn');
-    const hideStarredBtn = document.getElementById('hideStarredBtn');
-
-    if (hideStarredBtn) {
-        hideStarredBtn.classList.toggle('hidden', !viewingStarredOnly);
-    }
-
-    if (headerStarBtn) {
-        headerStarBtn.style.backgroundColor = viewingStarredOnly ? '#fbbf24' : '';
-        headerStarBtn.style.color = viewingStarredOnly ? '#78350f' : '';
-    }
+    syncStarredButtonsVisualState();
 
     displayedListingsCount = viewingStarredOnly ? Math.max(filteredListings.length, starredListings.length) : 15;
     updateURL();
@@ -451,6 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (refreshBtn) refreshBtn.style.display = 'flex';
     }
     loadStarredListings();
+    syncStarredButtonsVisualState();
     currentView = getPreferredListingsLayout();
     await ensureAuthoritativeNowUtc();
     loadListings();
@@ -703,7 +713,7 @@ Copyright (C) The Greek Directory, 2025-present. All rights reserved.
 function updateURL() {
     const url = new URL(window.location);
     const searchTerm = document.getElementById('searchInput').value;
-    const preserveStarred = url.searchParams.get('starred') === '1' || viewingStarredOnly;
+    const preserveStarred = viewingStarredOnly;
     url.search = '';
     if (selectedCategory && selectedCategory !== 'All') url.searchParams.set('category', selectedCategory);
     if (selectedSubcategories.length > 0) {
@@ -3613,12 +3623,6 @@ window.selectSplitListing = function(listingId, lat, lng) {
     renderSplitViewListings();
 };
 // ═══════════════════════════════════════════════════════════════
-
-window.addEventListener('tgd:starred-filter-requested', () => {
-    if (typeof window.applyUrlFilters === 'function') {
-        window.applyUrlFilters();
-    }
-});
 
 /*
 Copyright (C) The Greek Directory, 2025-present. All rights reserved.
