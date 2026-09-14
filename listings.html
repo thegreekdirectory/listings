@@ -173,6 +173,23 @@
         overflow-y: auto;
     }
 
+    /* Dark-mode override for the rule directly above, placed here (NOT in
+       css/listings.css's own @media (prefers-color-scheme: dark) block)
+       deliberately: css/listings.css loads BEFORE this inline <style>
+       block (see the <link>/<style> order in <head>), and both selectors
+       have identical specificity, so a dark override placed in that
+       earlier file would be overwritten by this rule's own
+       "background: #fff" the instant this rule is reached, regardless of
+       dark mode being active. Placing the override immediately after the
+       rule it corrects is what actually makes it win — same cascade-order
+       fix already used for #eventFilterPanel in css/events.css. */
+    @media (prefers-color-scheme: dark) {
+        #filterPanel {
+            background: #2a2a2a;
+            border-bottom-color: #404040;
+        }
+    }
+
     /* Copyright (C) The Greek Directory, 2025-present. All rights reserved. */
 
     /* ── Global mobile touch fix ── */
@@ -639,6 +656,11 @@
                         <button id="mapBtnDesktop" class="hidden lg:flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap">
                             <svg class="w-4 h-4" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                             <span class="text-sm font-medium">Map</span>
+                        </button>
+                        <button id="starToggleBtnDesktop" class="hidden lg:flex items-center justify-center px-3 py-2 bg-white border border-gray-300 rounded-lg whitespace-nowrap" title="View Starred" aria-label="Toggle starred listings" onclick="if(typeof toggleStarredView === 'function') toggleStarredView();">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="#facc15" stroke="#ca8a04" stroke-width="1.5">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
                         </button>
                         <div class="hidden lg:flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                             <button id="gridViewBtn2" class="p-2 rounded bg-white shadow-sm"><svg width="16" height="16" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path fill="#045093" d="M 5,4 C 4.446,4 4,4.446 4,5 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 14,4.446 13.554,4 13,4 Z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 V 5 C 26,4.446 25.554,4 25,4 Z M 5,16 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z m 12,0 c -0.554,0 -1,0.446 -1,1 v 8 c 0,0.554 0.446,1 1,1 h 8 c 0.554,0 1,-0.446 1,-1 v -8 c 0,-0.554 -0.446,-1 -1,-1 z"/></svg></button>
