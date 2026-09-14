@@ -209,6 +209,18 @@ h3,
    VIEW TOGGLE BUTTONS - SHOW SELECTED STATE
    ============================================ */
 
+/* Inactive state: explicit transparent background so these buttons never
+   fall through to the browser's native <button> UA chrome (light gray/
+   white in every theme) when setView() (js/listings.js) reduces them to
+   a bare "p-2 rounded" class with no bg-* utility. The surrounding
+   .bg-gray-100 pill (already dark-mode-covered) shows through instead. */
+#gridViewBtn,
+#gridViewBtn2,
+#listViewBtn,
+#listViewBtn2 {
+    background: transparent;
+}
+
 #gridViewBtn.active,
 #gridViewBtn2.active,
 #listViewBtn.active,
@@ -224,6 +236,16 @@ h3,
 #listViewBtn.active svg,
 #listViewBtn2.active svg {
     stroke: white !important;
+}
+
+/* Desktop star toggle button — "starred" (active) state, same amber
+   treatment the header star button used to apply to itself via inline
+   style (see toggleStarredView() in js/listings.js), and the same
+   naming convention as the per-listing-card .star-button.starred rule
+   defined inline in this page's own <style> block. */
+#starToggleBtnDesktop.starred {
+    background: #fffdeb;
+    border-color: rgba(234, 179, 8, 0.5);
 }
 
 /* ============================================
@@ -848,15 +870,28 @@ input[type="range"]::-moz-range-thumb {
     }
     
 .desktop-filters {
-    width: 280px;
+    width: 300px;
     flex-shrink: 0;
 }
 
+/* #desktopFilterPanel "card" treatment — same bordered/padded/background
+   pattern as events.html's own left sidebar (see css/events.css's
+   "#eventDesktopFiltersSlot #eventFilterPanel" rule, which this
+   intentionally mirrors): a faint border and a little distance from the
+   page edge so the panel reads as its own panel rather than page copy
+   sitting flush in the corner, plus inner padding so labels/dropdowns/
+   checkboxes/searchboxes don't start right at the border. */
 #desktopFilterPanel.desktop-sidebar {
     position: sticky;
     top: 76px;
     max-height: calc(100vh - 92px);
     overflow-y: auto;
+    margin-left: 8px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    box-sizing: border-box;
 }
     
     .desktop-content {
@@ -1042,6 +1077,23 @@ input[type="range"]::-moz-range-thumb {
     transform: none;
 }
 
+/* .load-more-btn (display:block, above) and .hidden (src/output.css,
+   display:none) are both single-class selectors -- equal specificity, so
+   cascade order decides, and output.css loads before this file in
+   listings.html, meaning .load-more-btn's display:block always won
+   outright whenever both classes were present on the same element,
+   regardless of which was added/removed last in JS. Confirmed bug: the
+   button stayed visible with no listings left to load (or none matching
+   the current filters, or after a load error), because toggling the
+   "hidden" class in js/listings.js's renderListings() was having no
+   visual effect. A compound (two-class) selector beats both single-class
+   rules on specificity alone, independent of file order -- same fix
+   already applied for the equivalent events-page bug (see
+   css/events.css's own ".load-more-btn.hidden" rule). */
+.load-more-btn.hidden {
+    display: none;
+}
+
 /* Split view filters layout */
 .split-view-filters-container {
     display: flex;
@@ -1206,6 +1258,11 @@ input[type="range"]::-moz-range-thumb {
     }
     
     #desktopFiltersContainer {
+        background: #2a2a2a !important;
+        border-color: #404040 !important;
+    }
+
+    #desktopFilterPanel.desktop-sidebar {
         background: #2a2a2a !important;
         border-color: #404040 !important;
     }
