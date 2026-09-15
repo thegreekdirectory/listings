@@ -238,12 +238,13 @@ h3,
     stroke: white !important;
 }
 
-/* Desktop star toggle button — "starred" (active) state, same amber
-   treatment the header star button used to apply to itself via inline
-   style (see toggleStarredView() in js/listings.js), and the same
-   naming convention as the per-listing-card .star-button.starred rule
-   defined inline in this page's own <style> block. */
-#starToggleBtnDesktop.starred {
+/* Star toggle buttons (desktop + mobile) — "starred" (active) state,
+   same amber treatment the header star button used to apply to itself
+   via inline style (see toggleStarredView() in js/listings.js), and the
+   same naming convention as the per-listing-card .star-button.starred
+   rule defined inline in this page's own <style> block. */
+#starToggleBtnDesktop.starred,
+#starToggleBtnMobile.starred {
     background: #fffdeb;
     border-color: rgba(234, 179, 8, 0.5);
 }
@@ -892,6 +893,17 @@ input[type="range"]::-moz-range-thumb {
     border-radius: 8px;
     background: #fff;
     box-sizing: border-box;
+    /* overflow-y:auto (needed so the sticky panel can scroll internally on
+       short viewports) combined with border-radius causes Chromium to
+       paint the background and the rounded-corner clip on mismatched
+       layers, leaving a real gap at the bottom corners where the page's
+       own background shows through underneath the border curve (confirmed
+       via pixel sampling — not merely an anti-aliasing seam, and present
+       in both themes). A no-op 3D transform forces this element onto its
+       own explicit compositing layer, which unifies the two paint passes
+       and fully closes the gap; position:sticky is unaffected. */
+    transform: translateZ(0);
+    will-change: transform;
 }
     
     .desktop-content {
@@ -1185,12 +1197,22 @@ input[type="range"]::-moz-range-thumb {
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important;
     }
     
-    input,
+    input:not([type="range"]),
     select,
     textarea {
         background: #2a2a2a !important;
         color: #e5e5e5 !important;
         border-color: #404040 !important;
+    }
+
+    /* input[type="range"] (the "Radius" distance slider) is deliberately
+       excluded from the generic input rule above -- a slider's visible
+       "background" is its track, not a text-field fill, and matching the
+       panel's own background made the track blend in invisibly. #4a4a4a
+       keeps the same light-track-on-dark-panel relationship the light
+       theme has (#ddd track on a white panel), just shifted for dark. */
+    input[type="range"] {
+        background: #4a4a4a !important;
     }
     
     .hover\:bg-gray-50:hover {
