@@ -829,7 +829,7 @@ function addUserLocationMarker() {
     userLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
         icon: userIcon, zIndexOffset: 1000
     }).addTo(map);
-    userLocationMarker.bindPopup('<strong>Your Location</strong>');
+    userLocationMarker.bindPopup('<strong>Your Location</strong>', { minWidth: 150 });
 }
 
 function addSplitUserLocationMarker() {
@@ -843,7 +843,7 @@ function addSplitUserLocationMarker() {
     splitUserLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
         icon: userIcon, zIndexOffset: 1000
     }).addTo(splitMap);
-    splitUserLocationMarker.bindPopup('<strong>Your Location</strong>');
+    splitUserLocationMarker.bindPopup('<strong>Your Location</strong>', { minWidth: 150 });
 }
 
 /*
