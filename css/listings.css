@@ -796,6 +796,19 @@ input[type="range"]::-moz-range-thumb {
     align-items: stretch;
 }
 
+/* Overrides css/index.css's generic ".bg-white.rounded-lg.shadow:hover
+   { transform: scale(1.1) }" rule, which also matches this element (it
+   carries those same three classes) even though it was written for much
+   smaller homepage cards/buttons -- on a full-width split-view row,
+   scale(1.1) meant a ~40px jump in width, which read as a much bigger
+   bounce than intended. !important is needed here since index.css loads
+   after this file and its rule has equal-or-higher class specificity;
+   the transition itself (index.css line ~65, "transition: all 0.3s")
+   stays as-is since the smoothness was never the complaint. */
+.split-listing-item:hover {
+    transform: scale(1.05) !important;
+}
+
 .listing-card-hover {
     transition: transform 0.22s ease, box-shadow 0.22s ease !important;
 }
