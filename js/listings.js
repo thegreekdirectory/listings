@@ -271,13 +271,8 @@ function applySortToListings(listings, sortValue) {
 
 function syncStarredButtonsVisualState() {
     const headerStarBtn = document.getElementById('headerStarBtn');
-    const hideStarredBtn = document.getElementById('hideStarredBtn');
     const starToggleBtnDesktop = document.getElementById('starToggleBtnDesktop');
     const starToggleBtnMobile = document.getElementById('starToggleBtnMobile');
-
-    if (hideStarredBtn) {
-        hideStarredBtn.classList.toggle('hidden', !viewingStarredOnly);
-    }
 
     if (headerStarBtn) {
         headerStarBtn.style.backgroundColor = viewingStarredOnly ? '#fbbf24' : '';
