@@ -238,6 +238,17 @@ h3,
     stroke: white !important;
 }
 
+/* Star toggle buttons (desktop + mobile) — same height as the Map
+   button they sit next to. Both share identical py-2 padding, but Map's
+   content also includes a text label whose line-height makes it taller
+   than the star button's bare icon (measured 38px vs 34px) -- pin the
+   height explicitly rather than trying to fake it via padding/line-height
+   tricks that could drift if either button's content changes. */
+#starToggleBtnDesktop,
+#starToggleBtnMobile {
+    height: 38px;
+}
+
 /* Star toggle buttons (desktop + mobile) — "starred" (active) state,
    same amber treatment the header star button used to apply to itself
    via inline style (see toggleStarredView() in js/listings.js), and the
@@ -1279,11 +1290,6 @@ input[type="range"]::-moz-range-thumb {
         border-bottom-color: #404040;
     }
     
-    #desktopFiltersContainer {
-        background: #2a2a2a !important;
-        border-color: #404040 !important;
-    }
-
     #desktopFilterPanel.desktop-sidebar {
         background: #2a2a2a !important;
         border-color: #404040 !important;
