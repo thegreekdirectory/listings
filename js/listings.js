@@ -273,6 +273,7 @@ function syncStarredButtonsVisualState() {
     const headerStarBtn = document.getElementById('headerStarBtn');
     const hideStarredBtn = document.getElementById('hideStarredBtn');
     const starToggleBtnDesktop = document.getElementById('starToggleBtnDesktop');
+    const starToggleBtnMobile = document.getElementById('starToggleBtnMobile');
 
     if (hideStarredBtn) {
         hideStarredBtn.classList.toggle('hidden', !viewingStarredOnly);
@@ -285,6 +286,10 @@ function syncStarredButtonsVisualState() {
 
     if (starToggleBtnDesktop) {
         starToggleBtnDesktop.classList.toggle('starred', viewingStarredOnly);
+    }
+
+    if (starToggleBtnMobile) {
+        starToggleBtnMobile.classList.toggle('starred', viewingStarredOnly);
     }
 }
 
