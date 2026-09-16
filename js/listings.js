@@ -3408,7 +3408,7 @@ function renderSplitViewListings() {
                             </div>
                         </div>
                     </button>
-                    ${isSelected ? `<a href="${listingUrl}" class="split-listing-visit-btn">Visit</a>` : ''}
+                    ${isSelected ? `<a href="${listingUrl}" class="split-listing-visit-btn">View</a>` : ''}
                 ` : `
                     <a href="${listingUrl}" class="flex gap-3 flex-1 min-w-0" style="touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important;">
                         ${logoImage ? `<img src="${logoImage}" alt="${l.business_name}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : '<div class="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs">No logo</div>'}
