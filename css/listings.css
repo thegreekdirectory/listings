@@ -801,12 +801,30 @@ input[type="range"]::-moz-range-thumb {
    carries those same three classes) even though it was written for much
    smaller homepage cards/buttons -- on a full-width split-view row,
    scale(1.1) meant a ~40px jump in width, which read as a much bigger
-   bounce than intended. !important is needed here since index.css loads
-   after this file and its rule has equal-or-higher class specificity;
-   the transition itself (index.css line ~65, "transition: all 0.3s")
-   stays as-is since the smoothness was never the complaint. */
+   bounce than intended. 1.03 matches this same file's own existing
+   "gentle" precedent for this exact generic rule (see
+   .related-listing-card:hover in index.css). !important is needed here
+   since index.css loads after this file and its rule has equal-or-higher
+   class specificity; the transition itself (index.css line ~65,
+   "transition: all 0.3s") stays as-is since the smoothness was never the
+   complaint. */
 .split-listing-item:hover {
-    transform: scale(1.05) !important;
+    transform: scale(1.03) !important;
+}
+
+/* .split-listing-content (the inner logo+text+pills button, inside
+   .split-listing-item above) is itself a <button>, so it ALSO
+   independently matched the same generic rule's "button:hover" clause --
+   meaning hovering specifically over the text/logo applied a SECOND,
+   separate scale(1.1) stacked on top of the outer card's already-scaled
+   box (hover applies to every ancestor of whatever's actually under the
+   cursor, not just the innermost element), compounding into something
+   close to the original, unfixed bounce. Neutralizing the inner
+   button's own hover transform makes the outer card's single transform
+   above the only one ever active, so the whole card scales together as
+   one piece no matter which part of it is hovered. */
+.split-listing-content:hover {
+    transform: none !important;
 }
 
 .listing-card-hover {
