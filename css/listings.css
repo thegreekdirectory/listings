@@ -1337,6 +1337,10 @@ input[type="range"]::-moz-range-thumb {
         background: #3a3a3a;
         border-color: var(--primary-blue);
     }
+
+    .split-listing-item.selected-listing {
+        background-color: rgba(4, 80, 147, 0.18) !important;
+    }
     
     .split-view-listings {
         border-right-color: #404040;
