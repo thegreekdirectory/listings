@@ -105,6 +105,11 @@ function formatPhoneDisplay(phone) {
     return phone;
 }
 
+function formatWebsiteDisplay(website) {
+    if (!website) return '';
+    return website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+}
+
 function getDirectionsUrl(listing) {
     if (window.TGDDirections && typeof window.TGDDirections.getDirectionsUrl === 'function') {
         return window.TGDDirections.getDirectionsUrl(listing);
@@ -1447,6 +1452,30 @@ function generateListingCardHtml(l, view) {
     const logoImage = l.logo || '';
     const checkmarkHtml = showsClaimedCheckmark(l) ? CLAIMED_CHECKMARK_SVG : '';
 
+    const hasLocation = !!fullAddress;
+    const hasPhone = !!l.phone;
+    const hasWebsite = !!l.website;
+    const hasEmail = !!l.email;
+    const showTaglineFallback = !hasLocation && !hasPhone && !hasWebsite && !hasEmail;
+
+    const locationRowHtml = hasLocation ? `
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="truncate">${fullAddress}</span>
+    ` : '';
+    const phoneRowHtml = hasPhone ? `
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        <span class="truncate">${formatPhoneDisplay(l.phone)}</span>
+    ` : '';
+    const websiteRowHtml = hasWebsite ? `
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+        <span class="truncate">${formatWebsiteDisplay(l.website)}</span>
+    ` : '';
+    const emailRowHtml = hasEmail ? `
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <span class="truncate">${l.email}</span>
+    ` : '';
+    const taglineFallbackHtml = showTaglineFallback ? `<span class="truncate">${l.tagline || l.description || ''}</span>` : '';
+
     if (view === 'grid') {
         const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : (l.logo || '');
         return `
@@ -1472,11 +1501,11 @@ function generateListingCardHtml(l, view) {
                         </div>
                         <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
                         <div class="text-sm text-gray-600 space-y-1">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <span class="truncate">${fullAddress}</span>
-                            </div>
-                            ${l.phone ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                            ${hasLocation ? `<div class="flex items-center gap-2">${locationRowHtml}</div>` : ''}
+                            ${hasPhone ? `<div class="flex items-center gap-2">${phoneRowHtml}</div>` : ''}
+                            ${hasWebsite ? `<div class="flex items-center gap-2">${websiteRowHtml}</div>` : ''}
+                            ${hasEmail ? `<div class="flex items-center gap-2">${emailRowHtml}</div>` : ''}
+                            ${showTaglineFallback ? `<div class="flex items-center gap-2">${taglineFallbackHtml}</div>` : ''}
                         </div>
                     </div>
                 </a>
@@ -1500,11 +1529,11 @@ function generateListingCardHtml(l, view) {
                         <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
                         <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                         <div class="flex flex-col gap-1 text-sm text-gray-600">
-                            <div class="flex items-center gap-1">
-                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <span class="truncate">${fullAddress}</span>
-                            </div>
-                            ${l.phone ? `<div class="flex items-center gap-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#045093" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span class="truncate">${formatPhoneDisplay(l.phone)}</span></div>` : ''}
+                            ${hasLocation ? `<div class="flex items-center gap-1">${locationRowHtml}</div>` : ''}
+                            ${hasPhone ? `<div class="flex items-center gap-1">${phoneRowHtml}</div>` : ''}
+                            ${hasWebsite ? `<div class="flex items-center gap-1">${websiteRowHtml}</div>` : ''}
+                            ${hasEmail ? `<div class="flex items-center gap-1">${emailRowHtml}</div>` : ''}
+                            ${showTaglineFallback ? `<div class="flex items-center gap-1">${taglineFallbackHtml}</div>` : ''}
                         </div>
                     </div>
                 </a>
@@ -3146,6 +3175,7 @@ function buildMapPopupContent(listing) {
                     ` : ''}
                     
                     <div class="map-popup-details" style="font-size:12px;color:#6b7280;margin-bottom:4px;">
+                        ${fullAddr ? `
                         <div style="display:flex;align-items:start;gap:6px;margin-bottom:4px;">
                             <svg style="width:14px;height:14px;margin-top:2px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -3153,6 +3183,7 @@ function buildMapPopupContent(listing) {
                             </svg>
                             <span style="line-height:1.4;">${fullAddr}</span>
                         </div>
+                        ` : ''}
                         
                         ${listing.phone ? `
                             <div style="display:flex;align-items:center;gap:6px;">
