@@ -1392,22 +1392,29 @@ function getFullAddress(listing) {
 
 function buildBadges(listing) {
     const badges = [];
-    const openStatus = isOpenNow(listing.hours, listing.timezone || 'America/Chicago');
-    const openingSoon = isOpeningSoon(listing.hours, listing.timezone || 'America/Chicago');
-    const closingSoon = isClosingSoon(listing.hours, listing.timezone || 'America/Chicago');
 
-    if (openingSoon) {
-        badges.push('<span class="badge badge-opening-soon">OPENING SOON</span>');
-    } else if (closingSoon) {
-        badges.push('<span class="badge badge-closing-soon">CLOSING SOON</span>');
-    } else if (openStatus === true) {
-        badges.push('<span class="badge badge-open">OPEN</span>');
-    } else if (openStatus === false) {
-        badges.push('<span class="badge badge-closed">CLOSED</span>');
+    if (listing.permanently_closed === true) {
+        badges.push('<span class="badge badge-permanently-closed">Permanently Closed</span>');
+    } else if (listing.temporarily_closed === true) {
+        badges.push('<span class="badge badge-temporarily-closed">Temporarily Closed</span>');
+    } else {
+        const openStatus = isOpenNow(listing.hours, listing.timezone || 'America/Chicago');
+        const openingSoon = isOpeningSoon(listing.hours, listing.timezone || 'America/Chicago');
+        const closingSoon = isClosingSoon(listing.hours, listing.timezone || 'America/Chicago');
+
+        if (openingSoon) {
+            badges.push('<span class="badge badge-opening-soon">Opening Soon</span>');
+        } else if (closingSoon) {
+            badges.push('<span class="badge badge-closing-soon">Closing Soon</span>');
+        } else if (openStatus === true) {
+            badges.push('<span class="badge badge-open">Open Now</span>');
+        } else if (openStatus === false) {
+            badges.push('<span class="badge badge-closed">Closed Now</span>');
+        }
     }
 
     if (listing.coming_soon === true) {
-        badges.push('<span class="badge badge-coming-soon">COMING SOON!</span>');
+        badges.push('<span class="badge badge-coming-soon">Coming Soon!</span>');
     }
 
     if (listing.tier === 'PREMIUM') {
