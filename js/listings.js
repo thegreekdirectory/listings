@@ -1476,6 +1476,14 @@ function generateListingCardHtml(l, view) {
     ` : '';
     const taglineFallbackHtml = showTaglineFallback ? `<span class="truncate">${l.tagline || l.description || ''}</span>` : '';
 
+    const contactCandidates = [
+        { has: hasLocation, html: locationRowHtml },
+        { has: hasPhone, html: phoneRowHtml },
+        { has: hasWebsite, html: websiteRowHtml },
+        { has: hasEmail, html: emailRowHtml },
+    ];
+    const contactRowsToShow = contactCandidates.filter(c => c.has).slice(0, 2).map(c => c.html);
+
     if (view === 'grid') {
         const firstPhoto = l.photos && l.photos.length > 0 ? l.photos[0] : (l.logo || '');
         return `
@@ -1501,10 +1509,7 @@ function generateListingCardHtml(l, view) {
                         </div>
                         <p class="text-sm text-gray-600 mb-3 line-clamp-2">${l.tagline || l.description}</p>
                         <div class="text-sm text-gray-600 space-y-1">
-                            ${hasLocation ? `<div class="flex items-center gap-2">${locationRowHtml}</div>` : ''}
-                            ${hasPhone ? `<div class="flex items-center gap-2">${phoneRowHtml}</div>` : ''}
-                            ${hasWebsite ? `<div class="flex items-center gap-2">${websiteRowHtml}</div>` : ''}
-                            ${hasEmail ? `<div class="flex items-center gap-2">${emailRowHtml}</div>` : ''}
+                            ${contactRowsToShow.map(html => `<div class="flex items-center gap-2">${html}</div>`).join('')}
                             ${showTaglineFallback ? `<div class="flex items-center gap-2">${taglineFallbackHtml}</div>` : ''}
                         </div>
                     </div>
@@ -1529,10 +1534,7 @@ function generateListingCardHtml(l, view) {
                         <h3 class="text-lg font-bold text-gray-900 mb-1 truncate flex items-center gap-1.5">${l.business_name}${checkmarkHtml}</h3>
                         <p class="text-sm text-gray-600 mb-2 line-clamp-1">${l.tagline || l.description}</p>
                         <div class="flex flex-col gap-1 text-sm text-gray-600">
-                            ${hasLocation ? `<div class="flex items-center gap-1">${locationRowHtml}</div>` : ''}
-                            ${hasPhone ? `<div class="flex items-center gap-1">${phoneRowHtml}</div>` : ''}
-                            ${hasWebsite ? `<div class="flex items-center gap-1">${websiteRowHtml}</div>` : ''}
-                            ${hasEmail ? `<div class="flex items-center gap-1">${emailRowHtml}</div>` : ''}
+                            ${contactRowsToShow.map(html => `<div class="flex items-center gap-1">${html}</div>`).join('')}
                             ${showTaglineFallback ? `<div class="flex items-center gap-1">${taglineFallbackHtml}</div>` : ''}
                         </div>
                     </div>
