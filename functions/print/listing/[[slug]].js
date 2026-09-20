@@ -1070,7 +1070,7 @@ function renderPrintPage(listing, owners) {
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="https://static.thegreekdirectory.org/img/logo/bluefavicon.png">
 ${PRINT_STYLES}
-</head>
+<script src="/js/translation-load.js"></script></head>
 <body>
 
     <main class="print-page hero-page">
@@ -1187,7 +1187,7 @@ function renderErrorPage(title, message) {
     h1 { font-size: 20px; color: #045093; margin: 0 0 8px; }
     p { color: #4b5563; margin: 0; line-height: 1.5; }
 </style>
-</head>
+<script src="/js/translation-load.js"></script></head>
 <body>
     <div class="box">
         <h1>${escapeHtml(title)}</h1>
@@ -1224,7 +1224,7 @@ function renderLoadingPage(currentUrl) {
     @keyframes spin { to { transform: rotate(360deg); } }
     h1 { font-size: 16px; font-weight: 600; color: #045093; margin: 0; }
 </style>
-</head>
+<script src="/js/translation-load.js"></script></head>
 <body>
     <div class="box">
         <div class="spinner"></div>

@@ -216,7 +216,7 @@ function buildEventsPageHeadAndHero(upcomingEvents) {
     <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>
     <script type="application/ld+json">${JSON.stringify(websiteSchema)}</script>
     <script type="application/ld+json">${JSON.stringify(organizationSchema)}</script>
-</head>
+<script src="/js/translation-load.js"></script></head>
 <body class="bg-gray-50">
 
 <div data-partial="header"></div>
