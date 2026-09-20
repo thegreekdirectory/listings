@@ -1421,7 +1421,7 @@ a.hover-bounce:hover, button.hover-bounce:hover { transform: scale(1.03); }
 }
 
 </style>
-</head>
+<script src="/js/translation-load.js"></script></head>
 <body class="bg-gray-50">
 
 <div data-partial="header"></div>
@@ -1591,7 +1591,7 @@ function renderErrorPage(title, message) {
         p { color: #9ca3af; }
     }
 </style>
-</head>
+<script src="/js/translation-load.js"></script></head>
 <body>
     <div class="wrap">
         <h1>${escapeHtml(title)}</h1>

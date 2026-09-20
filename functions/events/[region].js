@@ -90,7 +90,7 @@ function renderNotFoundPage() {
         p { color: #9ca3af; }
     }
 </style>
-</head>
+<script src="/js/translation-load.js"></script></head>
 <body>
     <div class="wrap">
         <h1>Not found.</h1>

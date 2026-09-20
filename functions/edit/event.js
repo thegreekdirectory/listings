@@ -225,7 +225,7 @@ function pageShell(title, bodyHtml) {
 <link rel="stylesheet" href="/css/index.css">
 <link rel="stylesheet" href="/css/submit.css">
 <link rel="stylesheet" href="/src/output.css">
-</head>
+<script src="/js/translation-load.js"></script></head>
 <body class="bg-gray-50">
 <div data-partial="header"></div>
 <main class="submit-wrap">
