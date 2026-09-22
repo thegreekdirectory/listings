@@ -16,7 +16,7 @@ export async function onRequest(context) {
   const cookieHeader = request.headers.get("Cookie") || ""; //[cite: 2]
   const hasCookie = cookieHeader.includes(`${COOKIE_NAME}=${SECRET_VALUE}`); //[cite: 2]
   const hasQuery = url.searchParams.get(SECRET_PARAM) === SECRET_VALUE; //[cite: 2]
-  const isManifestJson = (url.pathname === 'manifest.json') ? true : false;
+  const isManifestJson = url.pathname === '/manifest.json';
 
   // 1. Check if the current request has the secret query param OR the cookie
   if ((!hasQuery && !hasCookie) || !isManifestJson) { //[cite: 2]
