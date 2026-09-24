@@ -28,6 +28,8 @@ or distribution of this code can result in legal action to the fullest extent pe
 // exactly, since a person submitting a new event isn't necessarily its
 // organizer the way a listing submitter is typically its owner.
 
+import { buildCountryOptionsHtml, findCountryByCode } from '../events/_countries.js';
+
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 
 export async function onRequestGet(context) {
@@ -77,6 +79,13 @@ function extractFields(form) {
         city: get('city'),
         state: get('state').toUpperCase(),
         zip_code: get('zip_code'),
+        // Raw ISO 3166-1 alpha-2 code from the <select> — converted to
+        // the full { name, code } object insertEventRequest actually
+        // stores; kept as the raw code here so validateSubmission can
+        // treat "no country selected" (empty string) the same way it
+        // already treats an empty city/state/zip, before any object
+        // shape enters the picture.
+        country: get('country'),
         start_at: get('start_at'),
         end_at: get('end_at'),
         all_day: form.get('all_day') === 'on',
@@ -111,6 +120,23 @@ function validateSubmission(f) {
     // UX/robustness improvement rather than a security fix).
     if (!isValidDateInput(f.start_at)) return 'Please enter a valid start date/time.';
     if (f.end_at && !isValidDateInput(f.end_at)) return 'Please enter a valid end date/time.';
+    // City/state/zip/country are each optional on their own (an event
+    // needn't have a physical address at all — see the online/virtual
+    // case), but once a street address IS given, an address with no
+    // city/state/zip/country is much more likely a half-filled-out form
+    // than a deliberate choice, so all four become required together.
+    // This rule is deliberately submit/edit-only, not shared with the
+    // admin form (js/admin-events.js keeps its own, looser posture —
+    // per explicit instruction, since an admin may be entering a known-
+    // good venue's address from a source that doesn't always carry a
+    // full city/state/zip/country breakdown, e.g. transcribing from a
+    // flyer or an unfamiliar international listing).
+    if (f.address) {
+        if (!f.city) return 'Please enter the city, since you entered a street address.';
+        if (!f.state) return 'Please enter the state/province, since you entered a street address.';
+        if (!f.zip_code) return 'Please enter the zip/postal code, since you entered a street address.';
+        if (!f.country) return 'Please select a country, since you entered a street address.';
+    }
     if (!f.submitter_name) return 'Please enter your name.';
     if (!f.submitter_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.submitter_email)) return 'Please enter a valid email address.';
     return null;
@@ -127,6 +153,13 @@ async function insertEventRequest(f, serviceRoleKey) {
         city: f.city || null,
         state: f.state || null,
         zip_code: f.zip_code || null,
+        // f.country is the raw ISO code from the <select> (or '' if
+        // none was chosen); findCountryByCode turns it into the full
+        // { name, code } object events/event_requests.country actually
+        // stores, or null if it's empty/unrecognized — same "store
+        // null, not a guess" posture every other optional field on this
+        // payload already takes.
+        country: f.country ? findCountryByCode(f.country) : null,
         start_at: f.start_at ? new Date(f.start_at).toISOString() : null,
         end_at: f.end_at ? new Date(f.end_at).toISOString() : null,
         all_day: f.all_day,
@@ -274,12 +307,19 @@ function renderForm(f, errorMessage) {
                         <input type="text" name="city" value="${v('city')}">
                     </label>
                     <label>State
-                        <input type="text" name="state" maxlength="2" value="${v('state') || 'IL'}" style="text-transform:uppercase;">
+                        <input type="text" name="state" maxlength="2" value="${v('state')}" style="text-transform:uppercase;">
                     </label>
                     <label>Zip
                         <input type="text" name="zip_code" value="${v('zip_code')}">
                     </label>
+                    <label>Country
+                        <select name="country">
+                            <option value="">Select a country…</option>
+                            ${buildCountryOptionsHtml(f?.country, escapeHtml)}
+                        </select>
+                    </label>
                 </div>
+                <p class="form-note" style="margin-top:-8px;">If you enter a street address, city, state, zip, and country are all required.</p>
             </section>
 
             <section>
