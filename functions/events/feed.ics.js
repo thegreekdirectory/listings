@@ -81,7 +81,7 @@ export async function onRequestGet() {
 
     const rawEvents = await supabaseRestGet(
         `events?visible=eq.true&start_at=gte.${encodeURIComponent(windowStart)}&order=start_at.asc&limit=200` +
-        `&select=id,slug,title,tagline,start_at,end_at,status,organizer_listing_id,venue_listing_id,custom_venue_name,address,city,state`
+        `&select=id,slug,title,tagline,start_at,end_at,status,organizer_listing_id,venue_listing_id,custom_venue_name,address,city,state,zip_code,country,coordinates`
     );
 
     const nowMs = Date.now();
@@ -104,7 +104,7 @@ export async function onRequestGet() {
     let listingsById = {};
     if (allListingIds.length) {
         const idsFilter = allListingIds.join(',');
-        const listings = await supabaseRestGet(`listings?id=in.(${idsFilter})&select=id,business_name,address,city,state`);
+        const listings = await supabaseRestGet(`listings?id=in.(${idsFilter})&select=id,business_name,address,city,state,zip_code,country`);
         listingsById = Object.fromEntries(listings.map((l) => [l.id, l]));
     }
 
@@ -116,6 +116,8 @@ export async function onRequestGet() {
             organizerName: organizer?.business_name,
             venueName: venue?.business_name || event.custom_venue_name,
             venueAddress: venue?.address,
+            venueZip: venue?.zip_code,
+            venueCountry: venue?.country,
             siteBaseUrl: 'https://thegreekdirectory.org',
         });
     });
