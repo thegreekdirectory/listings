@@ -57,6 +57,252 @@ or distribution of this code can result in legal action to the fullest extent pe
 
     let adminEventDescriptionEditor = null;
 
+    // Canonical country list for the event Country <select> below —
+    // { name, code } pairs, code being the real ISO 3166-1 alpha-2 code
+    // (not this codebase's older, unrelated free-text listings.country
+    // values like "USA"). This is a byte-for-byte copy of
+    // functions/events/_countries.js's own EVENT_COUNTRIES array — kept
+    // as a literal copy rather than imported, since this file is a
+    // plain classic <script> (see admin.html's own non-module script
+    // tags) and functions/events/_countries.js is an ES module written
+    // for the Cloudflare Pages Functions side (functions/submit/event.js,
+    // functions/edit/event.js). If this list ever changes, update BOTH
+    // copies by hand — there are only these two.
+    //
+    // Ordering: the six countries js/admin.js's own existing
+    // detectUserCountry()/COUNTRY_CODES already single out as this
+    // directory's actual audience (Greek-American diaspora + primary
+    // English-speaking markets) come first; every other ISO 3166-1
+    // country follows alphabetically.
+    const EVENT_COUNTRIES = [
+        { name: 'United States', code: 'US' },
+        { name: 'Greece', code: 'GR' },
+        { name: 'Canada', code: 'CA' },
+        { name: 'United Kingdom', code: 'GB' },
+        { name: 'Cyprus', code: 'CY' },
+        { name: 'Australia', code: 'AU' },
+        { name: 'Afghanistan', code: 'AF' },
+        { name: 'Albania', code: 'AL' },
+        { name: 'Algeria', code: 'DZ' },
+        { name: 'Andorra', code: 'AD' },
+        { name: 'Angola', code: 'AO' },
+        { name: 'Antigua and Barbuda', code: 'AG' },
+        { name: 'Argentina', code: 'AR' },
+        { name: 'Armenia', code: 'AM' },
+        { name: 'Austria', code: 'AT' },
+        { name: 'Azerbaijan', code: 'AZ' },
+        { name: 'Bahamas', code: 'BS' },
+        { name: 'Bahrain', code: 'BH' },
+        { name: 'Bangladesh', code: 'BD' },
+        { name: 'Barbados', code: 'BB' },
+        { name: 'Belarus', code: 'BY' },
+        { name: 'Belgium', code: 'BE' },
+        { name: 'Belize', code: 'BZ' },
+        { name: 'Benin', code: 'BJ' },
+        { name: 'Bhutan', code: 'BT' },
+        { name: 'Bolivia', code: 'BO' },
+        { name: 'Bosnia and Herzegovina', code: 'BA' },
+        { name: 'Botswana', code: 'BW' },
+        { name: 'Brazil', code: 'BR' },
+        { name: 'Brunei', code: 'BN' },
+        { name: 'Bulgaria', code: 'BG' },
+        { name: 'Burkina Faso', code: 'BF' },
+        { name: 'Burundi', code: 'BI' },
+        { name: 'Cabo Verde', code: 'CV' },
+        { name: 'Cambodia', code: 'KH' },
+        { name: 'Cameroon', code: 'CM' },
+        { name: 'Central African Republic', code: 'CF' },
+        { name: 'Chad', code: 'TD' },
+        { name: 'Chile', code: 'CL' },
+        { name: 'China', code: 'CN' },
+        { name: 'Colombia', code: 'CO' },
+        { name: 'Comoros', code: 'KM' },
+        { name: 'Congo (Congo-Brazzaville)', code: 'CG' },
+        { name: 'Costa Rica', code: 'CR' },
+        { name: 'Croatia', code: 'HR' },
+        { name: 'Cuba', code: 'CU' },
+        { name: 'Czechia', code: 'CZ' },
+        { name: 'Democratic Republic of the Congo', code: 'CD' },
+        { name: 'Denmark', code: 'DK' },
+        { name: 'Djibouti', code: 'DJ' },
+        { name: 'Dominica', code: 'DM' },
+        { name: 'Dominican Republic', code: 'DO' },
+        { name: 'Ecuador', code: 'EC' },
+        { name: 'Egypt', code: 'EG' },
+        { name: 'El Salvador', code: 'SV' },
+        { name: 'Equatorial Guinea', code: 'GQ' },
+        { name: 'Eritrea', code: 'ER' },
+        { name: 'Estonia', code: 'EE' },
+        { name: 'Eswatini', code: 'SZ' },
+        { name: 'Ethiopia', code: 'ET' },
+        { name: 'Fiji', code: 'FJ' },
+        { name: 'Finland', code: 'FI' },
+        { name: 'France', code: 'FR' },
+        { name: 'Gabon', code: 'GA' },
+        { name: 'Gambia', code: 'GM' },
+        { name: 'Georgia', code: 'GE' },
+        { name: 'Germany', code: 'DE' },
+        { name: 'Ghana', code: 'GH' },
+        { name: 'Grenada', code: 'GD' },
+        { name: 'Guatemala', code: 'GT' },
+        { name: 'Guinea', code: 'GN' },
+        { name: 'Guinea-Bissau', code: 'GW' },
+        { name: 'Guyana', code: 'GY' },
+        { name: 'Haiti', code: 'HT' },
+        { name: 'Honduras', code: 'HN' },
+        { name: 'Hungary', code: 'HU' },
+        { name: 'Iceland', code: 'IS' },
+        { name: 'India', code: 'IN' },
+        { name: 'Indonesia', code: 'ID' },
+        { name: 'Iran', code: 'IR' },
+        { name: 'Iraq', code: 'IQ' },
+        { name: 'Ireland', code: 'IE' },
+        { name: 'Israel', code: 'IL' },
+        { name: 'Italy', code: 'IT' },
+        { name: 'Jamaica', code: 'JM' },
+        { name: 'Japan', code: 'JP' },
+        { name: 'Jordan', code: 'JO' },
+        { name: 'Kazakhstan', code: 'KZ' },
+        { name: 'Kenya', code: 'KE' },
+        { name: 'Kiribati', code: 'KI' },
+        { name: 'Kosovo', code: 'XK' },
+        { name: 'Kuwait', code: 'KW' },
+        { name: 'Kyrgyzstan', code: 'KG' },
+        { name: 'Laos', code: 'LA' },
+        { name: 'Latvia', code: 'LV' },
+        { name: 'Lebanon', code: 'LB' },
+        { name: 'Lesotho', code: 'LS' },
+        { name: 'Liberia', code: 'LR' },
+        { name: 'Libya', code: 'LY' },
+        { name: 'Liechtenstein', code: 'LI' },
+        { name: 'Lithuania', code: 'LT' },
+        { name: 'Luxembourg', code: 'LU' },
+        { name: 'Madagascar', code: 'MG' },
+        { name: 'Malawi', code: 'MW' },
+        { name: 'Malaysia', code: 'MY' },
+        { name: 'Maldives', code: 'MV' },
+        { name: 'Mali', code: 'ML' },
+        { name: 'Malta', code: 'MT' },
+        { name: 'Marshall Islands', code: 'MH' },
+        { name: 'Mauritania', code: 'MR' },
+        { name: 'Mauritius', code: 'MU' },
+        { name: 'Mexico', code: 'MX' },
+        { name: 'Micronesia', code: 'FM' },
+        { name: 'Moldova', code: 'MD' },
+        { name: 'Monaco', code: 'MC' },
+        { name: 'Mongolia', code: 'MN' },
+        { name: 'Montenegro', code: 'ME' },
+        { name: 'Morocco', code: 'MA' },
+        { name: 'Mozambique', code: 'MZ' },
+        { name: 'Myanmar', code: 'MM' },
+        { name: 'Namibia', code: 'NA' },
+        { name: 'Nauru', code: 'NR' },
+        { name: 'Nepal', code: 'NP' },
+        { name: 'Netherlands', code: 'NL' },
+        { name: 'New Zealand', code: 'NZ' },
+        { name: 'Nicaragua', code: 'NI' },
+        { name: 'Niger', code: 'NE' },
+        { name: 'Nigeria', code: 'NG' },
+        { name: 'North Korea', code: 'KP' },
+        { name: 'North Macedonia', code: 'MK' },
+        { name: 'Norway', code: 'NO' },
+        { name: 'Oman', code: 'OM' },
+        { name: 'Pakistan', code: 'PK' },
+        { name: 'Palau', code: 'PW' },
+        { name: 'Palestine', code: 'PS' },
+        { name: 'Panama', code: 'PA' },
+        { name: 'Papua New Guinea', code: 'PG' },
+        { name: 'Paraguay', code: 'PY' },
+        { name: 'Peru', code: 'PE' },
+        { name: 'Philippines', code: 'PH' },
+        { name: 'Poland', code: 'PL' },
+        { name: 'Portugal', code: 'PT' },
+        { name: 'Qatar', code: 'QA' },
+        { name: 'Romania', code: 'RO' },
+        { name: 'Russia', code: 'RU' },
+        { name: 'Rwanda', code: 'RW' },
+        { name: 'Saint Kitts and Nevis', code: 'KN' },
+        { name: 'Saint Lucia', code: 'LC' },
+        { name: 'Saint Vincent and the Grenadines', code: 'VC' },
+        { name: 'Samoa', code: 'WS' },
+        { name: 'San Marino', code: 'SM' },
+        { name: 'Sao Tome and Principe', code: 'ST' },
+        { name: 'Saudi Arabia', code: 'SA' },
+        { name: 'Senegal', code: 'SN' },
+        { name: 'Serbia', code: 'RS' },
+        { name: 'Seychelles', code: 'SC' },
+        { name: 'Sierra Leone', code: 'SL' },
+        { name: 'Singapore', code: 'SG' },
+        { name: 'Slovakia', code: 'SK' },
+        { name: 'Slovenia', code: 'SI' },
+        { name: 'Solomon Islands', code: 'SB' },
+        { name: 'Somalia', code: 'SO' },
+        { name: 'South Africa', code: 'ZA' },
+        { name: 'South Korea', code: 'KR' },
+        { name: 'South Sudan', code: 'SS' },
+        { name: 'Spain', code: 'ES' },
+        { name: 'Sri Lanka', code: 'LK' },
+        { name: 'Sudan', code: 'SD' },
+        { name: 'Suriname', code: 'SR' },
+        { name: 'Sweden', code: 'SE' },
+        { name: 'Switzerland', code: 'CH' },
+        { name: 'Syria', code: 'SY' },
+        { name: 'Taiwan', code: 'TW' },
+        { name: 'Tajikistan', code: 'TJ' },
+        { name: 'Tanzania', code: 'TZ' },
+        { name: 'Thailand', code: 'TH' },
+        { name: 'Timor-Leste', code: 'TL' },
+        { name: 'Togo', code: 'TG' },
+        { name: 'Tonga', code: 'TO' },
+        { name: 'Trinidad and Tobago', code: 'TT' },
+        { name: 'Tunisia', code: 'TN' },
+        { name: 'Turkey', code: 'TR' },
+        { name: 'Turkmenistan', code: 'TM' },
+        { name: 'Tuvalu', code: 'TV' },
+        { name: 'Uganda', code: 'UG' },
+        { name: 'Ukraine', code: 'UA' },
+        { name: 'United Arab Emirates', code: 'AE' },
+        { name: 'Uruguay', code: 'UY' },
+        { name: 'Uzbekistan', code: 'UZ' },
+        { name: 'Vanuatu', code: 'VU' },
+        { name: 'Vatican City', code: 'VA' },
+        { name: 'Venezuela', code: 'VE' },
+        { name: 'Vietnam', code: 'VN' },
+        { name: 'Yemen', code: 'YE' },
+        { name: 'Zambia', code: 'ZM' },
+        { name: 'Zimbabwe', code: 'ZW' },
+    ];
+
+    // Looks up a country by its ISO 3166-1 alpha-2 code (case-
+    // insensitive), returning the { name, code } entry or null — used
+    // to turn the event Country <select>'s value back into the object
+    // shape saved to events.country. Mirrors
+    // functions/events/_countries.js's own findCountryByCode exactly.
+    function findEventCountryByCode(code) {
+        if (!code) return null;
+        const upper = String(code).trim().toUpperCase();
+        return EVENT_COUNTRIES.find((c) => c.code === upper) || null;
+    }
+
+    // Builds the event Country <select>'s <option> elements — ISO code
+    // as the value, full name as the label, selectedCode (if any)
+    // pre-selected. No default/pre-selected option when selectedCode is
+    // blank (a brand-new event) — deliberately, same reasoning as the
+    // State field just above no longer defaulting to 'IL': an admin
+    // picking a country should be a deliberate choice, not something
+    // silently defaulted for them, now that this directory covers more
+    // than one country. Mirrors functions/events/_countries.js's own
+    // buildCountryOptionsHtml, using escapeAttr (this file's own HTML-
+    // escaping helper, defined further below) in place of that file's
+    // escapeHtml — same behavior, just this file's existing name for it.
+    function buildEventCountryOptionsHtml(selectedCode) {
+        const normalizedSelected = selectedCode ? String(selectedCode).trim().toUpperCase() : '';
+        return EVENT_COUNTRIES.map((c) => {
+            const isSelected = c.code === normalizedSelected;
+            return `<option value="${escapeAttr(c.code)}" ${isSelected ? 'selected' : ''}>${escapeAttr(c.name)}</option>`;
+        }).join('');
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('eventsViewBtn')?.addEventListener('click', () => window.switchAdminView('events'));
         document.getElementById('newEventBtn')?.addEventListener('click', () => openEventModal(null));
@@ -516,11 +762,18 @@ or distribution of this code can result in legal action to the fullest extent pe
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
-                <input type="text" id="ev_state" value="${escapeAttr(event.state || 'IL')}" maxlength="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg uppercase">
+                <input type="text" id="ev_state" value="${escapeAttr(event.state)}" maxlength="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg uppercase">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
                 <input type="text" id="ev_zip_code" value="${escapeAttr(event.zip_code)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                <select id="ev_country" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <option value="">Select a country…</option>
+                    ${buildEventCountryOptionsHtml(event.country?.code)}
+                </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Latitude <span class="text-gray-400 font-normal">(leave blank to auto-fill from venue or auto-geocode)</span></label>
@@ -810,6 +1063,30 @@ or distribution of this code can result in legal action to the fullest extent pe
         el.className = `text-xs mt-1 ${colorClass || ''}`;
     }
 
+    // Best-effort match from a listing's free-text listings.country value
+    // (e.g. "USA", "United States", "US" — that column has a default but
+    // no CHECK constraint, so it isn't a fixed enum) to one of this
+    // file's own EVENT_COUNTRIES entries. Deliberately narrow: only a
+    // handful of common variants for the countries actually used
+    // anywhere in the checked-in supabase/sql/listings_rows.sql sample
+    // (all "USA") are covered — this is a courtesy pre-fill for the
+    // overwhelmingly common case, not a general fuzzy-matcher, since a
+    // wrong guess here would silently mis-tag an event with the wrong
+    // country. Returns the matched EVENT_COUNTRIES code, or null if
+    // nothing confidently matches (leaving the Country <select>
+    // unselected — an admin picking explicitly beats a wrong guess).
+    function guessEventCountryCodeFromListingCountry(rawListingCountry) {
+        if (!rawListingCountry) return null;
+        const normalized = String(rawListingCountry).trim().toUpperCase();
+        const directMatches = {
+            USA: 'US',
+            US: 'US',
+            'UNITED STATES': 'US',
+            'UNITED STATES OF AMERICA': 'US',
+        };
+        return directMatches[normalized] || null;
+    }
+
     function selectOrganizerListing(listing) {
         const tierSelect = document.getElementById('ev_tier');
         if (!tierSelect) return;
@@ -825,6 +1102,7 @@ or distribution of this code can result in legal action to the fullest extent pe
         const cityEl = document.getElementById('ev_city');
         const stateEl = document.getElementById('ev_state');
         const zipEl = document.getElementById('ev_zip_code');
+        const countryEl = document.getElementById('ev_country');
         const latEl = document.getElementById('ev_lat');
         const lngEl = document.getElementById('ev_lng');
 
@@ -832,6 +1110,10 @@ or distribution of this code can result in legal action to the fullest extent pe
         if (cityEl && listing.city) cityEl.value = listing.city;
         if (stateEl && listing.state) stateEl.value = listing.state;
         if (zipEl && listing.zip_code) zipEl.value = listing.zip_code;
+        if (countryEl) {
+            const guessedCode = guessEventCountryCodeFromListingCountry(listing.country);
+            if (guessedCode) countryEl.value = guessedCode;
+        }
         if (listing.coordinates && typeof listing.coordinates === 'object') {
             if (latEl && listing.coordinates.lat != null) latEl.value = listing.coordinates.lat;
             if (lngEl && listing.coordinates.lng != null) lngEl.value = listing.coordinates.lng;
@@ -982,6 +1264,15 @@ or distribution of this code can result in legal action to the fullest extent pe
         const city = document.getElementById('ev_city')?.value.trim() || null;
         const state = document.getElementById('ev_state')?.value.trim().toUpperCase() || null;
         const zipCode = document.getElementById('ev_zip_code')?.value.trim() || null;
+        // ev_country's value is the raw ISO code; findEventCountryByCode
+        // turns it into the full { name, code } object events.country
+        // actually stores (see this file's own EVENT_COUNTRIES/
+        // findEventCountryByCode above, mirroring
+        // functions/events/_countries.js exactly). No requiredness check
+        // here — per explicit instruction, the admin form does not carry
+        // the same "address implies city/state/zip/country required"
+        // rule the public submit/edit forms enforce.
+        const country = findEventCountryByCode(document.getElementById('ev_country')?.value);
 
         let slug = document.getElementById('ev_slug')?.value.trim();
         if (!slug) {
@@ -1050,6 +1341,7 @@ or distribution of this code can result in legal action to the fullest extent pe
             city,
             state,
             zip_code: zipCode,
+            country,
             coordinates,
 
             start_at: new Date(startAt).toISOString(),
