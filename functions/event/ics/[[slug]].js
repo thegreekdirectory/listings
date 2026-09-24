@@ -46,7 +46,7 @@ export async function onRequestGet({ params }) {
 
     const events = await supabaseRestGet(
         `events?slug=eq.${encodeURIComponent(slug)}&visible=eq.true&limit=1` +
-        `&select=id,slug,title,tagline,description,start_at,end_at,status,organizer_listing_id,venue_listing_id,custom_venue_name,address,city,state`
+        `&select=id,slug,title,tagline,description,start_at,end_at,status,organizer_listing_id,venue_listing_id,custom_venue_name,address,city,state,zip_code,country,coordinates`
     );
     const event = events[0];
 
@@ -59,7 +59,7 @@ export async function onRequestGet({ params }) {
             ? supabaseRestGet(`listings?id=eq.${encodeURIComponent(event.organizer_listing_id)}&select=business_name`).then((r) => r[0])
             : null,
         event.venue_listing_id
-            ? supabaseRestGet(`listings?id=eq.${encodeURIComponent(event.venue_listing_id)}&select=business_name,address`).then((r) => r[0])
+            ? supabaseRestGet(`listings?id=eq.${encodeURIComponent(event.venue_listing_id)}&select=business_name,address,zip_code,country`).then((r) => r[0])
             : null,
     ]);
 
@@ -68,6 +68,8 @@ export async function onRequestGet({ params }) {
         organizerName: organizer?.business_name,
         venueName: venue?.business_name || event.custom_venue_name,
         venueAddress: venue?.address,
+        venueZip: venue?.zip_code,
+        venueCountry: venue?.country,
         siteBaseUrl: 'https://thegreekdirectory.org',
     });
     const ics = buildVCalendar([vevent], event.title);
