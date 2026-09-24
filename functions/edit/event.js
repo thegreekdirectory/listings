@@ -21,6 +21,8 @@ or distribution of this code can result in legal action to the fullest extent pe
 // the same pre-filled form with an error message on validation failure,
 // so a mistake doesn't lose everything already typed.
 
+import { buildCountryOptionsHtml, findCountryByCode } from '../events/_countries.js';
+
 const SUPABASE_URL = 'https://luetekzqrrgdxtopzvqw.supabase.co';
 
 export async function onRequestGet(context) {
@@ -81,7 +83,7 @@ export async function onRequestPost(context) {
     }
 
     const fields = extractFields(form);
-    const validationError = validateSuggestion(fields);
+    const validationError = validateSuggestion(fields, event);
     if (validationError) {
         return htmlResponse(renderForm(event, eventId, fields, validationError));
     }
@@ -125,6 +127,12 @@ function extractFields(form) {
         city: get('city'),
         state: get('state').toUpperCase(),
         zip_code: get('zip_code'),
+        // Raw ISO 3166-1 alpha-2 code from the <select> (or '' if the
+        // visitor didn't touch it, in which case validateSuggestion/
+        // insertEventSuggestion fall back to the event's current stored
+        // country — same "changed fields only" precedence every other
+        // field on this diff-style form already follows).
+        country: get('country'),
         start_at: get('start_at'),
         end_at: get('end_at'),
         price_range: get('price_range'),
@@ -145,7 +153,7 @@ function isValidDateInput(v) {
     return !Number.isNaN(new Date(v).getTime());
 }
 
-function validateSuggestion(f) {
+function validateSuggestion(f, event) {
     if (!f.suggester_name) return 'Please enter your name.';
     if (!f.suggester_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.suggester_email)) return 'Please enter a valid email address.';
     // Validated here, before insertEventSuggestion, so a malformed date
@@ -154,6 +162,34 @@ function validateSuggestion(f) {
     // throwing partway through building the payload.
     if (f.start_at && !isValidDateInput(f.start_at)) return 'Please enter a valid start date/time.';
     if (f.end_at && !isValidDateInput(f.end_at)) return 'Please enter a valid end date/time.';
+    // This form only sends fields the visitor actually changed (see
+    // insertEventSuggestion below), so "the address" for this rule's
+    // purposes is the EFFECTIVE address after the suggestion is applied
+    // — whatever the visitor typed, falling back to the event's current
+    // stored value for anything left untouched — not just the raw form
+    // input in isolation. Otherwise a visitor who leaves an already-
+    // correct city/state/zip/country pre-filled (i.e. doesn't retype
+    // it) would be wrongly told it's missing, and a visitor who clears
+    // out every address field at once (a legitimate "this is no longer
+    // at a physical venue" edit) would be wrongly blocked from doing so.
+    // effectiveCountry compares against event.country's own { name,
+    // code } shape (see functions/events/_countries.js) by code, since
+    // f.country (when present) is the raw ISO code from the <select>,
+    // not yet the { name, code } object.
+    const effective = (formValue, eventValue) => (formValue || eventValue || '');
+    const effectiveAddress = effective(f.address, event?.address);
+    const effectiveCity = effective(f.city, event?.city);
+    const effectiveState = effective(f.state, event?.state);
+    const effectiveZip = effective(f.zip_code, event?.zip_code);
+    const effectiveCountryCode = f.country || (event?.country && event.country.code) || '';
+    // Same submit/edit-only reasoning as functions/submit/event.js's
+    // matching rule — deliberately not applied to js/admin-events.js.
+    if (effectiveAddress) {
+        if (!effectiveCity) return 'Please enter the city, since there is a street address on file.';
+        if (!effectiveState) return 'Please enter the state/province, since there is a street address on file.';
+        if (!effectiveZip) return 'Please enter the zip/postal code, since there is a street address on file.';
+        if (!effectiveCountryCode) return 'Please select a country, since there is a street address on file.';
+    }
     return null;
 }
 
@@ -170,6 +206,12 @@ async function insertEventSuggestion(eventId, eventTitle, f, serviceRoleKey) {
     stringFields.forEach((key) => { if (f[key]) payload[key] = f[key]; });
 
     if (f.venue_name) payload.custom_venue_name = f.venue_name;
+    // country needs the { name, code } conversion (see
+    // functions/events/_countries.js), so — like venue_name/start_at/
+    // end_at above — it's handled here rather than folded into the
+    // generic stringFields loop, which assigns raw strings straight
+    // through.
+    if (f.country) payload.country = findCountryByCode(f.country);
     if (f.start_at) payload.start_at = dateOrNull(f.start_at);
     if (f.end_at) payload.end_at = dateOrNull(f.end_at);
 
@@ -282,6 +324,14 @@ function renderForm(event, eventId, f, errorMessage) {
         const formatted = formatEventValue ? formatEventValue(raw) : raw;
         return escapeHtml(formatted || '');
     };
+    // country needs the same visitor-typed-wins-over-event-value
+    // precedence as val() above, but the event's stored value is the
+    // whole { name, code } object (not a plain string val() expects) and
+    // buildCountryOptionsHtml wants the raw (unescaped) code as its
+    // selectedCode argument — it escapes internally — so this is kept
+    // separate rather than routed through val() and its built-in
+    // escaping.
+    const selectedCountryCode = f?.country || (event?.country && event.country.code) || '';
     return pageShell('Suggest an Edit', `
         <form class="submit-form" method="POST" action="/edit/event?id=${escapeHtml(eventId)}">
             <h1>Suggest an Edit</h1>
@@ -330,7 +380,14 @@ function renderForm(event, eventId, f, errorMessage) {
                     <label>Zip
                         <input type="text" name="zip_code" value="${val('zip_code')}">
                     </label>
+                    <label>Country
+                        <select name="country">
+                            <option value="">Select a country…</option>
+                            ${buildCountryOptionsHtml(selectedCountryCode, escapeHtml)}
+                        </select>
+                    </label>
                 </div>
+                <p class="form-note" style="margin-top:-8px;">If there is a street address, city, state, zip, and country are all required.</p>
             </section>
 
             <section>
