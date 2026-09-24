@@ -170,7 +170,7 @@ async function fetchEventBySlug(slug, serviceRoleKey) {
 async function fetchListingById(id, serviceRoleKey) {
     const encodedId = encodeURIComponent(id);
     const rows = await supabaseRestGet(
-        `listings?id=eq.${encodedId}&select=id,slug,business_name,logo,address,city,state,phone,website,hours,tier,category&limit=1`,
+        `listings?id=eq.${encodedId}&select=id,slug,business_name,logo,address,city,state,zip_code,country,phone,website,hours,tier,category&limit=1`,
         serviceRoleKey
     );
     return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
@@ -842,7 +842,7 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath, s
         // buildCustomVenueCard's own field set for the latter case.
         const venueName = venueListing?.business_name || event.custom_venue_name;
         const venueAddress = venueListing
-            ? { streetAddress: venueListing.address, addressLocality: venueListing.city, addressRegion: venueListing.state }
+            ? { streetAddress: venueListing.address, addressLocality: venueListing.city, addressRegion: venueListing.state, postalCode: venueListing.zip_code }
             : { streetAddress: event.address, addressLocality: event.city, addressRegion: event.state, postalCode: event.zip_code };
         const hasVenueAddress = Object.values(venueAddress).some(Boolean);
         if (venueName || hasVenueAddress) {
@@ -851,9 +851,33 @@ function renderEventPage(event, organizerListing, venueListing, shortlinkPath, s
                 name: venueName || locationLabel || 'Venue',
             };
             if (hasVenueAddress) {
+                // addressCountry is schema.org's own ISO 3166-1 alpha-2
+                // code field (https://schema.org/addressCountry). The
+                // venue listing's own country (once one is linked) takes
+                // precedence over the event's own, same fallback
+                // direction the rest of this block already uses for
+                // every other address field — BUT venueListing.country
+                // comes from listings.country, a plain legacy text
+                // column (e.g. "USA" — not a real ISO code and not the
+                // { name, code } shape events.country stores), while
+                // event.country IS that { name, code } shape. Only a
+                // recognized ISO code is usable for schema.org's own
+                // addressCountry field, so a plain-text listings.country
+                // value that isn't already a 2-letter code is treated as
+                // unusable here rather than passed through as-is (schema.org
+                // validators expect ISO 3166-1 alpha-2, not a free-text
+                // country name or abbreviation like "USA"). 'US' is kept
+                // as the final fallback for events/listings recorded
+                // before events.country existed, so their JSON-LD doesn't
+                // regress to no country at all.
+                const listingCountryRaw = venueListing?.country;
+                const listingCountryCode = (typeof listingCountryRaw === 'string' && /^[A-Za-z]{2}$/.test(listingCountryRaw.trim()))
+                    ? listingCountryRaw.trim().toUpperCase()
+                    : null;
+                const countryCode = listingCountryCode || event.country?.code || 'US';
                 schema.location.address = {
                     '@type': 'PostalAddress',
-                    addressCountry: 'US',
+                    addressCountry: countryCode,
                     ...Object.fromEntries(Object.entries(venueAddress).filter(([, v]) => v)),
                 };
             }
