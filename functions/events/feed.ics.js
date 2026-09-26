@@ -81,7 +81,7 @@ export async function onRequestGet() {
 
     const rawEvents = await supabaseRestGet(
         `events?visible=eq.true&start_at=gte.${encodeURIComponent(windowStart)}&order=start_at.asc&limit=200` +
-        `&select=id,slug,title,tagline,start_at,end_at,status,organizer_listing_id,venue_listing_id,custom_venue_name,address,city,state,zip_code,country,coordinates`
+        `&select=id,slug,title,tagline,start_at,end_at,timezone,status,organizer_listing_id,venue_listing_id,custom_venue_name,address,city,state,zip_code,country,coordinates,created_at,updated_at`
     );
 
     const nowMs = Date.now();
