@@ -288,14 +288,15 @@ function buildVEvent({ event, organizerName, venueName, venueAddress, venueZip, 
     // X-ADDRESS; that's what X-TITLE is for — confirmed directly against
     // a real Apple Calendar export of a directory venue, not assumed).
     //
-    // State and zip are joined by a bare double space with NO comma
-    // between them ("IL  60515", not "IL, 60515") — this looks unusual
-    // but is exactly what that same real export does for both LOCATION
-    // and X-ADDRESS; every OTHER segment boundary uses ", ". Kept
-    // exactly as observed rather than "corrected" to a single space or
-    // a comma, since matching Apple's own real formatting was the
-    // explicit goal here, not fixing what might look like a typo in it.
-    const stateZip = [event.state, zipCode].filter(Boolean).join('  ');
+    // State and zip are joined by a single space with no comma between
+    // them ("IL 60612", not "IL, 60612" or "IL  60612") — the standard
+    // US postal convention. An earlier version of this file used a
+    // double space here, having taken a real Apple export's "IL  60515"
+    // at face value as a deliberate formatting choice worth matching
+    // exactly; it was instead a stray double space in that one export,
+    // not something to reproduce. Every other segment boundary uses
+    // ", ".
+    const stateZip = [event.state, zipCode].filter(Boolean).join(' ');
     const addressOnlyParts = [venueAddress || event.address, event.city, stateZip, countryName].filter(Boolean);
     const addressOnlyText = addressOnlyParts.join(', ');
 
