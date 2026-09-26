@@ -92,6 +92,57 @@ function toIcsUtcDate(dateInput) {
     return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 }
 
+// Formats a UTC instant (events.start_at/end_at, stored as timestamptz —
+// an absolute instant, timezone-agnostic in storage) as RFC 5545's
+// LOCAL-time form for a given IANA zone (events.timezone — a genuinely
+// separate column recording which zone this event's wall-clock time
+// should be read in). Returns the bare "YYYYMMDDTHHMMSS" local time —
+// the caller is responsible for prefixing the DTSTART/DTEND property
+// with `;TZID=<zone>:` (see buildVEvent below); this function only
+// computes the local digits.
+//
+// RFC 5545 §3.3.5 defines exactly three DATE-TIME forms: floating (no
+// Z, no TZID — "local to nothing in particular," genuinely ambiguous),
+// UTC (trailing Z — what toIcsUtcDate above produces, REQUIRED for
+// DTSTAMP/CREATED/LAST-MODIFIED, which the RFC does not allow to carry
+// a TZID at all), and this one — TZID-qualified local time, correct for
+// DTSTART/DTEND when an event has a real, known timezone (which every
+// row here does — events.timezone is NOT NULL with an
+// 'America/Chicago' default). A bare local-time string with no zone
+// information at all (the "floating" form) would be genuinely wrong
+// here, not just less precise — a floating time means "this same clock
+// time, whatever zone the viewer happens to be in," which is NOT what
+// this data represents (a Chicago event has one specific real start
+// moment, correctly anchored by TZID to the zone it's actually in).
+//
+// Uses Intl.DateTimeFormat with the timeZone option — the only
+// correct, DST-aware way to do this conversion; a fixed UTC offset
+// would silently break twice a year at DST transitions. Standard Web
+// API, available in Cloudflare Workers with no compatibility flag,
+// consistent with foldLine's own TextEncoder choice above for the same
+// "avoid Node-specific globals" reason.
+function toIcsZonedLocalDate(dateInput, timeZone) {
+    const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    if (Number.isNaN(d.getTime())) return '';
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false,
+    });
+    const parts = formatter.formatToParts(d);
+    const get = (type) => parts.find((p) => p.type === type)?.value || '';
+    // Defensive normalization: hour12: false's midnight representation
+    // ("00" vs "24") has genuinely varied across JS engines/ICU
+    // versions historically. Verified "00" on this codebase's own
+    // tested runtime, but since this ships to Cloudflare Workers (a
+    // different engine than whatever tested it), coercing a stray "24"
+    // to "00" costs nothing and removes the risk entirely rather than
+    // trusting one runtime's observed behavior to hold everywhere.
+    const hour = get('hour') === '24' ? '00' : get('hour');
+    return `${get('year')}${get('month')}${get('day')}T${hour}${get('minute')}${get('second')}`;
+}
+
 // Builds one VEVENT block (without BEGIN:VCALENDAR/END:VCALENDAR — the
 // caller wraps one or more of these in that envelope). `event` is a row
 // from the events table (or the subset of fields the caller has
@@ -99,11 +150,14 @@ function toIcsUtcDate(dateInput) {
 // by the caller, since resolving the FK to a listing is caller-specific
 // (the feed resolves many at once via a join-like batch fetch; the
 // single-event page already has organizerListing/venueListing in scope).
-// `venueZip`/`venueCountry` follow the exact same caller-resolves-the-FK
-// convention as `venueAddress` — same reasoning, so the venue's own zip/
-// country (when the event has a linked venue listing) take precedence
-// over the event row's own address fields, exactly like venueAddress
-// already does for the street address.
+// `venueZip` follows the exact same caller-resolves-the-FK convention as
+// `venueAddress` — same reasoning, so the venue's own zip (when the
+// event has a linked venue listing) takes precedence over the event
+// row's own zip_code, exactly like venueAddress already does for the
+// street address. `venueCountry` is accepted for the same reason but is
+// NOT given that same venue-wins precedence — see the country-resolution
+// comment inside this function for why country specifically resolves in
+// the opposite direction (event's own value wins).
 //
 // event.country is the { name: "United States", code: "US" } jsonb shape
 // events.country stores (see functions/events/_countries.js); venueCountry
@@ -141,8 +195,25 @@ function buildVEvent({ event, organizerName, venueName, venueAddress, venueZip, 
     const lines = [];
     lines.push('BEGIN:VEVENT');
     lines.push(foldLine(`UID:${event.id}@thegreekdirectory.org`));
+    // CREATED/DTSTAMP/LAST-MODIFIED stay UTC (Z) always — RFC 5545 does
+    // not permit a TZID on these three properties, unlike DTSTART/DTEND
+    // below. DTSTAMP is "when this ICS record was generated" (now, every
+    // time this function runs — NOT the event's own timestamps);
+    // CREATED/LAST-MODIFIED instead reflect the underlying event row's
+    // own created_at/updated_at, when the caller has them (a caller
+    // fetching a narrower column set — e.g. feed.ics.js's own select —
+    // may not; both are omitted rather than guessed when absent, same
+    // "don't invent what wasn't provided" posture as DTEND's own
+    // no-default-duration comment below).
+    if (event.created_at) lines.push(foldLine(`CREATED:${toIcsUtcDate(event.created_at)}`));
     lines.push(foldLine(`DTSTAMP:${toIcsUtcDate(now)}`));
-    lines.push(foldLine(`DTSTART:${toIcsUtcDate(event.start_at)}`));
+
+    // events.timezone is NOT NULL with an 'America/Chicago' default, so
+    // this fallback is purely defensive (a caller passing a partial
+    // event object, not a real gap in the schema) — kept equal to the
+    // column's own DB default so behavior is identical either way.
+    const eventTimeZone = event.timezone || 'America/Chicago';
+    lines.push(foldLine(`DTSTART;TZID=${eventTimeZone}:${toIcsZonedLocalDate(event.start_at, eventTimeZone)}`));
 
     // No default-duration assumption here (unlike getEventTimingState's
     // 3-hour default for the "happening now" badge) — a calendar entry
@@ -153,8 +224,15 @@ function buildVEvent({ event, organizerName, venueName, venueAddress, venueZip, 
     // meaningful at all); a calendar entry doesn't have that same
     // requirement — plenty of real calendar events have no end time.
     if (event.end_at) {
-        lines.push(foldLine(`DTEND:${toIcsUtcDate(event.end_at)}`));
+        lines.push(foldLine(`DTEND;TZID=${eventTimeZone}:${toIcsZonedLocalDate(event.end_at, eventTimeZone)}`));
     }
+
+    if (event.updated_at) lines.push(foldLine(`LAST-MODIFIED:${toIcsUtcDate(event.updated_at)}`));
+    // 0 (never revised), matching Apple's own value in the reference
+    // export — this codebase has no real per-event revision counter to
+    // report a more meaningful number from, so 0 is the honest default
+    // rather than a fabricated one.
+    lines.push('SEQUENCE:0');
 
     lines.push(foldLine(`SUMMARY:${escapeIcsText(event.title)}`));
 
@@ -177,26 +255,58 @@ function buildVEvent({ event, organizerName, venueName, venueAddress, venueZip, 
     const zipCode = venueZip || event.zip_code;
     // Country can arrive in two different shapes depending on where it's
     // from: events.country is the { name, code } jsonb object described
-    // above, but a linked venue's country comes from listings.country,
-    // which is a plain legacy text column (e.g. "USA" — see
-    // supabase/edge-functions README's referenced schema audit), not the
-    // { name, code } shape. toCountryName() below normalizes either
-    // shape to a plain display string so callers can pass either kind of
-    // value through without needing to know which one applies. Genuinely
-    // ambiguous which one wins when a linked venue's plain-text country
-    // conflicts with the event's own recorded country — venue precedence
-    // is kept consistent with how zipCode/venueAddress/venueZip already
-    // resolve that same conflict above.
+    // above (curated through this system's own admin/submit/edit country
+    // dropdown — see functions/events/_countries.js), but a linked
+    // venue's country comes from listings.country, a much older, plain
+    // legacy text column with no fixed format at all — confirmed against
+    // real data to contain values like the bare abbreviation "USA"
+    // rather than a full name or a real ISO code. Unlike zipCode/
+    // venueAddress above (where the VENUE's own address fields are the
+    // more authoritative source, since they describe a specific physical
+    // place more precisely than an event row might), country is
+    // deliberately NOT resolved the same way: the event's own governed,
+    // dropdown-selected value takes precedence over a venue's
+    // inconsistent legacy text, falling back to the venue's value only
+    // when the event itself has none recorded. Confirmed necessary
+    // against this directory's own real "Example Event"/"Eagle
+    // Restaurant" data: the venue listing's country is the bare string
+    // "USA", but the correct calendar output is the full name "United
+    // States" — which only exists on the event's own country field, not
+    // the venue's.
     const toCountryName = (value) => {
         if (!value) return null;
         if (typeof value === 'string') return value;
         if (typeof value === 'object' && value.name) return value.name;
         return null;
     };
-    const countryName = toCountryName(venueCountry) || toCountryName(event.country);
+    const countryName = toCountryName(event.country) || toCountryName(venueCountry);
 
-    const locationParts = [venueName, venueAddress || event.address, event.city, event.state, zipCode, countryName].filter(Boolean);
-    const locationText = locationParts.length ? locationParts.join(', ') : '';
+    // Address text (street/city/state+zip/country) WITHOUT the venue
+    // name — used both as LOCATION's own address portion (joined to the
+    // venue name with \n below) and as X-ADDRESS's entire value (Apple's
+    // own X-APPLE-STRUCTURED-LOCATION never repeats the venue name inside
+    // X-ADDRESS; that's what X-TITLE is for — confirmed directly against
+    // a real Apple Calendar export of a directory venue, not assumed).
+    //
+    // State and zip are joined by a bare double space with NO comma
+    // between them ("IL  60515", not "IL, 60515") — this looks unusual
+    // but is exactly what that same real export does for both LOCATION
+    // and X-ADDRESS; every OTHER segment boundary uses ", ". Kept
+    // exactly as observed rather than "corrected" to a single space or
+    // a comma, since matching Apple's own real formatting was the
+    // explicit goal here, not fixing what might look like a typo in it.
+    const stateZip = [event.state, zipCode].filter(Boolean).join('  ');
+    const addressOnlyParts = [venueAddress || event.address, event.city, stateZip, countryName].filter(Boolean);
+    const addressOnlyText = addressOnlyParts.join(', ');
+
+    // LOCATION = venue name + address, joined by a real newline (encoded
+    // as the two literal characters \n via escapeIcsText below) — NOT a
+    // comma the way an earlier version of this file joined every segment
+    // uniformly. Confirmed against the same real export: LOCATION reads
+    // "Eagle Restaurant" then a line break then the full address, not
+    // "Eagle Restaurant, 406 Maple Ave, ...".
+    const locationParts = [venueName, addressOnlyText].filter(Boolean);
+    const locationText = locationParts.length ? locationParts.join('\n') : '';
     if (locationText) {
         lines.push(foldLine(`LOCATION:${escapeIcsText(locationText)}`));
     }
@@ -206,45 +316,80 @@ function buildVEvent({ event, organizerName, venueName, venueAddress, venueZip, 
     // LOCATION text property above, rather than relying on Apple's own
     // best-effort geocoding of the LOCATION string. Only emitted when
     // real coordinates exist (nothing else here can produce a valid
-    // geo: URI) and only when there's a LOCATION to describe in the
-    // first place — an X-ADDRESS with no corresponding LOCATION would be
-    // a structured location for an address this file never actually
+    // geo: URI) and only when there's an address to describe in the
+    // first place — an X-ADDRESS with nothing behind it would be a
+    // structured location for an address this file never actually
     // states, which is more likely to confuse a calendar app than help
     // it.
     //
     // RFC 5545 doesn't define this property at all (it's an Apple/Cyrus
     // extension, X- prefixed as the RFC requires for non-standard
-    // properties) — the format below is deliberately NOT what an initial
-    // reading of a couple of one-off examples might suggest (some
-    // examples circulating show X-ADDRESS/X-TITLE wrapped in DQUOTEs).
-    // Checked directly against Apple Calendar's own real macOS-generated
-    // output (captured verbatim in a long-running Apple bug-tracker
-    // thread on this exact property) and a maintained third-party
-    // generator library's own tests, both confirm: X-ADDRESS and X-TITLE
-    // are plain (unquoted) parameter values with the SAME backslash
-    // escaping as a property's own TEXT value (comma/semicolon/newline),
-    // not DQUOTE-wrapped strings. This also matches RFC 5545 §3.2's own
-    // param-value grammar (verified against the RFC text directly): a
-    // quoted-string parameter value cannot legally contain a DQUOTE
-    // character at all (not even escaped), which a venue or organization
-    // name genuinely could someday contain — an unquoted, backslash-
-    // escaped value has no such restriction and is what this codebase's
-    // own escapeIcsText already produces correctly for LOCATION. Kept
-    // this way rather than DQUOTE-wrapped for real Apple Calendar
-    // fidelity, not just RFC-technical correctness. X-APPLE-RADIUS of 50
-    // (meters) mirrors a commonly-seen single-building venue pin size —
-    // deliberately not configurable per-event, since this codebase has
-    // no per-event radius concept and one exists nowhere else in this
-    // system either.
+    // properties). An EARLIER version of this comment claimed, based on
+    // several third-party examples and a bug-tracker thread, that real
+    // Apple output leaves X-ADDRESS/X-TITLE UNQUOTED. A genuine Apple
+    // Calendar export of one of this directory's own venues (Eagle
+    // Restaurant, Downers Grove — supplied directly by the site owner,
+    // not sourced from a third party) shows the OPPOSITE for X-ADDRESS:
+    // DQUOTE-wrapped, with its commas left BARE (no backslash escaping)
+    // inside the quotes — consistent with RFC 5545 §3.2's own
+    // quoted-string param-value grammar, where comma/semicolon/colon are
+    // ordinary QSAFE-CHARs that need no escaping once quoted (escaping
+    // them would be someone else's convention bleeding in, not this
+    // one). X-TITLE in that SAME real export is left UNQUOTED, because
+    // "Eagle Restaurant" contains nothing that needs quoting — DQUOTEs
+    // appear to be added only when the value actually contains a comma,
+    // semicolon, or colon (a plain identifier doesn't need them). This
+    // file now follows the real example rather than the earlier
+    // (evidently wrong, or at least not universally true) research:
+    // X-ADDRESS is always quoted (it's built from LOCATION-style address
+    // segments, which routinely contain commas); X-TITLE is quoted ONLY
+    // when it actually needs it. A quoted-string value can never itself
+    // contain a literal DQUOTE character (RFC 5545 grammar, verified
+    // directly against the RFC text) — a venue/organizer name containing
+    // one is escaped to a single-quote here rather than left able to
+    // prematurely terminate the quoted parameter, which would silently
+    // corrupt the rest of the property line.
+    //
+    // X-APPLE-MAPKIT-HANDLE (present in the real export) is deliberately
+    // NOT reproduced here — it's an opaque, Apple-internal serialized
+    // reference into Apple's own MapKit place database, generated only
+    // when Apple's OWN app resolves a location through a live MapKit
+    // lookup. There's no public spec for its contents, and no way to
+    // construct a genuine one from directory data alone; a fabricated
+    // value that merely looks similar risks being actively misleading
+    // (or rejected) rather than simply absent, so it's omitted rather
+    // than guessed at. X-APPLE-RADIUS's value in that same export
+    // (141.17...meters) is similarly MapKit's own computed footprint for
+    // that one specific real building — not a number this codebase has
+    // any way to derive — so a fixed, disclosed default (50m, roughly a
+    // single-building pin) is used instead of attempting to fake
+    // precision this system doesn't have. X-APPLE-REFERENCEFRAME=1 is
+    // reproduced as-is: a static value with no per-event meaning to
+    // derive, present in the real export.
     if (locationText && event.coordinates && typeof event.coordinates.lat === 'number' && typeof event.coordinates.lng === 'number') {
         const structuredTitle = venueName || event.custom_venue_name || event.title;
+        // A DQUOTE can never appear inside a quoted-string parameter
+        // value at all (RFC 5545 grammar excludes it, even escaped) — a
+        // literal " in a venue/organizer name is mapped to a single
+        // quote rather than dropped or left to corrupt the line.
+        const quotedParamSafe = (value) => String(value).replace(/"/g, "'");
+        const needsQuoting = (value) => /[,;:]/.test(String(value));
+        const titleParam = needsQuoting(structuredTitle)
+            ? `"${quotedParamSafe(structuredTitle)}"`
+            : quotedParamSafe(structuredTitle);
         lines.push(foldLine(
-            `X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS=${escapeIcsText(locationText)};X-APPLE-RADIUS=50;X-TITLE=${escapeIcsText(structuredTitle)}:geo:${event.coordinates.lat},${event.coordinates.lng}`
+            `X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS="${quotedParamSafe(addressOnlyText)}";X-APPLE-RADIUS=50;X-APPLE-REFERENCEFRAME=1;X-TITLE=${titleParam}:geo:${event.coordinates.lat},${event.coordinates.lng}`
         ));
     }
 
     if (siteBaseUrl) {
-        lines.push(foldLine(`URL:${siteBaseUrl}/event/${event.slug}`));
+        // VALUE=URI is REQUIRED here to match the real example exactly
+        // (URL;VALUE=URI:https://...) — RFC 5545's own default VALUE
+        // type for URL is already URI, so this parameter is technically
+        // redundant, but Apple's own generator includes it explicitly
+        // and "just like the example" means matching that, not relying
+        // on an implicit default it doesn't rely on itself.
+        lines.push(foldLine(`URL;VALUE=URI:${siteBaseUrl}/event/${event.slug}`));
     }
 
     const statusMap = { cancelled: 'CANCELLED', scheduled: 'CONFIRMED', postponed: 'TENTATIVE', sold_out: 'CONFIRMED' };
