@@ -46,7 +46,7 @@ export async function onRequestGet({ params }) {
 
     const events = await supabaseRestGet(
         `events?slug=eq.${encodeURIComponent(slug)}&visible=eq.true&limit=1` +
-        `&select=id,slug,title,tagline,description,start_at,end_at,status,organizer_listing_id,venue_listing_id,custom_venue_name,address,city,state,zip_code,country,coordinates`
+        `&select=id,slug,title,tagline,description,start_at,end_at,timezone,status,organizer_listing_id,venue_listing_id,custom_venue_name,address,city,state,zip_code,country,coordinates,created_at,updated_at`
     );
     const event = events[0];
 
